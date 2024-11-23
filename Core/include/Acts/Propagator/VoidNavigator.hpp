@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 
 namespace Acts {
 
@@ -37,6 +38,9 @@ struct VoidNavigator {
     explicit State(const Options& options_) : options(options_) {}
 
     Options options;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
   };
 
   State makeState(const Options& options) const {

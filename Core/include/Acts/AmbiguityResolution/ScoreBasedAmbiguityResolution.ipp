@@ -21,27 +21,17 @@ inline const Logger& ScoreBasedAmbiguityResolution::logger() const {
   return *m_logger;
 }
 
-template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
-          typename source_link_equality_t>
-std::vector<std::vector<ScoreBasedAmbiguityResolution::MeasurementInfo>>
+template <TrackContainerFrontend track_container_t>
+std::vector<std::vector<ScoreBasedAmbiguityResolution::TrackFeatures>>
 ScoreBasedAmbiguityResolution::computeInitialState(
-    const track_container_t& tracks, source_link_hash_t sourceLinkHash,
-    source_link_equality_t sourceLinkEquality,
-    std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const {
-  auto MeasurementIndexMap =
-      std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
-                         source_link_equality_t>(0, sourceLinkHash,
-                                                 sourceLinkEquality);
-
-  std::vector<std::vector<MeasurementInfo>> measurementsPerTrack;
-  measurementsPerTrack.reserve(tracks.size());
+    const track_container_t& tracks) const {
   ACTS_VERBOSE("Starting to compute initial state");
+  std::vector<std::vector<TrackFeatures>> trackFeaturesVectors;
+  trackFeaturesVectors.reserve(tracks.size());
 
   for (const auto& track : tracks) {
     int numberOfDetectors = m_cfg.detectorConfigs.size();
-    int numberOfTrackStates = track.nTrackStates();
-    std::vector<MeasurementInfo> measurements;
-    measurements.reserve(numberOfTrackStates);
+
     std::vector<TrackFeatures> trackFeaturesVector(numberOfDetectors);
 
     for (const auto& ts : track.trackStatesReversed()) {
@@ -58,43 +48,25 @@ ScoreBasedAmbiguityResolution::computeInitialState(
       auto detectorId = volume_it->second;
 
       if (ts.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
-        ACTS_DEBUG("Track state type is HoleFlag");
+        ACTS_VERBOSE("Track state type is HoleFlag");
         trackFeaturesVector[detectorId].nHoles++;
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag)) {
-        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        ACTS_DEBUG("Track state type is OutlierFlag");
+        ACTS_VERBOSE("Track state type is OutlierFlag");
         trackFeaturesVector[detectorId].nOutliers++;
 
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = MeasurementIndexMap.try_emplace(
-            sourceLink, MeasurementIndexMap.size());
-
-        bool isOutliner = true;
-
-        measurements.push_back({emplace.first->second, detectorId, isOutliner});
       } else if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
-        ACTS_DEBUG("Track state type is MeasurementFlag");
+        ACTS_VERBOSE("Track state type is MeasurementFlag");
 
         if (ts.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
           trackFeaturesVector[detectorId].nSharedHits++;
         }
         trackFeaturesVector[detectorId].nHits++;
-
-        // assign a new measurement index if the source link was not seen yet
-        auto emplace = MeasurementIndexMap.try_emplace(
-            sourceLink, MeasurementIndexMap.size());
-
-        bool isoutliner = false;
-
-        measurements.push_back({emplace.first->second, detectorId, isoutliner});
       }
     }
-    measurementsPerTrack.push_back(std::move(measurements));
     trackFeaturesVectors.push_back(std::move(trackFeaturesVector));
   }
 
-  return measurementsPerTrack;
+  return trackFeaturesVectors;
 }
 
 template <TrackContainerFrontend track_container_t>
@@ -363,12 +335,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // choosing a scaling factor based on the number of hits in a track per
       // detector.
       std::size_t nHits = trackFeatures.nHits;
-      if (detector.factorHits.size() < nHits) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factorhits in the "
-                                    "detector.factorHits vector");
-        continue;
-      }
       if (nHits > detector.maxHits) {
         score = score * (detector.maxHits - nHits + 1);  // hits are good !
         nHits = detector.maxHits;
@@ -381,12 +347,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
       std::size_t iHoles = trackFeatures.nHoles;
-      if (detector.factorHoles.size() < iHoles) {
-        ACTS_WARNING("Detector " << detectorId
-                                 << " has not enough factorholes in the "
-                                    "detector.factorHoles vector");
-        continue;
-      }
       if (iHoles > detector.maxHoles) {
         score /= (iHoles - detector.maxHoles + 1);  // holes are bad !
         iHoles = detector.maxHoles;
@@ -421,16 +381,19 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
   return trackScore;
 }
 
-template <TrackContainerFrontend track_container_t>
+template <TrackContainerFrontend track_container_t, typename source_link_hash_t,
+          typename source_link_equality_t>
 std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
-    const track_container_t& tracks,
-    const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
-    const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+    const track_container_t& tracks, source_link_hash_t sourceLinkHash,
+    source_link_equality_t sourceLinkEquality,
     const OptionalCuts<typename track_container_t::ConstTrackProxy>&
         optionalCuts) const {
   ACTS_INFO("Number of tracks before Ambiguty Resolution: " << tracks.size());
   // vector of trackFeaturesVectors. where each trackFeaturesVector contains the
   // number of hits/hole/outliers for each detector in a track.
+
+  const std::vector<std::vector<TrackFeatures>> trackFeaturesVectors =
+      computeInitialState<track_container_t>(tracks);
 
   std::vector<double> trackScore;
   trackScore.reserve(tracks.size());
@@ -440,14 +403,72 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     trackScore = simpleScore(tracks, trackFeaturesVectors, optionalCuts);
   }
 
-  std::vector<bool> cleanTracks = getCleanedOutTracks(
-      trackScore, trackFeaturesVectors, measurementsPerTrack);
+  auto MeasurementIndexMap =
+      std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
+                         source_link_equality_t>(0, sourceLinkHash,
+                                                 sourceLinkEquality);
+
+  std::vector<std::vector<std::size_t>> measurementsPerTrackVector;
+  std::map<std::size_t, std::size_t> nTracksPerMeasurement;
+
+  // Stores tracks measurement into a vector or vectors
+  // (measurementsPerTrackVector) and counts the number of tracks per
+  // measurement.(nTracksPerMeasurement)
+
+  for (const auto& track : tracks) {
+    std::vector<std::size_t> measurementsPerTrack;
+    for (const auto& ts : track.trackStatesReversed()) {
+      if (!ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) &&
+          !ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
+      }
+      Acts::SourceLink sourceLink = ts.getUncalibratedSourceLink();
+      // assign a new measurement index if the source link was not seen yet
+      auto emplace = MeasurementIndexMap.try_emplace(
+          sourceLink, MeasurementIndexMap.size());
+      std::size_t iMeasurement = emplace.first->second;
+      measurementsPerTrack.push_back(iMeasurement);
+      if (nTracksPerMeasurement.find(iMeasurement) ==
+          nTracksPerMeasurement.end()) {
+        nTracksPerMeasurement[iMeasurement] = 0;
+      }
+      nTracksPerMeasurement[iMeasurement]++;
+    }
+    measurementsPerTrackVector.push_back(std::move(measurementsPerTrack));
+  }
 
   std::vector<int> goodTracks;
   int cleanTrackIndex = 0;
-  std::size_t iTrack = 0;
-  for (const auto& track : tracks) {
-    if (cleanTracks[iTrack]) {
+
+  auto optionalHitSelections = optionalCuts.hitSelections;
+
+  // Loop over all the tracks in the container
+  // For each track, check if the track has too many shared hits to be accepted.
+  // If the track is accepted, remove bad hits and check if the track has a
+  // score higher than the minimum score for shared tracks.
+  // If the track is good, add it to the goodTracks vector.
+  for (std::size_t iTrack = 0; const auto& track : tracks) {
+    // Check if the track has too many shared hits to be accepted.
+    auto trackFeaturesVector = trackFeaturesVectors.at(iTrack);
+    bool trkCouldBeAccepted = true;
+    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
+         detectorId++) {
+      auto detector = m_cfg.detectorConfigs.at(detectorId);
+      if (trackFeaturesVector[detectorId].nSharedHits >
+          detector.maxSharedHits) {
+        trkCouldBeAccepted = false;
+        break;
+      }
+    }
+    if (!trkCouldBeAccepted) {
+      iTrack++;
+      continue;
+    }
+
+    trkCouldBeAccepted = getCleanedOutTracks(
+        track, trackScore[iTrack], measurementsPerTrackVector[iTrack],
+        nTracksPerMeasurement, optionalHitSelections);
+    if (trkCouldBeAccepted) {
       cleanTrackIndex++;
       if (trackScore[iTrack] >= m_cfg.minScore) {
         goodTracks.push_back(track.index());
@@ -455,10 +476,120 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     }
     iTrack++;
   }
-  ACTS_VERBOSE("Number of clean tracks: " << cleanTrackIndex);
+  ACTS_INFO("Number of clean tracks: " << cleanTrackIndex);
   ACTS_VERBOSE("Min score: " << m_cfg.minScore);
   ACTS_INFO("Number of Good tracks: " << goodTracks.size());
   return goodTracks;
+}
+
+template <TrackProxyConcept track_proxy_t>
+bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
+    const track_proxy_t& track, const double& trackScore,
+    const std::vector<std::size_t>& measurementsPerTrack,
+    const std::map<std::size_t, std::size_t>& nTracksPerMeasurement,
+    const std::vector<
+        std::function<void(const track_proxy_t&,
+                           const typename track_proxy_t::ConstTrackStateProxy&,
+                           TrackStateTypes&)>>& optionalHitSelections) const {
+  // For tracks with shared hits, we need to check and remove bad hits
+
+  std::vector<TrackStateTypes> trackStateTypes;
+  // Loop over all measurements of the track and for each hit a
+  // trackStateTypes is assigned.
+  for (std::size_t index = 0; const auto& ts : track.trackStatesReversed()) {
+    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
+        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      std::size_t iMeasurement = measurementsPerTrack[index];
+      auto it = nTracksPerMeasurement.find(iMeasurement);
+      if (it == nTracksPerMeasurement.end()) {
+        trackStateTypes.push_back(TrackStateTypes::OtherTrackStateType);
+        index++;
+        continue;
+      }
+
+      std::size_t nTracksShared = it->second;
+      auto isoutliner = ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
+
+      if (isoutliner) {
+        ACTS_VERBOSE("Measurement is outlier on a fitter track, copy it over");
+        trackStateTypes.push_back(TrackStateTypes::Outlier);
+        continue;
+      }
+      if (nTracksShared == 1) {
+        ACTS_VERBOSE("Measurement is not shared, copy it over");
+
+        trackStateTypes.push_back(TrackStateTypes::UnsharedHit);
+        continue;
+      } else if (nTracksShared > 1) {
+        ACTS_VERBOSE("Measurement is shared, copy it over");
+        trackStateTypes.push_back(TrackStateTypes::SharedHit);
+        continue;
+      }
+    }
+  }
+  std::vector<std::size_t> newMeasurementsPerTrack;
+  std::size_t measurement = 0;
+  std::size_t nshared = 0;
+
+  // Loop over all measurements of the track and process them according to the
+  // trackStateTypes and other conditions.
+  // Good measurements are copied to the newMeasurementsPerTrack vector.
+  for (std::size_t index = 0; auto ts : track.trackStatesReversed()) {
+    if (ts.typeFlags().test(Acts::TrackStateFlag::OutlierFlag) ||
+        ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+      if (!ts.hasReferenceSurface()) {
+        ACTS_DEBUG("Track state has no reference surface");
+        continue;
+      }
+      measurement = measurementsPerTrack[index];
+
+      auto it = nTracksPerMeasurement.find(measurement);
+      if (it == nTracksPerMeasurement.end()) {
+        index++;
+        continue;
+      }
+      auto nTracksShared = it->second;
+
+      // Loop over all optionalHitSelections and apply them to trackStateType of
+      // the TrackState.
+
+      for (const auto& hitSelection : optionalHitSelections) {
+        hitSelection(track, ts, trackStateTypes[index]);
+      }
+
+      if (trackStateTypes[index] == TrackStateTypes::RejectedHit) {
+        ACTS_DEBUG("Dropping rejected hit");
+      } else if (trackStateTypes[index] != TrackStateTypes::SharedHit) {
+        ACTS_DEBUG("Good TSOS, copy hit");
+        newMeasurementsPerTrack.push_back(measurement);
+
+        // a counter called nshared is used to keep track of the number of
+        // shared hits accepted.
+      } else if (nshared >= m_cfg.maxShared) {
+        ACTS_DEBUG("Too many shared hit, drop it");
+      }
+      // If the track is shared, the hit is only accepted if the track has
+      // score higher than the minimum score for shared tracks.
+      else {
+        ACTS_DEBUG("Try to recover shared hit ");
+        if (nTracksShared <= m_cfg.maxSharedTracksPerMeasurement &&
+            trackScore > m_cfg.minScoreSharedTracks) {
+          ACTS_DEBUG("Accepted hit shared with " << nTracksShared << " tracks");
+          newMeasurementsPerTrack.push_back(measurement);
+          nshared++;
+        } else {
+          ACTS_DEBUG("Rejected hit shared with " << nTracksShared << " tracks");
+        }
+      }
+      index++;
+    }
+  }
+  // Check if the track has enough hits to be accepted.
+  if (newMeasurementsPerTrack.size() < 3) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 }  // namespace Acts

@@ -9,20 +9,17 @@
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
-#include <cstddef>
 #include <ios>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
-#include <variant>
 
 #include <TFile.h>
 #include <TTree.h>

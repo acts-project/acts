@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -80,6 +81,9 @@ class DirectNavigator {
     bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
 
     const Surface* navSurface() const {
       return options.surfaces.at(surfaceIndex);

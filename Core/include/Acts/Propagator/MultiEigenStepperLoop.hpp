@@ -25,6 +25,7 @@
 #include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -218,6 +219,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// Step-limit counter which limits the number of steps when one component
     /// reached a surface
     std::optional<std::size_t> stepCounterAfterFirstComponentOnSurface;
+
+    /// The stepper statistics
+    StepperStatistics statistics;
 
     /// No default constructor is provided
     State() = delete;

@@ -13,7 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -23,6 +22,7 @@
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -165,6 +165,9 @@ class EigenStepper {
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;
+
+    /// Statistics of the stepper
+    StepperStatistics statistics;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field

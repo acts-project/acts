@@ -8,13 +8,12 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -195,8 +194,11 @@ class Navigator {
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-    // The navigation stage (@todo: integrate break, target)
+    /// The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
 
     void reset() {
       navSurfaces.clear();

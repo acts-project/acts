@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -91,6 +92,9 @@ class TryAllNavigatorBase {
     bool targetReached = false;
     /// If a break has been detected
     bool navigationBreak = false;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
   };
 
   /// Constructor with configuration object
