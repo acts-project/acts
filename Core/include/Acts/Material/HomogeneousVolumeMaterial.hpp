@@ -67,14 +67,4 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   Material m_material = Material();
 };
 
-inline const Material HomogeneousVolumeMaterial::material(
-    const Vector3& /*position*/) const {
-  return (m_material);
-}
-
-inline bool HomogeneousVolumeMaterial::operator==(
-    const HomogeneousVolumeMaterial& hvm) const {
-  return (m_material == hvm.m_material);
-}
-
 }  // namespace Acts

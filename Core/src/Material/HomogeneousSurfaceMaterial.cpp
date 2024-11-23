@@ -12,20 +12,38 @@
 
 #include <ostream>
 
-Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
-    const MaterialSlab& full, double splitFactor, Acts::MappingType mappingType)
+namespace Acts {
+
+HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(const MaterialSlab& full,
+                                                       double splitFactor,
+                                                       MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_fullMaterial(full) {}
 
-Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(
-    double scale) {
-  m_fullMaterial.scaleThickness(scale);
-  return (*this);
+bool HomogeneousSurfaceMaterial::operator==(
+    const HomogeneousSurfaceMaterial& hsm) const {
+  return m_fullMaterial == hsm.m_fullMaterial;
 }
 
-std::ostream& Acts::HomogeneousSurfaceMaterial::toStream(
-    std::ostream& sl) const {
-  sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;
+HomogeneousSurfaceMaterial& HomogeneousSurfaceMaterial::scale(double factor) {
+  m_fullMaterial.scaleThickness(factor);
+  return *this;
+}
+
+const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
+    const Vector2& /*lp*/) const {
+  return m_fullMaterial;
+}
+
+const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
+    const Vector3& /*gp*/) const {
+  return m_fullMaterial;
+}
+
+std::ostream& HomogeneousSurfaceMaterial::toStream(std::ostream& sl) const {
+  sl << "HomogeneousSurfaceMaterial : " << std::endl;
   sl << "   - fullMaterial : " << m_fullMaterial << std::endl;
   sl << "   - split factor : " << m_splitFactor << std::endl;
   return sl;
 }
+
+}  // namespace Acts

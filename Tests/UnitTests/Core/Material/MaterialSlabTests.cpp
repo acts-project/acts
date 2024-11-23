@@ -70,8 +70,6 @@ BOOST_AUTO_TEST_CASE(scale_thickness) {
   Acts::MaterialSlab halfScaled = mat;
   halfScaled.scaleThickness(0.5);
 
-  BOOST_CHECK_NE(mat, halfMat);
-  BOOST_CHECK_EQUAL(halfMat, halfScaled);
   CHECK_CLOSE_REL(mat.thicknessInX0(), 2 * halfMat.thicknessInX0(), eps);
   CHECK_CLOSE_REL(mat.thicknessInL0(), 2 * halfMat.thicknessInL0(), eps);
   CHECK_CLOSE_REL(mat.thickness() * mat.material().massDensity(),

@@ -12,7 +12,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <cstddef>
 #include <iosfwd>
 
 namespace Acts {
@@ -59,16 +58,16 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   HomogeneousSurfaceMaterial& operator=(HomogeneousSurfaceMaterial&& hsm) =
       default;
 
-  /// Scale operator
-  /// - it is effectively a thickness scaling
-  ///
-  /// @param scale is the scale factor
-  HomogeneousSurfaceMaterial& operator*=(double scale) final;
-
   /// Equality operator
   ///
   /// @param hsm is the source material
   bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
+
+  /// Scale operator
+  /// - it is effectively a thickness scaling
+  ///
+  /// @param factor is the scale factor
+  HomogeneousSurfaceMaterial& scale(double factor) final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
@@ -94,22 +93,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
 
  private:
   /// The five different MaterialSlab
-  MaterialSlab m_fullMaterial = MaterialSlab();
+  MaterialSlab m_fullMaterial;
 };
-
-inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector2& /*lp*/) const {
-  return (m_fullMaterial);
-}
-
-inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector3& /*gp*/) const {
-  return (m_fullMaterial);
-}
-
-inline bool HomogeneousSurfaceMaterial::operator==(
-    const HomogeneousSurfaceMaterial& hsm) const {
-  return (m_fullMaterial == hsm.m_fullMaterial);
-}
 
 }  // namespace Acts

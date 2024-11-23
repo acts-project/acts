@@ -33,6 +33,10 @@ MaterialSlab::MaterialSlab(const Material& material, float thickness)
   }
 }
 
+bool MaterialSlab::operator==(const MaterialSlab& other) const {
+  return m_material == other.m_material && m_thickness == other.m_thickness;
+}
+
 MaterialSlab MaterialSlab::averageLayers(const MaterialSlab& layerA,
                                          const MaterialSlab& layerB) {
   return detail::combineSlabs(layerA, layerB);

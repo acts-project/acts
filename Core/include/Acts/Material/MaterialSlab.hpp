@@ -58,6 +58,13 @@ class MaterialSlab {
   MaterialSlab& operator=(MaterialSlab&&) = default;
   MaterialSlab& operator=(const MaterialSlab&) = default;
 
+  /// Check if two materials are exactly equal.
+  /// @note This is a strict equality check, i.e. the materials must
+  /// have identical properties.
+  /// @param mat is the material to compare to
+  /// @return true if the materials are equal
+  bool operator==(const MaterialSlab& other) const;
+
   /// Scale the material thickness by the given factor.
   void scaleThickness(float scale);
 
@@ -78,13 +85,6 @@ class MaterialSlab {
   float m_thickness = 0.0f;
   float m_thicknessInX0 = 0.0f;
   float m_thicknessInL0 = 0.0f;
-
-  friend constexpr bool operator==(const MaterialSlab& lhs,
-                                   const MaterialSlab& rhs) {
-    // t/X0 and t/L0 are dependent variables and need not be checked
-    return (lhs.m_material == rhs.m_material) &&
-           (lhs.m_thickness == rhs.m_thickness);
-  }
 };
 
 std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
