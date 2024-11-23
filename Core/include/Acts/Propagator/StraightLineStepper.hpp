@@ -23,6 +23,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -142,6 +143,9 @@ class StraightLineStepper {
 
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// Statistics of the stepper
+    StepperStatistics statistics;
   };
 
   StraightLineStepper() = default;
@@ -430,6 +434,7 @@ class StraightLineStepper {
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
     state.stepping.pars[eFreeTime] += h * dtds;
+
     // Propagate the jacobian
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
@@ -450,7 +455,14 @@ class StraightLineStepper {
     ++state.stepping.nSteps;
     ++state.stepping.nStepTrials;
 
-    // return h
+    ++state.stepping.statistics.nAttemptedSteps;
+    ++state.stepping.statistics.nSuccessfulSteps;
+    if (state.options.direction != Direction::fromScalarZeroAsPositive(h)) {
+      ++state.stepping.statistics.nReverseSteps;
+    }
+    state.stepping.statistics.pathLength += h;
+    state.stepping.statistics.absolutePathLength += std::abs(h);
+
     return h;
   }
 };
