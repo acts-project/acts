@@ -13,6 +13,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/TryAllNavigator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -57,7 +58,9 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
     if constexpr (std::is_same_v<N, Acts::Navigator> ||
                   std::is_same_v<N, Acts::VoidNavigator> ||
-                  std::is_same_v<N, Acts::DirectNavigator>) {
+                  std::is_same_v<N, Acts::DirectNavigator> ||
+                  std::is_same_v<N, Acts::TryAllNavigator> ||
+                  std::is_same_v<N, Acts::TryAllOverstepNavigator>) {
       auto getNextTargetIntersection = [&]() -> Result<SurfaceIntersection> {
         // TODO max iterations?
         for (int i = 0; i < 100; ++i) {
@@ -131,10 +134,11 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
                   state.stepping, *nextTargetIntersection.object(),
                   nextTargetIntersection.index(), state.options.direction,
                   BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
-          m_navigator.registerSurfaceStatus(
+          bool continueApproach = m_navigator.registerSurfaceStatus(
               state.navigation, state.position, state.direction,
               *nextTargetIntersection.object(), postStepSurfaceStatus);
-          if (postStepSurfaceStatus != IntersectionStatus::reachable) {
+          if (!continueApproach ||
+              postStepSurfaceStatus != IntersectionStatus::reachable) {
             nextTargetIntersection = SurfaceIntersection::invalid();
           }
         }
@@ -156,7 +160,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // Pre-Stepping: target setting
         state.stage = PropagatorStage::preStep;
 
-        if (m_navigator.currentSurface(state.navigation) != nullptr) {
+        if (!m_navigator.navigationBreak(state.navigation) &&
+            !nextTargetIntersection.isValid()) {
           nextTargetIntersectionResult = getNextTargetIntersection();
           if (!nextTargetIntersectionResult.ok()) {
             return nextTargetIntersectionResult.error();
@@ -445,7 +450,9 @@ void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
   // Navigator initialize state call
   if constexpr (std::is_same_v<N, Acts::Navigator> ||
                 std::is_same_v<N, Acts::VoidNavigator> ||
-                std::is_same_v<N, Acts::DirectNavigator>) {
+                std::is_same_v<N, Acts::DirectNavigator> ||
+                std::is_same_v<N, Acts::TryAllNavigator> ||
+                std::is_same_v<N, Acts::TryAllOverstepNavigator>) {
     m_navigator.initialize(state.navigation, state.position, state.direction,
                            state.options.direction);
   } else {

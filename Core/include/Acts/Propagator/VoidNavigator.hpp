@@ -17,7 +17,6 @@
 
 namespace Acts {
 
-class GeometryContext;
 class Surface;
 
 /// @brief The void navigator struct as a default navigator
@@ -60,7 +59,7 @@ struct VoidNavigator {
 
   const Surface* targetSurface(const State& /*state*/) const { return nullptr; }
 
-  bool navigationBreak(const State& /*state*/) const { return false; }
+  bool navigationBreak(const State& /*state*/) const { return true; }
 
   void currentSurface(State& /*state*/, const Surface* /*surface*/) const {}
 
@@ -74,10 +73,12 @@ struct VoidNavigator {
     return SurfaceIntersection::invalid();
   }
 
-  void registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
+  bool registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
                              const Vector3& /*direction*/,
                              const Surface& /*surface*/,
-                             IntersectionStatus /*surfaceStatus*/) const {}
+                             IntersectionStatus /*surfaceStatus*/) const {
+    return false;
+  }
 };
 
 }  // namespace Acts
