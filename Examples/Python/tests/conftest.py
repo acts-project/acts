@@ -360,8 +360,8 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
-        digiCfg = acts.examples.DigitizationConfig(
-            acts.examples.readDigiConfigFromJson(
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

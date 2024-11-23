@@ -23,11 +23,12 @@
 
 class G4RunManager;
 
-namespace ActsExamples {
-class Geant4DetectorConstructionFactory;
-namespace Geant4 {
+namespace ActsExamples::Geant4 {
+class DetectorConstructionFactory;
 class RegionCreator;
-}  // namespace Geant4
+}  // namespace ActsExamples::Geant4
+
+namespace ActsExamples {
 
 class EventRecording final : public ActsExamples::IAlgorithm {
  public:

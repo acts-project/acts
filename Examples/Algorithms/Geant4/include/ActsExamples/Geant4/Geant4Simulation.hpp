@@ -41,7 +41,6 @@ class Volume;
 }  // namespace Acts
 
 namespace ActsExamples {
-class Geant4DetectorConstructionFactory;
 struct Geant4Handle;
 
 namespace Geant4 {

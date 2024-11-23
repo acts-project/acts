@@ -9,7 +9,6 @@
 // TODO: update to C++17 style
 #include "Acts/TrackFinding/GbtsConnector.hpp"
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -34,7 +33,7 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
 
-    GbtsConnection *pC = new GbtsConnection(src, dst);
+    auto pC = std::make_unique<GbtsConnection>(src, dst);
 
     int dummy{};
 
@@ -47,19 +46,17 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
     int vol_id = src / 1000;
 
     if (vol_id == 13 || vol_id == 12 || vol_id == 14) {
-      delete pC;
       continue;
     }
 
     vol_id = dst / 1000;
 
     if (vol_id == 13 || vol_id == 12 || vol_id == 14) {
-      delete pC;
       continue;
     }
 
     auto &connections = m_connMap[stage];
-    connections.push_back(pC);
+    connections.push_back(std::move(pC));
   }
 
   // re-arrange the connection stages
@@ -69,7 +66,9 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   std::map<int, std::vector<const GbtsConnection *>> newConnMap;
 
   for (const auto &[_, value] : m_connMap) {
-    std::ranges::copy(value, std::back_inserter(lConns));
+    for (const auto &conn : value) {
+      lConns.push_back(conn.get());
+    }
   }
 
   int stageCounter = 0;
@@ -172,12 +171,4 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
   newConnMap.clear();
 }
 
-GbtsConnector::~GbtsConnector() {
-  m_layerGroups.clear();
-  for (const auto &[_, connections] : m_connMap) {
-    for (auto *conn : connections) {
-      delete conn;
-    }
-  }
-}
 }  // namespace Acts

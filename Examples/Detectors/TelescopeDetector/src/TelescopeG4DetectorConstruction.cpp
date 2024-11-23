@@ -13,9 +13,6 @@
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
-#include <memory>
-#include <vector>
-
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4NistManager.hh"

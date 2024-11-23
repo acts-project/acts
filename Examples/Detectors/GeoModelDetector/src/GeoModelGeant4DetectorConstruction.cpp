@@ -8,6 +8,8 @@
 
 #include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
+#include "ActsExamples/Geant4/RegionCreator.hpp"
+
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
 #include <G4ThreeVector.hh>
@@ -19,10 +21,10 @@ namespace ActsExamples {
 
 GeoModelGeant4DetectorConstruction::GeoModelGeant4DetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
+    const Geant4ConstructionOptions& options)
     : G4VUserDetectorConstruction(),
       m_geoModelTree(geoModelTree),
-      m_regionCreators(std::move(regionCreators)) {
+      m_options(options) {
   if (geoModelTree.worldVolume == nullptr) {
     throw std::invalid_argument(
         "GeoModelGeant4DetectorConstruction: "
@@ -39,7 +41,7 @@ G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
                           m_geoModelTree.worldVolumeName, nullptr, false, 0);
 
     // Create regions
-    for (const auto& regionCreator : m_regionCreators) {
+    for (const auto& regionCreator : m_options.regionCreators) {
       regionCreator->construct();
     }
   }

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/Geant4/RegionCreator.hpp"
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
 
@@ -23,9 +23,8 @@ class GeoModelGeant4DetectorConstruction final
  public:
   /// @param geoModelTree is the GeoModel tree containing the world volume
   /// @param regionCreators are the region creators
-  GeoModelGeant4DetectorConstruction(
-      const Acts::GeoModelTree& geoModelTree,
-      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators);
+  GeoModelGeant4DetectorConstruction(const Acts::GeoModelTree& geoModelTree,
+                                     const Geant4ConstructionOptions& options);
 
   /// Read the file and parse it to construct the Geant4 description
   ///
@@ -36,8 +35,8 @@ class GeoModelGeant4DetectorConstruction final
  private:
   /// The GeoModel tree
   Acts::GeoModelTree m_geoModelTree;
-  /// Region creators
-  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
+  /// Construction options
+  Geant4ConstructionOptions m_options;
   /// The world volume
   G4VPhysicalVolume* m_g4World = nullptr;
 };
