@@ -189,7 +189,7 @@ struct GsfActor {
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
-    using Status [[maybe_unused]] = Acts::Intersection3D::Status;
+    using Status [[maybe_unused]] = Acts::IntersectionStatus;
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
@@ -477,7 +477,7 @@ struct GsfActor {
   /// Function that updates the stepper from the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
-                     const TemporaryStates& tmpStates) const {
+                     coIntersectionStatusmpStates) const {
     auto cmps = stepper.componentIterable(state.stepping);
 
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {

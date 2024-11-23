@@ -217,7 +217,7 @@ struct GaussianSumFitter {
             .closest()
             .status();
 
-    if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
+    if (intersectionStatusStartSurface != IntersectionStatus::onSurface) {
       ACTS_DEBUG(
           "Surface intersection of start parameters WITH bound-check failed");
     }

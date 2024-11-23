@@ -215,7 +215,7 @@ class DetectorNavigator {
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
       // Estimate the surface status
-      auto surfaceStatus = stepper.updateSurfaceStatus(
+      auto surfaceStatus = IntersectionStatustatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, c.boundaryTolerance,
           state.options.surfaceTolerance, logger());
@@ -284,7 +284,7 @@ class DetectorNavigator {
       throw std::runtime_error(msg);
     }
 
-    // TODO not sure about the boundary check
+    // TODO not sure abouIntersectionStatus
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
         nState.surfaceCandidate().objectIntersection.index(),
