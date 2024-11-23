@@ -112,7 +112,7 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
         m_stepLimitAfterFirstComponentOnSurface) {
       for (auto& cmp : components) {
         if (cmp.status != Status::onSurface) {
-          cmp.status = Status::missed;
+          cmp.status = Status::unreachable;
         }
       }
 

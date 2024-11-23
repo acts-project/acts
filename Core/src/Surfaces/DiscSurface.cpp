@@ -297,11 +297,11 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
-        status = Intersection3D::Status::missed;
+        status = Intersection3D::Status::unreachable;
       }
     } else if (!insideBounds(localCartesianToPolar(lcartesian),
                              boundaryTolerance)) {
-      status = Intersection3D::Status::missed;
+      status = Intersection3D::Status::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),

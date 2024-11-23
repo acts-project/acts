@@ -398,7 +398,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   void removeMissedComponents(State& state) const {
     auto new_end = std::remove_if(
         state.components.begin(), state.components.end(), [](const auto& cmp) {
-          return cmp.status == Intersection3D::Status::missed;
+          return cmp.status == Intersection3D::Status::unreachable;
         });
 
     state.components.erase(new_end, state.components.end());
@@ -584,7 +584,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     } else if (counts[static_cast<std::size_t>(Status::unreachable)] > 0) {
       return Status::unreachable;
     } else {
-      return Status::missed;
+      return Status::unreachable;
     }
   }
 

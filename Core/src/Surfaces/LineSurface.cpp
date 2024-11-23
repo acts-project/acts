@@ -185,7 +185,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     double cZ = vecLocal.dot(eb);
     double cR = (vecLocal - cZ * eb).norm();
     if (!m_bounds->inside({cR, cZ}, boundaryTolerance)) {
-      status = Intersection3D::Status::missed;
+      status = Intersection3D::Status::unreachable;
     }
   }
 

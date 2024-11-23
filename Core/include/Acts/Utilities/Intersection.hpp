@@ -24,7 +24,6 @@ namespace Acts {
 
 /// Status enum
 enum class IntersectionStatus : int {
-  missed = 0,
   unreachable = 0,
   reachable = 1,
   onSurface = 2
@@ -60,7 +59,7 @@ class Intersection {
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
   /// Returns whether the intersection was successful or not
-  constexpr bool isValid() const { return m_status != Status::missed; }
+  constexpr bool isValid() const { return m_status != Status::unreachable; }
 
   /// Returns the position of the interseciton
   constexpr const Position& position() const { return m_position; }

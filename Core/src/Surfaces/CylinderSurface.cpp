@@ -267,11 +267,11 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       double modifiedTolerance = tolerance + absoluteBound->tolerance1;
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
-                                         : Intersection3D::Status::missed;
+                                         : Intersection3D::Status::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status
-               : Intersection3D::Status::missed;
+               : Intersection3D::Status::unreachable;
   };
   // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
