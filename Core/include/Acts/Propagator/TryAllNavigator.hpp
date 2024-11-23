@@ -88,8 +88,6 @@ class TryAllNavigatorBase {
     /// The vector of intersection candidates to work through
     std::vector<detail::IntersectionCandidate> intersectionCandidates;
 
-    /// Indicator if the target is reached
-    bool targetReached = false;
     /// If a break has been detected
     bool navigationBreak = false;
 
@@ -135,8 +133,6 @@ class TryAllNavigatorBase {
     return state.targetSurface;
   }
 
-  bool targetReached(const State& state) const { return state.targetReached; }
-
   bool endOfWorldReached(State& state) const {
     return state.currentVolume == nullptr;
   }
@@ -147,14 +143,6 @@ class TryAllNavigatorBase {
 
   void currentSurface(State& state, const Surface* surface) const {
     state.currentSurface = surface;
-  }
-
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
-
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
   }
 
   /// @brief Initialize call - start of navigation
@@ -272,7 +260,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
   using TryAllNavigatorBase::endOfWorldReached;
   using TryAllNavigatorBase::navigationBreak;
   using TryAllNavigatorBase::startSurface;
-  using TryAllNavigatorBase::targetReached;
   using TryAllNavigatorBase::targetSurface;
 
   using TryAllNavigatorBase::initialize;
@@ -610,7 +597,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   using TryAllNavigatorBase::endOfWorldReached;
   using TryAllNavigatorBase::navigationBreak;
   using TryAllNavigatorBase::startSurface;
-  using TryAllNavigatorBase::targetReached;
   using TryAllNavigatorBase::targetSurface;
 
   /// @brief Initialize call - start of navigation

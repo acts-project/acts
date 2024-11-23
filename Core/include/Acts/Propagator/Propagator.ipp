@@ -54,8 +54,10 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     // priming error condition
     terminatedNormally = false;
 
-    if constexpr (std::is_same_v<N, Acts::Navigator>) {
+    if constexpr (std::is_same_v<N, Acts::Navigator> ||
+                  std::is_same_v<N, Acts::VoidNavigator>) {
       auto getNextTargetIntersection = [&]() -> Result<SurfaceIntersection> {
+        // TODO max iterations?
         for (int i = 0; i < 100; ++i) {
           SurfaceIntersection nextTargetIntersection =
               m_navigator.estimateNextTarget(
@@ -201,7 +203,6 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
-    m_navigator.navigationBreak(state.navigation, true);
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << state.steps
                << " steps)");
@@ -440,7 +441,13 @@ void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
   state.direction = m_stepper.direction(state.stepping);
 
   // Navigator initialize state call
-  m_navigator.initialize(state, m_stepper);
+  if constexpr (std::is_same_v<N, Acts::Navigator> ||
+                std::is_same_v<N, Acts::VoidNavigator>) {
+    m_navigator.initialize(state.navigation, state.position,
+                           state.options.direction * state.direction);
+  } else {
+    m_navigator.initialize(state, m_stepper);
+  }
 
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(

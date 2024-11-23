@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
@@ -56,45 +59,23 @@ struct VoidNavigator {
 
   const Surface* targetSurface(const State& /*state*/) const { return nullptr; }
 
-  bool targetReached(const State& /*state*/) const { return false; }
-
   bool navigationBreak(const State& /*state*/) const { return false; }
 
   void currentSurface(State& /*state*/, const Surface* /*surface*/) const {}
 
-  void targetReached(State& /*state*/, bool /*targetReached*/) const {}
+  void initialize(State& /*state*/, const Vector3& /*position*/,
+                  const Vector3& /*direction*/) const {}
 
-  void navigationBreak(State& /*state*/, bool /*navigationBreak*/) const {}
+  SurfaceIntersection estimateNextTarget(State& /*state*/,
+                                         const Vector3& /*position*/,
+                                         const Vector3& /*direction*/) const {
+    return SurfaceIntersection::invalid();
+  }
 
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& /*state*/,
-                  const stepper_t& /*stepper*/) const {}
-
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void preStep(propagator_state_t& /*state*/,
-               const stepper_t& /*stepper*/) const {}
-
-  /// Navigation call - void
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t Type of the Stepper
-  ///
-  /// Empty call, compiler should optimise that
-  template <typename propagator_state_t, typename stepper_t>
-  void postStep(propagator_state_t& /*state*/,
-                const stepper_t& /*stepper*/) const {}
+  void registerSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
+                             const Vector3& /*direction*/,
+                             const Surface& /*surface*/,
+                             IntersectionStatus /*surfaceStatus*/) const {}
 };
 
 }  // namespace Acts

@@ -241,7 +241,6 @@ struct PropagatorState {
 
   /// Navigation cache: the target surface
   const Surface* targetSurface = nullptr;
-  bool targetReached = false;
 
   /// Give some options
   Options options;
@@ -377,7 +376,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
     state.navigation.navigationBreak = true;
     ACTS_INFO("        i) Because target is reached");
-    state.navigation.targetReached = true;
     navigator.postStep(state, stepper);
     BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
@@ -385,7 +383,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr));
 
     ACTS_INFO("        ii) Because of no target surface");
-    state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
     BOOST_CHECK(testNavigatorStateVectors(state.navigation, 0u, 0u, 0u));

@@ -77,8 +77,6 @@ class DirectNavigator {
     /// Navigation state - external interface: the current surface
     const Surface* currentSurface = nullptr;
 
-    /// Navigation state - external interface: target is reached
-    bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
 
@@ -145,8 +143,6 @@ class DirectNavigator {
     return state.options.targetSurface;
   }
 
-  bool targetReached(const State& state) const { return state.targetReached; }
-
   bool endOfWorldReached(State& /*state*/) const { return false; }
 
   bool navigationBreak(const State& state) const {
@@ -155,14 +151,6 @@ class DirectNavigator {
 
   void currentSurface(State& state, const Surface* surface) const {
     state.currentSurface = surface;
-  }
-
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
-
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
   }
 
   /// @brief Initialize call - start of propagation
@@ -209,7 +197,6 @@ class DirectNavigator {
     }
 
     state.navigation.navigationBreak = false;
-    state.navigation.targetReached = false;
   }
 
   /// @brief Navigator pre step call
@@ -242,7 +229,6 @@ class DirectNavigator {
       stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
       // If no externally provided target is given, the target is reached
       if (state.navigation.options.targetSurface == nullptr) {
-        state.navigation.targetReached = true;
         // Announce it then
         ACTS_VERBOSE("No target Surface, job done.");
       }

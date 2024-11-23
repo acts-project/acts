@@ -70,8 +70,6 @@ class DetectorNavigator {
 
     /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
-    /// Indicator if the target is reached
-    bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
@@ -114,8 +112,6 @@ class DetectorNavigator {
     return state.options.targetSurface;
   }
 
-  bool targetReached(const State& state) const { return state.targetReached; }
-
   bool endOfWorldReached(State& state) const {
     return state.currentVolume == nullptr;
   }
@@ -126,14 +122,6 @@ class DetectorNavigator {
 
   void currentSurface(State& state, const Surface* surface) const {
     state.currentSurface = surface;
-  }
-
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
-
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
   }
 
   /// Initialize call - start of propagation

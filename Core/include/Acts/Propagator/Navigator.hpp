@@ -190,8 +190,6 @@ class Navigator {
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
 
-    /// Indicator if the target is reached
-    bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
     /// The navigation stage (@todo: integrate break, target)
@@ -255,8 +253,6 @@ class Navigator {
     return state.targetSurface;
   }
 
-  bool targetReached(const State& state) const { return state.targetReached; }
-
   bool endOfWorldReached(const State& state) const {
     return state.currentVolume == nullptr;
   }
@@ -269,17 +265,6 @@ class Navigator {
     state.currentSurface = surface;
   }
 
-  void targetReached(State& state, bool targetReached) const {
-    state.targetReached = targetReached;
-  }
-
-  void navigationBreak(State& state, bool navigationBreak) const {
-    state.navigationBreak = navigationBreak;
-  }
-
-  /// @brief Initialize call - start of navigation
-  ///
-  /// @param [in,out] state the navigation state
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction) const {
     // Call the navigation helper prior to actual navigation

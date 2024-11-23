@@ -323,13 +323,6 @@ struct GsfActor {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
     }
-
-    // Break the navigation if we found all measurements
-    if (m_cfg.numberMeasurements &&
-        result.measurementStates == m_cfg.numberMeasurements) {
-      ACTS_VERBOSE("Stop navigation because all measurements are found");
-      navigator.navigationBreak(state.navigation, true);
-    }
   }
 
   template <typename propagator_state_t, typename stepper_t,
