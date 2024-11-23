@@ -24,7 +24,7 @@ class TelescopeG4DetectorConstruction final
  public:
   TelescopeG4DetectorConstruction(
       const TelescopeDetector::Config& cfg,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
 
   G4VPhysicalVolume* Construct() final;
 
@@ -32,17 +32,17 @@ class TelescopeG4DetectorConstruction final
   /// The configuration of the telescope detector
   TelescopeDetector::Config m_cfg;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_world{};
 };
 
 class TelescopeG4DetectorConstructionFactory final
-    : public DetectorConstructionFactory {
+    : public Geant4::DetectorConstructionFactory {
  public:
   TelescopeG4DetectorConstructionFactory(
       const TelescopeDetector::Config& cfg,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 
@@ -50,7 +50,7 @@ class TelescopeG4DetectorConstructionFactory final
   /// The configuration of the telescope detector
   TelescopeDetector::Config m_cfg;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples::Telescope
