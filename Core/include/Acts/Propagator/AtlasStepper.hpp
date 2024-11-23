@@ -21,6 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -305,6 +306,9 @@ class AtlasStepper {
     /// buffer & formatting for consistent output
     std::size_t debugPfxWidth = 30;
     std::size_t debugMsgWidth = 50;
+
+    /// The statistics of the stepper
+    StepperStatistics statistics;
   };
 
   explicit AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)

@@ -22,6 +22,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
 namespace Acts {
@@ -132,15 +133,8 @@ class SympyStepper {
     /// The geometry context
     std::reference_wrapper<const GeometryContext> geoContext;
 
-    /// @brief Storage of magnetic field and the sub steps during a RKN4 step
-    struct {
-      /// Magnetic field evaulations
-      Vector3 B_first, B_middle, B_last;
-      /// k_i of the RKN4 algorithm
-      Vector3 k1, k2, k3, k4;
-      /// k_i elements of the momenta
-      std::array<double, 4> kQoP{};
-    } stepData;
+    /// Statistics of the stepper
+    StepperStatistics statistics;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field

@@ -8,22 +8,18 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
-#include <cstddef>
 #include <mutex>
 #include <string>
-#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootPropagationSummaryWriter
 ///
@@ -110,10 +106,17 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   int m_nMaterials = 0;
   int m_nPortals = 0;
 
-  // steper statistics
-  int m_nSteps = 0;
-  int m_nStepTrials = 0;
-  int m_pathLength = 0;
+  // stepper statistics
+  std::size_t m_nAttemptedSteps = 0;
+  std::size_t m_nRejectedSteps = 0;
+  std::size_t m_nSuccessfulSteps = 0;
+  std::size_t m_nReverseSteps = 0;
+  double m_pathLength = 0;
+  double m_absolutePathLength = 0;
+
+  // navigator statistics
+  std::size_t m_nRenavigations = 0;
+  std::size_t m_nVolumeSwitches = 0;
 };
 
 }  // namespace ActsExamples
