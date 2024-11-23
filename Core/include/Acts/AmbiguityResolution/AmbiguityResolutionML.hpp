@@ -74,13 +74,14 @@ class AmbiguityResolutionML {
     std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>
         trackMap;
     std::size_t trackIndex = 0;
+    std::vector<std::size_t> measurements;
     // Loop over all the trajectories in the events
     for (const auto& track : tracks) {
       // Kick out tracks that do not fulfill our initial requirements
       if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
         continue;
       }
-      std::vector<std::size_t> measurements;
+      measurements.clear();
       for (auto ts : track.trackStatesReversed()) {
         if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           SourceLink sourceLink = ts.getUncalibratedSourceLink();
