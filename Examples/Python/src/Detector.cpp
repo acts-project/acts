@@ -132,6 +132,11 @@ void addDetector(Context& ctx) {
     py::enum_<Config::Mode>(c, "Mode")
         .value("Internal", Config::Mode::Internal)
         .value("External", Config::Mode::External);
+
+    using Detector = TelescopeDetector;
+
+    py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
+        m, "TelescopeDetector");
   }
 
   {

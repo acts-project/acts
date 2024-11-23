@@ -26,7 +26,8 @@ from helpers import (
 import acts
 from acts.examples import (
     Sequencer,
-    GenericDetector,
+    GenericDetectorFactory,
+    AlignedDetectorFactory,
     AlignedDetector,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
@@ -890,7 +891,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 @pytest.mark.parametrize(
     "geoFactory,nobj",
     [
-        (GenericDetector.create, 450),
+        (GenericDetectorFactory(), 450),
         pytest.param(
             getOpenDataDetector,
             540,
@@ -900,12 +901,14 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
                 pytest.mark.odd,
             ],
         ),
-        (functools.partial(AlignedDetector.create, iovSize=1), 450),
+        (functools.partial(AlignedDetectorFactory(), iovSize=1), 450),
     ],
 )
 @pytest.mark.slow
 def test_geometry_example(geoFactory, nobj, tmp_path):
-    detector, trackingGeometry, decorators = geoFactory()
+    detector = geoFactory.buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.gen1Decorators()
 
     from geometry import runGeometry
 

@@ -1,7 +1,6 @@
 import os
 import sys
 import math
-from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 import acts
@@ -102,26 +101,5 @@ def getOpenDataDetector(
         materialDecorator=mdecorator,
     )
     detectorFactory = acts.examples.dd4hep.DD4hepDetectorFactory(dd4hepFactoryConfig)
-
     detector = detectorFactory.buildDetector()
-
-    trackingGeometry = detector.gen1Geometry()
-    decorators = detector.contextDecorators()
-
-    OpenDataDetector = namedtuple(
-        "OpenDataDetector", ["detector", "trackingGeometry", "decorators"]
-    )
-
-    class OpenDataDetectorContextManager(OpenDataDetector):
-        def __new__(cls, detector, trackingGeometry, decorators):
-            return super(OpenDataDetectorContextManager, cls).__new__(
-                cls, detector, trackingGeometry, decorators
-            )
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            self.detector.drop()
-
-    return OpenDataDetectorContextManager(detector, trackingGeometry, decorators)
+    return detector

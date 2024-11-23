@@ -244,8 +244,9 @@ def basic_prop_seq(rng):
 
 @pytest.fixture
 def trk_geo():
-    detector, geo, contextDecorators = acts.examples.GenericDetector.create()
-    yield geo
+    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    yield trackingGeometry
 
 
 DetectorConfig = namedtuple(
@@ -264,9 +265,11 @@ def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     if request.param == "generic":
-        detectorTuple = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetectorFactory().buildDetector()
+        trackingGeometry = detector.gen1Geometry()
+        contextDecorators = detector.contextDecorators()
         return DetectorConfig(
-            detectorTuple,
+            (detector, trackingGeometry, contextDecorators),
             geometrySelection=(
                 srcdir
                 / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"

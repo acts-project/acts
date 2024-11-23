@@ -27,41 +27,50 @@ def check_extra_odd(srf):
 
 
 def test_generic_geometry():
-    detector, geo, contextDecorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    contextDecorators = detector.contextDecorators()
     assert detector is not None
-    assert geo is not None
+    assert trackingGeometry is not None
     assert contextDecorators is not None
 
-    assert count_surfaces(geo) == 18728
+    assert count_surfaces(trackingGeometry) == 18728
 
 
 def test_telescope_geometry():
     n_surfaces = 10
 
-    detector, geo, contextDecorators = acts.examples.TelescopeDetector.create(
+    config = acts.examples.TelescopeDetectorFactory.Config(
         bounds=[100, 100],
         positions=[10 * i for i in range(n_surfaces)],
         stereos=[0] * n_surfaces,
         binValue=0,
     )
+    detector = acts.examples.TelescopeDetectorFactory(config).buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    contextDecorators = detector.contextDecorators()
 
     assert detector is not None
-    assert geo is not None
+    assert trackingGeometry is not None
     assert contextDecorators is not None
 
-    assert count_surfaces(geo) == n_surfaces
+    assert count_surfaces(trackingGeometry) == n_surfaces
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
-        trackingGeometry.visitSurfaces(check_extra_odd)
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.gen1Geometry()
 
-        assert count_surfaces(trackingGeometry) == 18824
+    trackingGeometry.visitSurfaces(check_extra_odd)
+
+    assert count_surfaces(trackingGeometry) == 18824
 
 
 def test_aligned_detector():
-    detector, trackingGeometry, decorators = acts.examples.AlignedDetector.create()
+    detector = acts.examples.AlignedDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.contextDecorators()
 
     assert detector is not None
     assert trackingGeometry is not None
@@ -74,7 +83,7 @@ import itertools
 
 
 def test_tgeo_config_triplet(monkeypatch):
-    from acts.examples import TGeoDetector, Interval
+    from acts.examples import TGeoDetectorFactory, Interval
 
     # monkeypatch the comparison operator
     def eq(self, other):
@@ -82,8 +91,8 @@ def test_tgeo_config_triplet(monkeypatch):
 
     monkeypatch.setattr(Interval, "__eq__", eq)
 
-    LayerTriplet = TGeoDetector.Config.LayerTriplet
-    c = TGeoDetector.Config
+    LayerTriplet = TGeoDetectorFactory.Config.LayerTriplet
+    c = TGeoDetectorFactory.Config
 
     def assert_combinations(value, _type):
         t = LayerTriplet(value)
@@ -133,7 +142,7 @@ def test_tgeo_config_triplet(monkeypatch):
 
 
 def test_tgeo_config_volume(monkeypatch):
-    from acts.examples import TGeoDetector, Interval
+    from acts.examples import TGeoDetectorFactory, Interval
 
     # monkeypatch the comparison operator
     def eq(self, other):
@@ -141,7 +150,7 @@ def test_tgeo_config_volume(monkeypatch):
 
     monkeypatch.setattr(Interval, "__eq__", eq)
 
-    Volume = TGeoDetector.Config.Volume
+    Volume = TGeoDetectorFactory.Config.Volume
 
     v = Volume(name="blubb")
     assert v
