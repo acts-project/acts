@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Propagator/detail/NavigationHelpers.hpp"
@@ -94,7 +95,7 @@ class TryAllNavigatorBase {
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of intersection candidates to work through
-    std::vector<detail::IntersectionCandidate> intersectionCandidates;
+    std::vector<detail::IntersectedNavigationObject> intersectionCandidates;
 
     /// If a break has been detected
     bool navigationBreak = false;
@@ -235,7 +236,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     explicit State(const Options& options_)
         : TryAllNavigatorBase::State(options_) {}
 
-    std::optional<detail::IntersectionCandidate> currentCandidate;
+    std::optional<detail::IntersectedNavigationObject> currentCandidate;
   };
 
   /// Constructor with configuration object
@@ -283,11 +284,11 @@ class TryAllNavigator : public TryAllNavigatorBase {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
-                                         const Vector3& direction) const {
+  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
-      return SurfaceIntersection::invalid();
+      return NavigationTarget::invalid();
     }
 
     ACTS_VERBOSE(volInfo(state) << "estimateNextTarget");
@@ -302,7 +303,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     // handle overstepping
     if (state.currentCandidate.has_value()) {
-      const detail::IntersectionCandidate& previousCandidate =
+      const detail::IntersectedNavigationObject& previousCandidate =
           state.currentCandidate.value();
 
       const Surface& surface = *previousCandidate.intersection.object();
@@ -322,7 +323,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       }
     }
 
-    std::vector<detail::IntersectionCandidate> intersectionCandidates;
+    std::vector<detail::IntersectedNavigationObject> intersectionCandidates;
 
     // Find intersections with all candidates
     for (const auto& candidate : state.navigationCandidates) {
@@ -343,7 +344,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     }
 
     std::ranges::sort(intersectionCandidates,
-                      detail::IntersectionCandidate::forwardOrder);
+                      detail::IntersectedNavigationObject::forwardOrder);
 
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
@@ -377,7 +378,13 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     state.intersectionCandidates = std::move(intersectionCandidates);
 
-    return nextIntersection;
+    if (!nextIntersection.isValid()) {
+      return NavigationTarget::invalid();
+    }
+
+    return NavigationTarget(*nextIntersection.object(),
+                            nextIntersection.index(),
+                            BoundaryTolerance::None());
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
@@ -484,7 +491,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     /// The vector of navigation candidates to work through
     std::vector<detail::NavigationObjectCandidate> navigationCandidates;
     /// The vector of active intersection candidates to work through
-    std::vector<detail::IntersectionCandidate> activeCandidates;
+    std::vector<detail::IntersectedNavigationObject> activeCandidates;
     /// The current active candidate index of the navigation state
     std::size_t activeCandidateIndex = 0;
 
@@ -494,7 +501,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     std::optional<SurfaceIntersection> lastIntersection;
 
     /// Provides easy access to the active intersection candidate
-    const detail::IntersectionCandidate& activeCandidate() const {
+    const detail::IntersectedNavigationObject& activeCandidate() const {
       return activeCandidates.at(activeCandidateIndex);
     }
   };
@@ -548,10 +555,10 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
-                                         const Vector3& direction) const {
+  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     if (state.navigationBreak) {
-      return SurfaceIntersection::invalid();
+      return NavigationTarget::invalid();
     }
 
     ACTS_VERBOSE(volInfo(state) << "estimateNextTarget");
@@ -615,7 +622,13 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       ACTS_VERBOSE(volInfo(state) << "blindly stepping forwards.");
     }
 
-    return nextIntersection;
+    if (!nextIntersection.isValid()) {
+      return NavigationTarget::invalid();
+    }
+
+    return NavigationTarget(*nextIntersection.object(),
+                            nextIntersection.index(),
+                            BoundaryTolerance::None());
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
@@ -675,7 +688,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       }
 
       std::ranges::sort(state.activeCandidates,
-                        detail::IntersectionCandidate::forwardOrder);
+                        detail::IntersectedNavigationObject::forwardOrder);
 
       state.activeCandidateIndex = 0;
 
@@ -686,7 +699,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     if (state.activeCandidateIndex != state.activeCandidates.size()) {
       ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
-      std::vector<detail::IntersectionCandidate> hitCandidates;
+      std::vector<detail::IntersectedNavigationObject> hitCandidates;
 
       while (state.activeCandidateIndex != state.activeCandidates.size()) {
         const auto& candidate = state.activeCandidate();
@@ -716,7 +729,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
       state.lastIntersection.reset();
 
-      std::vector<detail::IntersectionCandidate> trueHitCandidates;
+      std::vector<detail::IntersectedNavigationObject> trueHitCandidates;
 
       for (const auto& candidate : hitCandidates) {
         const auto& intersection = candidate.intersection;

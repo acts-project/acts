@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -371,11 +372,11 @@ class Navigator {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
-                                         const Vector3& direction) const {
+  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     // Check if the navigator is inactive
     if (inactive(state)) {
-      return SurfaceIntersection::invalid();
+      return NavigationTarget::invalid();
     }
 
     ACTS_VERBOSE(volInfo(state) << "Entering Navigator::estimateNextTarget.");
@@ -387,25 +388,31 @@ class Navigator {
     if (state.navigationStage <= Stage::surfaceTarget &&
         targetSurfaces(state)) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
-      return state.navSurface();
+      return NavigationTarget(*state.navSurface().object(),
+                              state.navSurface().index(),
+                              BoundaryTolerance::None());
     }
 
     if (state.navigationStage <= Stage::layerTarget &&
         targetLayers(state, position, direction)) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
-      return state.navLayer().first;
+      return NavigationTarget(*state.navLayer().first.object(),
+                              state.navLayer().first.index(),
+                              BoundaryTolerance::None());
     }
 
     if (targetBoundaries(state, position, direction)) {
       ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
-      return state.navBoundary().first;
+      return NavigationTarget(*state.navBoundary().first.object(),
+                              state.navBoundary().first.index(),
+                              BoundaryTolerance::None());
     }
 
     ACTS_VERBOSE(volInfo(state)
                  << "No further navigation action, proceed to target.");
     // Set navigation break and release the navigation step size
     state.navigationBreak = true;
-    return SurfaceIntersection::invalid();
+    return NavigationTarget::invalid();
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,

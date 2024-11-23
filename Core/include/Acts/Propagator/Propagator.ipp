@@ -10,6 +10,7 @@
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -61,42 +62,39 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
                   std::is_same_v<N, Acts::DirectNavigator> ||
                   std::is_same_v<N, Acts::TryAllNavigator> ||
                   std::is_same_v<N, Acts::TryAllOverstepNavigator>) {
-      auto getNextTargetIntersection = [&]() -> Result<SurfaceIntersection> {
+      auto getNextTarget = [&]() -> Result<NavigationTarget> {
         // TODO max iterations?
         for (int i = 0; i < 100; ++i) {
-          SurfaceIntersection nextTargetIntersection =
-              m_navigator.estimateNextTarget(state.navigation, state.position,
-                                             state.direction);
-          if (!nextTargetIntersection.isValid()) {
-            return SurfaceIntersection::invalid();
+          NavigationTarget nextTarget = m_navigator.estimateNextTarget(
+              state.navigation, state.position, state.direction);
+          if (!nextTarget.isValid()) {
+            return NavigationTarget::invalid();
           }
           IntersectionStatus preStepSurfaceStatus =
               m_stepper.updateSurfaceStatus(
-                  state.stepping, *nextTargetIntersection.object(),
-                  nextTargetIntersection.index(), state.options.direction,
-                  BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
+                  state.stepping, *nextTarget.surface,
+                  nextTarget.surfaceIntersectionIndex, state.options.direction,
+                  nextTarget.boundaryTolerance, s_onSurfaceTolerance, logger());
           if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
-            return nextTargetIntersection;
+            return nextTarget;
           }
-          m_navigator.handleSurfaceStatus(
-              state.navigation, state.position, state.direction,
-              *nextTargetIntersection.object(), preStepSurfaceStatus);
+          m_navigator.handleSurfaceStatus(state.navigation, state.position,
+                                          state.direction, *nextTarget.surface,
+                                          preStepSurfaceStatus);
         }
 
-        ACTS_ERROR(
-            "getNextTargetIntersection failed to find a valid target surface.");
-        return Result<SurfaceIntersection>::failure(PropagatorError::Failure);
+        ACTS_ERROR("getNextTarget failed to find a valid target surface.");
+        return Result<NavigationTarget>::failure(PropagatorError::Failure);
       };
 
       // Pre-Stepping: target setting
       state.stage = PropagatorStage::preStep;
 
-      auto nextTargetIntersectionResult = getNextTargetIntersection();
-      if (!nextTargetIntersectionResult.ok()) {
-        return nextTargetIntersectionResult.error();
+      Result<NavigationTarget> nextTargetResult = getNextTarget();
+      if (!nextTargetResult.ok()) {
+        return nextTargetResult.error();
       }
-      SurfaceIntersection nextTargetIntersection =
-          *nextTargetIntersectionResult;
+      NavigationTarget nextTarget = *nextTargetResult;
 
       // Propagation loop : stepping
       for (; state.steps < state.options.maxSteps; ++state.steps) {
@@ -128,17 +126,17 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // navigator - action list - aborter list
         state.stage = PropagatorStage::postStep;
 
-        if (nextTargetIntersection.isValid()) {
+        if (nextTarget.isValid()) {
           IntersectionStatus postStepSurfaceStatus =
               m_stepper.updateSurfaceStatus(
-                  state.stepping, *nextTargetIntersection.object(),
-                  nextTargetIntersection.index(), state.options.direction,
-                  BoundaryTolerance::None(), s_onSurfaceTolerance, logger());
-          m_navigator.handleSurfaceStatus(
-              state.navigation, state.position, state.direction,
-              *nextTargetIntersection.object(), postStepSurfaceStatus);
+                  state.stepping, *nextTarget.surface,
+                  nextTarget.surfaceIntersectionIndex, state.options.direction,
+                  nextTarget.boundaryTolerance, s_onSurfaceTolerance, logger());
+          m_navigator.handleSurfaceStatus(state.navigation, state.position,
+                                          state.direction, *nextTarget.surface,
+                                          postStepSurfaceStatus);
           if (postStepSurfaceStatus != IntersectionStatus::reachable) {
-            nextTargetIntersection = SurfaceIntersection::invalid();
+            nextTarget = NavigationTarget::invalid();
           }
         }
 
@@ -159,18 +157,18 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         // Pre-Stepping: target setting
         state.stage = PropagatorStage::preStep;
 
-        if (nextTargetIntersection.isValid() &&
+        if (nextTarget.isValid() &&
             !m_navigator.checkTargetValid(state.navigation, state.position,
                                           state.direction)) {
-          nextTargetIntersection = SurfaceIntersection::invalid();
+          nextTarget = NavigationTarget::invalid();
         }
 
-        if (!nextTargetIntersection.isValid()) {
-          nextTargetIntersectionResult = getNextTargetIntersection();
-          if (!nextTargetIntersectionResult.ok()) {
-            return nextTargetIntersectionResult.error();
+        if (!nextTarget.isValid()) {
+          nextTargetResult = getNextTarget();
+          if (!nextTargetResult.ok()) {
+            return nextTargetResult.error();
           }
-          nextTargetIntersection = *nextTargetIntersectionResult;
+          nextTarget = *nextTargetResult;
         }
       }
     } else {

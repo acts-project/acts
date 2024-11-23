@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -211,10 +212,10 @@ class DirectNavigator {
     initialize(state.navigation, position, direction, state.options.direction);
   }
 
-  SurfaceIntersection estimateNextTarget(State& state, const Vector3& position,
-                                         const Vector3& direction) const {
+  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
+                                      const Vector3& direction) const {
     if (state.navigationBreak) {
-      return SurfaceIntersection::invalid();
+      return NavigationTarget::invalid();
     }
 
     ACTS_VERBOSE("estimateNextTarget");
@@ -236,7 +237,7 @@ class DirectNavigator {
         // Announce it then
         ACTS_VERBOSE("No target Surface, job done.");
       }
-      return SurfaceIntersection::invalid();
+      return NavigationTarget::invalid();
     }
 
     // Establish & update the surface status
@@ -247,7 +248,8 @@ class DirectNavigator {
         state.options.geoContext, surface, position, direction,
         BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
         state.options.surfaceTolerance);
-    return intersection;
+    return NavigationTarget(surface, intersection.index(),
+                            BoundaryTolerance::Infinite());
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
