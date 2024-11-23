@@ -349,7 +349,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
 
-    SurfaceIntersection nextIntersection = SurfaceIntersection::invalid();
+    NavigationTarget nextTarget = NavigationTarget::invalid();
     state.currentCandidate.reset();
 
     for (const auto& candidate : intersectionCandidates) {
@@ -366,25 +366,20 @@ class TryAllNavigator : public TryAllNavigatorBase {
       }
 
       if (intersection.status() == IntersectionStatus::reachable) {
-        nextIntersection = intersection;
+        nextTarget =
+            NavigationTarget(surface, intersection.index(), boundaryTolerance);
         state.currentCandidate = candidate;
         break;
       }
     }
 
-    if (!nextIntersection.isValid()) {
+    if (!nextTarget.isValid()) {
       ACTS_VERBOSE(volInfo(state) << "no intersections found");
     }
 
     state.intersectionCandidates = std::move(intersectionCandidates);
 
-    if (!nextIntersection.isValid()) {
-      return NavigationTarget::invalid();
-    }
-
-    return NavigationTarget(*nextIntersection.object(),
-                            nextIntersection.index(),
-                            BoundaryTolerance::None());
+    return nextTarget;
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
@@ -568,7 +563,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
-    SurfaceIntersection nextIntersection = SurfaceIntersection::invalid();
+    NavigationTarget nextTarget = NavigationTarget::invalid();
 
     // Check next navigation candidate
     while (state.activeCandidateIndex != state.activeCandidates.size()) {
@@ -607,7 +602,8 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface " << surface.geometryId() << " reachable.");
-        nextIntersection = intersection;
+        nextTarget =
+            NavigationTarget(surface, intersection.index(), boundaryTolerance);
         break;
       }
 
@@ -622,13 +618,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       ACTS_VERBOSE(volInfo(state) << "blindly stepping forwards.");
     }
 
-    if (!nextIntersection.isValid()) {
-      return NavigationTarget::invalid();
-    }
-
-    return NavigationTarget(*nextIntersection.object(),
-                            nextIntersection.index(),
-                            BoundaryTolerance::None());
+    return nextTarget;
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
