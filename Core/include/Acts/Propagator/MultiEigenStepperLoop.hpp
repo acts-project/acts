@@ -14,16 +14,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/EigenStepperError.hpp"
-#include "Acts/Propagator/MultiStepperError.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
@@ -36,7 +32,6 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
-#include <numeric>
 #include <sstream>
 #include <vector>
 
@@ -581,8 +576,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     } else if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
       state.stepCounterAfterFirstComponentOnSurface.reset();
       return Status::onSurface;
-    } else if (counts[static_cast<std::size_t>(Status::unreachable)] > 0) {
-      return Status::unreachable;
     } else {
       return Status::unreachable;
     }

@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+#include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
