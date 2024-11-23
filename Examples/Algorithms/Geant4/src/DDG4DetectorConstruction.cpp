@@ -22,22 +22,23 @@
 
 class G4VPhysicalVolume;
 
-ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
+namespace ActsExamples {
+
+DDG4DetectorConstruction::DDG4DetectorConstruction(
     std::shared_ptr<DD4hep::DD4hepDetector> detector,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_detector(std::move(detector)),
       m_regionCreators(std::move(regionCreators)) {}
 
-ActsExamples::DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
+DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
 
-dd4hep::Detector& ActsExamples::DDG4DetectorConstruction::dd4hepDetector()
-    const {
+dd4hep::Detector& DDG4DetectorConstruction::dd4hepDetector() const {
   return m_detector->geometryService->detector();
 }
 
 // See DD4hep::Simulation::Geant4DetectorConstruction::Construct()
-G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
+G4VPhysicalVolume* DDG4DetectorConstruction::Construct() {
   if (m_world == nullptr) {
     dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
     auto conv = dd4hep::sim::Geant4Converter(dd4hepDetector(),
@@ -52,23 +53,24 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->Construct();
+      regionCreator->construct();
     }
   }
   return m_world;
 }
 
-ActsExamples::DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
+DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
     std::shared_ptr<DD4hep::DD4hepDetector> detector,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_detector(std::move(detector)),
       m_regionCreators(std::move(regionCreators)) {}
 
-ActsExamples::DDG4DetectorConstructionFactory::
-    ~DDG4DetectorConstructionFactory() = default;
+DDG4DetectorConstructionFactory::~DDG4DetectorConstructionFactory() = default;
 
 std::unique_ptr<G4VUserDetectorConstruction>
-ActsExamples::DDG4DetectorConstructionFactory::factorize() const {
+DDG4DetectorConstructionFactory::factorize() const {
   return std::make_unique<DDG4DetectorConstruction>(m_detector,
                                                     m_regionCreators);
 }
+
+}  // namespace ActsExamples
