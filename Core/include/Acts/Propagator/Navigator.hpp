@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -176,8 +176,11 @@ class Navigator {
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-    // The navigation stage (@todo: integrate break, target)
+    /// The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
 
     void reset() {
       navSurfaces.clear();
@@ -427,6 +430,7 @@ class Navigator {
                  << "No targets found, we got lost! Attempt renavigation.");
 
     state.navigation.reset();
+    ++state.navigation.statistics.nRenavigations;
 
     // We might have punched through a boundary and entered another volume
     // so we have to reinitialize
@@ -576,6 +580,7 @@ class Navigator {
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
               state.navigation.navBoundaries.size();
+          ++state.navigation.statistics.nVolumeSwitches;
         }
       } else {
         // Set the navigation stage back to boundary target
@@ -772,8 +777,6 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
-    using namespace UnitLiterals;
-
     if (state.navigation.navigationBreak) {
       return false;
     }
