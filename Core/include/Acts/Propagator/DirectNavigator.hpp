@@ -193,7 +193,8 @@ class DirectNavigator {
     ACTS_VERBOSE("Start surface index set to " << state.surfaceIndex);
     if (state.endOfSurfaces()) {
       ACTS_DEBUG(
-          "Did not find the start surface in the sequence. Assuming it is not "
+          "Did not find the start surface in the sequence. Assuming it is "
+          "not "
           "part of the sequence. Trusting the correctness of the input "
           "sequence. Resetting the surface index.");
       state.resetSurfaceIndex();
