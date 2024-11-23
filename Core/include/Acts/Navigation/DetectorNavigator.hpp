@@ -215,7 +215,7 @@ class DetectorNavigator {
                    << " (" << surface.center(state.geoContext).transpose()
                    << ")");
       // Estimate the surface status
-      auto surfaceStatus = IntersectionStatustatus(
+      auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, c.boundaryTolerance,
           state.options.surfaceTolerance, logger());
@@ -223,7 +223,7 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "surface status is " << surfaceStatus);
 
-      if (surfaceStatus == Intersection3D::Status::reachable) {
+      if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "surface "
                      << surface.center(state.geoContext).transpose()
@@ -284,7 +284,7 @@ class DetectorNavigator {
       throw std::runtime_error(msg);
     }
 
-    // TODO not sure abouIntersectionStatus
+    // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *nextSurface,
         nState.surfaceCandidate().objectIntersection.index(),
@@ -292,7 +292,7 @@ class DetectorNavigator {
         state.options.surfaceTolerance, logger());
 
     // Check if we are at a surface
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "landed on surface");
 
