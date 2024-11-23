@@ -259,7 +259,7 @@ class DirectNavigator {
         state.stepping, surface, index, state.options.direction,
         BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
         *m_logger);
-    if (surfaceStatus == Intersection3D::Status::unreachable) {
+    if (surfaceStatus == IntersectionStatus::unreachable) {
       ACTS_VERBOSE(
           "Surface not reachable anymore, switching to next one in "
           "sequence");
@@ -313,7 +313,7 @@ class DirectNavigator {
         state.stepping, surface, index, state.options.direction,
         BoundaryTolerance::Infinite(), state.options.surfaceTolerance,
         *m_logger);
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       // Set the current surface
       state.navigation.currentSurface = state.navigation.navSurface();
       ACTS_VERBOSE("Current surface set to  "
@@ -326,7 +326,7 @@ class DirectNavigator {
                             .at(state.navigation.surfaceIndex)
                             ->geometryId());
       }
-    } else if (surfaceStatus == Intersection3D::Status::reachable) {
+    } else if (surfaceStatus == IntersectionStatus::reachable) {
       ACTS_VERBOSE("Next surface reachable at distance  "
                    << stepper.outputStepSize(state.stepping));
     }
