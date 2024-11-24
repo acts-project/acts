@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.4.3
     # via aiohttp
-aiohttp==3.11.6
+aiohttp==3.11.7
     # via -r CI/fpe_masks/requirements.in
 aiosignal==1.3.1
     # via aiohttp
@@ -58,5 +58,5 @@ typing-extensions==4.12.2
     # via typer
 uritemplate==4.1.1
     # via gidgethub
-yarl==1.17.2
+yarl==1.18.0
     # via aiohttp
