@@ -140,10 +140,6 @@ class TryAllNavigatorBase {
     return state.navigationBreak;
   }
 
-  void currentSurface(State& state, const Surface* surface) const {
-    state.currentSurface = surface;
-  }
-
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction /*propagationDirection*/) const {
@@ -379,15 +375,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
     return false;
   }
 
-  void handleSurfaceStatus(State& state, const Vector3& position,
-                           const Vector3& direction, const Surface& /*surface*/,
-                           IntersectionStatus surfaceStatus) const {
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& /*surface*/) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
       return;
     }
 
-    ACTS_VERBOSE(volInfo(state) << "handleSurfaceStatus");
+    ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
 
     if (state.currentCandidates.empty()) {
       ACTS_VERBOSE(volInfo(state) << "No current candidate set.");
@@ -395,10 +391,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
     }
 
     assert(state.currentSurface == nullptr && "Current surface must be reset.");
-
-    if (surfaceStatus < IntersectionStatus::onSurface) {
-      return;
-    }
 
     // handle multiple surface intersections due to increased bounds
 
@@ -649,14 +641,14 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     return state.activeCandidateIndex != state.activeCandidates.size();
   }
 
-  void handleSurfaceStatus(State& state, const Vector3& position,
-                           const Vector3& direction, const Surface& /*surface*/,
-                           IntersectionStatus /*surfaceStatus*/) const {
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& /*surface*/) const {
     if (state.navigationBreak) {
       return;
     }
 
-    ACTS_VERBOSE(volInfo(state) << "handleSurfaceStatus");
+    ACTS_VERBOSE(volInfo(state) << "handleSurfaceReached");
 
     assert(state.currentSurface == nullptr && "Current surface must be reset.");
 

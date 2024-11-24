@@ -59,13 +59,11 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
       IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
-          nextTarget.boundaryTolerance, s_onSurfaceTolerance, logger());
+          nextTarget.boundaryTolerance, state.options.surfaceTolerance,
+          logger());
       if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
         return nextTarget;
       }
-      m_navigator.handleSurfaceStatus(state.navigation, state.position,
-                                      state.direction, *nextTarget.surface,
-                                      preStepSurfaceStatus);
     }
 
     ACTS_ERROR("getNextTarget failed to find a valid target surface.");
@@ -119,10 +117,12 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
       IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
-          nextTarget.boundaryTolerance, s_onSurfaceTolerance, logger());
-      m_navigator.handleSurfaceStatus(state.navigation, state.position,
-                                      state.direction, *nextTarget.surface,
-                                      postStepSurfaceStatus);
+          nextTarget.boundaryTolerance, state.options.surfaceTolerance,
+          logger());
+      if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
+        m_navigator.handleSurfaceReached(state.navigation, state.position,
+                                         state.direction, *nextTarget.surface);
+      }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
         nextTarget = NavigationTarget::invalid();
       }

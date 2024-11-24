@@ -62,11 +62,11 @@ struct VoidNavigator {
 
   bool navigationBreak(const State& /*state*/) const { return true; }
 
-  void currentSurface(State& /*state*/, const Surface* /*surface*/) const {}
-
   void initialize(State& /*state*/, const Vector3& /*position*/,
                   const Vector3& /*direction*/,
-                  Direction /*propagationDirection*/) const {}
+                  Direction /*propagationDirection*/) const {
+    return;
+  }
 
   NavigationTarget estimateNextTarget(State& /*state*/,
                                       const Vector3& /*position*/,
@@ -79,10 +79,11 @@ struct VoidNavigator {
     return true;
   }
 
-  void handleSurfaceStatus(State& /*state*/, const Vector3& /*position*/,
-                           const Vector3& /*direction*/,
-                           const Surface& /*surface*/,
-                           IntersectionStatus /*surfaceStatus*/) const {}
+  void handleSurfaceReached(State& /*state*/, const Vector3& /*position*/,
+                            const Vector3& /*direction*/,
+                            const Surface& /*surface*/) const {
+    return;
+  }
 };
 
 }  // namespace Acts

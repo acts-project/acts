@@ -79,7 +79,7 @@ class DirectNavigator {
     Direction direction = Direction::Forward;
 
     /// Index of the next surface to try
-    int surfaceIndex = 0;
+    int surfaceIndex = -1;
 
     /// Navigation state - external interface: the current surface
     const Surface* currentSurface = nullptr;
@@ -116,7 +116,7 @@ class DirectNavigator {
 
     void resetSurfaceIndex() {
       surfaceIndex =
-          direction == Direction::Forward ? 0 : options.surfaces.size() - 1;
+          direction == Direction::Forward ? -1 : options.surfaces.size();
     }
   };
 
@@ -154,10 +154,6 @@ class DirectNavigator {
 
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
-  }
-
-  void currentSurface(State& state, const Surface* surface) const {
-    state.currentSurface = surface;
   }
 
   void initialize(State& state, const Vector3& /*position*/,
@@ -224,6 +220,14 @@ class DirectNavigator {
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
+    // Move the sequence to the next surface
+    state.nextSurface();
+    if (!state.endOfSurfaces()) {
+      ACTS_VERBOSE(
+          "Next surface candidate is  "
+          << state.options.surfaces.at(state.surfaceIndex)->geometryId());
+    }
+
     // Output the position in the sequence
     ACTS_VERBOSE(state.remainingSurfaces()
                  << " out of " << state.options.surfaces.size()
@@ -258,47 +262,19 @@ class DirectNavigator {
     return true;
   }
 
-  void handleSurfaceStatus(State& state, const Vector3& /*position*/,
-                           const Vector3& /*direction*/,
-                           const Surface& /*surface*/,
-                           IntersectionStatus surfaceStatus) const {
+  void handleSurfaceReached(State& state, const Vector3& /*position*/,
+                            const Vector3& /*direction*/,
+                            const Surface& /*surface*/) const {
     if (state.navigationBreak) {
       return;
     }
 
-    ACTS_VERBOSE("handleSurfaceStatus");
+    ACTS_VERBOSE("handleSurfaceReached");
 
-    // Navigator post step always resets the current surface
-    state.currentSurface = nullptr;
-
-    // Output the position in the sequence
-    ACTS_VERBOSE(state.remainingSurfaces()
-                 << " out of " << state.options.surfaces.size()
-                 << " surfaces remain to try.");
-
-    if (state.endOfSurfaces()) {
-      return;
-    }
-
-    if (surfaceStatus == IntersectionStatus::reachable) {
-      ACTS_VERBOSE("Surface is reachable. Continue approach.");
-      return;
-    }
-
-    if (surfaceStatus == IntersectionStatus::onSurface) {
-      // Set the current surface
-      state.currentSurface = state.navSurface();
-      ACTS_VERBOSE("Current surface set to  "
-                   << state.currentSurface->geometryId());
-    }
-
-    // Move the sequence to the next surface
-    state.nextSurface();
-    if (!state.endOfSurfaces()) {
-      ACTS_VERBOSE(
-          "Next surface candidate is  "
-          << state.options.surfaces.at(state.surfaceIndex)->geometryId());
-    }
+    // Set the current surface
+    state.currentSurface = state.navSurface();
+    ACTS_VERBOSE("Current surface set to  "
+                 << state.currentSurface->geometryId());
   }
 
  private:

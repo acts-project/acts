@@ -116,10 +116,6 @@ class DetectorNavigator {
     return state.navigationBreak;
   }
 
-  void currentSurface(State& state, const Surface* surface) const {
-    state.currentSurface = surface;
-  }
-
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction /*propagationDirection*/) const {
@@ -208,11 +204,11 @@ class DetectorNavigator {
     return true;
   }
 
-  void handleSurfaceStatus(State& state, const Vector3& position,
-                           const Vector3& direction, const Surface& /*surface*/,
-                           IntersectionStatus surfaceStatus) const {
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& /*surface*/) const {
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
-                                << "Entering navigator::postStep.");
+                                << "Entering navigator::handleSurfaceReached.");
 
     fillNavigationState(position, direction, state);
 
@@ -246,51 +242,48 @@ class DetectorNavigator {
       throw std::runtime_error(msg);
     }
 
-    // Check if we are at a surface
-    if (surfaceStatus == IntersectionStatus::onSurface) {
-      ACTS_VERBOSE(volInfo(state)
-                   << posInfo(state, position) << "landed on surface");
+    ACTS_VERBOSE(volInfo(state)
+                 << posInfo(state, position) << "landed on surface");
 
-      if (isPortal) {
+    if (isPortal) {
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, position)
+                   << "this is a portal, updating to new volume.");
+      state.currentPortal = nextPortal;
+      state.currentSurface = &nextPortal->surface();
+      state.surfaceCandidates.clear();
+      state.surfaceCandidateIndex = 0;
+
+      state.currentPortal->updateDetectorVolume(state.options.geoContext,
+                                                state);
+
+      // If no Volume is found, we are at the end of the world
+      if (state.currentVolume == nullptr) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, position)
-                     << "this is a portal, updating to new volume.");
-        state.currentPortal = nextPortal;
-        state.currentSurface = &nextPortal->surface();
-        state.surfaceCandidates.clear();
-        state.surfaceCandidateIndex = 0;
-
-        state.currentPortal->updateDetectorVolume(state.options.geoContext,
-                                                  state);
-
-        // If no Volume is found, we are at the end of the world
-        if (state.currentVolume == nullptr) {
-          ACTS_VERBOSE(volInfo(state)
-                       << posInfo(state, position)
-                       << "no volume after Portal update, end of world.");
-          state.navigationBreak = true;
-          return;
-        }
-
-        // Switched to a new volume
-        // Update candidate surfaces
-        updateCandidateSurfaces(state, position);
-
-        ACTS_VERBOSE(volInfo(state)
-                     << posInfo(state, position) << "current portal set to "
-                     << state.currentPortal->surface().geometryId());
-      } else {
-        ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
-                                    << "this is a surface, storing it.");
-
-        // If we are on the surface pointed at by the iterator, we can make
-        // it the current one to pass it to the other actors
-        state.currentSurface = nextSurface;
-        ACTS_VERBOSE(volInfo(state)
-                     << posInfo(state, position) << "current surface set to "
-                     << state.currentSurface->geometryId());
-        ++state.surfaceCandidateIndex;
+                     << "no volume after Portal update, end of world.");
+        state.navigationBreak = true;
+        return;
       }
+
+      // Switched to a new volume
+      // Update candidate surfaces
+      updateCandidateSurfaces(state, position);
+
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, position) << "current portal set to "
+                   << state.currentPortal->surface().geometryId());
+    } else {
+      ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
+                                  << "this is a surface, storing it.");
+
+      // If we are on the surface pointed at by the iterator, we can make
+      // it the current one to pass it to the other actors
+      state.currentSurface = nextSurface;
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, position) << "current surface set to "
+                   << state.currentSurface->geometryId());
+      ++state.surfaceCandidateIndex;
     }
   }
 
