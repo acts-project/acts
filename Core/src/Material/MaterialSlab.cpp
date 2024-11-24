@@ -11,7 +11,6 @@
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
 #include <limits>
-#include <numeric>
 #include <ostream>
 #include <stdexcept>
 
@@ -31,10 +30,6 @@ MaterialSlab::MaterialSlab(const Material& material, float thickness)
   if (thickness < 0) {
     throw std::runtime_error("thickness < 0");
   }
-}
-
-bool MaterialSlab::operator==(const MaterialSlab& other) const {
-  return m_material == other.m_material && m_thickness == other.m_thickness;
 }
 
 MaterialSlab MaterialSlab::averageLayers(const MaterialSlab& layerA,

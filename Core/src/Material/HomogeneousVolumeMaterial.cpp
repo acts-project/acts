@@ -17,11 +17,6 @@ namespace Acts {
 HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(const Material& material)
     : m_material(material) {}
 
-bool HomogeneousVolumeMaterial::operator==(
-    const HomogeneousVolumeMaterial& hvm) const {
-  return m_material == hvm.m_material;
-}
-
 const Material HomogeneousVolumeMaterial::material(
     const Vector3& /*position*/) const {
   return m_material;

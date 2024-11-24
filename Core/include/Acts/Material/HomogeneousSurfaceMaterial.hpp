@@ -58,11 +58,6 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   HomogeneousSurfaceMaterial& operator=(HomogeneousSurfaceMaterial&& hsm) =
       default;
 
-  /// Equality operator
-  ///
-  /// @param hsm is the source material
-  bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
-
   /// Scale operator
   /// - it is effectively a thickness scaling
   ///
@@ -94,6 +89,16 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
  private:
   /// The five different MaterialSlab
   MaterialSlab m_fullMaterial;
+
+  /// Check if two materials are exactly equal.
+  /// @note This is a strict equality check, i.e. the materials must
+  /// have identical properties.
+  /// @param other is the material to compare to
+  /// @return true if the materials are equal
+  friend constexpr bool operator==(const HomogeneousSurfaceMaterial& lhs,
+                                   const HomogeneousSurfaceMaterial& rhs) {
+    return lhs.m_fullMaterial == rhs.m_fullMaterial;
+  }
 };
 
 }  // namespace Acts

@@ -81,13 +81,6 @@ class Material {
   Material& operator=(Material&& mat) = default;
   Material& operator=(const Material& mat) = default;
 
-  /// Check if two materials are exactly equal.
-  /// @note This is a strict equality check, i.e. the materials must
-  /// have identical properties.
-  /// @param mat is the material to compare to
-  /// @return true if the materials are equal
-  bool operator==(const Material& mat) const;
-
   /// Check if the material is valid, i.e. it is not vacuum.
   bool isValid() const { return 0.0f < m_ar; }
 
@@ -117,6 +110,17 @@ class Material {
   float m_ar = 0.0f;
   float m_z = 0.0f;
   float m_molarRho = 0.0f;
+
+  /// Check if two materials are exactly equal.
+  /// @note This is a strict equality check, i.e. the materials must
+  /// have identical properties.
+  /// @param mat is the material to compare to
+  /// @return true if the materials are equal
+  friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
+    return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
+           (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&
+           (lhs.m_molarRho == rhs.m_molarRho);
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const Material& material);

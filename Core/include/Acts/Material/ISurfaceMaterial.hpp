@@ -127,6 +127,7 @@ class ISurfaceMaterial {
  protected:
   /// the split factor in favour of oppositePre
   double m_splitFactor{1.};
+
   /// Use the default mapping type by default
   MappingType m_mappingType{Acts::MappingType::Default};
 };

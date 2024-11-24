@@ -80,11 +80,6 @@ float Material::massDensity() const {
   return atomicMass * numberDensity;
 }
 
-bool Material::operator==(const Material& mat) const {
-  return m_x0 == mat.m_x0 && m_l0 == mat.m_l0 && m_ar == mat.m_ar &&
-         m_z == mat.m_z && m_molarRho == mat.m_molarRho;
-}
-
 float Material::meanExcitationEnergy() const {
   using namespace UnitLiterals;
 
