@@ -8,6 +8,8 @@
 
 #include "Acts/Utilities/Intersection.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
+
 namespace Acts {
 
 bool detail::checkPathLength(double pathLength, double nearLimit,
