@@ -92,7 +92,7 @@ class RootTrackSummaryReader : public IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain* m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// the event number
   std::uint32_t m_eventNr{0};
