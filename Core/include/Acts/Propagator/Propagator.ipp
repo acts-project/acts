@@ -30,20 +30,13 @@ template <typename S, typename N>
 template <typename propagator_state_t>
 auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     -> Result<void> {
-  // Pre-stepping call to the navigator and actor list
   ACTS_VERBOSE("Entering propagation.");
 
   state.stage = PropagatorStage::prePropagation;
 
-  // Pre-Stepping call to the actor list
+  // Pre-Propagation: call to the actor list, abort condition check
   state.options.actorList.act(state, m_stepper, m_navigator, logger());
-  // assume negative outcome, only set to true later if we actually have
-  // a positive outcome.
 
-  // start at true, if we don't begin the stepping loop we're fine.
-  bool terminatedNormally = true;
-
-  // Pre-Stepping: abort condition check
   if (state.options.actorList.checkAbort(state, m_stepper, m_navigator,
                                          logger())) {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
@@ -80,7 +73,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
   };
 
   // priming error condition
-  terminatedNormally = false;
+  bool terminatedNormally = false;
 
   // Pre-Stepping: target setting
   state.stage = PropagatorStage::preStep;
@@ -95,7 +88,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
   // Stepping loop
   for (; state.steps < state.options.maxSteps; ++state.steps) {
-    // Perform a propagation step - it takes the propagation state
+    // Perform a step
     Result<double> res = m_stepper.step(state, m_navigator);
     if (!res.ok()) {
       ACTS_ERROR("Step failed with " << res.error() << ": "
@@ -110,17 +103,16 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     state.direction =
         state.options.direction * m_stepper.direction(state.stepping);
 
-    ACTS_VERBOSE("Step with size = " << *res << " performed. We are now at "
-                                     << state.position.transpose()
-                                     << " with direction "
-                                     << state.direction.transpose());
+    ACTS_VERBOSE("Step with size " << *res << " performed. We are now at "
+                                   << state.position.transpose()
+                                   << " with direction "
+                                   << state.direction.transpose());
 
     // release actor and aborter constrains after step was performed
     m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
     m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
 
-    // Post-stepping:
-    // navigator - action list - aborter list
+    // Post-stepping: check target status, call actors, check abort conditions
     state.stage = PropagatorStage::postStep;
 
     if (nextTarget.isValid()) {
@@ -167,8 +159,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     }
   }
 
-  // if we didn't terminate normally (via aborters) set navigation break.
-  // this will trigger error output in the lines below
+  // check if we didn't terminate normally via aborters
   if (!terminatedNormally) {
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << state.steps
