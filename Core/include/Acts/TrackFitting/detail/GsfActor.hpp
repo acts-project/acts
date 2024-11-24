@@ -321,6 +321,20 @@ struct GsfActor {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, const result_type& result,
+                  const Logger& /*logger*/) const {
+    if (m_cfg.numberMeasurements &&
+        result.measurementStates == m_cfg.numberMeasurements) {
+      ACTS_VERBOSE("Stop navigation because all measurements are found");
+      return true;
+    }
+
+    return false;
+  }
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
