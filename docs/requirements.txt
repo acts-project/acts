@@ -6,7 +6,7 @@
 #
 aiohappyeyeballs==2.4.3
     # via aiohttp
-aiohttp==3.11.5
+aiohttp==3.11.7
     # via -r docs/requirements.in
 aiosignal==1.3.1
     # via aiohttp
@@ -81,16 +81,18 @@ propcache==0.2.0
     #   yarl
 pycparser==2.22
     # via cffi
-pydantic==2.9.2
+pydantic==2.10.1
     # via -r docs/requirements.in
-pydantic-core==2.23.4
+pydantic-core==2.27.1
     # via pydantic
 pygments==2.18.0
     # via
     #   rich
     #   sphinx
 pyjwt[crypto]==2.10.0
-    # via gidgethub
+    # via
+    #   gidgethub
+    #   pyjwt
 python-dotenv==1.0.1
     # via -r docs/requirements.in
 pyyaml==6.0.2
@@ -141,5 +143,5 @@ uritemplate==4.1.1
     # via gidgethub
 urllib3==2.2.3
     # via requests
-yarl==1.17.2
+yarl==1.18.0
     # via aiohttp

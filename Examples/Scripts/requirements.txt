@@ -6,11 +6,11 @@
 #
 annotated-types==0.7.0
     # via pydantic
-awkward==2.7.0
+awkward==2.7.1
     # via
     #   -r Examples/Scripts/requirements.in
     #   uproot
-awkward-cpp==41
+awkward-cpp==42
     # via awkward
 boost-histogram==1.5.0
     # via hist
@@ -72,9 +72,9 @@ pandas==2.2.3
     # via -r Examples/Scripts/requirements.in
 pillow==11.0.0
     # via matplotlib
-pydantic==2.9.2
+pydantic==2.10.1
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.23.4
+pydantic-core==2.27.1
     # via pydantic
 pygments==2.18.0
     # via rich
@@ -111,7 +111,7 @@ uhi==0.5.0
     # via
     #   histoprint
     #   mplhep
-uproot==5.5.0
+uproot==5.5.1
     # via -r Examples/Scripts/requirements.in
 xxhash==3.5.0
     # via uproot
