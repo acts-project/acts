@@ -90,8 +90,8 @@ class DirectNavigator {
     /// Navigation statistics
     NavigatorStatistics statistics;
 
-    const Surface* navSurface() const {
-      return options.surfaces.at(surfaceIndex);
+    const Surface& navSurface() const {
+      return *options.surfaces.at(surfaceIndex);
     }
 
     void nextSurface() {
@@ -179,18 +179,18 @@ class DirectNavigator {
 
     // Reset the surface index
     state.resetSurfaceIndex();
+    bool foundStartSurface = false;
     for (const Surface* surface : state.options.surfaces) {
-      // make sure we skip over the start surface
-      state.nextSurface();
       if (surface == state.currentSurface) {
+        foundStartSurface = true;
         break;
       }
+      state.nextSurface();
     }
-    ACTS_VERBOSE("Start surface index set to " << state.surfaceIndex);
-    if (state.endOfSurfaces()) {
+    ACTS_VERBOSE("Initial surface index set to " << state.surfaceIndex);
+    if (!foundStartSurface) {
       ACTS_DEBUG(
-          "Did not find the start surface in the sequence. Assuming it is "
-          "not "
+          "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
           "sequence. Resetting the surface index.");
       state.resetSurfaceIndex();
@@ -199,55 +199,35 @@ class DirectNavigator {
     state.navigationBreak = false;
   }
 
-  // TODO remove
-  template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    Vector3 position = stepper.position(state.stepping);
-    Vector3 direction =
-        state.options.direction * stepper.direction(state.stepping);
-
-    initialize(state.navigation, position, direction, state.options.direction);
-  }
-
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& direction) const {
     if (state.navigationBreak) {
       return NavigationTarget::invalid();
     }
 
-    ACTS_VERBOSE("estimateNextTarget");
+    ACTS_VERBOSE("DirectNavigator::estimateNextTarget");
 
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
 
     // Move the sequence to the next surface
     state.nextSurface();
+
     if (!state.endOfSurfaces()) {
-      ACTS_VERBOSE(
-          "Next surface candidate is  "
-          << state.options.surfaces.at(state.surfaceIndex)->geometryId());
-    }
-
-    // Output the position in the sequence
-    ACTS_VERBOSE(state.remainingSurfaces()
-                 << " out of " << state.options.surfaces.size()
-                 << " surfaces remain to try.");
-
-    if (state.endOfSurfaces()) {
-      // Set the navigation break
+      ACTS_VERBOSE("Next surface candidate is  "
+                   << state.navSurface().geometryId() << ". "
+                   << state.remainingSurfaces() << " out of "
+                   << state.options.surfaces.size()
+                   << " surfaces remain to try.");
+    } else {
       ACTS_VERBOSE("End of surfaces reached, navigation break.");
       state.navigationBreak = true;
-      // If no externally provided target is given, the target is reached
-      if (state.options.targetSurface == nullptr) {
-        // Announce it then
-        ACTS_VERBOSE("No target Surface, job done.");
-      }
       return NavigationTarget::invalid();
     }
 
     // Establish & update the surface status
     // TODO we do not know the intersection index - passing the closer one
-    const auto& surface = *state.navSurface();
+    const Surface& surface = state.navSurface();
     const double farLimit = std::numeric_limits<double>::max();
     const auto intersection = chooseIntersection(
         state.options.geoContext, surface, position, direction,
@@ -269,10 +249,10 @@ class DirectNavigator {
       return;
     }
 
-    ACTS_VERBOSE("handleSurfaceReached");
+    ACTS_VERBOSE("DirectNavigator::handleSurfaceReached");
 
     // Set the current surface
-    state.currentSurface = state.navSurface();
+    state.currentSurface = &state.navSurface();
     ACTS_VERBOSE("Current surface set to  "
                  << state.currentSurface->geometryId());
   }

@@ -140,16 +140,6 @@ class DetectorNavigator {
     updateCandidateSurfaces(state, position);
   }
 
-  // TODO remove
-  template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
-    Vector3 position = stepper.position(state.stepping);
-    Vector3 direction =
-        state.options.direction * stepper.direction(state.stepping);
-
-    initialize(state.navigation, position, direction, state.options.direction);
-  }
-
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state)
