@@ -9,7 +9,6 @@
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -25,9 +24,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 
 namespace {
+
 /// @note This does not really compare if the configs are equal, therefore
 /// it is no operator==. The contained std::function types cannot really
 /// be checked for equality.
@@ -47,6 +46,7 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
           ag.thickness == bg.thickness && ag.threshold == bg.threshold &&
           ag.digital == bg.digital);
 }
+
 }  // namespace
 
 void ActsExamples::DigitizationConfigurator::operator()(

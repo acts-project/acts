@@ -381,8 +381,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
 
@@ -390,8 +390,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
 
@@ -399,8 +399,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
 
     } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
 
@@ -408,8 +408,8 @@ class SurfaceArrayCreator {
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.bValue, pAxisB.bValue})));
+      ptr = std::make_unique<SGL>(
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
     }
     // clang-format on
 

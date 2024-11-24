@@ -295,23 +295,23 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status1 = std::abs(qe.first) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
 
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution1, direction, boundaryTolerance)) {
-    status1 = Intersection3D::Status::missed;
+    status1 = IntersectionStatus::missed;
   }
 
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
-  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status2 = std::abs(qe.second) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution2, direction, boundaryTolerance)) {
-    status2 = Intersection3D::Status::missed;
+    status2 = IntersectionStatus::missed;
   }
 
   const auto& tf = transform(gctx);

@@ -8,27 +8,12 @@
 
 #pragma once
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/detail/TrackParametersUtils.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 #include <nlohmann/json.hpp>
-
-namespace {
-
-// Alias to bound adl_serializer specialization
-// only to track parameters
-template <class parameters_t>
-concept TrackParameters = Acts::FreeTrackParametersConcept<parameters_t> ||
-                          Acts::BoundTrackParametersConcept<parameters_t>;
-
-// Shorthand for bound track parameters
-template <class parameters_t>
-concept IsGenericBound =
-    std::same_as<parameters_t, Acts::GenericBoundTrackParameters<
-                                   typename parameters_t::ParticleHypothesis>>;
-
-}  // namespace
 
 namespace Acts {
 NLOHMANN_JSON_SERIALIZE_ENUM(Acts::PdgParticle,
@@ -67,7 +52,7 @@ namespace nlohmann {
 /// convention is followed.
 ///
 /// @tparam parameters_t The track parameters type
-template <TrackParameters parameters_t>
+template <Acts::detail::isBoundOrFreeTrackParams parameters_t>
 struct adl_serializer<parameters_t> {
   /// Covariance matrix type attached to the parameters
   using CovarianceMatrix = typename parameters_t::CovarianceMatrix;
@@ -101,7 +86,7 @@ struct adl_serializer<parameters_t> {
     // Bound track parameters have
     // reference surface attached
     // and position takes a geometry context
-    if constexpr (IsGenericBound<parameters_t>) {
+    if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
       Acts::GeometryContext gctx;
       j["position"] = t.fourPosition(gctx);
 
@@ -152,7 +137,7 @@ struct adl_serializer<parameters_t> {
     // reference surface attached
     // and constructor is hidden
     // behind a factory method
-    if constexpr (IsGenericBound<parameters_t>) {
+    if constexpr (Acts::detail::isGenericBoundTrackParams<parameters_t>) {
       Acts::GeometryContext gctx;
       auto referenceSurface =
           Acts::SurfaceJsonConverter::fromJson(j.at("referenceSurface"));
@@ -178,7 +163,7 @@ struct adl_serializer<parameters_t> {
 /// convention is followed.
 ///
 /// @tparam parameters_t The track parameters type
-template <TrackParameters parameters_t>
+template <Acts::detail::isBoundOrFreeTrackParams parameters_t>
 struct adl_serializer<std::shared_ptr<parameters_t>> {
   using CovarianceMatrix = typename parameters_t::CovarianceMatrix;
   static void to_json(nlohmann::json& j,
@@ -202,7 +187,7 @@ struct adl_serializer<std::shared_ptr<parameters_t>> {
 /// convention is followed.
 ///
 /// @tparam parameters_t The track parameters type
-template <TrackParameters parameters_t>
+template <Acts::detail::isBoundOrFreeTrackParams parameters_t>
 struct adl_serializer<std::unique_ptr<parameters_t>> {
   using CovarianceMatrix = typename parameters_t::CovarianceMatrix;
   static void to_json(nlohmann::json& j,

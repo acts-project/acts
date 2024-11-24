@@ -34,7 +34,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
     throw std::invalid_argument{"No input files given"};
   }
 
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   // loop over the input files
   for (const auto& inputFile : m_cfg.fileList) {
@@ -91,7 +91,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   {
     // necessary to guarantee that m_inputChain->GetV1() is valid for the
     // entire range
-    m_inputChain->SetEstimate(nentries);
+    m_inputChain->SetEstimate(nentries + 1);
 
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
@@ -103,8 +103,6 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
 }
 
 RootMaterialTrackReader::~RootMaterialTrackReader() {
-  delete m_inputChain;
-
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;

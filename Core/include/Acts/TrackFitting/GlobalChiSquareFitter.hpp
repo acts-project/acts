@@ -1408,9 +1408,9 @@ class Gx2Fitter {
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(extendedSystem.chi2() / oldChi2sum - 1) <
            gx2fOptions.relChi2changeCutOff)) {
-        ACTS_INFO("Abort with relChi2changeCutOff after "
-                  << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
-                  << " iterations.");
+        ACTS_DEBUG("Abort with relChi2changeCutOff after "
+                   << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
+                   << " iterations.");
         updateGx2fCovarianceParams(fullCovariancePredicted, extendedSystem);
         break;
       }

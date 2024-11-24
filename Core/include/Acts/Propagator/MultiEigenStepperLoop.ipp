@@ -92,7 +92,7 @@ template <typename E, typename R>
 template <typename propagator_state_t, typename navigator_t>
 Result<double> MultiEigenStepperLoop<E, R>::step(
     propagator_state_t& state, const navigator_t& navigator) const {
-  using Status = Acts::Intersection3D::Status;
+  using Status = Acts::IntersectionStatus;
 
   State& stepping = state.stepping;
   auto& components = stepping.components;
@@ -136,10 +136,9 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
   // If at least one component is on a surface, we can remove all missed
   // components before the step. If not, we must keep them for the case that all
   // components miss and we need to retarget
-  const auto cmpsOnSurface =
-      std::count_if(components.cbegin(), components.cend(), [&](auto& cmp) {
-        return cmp.status == Intersection3D::Status::onSurface;
-      });
+  const auto cmpsOnSurface = std::count_if(
+      components.cbegin(), components.cend(),
+      [&](auto& cmp) { return cmp.status == IntersectionStatus::onSurface; });
 
   if (cmpsOnSurface > 0) {
     removeMissedComponents(stepping);

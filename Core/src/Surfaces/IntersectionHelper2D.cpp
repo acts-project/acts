@@ -30,11 +30,11 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   auto d = line.intersectionParameter(Plane::Through(s0, s1));
 
   Vector2 intersection(origin + d * dir);
-  Intersection2D::Status status = Intersection2D::Status::reachable;
+  IntersectionStatus status = IntersectionStatus::reachable;
   if (boundCheck) {
     auto edgeToSol = intersection - s0;
     if (edgeToSol.dot(edge) < 0. || edgeToSol.norm() > (edge).norm()) {
-      status = Intersection2D::Status::unreachable;
+      status = IntersectionStatus::unreachable;
     }
   }
   return Intersection2D(intersection, d, status);
@@ -54,11 +54,11 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
     double altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
 
     if (std::abs(solD) < std::abs(altD)) {
-      return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
-              Intersection2D(alt, altD, Intersection2D::Status::reachable)};
+      return {Intersection2D(sol, solD, IntersectionStatus::reachable),
+              Intersection2D(alt, altD, IntersectionStatus::reachable)};
     }
-    return {Intersection2D(alt, altD, Intersection2D::Status::reachable),
-            Intersection2D(sol, solD, Intersection2D::Status::reachable)};
+    return {Intersection2D(alt, altD, IntersectionStatus::reachable),
+            Intersection2D(sol, solD, IntersectionStatus::reachable)};
   };
 
   // Special cases first
@@ -72,7 +72,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
       return createSolution(sol, alt);
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(solx, 0.), -origin.y(),
-                             Intersection2D::Status::reachable),
+                             IntersectionStatus::reachable),
               Intersection2D::invalid()};
     }
     return {Intersection2D::invalid(), Intersection2D::invalid()};
@@ -86,7 +86,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
       return createSolution(sol, alt);
     } else if (std::abs(D) < s_epsilon) {
       return {Intersection2D(Vector2(0., soly), -origin.x(),
-                             Intersection2D::Status::reachable),
+                             IntersectionStatus::reachable),
               Intersection2D::invalid()};
     }
     return {Intersection2D::invalid(), Intersection2D::invalid()};
@@ -104,7 +104,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
     Vector2 sol(x, k * x + d);
     Vector2 toSolD(sol - origin);
     double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
-    return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
+    return {Intersection2D(sol, solD, IntersectionStatus::reachable),
             Intersection2D::invalid()};
   } else if (solver.solutions > 1) {
     double x0 = solver.first;

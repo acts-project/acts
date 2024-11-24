@@ -13,7 +13,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -23,6 +22,7 @@
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -164,6 +164,9 @@ class EigenStepper {
       /// k_i elements of the momenta
       std::array<double, 4> kQoP{};
     } stepData;
+
+    /// Statistics of the stepper
+    StepperStatistics statistics;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
@@ -267,7 +270,7 @@ class EigenStepper {
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
-  Intersection3D::Status updateSurfaceStatus(
+  IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       double surfaceTolerance = s_onSurfaceTolerance,

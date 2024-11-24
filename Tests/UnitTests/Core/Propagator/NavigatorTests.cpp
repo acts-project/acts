@@ -140,7 +140,7 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(
+    IntersectionStatus updateSurfaceStatus(
         State& state, const Surface& surface, std::uint8_t index,
         Direction navDir, const BoundaryTolerance& boundaryTolerance,
         double surfaceTolerance, const Logger& logger) const {
