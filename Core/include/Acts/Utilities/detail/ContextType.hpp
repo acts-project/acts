@@ -79,6 +79,28 @@ class ContextType {
     return std::any_cast<const std::decay_t<T>&>(m_data);
   }
 
+  /// Retrieve a pointer to the contained type
+  ///
+  /// @note Returns `nullptr` if @p is not the contained type.
+  ///
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Pointer to the contained value, may be null
+  template <typename T>
+  std::decay_t<T>* maybeGet() {
+    return std::any_cast<std::decay_t<T>>(&m_data);
+  }
+
+  /// Retrieve a pointer to the contained type
+  ///
+  /// @note Returns `nullptr` if @p is not the contained type.
+  ///
+  /// @tparam T The type to attempt to retrieve the value as
+  /// @return Pointer to the contained value, may be null
+  template <typename T>
+  const std::decay_t<T>* maybeGet() const {
+    return std::any_cast<const std::decay_t<T>>(&m_data);
+  }
+
   /// Check if the contained type is initialized.
   /// @return Boolean indicating whether a type is present
   bool hasValue() const { return m_data.has_value(); }

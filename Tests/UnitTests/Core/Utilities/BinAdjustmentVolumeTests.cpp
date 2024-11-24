@@ -18,13 +18,14 @@
 
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace Acts::Test {
 
 // Test Cylinder
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
-  CylinderVolumeBounds bound(10, 50, 150, M_PI / 2, 0);
+  CylinderVolumeBounds bound(10, 50, 150, std::numbers::pi / 2., 0);
   BinUtility bu;
   bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binPhi);
@@ -34,8 +35,10 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI / 2});
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI / 2});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min,
+                    -static_cast<float>(std::numbers::pi / 2.));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max,
+                    static_cast<float>(std::numbers::pi / 2.));
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -150);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 150);
 }
@@ -52,8 +55,8 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
 
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float{-M_PI});
-  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float{M_PI});
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -std::numbers::pi_v<float>);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, std::numbers::pi_v<float>);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -100);
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 100);
 }
