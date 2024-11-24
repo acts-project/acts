@@ -232,8 +232,6 @@ class DetectorNavigator {
     const Portal* nextPortal = nullptr;
     const Surface* nextSurface = nullptr;
     bool isPortal = false;
-    BoundaryTolerance boundaryTolerance =
-        state.surfaceCandidate().boundaryTolerance;
 
     if (state.surfaceCandidate().surface != nullptr) {
       nextSurface = state.surfaceCandidate().surface;
