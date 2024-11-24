@@ -221,4 +221,43 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
+/// Computes the minimum, maximum, and bin count for a given vector of values.
+///
+/// This function processes a vector of doubles to compute:
+/// - The minimum value (@c xMin)
+/// - The maximum value (@c xMax), adjusted to include an additional bin
+/// - The bin count (@c xBinCount) based on the number of unique values
+///
+/// The computation is performed as follows:
+/// 1. Sorts the input vector using @c std::ranges::sort to prepare for uniqueness.
+/// 2. Determines the number of unique values using @c std::unique and calculates the bin count.
+/// 3. Calculates the minimum and maximum using @c std::ranges::minmax.
+/// 4. Adjusts the maximum to include an additional bin by adding the bin step
+/// size.
+///
+/// @param xPos A reference to a vector of doubles.
+/// @return A tuple containing:
+///         - The minimum value (double)
+///         - The adjusted maximum value (double)
+///         - The bin count (std::size_t)
+auto getMinMaxAndBinCount(std::vector<double>& xPos) {
+  // sort the values for unique()
+  std::ranges::sort(xPos);
+
+  // get the number of bins over unique values
+  auto it = std::unique(xPos.begin(), xPos.end());
+  const std::size_t xBinCount = std::distance(xPos.begin(), it);
+
+  // get the minimum and maximum
+  auto [xMin, xMax] = std::ranges::minmax(xPos);
+
+  // calculate maxima (add one last bin, because bin value always corresponds to
+  // left boundary)
+  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
+  xMax += stepX;
+
+  // Return all values as a tuple
+  return std::make_tuple(xMin, xMax, xBinCount);
+}
+
 }  // namespace Acts

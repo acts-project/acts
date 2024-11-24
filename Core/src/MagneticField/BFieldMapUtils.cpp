@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
@@ -27,28 +28,6 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-namespace {
-auto getMinMaxAndBinCount(std::vector<double>& xPos) {
-  // sort the values for unique()
-  std::ranges::sort(xPos);
-
-  // get the number of bins over unique values
-  auto it = std::unique(xPos.begin(), xPos.end());
-  const std::size_t xBinCount = std::distance(xPos.begin(), it);
-
-  // get the minimum and maximum
-  auto [xMin, xMax] = std::ranges::minmax(xPos);
-
-  // calculate maxima (add one last bin, because bin value always corresponds to
-  // left boundary)
-  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
-  xMax += stepX;
-
-  // Return all values as a tuple
-  return std::make_tuple(xMin, xMax, xBinCount);
-}
-}  // anonymous namespace
-
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
@@ -60,8 +39,8 @@ Acts::fieldMapRZ(
     const std::vector<Acts::Vector2>& bField, double lengthUnit,
     double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
-  const auto [rMin, rMax, rBinCount] = getMinMaxAndBinCount(rPos);
-  auto [zMin, zMax, zBinCount] = getMinMaxAndBinCount(zPos);
+  const auto [rMin, rMax, rBinCount] = Acts::getMinMaxAndBinCount(rPos);
+  auto [zMin, zMax, zBinCount] = Acts::getMinMaxAndBinCount(zPos);
 
   const std::size_t nBinsR = rBinCount;
   std::size_t nBinsZ = zBinCount;
@@ -140,9 +119,9 @@ Acts::fieldMapXYZ(
     std::vector<double> zPos, const std::vector<Acts::Vector3>& bField,
     double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
-  auto [xMin, xMax, xBinCount] = getMinMaxAndBinCount(xPos);
-  auto [yMin, yMax, yBinCount] = getMinMaxAndBinCount(yPos);
-  auto [zMin, zMax, zBinCount] = getMinMaxAndBinCount(zPos);
+  auto [xMin, xMax, xBinCount] = Acts::getMinMaxAndBinCount(xPos);
+  auto [yMin, yMax, yBinCount] = Acts::getMinMaxAndBinCount(yPos);
+  auto [zMin, zMax, zBinCount] = Acts::getMinMaxAndBinCount(zPos);
 
   std::size_t nBinsX = xBinCount;
   std::size_t nBinsY = yBinCount;

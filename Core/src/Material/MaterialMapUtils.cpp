@@ -12,6 +12,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -24,28 +25,6 @@
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
-
-namespace {
-auto getMinMaxAndBinCount(std::vector<double>& xPos) {
-  // sort the values for unique()
-  std::ranges::sort(xPos);
-
-  // get the number of bins over unique values
-  auto it = std::unique(xPos.begin(), xPos.end());
-  const std::size_t xBinCount = std::distance(xPos.begin(), it);
-
-  // get the minimum and maximum
-  auto [xMin, xMax] = std::ranges::minmax(xPos);
-
-  // calculate maxima (add one last bin, because bin value always corresponds to
-  // left boundary)
-  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
-  xMax += stepX;
-
-  // Return all values as a tuple
-  return std::make_tuple(xMin, xMax, xBinCount);
-}
-}  // anonymous namespace
 
 auto Acts::materialMapperRZ(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
@@ -65,8 +44,8 @@ auto Acts::materialMapperRZ(
   }
 
   // [2] Create Grid
-  const auto [rMin, rMax, nBinsR] = getMinMaxAndBinCount(rPos);
-  const auto [zMin, zMax, nBinsZ] = getMinMaxAndBinCount(zPos);
+  const auto [rMin, rMax, nBinsR] = Acts::getMinMaxAndBinCount(rPos);
+  const auto [zMin, zMax, nBinsZ] = Acts::getMinMaxAndBinCount(zPos);
 
   // Create the axis for the grid
   Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
@@ -122,9 +101,9 @@ auto Acts::materialMapperXYZ(
   }
 
   // [2] Create Grid
-  const auto [xMin, xMax, nBinsX] = getMinMaxAndBinCount(xPos);
-  const auto [yMin, yMax, nBinsY] = getMinMaxAndBinCount(yPos);
-  const auto [zMin, zMax, nBinsZ] = getMinMaxAndBinCount(zPos);
+  const auto [xMin, xMax, nBinsX] = Acts::getMinMaxAndBinCount(xPos);
+  const auto [yMin, yMax, nBinsY] = Acts::getMinMaxAndBinCount(yPos);
+  const auto [zMin, zMax, nBinsZ] = Acts::getMinMaxAndBinCount(zPos);
 
   // Create the axis for the grid
   Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
