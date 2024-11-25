@@ -33,7 +33,6 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericFreeTrackParameters {
  public:
-  using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
@@ -66,7 +65,7 @@ class GenericFreeTrackParameters {
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
-                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+                             double qOverP, std::optional<CovarianceMatrix> cov,
                              ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
@@ -91,8 +90,8 @@ class GenericFreeTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+  GenericFreeTrackParameters(const Vector4& pos4, double phi, double theta,
+                             double qOverP, std::optional<CovarianceMatrix> cov,
                              ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
@@ -146,7 +145,7 @@ class GenericFreeTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <FreeIndices kIndex>
-  Scalar get() const {
+  double get() const {
     return m_params[kIndex];
   }
 
@@ -162,33 +161,33 @@ class GenericFreeTrackParameters {
   /// Spatial position three-vector.
   Vector3 position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
-  Scalar time() const { return m_params[eFreeTime]; }
+  double time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return VectorHelpers::phi(direction()); }
+  double phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return VectorHelpers::theta(direction()); }
+  double theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
-  Scalar qOverP() const { return m_params[eFreeQOverP]; }
+  double qOverP() const { return m_params[eFreeQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
-  Scalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
-  Scalar transverseMomentum() const {
+  double transverseMomentum() const {
     // direction vector w/ arbitrary normalization can be parametrized as
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
-    Scalar transverseMagnitude2 =
+    double transverseMagnitude2 =
         square(m_params[eFreeDir0]) + square(m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    Scalar magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
+    double magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
     return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }
@@ -196,7 +195,7 @@ class GenericFreeTrackParameters {
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
-  Scalar charge() const {
+  double charge() const {
     return m_particleHypothesis.extractCharge(get<eFreeQOverP>());
   }
 
