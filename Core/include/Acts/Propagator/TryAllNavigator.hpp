@@ -156,7 +156,9 @@ class TryAllNavigatorBase {
   /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
-                  Direction /*propagationDirection*/) const {
+                  Direction propagationDirection) const {
+    (void)propagationDirection;
+
     ACTS_VERBOSE("initialize");
 
     const TrackingVolume* startVolume = nullptr;
@@ -416,8 +418,12 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param direction The current direction
   ///
   /// @return True if the target is still valid
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    (void)state;
+    (void)position;
+    (void)direction;
+
     return false;
   }
 
@@ -429,7 +435,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
-  /// @param surface The reached surface
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& /*surface*/) const {
@@ -622,7 +627,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   ///
   /// @return The next target surface
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& /*direction*/) const {
+                                      const Vector3& direction) const {
+    (void)direction;
+
     if (state.navigationBreak) {
       return NavigationTarget::invalid();
     }
@@ -717,8 +724,11 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param direction The current direction
   ///
   /// @return True if the target is still valid
-  bool checkTargetValid(const State& state, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    (void)position;
+    (void)direction;
+
     return state.activeCandidateIndex != state.activeCandidates.size();
   }
 
@@ -730,7 +740,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
-  /// @param surface The reached surface
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& /*surface*/) const {

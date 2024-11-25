@@ -268,7 +268,9 @@ class Navigator {
   /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
-                  Direction /*propagationDirection*/) const {
+                  Direction propagationDirection) const {
+    (void)propagationDirection;
+
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
     // Fast Navigation initialization for start condition:
@@ -467,8 +469,12 @@ class Navigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    (void)state;
+    (void)position;
+    (void)direction;
+
     return true;
   }
 

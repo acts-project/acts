@@ -166,9 +166,12 @@ class DirectNavigator {
   /// @param position The start position
   /// @param direction The start direction
   /// @param propagationDirection The propagation direction
-  void initialize(State& state, const Vector3& /*position*/,
-                  const Vector3& /*direction*/,
+  void initialize(State& state, const Vector3& position,
+                  const Vector3& direction,
                   Direction propagationDirection) const {
+    (void)position;
+    (void)direction;
+
     ACTS_VERBOSE("Initialize. Surface sequence for navigation:");
     for (const Surface* surface : state.options.surfaces) {
       ACTS_VERBOSE(surface->geometryId()
@@ -267,8 +270,12 @@ class DirectNavigator {
   /// @param direction The current direction
   ///
   /// @return True if the target is valid
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    (void)state;
+    (void)position;
+    (void)direction;
+
     return true;
   }
 
@@ -281,9 +288,13 @@ class DirectNavigator {
   /// @param position The current position
   /// @param direction The current direction
   /// @param surface The surface reached
-  void handleSurfaceReached(State& state, const Vector3& /*position*/,
-                            const Vector3& /*direction*/,
-                            const Surface& /*surface*/) const {
+  void handleSurfaceReached(State& state, const Vector3& position,
+                            const Vector3& direction,
+                            const Surface& surface) const {
+    (void)position;
+    (void)direction;
+    (void)surface;
+
     if (state.navigationBreak) {
       return;
     }

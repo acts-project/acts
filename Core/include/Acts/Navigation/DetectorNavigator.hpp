@@ -118,7 +118,9 @@ class DetectorNavigator {
 
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
-                  Direction /*propagationDirection*/) const {
+                  Direction propagationDirection) const {
+    (void)propagationDirection;
+
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position) << "initialize");
 
     if (state.currentDetector == nullptr) {
@@ -189,14 +191,20 @@ class DetectorNavigator {
                             candidate.boundaryTolerance);
   }
 
-  bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
-                        const Vector3& /*direction*/) const {
+  bool checkTargetValid(const State& state, const Vector3& position,
+                        const Vector3& direction) const {
+    (void)state;
+    (void)position;
+    (void)direction;
+
     return true;
   }
 
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
-                            const Surface& /*surface*/) const {
+                            const Surface& surface) const {
+    (void)surface;
+
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
                                 << "Entering navigator::handleSurfaceReached.");
 
