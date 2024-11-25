@@ -145,7 +145,8 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // There MUST be a second solution
     BOOST_CHECK(!eIntersection[1].isValid());
     // The other intersection MUST NOT be reachable
-    BOOST_CHECK_EQUAL(eIntersection[1].status(), IntersectionStatus::missed);
+    BOOST_CHECK_EQUAL(eIntersection[1].status(),
+                      IntersectionStatus::unreachable);
     // And be the positive one
     BOOST_CHECK_GT(eIntersection[1].pathLength(), 0.);
   };
@@ -279,7 +280,8 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!mIntersection[0].isValid());
     // The intersection MUST be reachable
-    BOOST_CHECK_EQUAL(mIntersection[0].status(), IntersectionStatus::missed);
+    BOOST_CHECK_EQUAL(mIntersection[0].status(),
+                      IntersectionStatus::unreachable);
     // The path length MUST be negative
     BOOST_CHECK_GT(mIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
@@ -386,7 +388,8 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // The intersection MUST NOT be valid
     BOOST_CHECK(!mIntersection[0].isValid());
     // The intersection MUST be reachable
-    BOOST_CHECK_EQUAL(mIntersection[0].status(), IntersectionStatus::missed);
+    BOOST_CHECK_EQUAL(mIntersection[0].status(),
+                      IntersectionStatus::unreachable);
     // The path length MUST be negative
     BOOST_CHECK_LT(mIntersection[0].pathLength(), 0.);
     // The intersection MUST be unique
