@@ -60,6 +60,26 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
                                        const Vector3& sp2,
                                        const Vector3& bField);
 
+/// Estimate the full track parameters from three space points
+///
+/// This is a purely spatial estimation, i.e. the time parameter will be set to
+/// 0.
+///
+/// See the free parameter version for more details.
+///
+/// @tparam spacepoint_iterator_t  The type of space point iterator
+///
+/// @param gctx the geometry context
+/// @param mctx the magnetic field context
+/// @param surface the surface where the bound parameters should be expressed
+/// @param sp0 the bottom space point
+/// @param sp1 the middle space point
+/// @param sp2 the top space point
+/// @param bField the magnetic field provider
+/// @param propagator is the propagator used in case the bottom spacepoint is not on the surface
+/// @param logger the logger to be used
+///
+/// @return bound parameters result
 Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Surface& surface, const Vector3& sp0, const Vector3& sp1,
@@ -70,15 +90,8 @@ Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
 
 /// Estimate the full track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full free track parameters, i.e. (x, y, z, t, dx, dy, dz, q/p) at the bottom
-/// space point. The bottom space is assumed to be the first element in the
-/// range defined by the iterators. The magnetic field (which might be along any
-/// direction) is also necessary for the momentum estimation.
-///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// See the free parameter version with the explicit spacepoints for more
+/// details.
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
@@ -119,27 +132,19 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
 
 /// Estimate the full track parameters from three space points
 ///
-/// This method is based on the conformal map transformation. It estimates the
-/// full bound track parameters, i.e. (loc0, loc1, phi, theta, q/p, t) at the
-/// bottom space point. The bottom space is assumed to be the first element
-/// in the range defined by the iterators. It must lie on the surface provided
-/// for the representation of the bound track parameters. The magnetic field
-/// (which might be along any direction) is also necessary for the momentum
-/// estimation.
-///
-/// It resembles the method used in ATLAS for the track parameters estimated
-/// from seed, i.e. the function InDet::SiTrackMaker_xk::getAtaPlane here:
-/// https://acode-browser.usatlas.bnl.gov/lxr/source/athena/InnerDetector/InDetRecTools/SiTrackMakerTool_xk/src/SiTrackMaker_xk.cxx
+/// See the free parameter version for more details.
 ///
 /// @tparam spacepoint_iterator_t  The type of space point iterator
 ///
-/// @param gctx is the geometry context
-/// @param spRange is the range of space points
-/// @param surface is the surface of the bottom space point. The estimated bound
-/// track parameters will be represented also at this surface
-/// @param bField is the magnetic field vector
+/// @param gctx the geometry context
+/// @param mctx the magnetic field context
+/// @param surface the surface where the bound parameters should be expressed
+/// @param spRange the range of space points (bottom, middle, top)
+/// @param bField the magnetic field provider
+/// @param propagator is the propagator used in case the bottom spacepoint is not on the surface
+/// @param logger the logger to be used
 ///
-/// @return bound parameters
+/// @return bound parameters result
 template <std::ranges::range spacepoint_range_t>
 Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
