@@ -13,21 +13,21 @@
 #include "Acts/Propagator/NavigationTarget.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
 class Surface;
 
-/// @brief The void navigator struct as a default navigator
+/// @brief A navigator that does nothing
 ///
-/// It does not provide any navigation action, the compiler
-/// should eventually optimise that the function call is not done
+/// It does not provide any navigation action
 ///
-struct VoidNavigator {
+class VoidNavigator {
+ public:
+  /// @brief Nested Config struct
   struct Config {};
 
+  /// @brief Nested Options struct
   struct Options : public NavigatorPlainOptions {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
@@ -37,7 +37,7 @@ struct VoidNavigator {
     }
   };
 
-  /// @brief Nested State struct, minimal requirement
+  /// @brief Nested State struct
   struct State {
     explicit State(const Options& options_) : options(options_) {}
 

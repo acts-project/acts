@@ -27,21 +27,23 @@
 
 namespace Acts {
 
-class GeometryContext;
-
-/// This is a fully guided navigator that progresses through a pre-given
-/// sequence of surfaces.
+/// @brief A fully guided navigator
+///
+/// This is a fully guided navigator that progresses through a provided sequence
+/// of surfaces.
 ///
 /// This can either be used as a validation tool, for truth tracking, or track
 /// refitting.
+///
 class DirectNavigator {
  public:
   /// The sequentially crossed surfaces
   using SurfaceSequence = std::vector<const Surface*>;
-  using SurfaceIter = SurfaceSequence::const_iterator;
 
+  /// @brief The nested configuration struct
   struct Config {};
 
+  /// @brief The nested options struct
   struct Options : public NavigatorPlainOptions {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
@@ -156,6 +158,14 @@ class DirectNavigator {
     return state.navigationBreak;
   }
 
+  /// @brief Initialize the navigator
+  ///
+  /// This function initializes the navigator for a new propagation.
+  ///
+  /// @param state The navigation state
+  /// @param position The start position
+  /// @param direction The start direction
+  /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& /*position*/,
                   const Vector3& /*direction*/,
                   Direction propagationDirection) const {
@@ -199,6 +209,16 @@ class DirectNavigator {
     state.navigationBreak = false;
   }
 
+  /// @brief Estimate the next target surface
+  ///
+  /// This function estimates the next target surface for the propagation. For
+  /// the direct navigator this is always the next surface in the sequence.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return The next target surface
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& direction) const {
     if (state.navigationBreak) {
@@ -237,11 +257,30 @@ class DirectNavigator {
                             BoundaryTolerance::Infinite());
   }
 
+  /// @brief Check if the current target is still valid
+  ///
+  /// This function checks if the target is valid. For the direct navigator this
+  /// is always true.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is valid
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
                         const Vector3& /*direction*/) const {
     return true;
   }
 
+  /// @brief Handle the surface reached
+  ///
+  /// This function handles the surface reached. For the direct navigator this
+  /// effectively sets the current surface to the reached surface.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param surface The surface reached
   void handleSurfaceReached(State& state, const Vector3& /*position*/,
                             const Vector3& /*direction*/,
                             const Surface& /*surface*/) const {

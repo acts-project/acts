@@ -30,7 +30,11 @@
 
 namespace Acts {
 
-/// @brief Captures the common functionality of the `TryAllNavigator`s
+/// @brief Captures the common functionality of the try-all navigators
+///
+/// This class is not meant to be used directly, but to be inherited by the
+/// actual navigator implementations.
+///
 class TryAllNavigatorBase {
  public:
   /// @brief Configuration for this Navigator
@@ -50,6 +54,7 @@ class TryAllNavigatorBase {
         BoundaryTolerance::None();
   };
 
+  /// @brief Options for this Navigator
   struct Options : public NavigatorPlainOptions {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
@@ -105,9 +110,9 @@ class TryAllNavigatorBase {
   /// Constructor with configuration object
   ///
   /// @param cfg The navigator configuration
-  /// @param _logger a logger instance
-  TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> _logger)
-      : m_cfg(std::move(cfg)), m_logger{std::move(_logger)} {}
+  /// @param logger a logger instance
+  TryAllNavigatorBase(Config cfg, std::unique_ptr<const Logger> logger)
+      : m_cfg(std::move(cfg)), m_logger{std::move(logger)} {}
 
   const Surface* currentSurface(const State& state) const {
     return state.currentSurface;
@@ -140,6 +145,15 @@ class TryAllNavigatorBase {
     return state.navigationBreak;
   }
 
+  /// @brief Initialize the navigator
+  ///
+  /// This method initializes the navigator for a new propagation. It sets the
+  /// current volume and surface to the start volume and surface, respectively.
+  ///
+  /// @param state The navigation state
+  /// @param position The starting position
+  /// @param direction The starting direction
+  /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction /*propagationDirection*/) const {
@@ -226,6 +240,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
   using Config = TryAllNavigatorBase::Config;
   using Options = TryAllNavigatorBase::Options;
 
+  /// @brief Nested State struct
   struct State : public TryAllNavigatorBase::State {
     explicit State(const Options& options_)
         : TryAllNavigatorBase::State(options_) {}
@@ -258,6 +273,15 @@ class TryAllNavigator : public TryAllNavigatorBase {
   using TryAllNavigatorBase::startSurface;
   using TryAllNavigatorBase::targetSurface;
 
+  /// @brief Initialize the navigator
+  ///
+  /// This method initializes the navigator for a new propagation. It sets the
+  /// current volume and surface to the start volume and surface, respectively.
+  ///
+  /// @param state The navigation state
+  /// @param position The starting position
+  /// @param direction The starting direction
+  /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction propagationDirection) const {
@@ -268,6 +292,17 @@ class TryAllNavigator : public TryAllNavigatorBase {
     reinitializeCandidates(state);
   }
 
+  /// @brief Estimate the next target surface
+  ///
+  /// This method estimates the next target surface based on the current
+  /// position and direction. It returns an invalid target if no target can be
+  /// found.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return The next target surface
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& direction) const {
     // Check if the navigator is inactive
@@ -279,8 +314,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
-
-    ACTS_VERBOSE(volInfo(state) << "intersect candidates");
 
     double nearLimit = state.options.nearLimit;
     double farLimit = state.options.farLimit;
@@ -370,11 +403,33 @@ class TryAllNavigator : public TryAllNavigatorBase {
     return nextTarget;
   }
 
+  /// @brief Check if the target is still valid
+  ///
+  /// This method checks if the target is valid based on the current position
+  /// and direction. It returns true if the target is still valid.
+  ///
+  /// For the TryAllNavigator, the target is always invalid since we do not want
+  /// to assume any specific surface sequence over multiple steps.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is still valid
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
                         const Vector3& /*direction*/) const {
     return false;
   }
 
+  /// @brief Handle the surface reached
+  ///
+  /// This method is called when a surface is reached. It sets the current
+  /// surface in the navigation state and updates the navigation candidates.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param surface The reached surface
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& /*surface*/) const {
@@ -433,7 +488,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "Surface " << surface.geometryId()
                                 << " successfully hit, storing it.");
-    // Set in navigation state, so actors and aborters can access it
     state.currentSurface = &surface;
 
     if (candidate.template checkType<Surface>()) {
@@ -535,6 +589,15 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   using TryAllNavigatorBase::startSurface;
   using TryAllNavigatorBase::targetSurface;
 
+  /// @brief Initialize the navigator
+  ///
+  /// This method initializes the navigator for a new propagation. It sets the
+  /// current volume and surface to the start volume and surface, respectively.
+  ///
+  /// @param state The navigation state
+  /// @param position The starting position
+  /// @param direction The starting direction
+  /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction propagationDirection) const {
@@ -547,6 +610,17 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     state.lastPosition.reset();
   }
 
+  /// @brief Estimate the next target surface
+  ///
+  /// This method estimates the next target surface based on the current
+  /// position and direction. It returns an invalid target if no target can be
+  /// found.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return The next target surface
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& /*direction*/) const {
     if (state.navigationBreak) {
@@ -555,7 +629,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "estimateNextTarget");
 
-    // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
 
     // We cannot do anything without a last position
@@ -618,7 +691,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
-    // Screen output how much is left to try
     ACTS_VERBOSE(volInfo(state)
                  << (state.activeCandidates.size() - state.activeCandidateIndex)
                  << " out of " << state.activeCandidates.size()
@@ -629,18 +701,36 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     const Surface& surface = *intersection.object();
     BoundaryTolerance boundaryTolerance = candidate.boundaryTolerance;
 
-    // Screen output which surface you are on
     ACTS_VERBOSE(volInfo(state)
                  << "Next surface candidate will be " << surface.geometryId());
 
     return NavigationTarget(surface, intersection.index(), boundaryTolerance);
   }
 
+  /// @brief Check if the target is still valid
+  ///
+  /// This method checks if the target is valid based on the current position
+  /// and direction. It returns true if the target is still valid.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& /*position*/,
                         const Vector3& /*direction*/) const {
     return state.activeCandidateIndex != state.activeCandidates.size();
   }
 
+  /// @brief Handle the surface reached
+  ///
+  /// This method is called when a surface is reached. It sets the current
+  /// surface in the navigation state and updates the navigation candidates.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param surface The reached surface
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& /*surface*/) const {
@@ -656,8 +746,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       ACTS_VERBOSE(volInfo(state) << "No active candidate set.");
       return;
     }
-
-    ACTS_VERBOSE(volInfo(state) << "handle active candidates");
 
     std::vector<detail::IntersectedNavigationObject> hitCandidates;
 
@@ -710,12 +798,12 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
                    << "Only using first intersection within bounds.");
     }
 
+    // we can only handle a single surface hit so we pick the first one
     const auto& candidate = hitCandidates.front();
     const auto& intersection = candidate.intersection;
     const Surface& surface = *intersection.object();
 
     ACTS_VERBOSE(volInfo(state) << "Surface successfully hit, storing it.");
-    // Set in navigation state, so actors and aborters can access it
     state.currentSurface = &surface;
 
     if (state.currentSurface != nullptr) {

@@ -29,8 +29,7 @@
 
 namespace Acts {
 
-/// @brief struct for the Navigation options that are forwarded to
-///        the geometry
+/// @brief The navigation options for the tracking geometry
 ///
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
@@ -60,11 +59,11 @@ struct NavigationOptions {
   double farLimit = std::numeric_limits<double>::max();
 };
 
-/// @brief Steers the propagation through the geometry by adjusting the step
-///        size and providing the next surface to be targeted.
+/// @brief Steers the propagation through the geometry by providing the next
+/// surface to be targeted.
 ///
 /// The Navigator is part of the propagation and responsible for steering
-/// the step size in order to encounter all the relevant surfaces which are
+/// the surface sequence to encounter all the relevant surfaces which are
 /// intersected by the trajectory.
 ///
 /// The current navigation stage is cached in the state struct and updated
@@ -79,8 +78,6 @@ struct NavigationOptions {
 ///
 class Navigator {
  public:
-  using Surfaces = std::vector<const Surface*>;
-
   using NavigationSurfaces =
       boost::container::small_vector<SurfaceIntersection, 10>;
 
@@ -100,6 +97,7 @@ class Navigator {
     noTarget = 4,
   };
 
+  /// The navigator configuration
   struct Config {
     /// Tracking Geometry for this Navigator
     std::shared_ptr<const TrackingGeometry> trackingGeometry{nullptr};
@@ -112,6 +110,7 @@ class Navigator {
     bool resolvePassive = false;
   };
 
+  /// The navigator options
   struct Options : public NavigatorPlainOptions {
     explicit Options(const GeometryContext& gctx)
         : NavigatorPlainOptions(gctx) {}
@@ -259,6 +258,14 @@ class Navigator {
     return state.navigationBreak;
   }
 
+  /// @brief Initialize the navigator
+  ///
+  /// This function initializes the navigator for a new propagation.
+  ///
+  /// @param state The navigation state
+  /// @param position The start position
+  /// @param direction The start direction
+  /// @param propagationDirection The propagation direction
   void initialize(State& state, const Vector3& position,
                   const Vector3& direction,
                   Direction /*propagationDirection*/) const {
@@ -331,6 +338,15 @@ class Navigator {
     }
   }
 
+  /// @brief Estimate the next target surface
+  ///
+  /// This function estimates the next target surface for the propagation.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return The next target surface
   NavigationTarget estimateNextTarget(State& state, const Vector3& position,
                                       const Vector3& direction) const {
     if (inactive(state)) {
@@ -442,11 +458,28 @@ class Navigator {
     return NavigationTarget::invalid();
   }
 
+  /// @brief Check if the current target is still valid
+  ///
+  /// This function checks if the target is valid.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  ///
+  /// @return True if the target is valid
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,
                         const Vector3& /*direction*/) const {
     return true;
   }
 
+  /// @brief Handle the surface reached
+  ///
+  /// This function handles the surface reached.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
+  /// @param surface The surface reached
   void handleSurfaceReached(State& state, const Vector3& position,
                             const Vector3& direction,
                             const Surface& surface) const {
@@ -515,6 +548,13 @@ class Navigator {
   }
 
  private:
+  /// @brief Resolve compatible surfaces
+  ///
+  /// This function resolves the compatible surfaces for the navigation.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
   void resolveSurfaces(State& state, const Vector3& position,
                        const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible surfaces.");
@@ -570,6 +610,13 @@ class Navigator {
     }
   }
 
+  /// @brief Resolve compatible layers
+  ///
+  /// This function resolves the compatible layers for the navigation.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
   void resolveLayers(State& state, const Vector3& position,
                      const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible layers.");
@@ -605,6 +652,13 @@ class Navigator {
     }
   }
 
+  /// @brief Resolve compatible boundaries
+  ///
+  /// This function resolves the compatible boundaries for the navigation.
+  ///
+  /// @param state The navigation state
+  /// @param position The current position
+  /// @param direction The current direction
   void resolveBoundaries(State& state, const Vector3& position,
                          const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state) << "Searching for compatible boundaries.");
@@ -641,12 +695,13 @@ class Navigator {
     }
   }
 
-  /// This checks if a navigation break had been triggered or navigator
-  /// is misconfigured
+  /// @brief Check if the navigator is inactive
   ///
-  /// @param [in,out] state the navigation state
+  /// This function checks if the navigator is inactive.
   ///
-  /// boolean return triggers exit to stepper
+  /// @param state The navigation state
+  ///
+  /// @return True if the navigator is inactive
   bool inactive(const State& state) const {
     // Void behavior in case no tracking geometry is present
     if (m_cfg.trackingGeometry == nullptr) {
