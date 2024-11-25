@@ -823,7 +823,12 @@ class CombinatorialKalmanFilter {
         currentBranch.tipIndex() = currentTip;
         auto currentState = currentBranch.outermostTrackState();
         if (expectMeasurements) {
-          currentBranch.nHoles()++;
+           static const BoundaryTolerance exclude_sensor_border
+              = BoundaryTolerance(BoundaryTolerance::AbsoluteCartesian{-2*UnitConstants::mm,-2*UnitConstants::mm});
+           if (currentState.referenceSurface().insideBounds(currentState.parameters().template head<2>(),
+                                                            exclude_sensor_border)) {
+              currentBranch.nHoles()++;
+           }
         }
 
         BranchStopperResult branchStopperResult =

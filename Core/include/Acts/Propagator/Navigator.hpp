@@ -35,7 +35,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The boundary check directive
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+   BoundaryTolerance boundaryTolerance = BoundaryTolerance::AbsoluteCartesian{2*UnitConstants::mm,2*UnitConstants::mm};
 
   // How to resolve the geometry
   /// Always look for sensitive
