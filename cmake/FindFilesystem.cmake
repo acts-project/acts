@@ -103,6 +103,8 @@ if(TARGET std::filesystem)
     return()
 endif()
 
+cmake_minimum_required(VERSION 3.10)
+
 include(CMakePushCheckState)
 include(CheckIncludeFileCXX)
 
@@ -123,6 +125,9 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_QUIET ${Filesystem_FIND_QUIETLY})
+
+# All of our tests required C++17 or later
+set(CMAKE_CXX_STANDARD 17)
 
 # Normalize and check the component list we were given
 set(want_components ${Filesystem_FIND_COMPONENTS})
