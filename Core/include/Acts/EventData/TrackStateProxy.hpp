@@ -1016,17 +1016,14 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
         setBoundSubspaceIndices(other.boundSubspaceIndices());
@@ -1064,17 +1061,14 @@ class TrackStateProxy {
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<hashString("calibrated")>()) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
         setBoundSubspaceIndices(other.boundSubspaceIndices());
