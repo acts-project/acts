@@ -117,17 +117,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
-    navigator.initialize(state, stepper);
+    navigator.initialize(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping),
+                         state.options.direction);
 
-    navigator.preStep(state, stepper);
+    navigator.estimateNextTarget(state.navigation,
+                                 stepper.position(state.stepping),
+                                 stepper.direction(state.stepping));
     auto preStepState = state.navigation;
     BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);
-
-    navigator.postStep(state, stepper);
-    auto postStepState = state.navigation;
-    BOOST_CHECK_EQUAL(postStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentPortal, nullptr);
   }
 
   //
@@ -166,7 +165,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
-    navigator.initialize(state, stepper);
+    navigator.initialize(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping),
+                         state.options.direction);
+
     auto initState = state.navigation;
     BOOST_CHECK_EQUAL(initState.currentDetector, detector.get());
     BOOST_CHECK_EQUAL(
