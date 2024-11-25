@@ -25,9 +25,6 @@ namespace ActsFatras {
 /// "A Gaussian-mixture approximation of the Bethe–Heitler model of electron
 /// energy loss by bremsstrahlung" R. Frühwirth
 struct BetheHeitler {
-  using Scalar = Particle::Scalar;
-  using Vector3 = Particle::Vector3;
-
   /// A scaling factor to
   double scaleFactor = 1.;
 
@@ -42,9 +39,9 @@ struct BetheHeitler {
   /// @param [in] rndTheta1 Random number for the polar angle
   /// @param [in] rndTheta2 Random number for the polar angle
   /// @param [in] rndTheta3 Random number for the polar angle
-  Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi,
-                      Scalar rndTheta1, Scalar rndTheta2,
-                      Scalar rndTheta3) const;
+  Particle bremPhoton(const Particle &particle, double gammaE, double rndPsi,
+                      double rndTheta1, double rndTheta2,
+                      double rndTheta3) const;
 
   /// Simulate energy loss and update the particle parameters.
   ///
@@ -67,7 +64,7 @@ struct BetheHeitler {
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
-    std::uniform_real_distribution<Scalar> uDist(0., 1.);
+    std::uniform_real_distribution<double> uDist(0., 1.);
     // Build the produced photon
     Particle photon =
         bremPhoton(particle, sampledEnergyLoss, uDist(generator),

@@ -434,7 +434,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
 
-      Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+      IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, BoundaryTolerance::Infinite(),
           state.options.surfaceTolerance, logger());
@@ -463,7 +463,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
 
-      Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+      IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
@@ -788,7 +788,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         const auto& intersection = candidate.intersection;
         const Surface& surface = *intersection.object();
 
-        Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+        IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
             state.options.direction, BoundaryTolerance::Infinite(),
             state.options.surfaceTolerance, logger());
@@ -815,7 +815,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         const auto& intersection = candidate.intersection;
         const Surface& surface = *intersection.object();
 
-        Intersection3D::Status surfaceStatus = stepper.updateSurfaceStatus(
+        IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
             state.options.direction, BoundaryTolerance::None(),
             state.options.surfaceTolerance, logger());

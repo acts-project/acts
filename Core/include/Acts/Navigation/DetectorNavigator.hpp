@@ -223,7 +223,7 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "surface status is " << surfaceStatus);
 
-      if (surfaceStatus == Intersection3D::Status::reachable) {
+      if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "surface "
                      << surface.center(state.geoContext).transpose()
@@ -292,7 +292,7 @@ class DetectorNavigator {
         state.options.surfaceTolerance, logger());
 
     // Check if we are at a surface
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "landed on surface");
 
