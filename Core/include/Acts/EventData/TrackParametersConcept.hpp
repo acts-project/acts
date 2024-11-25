@@ -21,7 +21,6 @@ class Surface;
 namespace Concepts {
 template <typename Parameters>
 concept BasicTrackParameters = requires {
-  typename Parameters::Scalar;
   typename Parameters::ParametersVector;
   typename Parameters::CovarianceMatrix;
 

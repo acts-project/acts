@@ -121,8 +121,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   }
 
   // create the primary vertex
-  vertices.emplace_back(SimVertexBarcode{0},
-                        SimVertex::Vector4(0., 0., 0., 0.));
+  vertices.emplace_back(SimVertexBarcode{0}, Acts::Vector4(0., 0., 0., 0.));
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
