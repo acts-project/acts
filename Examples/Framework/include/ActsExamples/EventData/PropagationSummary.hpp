@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 
 #include <vector>
@@ -34,6 +35,9 @@ struct PropagationSummary {
 
   /// Steps
   std::vector<Acts::detail::Step> steps;
+
+  /// Propagation statistics
+  Acts::PropagatorStatistics statistics;
 };
 
 using PropagationSummaries = std::vector<PropagationSummary>;

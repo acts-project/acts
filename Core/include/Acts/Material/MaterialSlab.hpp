@@ -79,6 +79,15 @@ class MaterialSlab {
   float m_thicknessInX0 = 0.0f;
   float m_thicknessInL0 = 0.0f;
 
+  /// @brief Check if two materials are exactly equal.
+  ///
+  /// This is a strict equality check, i.e. the materials must have identical
+  /// properties.
+  ///
+  /// @param lhs is the left hand side material
+  /// @param rhs is the right hand side material
+  ///
+  /// @return true if the materials are equal
   friend constexpr bool operator==(const MaterialSlab& lhs,
                                    const MaterialSlab& rhs) {
     // t/X0 and t/L0 are dependent variables and need not be checked
