@@ -55,7 +55,6 @@ PrototracksToParameters::~PrototracksToParameters() {}
 
 ProcessCode PrototracksToParameters::execute(
     const AlgorithmContext &ctx) const {
-  auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
   const auto &sps = m_inputSpacePoints(ctx);
   auto prototracks = m_inputProtoTracks(ctx);
 
@@ -154,21 +153,9 @@ ProcessCode PrototracksToParameters::execute(
                            .geometryId();
     const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
-    auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
-    if (!fieldRes.ok()) {
-      ACTS_ERROR("Field lookup error: " << fieldRes.error());
-      return ProcessCode::ABORT;
-    }
-    Acts::Vector3 field = *fieldRes;
-
-    if (field.norm() < m_cfg.bFieldMin) {
-      ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
-      continue;
-    }
-
-    auto parsResult = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp(), surface, field);
+    auto parsResult = Acts::estimateTrackParamsFromSeedAtSurface(
+        ctx.geoContext, ctx.magFieldContext, surface, seed.sp(),
+        m_cfg.magneticField);
     if (!parsResult.ok()) {
       ACTS_WARNING("Skip track because of bad params");
     }
