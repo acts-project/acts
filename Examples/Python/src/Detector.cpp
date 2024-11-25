@@ -53,7 +53,14 @@ void addDetector(Context& ctx) {
         .def("geometryContext", &DetectorBase::geometryContext)
         .def("gen1Geometry", &DetectorBase::gen1Geometry)
         .def("gen2Geometry", &DetectorBase::gen2Geometry)
-        .def("contextDecorators", &DetectorBase::contextDecorators);
+        .def("contextDecorators", &DetectorBase::contextDecorators)
+        .def("__enter__",
+             [](const std::shared_ptr<DetectorBase>& self) { return self; })
+        .def("__exit__",
+             [](std::shared_ptr<DetectorBase>& self,
+                const std::optional<py::object>&,
+                const std::optional<py::object>&,
+                const std::optional<py::object>&) { self.reset(); });
 
     py::class_<DetectorFactoryBase, std::shared_ptr<DetectorFactoryBase>>(
         mex, "DetectorFactoryBase")

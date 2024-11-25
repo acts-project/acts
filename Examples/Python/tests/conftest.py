@@ -387,7 +387,7 @@ def _do_material_recording(d: Path):
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
         detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
 
         runMaterialRecording(

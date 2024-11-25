@@ -150,7 +150,7 @@ def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
         pass
 
     csv = tmp_path / "csv"
@@ -760,7 +760,10 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector(mdecorator) as detector:
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
+
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -793,11 +796,12 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    ) as detector:
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
+
         runMaterialValidation(
             10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
         )
@@ -827,11 +831,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+    ) as detector:
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
+
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -865,11 +870,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    ) as detector:
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
+
         runMaterialValidation(
             10,
             1000,
@@ -1204,7 +1210,7 @@ def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
         pass
 
     script = (
@@ -1237,7 +1243,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
         pass
 
     script = (
@@ -1291,7 +1297,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     assert not (tmp_path / root_file).exists()
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
         pass
 
     script = (
