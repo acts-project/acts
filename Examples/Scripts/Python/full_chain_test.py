@@ -301,10 +301,12 @@ def full_chain(args):
         if args.material_config is None:
             args.material_config = geo_dir / "data/odd-material-maps.root"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
+        detector = getOpenDataDetector(
             odd_dir=geo_dir,
             mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
         etaRange = (-4.0, 4.0)

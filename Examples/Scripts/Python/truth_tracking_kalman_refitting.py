@@ -100,7 +100,9 @@ if __name__ == "__main__":
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.contextDecorators()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )

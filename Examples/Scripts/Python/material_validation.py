@@ -105,9 +105,9 @@ if "__main__" == __name__:
         acts.IMaterialDecorator.fromFile(args.map) if args.map != None else None
     )
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=materialDecorator
-    )
+    detector = getOpenDataDetector(materialDecorator)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
 

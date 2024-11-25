@@ -12,9 +12,9 @@ oddDir = getOpenDataDetectorDirectory()
 oddMaterialMap = oddDir / "data/odd-material-maps.root"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(
-    mdecorator=oddMaterialDeco,
-)
+detector = getOpenDataDetector(mdecorator=oddMaterialDeco)
+trackingGeometry = detector.gen1Geometry()
+decorators = detector.contextDecorators()
 ```
 
 In our simple example we assume a homogeneous magnetic field along the beam axis with 2 T. The magnetic field is passed to all the different algorithms in our simulation and the reconstruction pipeline.

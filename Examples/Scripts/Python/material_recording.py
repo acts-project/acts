@@ -109,7 +109,7 @@ def main():
 
     detectorConstructionFactory = None
     if args.input == "":
-        detector, trackingGeometry, decorators = getOpenDataDetector()
+        detector = getOpenDataDetector()
 
         detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
     elif args.input.endswith(".gdml"):

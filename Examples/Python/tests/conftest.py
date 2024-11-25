@@ -288,9 +288,11 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detectorTuple = getOpenDataDetector(matDeco)
+        detector = getOpenDataDetector(matDeco)
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
         return DetectorConfig(
-            detectorTuple,
+            (detector, trackingGeometry, decorators),
             digiConfigFile=(
                 srcdir
                 / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"

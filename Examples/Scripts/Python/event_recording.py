@@ -75,7 +75,9 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.contextDecorators()
 
     detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
 
