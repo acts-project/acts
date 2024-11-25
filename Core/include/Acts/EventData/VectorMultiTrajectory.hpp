@@ -47,6 +47,32 @@ using MultiTrajectoryTraits::IndexType;
 constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
 constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
 
+template <typename T>
+struct NonInitializingAllocator {
+  using value_type = T;
+
+  NonInitializingAllocator() noexcept = default;
+
+  template <class U>
+  NonInitializingAllocator(
+      const NonInitializingAllocator<U>& /*other*/) noexcept {}
+
+  template <class U>
+  bool operator==(const NonInitializingAllocator<U>& /*other*/) const noexcept {
+    return true;
+  }
+
+  T* allocate(std::size_t n) const { return std::allocator<T>{}.allocate(n); }
+
+  void deallocate(T* const p, std::size_t n) const noexcept {
+    std::allocator<T>{}.deallocate(p, n);
+  }
+
+  /// This construct function intentionally does not initialize the object!
+  /// Be very careful when using this allocator.
+  void construct(T* /*p*/) {}
+};
+
 class VectorMultiTrajectoryBase {
  public:
   struct Statistics {
@@ -320,9 +346,9 @@ class VectorMultiTrajectoryBase {
       m_params;
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
 
-  std::vector<double> m_meas;
+  std::vector<double, NonInitializingAllocator<double>> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
-  std::vector<double> m_measCov;
+  std::vector<double, NonInitializingAllocator<double>> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
@@ -465,22 +491,26 @@ class VectorMultiTrajectory final
   }
 
   void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
-    throw_assert(measdim > 0 && measdim <= eBoundSize,
-                 "Invalid measurement dimension detected");
+    if (m_measOffset[istate] == kInvalid ||
+        m_measCovOffset[istate] == kInvalid ||
+        m_index[istate].measdim != measdim) {
+      m_index[istate].measdim = measdim;
 
-    if (m_measOffset[istate] != kInvalid &&
-        m_measCovOffset[istate] != kInvalid &&
-        m_index[istate].measdim == measdim) {
-      return;
+      m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
+      m_meas.resize(m_meas.size() + measdim);
+
+      m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
+      m_measCov.resize(m_measCov.size() + measdim * measdim);
     }
 
-    m_index[istate].measdim = measdim;
+    // Always initialize to zero
+    for (std::size_t i = 0; i < measdim; i++) {
+      m_meas[m_measOffset[istate] + i] = 0;
+    }
 
-    m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
-    m_meas.resize(m_meas.size() + measdim);
-
-    m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
-    m_measCov.resize(m_measCov.size() + measdim * measdim);
+    for (std::size_t i = 0; i < measdim * measdim; i++) {
+      m_measCov[m_measCovOffset[istate] + i] = 0;
+    }
   }
 
   void setUncalibratedSourceLink_impl(IndexType istate,

@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -196,6 +197,9 @@ class MultiTrajectoryTestsCommon {
     alwaysPresent(ts);
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
+                      ActsSquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::None));
     BOOST_CHECK(!ts.hasPredicted());
@@ -242,6 +246,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(!ts.hasJacobian());
     ts.allocateCalibrated(5);
     BOOST_CHECK(ts.hasCalibrated());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
+                      ActsSquareMatrix<5>::Zero());
 
     ts = t.getTrackState(t.addTrackState(PM::Jacobian));
     BOOST_CHECK(!ts.hasPredicted());
@@ -300,6 +307,9 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK(ts.hasSmoothed());
     BOOST_CHECK(ts.hasCalibrated());
     BOOST_CHECK(!ts.hasJacobian());
+    BOOST_CHECK_EQUAL(ts.template calibrated<5>(), ActsVector<5>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibratedCovariance<5>(),
+                      ActsSquareMatrix<5>::Zero());
 
     ts.addComponents(PM::Jacobian);
     BOOST_CHECK(ts.hasPredicted());
@@ -379,6 +389,10 @@ class MultiTrajectoryTestsCommon {
       // reset measurements w/ full parameters
       auto [measPar, measCov] = generateBoundParametersCovariance(rng, {});
       tsb.allocateCalibrated(eBoundSize);
+      BOOST_CHECK_EQUAL(tsb.template calibrated<eBoundSize>(),
+                        BoundVector::Zero());
+      BOOST_CHECK_EQUAL(tsb.template calibratedCovariance<eBoundSize>(),
+                        BoundMatrix::Zero());
       tsb.template calibrated<eBoundSize>() = measPar;
       tsb.template calibratedCovariance<eBoundSize>() = measCov;
       BOOST_CHECK_EQUAL(tsa.template calibrated<eBoundSize>(), measPar);
@@ -394,7 +408,15 @@ class MultiTrajectoryTestsCommon {
       std::size_t nMeasurements = tsb.effectiveCalibrated().rows();
       auto effPar = measPar.head(nMeasurements);
       auto effCov = measCov.topLeftCorner(nMeasurements, nMeasurements);
-      tsb.allocateCalibrated(eBoundSize);
+      tsb.allocateCalibrated(
+          eBoundSize);  // no allocation, but we expect it to be reset to zero
+                        // with this overload
+      BOOST_CHECK_EQUAL(tsa.effectiveCalibrated(), BoundVector::Zero());
+      BOOST_CHECK_EQUAL(tsa.effectiveCalibratedCovariance(),
+                        BoundMatrix::Zero());
+      BOOST_CHECK_EQUAL(tsa.effectiveCalibrated(), BoundVector::Zero());
+      BOOST_CHECK_EQUAL(tsa.effectiveCalibratedCovariance(),
+                        BoundMatrix::Zero());
       tsb.effectiveCalibrated() = effPar;
       tsb.effectiveCalibratedCovariance() = effCov;
       BOOST_CHECK_EQUAL(tsa.effectiveCalibrated(), effPar);
