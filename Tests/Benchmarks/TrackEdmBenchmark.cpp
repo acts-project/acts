@@ -111,6 +111,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
             << std::endl;
   for (std::size_t r = 0; r < runs; ++r) {
     tc.clear();
+    output.clear();
+
     for (std::size_t i = 0; i < nTracks; ++i) {
       auto track = tc.makeTrack();
 
