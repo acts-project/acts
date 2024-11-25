@@ -61,10 +61,14 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
  private:
   Material m_material;
 
-  /// Check if two materials are exactly equal.
-  /// @note This is a strict equality check, i.e. the materials must
-  /// have identical properties.
-  /// @param other is the material to compare to
+  /// @brief Check if two materials are exactly equal.
+  ///
+  /// This is a strict equality check, i.e. the materials must have identical
+  /// properties.
+  ///
+  /// @param lhs is the left hand side material
+  /// @param rhs is the right hand side material
+  ///
   /// @return true if the materials are equal
   friend constexpr bool operator==(const HomogeneousVolumeMaterial& lhs,
                                    const HomogeneousVolumeMaterial& rhs) {
