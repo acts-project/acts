@@ -739,7 +739,7 @@ class CombinatorialKalmanFilter {
         slRange = m_sourceLinkAccessor(*surface);
         hasMeasurements = slRange->first != slRange->second;
       }
-      bool isHole = isSensitive && !hasMeasurements;
+      bool isHole = isSensitive && expectMeasurements && !hasMeasurements;
 
       if (isHole) {
         ACTS_VERBOSE("Detected hole before measurement selection on surface "

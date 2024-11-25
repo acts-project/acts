@@ -29,11 +29,10 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
       m_binUtility(binUtility),
       m_fullMaterial(std::move(fullProperties)) {}
 
-Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::operator*=(
-    double scale) {
+Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
   for (auto& materialVector : m_fullMaterial) {
     for (auto& materialBin : materialVector) {
-      materialBin.scaleThickness(scale);
+      materialBin.scaleThickness(factor);
     }
   }
   return (*this);

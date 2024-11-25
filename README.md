@@ -70,7 +70,7 @@ Contributors to the Acts project are listed in the [AUTHORS](AUTHORS) file.
 
 The Acts project is published under the terms of the Mozilla Public License, v. 2.0.
 A copy of the license can be found in the [LICENSE](LICENSE) file or at
-http://mozilla.org/MPL/2.0/ .
+https://mozilla.org/MPL/2.0/ .
 
 The Acts project contains copies of the following external packages:
 
