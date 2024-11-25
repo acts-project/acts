@@ -16,7 +16,6 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"

@@ -302,8 +302,8 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 
 Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
-const int nTestsSelfConsistency = 100;
-const int nTestsRefConsistency = 100;
+const int nTestsSelfConsistency = 500;
+const int nTestsRefConsistency = 500;
 
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 using EigenStepper = Acts::EigenStepper<>;
