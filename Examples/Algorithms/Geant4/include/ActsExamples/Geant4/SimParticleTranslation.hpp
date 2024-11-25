@@ -20,7 +20,7 @@
 
 class G4Event;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class SimParticleTranslation
 ///
@@ -81,4 +81,4 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
