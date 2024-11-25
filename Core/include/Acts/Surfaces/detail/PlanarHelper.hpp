@@ -35,9 +35,9 @@ inline Intersection3D intersect(const Transform3& transform,
     // Translate that into a path
     ActsScalar path = (pnormal.dot((pcenter - position))) / (denom);
     // Is valid hence either on surface or reachable
-    Intersection3D::Status status = std::abs(path) < std::abs(tolerance)
-                                        ? Intersection3D::Status::onSurface
-                                        : Intersection3D::Status::reachable;
+    IntersectionStatus status = std::abs(path) < std::abs(tolerance)
+                                    ? IntersectionStatus::onSurface
+                                    : IntersectionStatus::reachable;
     // Return the intersection
     return Intersection3D{(position + path * direction), path, status};
   }

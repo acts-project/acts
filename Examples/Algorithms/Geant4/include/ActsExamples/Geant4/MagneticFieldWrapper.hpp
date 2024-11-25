@@ -18,7 +18,7 @@ namespace Acts {
 class MagneticFieldProvider;
 }
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A magnetic field wrapper for the Acts magnetic field
 /// to be used with Geant4.
@@ -58,4 +58,4 @@ class MagneticFieldWrapper : public G4MagneticField {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

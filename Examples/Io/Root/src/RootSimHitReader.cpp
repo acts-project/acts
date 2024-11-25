@@ -29,7 +29,7 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
@@ -102,6 +102,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
   ACTS_DEBUG("Event range: " << availableEvents().first << " - "
                              << availableEvents().second);
 }
+
+RootSimHitReader::~RootSimHitReader() = default;
 
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
