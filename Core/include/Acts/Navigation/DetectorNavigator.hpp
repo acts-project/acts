@@ -308,7 +308,7 @@ class DetectorNavigator {
   /// This checks if a navigation break had been triggered or navigator
   /// is misconfigured
   ///
-  /// boolean return triggers exit to stepper
+  /// @return true if the navigator is inactive
   bool inactive() const {
     if (m_cfg.detector == nullptr) {
       return true;
@@ -332,13 +332,8 @@ class DetectorNavigator {
   /// - attempted volume switch
   /// Target finding by association will not be done again
   ///
-  /// @tparam propagator_state_t The state type of the propagator
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
   /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
-  ///
-  /// boolean return triggers exit to stepper
+  /// @param [in] position is the current position
   void updateCandidateSurfaces(State& state, const Vector3& position) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, position) << "initialize target");
