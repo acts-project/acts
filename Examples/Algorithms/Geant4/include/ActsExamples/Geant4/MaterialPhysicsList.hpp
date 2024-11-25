@@ -12,11 +12,10 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include <G4VUserPhysicsList.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class MaterialPhysicsList
 ///
@@ -57,4 +56,4 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

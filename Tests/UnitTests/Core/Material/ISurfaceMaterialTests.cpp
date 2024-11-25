@@ -14,7 +14,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <cstddef>
 #include <ostream>
 
 namespace Acts::Test {
@@ -22,7 +21,7 @@ namespace Acts::Test {
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
 
-  ISurfaceMaterial& operator*=(double /*scale*/) override { return *this; };
+  ISurfaceMaterial& scale(double /*factor*/) override { return *this; };
 
   const MaterialSlab& materialSlab(const Vector2& /*lp*/) const override {
     return m_fullMaterial;

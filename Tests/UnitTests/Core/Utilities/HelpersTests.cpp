@@ -27,6 +27,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace Acts::VectorHelpers;
@@ -308,6 +309,20 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     CHECK_CLOSE_ABS(a1, std::numbers::pi / 2.,
                     std::numeric_limits<ActsScalar>::epsilon());
   }
+}
+
+BOOST_AUTO_TEST_CASE(Overloaded) {
+  struct A {};
+  std::variant<int, double, A> var;
+
+  var = 42;
+
+  std::visit(overloaded{
+                 [](int) { BOOST_CHECK(true); },
+                 [](double) { BOOST_CHECK(false); },
+                 [](A) { BOOST_CHECK(false); },
+             },
+             var);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
