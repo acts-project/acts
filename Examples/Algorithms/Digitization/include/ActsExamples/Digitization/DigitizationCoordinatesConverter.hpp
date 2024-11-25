@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 namespace ActsExamples {
@@ -18,10 +19,11 @@ class DigitizationCoordinatesConverter final {
   /// Construct the converter
   ///
   /// @param config is the configuration
-  explicit DigitizationCoordinatesConverter(DigitizationConfig config);
+  explicit DigitizationCoordinatesConverter(
+      DigitizationAlgorithm::Config config);
 
   /// Get const access to the config
-  const DigitizationConfig& config() const { return m_cfg; }
+  const DigitizationAlgorithm::Config& config() const { return m_cfg; }
 
   /// Convert the hit coordinates to the local frame.
   std::tuple<double, double> globalToLocal(std::uint64_t moduleId, double x,
@@ -33,7 +35,7 @@ class DigitizationCoordinatesConverter final {
 
  private:
   /// Configuration
-  DigitizationConfig m_cfg;
+  DigitizationAlgorithm::Config m_cfg;
 };
 
 }  // namespace ActsExamples

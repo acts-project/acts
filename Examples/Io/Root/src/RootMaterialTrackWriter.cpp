@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -23,11 +22,9 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <ios>
 #include <stdexcept>
-#include <type_traits>
 
 #include <TFile.h>
 #include <TTree.h>

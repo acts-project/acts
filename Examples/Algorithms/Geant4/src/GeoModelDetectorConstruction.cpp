@@ -21,7 +21,7 @@ using namespace ActsExamples;
 
 GeoModelDetectorConstruction::GeoModelDetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_geoModelTree(geoModelTree),
       m_regionCreators(std::move(regionCreators)) {
@@ -42,7 +42,7 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->Construct();
+      regionCreator->construct();
     }
   }
   return m_g4World;
@@ -50,7 +50,7 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
 
 GeoModelDetectorConstructionFactory::GeoModelDetectorConstructionFactory(
     const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_geoModelTree(geoModelTree),
       m_regionCreators(std::move(regionCreators)) {}
 

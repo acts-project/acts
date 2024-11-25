@@ -13,10 +13,10 @@
 
 namespace Acts {
 
-TryAllNavigationPolicy::TryAllNavigationPolicy(const Config& config,
-                                               const GeometryContext& /*gctx*/,
+TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& /*gctx*/,
                                                const TrackingVolume& volume,
-                                               const Logger& logger)
+                                               const Logger& logger,
+                                               const Config& config)
     : m_cfg{config}, m_volume(&volume) {
   assert(m_volume != nullptr);
   ACTS_VERBOSE("TryAllNavigationPolicy created for volume "
@@ -26,7 +26,7 @@ TryAllNavigationPolicy::TryAllNavigationPolicy(const Config& config,
 TryAllNavigationPolicy::TryAllNavigationPolicy(const GeometryContext& gctx,
                                                const TrackingVolume& volume,
                                                const Logger& logger)
-    : TryAllNavigationPolicy({}, gctx, volume, logger) {}
+    : TryAllNavigationPolicy(gctx, volume, logger, {}) {}
 
 void TryAllNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
