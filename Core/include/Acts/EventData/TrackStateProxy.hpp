@@ -871,8 +871,31 @@ class TrackStateProxy {
 
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This will zero-initialize the allocated storage
+  /// @note This is an error if an existing allocation has different size
   void allocateCalibrated(std::size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
+  }
+
+  /// Allocate storage and assign the given vector and covariance to it.
+  /// The dimension is inferred from the given vector and matrix.
+  /// @tparam val_t Type of the vector
+  /// @tparam cov_t Type of the covariance matrix
+  /// @param val The measurement vector
+  /// @param cov The covariance matrix
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This is an error if an existing allocation has different size
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov)
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    m_traj->template allocateCalibrated<
+        Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);
   }
 
   /// @}

@@ -490,10 +490,28 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
-  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
-    if (m_measOffset[istate] == kInvalid ||
-        m_measCovOffset[istate] == kInvalid ||
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated_impl(IndexType istate,
+                               const Eigen::DenseBase<val_t>& val,
+                               const Eigen::DenseBase<cov_t>& cov)
+
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    constexpr std::size_t measdim = val_t::RowsAtCompileTime;
+
+    if (m_index[istate].measdim != kInvalid &&
         m_index[istate].measdim != measdim) {
+      throw std::invalid_argument{
+          "Measurement dimension does not match the allocated dimension"};
+    }
+
+    if (m_measOffset[istate] == kInvalid ||
+        m_measCovOffset[istate] == kInvalid) {
       m_index[istate].measdim = measdim;
 
       m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
@@ -503,14 +521,21 @@ class VectorMultiTrajectory final
       m_measCov.resize(m_measCov.size() + measdim * measdim);
     }
 
-    // Always initialize to zero
-    for (std::size_t i = 0; i < measdim; i++) {
-      m_meas[m_measOffset[istate] + i] = 0;
-    }
+    m_index[istate].measdim = measdim;
 
-    for (std::size_t i = 0; i < measdim * measdim; i++) {
-      m_measCov[m_measCovOffset[istate] + i] = 0;
-    }
+    m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
+    m_meas.resize(m_meas.size() + measdim);
+
+    double* measPtr = &m_meas[m_measOffset[istate]];
+    Eigen::Map<ActsVector<measdim>> valMap(measPtr);
+    valMap = val;
+
+    m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
+    m_measCov.resize(m_measCov.size() + measdim * measdim);
+
+    double* covPtr = &m_measCov[m_measCovOffset[istate]];
+    Eigen::Map<ActsSquareMatrix<measdim>> covMap(covPtr);
+    covMap = cov;
   }
 
   void setUncalibratedSourceLink_impl(IndexType istate,
