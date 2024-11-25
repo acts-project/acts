@@ -23,10 +23,6 @@ using SimParticleState = ::ActsFatras::Particle;
 
 class SimParticle final {
  public:
-  using Scalar = double;
-  using Vector3 = Acts::ActsVector<3>;
-  using Vector4 = Acts::ActsVector<4>;
-
   /// Construct a default particle with invalid identity.
   SimParticle() = default;
 
@@ -39,8 +35,8 @@ class SimParticle final {
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, Scalar charge,
-              Scalar mass)
+  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, double charge,
+              double mass)
       : m_initial(particleId, pdg, charge, mass),
         m_final(particleId, pdg, charge, mass) {}
 
@@ -89,13 +85,13 @@ class SimParticle final {
     return *this;
   }
   /// Set the charge.
-  SimParticle& setCharge(Scalar charge) {
+  SimParticle& setCharge(double charge) {
     initial().setCharge(charge);
     final().setCharge(charge);
     return *this;
   }
   /// Set the mass.
-  SimParticle& setMass(Scalar mass) {
+  SimParticle& setMass(double mass) {
     initial().setMass(mass);
     final().setMass(mass);
     return *this;

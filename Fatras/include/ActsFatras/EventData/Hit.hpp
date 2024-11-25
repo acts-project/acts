@@ -26,10 +26,6 @@ namespace ActsFatras {
 /// thus stored as two separate four-vectors.
 class Hit {
  public:
-  using Scalar = double;
-  using Vector3 = Acts::ActsVector<3>;
-  using Vector4 = Acts::ActsVector<4>;
-
   /// Construct default hit with (mostly) invalid information.
   Hit() = default;
   /// Construct from four-position and four-momenta.
@@ -45,8 +41,8 @@ class Hit {
   /// users responsibility to ensure that the position correspond to a
   /// position on the given surface.
   Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
-      const Vector4& pos4, const Vector4& before4, const Vector4& after4,
-      std::int32_t index_ = -1)
+      const Acts::Vector4& pos4, const Acts::Vector4& before4,
+      const Acts::Vector4& after4, std::int32_t index_ = -1)
       : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),
@@ -68,26 +64,26 @@ class Hit {
   constexpr std::int32_t index() const { return m_index; }
 
   /// Space-time position four-vector.
-  const Vector4& fourPosition() const { return m_pos4; }
+  const Acts::Vector4& fourPosition() const { return m_pos4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_pos4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
-  Scalar time() const { return m_pos4[Acts::eTime]; }
+  double time() const { return m_pos4[Acts::eTime]; }
 
   /// Particle four-momentum before the hit.
-  const Vector4& momentum4Before() const { return m_before4; }
+  const Acts::Vector4& momentum4Before() const { return m_before4; }
   /// Particle four-momentum after the hit.
-  const Vector4& momentum4After() const { return m_after4; }
+  const Acts::Vector4& momentum4After() const { return m_after4; }
   /// Normalized particle direction vector before the hit.
-  Vector3 directionBefore() const {
+  Acts::Vector3 directionBefore() const {
     return m_before4.segment<3>(Acts::eMom0).normalized();
   }
   /// Normalized particle direction vector the hit.
-  Vector3 directionAfter() const {
+  Acts::Vector3 directionAfter() const {
     return m_after4.segment<3>(Acts::eMom0).normalized();
   }
   /// Average normalized particle direction vector through the surface.
-  Vector3 direction() const {
+  Acts::Vector3 direction() const {
     auto dir0 = m_before4.segment<3>(Acts::eMom0).normalized();
     auto dir1 = m_after4.segment<3>(Acts::eMom0).normalized();
     return ((dir0 + dir1) / 2.).segment<3>(Acts::eMom0).normalized();
@@ -96,7 +92,7 @@ class Hit {
   ///
   /// @retval positive if the particle lost energy when it passed the surface
   /// @retval negative if magic was involved
-  Scalar depositedEnergy() const {
+  double depositedEnergy() const {
     return m_before4[Acts::eEnergy] - m_after4[Acts::eEnergy];
   }
 
@@ -108,11 +104,11 @@ class Hit {
   /// Index of the hit along the particle trajectory.
   std::int32_t m_index = -1;
   /// Global space-time position four-vector.
-  Vector4 m_pos4 = Vector4::Zero();
+  Acts::Vector4 m_pos4 = Acts::Vector4::Zero();
   /// Global particle energy-momentum four-vector before the hit.
-  Vector4 m_before4 = Vector4::Zero();
+  Acts::Vector4 m_before4 = Acts::Vector4::Zero();
   /// Global particle energy-momentum four-vector after the hit.
-  Vector4 m_after4 = Vector4::Zero();
+  Acts::Vector4 m_after4 = Acts::Vector4::Zero();
 };
 
 }  // namespace ActsFatras

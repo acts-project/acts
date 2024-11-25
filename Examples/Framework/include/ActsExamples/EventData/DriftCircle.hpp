@@ -23,8 +23,6 @@ namespace ActsExamples {
 
 /// representation of a drift circle measurement used for track finding
 class DriftCircle {
-  using Scalar = double;
-
  public:
   /// Construct the drift circle from the drift radius and tube location
   ///
@@ -52,11 +50,11 @@ class DriftCircle {
         m_tubeLayer(tubeLayer),
         m_tube(tube) {}
 
-  constexpr Scalar x() const { return m_x; }
-  constexpr Scalar y() const { return m_y; }
-  constexpr Scalar z() const { return m_z; }
-  constexpr Scalar rDrift() const { return m_rho; }
-  constexpr Scalar rDriftError() const { return m_sigmaRho; }
+  constexpr double x() const { return m_x; }
+  constexpr double y() const { return m_y; }
+  constexpr double z() const { return m_z; }
+  constexpr double rDrift() const { return m_rho; }
+  constexpr double rDriftError() const { return m_sigmaRho; }
   constexpr int stationName() const { return m_stationName; }
   constexpr int stationEta() const { return m_stationEta; }
   constexpr int stationPhi() const { return m_stationPhi; }
@@ -66,11 +64,11 @@ class DriftCircle {
 
  private:
   // Global position
-  Scalar m_x = 0.0f;
-  Scalar m_y = 0.0f;
-  Scalar m_z = 0.0f;
-  Scalar m_rho = 0.0f;
-  Scalar m_sigmaRho = 0.0f;
+  double m_x = 0.;
+  double m_y = 0.;
+  double m_z = 0.;
+  double m_rho = 0.;
+  double m_sigmaRho = 0.;
   int m_stationName = 0;
   int m_stationEta = 0;
   int m_stationPhi = 0;
