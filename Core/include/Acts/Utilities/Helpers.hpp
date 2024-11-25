@@ -240,7 +240,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
 ///         - The minimum value (double)
 ///         - The adjusted maximum value (double)
 ///         - The bin count (std::size_t)
-auto getMinMaxAndBinCount(std::vector<double>& xPos) {
+inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   // sort the values for unique()
   std::ranges::sort(xPos);
 
