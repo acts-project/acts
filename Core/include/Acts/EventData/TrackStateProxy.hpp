@@ -82,17 +82,15 @@ template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
   // single items
-  using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
+  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
+  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 
-  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using DynamicCovariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using DynamicCoefficientsMap =
       Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
   using DynamicCovarianceMap =
@@ -105,11 +103,9 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
-  using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using Covariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
@@ -119,8 +115,6 @@ struct DynamicSizeTypes {
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Scalar = ActsScalar;
-
   using Parameters =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
@@ -135,8 +129,8 @@ struct TrackStateTraits {
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
 
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
-  using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
+  using Projector = Eigen::Matrix<double, M, eBoundSize, ProjectorFlags>;
+  using EffectiveProjector = Eigen::Matrix<double, Eigen::Dynamic, eBoundSize,
                                            ProjectorFlags, M, eBoundSize>;
 };
 

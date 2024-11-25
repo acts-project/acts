@@ -8,17 +8,12 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-
 #include <memory>
-#include <optional>
-#include <string>
+#include <vector>
 
 #include <G4UserSteppingAction.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// Geant4 only allows one user action of each type. This simple wrapper
 /// dispatches multiple actions to Geant4.
@@ -42,4 +37,4 @@ class SteppingActionList : public G4UserSteppingAction {
   Config m_cfg;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
