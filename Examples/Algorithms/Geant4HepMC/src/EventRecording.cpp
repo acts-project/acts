@@ -11,9 +11,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 
-#include <iostream>
 #include <stdexcept>
 
 #include <FTFP_BERT.hh>
@@ -26,14 +24,15 @@
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
 
-ActsExamples::EventRecording::~EventRecording() {
+namespace ActsExamples {
+
+EventRecording::~EventRecording() {
   m_runManager = nullptr;
 }
 
-ActsExamples::EventRecording::EventRecording(
-    const ActsExamples::EventRecording::Config& config,
-    Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("EventRecording", level),
+EventRecording::EventRecording(const EventRecording::Config& config,
+                               Acts::Logging::Level level)
+    : IAlgorithm("EventRecording", level),
       m_cfg(config),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.inputParticles.empty()) {
@@ -42,7 +41,7 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (!m_cfg.detectorConstructionFactory) {
+  if (m_cfg.detectorConstructionFactory == nullptr) {
     throw std::invalid_argument("Missing detector construction object");
   }
 
@@ -55,19 +54,17 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserInitialization(
       m_cfg.detectorConstructionFactory->factorize().release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
+  m_runManager->SetUserAction(new Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(
-      new ActsExamples::Geant4::HepMC3::EventAction(m_cfg.processesCombine));
+      new Geant4::HepMC3::EventAction(m_cfg.processesCombine));
   m_runManager->SetUserAction(
-      new ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction(m_cfg.seed1,
-                                                               m_cfg.seed2));
+      new Geant4::HepMC3::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(
-      new ActsExamples::Geant4::HepMC3::SteppingAction(m_cfg.processesReject));
+      new Geant4::HepMC3::SteppingAction(m_cfg.processesReject));
   m_runManager->Initialize();
 }
 
-ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
-    const ActsExamples::AlgorithmContext& context) const {
+ProcessCode EventRecording::execute(const AlgorithmContext& context) const {
   // ensure exclusive access to the geant run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
 
@@ -80,8 +77,8 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
-    ActsExamples::Geant4::HepMC3::PrimaryGeneratorAction::instance()
-        ->prepareParticleGun(part);
+    Geant4::HepMC3::PrimaryGeneratorAction::instance()->prepareParticleGun(
+        part);
 
     // Begin with the simulation
     m_runManager->BeamOn(1);
@@ -92,8 +89,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     }
 
     // Set event start time
-    HepMC3::GenEvent event =
-        ActsExamples::Geant4::HepMC3::EventAction::instance()->event();
+    HepMC3::GenEvent event = Geant4::HepMC3::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::mm);
     event.shift_position_by(shift);
 
@@ -174,5 +170,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   // Write the recorded material to the event store
   m_outputEvents(context, std::move(events));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

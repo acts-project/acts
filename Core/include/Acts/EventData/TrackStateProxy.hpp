@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
@@ -17,7 +16,6 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -82,17 +80,15 @@ template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
   // single items
-  using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
+  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
+  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 
-  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using DynamicCovariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using DynamicCoefficientsMap =
       Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
   using DynamicCovarianceMap =
@@ -105,11 +101,9 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
-  using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using Covariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
@@ -119,8 +113,6 @@ struct DynamicSizeTypes {
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Scalar = ActsScalar;
-
   using Parameters =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
@@ -1041,7 +1033,7 @@ class TrackStateProxy {
   /// @note This might hash the @p key at runtime instead of compile-time
   /// @return true if the component exists, false if not
   constexpr bool has(std::string_view key) const {
-    return has(hashString(key));
+    return has(hashStringDynamic(key));
   }
 
   /// Retrieve a mutable reference to a component
@@ -1075,7 +1067,7 @@ class TrackStateProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// Retrieve a const reference to a component
@@ -1103,7 +1095,7 @@ class TrackStateProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_traj->template component<T>(hashString(key), m_istate);
+    return m_traj->template component<T>(hashStringDynamic(key), m_istate);
   }
 
   /// @}

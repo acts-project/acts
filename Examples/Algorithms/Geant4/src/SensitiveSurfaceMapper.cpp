@@ -63,6 +63,7 @@ struct access<Eigen::Matrix<T, D, 1>, Index> {
 }  // namespace boost::geometry::traits
 
 namespace {
+
 void writeG4Polyhedron(
     Acts::IVisualization3D& visualizer, const G4Polyhedron& polyhedron,
     const Acts::Transform3& trafo = Acts::Transform3::Identity(),
@@ -89,10 +90,12 @@ void writeG4Polyhedron(
     visualizer.face(faces, color);
   }
 }
+
 }  // namespace
 
-std::vector<const Acts::Surface*>
-ActsExamples::SensitiveCandidates::queryPosition(
+namespace ActsExamples::Geant4 {
+
+std::vector<const Acts::Surface*> SensitiveCandidates::queryPosition(
     const Acts::GeometryContext& gctx, const Acts::Vector3& position) const {
   std::vector<const Acts::Surface*> surfaces;
 
@@ -119,8 +122,7 @@ ActsExamples::SensitiveCandidates::queryPosition(
   return surfaces;
 }
 
-std::vector<const Acts::Surface*> ActsExamples::SensitiveCandidates::queryAll()
-    const {
+std::vector<const Acts::Surface*> SensitiveCandidates::queryAll() const {
   std::vector<const Acts::Surface*> surfaces;
 
   const bool restrictToSensitives = true;
@@ -130,11 +132,11 @@ std::vector<const Acts::Surface*> ActsExamples::SensitiveCandidates::queryAll()
   return surfaces;
 }
 
-ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
+SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
+void SensitiveSurfaceMapper::remapSensitiveNames(
     State& state, const Acts::GeometryContext& gctx,
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform) const {
@@ -291,7 +293,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   state.g4VolumeToSurfaces.insert({g4PhysicalVolume, mappedSurface});
 }
 
-bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
+bool SensitiveSurfaceMapper::checkMapping(
     const State& state, const Acts::GeometryContext& gctx,
     bool writeMissingG4VolsAsObj, bool writeMissingSurfacesAsObj) const {
   auto allSurfaces = m_cfg.candidateSurfaces->queryAll();
@@ -343,3 +345,5 @@ bool ActsExamples::SensitiveSurfaceMapper::checkMapping(
 
   return missing.empty();
 }
+
+}  // namespace ActsExamples::Geant4

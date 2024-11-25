@@ -77,13 +77,10 @@ class SimVertexBarcode {
 
 /// A simulated vertex e.g. from a physics process.
 struct SimVertex {
-  using Scalar = Acts::ActsScalar;
-  using Vector4 = Acts::ActsVector<4>;
-
   /// The vertex ID
   SimVertexBarcode id;
   /// The vertex four-position
-  Vector4 position4 = Vector4::Zero();
+  Acts::Vector4 position4 = Acts::Vector4::Zero();
   /// The vertex process type
   ActsFatras::ProcessType process = ActsFatras::ProcessType::eUndefined;
   /// The incoming particles into the vertex
@@ -99,7 +96,7 @@ struct SimVertex {
   /// Associated particles are left empty by default and must be filled by the
   /// user after construction.
   SimVertex(
-      SimVertexBarcode id_, const Vector4& position4_,
+      SimVertexBarcode id_, const Acts::Vector4& position4_,
       ActsFatras::ProcessType process_ = ActsFatras::ProcessType::eUndefined)
       : id(id_), position4(position4_), process(process_) {}
   // explicitly default rule-of-five.
@@ -113,7 +110,7 @@ struct SimVertex {
   /// The vertex three-position.
   auto position() const { return position4.head<3>(); }
   /// The vertex time.
-  Scalar time() const { return position4[3]; }
+  double time() const { return position4[3]; }
 };
 
 namespace detail {
