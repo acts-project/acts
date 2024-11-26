@@ -127,14 +127,12 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   Acts::Vector3 maxValues = {min_max[0].second, min_max[1].second,
                              min_max[2].second};
 
-  Acts::ActsScalar hx =
+  double hx =
       strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
-  Acts::ActsScalar hy =
-      0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
-      mCfg.toleranceOverlap;
-  Acts::ActsScalar hz =
-      0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
-      mCfg.toleranceOverlap;
+  double hy = 0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
+              mCfg.toleranceOverlap;
+  double hz = 0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
+              mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_shared<Acts::CuboidVolumeBounds>(hx, hy, hz);
@@ -189,10 +187,9 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  Acts::ActsScalar sectorAngle = std::numbers::pi_v<Acts::ActsScalar>;
+  double sectorAngle = std::numbers::pi;
 
-  Acts::ActsScalar halfPhi =
-      std::numbers::pi_v<Acts::ActsScalar> / mCfg.NumberOfSectors;
+  double halfPhi = std::numbers::pi / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;

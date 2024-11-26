@@ -104,10 +104,10 @@ inline std::string toString(const Acts::Transform3& transform,
   return sout.str();
 }
 
-/// Print out a vector of ActsScalar
+/// Print out a vector of double
 /// @param pVector The vector to print
 /// @param precision Numeric output precision
-inline std::string toString(const std::vector<ActsScalar>& pVector,
+inline std::string toString(const std::vector<double>& pVector,
                             int precision = 4) {
   std::ostringstream sout;
   sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);

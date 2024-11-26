@@ -230,7 +230,7 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
 Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation
@@ -265,11 +265,12 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double modifiedTolerance = tolerance + absoluteBound->tolerance1;
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
-      return std::abs(cZ) < std::abs(hZ) ? status : IntersectionStatus::missed;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : IntersectionStatus::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status
-               : IntersectionStatus::missed;
+               : IntersectionStatus::unreachable;
   };
   // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
@@ -428,7 +429,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
         "CylinderSurface::merge: surfaces have different radii");
   }
 
-  ActsScalar r = bounds().get(CylinderBounds::eR);
+  double r = bounds().get(CylinderBounds::eR);
 
   // no translation in x/z is allowed
   Vector3 translation = otherLocal.translation();
@@ -442,20 +443,20 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
         "CylinderSurface::merge: surfaces have relative translation in x/y");
   }
 
-  ActsScalar hlZ = bounds().get(CylinderBounds::eHalfLengthZ);
-  ActsScalar minZ = -hlZ;
-  ActsScalar maxZ = hlZ;
+  double hlZ = bounds().get(CylinderBounds::eHalfLengthZ);
+  double minZ = -hlZ;
+  double maxZ = hlZ;
 
-  ActsScalar zShift = translation[2];
-  ActsScalar otherHlZ = other.bounds().get(CylinderBounds::eHalfLengthZ);
-  ActsScalar otherMinZ = -otherHlZ + zShift;
-  ActsScalar otherMaxZ = otherHlZ + zShift;
+  double zShift = translation[2];
+  double otherHlZ = other.bounds().get(CylinderBounds::eHalfLengthZ);
+  double otherMinZ = -otherHlZ + zShift;
+  double otherMaxZ = otherHlZ + zShift;
 
-  ActsScalar hlPhi = bounds().get(CylinderBounds::eHalfPhiSector);
-  ActsScalar avgPhi = bounds().get(CylinderBounds::eAveragePhi);
+  double hlPhi = bounds().get(CylinderBounds::eHalfPhiSector);
+  double avgPhi = bounds().get(CylinderBounds::eAveragePhi);
 
-  ActsScalar otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
-  ActsScalar otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
+  double otherHlPhi = other.bounds().get(CylinderBounds::eHalfPhiSector);
+  double otherAvgPhi = other.bounds().get(CylinderBounds::eAveragePhi);
 
   if (direction == Acts::BinningValue::binZ) {
     // z shift must match the bounds
@@ -489,10 +490,10 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
                                     "different phi sectors");
     }
 
-    ActsScalar newMaxZ = std::max(maxZ, otherMaxZ);
-    ActsScalar newMinZ = std::min(minZ, otherMinZ);
-    ActsScalar newHlZ = (newMaxZ - newMinZ) / 2.0;
-    ActsScalar newMidZ = (newMaxZ + newMinZ) / 2.0;
+    double newMaxZ = std::max(maxZ, otherMaxZ);
+    double newMinZ = std::min(minZ, otherMinZ);
+    double newHlZ = (newMaxZ - newMinZ) / 2.0;
+    double newMidZ = (newMaxZ + newMinZ) / 2.0;
     ACTS_VERBOSE("merged: [" << newMinZ << ", " << newMaxZ << "] ~> " << newMidZ
                              << " +- " << newHlZ);
 
@@ -524,7 +525,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
 
     // Figure out signed relative rotation
     Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();
-    ActsScalar zrotation = std::atan2(rotatedX[1], rotatedX[0]);
+    double zrotation = std::atan2(rotatedX[1], rotatedX[0]);
 
     ACTS_VERBOSE("this:  [" << avgPhi / 1_degree << " +- " << hlPhi / 1_degree
                             << "]");
@@ -533,7 +534,7 @@ Acts::CylinderSurface::mergedWith(const CylinderSurface& other,
 
     ACTS_VERBOSE("Relative rotation around local z: " << zrotation / 1_degree);
 
-    ActsScalar prevOtherAvgPhi = otherAvgPhi;
+    double prevOtherAvgPhi = otherAvgPhi;
     otherAvgPhi = detail::radian_sym(otherAvgPhi + zrotation);
     ACTS_VERBOSE("~> local other average phi: "
                  << otherAvgPhi / 1_degree

@@ -153,7 +153,7 @@ void addJson(Context& ctx) {
                  .def(py::init<>())
                  .def(py::init<std::unordered_map<Acts::GeometryIdentifier,
                                                   const Acts::Surface*>,
-                               std::pair<Acts::ActsScalar, Acts::ActsScalar>>(),
+                               std::pair<double, double>>(),
                       py::arg("refLayers"), py::arg("bins"));
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);

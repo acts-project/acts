@@ -69,19 +69,19 @@ ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
   G4ThreeVector postStepMomentum = convertEnergy * postStepPoint->GetMomentum();
   G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
 
-  Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
-  Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
-  Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
-  Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
+  double hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
+  double hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
+  double hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
+  double hT = 0.5 * (preStepTime + postStepTime);
 
-  Acts::ActsScalar mXpre = preStepMomentum[0];
-  Acts::ActsScalar mYpre = preStepMomentum[1];
-  Acts::ActsScalar mZpre = preStepMomentum[2];
-  Acts::ActsScalar mEpre = preStepEnergy;
-  Acts::ActsScalar mXpost = postStepMomentum[0];
-  Acts::ActsScalar mYpost = postStepMomentum[1];
-  Acts::ActsScalar mZpost = postStepMomentum[2];
-  Acts::ActsScalar mEpost = postStepEnergy;
+  double mXpre = preStepMomentum[0];
+  double mYpre = preStepMomentum[1];
+  double mZpre = preStepMomentum[2];
+  double mEpre = preStepEnergy;
+  double mXpost = postStepMomentum[0];
+  double mYpost = postStepMomentum[1];
+  double mZpost = postStepMomentum[2];
+  double mEpost = postStepEnergy;
 
   Acts::Vector4 particlePosition(hX, hY, hZ, hT);
   Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
