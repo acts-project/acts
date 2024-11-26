@@ -243,27 +243,27 @@ class TrackProxy {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+  double theta() const { return parameters()[eBoundTheta]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+  double phi() const { return parameters()[eBoundPhi]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+  double loc0() const { return parameters()[eBoundLoc0]; }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+  double loc1() const { return parameters()[eBoundLoc1]; }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  ActsScalar time() const { return parameters()[eBoundTime]; }
+  double time() const { return parameters()[eBoundTime]; }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+  double qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
@@ -284,17 +284,17 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  ActsScalar charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
-  ActsScalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
   /// @return The track transverse momentum value
-  ActsScalar transverseMomentum() const {
+  double transverseMomentum() const {
     return std::sin(theta()) * absoluteMomentum();
   }
 

@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(Exceptions) {
   // Create parameters to accumulate
   Acts::Vector4 pos{1, 2, 0, 4};
   Acts::Vector3 dir{1, 0, 0};
-  Acts::ActsScalar P = 1;
+  double P = 1.;
 
   auto hypothesis1 = Acts::ParticleHypothesis::electron();
   auto hypothesis2 = Acts::ParticleHypothesis::muon();
@@ -143,15 +143,15 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     std::array<Acts::Vector4, 4> fourPositions = {pos * (i + 1), pos * (i + 2),
                                                   pos * (i + 3), pos * (i + 4)};
 
-    std::array<Acts::ActsScalar, 4> thetas = {
+    std::array<double, 4> thetas = {
         std::numbers::pi / (i + 1), std::numbers::pi / (i + 2),
         std::numbers::pi / (i + 3), std::numbers::pi / (i + 4)};
 
-    std::array<Acts::ActsScalar, 4> phis = {
+    std::array<double, 4> phis = {
         2 * std::numbers::pi / (i + 1), 2 * std::numbers::pi / (i + 2),
         2 * std::numbers::pi / (i + 3), 2 * std::numbers::pi / (i + 4)};
 
-    Acts::ActsScalar P = 1.5 * (i + 1);
+    double P = 1.5 * (i + 1);
 
     // Get the point of the grid
     auto bin = gridBound.localBinsFromGlobalBin(i);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
     Acts::Vector3 avgMom = avgMoms.at(i);
     Acts::Vector3 avgDir = avgMom.normalized();
-    Acts::ActsScalar avgP = avgMom.norm();
+    double avgP = avgMom.norm();
 
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);

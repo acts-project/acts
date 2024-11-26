@@ -22,8 +22,8 @@
 BOOST_AUTO_TEST_SUITE(DetectorVolumeFinderJsonConverter)
 
 BOOST_AUTO_TEST_CASE(RzVolumes) {
-  std::vector<Acts::ActsScalar> zBoundaries = {-1000., -500, 150.};
-  std::vector<Acts::ActsScalar> rBoundaries = {0., 10., 30., 35.};
+  std::vector<double> zBoundaries = {-1000., -500, 150.};
+  std::vector<double> rBoundaries = {0., 10., 30., 35.};
 
   using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
