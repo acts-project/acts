@@ -22,6 +22,8 @@ class Surface;
 namespace Acts::JsonSurfacesReader {
 
 /// @brief Options specification for surface reading
+/// The file should contain an array of json surfaces
+/// as produced by the SurfaceJsonConverter tools
 struct Options {
   /// @brief  Which input file to read from
   std::string inputFile = "";
@@ -30,6 +32,7 @@ struct Options {
 };
 
 /// @brief Read the surfaces from the input file
+/// For details on the file format see the options struct
 ///
 /// @param options specifies which file and what to read
 ///
@@ -38,6 +41,7 @@ Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> readHierarchyMap(
     const Options& options);
 
 /// @brief Read the flat surfaces from the input file
+/// For details on the file format see the options struct
 ///
 /// @param options options for surface reading
 ///
@@ -46,6 +50,7 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 
 /// @brief Read the surfaces from the input file and create
 /// detector elements
+/// For details on the file format see the options struct
 ///
 /// @param options options for surface reading
 /// @param thickness the thickness used to construct the detector element

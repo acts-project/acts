@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Json/JsonDetectorElement.hpp"
 
+#include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
 namespace Acts {
@@ -16,7 +17,7 @@ JsonDetectorElement::JsonDetectorElement(const nlohmann::json &jSurface,
                                          double thickness)
     : m_thickness(thickness) {
   m_surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
-  m_transform = m_surface->transform({});
+  m_transform = Transform3JsonConverter::fromJson(jSurface["transform"]);
   m_surface->assignDetectorElement(*this);
 }
 
