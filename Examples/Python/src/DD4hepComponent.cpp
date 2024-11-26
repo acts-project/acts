@@ -16,19 +16,12 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <array>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class IMaterialDecorator;
-}  // namespace Acts
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -36,12 +29,12 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
-    using Config = DD4hep::DD4hepGeometryService::Config;
-    auto s = py::class_<DD4hep::DD4hepGeometryService,
-                        std::shared_ptr<DD4hep::DD4hepGeometryService>>(
+    using Config = DD4hepGeometryService::Config;
+    auto s = py::class_<DD4hepGeometryService,
+                        std::shared_ptr<DD4hepGeometryService>>(
                  m, "DD4hepGeometryService")
                  .def(py::init<const Config&>())
-                 .def("drop", &DD4hep::DD4hepGeometryService::drop);
+                 .def("drop", &DD4hepGeometryService::drop);
 
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
@@ -155,20 +148,20 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
+    py::class_<DD4hepDetector, std::shared_ptr<DD4hepDetector>>(
         m, "DD4hepDetector")
         .def(py::init<>())
-        .def(py::init<std::shared_ptr<DD4hep::DD4hepGeometryService>>())
+        .def(py::init<std::shared_ptr<DD4hepGeometryService>>())
         .def("finalize",
-             py::overload_cast<DD4hep::DD4hepGeometryService::Config,
+             py::overload_cast<DD4hepGeometryService::Config,
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
-                 &DD4hep::DD4hepDetector::finalize))
+                 &DD4hepDetector::finalize))
         .def("finalize",
              py::overload_cast<
                  const Acts::GeometryContext&,
                  const Acts::Experimental::DD4hepDetectorStructure::Options&>(
-                 &DD4hep::DD4hepDetector::finalize))
-        .def("drop", &DD4hep::DD4hepDetector::drop)
-        .def_property_readonly("field", &DD4hep::DD4hepDetector::field);
+                 &DD4hepDetector::finalize))
+        .def("drop", &DD4hepDetector::drop)
+        .def_property_readonly("field", &DD4hepDetector::field);
   }
 }

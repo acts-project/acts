@@ -24,7 +24,6 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -40,20 +39,21 @@
 #include <numbers>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
-ActsExamples::MockupSectorBuilder::MockupSectorBuilder(
-    const ActsExamples::MockupSectorBuilder::Config& config) {
+namespace ActsExamples {
+
+MockupSectorBuilder::MockupSectorBuilder(
+    const MockupSectorBuilder::Config& config) {
   mCfg = config;
-  ActsExamples::GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath);
+  GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath);
   g4World = geo_gdml.Construct();
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
-ActsExamples::MockupSectorBuilder::buildChamber(
-    const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
+MockupSectorBuilder::buildChamber(
+    const MockupSectorBuilder::ChamberConfig& chamberConfig) {
   if (g4World == nullptr) {
     throw std::invalid_argument("MockupSector: No g4World initialized");
   }
@@ -61,7 +61,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   const Acts::GeometryContext gctx;
 
   // Geant4Detector Config creator with the g4world from the gdml file
-  auto g4WorldConfig = ActsExamples::Geant4::Geant4Detector::Config();
+  auto g4WorldConfig = Geant4Detector::Config();
   g4WorldConfig.name = "Chamber";
   g4WorldConfig.g4World = g4World;
 
@@ -78,7 +78,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
   g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
 
-  auto g4detector = ActsExamples::Geant4::Geant4Detector();
+  auto g4detector = Geant4Detector();
 
   auto [detector, surfaces, detectorElements] =
       g4detector.constructDetector(g4WorldConfig, Acts::getDummyLogger());
@@ -157,7 +157,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
-ActsExamples::MockupSectorBuilder::buildSector(
+MockupSectorBuilder::buildSector(
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
         detVolumes) {
   if (mCfg.NumberOfSectors > maxNumberOfSectors) {
@@ -316,7 +316,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   return detectorVolume;
 }
 
-void ActsExamples::MockupSectorBuilder::drawSector(
+void MockupSectorBuilder::drawSector(
     const std::shared_ptr<Acts::Experimental::DetectorVolume>&
         detectorVolumeSector,
     const std::string& nameObjFile) {
@@ -330,3 +330,5 @@ void ActsExamples::MockupSectorBuilder::drawSector(
 
   objSector.write(nameObjFile);
 }
+
+}  // namespace ActsExamples

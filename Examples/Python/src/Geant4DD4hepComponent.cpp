@@ -14,8 +14,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-class G4VUserDetectorConstruction;
-
 namespace py = pybind11;
 
 using namespace ActsExamples;
@@ -28,7 +26,7 @@ PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
              Geant4::DetectorConstructionFactory,
              std::shared_ptr<DDG4DetectorConstructionFactory>>(
       m, "DDG4DetectorConstructionFactory")
-      .def(py::init<std::shared_ptr<DD4hep::DD4hepDetector>,
+      .def(py::init<std::shared_ptr<DD4hepDetector>,
                     std::vector<std::shared_ptr<Geant4::RegionCreator>>>(),
            py::arg("detector"),
            py::arg("regionCreators") =
