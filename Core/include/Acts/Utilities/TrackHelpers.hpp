@@ -618,14 +618,14 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
     throw std::invalid_argument("track state has no calibrated parameters");
   }
 
-  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
-    constexpr int measdim = decltype(N)::value;
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        auto [residual, residualCovariance] =
+            calculatePredictedResidual<measdim>(trackState);
 
-    auto [residual, residualCovariance] =
-        calculatePredictedResidual<measdim>(trackState);
-
-    return residual.transpose() * residualCovariance.inverse() * residual;
-  });
+        return residual.transpose() * residualCovariance.inverse() * residual;
+      });
 }
 
 /// Helper function to calculate the filtered chi2
@@ -641,14 +641,14 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
     throw std::invalid_argument("track state has no calibrated parameters");
   }
 
-  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
-    constexpr int measdim = decltype(N)::value;
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        auto [residual, residualCovariance] =
+            calculateFilteredResidual<measdim>(trackState);
 
-    auto [residual, residualCovariance] =
-        calculateFilteredResidual<measdim>(trackState);
-
-    return residual.transpose() * residualCovariance.inverse() * residual;
-  });
+        return residual.transpose() * residualCovariance.inverse() * residual;
+      });
 }
 
 /// Helper function to calculate the smoothed chi2
@@ -664,14 +664,14 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
     throw std::invalid_argument("track state has no calibrated parameters");
   }
 
-  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
-    constexpr int measdim = decltype(N)::value;
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        auto [residual, residualCovariance] =
+            calculateSmoothedResidual<measdim>(trackState);
 
-    auto [residual, residualCovariance] =
-        calculateSmoothedResidual<measdim>(trackState);
-
-    return residual.transpose() * residualCovariance.inverse() * residual;
-  });
+        return residual.transpose() * residualCovariance.inverse() * residual;
+      });
 }
 
 /// Helper function to calculate the unbiased track parameters and their
@@ -690,20 +690,21 @@ std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
     throw std::invalid_argument("track state has no calibrated parameters");
   }
 
-  return visit_measurement(trackState.calibratedSize(), [&](auto N) {
-    constexpr int measdim = decltype(N)::value;
-
-    auto H =
-        trackState.projector().template topLeftCorner<measdim, eBoundSize>();
-    auto s = trackState.smoothed();
-    auto C = trackState.smoothedCovariance();
-    auto m = trackState.template calibrated<measdim>();
-    auto V = trackState.template calibratedCovariance<measdim>();
-    auto K = (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
-    BoundVector unbiasedParamsVec = s + K * (m - H * s);
-    BoundMatrix unbiasedParamsCov = C - K * H * C;
-    return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
-  });
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        auto H = trackState.projector()
+                     .template topLeftCorner<measdim, eBoundSize>();
+        auto s = trackState.smoothed();
+        auto C = trackState.smoothedCovariance();
+        auto m = trackState.template calibrated<measdim>();
+        auto V = trackState.template calibratedCovariance<measdim>();
+        auto K =
+            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
+        BoundVector unbiasedParamsVec = s + K * (m - H * s);
+        BoundMatrix unbiasedParamsCov = C - K * H * C;
+        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+      });
 }
 
 }  // namespace Acts
