@@ -883,7 +883,9 @@ class TrackStateProxy {
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
-    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
                  Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
              Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
                  Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
