@@ -50,7 +50,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   }
 
   // Boost the decay products using the parents four-momentum
-  const Particle::Vector4 mom4 = parent.fourMomentum();
+  const Acts::Vector4 mom4 = parent.fourMomentum();
   products->Boost(mom4[Acts::eMom0] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom1] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom2] / mom4[Acts::eEnergy]);
@@ -64,7 +64,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
 
     // Convert the decay product from Geant4 to Acts
     const G4ThreeVector& mom = prod->GetMomentum();
-    constexpr Scalar convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+    constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
     Acts::Vector3 amgMom(mom.x(), mom.y(), mom.z());
     amgMom *= convertEnergy;
     const std::int32_t pdg = prod->GetPDGcode();

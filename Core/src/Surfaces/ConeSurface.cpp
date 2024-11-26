@@ -301,7 +301,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution1, direction, boundaryTolerance)) {
-    status1 = IntersectionStatus::missed;
+    status1 = IntersectionStatus::unreachable;
   }
 
   // Check the validity of the second solution
@@ -311,7 +311,7 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
                                    : IntersectionStatus::reachable;
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution2, direction, boundaryTolerance)) {
-    status2 = IntersectionStatus::missed;
+    status2 = IntersectionStatus::unreachable;
   }
 
   const auto& tf = transform(gctx);
