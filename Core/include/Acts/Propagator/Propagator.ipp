@@ -6,12 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 
 #include <concepts>
 
@@ -382,4 +384,19 @@ Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
   } else {
     return res.error();
   }
+}
+
+template <typename derived_t>
+Acts::Result<Acts::BoundTrackParameters>
+Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
+    const FreeVector& start, const Surface& target,
+    const Options& options) const {
+  // Convert free parameters to curvilinear parameters. Randomly picking pion
+  // hypothesis which should not make a difference as we extrapolate without
+  // interactions.
+  CurvilinearTrackParameters startBound(
+      start.segment<4>(Acts::eFreePos0), start.segment<3>(Acts::eFreeDir0),
+      start[Acts::eFreeQOverP], std::nullopt, ParticleHypothesis::pion());
+
+  return propagateToSurface(startBound, target, options);
 }

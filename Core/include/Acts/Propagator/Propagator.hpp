@@ -13,13 +13,8 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 // clang-format on
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/PropagatorResult.hpp"
@@ -31,8 +26,6 @@
 #include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-
-#include <optional>
 
 namespace Acts {
 
@@ -56,6 +49,17 @@ class BasePropagator {
       const BoundTrackParameters& start, const Surface& target,
       const Options& options) const = 0;
 
+  /// Method to propagate start free vector to a target surface.
+  /// @note this will not do covariance transport and the particle
+  ///       hypothesis in the result is meaningless
+  /// @param start The start free vector.
+  /// @param target The target surface.
+  /// @param options The propagation options.
+  /// @return The end bound track parameters.
+  virtual Result<BoundTrackParameters> propagateToSurface(
+      const FreeVector& start, const Surface& target,
+      const Options& options) const = 0;
+
   virtual ~BasePropagator() = default;
 };
 
@@ -67,6 +71,10 @@ class BasePropagatorHelper : public BasePropagator {
  public:
   Result<BoundTrackParameters> propagateToSurface(
       const BoundTrackParameters& start, const Surface& target,
+      const Options& options) const override;
+
+  Result<BoundTrackParameters> propagateToSurface(
+      const FreeVector& start, const Surface& target,
       const Options& options) const override;
 };
 }  // namespace detail
