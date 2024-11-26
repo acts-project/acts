@@ -174,8 +174,7 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
     const Surface& surface, const Vector3& sp0, const Vector3& sp1,
     const Vector3& sp2,
     const std::shared_ptr<const MagneticFieldProvider>& bField,
-    const std::shared_ptr<const BasePropagator>& propagator,
-    const Acts::Logger& logger) {
+    const BasePropagator* propagator, const Acts::Logger& logger) {
   MagneticFieldProvider::Cache bFieldCache = bField->makeCache(mctx);
 
   Result<Vector3> bFieldResult = bField->getField(sp0, bFieldCache);
