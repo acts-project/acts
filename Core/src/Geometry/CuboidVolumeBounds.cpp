@@ -18,15 +18,13 @@
 
 namespace Acts {
 
-CuboidVolumeBounds::CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
-                                       ActsScalar halez)
+CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(
-    const std::array<ActsScalar, eSize>& values)
+CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
     : m_values(values) {
   checkConsistency();
   buildSurfaceBounds();
@@ -102,7 +100,7 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+double CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue <= BinningValue::binZ) {
     return m_values[toUnderlying(bValue)];
   }
@@ -115,14 +113,14 @@ ActsScalar CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
   return 0.0;
 }
 
-bool CuboidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
+bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
 }
 
-std::vector<ActsScalar> CuboidVolumeBounds::values() const {
-  std::vector<ActsScalar> valvector;
+std::vector<double> CuboidVolumeBounds::values() const {
+  std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
@@ -135,13 +133,13 @@ void CuboidVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-void CuboidVolumeBounds::set(BoundValues bValue, ActsScalar value) {
+void CuboidVolumeBounds::set(BoundValues bValue, double value) {
   set({{bValue, value}});
 }
 
 void CuboidVolumeBounds::set(
-    std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues) {
-  std::array<ActsScalar, eSize> previous = m_values;
+    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
+  std::array<double, eSize> previous = m_values;
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
   }

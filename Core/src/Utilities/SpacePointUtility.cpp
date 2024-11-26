@@ -51,8 +51,7 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
-std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
-           std::optional<ActsScalar>>
+std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
@@ -93,8 +92,8 @@ SpacePointUtility::globalCoords(
   // optionally set time
   // TODO the current condition of checking the covariance is not optional but
   // should do for now
-  std::optional<ActsScalar> globalTime = par[eBoundTime];
-  std::optional<ActsScalar> tcov = cov(eBoundTime, eBoundTime);
+  std::optional<double> globalTime = par[eBoundTime];
+  std::optional<double> tcov = cov(eBoundTime, eBoundTime);
   if (tcov.value() <= 0) {
     globalTime = std::nullopt;
     tcov = std::nullopt;
