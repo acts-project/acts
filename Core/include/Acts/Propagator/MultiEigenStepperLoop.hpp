@@ -14,16 +14,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/EigenStepperError.hpp"
-#include "Acts/Propagator/MultiStepperError.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/LoopStepperUtils.hpp"
@@ -36,7 +32,6 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
-#include <numeric>
 #include <sstream>
 #include <vector>
 
@@ -197,7 +192,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     struct Component {
       SingleState state;
       ActsScalar weight;
-      Intersection3D::Status status;
+      IntersectionStatus status;
     };
 
     /// Particle hypothesis
@@ -255,7 +250,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
         const auto& [weight, singlePars] = multipars[i];
         components.push_back(
             {SingleState(gctx, bfield->makeCache(mctx), singlePars, ssize),
-             weight, Intersection3D::Status::onSurface});
+             weight, IntersectionStatus::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -398,7 +393,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   void removeMissedComponents(State& state) const {
     auto new_end = std::remove_if(
         state.components.begin(), state.components.end(), [](const auto& cmp) {
-          return cmp.status == Intersection3D::Status::missed;
+          return cmp.status == IntersectionStatus::unreachable;
         });
 
     state.components.erase(new_end, state.components.end());
@@ -441,7 +436,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
         {SingleState(state.geoContext,
                      SingleStepper::m_bField->makeCache(state.magContext),
                      pars),
-         weight, Intersection3D::Status::onSurface});
+         weight, IntersectionStatus::onSurface});
 
     return ComponentProxy{state.components.back(), state};
   }
@@ -520,12 +515,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
-  Intersection3D::Status updateSurfaceStatus(
+  IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
       ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
-    using Status = Intersection3D::Status;
+    using Status = IntersectionStatus;
 
     std::array<int, 3> counts = {0, 0, 0};
 
@@ -581,10 +576,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     } else if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
       state.stepCounterAfterFirstComponentOnSurface.reset();
       return Status::onSurface;
-    } else if (counts[static_cast<std::size_t>(Status::unreachable)] > 0) {
-      return Status::unreachable;
     } else {
-      return Status::missed;
+      return Status::unreachable;
     }
   }
 

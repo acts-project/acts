@@ -67,14 +67,14 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   return static_cast<unsigned int>(distribution.first[iBin]);
 }
 
-Particle::Scalar NuclearInteraction::sampleContinuousValues(
+double NuclearInteraction::sampleContinuousValues(
     double rnd,
     const detail::NuclearInteractionParameters::CumulativeDistribution&
         distribution,
     bool interpolate) const {
   // Fast exit
   if (distribution.second.empty()) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
 
   // Find the bin
@@ -82,7 +82,7 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
       std::numeric_limits<std::uint32_t>::max() * rnd);
   // Fast exit for non-normalised CDFs like interaction probability
   if (int_rnd > distribution.second.back()) {
-    return std::numeric_limits<Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
@@ -111,10 +111,10 @@ unsigned int NuclearInteraction::finalStateMultiplicity(
   return sampleDiscreteValues(rnd, distribution);
 }
 
-std::pair<ActsFatras::Particle::Scalar, ActsFatras::Particle::Scalar>
-NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
-                                ActsFatras::Particle::Scalar theta1, float phi2,
-                                float theta2) const {
+std::pair<double, double> NuclearInteraction::globalAngle(double phi1,
+                                                          double theta1,
+                                                          float phi2,
+                                                          float theta2) const {
   // Rotation around the global y-axis
   Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);

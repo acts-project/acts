@@ -61,18 +61,16 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
 
   SimHitContainer::sequence_type unordered;
   while (reader.read(data)) {
-    ActsFatras::Hit::Vector4 pos{
-        data.LocalPositionExtrx * Acts::UnitConstants::mm,
-        data.LocalPositionExtry * Acts::UnitConstants::mm,
-        data.LocalPositionExtrz * Acts::UnitConstants::mm, 0};
-    ActsFatras::Hit::Vector4 mom{
-        data.LocalDirectionx * Acts::UnitConstants::GeV,
-        data.LocalDirectiony * Acts::UnitConstants::GeV,
-        data.LocalDirectionz * Acts::UnitConstants::GeV,
-        std::sqrt(data.LocalDirectionx * data.LocalDirectionx +
-                  data.LocalDirectiony * data.LocalDirectiony +
-                  data.LocalDirectionz * data.LocalDirectionz) *
-            Acts::UnitConstants::GeV};
+    Acts::Vector4 pos{data.LocalPositionExtrx * Acts::UnitConstants::mm,
+                      data.LocalPositionExtry * Acts::UnitConstants::mm,
+                      data.LocalPositionExtrz * Acts::UnitConstants::mm, 0};
+    Acts::Vector4 mom{data.LocalDirectionx * Acts::UnitConstants::GeV,
+                      data.LocalDirectiony * Acts::UnitConstants::GeV,
+                      data.LocalDirectionz * Acts::UnitConstants::GeV,
+                      std::sqrt(data.LocalDirectionx * data.LocalDirectionx +
+                                data.LocalDirectiony * data.LocalDirectiony +
+                                data.LocalDirectionz * data.LocalDirectionz) *
+                          Acts::UnitConstants::GeV};
     MuonMdtIdentifierFields f;
     f.multilayer = 0;
     f.tube = 0;
