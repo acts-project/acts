@@ -265,11 +265,12 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double modifiedTolerance = tolerance + absoluteBound->tolerance1;
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
-      return std::abs(cZ) < std::abs(hZ) ? status : IntersectionStatus::missed;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : IntersectionStatus::unreachable;
     }
     return isOnSurface(gctx, solution, direction, boundaryTolerance)
                ? status
-               : IntersectionStatus::missed;
+               : IntersectionStatus::unreachable;
   };
   // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);

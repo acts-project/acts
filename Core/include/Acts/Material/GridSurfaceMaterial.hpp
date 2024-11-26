@@ -11,10 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -197,9 +195,9 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operator
   ///
-  /// @param scale is the scale factor applied
-  ISurfaceMaterial& operator*=(double scale) final {
-    m_materialAccessor.scale(m_grid, scale);
+  /// @param factor is the scale factor applied
+  ISurfaceMaterial& scale(double factor) final {
+    m_materialAccessor.scale(m_grid, factor);
     return (*this);
   }
 
