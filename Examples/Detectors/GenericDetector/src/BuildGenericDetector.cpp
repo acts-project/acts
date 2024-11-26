@@ -11,10 +11,8 @@
 #include <cmath>
 #include <numbers>
 
-namespace ActsExamples::Generic {
-
 /// helper method for cylinder
-std::vector<Acts::Vector3> modulePositionsCylinder(
+std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsCylinder(
     double radius, double zStagger, double moduleHalfLength, double lOverlap,
     const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
@@ -45,7 +43,8 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 }
 
 /// helper method for disc
-std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
+std::vector<std::vector<Acts::Vector3>>
+ActsExamples::Generic::modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
     const std::vector<std::size_t>& discBinning,
@@ -95,10 +94,9 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 }
 
 /// Helper method for positioning
-std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
-                                               double phiStagger,
-                                               double phiSubStagger,
-                                               int nPhiBins) {
+std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsRing(
+    double z, double radius, double phiStagger, double phiSubStagger,
+    int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
@@ -130,5 +128,3 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   }
   return rPositions;
 }
-
-}  // namespace ActsExamples::Generic
