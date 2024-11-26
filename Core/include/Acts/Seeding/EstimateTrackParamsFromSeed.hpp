@@ -83,7 +83,7 @@ FreeVector estimateTrackParamsFromSeed(const Vector3& sp0, const Vector3& sp1,
 Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Surface& surface, const Vector3& sp0, const Vector3& sp1,
-    const Vector3& sp2,
+    const Vector3& sp2, double timeSp0,
     const std::shared_ptr<const MagneticFieldProvider>& bField,
     const BasePropagator* propagator = nullptr,
     const Acts::Logger& logger = getDummyLogger());
@@ -176,10 +176,7 @@ Result<BoundVector> estimateTrackParamsFromSeedAtSurface(
 
   Result<BoundVector> paramsResult = estimateTrackParamsFromSeedAtSurface(
       gctx, mctx, surface, spPositions[0], spPositions[1], spPositions[2],
-      bField, propagator, logger);
-  if (paramsResult.ok()) {
-    paramsResult.value()[eBoundTime] = spTimes[0].value_or(0);
-  }
+      spTimes[0].value_or(0), bField, propagator, logger);
   return paramsResult;
 }
 

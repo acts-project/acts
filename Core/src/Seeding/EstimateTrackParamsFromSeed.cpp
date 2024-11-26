@@ -172,7 +172,7 @@ Acts::BoundMatrix Acts::estimateTrackParamCovariance(
 Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Surface& surface, const Vector3& sp0, const Vector3& sp1,
-    const Vector3& sp2,
+    const Vector3& sp2, double timeSp0,
     const std::shared_ptr<const MagneticFieldProvider>& bField,
     const BasePropagator* propagator, const Acts::Logger& logger) {
   MagneticFieldProvider::Cache bFieldCache = bField->makeCache(mctx);
@@ -186,6 +186,7 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
 
   FreeVector freeParams =
       estimateTrackParamsFromSeed(sp0, sp1, sp2, bFieldVector);
+  freeParams[eFreeTime] = timeSp0;
 
   Vector3 origin = sp0;
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
@@ -206,7 +207,6 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
       ACTS_INFO(
           "The surface does not intersect with the origin and estimated "
           "direction.");
-      // TODO
       return Result<BoundVector>::failure(
           EstimateTrackParamsFromSeedError::SurfaceIntersectionFailed);
     }
@@ -222,7 +222,7 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
             ? propagator->propagateToSurface(estimatedParams, surface,
                                              propagatorOptions)
             : Propagator(EigenStepper<>(bField), VoidNavigator(),
-                         logger().cloneWithSuffix("Propagator"))
+                         logger.cloneWithSuffix("Propagator"))
                   .propagateToSurface(estimatedParams, surface,
                                       propagatorOptions);
     if (!result.ok()) {
@@ -243,8 +243,6 @@ Acts::Result<Acts::BoundVector> Acts::estimateTrackParamsFromSeedAtSurface(
   // The estimated loc0 and loc1
   params[eBoundLoc0] = bottomLocalPos.x();
   params[eBoundLoc1] = bottomLocalPos.y();
-  // We need the bottom space point time later
-  params[eBoundTime] = 0;
 
   return Result<BoundVector>::success(params);
 }
