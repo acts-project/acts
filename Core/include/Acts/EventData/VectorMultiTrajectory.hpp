@@ -512,8 +512,6 @@ class VectorMultiTrajectory final
 
     if (m_measOffset[istate] == kInvalid ||
         m_measCovOffset[istate] == kInvalid) {
-      m_index[istate].measdim = measdim;
-
       m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
       m_meas.resize(m_meas.size() + measdim);
 
@@ -523,15 +521,9 @@ class VectorMultiTrajectory final
 
     m_index[istate].measdim = measdim;
 
-    m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
-    m_meas.resize(m_meas.size() + measdim);
-
     double* measPtr = &m_meas[m_measOffset[istate]];
     Eigen::Map<ActsVector<measdim>> valMap(measPtr);
     valMap = val;
-
-    m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
-    m_measCov.resize(m_measCov.size() + measdim * measdim);
 
     double* covPtr = &m_measCov[m_measCovOffset[istate]];
     Eigen::Map<ActsSquareMatrix<measdim>> covMap(covPtr);
