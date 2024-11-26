@@ -19,6 +19,7 @@
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <utility>
 
@@ -105,8 +106,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // https://en.wikipedia.org/wiki/Full_width_at_half_maximum#Normal_distribution
   // but the calculation needs to be slightly modified in our case)
   double correctFWHM =
-      2. *
-      std::sqrt(2 * std::log(2.) * subCovMat.determinant() / subCovMat(0, 0));
+      2. * std::sqrt(2 * std::numbers::ln2 * subCovMat.determinant() /
+                     subCovMat(0, 0));
 
   // Estimate maximum z position and seed width
   auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);
@@ -210,7 +211,8 @@ BOOST_AUTO_TEST_CASE(
   ActsScalar correctMaxT = tNom / denom * d0 + t0;
 
   // Analytical FWHM of the Gaussian
-  ActsScalar correctFWHM = 2. * std::sqrt(2 * std::log(2.) / ipWeights(1, 1));
+  ActsScalar correctFWHM =
+      2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
 
   // Estimate maximum z position and seed width
   auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);

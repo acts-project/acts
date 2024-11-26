@@ -15,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -89,12 +90,14 @@ BOOST_AUTO_TEST_CASE(BinUtility_arbitrary_binning) {
 BOOST_AUTO_TEST_CASE(BinUtility_transform) {
   Transform3 transform_LtoG = Transform3::Identity();
   transform_LtoG = transform_LtoG * Translation3(0., 0., -50);
-  transform_LtoG = transform_LtoG * AngleAxis3(M_PI / 4, Vector3(0, 0, 1));
+  transform_LtoG =
+      transform_LtoG * AngleAxis3(std::numbers::pi / 4., Vector3(0, 0, 1));
 
   Transform3 transform_GtoL = transform_LtoG.inverse();
 
   BinUtility rUtil(10, 0., 100., open, BinningValue::binR);
-  BinUtility phiUtil(10, -M_PI, M_PI, closed, BinningValue::binPhi);
+  BinUtility phiUtil(10, -std::numbers::pi, std::numbers::pi, closed,
+                     BinningValue::binPhi);
   BinUtility zUtil(10, -100., 100., open, BinningValue::binZ);
 
   BinUtility noTranform;
@@ -109,9 +112,9 @@ BOOST_AUTO_TEST_CASE(BinUtility_transform) {
 
   Vector3 pos1(0, 0, 0);
   Vector3 pos2(60, 0, 0);
-  Vector3 pos3(34, M_PI / 2, 0);
+  Vector3 pos3(34, std::numbers::pi / 2., 0);
   Vector3 pos4(0, 0, -80);
-  Vector3 pos5(80, -M_PI / 4, 50);
+  Vector3 pos5(80, -std::numbers::pi / 4., 50);
 
   for (int i = 0; i < 3; i++) {
     BOOST_CHECK_EQUAL(withTranform.bin(pos1, i),

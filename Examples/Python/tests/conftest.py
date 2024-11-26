@@ -328,8 +328,7 @@ def fatras(ptcl_gun, trk_geo, rng):
         simAlg = acts.examples.FatrasSimulation(
             level=acts.logging.INFO,
             inputParticles=evGen.config.outputParticles,
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticles="particles_simulated",
             outputSimHits="simhits",
             randomNumbers=rng,
             trackingGeometry=trk_geo,
@@ -344,8 +343,8 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
-        digiCfg = acts.examples.DigitizationConfig(
-            acts.examples.readDigiConfigFromJson(
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

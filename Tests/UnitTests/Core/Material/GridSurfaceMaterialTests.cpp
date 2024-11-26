@@ -14,6 +14,7 @@
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <numbers>
 #include <vector>
 
 // this is a global access to the x coordinate
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   BOOST_CHECK_EQUAL(ml4.material().X0(), 21.);
 
   // Now scale it - and access again
-  ism *= 2.;
+  ism.scale(2.);
   const Acts::MaterialSlab& sml0 = ism.materialSlab(l0);
   const Acts::MaterialSlab& sml1 = ism.materialSlab(l1);
   const Acts::MaterialSlab& sml2 = ism.materialSlab(l2);
@@ -206,18 +207,20 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   using EqEqGrid = EqBoundEqClosed::grid_type<std::size_t>;
   using Point = EqEqGrid::point_t;
 
-  EqBoundEqClosed eqeqBound{{-1., 1.}, 2, {-M_PI, M_PI}, 4};
+  EqBoundEqClosed eqeqBound{
+      {-1., 1.}, 2, {-std::numbers::pi, std::numbers::pi}, 4};
   EqEqGrid eqeqGrid{eqeqBound()};
 
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.75}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, -M_PI * 0.25}) = 1u;  // material 1
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.25}) = 0u;   // vacuum
-  eqeqGrid.atPosition(Point{-0.5, M_PI * 0.75}) = 2u;   // material 2
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi * 0.75}) =
+      1u;                                                          // material 1
+  eqeqGrid.atPosition(Point{-0.5, -std::numbers::pi / 4.}) = 1u;   // material 1
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi / 4.}) = 0u;    // vacuum
+  eqeqGrid.atPosition(Point{-0.5, std::numbers::pi * 0.75}) = 2u;  // material 2
 
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.75}) = 0u;  // vacuum
-  eqeqGrid.atPosition(Point{0.5, -M_PI * 0.25}) = 3u;  // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.25}) = 3u;   // material 3
-  eqeqGrid.atPosition(Point{0.5, M_PI * 0.75}) = 0u;   // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi * 0.75}) = 0u;  // vacuum
+  eqeqGrid.atPosition(Point{0.5, -std::numbers::pi / 4.}) = 3u;    // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi / 4.}) = 3u;     // material 3
+  eqeqGrid.atPosition(Point{0.5, std::numbers::pi * 0.75}) = 0u;   // vacuum
 
   // With radius 20
   auto boundToGrid = std::make_unique<const LocalToZPhi>(20.);
@@ -334,7 +337,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   BOOST_CHECK_EQUAL(ml0g1.material().X0(), 31.);
 
   // Scale
-  ism1 *= 2.;
+  ism1.scale(2.);
   const Acts::MaterialSlab& sml0g1 = ism1.materialSlab(l0g1);
   BOOST_CHECK_EQUAL(sml0g1.thickness(), 8.);
 
@@ -397,7 +400,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   BOOST_CHECK_EQUAL(ml0g1.material().X0(), 1.);
 
   // scaling shared material should throw a std::invalid_argument
-  BOOST_CHECK_THROW(ism1 *= 2., std::invalid_argument);
+  BOOST_CHECK_THROW(ism1.scale(2.), std::invalid_argument);
 }
 
 // This test covers the grid material (non-indexed accessor)
@@ -469,7 +472,7 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   BOOST_CHECK_EQUAL(ml4.thickness(), 4.);
 
   // Now scale it - and access again
-  gsm *= 2.;
+  gsm.scale(2.);
 
   const Acts::MaterialSlab& sml0 = gsm.materialSlab(l0);
   const Acts::MaterialSlab& sml1 = gsm.materialSlab(l1);

@@ -16,14 +16,10 @@
 
 namespace Acts {
 
-/// @brief Default evaluater of the k_i's and elements of the transport matrix
+/// @brief Default evaluator of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
 struct EigenStepperDefaultExtension {
-  using Scalar = ActsScalar;
-  /// @brief Vector3 replacement for the custom scalar type
-  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
-
-  /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
+  /// @brief Evaluator of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up qop, too.
   ///
   /// @tparam i Index of the k_i, i = [0, 3]
@@ -43,9 +39,9 @@ struct EigenStepperDefaultExtension {
   template <int i, typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         const navigator_t& /*navigator*/, ThisVector3& knew,
-         const Vector3& bField, std::array<Scalar, 4>& kQoP,
-         const double h = 0., const ThisVector3& kprev = ThisVector3::Zero())
+         const navigator_t& /*navigator*/, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const double h = 0.,
+         const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
     auto qop = stepper.qOverP(state.stepping);

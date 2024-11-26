@@ -35,11 +35,11 @@ void addExampleAlgorithms(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
-      outputParticlesInitial, outputParticlesFinal, outputSimHits,
-      imputParametrisationNuclearInteraction, randomNumbers, trackingGeometry,
-      magneticField, pMin, emScattering, emEnergyLossIonisation,
-      emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
-      generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
+      outputParticles, outputSimHits, imputParametrisationNuclearInteraction,
+      randomNumbers, trackingGeometry, magneticField, pMin, emScattering,
+      emEnergyLossIonisation, emEnergyLossRadiation, emPhotonConversion,
+      generateHitsOnSensitive, generateHitsOnMaterial, generateHitsOnPassive,
+      averageHitsPerParticle);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);

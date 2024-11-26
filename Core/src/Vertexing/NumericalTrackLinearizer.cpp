@@ -13,6 +13,8 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
+#include <numbers>
+
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
     const BoundTrackParameters& params, double linPointTime,
@@ -94,7 +96,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   BoundVector newPerigeeParams;
 
   // Check if wiggled angle theta are within definition range [0, pi]
-  if (paramVec(eLinTheta) + m_cfg.delta > M_PI) {
+  if (paramVec(eLinTheta) + m_cfg.delta > std::numbers::pi) {
     ACTS_ERROR(
         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)! "
         "You might need to decrease targetTolerance as well.");
@@ -141,7 +143,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     // previously computed value for better readability.
     completeJacobian(eLinPhi, i) =
         Acts::detail::difference_periodic(newPerigeeParams(eLinPhi),
-                                          perigeeParams(eLinPhi), 2 * M_PI) /
+                                          perigeeParams(eLinPhi),
+                                          2 * std::numbers::pi) /
         m_cfg.delta;
   }
 

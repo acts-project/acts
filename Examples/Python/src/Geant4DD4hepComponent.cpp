@@ -8,7 +8,6 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
@@ -25,12 +24,13 @@ using namespace Acts;
 PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
-  py::class_<DDG4DetectorConstructionFactory, DetectorConstructionFactory,
+  py::class_<DDG4DetectorConstructionFactory,
+             Geant4::DetectorConstructionFactory,
              std::shared_ptr<DDG4DetectorConstructionFactory>>(
       m, "DDG4DetectorConstructionFactory")
       .def(py::init<std::shared_ptr<DD4hep::DD4hepDetector>,
-                    std::vector<std::shared_ptr<RegionCreator>>>(),
+                    std::vector<std::shared_ptr<Geant4::RegionCreator>>>(),
            py::arg("detector"),
            py::arg("regionCreators") =
-               std::vector<std::shared_ptr<RegionCreator>>());
+               std::vector<std::shared_ptr<Geant4::RegionCreator>>());
 }

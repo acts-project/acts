@@ -8,6 +8,8 @@
 
 #include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <numbers>
+
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
@@ -23,7 +25,7 @@
 void momentumDistributions(std::string inFile, std::string treeName,
                            std::string outFile, int nBins, float r, float zMin,
                            float zMax, float etaMin, float etaMax,
-                           float thetaMin = 0., float thetaMax = M_PI) {
+                           float thetaMin = 0., float thetaMax = std::numbers::pi_v<float>) {
   std::cout << "Opening file: " << inFile << std::endl;
   TFile inputFile(inFile.c_str());
   std::cout << "Reading tree: " << treeName << std::endl;

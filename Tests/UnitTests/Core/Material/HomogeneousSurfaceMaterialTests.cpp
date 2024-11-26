@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
   matHalf.scaleThickness(0.5);
 
   HomogeneousSurfaceMaterial hsm(mat, 1.);
-  hsm *= 0.5;
+  hsm.scale(0.5);
 
   auto matBin = hsm.materialSlab(Vector3(0., 0., 0.));
 
