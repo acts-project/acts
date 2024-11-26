@@ -12,9 +12,10 @@
 
 namespace Acts::detail {
 
-std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
-    ActsScalar hlPhi1, ActsScalar avgPhi1, ActsScalar hlPhi2,
-    ActsScalar avgPhi2, const Logger& logger, ActsScalar tolerance) {
+std::tuple<double, double, bool> mergedPhiSector(double hlPhi1, double avgPhi1,
+                                                 double hlPhi2, double avgPhi2,
+                                                 const Logger& logger,
+                                                 double tolerance) {
   using namespace Acts::UnitLiterals;
 
   if (std::abs(hlPhi1 - std::numbers::pi / 2.) < tolerance &&
@@ -33,8 +34,8 @@ std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
           "Phi sectors cover half a circle but are not opposite");
     }
 
-    ActsScalar newAvgPhi = detail::radian_sym(avgPhi1 + std::numbers::pi / 2.);
-    ActsScalar newHlPhi = std::numbers::pi;
+    double newAvgPhi = detail::radian_sym(avgPhi1 + std::numbers::pi / 2.);
+    double newHlPhi = std::numbers::pi;
     ACTS_VERBOSE("merged: ["
                  << detail::radian_sym(newAvgPhi - newHlPhi) / 1_degree << ", "
                  << detail::radian_sym(newAvgPhi + newHlPhi) / 1_degree
@@ -43,27 +44,27 @@ std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
     return {newHlPhi, newAvgPhi, false};
   }
 
-  ActsScalar minPhi1 = detail::radian_sym(-hlPhi1 + avgPhi1);
-  ActsScalar maxPhi1 = detail::radian_sym(hlPhi1 + avgPhi1);
+  double minPhi1 = detail::radian_sym(-hlPhi1 + avgPhi1);
+  double maxPhi1 = detail::radian_sym(hlPhi1 + avgPhi1);
 
   ACTS_VERBOSE("one: [" << minPhi1 / 1_degree << ", " << maxPhi1 / 1_degree
                         << "] ~> " << avgPhi1 / 1_degree << " +- "
                         << hlPhi1 / 1_degree);
 
-  ActsScalar maxPhi2 = detail::radian_sym(hlPhi2 + avgPhi2);
-  ActsScalar minPhi2 = detail::radian_sym(-hlPhi2 + avgPhi2);
+  double maxPhi2 = detail::radian_sym(hlPhi2 + avgPhi2);
+  double minPhi2 = detail::radian_sym(-hlPhi2 + avgPhi2);
 
   ACTS_VERBOSE("two: [" << minPhi2 / 1_degree << ", " << maxPhi2 / 1_degree
                         << "] ~> " << avgPhi2 / 1_degree << " +- "
                         << hlPhi2 / 1_degree);
 
   ACTS_VERBOSE("Checking for CCW or CW ordering");
-  auto same = [tolerance](ActsScalar a, ActsScalar b) {
+  auto same = [tolerance](double a, double b) {
     return std::abs(a - b) < tolerance;
   };
 
-  ActsScalar newMaxPhi{}, newMinPhi{};
-  ActsScalar newHlPhi = hlPhi1 + hlPhi2;
+  double newMaxPhi{}, newMinPhi{};
+  double newHlPhi = hlPhi1 + hlPhi2;
 
   bool reversed = false;
   if (same(minPhi1, maxPhi2)) {
@@ -81,7 +82,7 @@ std::tuple<ActsScalar, ActsScalar, bool> mergedPhiSector(
     throw std::invalid_argument("Phi ranges are incompatible");
   }
 
-  ActsScalar newAvgPhi = detail::radian_sym(newMinPhi + newHlPhi);
+  double newAvgPhi = detail::radian_sym(newMinPhi + newHlPhi);
 
   ACTS_VERBOSE("merged: [" << newMinPhi / 1_degree << ", "
                            << newMaxPhi / 1_degree << "] ~> "

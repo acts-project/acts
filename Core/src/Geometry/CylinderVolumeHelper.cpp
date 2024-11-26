@@ -638,7 +638,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
 
           // re-evalueate rGlueMin
-          ActsScalar rGlueR =
+          double rGlueR =
               0.5 * (tVol1->volumeBounds()
                          .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
                      tVol2->volumeBounds()

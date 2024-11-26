@@ -48,7 +48,7 @@ class SeedFinderOrthogonal {
    * has leaf size 4.
    */
   using tree_t =
-      KDTree<NDims, const external_spacepoint_t *, ActsScalar, std::array, 4>;
+      KDTree<NDims, const external_spacepoint_t *, double, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.

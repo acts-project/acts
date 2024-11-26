@@ -64,7 +64,7 @@ class Intersection {
   constexpr const Position& position() const { return m_position; }
 
   /// Returns the path length to the interseciton
-  constexpr ActsScalar pathLength() const { return m_pathLength; }
+  constexpr double pathLength() const { return m_pathLength; }
 
   /// Returns the intersection status enum
   constexpr IntersectionStatus status() const { return m_status; }
@@ -113,7 +113,7 @@ class Intersection {
   /// Position of the intersection
   Position m_position = Position::Zero();
   /// Signed path length to the intersection (if valid)
-  ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
+  double m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
   IntersectionStatus m_status = IntersectionStatus::unreachable;
 
@@ -154,9 +154,7 @@ class ObjectIntersection {
   }
 
   /// Returns the path length to the interseciton
-  constexpr ActsScalar pathLength() const {
-    return m_intersection.pathLength();
-  }
+  constexpr double pathLength() const { return m_intersection.pathLength(); }
 
   /// Returns the status of the interseciton
   constexpr IntersectionStatus status() const {

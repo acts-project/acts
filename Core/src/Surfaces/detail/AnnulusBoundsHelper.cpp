@@ -16,7 +16,7 @@
 
 std::tuple<std::shared_ptr<Acts::AnnulusBounds>, Acts::Transform3>
 Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
-                                          ActsScalar rMin, ActsScalar rMax,
+                                          double rMin, double rMax,
                                           std::vector<Vector2> vertices) {
   using Line2D = Eigen::Hyperplane<double, 2>;
 

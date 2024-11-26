@@ -16,7 +16,7 @@
 
 Acts::GeoModelDetectorElement::GeoModelDetectorElement(
     PVConstLink geoPhysVol, std::shared_ptr<Surface> surface,
-    const Transform3& sfTransform, ActsScalar thickness)
+    const Transform3& sfTransform, double thickness)
     : m_geoPhysVol(std::move(geoPhysVol)),
       m_surface(std::move(surface)),
       m_surfaceTransform(sfTransform),
@@ -35,7 +35,7 @@ Acts::Surface& Acts::GeoModelDetectorElement::surface() {
   return *m_surface;
 }
 
-Acts::ActsScalar Acts::GeoModelDetectorElement::thickness() const {
+double Acts::GeoModelDetectorElement::thickness() const {
   return m_thickness;
 }
 
