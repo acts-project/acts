@@ -29,18 +29,19 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    int numFeatures = 3;
+    std::vector<int> selectedFeatures = {};
     float cut = 0.21;
     int nChunks = 1;  // NOTE for GNN use 1
     bool undirected = false;
     int deviceID = 0;
+    bool useEdgeFeatures = false;
   };
 
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges,
+  std::tuple<std::any, std::any, std::any, std::any> operator()(
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
       torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }

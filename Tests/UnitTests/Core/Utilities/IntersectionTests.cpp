@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
 
 BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
   std::array<IntersectionStatus, 4> status_values = {
-      {IntersectionStatus::missed, IntersectionStatus::unreachable,
+      {IntersectionStatus::unreachable, IntersectionStatus::unreachable,
        IntersectionStatus::reachable, IntersectionStatus::onSurface}};
   std::array<std::string, 4> expected_messages = {
       {"missed/unreachable", "missed/unreachable", "reachable", "onSurface"}};
