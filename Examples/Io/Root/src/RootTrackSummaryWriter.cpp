@@ -108,40 +108,37 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("err_eQOP_fit", &m_err_eQOP_fit);
   m_outputTree->Branch("err_eT_fit", &m_err_eT_fit);
 
-  if (m_inputParticles.isInitialized() &&
-      m_inputTrackParticleMatching.isInitialized()) {
-    m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
-    m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
-    m_outputTree->Branch("trackClassification", &m_trackClassification);
-    m_outputTree->Branch("t_charge", &m_t_charge);
-    m_outputTree->Branch("t_time", &m_t_time);
-    m_outputTree->Branch("t_vx", &m_t_vx);
-    m_outputTree->Branch("t_vy", &m_t_vy);
-    m_outputTree->Branch("t_vz", &m_t_vz);
-    m_outputTree->Branch("t_px", &m_t_px);
-    m_outputTree->Branch("t_py", &m_t_py);
-    m_outputTree->Branch("t_pz", &m_t_pz);
-    m_outputTree->Branch("t_theta", &m_t_theta);
-    m_outputTree->Branch("t_phi", &m_t_phi);
-    m_outputTree->Branch("t_eta", &m_t_eta);
-    m_outputTree->Branch("t_p", &m_t_p);
-    m_outputTree->Branch("t_pT", &m_t_pT);
-    m_outputTree->Branch("t_d0", &m_t_d0);
-    m_outputTree->Branch("t_z0", &m_t_z0);
+  m_outputTree->Branch("nMajorityHits", &m_nMajorityHits);
+  m_outputTree->Branch("majorityParticleId", &m_majorityParticleId);
+  m_outputTree->Branch("trackClassification", &m_trackClassification);
+  m_outputTree->Branch("t_charge", &m_t_charge);
+  m_outputTree->Branch("t_time", &m_t_time);
+  m_outputTree->Branch("t_vx", &m_t_vx);
+  m_outputTree->Branch("t_vy", &m_t_vy);
+  m_outputTree->Branch("t_vz", &m_t_vz);
+  m_outputTree->Branch("t_px", &m_t_px);
+  m_outputTree->Branch("t_py", &m_t_py);
+  m_outputTree->Branch("t_pz", &m_t_pz);
+  m_outputTree->Branch("t_theta", &m_t_theta);
+  m_outputTree->Branch("t_phi", &m_t_phi);
+  m_outputTree->Branch("t_eta", &m_t_eta);
+  m_outputTree->Branch("t_p", &m_t_p);
+  m_outputTree->Branch("t_pT", &m_t_pT);
+  m_outputTree->Branch("t_d0", &m_t_d0);
+  m_outputTree->Branch("t_z0", &m_t_z0);
 
-    m_outputTree->Branch("res_eLOC0_fit", &m_res_eLOC0_fit);
-    m_outputTree->Branch("res_eLOC1_fit", &m_res_eLOC1_fit);
-    m_outputTree->Branch("res_ePHI_fit", &m_res_ePHI_fit);
-    m_outputTree->Branch("res_eTHETA_fit", &m_res_eTHETA_fit);
-    m_outputTree->Branch("res_eQOP_fit", &m_res_eQOP_fit);
-    m_outputTree->Branch("res_eT_fit", &m_res_eT_fit);
-    m_outputTree->Branch("pull_eLOC0_fit", &m_pull_eLOC0_fit);
-    m_outputTree->Branch("pull_eLOC1_fit", &m_pull_eLOC1_fit);
-    m_outputTree->Branch("pull_ePHI_fit", &m_pull_ePHI_fit);
-    m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
-    m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
-    m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
-  }
+  m_outputTree->Branch("res_eLOC0_fit", &m_res_eLOC0_fit);
+  m_outputTree->Branch("res_eLOC1_fit", &m_res_eLOC1_fit);
+  m_outputTree->Branch("res_ePHI_fit", &m_res_ePHI_fit);
+  m_outputTree->Branch("res_eTHETA_fit", &m_res_eTHETA_fit);
+  m_outputTree->Branch("res_eQOP_fit", &m_res_eQOP_fit);
+  m_outputTree->Branch("res_eT_fit", &m_res_eT_fit);
+  m_outputTree->Branch("pull_eLOC0_fit", &m_pull_eLOC0_fit);
+  m_outputTree->Branch("pull_eLOC1_fit", &m_pull_eLOC1_fit);
+  m_outputTree->Branch("pull_ePHI_fit", &m_pull_ePHI_fit);
+  m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
+  m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
+  m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
 
   if (m_cfg.writeGsfSpecific) {
     m_outputTree->Branch("max_material_fwd", &m_gsf_max_material_fwd);
@@ -320,34 +317,41 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
     m_hasFittedParams.push_back(hasFittedParams);
 
+    // Initialize the truth particle info
+    ActsFatras::Barcode majorityParticleId(
+        std::numeric_limits<std::size_t>::max());
+    TrackMatchClassification trackClassification =
+        TrackMatchClassification::Unknown;
+    unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
+    int t_charge = std::numeric_limits<int>::max();
+    float t_time = NaNfloat;
+    float t_vx = NaNfloat;
+    float t_vy = NaNfloat;
+    float t_vz = NaNfloat;
+    float t_px = NaNfloat;
+    float t_py = NaNfloat;
+    float t_pz = NaNfloat;
+    float t_theta = NaNfloat;
+    float t_phi = NaNfloat;
+    float t_eta = NaNfloat;
+    float t_p = NaNfloat;
+    float t_pT = NaNfloat;
+    float t_d0 = NaNfloat;
+    float t_z0 = NaNfloat;
+    float t_qop = NaNfloat;
+
+    // Initialize the residual and pull values
+    std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
+                                               NaNfloat, NaNfloat, NaNfloat};
+    std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
+                                                NaNfloat, NaNfloat, NaNfloat};
+
+    // Get the perigee surface
+    const Acts::Surface* pSurface =
+        track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
+
+    // Fill truth information, residuals and pulls if truth is available
     if (particles != nullptr && trackParticleMatching != nullptr) {
-      // Initialize the truth particle info
-      ActsFatras::Barcode majorityParticleId(
-          std::numeric_limits<std::size_t>::max());
-      TrackMatchClassification trackClassification =
-          TrackMatchClassification::Unknown;
-      unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
-      int t_charge = std::numeric_limits<int>::max();
-      float t_time = NaNfloat;
-      float t_vx = NaNfloat;
-      float t_vy = NaNfloat;
-      float t_vz = NaNfloat;
-      float t_px = NaNfloat;
-      float t_py = NaNfloat;
-      float t_pz = NaNfloat;
-      float t_theta = NaNfloat;
-      float t_phi = NaNfloat;
-      float t_eta = NaNfloat;
-      float t_p = NaNfloat;
-      float t_pT = NaNfloat;
-      float t_d0 = NaNfloat;
-      float t_z0 = NaNfloat;
-      float t_qop = NaNfloat;
-
-      // Get the perigee surface
-      const Acts::Surface* pSurface =
-          track.hasReferenceSurface() ? &track.referenceSurface() : nullptr;
-
       // Get the majority truth particle to this track
       auto match = trackParticleMatching->find(track.index());
       bool foundMajorityParticle = false;
@@ -414,6 +418,22 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                                << " not found!");
       }
 
+      // Residuals and pulls
+      if (foundMajorityParticle && hasFittedParams) {
+        res = {param[Acts::eBoundLoc0] - t_d0,
+               param[Acts::eBoundLoc1] - t_z0,
+               Acts::detail::difference_periodic(
+                   param[Acts::eBoundPhi], t_phi,
+                   static_cast<float>(2 * std::numbers::pi)),
+               param[Acts::eBoundTheta] - t_theta,
+               param[Acts::eBoundQOverP] - t_qop,
+               param[Acts::eBoundTime] - t_time};
+
+        for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
+          pull[i] = res[i] / error[i];
+        }
+      }
+
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
       m_majorityParticleId.push_back(majorityParticleId.value());
@@ -434,25 +454,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       m_t_pT.push_back(t_pT);
       m_t_d0.push_back(t_d0);
       m_t_z0.push_back(t_z0);
-
-      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
-                                                 NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
-                                                  NaNfloat, NaNfloat, NaNfloat};
-      if (foundMajorityParticle && hasFittedParams) {
-        res = {param[Acts::eBoundLoc0] - t_d0,
-               param[Acts::eBoundLoc1] - t_z0,
-               Acts::detail::difference_periodic(
-                   param[Acts::eBoundPhi], t_phi,
-                   static_cast<float>(2 * std::numbers::pi)),
-               param[Acts::eBoundTheta] - t_theta,
-               param[Acts::eBoundQOverP] - t_qop,
-               param[Acts::eBoundTime] - t_time};
-
-        for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-          pull[i] = res[i] / error[i];
-        }
-      }
 
       m_res_eLOC0_fit.push_back(res[Acts::eBoundLoc0]);
       m_res_eLOC1_fit.push_back(res[Acts::eBoundLoc1]);
