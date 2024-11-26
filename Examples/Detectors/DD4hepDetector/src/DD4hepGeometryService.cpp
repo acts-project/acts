@@ -24,8 +24,7 @@
 
 namespace ActsExamples {
 
-DD4hepGeometryService::DD4hepGeometryService(
-    const DD4hepGeometryService::Config& cfg)
+DD4hepGeometryService::DD4hepGeometryService(const Config& cfg)
     : m_cfg(cfg),
       m_logger{Acts::getDefaultLogger("DD4hepGeometryService", cfg.logLevel)} {
   if (m_cfg.xmlFileNames.empty()) {
@@ -141,6 +140,7 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
   std::vector<dd4hep::DetElement> eCal;
   std::vector<dd4hep::DetElement> hCal;
   std::vector<dd4hep::DetElement> muon;
+
   for (auto& detElement : det) {
     std::string detName = detElement.name();
     if (detName.find("Muon") != std::string::npos) {
@@ -153,22 +153,16 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
       tracker.push_back(detElement);
     }
   }
-  sort(muon.begin(), muon.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(eCal.begin(), eCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(hCal.begin(), hCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(tracker.begin(), tracker.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
+
+  auto byId = [](const dd4hep::DetElement& a,
+                 const dd4hep::DetElement& b) -> bool {
+    return a.id() < b.id();
+  };
+  sort(muon.begin(), muon.end(), byId);
+  sort(eCal.begin(), eCal.end(), byId);
+  sort(hCal.begin(), hCal.end(), byId);
+  sort(tracker.begin(), tracker.end(), byId);
+
   det.clear();
   det = tracker;
 
