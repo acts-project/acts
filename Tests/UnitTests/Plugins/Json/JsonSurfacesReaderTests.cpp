@@ -62,9 +62,7 @@ struct FileFixture {
     f << j.dump(2);
   }
 
-  ~FileFixture() {
-    // std::filesystem::remove(filename);
-  }
+  ~FileFixture() { std::filesystem::remove(filename); }
 };
 
 FileFixture fileFixture;
@@ -73,6 +71,7 @@ BOOST_AUTO_TEST_CASE(surface_reading_test) {
   auto readBackSurfaces =
       Acts::JsonSurfacesReader::readVector({filename, {"foo"}});
 
+  BOOST_REQUIRE_EQUAL(surfaces.size(), readBackSurfaces.size());
   for (auto [refSurface, surface] : Acts::zip(surfaces, readBackSurfaces)) {
     BOOST_CHECK(
         refSurface->transform({}).isApprox(surface->transform({}), 1.e-4));
@@ -86,6 +85,7 @@ BOOST_AUTO_TEST_CASE(json_detelement_reading_test) {
   auto readBackDetElements =
       Acts::JsonSurfacesReader::readDetectorElements({filename, {"foo"}}, 1.0);
 
+  BOOST_REQUIRE_EQUAL(surfaces.size(), readBackDetElements.size());
   for (auto [refSurface, detElement] :
        Acts::zip(surfaces, readBackDetElements)) {
     auto surface = &detElement->surface();
