@@ -253,6 +253,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   void reserve(IndexType size);
   void clear();
+  std::size_t size() const;
 
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
