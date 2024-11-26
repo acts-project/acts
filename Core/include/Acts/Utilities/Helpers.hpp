@@ -175,10 +175,10 @@ T clampValue(U value) {
 ///
 /// @return [ range, medium ] in an tuple
 template <typename T>
-std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
+std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
   typename T::value_type range = (*maxIt - *minIt);
-  ActsScalar medium = static_cast<ActsScalar>((*maxIt + *minIt) * 0.5);
+  double medium = static_cast<double>((*maxIt + *minIt) * 0.5);
   return {range, medium};
 }
 
@@ -203,5 +203,22 @@ template <typename R, typename T>
 bool rangeContainsValue(const R& range, const T& value) {
   return std::ranges::find(range, value) != std::ranges::end(range);
 }
+
+/// Helper struct that can turn a set of lambdas into a single entity with
+/// overloaded call operator. This can be useful for example in a std::visit
+/// call.
+/// ```cpp
+/// std::visit(overloaded{
+///  [](const int& i) { std::cout << "int: " << i << std::endl; },
+///  [](const std::string& s) { std::cout << "string: " << s << std::endl; },
+/// }, variant);
+/// ```
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 }  // namespace Acts

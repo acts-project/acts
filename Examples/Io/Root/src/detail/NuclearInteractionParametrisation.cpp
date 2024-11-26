@@ -32,15 +32,20 @@ namespace {
 /// @return The location in a standard normal distribution
 float gaussianValue(TH1F const* histo, const float mom) {
   // Get the cumulative probability distribution
-  TH1F* normalised = static_cast<TH1F*>(histo->DrawNormalized());
-  TH1F* cumulative = static_cast<TH1F*>(normalised->GetCumulative());
+
+  // DrawNormalized and GetCumulative return pointers to histograms where ROOT
+  // transfers ownership to the caller.
+  std::unique_ptr<TH1F> normalised(
+      dynamic_cast<TH1F*>(histo->DrawNormalized()));
+  std::unique_ptr<TH1F> cumulative(
+      dynamic_cast<TH1F*>(normalised->GetCumulative()));
+  assert(cumulative);
+  assert(normalised);
   // Find the cumulative probability
   const float binContent = cumulative->GetBinContent(cumulative->FindBin(mom));
   // Transform the probability to an entry in a standard normal distribution
   const float value = TMath::ErfInverse(2. * binContent - 1.);
 
-  delete (normalised);
-  delete (cumulative);
   return value;
 }
 
@@ -53,8 +58,8 @@ float gaussianValue(TH1F const* histo, const float mom) {
 float invariantMass(const Acts::Vector4& fourVector1,
                     const Acts::Vector4& fourVector2) {
   Acts::Vector4 sum = fourVector1 + fourVector2;
-  const Acts::ActsScalar energy = sum[Acts::eEnergy];
-  Acts::ActsScalar momentum = sum.template segment<3>(Acts::eMom0).norm();
+  const double energy = sum[Acts::eEnergy];
+  double momentum = sum.template segment<3>(Acts::eMom0).norm();
   return std::sqrt(energy * energy - momentum * momentum);
 }
 

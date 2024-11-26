@@ -116,19 +116,11 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
-  std::vector<std::vector<Acts::ScoreBasedAmbiguityResolution::MeasurementInfo>>
-      measurementsPerTracks;
-
-  std::vector<std::vector<Acts::ScoreBasedAmbiguityResolution::TrackFeatures>>
-      trackFeaturesVectors;
-  measurementsPerTracks = m_ambi.computeInitialState(
-      tracks, &sourceLinkHash, &sourceLinkEquality, trackFeaturesVectors);
-
   Acts::ScoreBasedAmbiguityResolution::OptionalCuts<ConstTrackProxy>
       optionalCuts;
   optionalCuts.cuts.push_back(doubleHolesFilter);
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
-      tracks, measurementsPerTracks, trackFeaturesVectors, optionalCuts);
+      tracks, &sourceLinkHash, &sourceLinkEquality, optionalCuts);
   // Prepare the output track collection from the IDs
   TrackContainer solvedTracks{std::make_shared<Acts::VectorTrackContainer>(),
                               std::make_shared<Acts::VectorMultiTrajectory>()};

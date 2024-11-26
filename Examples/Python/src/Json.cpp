@@ -19,6 +19,8 @@
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
+#include "ActsExamples/Io/Json/JsonTrackParamsLookupReader.hpp"
+#include "ActsExamples/Io/Json/JsonTrackParamsLookupWriter.hpp"
 
 #include <fstream>
 #include <initializer_list>
@@ -37,6 +39,11 @@ class IMaterialDecorator;
 namespace ActsExamples {
 class IMaterialWriter;
 class IWriter;
+
+namespace Experimental {
+class ITrackParamsLookupWriter;
+}  // namespace Experimental
+
 }  // namespace ActsExamples
 
 namespace py = pybind11;
@@ -108,6 +115,50 @@ void addJson(Context& ctx) {
     ACTS_PYTHON_MEMBER(converterCfg);
     ACTS_PYTHON_MEMBER(fileName);
     ACTS_PYTHON_MEMBER(writeFormat);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using IWriter = ActsExamples::ITrackParamsLookupWriter;
+    using Writer = ActsExamples::JsonTrackParamsLookupWriter;
+    using Config = Writer::Config;
+
+    auto cls = py::class_<Writer, IWriter, std::shared_ptr<Writer>>(
+                   mex, "JsonTrackParamsLookupWriter")
+                   .def(py::init<const Config&>(), py::arg("config"))
+                   .def("writeLookup", &Writer::writeLookup)
+                   .def_property_readonly("config", &Writer::config);
+
+    auto c = py::class_<Config>(cls, "Config")
+                 .def(py::init<>())
+                 .def(py::init<const std::string&>(), py::arg("path"));
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(path);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using IReader = ActsExamples::ITrackParamsLookupReader;
+    using Reader = ActsExamples::JsonTrackParamsLookupReader;
+    using Config = Reader::Config;
+
+    auto cls = py::class_<Reader, IReader, std::shared_ptr<Reader>>(
+                   mex, "JsonTrackParamsLookupReader")
+                   .def(py::init<const Config&>(), py::arg("config"))
+                   .def("readLookup", &Reader::readLookup)
+                   .def_property_readonly("config", &Reader::config);
+
+    auto c = py::class_<Config>(cls, "Config")
+                 .def(py::init<>())
+                 .def(py::init<std::unordered_map<Acts::GeometryIdentifier,
+                                                  const Acts::Surface*>,
+                               std::pair<double, double>>(),
+                      py::arg("refLayers"), py::arg("bins"));
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(refLayers);
+    ACTS_PYTHON_MEMBER(bins);
     ACTS_PYTHON_STRUCT_END();
   }
 

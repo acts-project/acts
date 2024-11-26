@@ -40,7 +40,7 @@ namespace Acts::DetrayJsonHelper {
 /// @param portal is the flag for conversion into detray portal format
 ///
 /// @return type and value array in detray format
-std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
+std::tuple<unsigned int, std::vector<double>> maskFromBounds(
     const Acts::SurfaceBounds& sBounds, bool portal = false);
 
 /// @brief add volume link

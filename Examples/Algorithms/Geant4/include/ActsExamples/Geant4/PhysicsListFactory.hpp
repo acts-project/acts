@@ -13,7 +13,7 @@
 
 class G4VUserPhysicsList;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A factory around G4VUserPhysicsList which allows on demand instantiation.
 class PhysicsListFactory {
@@ -36,4 +36,4 @@ class PhysicsListFactoryFunction final : public PhysicsListFactory {
   Function m_function;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

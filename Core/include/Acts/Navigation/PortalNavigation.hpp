@@ -86,7 +86,7 @@ struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
   BoundVolumesGrid1Navigation(
-      const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
+      const std::vector<double>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
       : indexedUpdater(IndexedUpdater(VariableBoundIndexGrid1(std::make_tuple(
