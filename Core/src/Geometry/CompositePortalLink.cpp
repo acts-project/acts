@@ -228,9 +228,9 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       const auto& bounds =
           dynamic_cast<const CylinderBounds&>(child->surface().bounds());
       Transform3 ltransform = itransform * child->surface().transform(gctx);
-      ActsScalar hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
-      ActsScalar minZ = ltransform.translation()[eZ] - hlZ;
-      ActsScalar maxZ = ltransform.translation()[eZ] + hlZ;
+      double hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
+      double minZ = ltransform.translation()[eZ] - hlZ;
+      double maxZ = ltransform.translation()[eZ] + hlZ;
       if (i == 0) {
         edges.push_back(minZ);
       }

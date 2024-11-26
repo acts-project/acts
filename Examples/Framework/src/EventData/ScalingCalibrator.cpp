@@ -178,9 +178,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) *= ct.x_scale;
     calibratedCovariance(boundLoc1, boundLoc1) *= ct.y_scale;
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
     trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

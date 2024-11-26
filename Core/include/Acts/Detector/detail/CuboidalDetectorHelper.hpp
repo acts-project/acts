@@ -73,7 +73,7 @@ DetectorComponent::PortalContainer connect(
 /// @param logLevel is the screen logging level
 ///
 /// @return extracted boundary values
-std::array<std::vector<ActsScalar>, 3u> xyzBoundaries(
+std::array<std::vector<double>, 3u> xyzBoundaries(
     const GeometryContext& gctx,
     const std::vector<const DetectorVolume*>& volumes,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);

@@ -53,12 +53,6 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
     : WriterT(config.inputTracks, "RootTrackSummaryWriter", level),
       m_cfg(config) {
   // tracks collection name is already checked by base ctor
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing particles input collection");
-  }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
-  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -66,8 +60,9 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -220,9 +215,16 @@ ProcessCode RootTrackSummaryWriter::finalize() {
 
 ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                            const ConstTrackContainer& tracks) {
-  // Read additional input collections
-  const auto& particles = m_inputParticles(ctx);
-  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  // In case we do not have truth info, we bind to a empty collection
+  const static SimParticleContainer emptyParticles;
+  const static TrackParticleMatching emptyTrackParticleMatching;
+
+  const auto& particles =
+      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
+  const auto& trackParticleMatching =
+      m_inputTrackParticleMatching.isInitialized()
+          ? m_inputTrackParticleMatching(ctx)
+          : emptyTrackParticleMatching;
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -244,6 +246,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_nSharedHits.push_back(track.nSharedHits());
     m_chi2Sum.push_back(track.chi2());
     m_NDF.push_back(track.nDoF());
+
     {
       std::vector<double> measurementChi2;
       std::vector<std::uint32_t> measurementVolume;
@@ -266,8 +269,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           measurementLayer.push_back(layer);
         }
       }
-      // IDs are stored as double (as the vector of vector of int is not known
-      // to ROOT)
       m_measurementChi2.push_back(std::move(measurementChi2));
       m_measurementVolume.push_back(std::move(measurementVolume));
       m_measurementLayer.push_back(std::move(measurementLayer));

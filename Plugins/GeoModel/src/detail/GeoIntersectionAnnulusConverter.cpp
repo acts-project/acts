@@ -31,7 +31,7 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
     const PVConstLink& geoPV, const GeoShapeIntersection& geoIntersection,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Returns the first operand being ANDed
@@ -41,8 +41,8 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
   const GeoTubs* tubs = dynamic_cast<const GeoTubs*>(opA);
   if (tubs != nullptr) {
     // rMin, rMax
-    ActsScalar rMin = unitLength * tubs->getRMin();
-    ActsScalar rMax = unitLength * tubs->getRMax();
+    double rMin = unitLength * tubs->getRMin();
+    double rMax = unitLength * tubs->getRMax();
 
     // Get the shift
     const GeoShapeShift* shapeShift = dynamic_cast<const GeoShapeShift*>(opB);
@@ -51,7 +51,7 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
       const GeoGenericTrap* trap =
           dynamic_cast<const GeoGenericTrap*>(shapeShift->getOp());
       if (trap != nullptr) {
-        ActsScalar thickness = 2 * unitLength * trap->getZHalfLength();
+        double thickness = 2 * unitLength * trap->getZHalfLength();
         //    X half length at -z, -y.
         auto trapVertices = trap->getVertices();
 
