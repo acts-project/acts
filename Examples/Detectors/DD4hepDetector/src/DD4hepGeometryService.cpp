@@ -85,7 +85,7 @@ ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
   return ProcessCode::SUCCESS;
 }
 
-dd4hep::Detector& DD4hepGeometryService::DD4hepGeometryService::detector() {
+dd4hep::Detector& DD4hepGeometryService::detector() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
