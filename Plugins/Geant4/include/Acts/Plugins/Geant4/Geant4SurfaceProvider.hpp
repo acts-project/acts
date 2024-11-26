@@ -46,13 +46,13 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     const G4VPhysicalVolume* g4World = nullptr;
 
     /// Convert the length scale
-    ActsScalar scaleConversion = 1.;
+    double scaleConversion = 1.;
 
     /// Convert the material
     bool convertMaterial = true;
 
     /// Converted material thickness (< 0 indicates keeping original thickness)
-    ActsScalar convertedMaterialThickness = -1;
+    double convertedMaterialThickness = -1;
 
     /// Transformation to apply to the
     /// G4World volume
@@ -66,7 +66,7 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   /// Optional configuration for the KDTree
   struct kdtOptions {
     /// A set of ranges to separate the surfaces
-    Acts::RangeXD<kDim, Acts::ActsScalar> range;
+    Acts::RangeXD<kDim, double> range;
 
     /// A set of binning values to perform the separation
     std::array<Acts::BinningValue, kDim> binningValues;

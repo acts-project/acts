@@ -142,9 +142,9 @@ Acts::PortalJsonConverter::toJsonDetray(
       const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
 
       // Apply the correction from local to global boundaries
-      ActsScalar gCorr = VectorHelpers::cast(transform.translation(), cast);
+      double gCorr = VectorHelpers::cast(transform.translation(), cast);
       std::for_each(boundaries.begin(), boundaries.end(),
-                    [&gCorr](ActsScalar& b) { b -= gCorr; });
+                    [&gCorr](double& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -154,11 +154,11 @@ Acts::PortalJsonConverter::toJsonDetray(
       }
 
       // Pick the surface dimension - via poly
-      std::array<ActsScalar, 2u> clipRange = {0., 0.};
-      std::vector<ActsScalar> boundValues = surfaceAdjusted->bounds().values();
+      std::array<double, 2u> clipRange = {0., 0.};
+      std::vector<double> boundValues = surfaceAdjusted->bounds().values();
       if (surfaceType == Surface::SurfaceType::Cylinder &&
           cast == BinningValue::binZ) {
-        ActsScalar zPosition = surfaceAdjusted->center(gctx).z();
+        double zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
@@ -174,12 +174,12 @@ Acts::PortalJsonConverter::toJsonDetray(
 
       // Need to clip the parameter space to the surface dimension
       std::vector<unsigned int> clippedIndices = {};
-      std::vector<ActsScalar> clippedBoundaries = {};
+      std::vector<double> clippedBoundaries = {};
       clippedBoundaries.push_back(clipRange[0u]);
       for (const auto [ib, b] : enumerate(boundaries)) {
         if (ib > 0) {
           unsigned int vI = vIndices[ib - 1u];
-          ActsScalar highEdge = boundaries[ib];
+          double highEdge = boundaries[ib];
           if (boundaries[ib - 1] >= clipRange[1u]) {
             break;
           }
@@ -201,7 +201,7 @@ Acts::PortalJsonConverter::toJsonDetray(
         for (auto [ib, b] : enumerate(clippedBoundaries)) {
           if (ib > 0) {
             // Create sub surfaces
-            std::array<ActsScalar, CylinderBounds::BoundValues::eSize>
+            std::array<double, CylinderBounds::BoundValues::eSize>
                 subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;
@@ -228,7 +228,7 @@ Acts::PortalJsonConverter::toJsonDetray(
         for (auto [ib, b] : enumerate(clippedBoundaries)) {
           if (ib > 0) {
             // Create sub surfaces
-            std::array<ActsScalar, RadialBounds::BoundValues::eSize>
+            std::array<double, RadialBounds::BoundValues::eSize>
                 subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;

@@ -15,6 +15,8 @@
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
+#include <numbers>
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -65,9 +67,9 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 
 TorchMetricLearning::~TorchMetricLearning() {}
 
-std::tuple<std::any, std::any> TorchMetricLearning::operator()(
+std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    torch::Device device) {
+    const std::vector<std::uint64_t> & /*moduleIds*/, torch::Device device) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
 
@@ -105,18 +107,16 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // Embedding
   // **********
 
-  if (m_cfg.numFeatures > numAllFeatures) {
-    throw std::runtime_error("requested more features then available");
-  }
-
   // Clone models (solve memory leak? members can be const...)
   auto model = m_model->clone();
   model.to(device);
 
   std::vector<torch::jit::IValue> inputTensors;
+  auto selectedFeaturesTensor =
+      at::tensor(at::ArrayRef<int>(m_cfg.selectedFeatures));
   inputTensors.push_back(
-      m_cfg.numFeatures < numAllFeatures
-          ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+      !m_cfg.selectedFeatures.empty()
+          ? inputTensor.index({Slice{}, selectedFeaturesTensor})
           : std::move(inputTensor));
 
   ACTS_DEBUG("embedding input tensor shape "
@@ -141,6 +141,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList)};
+  // TODO add real edge features for this workflow later
+  std::any edgeFeatures;
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList),
+          std::move(edgeFeatures)};
 }
 }  // namespace Acts

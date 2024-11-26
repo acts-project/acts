@@ -25,7 +25,7 @@ class G4VPhysicalVolume;
 namespace ActsExamples {
 
 DDG4DetectorConstruction::DDG4DetectorConstruction(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::shared_ptr<DD4hepDetector> detector,
     std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_detector(std::move(detector)),
@@ -60,7 +60,7 @@ G4VPhysicalVolume* DDG4DetectorConstruction::Construct() {
 }
 
 DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::shared_ptr<DD4hepDetector> detector,
     std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_detector(std::move(detector)),
       m_regionCreators(std::move(regionCreators)) {}

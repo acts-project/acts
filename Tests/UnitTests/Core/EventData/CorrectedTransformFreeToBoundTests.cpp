@@ -34,7 +34,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr ActsScalar eps = 0.01;
+constexpr double eps = 0.01;
 }
 
 BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   const auto resTime = 0.01_ns;
 
   // construct two parallel plane surfaces with normal in x direction
-  ActsScalar distance = 10_mm;
+  double distance = 10_mm;
   auto eSurface = CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
                       .planeSurface();
 

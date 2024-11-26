@@ -9,15 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 
 #include <array>
 #include <memory>
 #include <utility>
 #include <vector>
-
-using namespace Acts::UnitLiterals;
 
 namespace Acts {
 class TrackingGeometry;
@@ -25,21 +22,11 @@ class IMaterialDecorator;
 }  // namespace Acts
 
 namespace ActsExamples {
+
 class IContextDecorator;
-}  // namespace ActsExamples
-
-namespace ActsExamples::Telescope {
-
-class TelescopeDetectorElement;
-class TelescopeG4DetectorConstruction;
 
 struct TelescopeDetector {
-  using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
-  using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using DetectorStore = std::vector<DetectorElementPtr>;
-
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
@@ -47,18 +34,18 @@ struct TelescopeDetector {
     std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
     std::array<double, 2> offsets{{0, 0}};
     std::array<double, 2> bounds{{25, 100}};
-    double thickness{80_um};
+    double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
     int binValue{2};
   };
 
   Config config;
   /// The store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
+  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
 
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const Config& cfg,
       const std::shared_ptr<const Acts::IMaterialDecorator>& mdecorator);
 };
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples
