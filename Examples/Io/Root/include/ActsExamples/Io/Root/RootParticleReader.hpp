@@ -83,7 +83,7 @@ class RootParticleReader : public IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain* m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// Event identifier.
   std::uint32_t m_eventId = 0;

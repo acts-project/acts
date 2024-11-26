@@ -75,7 +75,7 @@ struct ProxyAccessorBase {
   /// Create the accessor from a string key
   /// @param _key the key
   constexpr ProxyAccessorBase(const std::string& _key)
-      : key{hashString(_key)} {}
+      : key{hashStringDynamic(_key)} {}
 
   /// Access the stored key on the proxy given as an argument. Mutable version
   /// @tparam proxy_t the type of the proxy

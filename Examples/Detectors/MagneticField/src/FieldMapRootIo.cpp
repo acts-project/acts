@@ -32,7 +32,7 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   // components of magnetic field on grid points
   std::vector<Acts::Vector2> bField;
   // [1] Read in file and fill values
-  TFile* inputFile = TFile::Open(fieldMapFile.c_str());
+  std::unique_ptr<TFile> inputFile(TFile::Open(fieldMapFile.c_str()));
   if (inputFile == nullptr) {
     throw std::runtime_error("file does not exist");
   }
@@ -62,7 +62,6 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector2(Br, Bz));
   }
-  delete inputFile;
   /// [2] use helper function in core
   return Acts::fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
                           BFieldUnit, firstQuadrant);
@@ -84,7 +83,7 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   // components of magnetic field on grid points
   std::vector<Acts::Vector3> bField;
   // [1] Read in file and fill values
-  TFile* inputFile = TFile::Open(fieldMapFile.c_str());
+  std::unique_ptr<TFile> inputFile(TFile::Open(fieldMapFile.c_str()));
   if (inputFile == nullptr) {
     throw std::runtime_error("file does not exist");
   }
@@ -118,7 +117,6 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector3(Bx, By, Bz));
   }
-  delete inputFile;
 
   return Acts::fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
                            lengthUnit, BFieldUnit, firstOctant);

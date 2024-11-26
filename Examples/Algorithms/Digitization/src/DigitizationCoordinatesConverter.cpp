@@ -10,21 +10,22 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 
-#include <cmath>
 #include <stdexcept>
 #include <utility>
 
-ActsExamples::DigitizationCoordinatesConverter::
-    DigitizationCoordinatesConverter(DigitizationConfig config)
+namespace ActsExamples {
+
+DigitizationCoordinatesConverter::DigitizationCoordinatesConverter(
+    DigitizationAlgorithm::Config config)
     : m_cfg(std::move(config)) {
   if (m_cfg.surfaceByIdentifier.empty()) {
     throw std::invalid_argument("Missing Surface-GeometryID association map");
   }
 }
 
-std::tuple<double, double>
-ActsExamples::DigitizationCoordinatesConverter::globalToLocal(
+std::tuple<double, double> DigitizationCoordinatesConverter::globalToLocal(
     std::uint64_t moduleId, double x, double y, double z) const {
   const Acts::GeometryIdentifier moduleGeoId = moduleId;
   auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
@@ -44,8 +45,8 @@ ActsExamples::DigitizationCoordinatesConverter::globalToLocal(
 }
 
 std::tuple<double, double, double>
-ActsExamples::DigitizationCoordinatesConverter::localToGlobal(
-    std::uint64_t moduleId, double x, double y) const {
+DigitizationCoordinatesConverter::localToGlobal(std::uint64_t moduleId,
+                                                double x, double y) const {
   const Acts::GeometryIdentifier moduleGeoId = moduleId;
   auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
   if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
@@ -61,3 +62,5 @@ ActsExamples::DigitizationCoordinatesConverter::localToGlobal(
 
   return {pos2Global.x(), pos2Global.y(), pos2Global.z()};
 }
+
+}  // namespace ActsExamples

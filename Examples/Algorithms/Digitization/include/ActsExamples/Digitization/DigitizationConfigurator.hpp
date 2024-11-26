@@ -11,21 +11,9 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningData.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 #include <map>
-#include <memory>
-#include <utility>
-#include <vector>
 
 namespace Acts {
 class Surface;
@@ -66,4 +54,5 @@ struct DigitizationConfigurator {
   /// it adds an appropriate entry into the digitisation configuration
   void operator()(const Acts::Surface* surface);
 };
+
 }  // namespace ActsExamples

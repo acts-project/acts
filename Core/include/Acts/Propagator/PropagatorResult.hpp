@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Propagator/PropagatorStatistics.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 
 #include <optional>
@@ -36,6 +37,9 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
+
+  /// Propagator statistics
+  PropagatorStatistics statistics;
 };
 
 }  // namespace Acts

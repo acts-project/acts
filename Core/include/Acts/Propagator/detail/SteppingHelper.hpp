@@ -32,7 +32,7 @@ namespace Acts::detail {
 /// @param surface [in] The surface provided
 /// @param boundaryTolerance [in] The boundary check for this status update
 template <typename stepper_t>
-Acts::Intersection3D::Status updateSingleSurfaceStatus(
+Acts::IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction navDir,
     const BoundaryTolerance& boundaryTolerance, ActsScalar surfaceTolerance,
@@ -46,11 +46,11 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
                         surfaceTolerance)[index];
 
   // The intersection is on surface already
-  if (sIntersection.status() == Intersection3D::Status::onSurface) {
+  if (sIntersection.status() == IntersectionStatus::onSurface) {
     // Release navigation step size
     state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
-    return Intersection3D::Status::onSurface;
+    return IntersectionStatus::onSurface;
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
@@ -62,11 +62,11 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     ACTS_VERBOSE("Surface is reachable");
     stepper.updateStepSize(state, sIntersection.pathLength(),
                            ConstrainedStep::actor);
-    return Intersection3D::Status::reachable;
+    return IntersectionStatus::reachable;
   }
 
   ACTS_VERBOSE("Surface is NOT reachable");
-  return Intersection3D::Status::unreachable;
+  return IntersectionStatus::unreachable;
 }
 
 /// Update the Step size - single component
