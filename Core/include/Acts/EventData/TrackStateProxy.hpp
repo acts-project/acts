@@ -879,7 +879,7 @@ class TrackStateProxy {
   /// @param val The measurement vector
   /// @param cov The covariance matrix
   /// @note This does not allocate if an allocation of the same size already exists
-  /// @note This is an error if an existing allocation has different size
+  /// @note This throws an exception if an existing allocation has different size
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
