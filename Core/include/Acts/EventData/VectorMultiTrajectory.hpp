@@ -54,7 +54,7 @@ struct NonInitializingAllocator {
   NonInitializingAllocator() noexcept = default;
 
   template <class U>
-  NonInitializingAllocator(
+  explicit NonInitializingAllocator(
       const NonInitializingAllocator<U>& /*other*/) noexcept {}
 
   template <class U>
@@ -68,9 +68,10 @@ struct NonInitializingAllocator {
     std::allocator<T>{}.deallocate(p, n);
   }
 
-  /// This construct function intentionally does not initialize the object!
-  /// Be very careful when using this allocator.
-  void construct(T* /*p*/) {}
+  void construct(T* /*p*/) const {
+    // This construct function intentionally does not initialize the object!
+    // Be very careful when using this allocator.
+  }
 };
 
 class VectorMultiTrajectoryBase {
