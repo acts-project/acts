@@ -242,6 +242,8 @@ namespace detail {
 ///         - The minimum value (double)
 ///         - The adjusted maximum value (double)
 ///         - The bin count (std::size_t)
+///
+/// @note The vector xPos will be modified during the call.
 inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   // sort the values for unique()
   std::ranges::sort(xPos);
