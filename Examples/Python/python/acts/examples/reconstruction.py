@@ -19,7 +19,18 @@ ParticleSmearingSigmas = namedtuple(
     defaults=[None] * 10,
 )
 
-ParticleSmearingSigmas.zeros = lambda: ParticleSmearingSigmas([0] * 10)
+ParticleSmearingSigmas.zeros = lambda: ParticleSmearingSigmas(
+    d0=0.0,
+    d0PtA=0.0,
+    d0PtB=0.0,
+    z0=0.0,
+    z0PtA=0.0,
+    z0PtB=0.0,
+    t0=0.0,
+    phi=0.0,
+    theta=0.0,
+    ptRel=0.0,
+)
 
 SeedFinderConfigArg = namedtuple(
     "SeedFinderConfig",
