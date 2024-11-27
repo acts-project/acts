@@ -109,6 +109,7 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(maxSharedHits);
       ACTS_PYTHON_MEMBER(maxChi2);
       ACTS_PYTHON_MEMBER(measurementCounter);
+      ACTS_PYTHON_MEMBER(requireReferenceSurface);
       ACTS_PYTHON_STRUCT_END();
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
