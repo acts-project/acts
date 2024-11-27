@@ -46,7 +46,7 @@ class HitSelector final : public IAlgorithm {
     double maxZ = std::numeric_limits<double>::max();
 
     /// Min r cut
-    double minR = -std::numeric_limits<double>::max();
+    double minR = 0.0;
     /// Max r cut
     double maxR = std::numeric_limits<double>::max();
 
