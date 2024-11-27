@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <initializer_list>
 #include <limits>
@@ -67,8 +68,8 @@ Acts::fieldMapRZ(
       // underflow or overflow bins in account this is why we need to subtract
       // by one
       if (firstQuadrant) {
-        std::size_t n =
-            std::abs(static_cast<int>(j) - static_cast<int>(zBinCount));
+        std::size_t n = std::abs(static_cast<std::ptrdiff_t>(j) -
+                                 static_cast<std::ptrdiff_t>(zBinCount));
 
         grid.atLocalBins(indices) =
             bField.at(localToGlobalBin({{i - 1, n}}, nIndices)) * BFieldUnit;
@@ -93,7 +94,7 @@ Acts::fieldMapRZ(
     double sinPhi = 0.;
 
     if (rSinTheta2 > std::numeric_limits<double>::min()) {
-      const double invRsinTheta = 1. / sqrt(rSinTheta2);
+      const double invRsinTheta = 1. / std::sqrt(rSinTheta2);
       cosPhi = pos.x() * invRsinTheta;
       sinPhi = pos.y() * invRsinTheta;
     }
@@ -154,12 +155,12 @@ Acts::fieldMapXYZ(
         // underflow or overflow bins in account this is why we need to subtract
         // by one
         if (firstOctant) {
-          std::size_t l =
-              std::abs(static_cast<int>(i) - static_cast<int>(xBinCount));
-          std::size_t m =
-              std::abs(static_cast<int>(j) - static_cast<int>(yBinCount));
-          std::size_t n =
-              std::abs(static_cast<int>(k) - static_cast<int>(zBinCount));
+          std::size_t l = std::abs(static_cast<std::ptrdiff_t>(i) -
+                                   static_cast<std::ptrdiff_t>(xBinCount));
+          std::size_t m = std::abs(static_cast<std::ptrdiff_t>(j) -
+                                   static_cast<std::ptrdiff_t>(yBinCount));
+          std::size_t n = std::abs(static_cast<std::ptrdiff_t>(k) -
+                                   static_cast<std::ptrdiff_t>(zBinCount));
 
           grid.atLocalBins(indices) =
               bField.at(localToGlobalBin({{l, m, n}}, nIndices)) * BFieldUnit;
@@ -222,7 +223,7 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
     double sinPhi = 0.;
 
     if (rSinTheta2 > std::numeric_limits<double>::min()) {
-      const double invRsinTheta = 1. / sqrt(rSinTheta2);
+      const double invRsinTheta = 1. / std::sqrt(rSinTheta2);
       cosPhi = pos.x() * invRsinTheta;
       sinPhi = pos.y() * invRsinTheta;
     }
