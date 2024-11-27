@@ -97,16 +97,6 @@ def runTruthTrackingGx2f(
         rnd=rnd,
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        initialSigmas=[
-            1 * u.mm,
-            1 * u.mm,
-            1 * u.degree,
-            1 * u.degree,
-            0.1 * u.e / u.GeV,
-            1 * u.ns,
-        ],
-        initialSigmaPtRel=0.01,
-        initialVarInflation=[1.0] * 6,
         particleHypothesis=acts.ParticleHypothesis.muon,
     )
 
