@@ -78,13 +78,13 @@ struct SingleComponentReducer {
   }
 
   template <typename stepper_state_t>
-  static ActsScalar qOverP(const stepper_state_t& s) {
+  static double qOverP(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return cmp->state.pars[eFreeQOverP];
   }
 
   template <typename stepper_state_t>
-  static ActsScalar absoluteMomentum(const stepper_state_t& s) {
+  static double absoluteMomentum(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]);
   }
@@ -97,13 +97,13 @@ struct SingleComponentReducer {
   }
 
   template <typename stepper_state_t>
-  static ActsScalar charge(const stepper_state_t& s) {
+  static double charge(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return s.particleHypothesis.extractCharge(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
-  static ActsScalar time(const stepper_state_t& s) {
+  static double time(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)->state.pars[eFreeTime];
   }
 
@@ -165,11 +165,11 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
   /// @brief Define an own bound state
   using BoundState =
-      std::tuple<MultiComponentBoundTrackParameters, Jacobian, ActsScalar>;
+      std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
 
   /// @brief Define an own curvilinear state
-  using CurvilinearState = std::tuple<MultiComponentCurvilinearTrackParameters,
-                                      Jacobian, ActsScalar>;
+  using CurvilinearState =
+      std::tuple<MultiComponentCurvilinearTrackParameters, Jacobian, double>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -191,7 +191,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// The struct that stores the individual components
     struct Component {
       SingleState state;
-      ActsScalar weight;
+      double weight;
       IntersectionStatus status;
     };
 
@@ -403,7 +403,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   void reweightComponents(State& state) const {
-    ActsScalar sumOfWeights = 0.0;
+    double sumOfWeights = 0.0;
     for (const auto& cmp : state.components) {
       sumOfWeights += cmp.weight;
     }
@@ -518,7 +518,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     using Status = IntersectionStatus;
 

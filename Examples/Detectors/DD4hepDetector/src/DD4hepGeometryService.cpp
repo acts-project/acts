@@ -22,10 +22,9 @@
 #include <Parsers/Printout.h>
 #include <TError.h>
 
-class TGeoNode;
+namespace ActsExamples {
 
-ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
-    const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
+DD4hepGeometryService::DD4hepGeometryService(const Config& cfg)
     : m_cfg(cfg),
       m_logger{Acts::getDefaultLogger("DD4hepGeometryService", cfg.logLevel)} {
   if (m_cfg.xmlFileNames.empty()) {
@@ -33,12 +32,11 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
   }
 }
 
-ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
+DD4hepGeometryService::~DD4hepGeometryService() {
   drop();
 }
 
-ActsExamples::ProcessCode
-ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
+ProcessCode DD4hepGeometryService::buildDD4hepGeometry() {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
@@ -83,33 +81,31 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   gErrorIgnoreLevel = old_gErrorIgnoreLevel;
   std::cout.clear();
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-dd4hep::Detector&
-ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::detector() {
+dd4hep::Detector& DD4hepGeometryService::detector() {
   if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
   return *m_detector;
 }
 
-dd4hep::DetElement& ActsExamples::DD4hep::DD4hepGeometryService::geometry() {
+dd4hep::DetElement& DD4hepGeometryService::geometry() {
   if (!m_geometry) {
     buildDD4hepGeometry();
   }
   return m_geometry;
 }
 
-TGeoNode& ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
+TGeoNode& DD4hepGeometryService::tgeoGeometry() {
   if (!m_geometry) {
     buildDD4hepGeometry();
   }
   return *m_geometry.placement().ptr();
 }
 
-ActsExamples::ProcessCode
-ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
+ProcessCode DD4hepGeometryService::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
   // Set the tracking geometry
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
@@ -118,19 +114,18 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
       m_cfg.sortDetectors, gctx, m_cfg.matDecorator,
       m_cfg.geometryIdentifierHook);
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
 std::shared_ptr<const Acts::TrackingGeometry>
-ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
-    const Acts::GeometryContext& gctx) {
+DD4hepGeometryService::trackingGeometry(const Acts::GeometryContext& gctx) {
   if (!m_trackingGeometry) {
     buildTrackingGeometry(gctx);
   }
   return m_trackingGeometry;
 }
 
-void ActsExamples::DD4hep::DD4hepGeometryService::drop() {
+void DD4hepGeometryService::drop() {
   if (m_detector == nullptr) {
     return;
   }
@@ -140,12 +135,12 @@ void ActsExamples::DD4hep::DD4hepGeometryService::drop() {
   m_trackingGeometry = nullptr;
 }
 
-void ActsExamples::DD4hep::sortFCChhDetElements(
-    std::vector<dd4hep::DetElement>& det) {
+void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
   std::vector<dd4hep::DetElement> tracker;
   std::vector<dd4hep::DetElement> eCal;
   std::vector<dd4hep::DetElement> hCal;
   std::vector<dd4hep::DetElement> muon;
+
   for (auto& detElement : det) {
     std::string detName = detElement.name();
     if (detName.find("Muon") != std::string::npos) {
@@ -158,22 +153,16 @@ void ActsExamples::DD4hep::sortFCChhDetElements(
       tracker.push_back(detElement);
     }
   }
-  sort(muon.begin(), muon.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(eCal.begin(), eCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(hCal.begin(), hCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(tracker.begin(), tracker.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
+
+  auto byId = [](const dd4hep::DetElement& a,
+                 const dd4hep::DetElement& b) -> bool {
+    return a.id() < b.id();
+  };
+  sort(muon.begin(), muon.end(), byId);
+  sort(eCal.begin(), eCal.end(), byId);
+  sort(hCal.begin(), hCal.end(), byId);
+  sort(tracker.begin(), tracker.end(), byId);
+
   det.clear();
   det = tracker;
 
@@ -181,3 +170,5 @@ void ActsExamples::DD4hep::sortFCChhDetElements(
   det.insert(det.end(), hCal.begin(), hCal.end());
   det.insert(det.end(), muon.begin(), muon.end());
 }
+
+}  // namespace ActsExamples

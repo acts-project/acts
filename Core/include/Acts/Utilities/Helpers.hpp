@@ -175,10 +175,10 @@ T clampValue(U value) {
 ///
 /// @return [ range, medium ] in an tuple
 template <typename T>
-std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
+std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
   typename T::value_type range = (*maxIt - *minIt);
-  ActsScalar medium = static_cast<ActsScalar>((*maxIt + *minIt) * 0.5);
+  double medium = static_cast<double>((*maxIt + *minIt) * 0.5);
   return {range, medium};
 }
 
