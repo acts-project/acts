@@ -308,7 +308,7 @@ void test_multi_stepper_vs_eigen_stepper() {
   SingleStepper single_stepper(defaultBField);
 
   for (auto cmp : multi_stepper.componentIterable(multi_state)) {
-    cmp.status() = Acts::Intersection3D::Status::reachable;
+    cmp.status() = Acts::IntersectionStatus::reachable;
   }
 
   // Do some steps and check that the results match
@@ -483,14 +483,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *right_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::reachable);
 
     BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), 1.0);
     BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), -1.0);
@@ -512,14 +512,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *right_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::onSurface);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::onSurface);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::onSurface);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::onSurface);
   }
 
   // Start surface should be reachable
@@ -528,14 +528,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *start_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::reachable);
 
     BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), -1.0);
     BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), 1.0);

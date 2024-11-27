@@ -29,6 +29,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>

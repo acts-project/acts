@@ -15,6 +15,7 @@
 #include <memory>
 
 namespace ActsExamples {
+
 class GenericDetectorElement;
 
 class GenericDetectorFactory : public DetectorFactoryBase {

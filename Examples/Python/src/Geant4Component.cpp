@@ -40,17 +40,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-class G4UserSteppingAction;
-class G4VUserPhysicsList;
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-class Volume;
-}  // namespace Acts
-namespace ActsExamples {
-class RandomNumbers;
-}  // namespace ActsExamples
-
 namespace py = pybind11;
 using namespace pybind11::literals;
 

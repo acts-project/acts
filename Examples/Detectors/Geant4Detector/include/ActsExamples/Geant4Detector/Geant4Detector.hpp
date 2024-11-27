@@ -32,10 +32,8 @@ class Detector;
 }  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
 
-namespace ActsExamples {
+class IContextDecorator;
 
 struct Geant4DetectorFactory : public DetectorFactoryBase {
   /// Nested configuration struct

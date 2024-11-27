@@ -82,17 +82,15 @@ template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
   // single items
-  using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
+  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
+  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 
-  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using DynamicCovariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using DynamicCoefficientsMap =
       Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
   using DynamicCovarianceMap =
@@ -105,11 +103,9 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
-  using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using Covariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
@@ -119,8 +115,6 @@ struct DynamicSizeTypes {
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Scalar = ActsScalar;
-
   using Parameters =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
@@ -135,8 +129,8 @@ struct TrackStateTraits {
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
 
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
-  using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
+  using Projector = Eigen::Matrix<double, M, eBoundSize, ProjectorFlags>;
+  using EffectiveProjector = Eigen::Matrix<double, Eigen::Dynamic, eBoundSize,
                                            ProjectorFlags, M, eBoundSize>;
 };
 
@@ -871,8 +865,33 @@ class TrackStateProxy {
 
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This will zero-initialize the allocated storage
+  /// @note This is an error if an existing allocation has different size
   void allocateCalibrated(std::size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
+  }
+
+  /// Allocate storage and assign the given vector and covariance to it.
+  /// The dimension is inferred from the given vector and matrix.
+  /// @tparam val_t Type of the vector
+  /// @tparam cov_t Type of the covariance matrix
+  /// @param val The measurement vector
+  /// @param cov The covariance matrix
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This throws an exception if an existing allocation has different size
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov)
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    m_traj->template allocateCalibrated<
+        Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);
   }
 
   /// @}
@@ -999,17 +1018,14 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
         setBoundSubspaceIndices(other.boundSubspaceIndices());
@@ -1047,17 +1063,14 @@ class TrackStateProxy {
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<hashString("calibrated")>()) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
         setBoundSubspaceIndices(other.boundSubspaceIndices());

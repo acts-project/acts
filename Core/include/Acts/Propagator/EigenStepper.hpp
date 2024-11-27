@@ -270,10 +270,10 @@ class EigenStepper {
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A @c Logger instance
-  Intersection3D::Status updateSurfaceStatus(
+  IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,

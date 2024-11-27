@@ -23,8 +23,7 @@ InternalAlignmentDecorator::InternalAlignmentDecorator(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-ActsExamples::ProcessCode InternalAlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+ProcessCode InternalAlignmentDecorator::decorate(AlgorithmContext& context) {
   // We need to lock the Decorator
   std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);
 

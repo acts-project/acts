@@ -72,8 +72,7 @@ class DD4hepDetector : public PreConstructedDetector {
 class DD4hepDetectorFactory : public DetectorFactoryBase {
  public:
   /// @brief The context decorators
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
 
   struct Config {
     /// Log level for the geometry service.

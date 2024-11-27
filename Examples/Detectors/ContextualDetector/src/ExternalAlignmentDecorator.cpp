@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -31,8 +30,7 @@ ExternalAlignmentDecorator::ExternalAlignmentDecorator(
   }
 }
 
-ActsExamples::ProcessCode ExternalAlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+ProcessCode ExternalAlignmentDecorator::decorate(AlgorithmContext& context) {
   // Iov map access needs to be synchronized
   std::lock_guard lock{m_iovMutex};
 

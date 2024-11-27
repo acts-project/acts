@@ -22,8 +22,6 @@
 
 #include <memory>
 
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 
 AlignedDetectorFactory::AlignedDetectorFactory(const Config& cfg)
@@ -49,7 +47,7 @@ std::shared_ptr<DetectorBase> AlignedDetectorFactory::buildDetector() const {
   }
 
   // Let's create a random number service
-  ActsExamples::RandomNumbers::Config randomNumberConfig;
+  RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = m_cfg.seed;
   auto randomNumberSvc =
       std::make_shared<ActsExamples::RandomNumbers>(randomNumberConfig);
@@ -77,11 +75,10 @@ std::shared_ptr<DetectorBase> AlignedDetectorFactory::buildDetector() const {
     std::vector<std::vector<std::shared_ptr<ExternallyAlignedDetectorElement>>>
         specificDetectorStore;
 
-    gen1Geometry =
-        ActsExamples::Generic::buildDetector<ExternallyAlignedDetectorElement>(
-            geometryContext, specificDetectorStore, m_cfg.buildLevel,
-            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    gen1Geometry = Generic::buildDetector<ExternallyAlignedDetectorElement>(
+        geometryContext, specificDetectorStore, m_cfg.buildLevel,
+        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
     agcsConfig.trackingGeometry = gen1Geometry;
 
     // need to upcast to store in this object as well
@@ -98,11 +95,10 @@ std::shared_ptr<DetectorBase> AlignedDetectorFactory::buildDetector() const {
     InternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
-    gen1Geometry =
-        ActsExamples::Generic::buildDetector<InternallyAlignedDetectorElement>(
-            geometryContext, agcsConfig.detectorStore, m_cfg.buildLevel,
-            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    gen1Geometry = Generic::buildDetector<InternallyAlignedDetectorElement>(
+        geometryContext, agcsConfig.detectorStore, m_cfg.buildLevel,
+        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
     // need to upcast to store in this object as well
     for (auto& lstore : agcsConfig.detectorStore) {

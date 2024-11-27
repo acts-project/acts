@@ -14,7 +14,6 @@
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include <cstddef>
-#include <memory>
 
 namespace ActsExamples {
 

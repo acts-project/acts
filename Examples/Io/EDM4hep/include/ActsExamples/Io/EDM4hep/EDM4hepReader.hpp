@@ -24,6 +24,7 @@
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
+
 class DD4hepDetector;
 
 /// Read particles from EDM4hep.

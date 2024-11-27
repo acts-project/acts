@@ -17,16 +17,16 @@ namespace Acts::Ccl {
 
 template <typename Cell>
 concept HasRetrievableTimeInfo = requires(Cell cell) {
-  { getCellTime(cell) } -> std::same_as<Acts::ActsScalar>;
+  { getCellTime(cell) } -> std::same_as<double>;
 };
 
 template <Acts::Ccl::HasRetrievableTimeInfo Cell, std::size_t N>
 struct TimedConnect : public Acts::Ccl::DefaultConnect<Cell, N> {
-  Acts::ActsScalar timeTolerance{std::numeric_limits<Acts::ActsScalar>::max()};
+  double timeTolerance{std::numeric_limits<double>::max()};
 
   TimedConnect() = default;
-  TimedConnect(Acts::ActsScalar time);
-  TimedConnect(Acts::ActsScalar time, bool commonCorner)
+  TimedConnect(double time);
+  TimedConnect(double time, bool commonCorner)
     requires(N == 2);
   ~TimedConnect() override = default;
 
