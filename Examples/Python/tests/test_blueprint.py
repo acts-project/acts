@@ -65,25 +65,3 @@ def test_zdirection_container_blueprint(tmp_path):
             ec.addStaticVolume(trf, bounds, name=f"pEC_{i}")
 
     write(root, 4)
-
-    # gz = tmp_path / "blueprint.dot"
-    # print(gz)
-    # with gz.open("w") as fh:
-    #     root.graphViz(fh)
-    #
-    # trackingGeometry = root.construct(
-    #     acts.BlueprintNode.Options(), gctx, level=logLevel
-    # )
-    # assert trackingGeometry is not None
-
-
-if False:
-    with root.CylinderContainer("Detector", direction=bv.binZ) as det:
-        det.addStaticVolume(
-            base, acts.CylinderVolumeBounds(0, 23 * mm, 3 * m), "BeamPipe"
-        )
-
-    trackingGeometry = root.construct(
-        acts.BlueprintNode.Options(), gctx, level=logLevel
-    )
-    assert trackingGeometry is not None
