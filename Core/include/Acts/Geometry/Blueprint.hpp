@@ -23,7 +23,10 @@ class Blueprint : private BlueprintNode {
   using BlueprintNode::addCylinderContainer;
   using BlueprintNode::addLayer;
   using BlueprintNode::addMaterial;
+  using BlueprintNode::addStaticVolume;
+  using BlueprintNode::children;
   using BlueprintNode::graphViz;
+
   using BlueprintNode::Options;
 
   struct Config {

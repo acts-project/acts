@@ -94,6 +94,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     if (zEnv[0] != zEnv[1]) {
       ACTS_ERROR(
           prefix() << "Root node cylinder envelope for z must be symmetric");
+      throw std::logic_error(
+          "Root node cylinder envelope for z must be "
+          "symmetric");
     }
 
     const auto &rEnv = m_cfg.envelope[binR];
@@ -133,8 +136,17 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   child.finalize(options, gctx, *world, logger);
 
-  // @TODO: Handle material decorator, geo id hook
   // @TODO: Maybe add a name uniqueness check
+
+  std::set<std::string> names;
+
+  world->visitVolumes([&](const auto *volume) {
+    if (names.contains(volume->volumeName())) {
+      ACTS_ERROR(prefix() << "Duplicate volume name: " << volume->volumeName());
+      throw std::logic_error("Duplicate volume name");
+    }
+    names.insert(volume->volumeName());
+  });
 
   return std::make_unique<TrackingGeometry>(
       std::move(world), nullptr, m_cfg.geometryIdentifierHook, logger);

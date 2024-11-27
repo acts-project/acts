@@ -84,13 +84,13 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
                 }
 
                 if (face == PositiveDisc || face == NegativeDisc) {
-                  if (loc0.binValue != BinningValue::binPhi) {
-                    ACTS_ERROR(prefix() << "Binning is not in Phi");
-                    throw std::runtime_error("Binning is not in Phi");
-                  }
-                  if (loc1.binValue != BinningValue::binR) {
+                  if (loc0.binValue != BinningValue::binR) {
                     ACTS_ERROR(prefix() << "Binning is not in R");
                     throw std::runtime_error("Binning is not in R");
+                  }
+                  if (loc1.binValue != BinningValue::binPhi) {
+                    ACTS_ERROR(prefix() << "Binning is not in Phi");
+                    throw std::runtime_error("Binning is not in Phi");
                   }
                 }
 
