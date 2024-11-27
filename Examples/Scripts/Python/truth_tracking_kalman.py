@@ -115,8 +115,6 @@ def runTruthTrackingKalman(
         rnd=rnd,
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        initialSigmaPtRel=0.01,
-        initialVarInflation=[1.0] * 6,
         particleHypothesis=acts.ParticleHypothesis.muon,
     )
 
