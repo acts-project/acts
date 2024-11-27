@@ -471,8 +471,8 @@ class MultiTrajectoryTestsCommon {
         pc.sourceLink.sourceId);
     // Explicitly unset to avoid error below
     ts.unset(TrackStatePropMask::Calibrated);
-    testSourceLinkCalibratorReturn<trajectory_t>(
-        gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
+    testSourceLinkCalibrator<trajectory_t>(gctx, cctx,
+                                           SourceLink{ttsb.sourceLink}, ts);
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
@@ -549,8 +549,6 @@ class MultiTrajectoryTestsCommon {
         BOOST_CHECK_EQUAL(ts.template calibratedCovariance<measdim>(), expCov);
       });
     }
-
-    BOOST_CHECK(ts.hasProjector());
   }
 
   void testTrackStateProxyAllocations(std::default_random_engine& rng) {
