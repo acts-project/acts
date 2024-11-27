@@ -81,6 +81,7 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   for (const auto& inputTrackParameters : inputTrackParametersContainer) {
+    const auto position = inputTrackParameters.localPosition();
     const auto time = inputTrackParameters.time();
     const auto phi = inputTrackParameters.phi();
     const auto theta = inputTrackParameters.theta();
@@ -107,8 +108,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
     Acts::BoundVector params = Acts::BoundVector::Zero();
     // smear the position/time
     // note that we smear d0 and z0 in the perigee frame
-    params[Acts::eBoundLoc0] = sigmaLoc0 * stdNormal(rng);
-    params[Acts::eBoundLoc1] = sigmaLoc1 * stdNormal(rng);
+    params[Acts::eBoundLoc0] = position[0] + sigmaLoc0 * stdNormal(rng);
+    params[Acts::eBoundLoc1] = position[1] + sigmaLoc1 * stdNormal(rng);
     params[Acts::eBoundTime] = time + sigmaTime * stdNormal(rng);
     // smear direction angles phi,theta ensuring correct bounds
     const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
