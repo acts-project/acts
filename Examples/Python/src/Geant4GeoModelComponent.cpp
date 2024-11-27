@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/GeoModelG4/GeoModelDetectorConstruction.hpp"
@@ -25,12 +24,13 @@ using namespace Acts;
 PYBIND11_MODULE(ActsPythonBindingsGeoModelG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
-  py::class_<GeoModelDetectorConstructionFactory, DetectorConstructionFactory,
+  py::class_<GeoModelDetectorConstructionFactory,
+             Geant4::DetectorConstructionFactory,
              std::shared_ptr<GeoModelDetectorConstructionFactory>>(
       m, "GeoModelDetectorConstructionFactory")
       .def(py::init<const Acts::GeoModelTree&,
-                    std::vector<std::shared_ptr<RegionCreator>>>(),
+                    std::vector<std::shared_ptr<Geant4::RegionCreator>>>(),
            py::arg("geoModelTree"),
            py::arg("regionCreators") =
-               std::vector<std::shared_ptr<RegionCreator>>());
+               std::vector<std::shared_ptr<Geant4::RegionCreator>>());
 }

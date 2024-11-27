@@ -13,7 +13,6 @@
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstddef>
 #include <ostream>
@@ -27,10 +26,6 @@
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::phi;
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config config,
@@ -126,6 +121,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   // Read truth information collections
   const auto& particles = m_inputParticles(ctx);
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+
+  // Exclusive access to the tree while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
 
   std::size_t nSeeds = seeds.size();
   std::size_t nMatchedSeeds = 0;

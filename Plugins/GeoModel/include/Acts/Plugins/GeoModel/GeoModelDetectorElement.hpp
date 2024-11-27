@@ -51,7 +51,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   template <typename SurfaceType, typename BoundsType>
   static std::shared_ptr<GeoModelDetectorElement> createDetectorElement(
       const PVConstLink& geoPhysVol, const std::shared_ptr<BoundsType> bounds,
-      const Transform3& sfTransform, ActsScalar thickness) {
+      const Transform3& sfTransform, double thickness) {
     // First create the detector element with a nullptr
     auto detElement = std::make_shared<GeoModelDetectorElement>(
         geoPhysVol, nullptr, sfTransform, thickness);
@@ -68,7 +68,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// @param thickness the thickness of the detector element
   GeoModelDetectorElement(PVConstLink geoPhysVol,
                           std::shared_ptr<Surface> surface,
-                          const Transform3& sfTransform, ActsScalar thickness);
+                          const Transform3& sfTransform, double thickness);
 
   /// Return local to global transform associated with this detector element
   ///
@@ -82,7 +82,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// Return the thickness of this detector element
-  ActsScalar thickness() const override;
+  double thickness() const override;
 
   /// @return to the Geant4 physical volume
   PVConstLink physicalVolume() const;
@@ -116,7 +116,7 @@ class GeoModelDetectorElement : public DetectorElementBase {
   /// The global transformation before the volume
   Transform3 m_surfaceTransform;
   ///  Thickness of this detector element
-  ActsScalar m_thickness{0.};
+  double m_thickness{0.};
 };
 
 /// Collect the sensitive surface & detector element

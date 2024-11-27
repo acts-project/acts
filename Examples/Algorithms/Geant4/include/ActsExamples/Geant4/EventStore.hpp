@@ -21,8 +21,10 @@
 #include "G4Types.hh"
 
 namespace ActsExamples {
-
 class WhiteBoard;
+}
+
+namespace ActsExamples::Geant4 {
 
 /// Common event store for all Geant4 related sub algorithms
 struct EventStore {
@@ -80,4 +82,4 @@ struct EventStore {
   std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
