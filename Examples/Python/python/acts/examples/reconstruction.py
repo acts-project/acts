@@ -345,7 +345,6 @@ def addSeeding(
             s=s,
             rnd=rnd,
             selectedParticles=selectedParticles,
-            inputTrackParameters="particle_track_parameters",
             trackSmearingSigmas=trackSmearingSigmas,
             initialSigmas=initialSigmas,
             initialSigmaPtRel=initialSigmaPtRel,
@@ -513,8 +512,7 @@ def addTruthSmearedSeeding(
 
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
 
-    # TODO do param extraction
-    trkParamExtractor = acts.examples.ParticleTrackParametersExtractor(
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
         level=logLevel,
         inputParticles=selectedParticles,
         outputTrackParameters="trueparameters",
