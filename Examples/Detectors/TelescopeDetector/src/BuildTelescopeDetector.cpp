@@ -43,7 +43,7 @@ ActsExamples::buildTelescopeDetector(
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, ActsExamples::TelescopeSurfaceType surfaceType,
+    double thickness, TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 

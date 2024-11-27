@@ -48,8 +48,7 @@ class TelescopeDetector : public PreConstructedDetector {
           detectorStore,
       std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
       std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-          contextDecorators);
+      std::vector<std::shared_ptr<IContextDecorator>> contextDecorators);
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;

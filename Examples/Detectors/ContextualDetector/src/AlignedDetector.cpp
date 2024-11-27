@@ -34,8 +34,7 @@ std::shared_ptr<DetectorBase> AlignedDetectorFactory::buildDetector() const {
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
   std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      contextDecorators;
+  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
 
   if (m_cfg.mode == Config::Mode::External) {
     InternallyAlignedDetectorElement::ContextType nominalContext;
@@ -49,8 +48,7 @@ std::shared_ptr<DetectorBase> AlignedDetectorFactory::buildDetector() const {
   // Let's create a random number service
   RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = m_cfg.seed;
-  auto randomNumberSvc =
-      std::make_shared<ActsExamples::RandomNumbers>(randomNumberConfig);
+  auto randomNumberSvc = std::make_shared<RandomNumbers>(randomNumberConfig);
 
   auto fillDecoratorConfig = [&](AlignmentDecorator::Config& config) {
     config.iovSize = m_cfg.iovSize;

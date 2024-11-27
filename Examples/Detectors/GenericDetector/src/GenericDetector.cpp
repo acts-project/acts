@@ -24,8 +24,7 @@ std::shared_ptr<DetectorBase> GenericDetectorFactory::buildDetector() const {
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
   std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      contextDecorators;
+  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
 
   geometryContext = Acts::GeometryContext();
 

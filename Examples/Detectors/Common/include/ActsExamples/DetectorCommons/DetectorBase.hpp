@@ -51,8 +51,8 @@ class DetectorBase {
       const = 0;
   virtual std::shared_ptr<Acts::Experimental::Detector> gen2Geometry()
       const = 0;
-  virtual std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-  contextDecorators() const;
+  virtual std::vector<std::shared_ptr<IContextDecorator>> contextDecorators()
+      const;
 
   virtual std::unique_ptr<G4VUserDetectorConstruction>
   buildGeant4DetectorConstruction(
@@ -60,8 +60,7 @@ class DetectorBase {
 
  protected:
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> m_detectorStore;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      m_contextDecorators;
+  std::vector<std::shared_ptr<IContextDecorator>> m_contextDecorators;
 };
 
 class DetectorFactoryBase {
@@ -90,8 +89,7 @@ class PreConstructedDetector : public DetectorBase {
           detectorStore,
       std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
       std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-          contextDecorators);
+      std::vector<std::shared_ptr<IContextDecorator>> contextDecorators);
   ~PreConstructedDetector() override;
 
   const Acts::GeometryContext& geometryContext() const override;

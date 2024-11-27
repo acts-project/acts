@@ -45,12 +45,11 @@ std::shared_ptr<DetectorBase> TelescopeDetectorFactory::buildDetector() const {
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
   std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      contextDecorators;
+  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
 
   geometryContext = Acts::GeometryContext();
 
-  gen1Geometry = ActsExamples::buildTelescopeDetector(
+  gen1Geometry = buildTelescopeDetector(
       geometryContext, detectorStore, m_cfg.positions, m_cfg.stereos,
       m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
       static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
@@ -67,8 +66,7 @@ TelescopeDetector::TelescopeDetector(
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
     std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
     std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-    std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-        contextDecorators)
+    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators)
     : PreConstructedDetector(std::move(geometryContext),
                              std::move(detectorStore), std::move(gen1Geometry),
                              std::move(gen2Geometry),

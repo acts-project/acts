@@ -47,25 +47,24 @@ GenericDetectorElement::GenericDetectorElement(
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
-const Acts::Transform3& ActsExamples::GenericDetectorElement::transform(
+const Acts::Transform3& GenericDetectorElement::transform(
     const Acts::GeometryContext& /*gctx*/) const {
   return *m_elementTransform;
 }
 
-const Acts::Surface& ActsExamples::GenericDetectorElement::surface() const {
+const Acts::Surface& GenericDetectorElement::surface() const {
   return *m_elementSurface;
 }
 
-Acts::Surface& ActsExamples::GenericDetectorElement::surface() {
+Acts::Surface& GenericDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-double ActsExamples::GenericDetectorElement::thickness() const {
+double GenericDetectorElement::thickness() const {
   return m_elementThickness;
 }
 
-ActsExamples::GenericDetectorElement::Identifier
-ActsExamples::GenericDetectorElement::identifier() const {
+GenericDetectorElement::Identifier GenericDetectorElement::identifier() const {
   return m_elementIdentifier;
 }
 

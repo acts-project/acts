@@ -30,8 +30,7 @@ DD4hepDetector::DD4hepDetector(
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
     std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
     std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-    std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-        contextDecorators,
+    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators,
     std::shared_ptr<dd4hep::Detector> detector)
     : PreConstructedDetector(std::move(geometryContext),
                              std::move(detectorStore), std::move(gen1Geometry),
@@ -121,8 +120,7 @@ std::shared_ptr<DetectorBase> DD4hepDetectorFactory::buildDetector() const {
   std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
   std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>
-      contextDecorators;
+  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
   std::unique_ptr<dd4hep::Detector> detector;
 
   geometryContext = Acts::GeometryContext();
