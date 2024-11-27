@@ -593,7 +593,6 @@ def test_truth_tracking_kalman(
         fp = tmp_path / fn
         assert not fp.exists()
 
-    print("with")
     with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
         from truth_tracking_kalman import runTruthTrackingKalman
 
@@ -612,7 +611,6 @@ def test_truth_tracking_kalman(
         )
 
         seq.run()
-    print("done")
 
     for fn, tn, ee in root_files:
         fp = tmp_path / fn
@@ -894,11 +892,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
 
 @pytest.mark.parametrize(
-    "geoFactory,nobj",
+    "detectorFactory,aligned,nobj",
     [
-        (GenericDetectorFactory(), 450),
+        (GenericDetectorFactory().buildDetector, True, 450),
         pytest.param(
             getOpenDataDetector,
+            True,
             540,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
@@ -906,14 +905,14 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
                 pytest.mark.odd,
             ],
         ),
-        (functools.partial(AlignedDetectorFactory(), iovSize=1), 450),
+        (AlignedDetectorFactory(iovSize=1).buildDetector, False, 450),
     ],
 )
 @pytest.mark.slow
-def test_geometry_example(geoFactory, nobj, tmp_path):
-    detector = geoFactory.buildDetector()
+def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
+    detector = detectorFactory()
     trackingGeometry = detector.gen1Geometry()
-    decorators = detector.gen1Decorators()
+    decorators = detector.contextDecorators()
 
     from geometry import runGeometry
 
@@ -950,12 +949,12 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
     contents = [f.read_text() for f in detector_files]
     ref = contents[0]
     for c in contents[1:]:
-        if isinstance(geoFactory, AlignedDetectorFactory):
-            assert c != ref, "Detector writeout is expected to be different"
-        else:
+        if aligned:
             assert c == ref, "Detector writeout is expected to be identical"
+        else:
+            assert c != ref, "Detector writeout is expected to be different"
 
-    if not isinstance(geoFactory, AlignedDetectorFactory):
+    if aligned:
         for f in [json_dir / f"event{i:>09}-detector.json" for i in range(events)]:
             assert detector_file.exists()
             with f.open() as fh:
