@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
 
 import acts.examples
@@ -21,7 +22,8 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

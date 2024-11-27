@@ -99,13 +99,14 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     # Initialize the geometry
-    detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+    detector = acts.examples.TelescopeDetectorFactory(
         bounds=[4, 10],
         positions=[30, 60, 90],
         stereos=[0, 0, 0],
         binValue=2,
         surfaceType=0,
-    )
+    ).buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     # Estimate the lookup
     estimateLookup(trackingGeometry, args.events, args.output)

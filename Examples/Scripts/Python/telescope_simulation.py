@@ -16,12 +16,13 @@ from acts.examples.simulation import (
 u = acts.UnitConstants
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+    detector = acts.examples.TelescopeDetectorFactory(
         bounds=[200, 200],
         positions=[30, 60, 90, 120, 150, 180, 210, 240, 270],
         stereos=[0, 0, 0, 0, 0, 0, 0, 0, 0],
         binValue=2,
-    )
+    ).buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

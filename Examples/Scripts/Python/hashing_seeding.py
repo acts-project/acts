@@ -135,7 +135,8 @@ class Config:
         elif self.detector == DetectorName.generic:
             print("Create detector and tracking geometry")
 
-            detector, trackingGeometry, a = acts.examples.GenericDetector.create()
+            detector = acts.examples.GenericDetectorFactory().buildDetector()
+            trackingGeometry = detector.gen1Geometry()
             digiConfig = (
                 actsExamplesDir
                 / "Algorithms/Digitization/share/default-smearing-config-generic.json"

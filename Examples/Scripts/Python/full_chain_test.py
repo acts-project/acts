@@ -285,7 +285,9 @@ def full_chain(args):
             args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetectorFactory().buildDetector()
+        trackingGeometry = detector.gen1Geometry()
+        decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
         etaRange = (-3.0, 3.0)

@@ -360,11 +360,12 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_root_material_writer(tmp_path, assert_root_hash):
-    from acts.examples.dd4hep import DD4hepDetector
+    from acts.examples.dd4hep import DD4hepDetectorFactory
 
-    detector, trackingGeometry, _ = DD4hepDetector.create(
+    detector = DD4hepDetectorFactory(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
+    ).buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     out = tmp_path / "material.root"
 
@@ -384,11 +385,12 @@ def test_root_material_writer(tmp_path, assert_root_hash):
 @pytest.mark.parametrize("fmt", [JsonFormat.Json, JsonFormat.Cbor])
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_json_material_writer(tmp_path, fmt):
-    from acts.examples.dd4hep import DD4hepDetector
+    from acts.examples.dd4hep import DD4hepDetectorFactory
 
-    detector, trackingGeometry, _ = DD4hepDetector.create(
+    detector = DD4hepDetectorFactory(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
+    ).buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
 

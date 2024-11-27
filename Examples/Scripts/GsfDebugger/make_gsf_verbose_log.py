@@ -1,7 +1,6 @@
 #!/bin/python3
-import sys
+
 from pathlib import Path
-import os
 
 import acts
 import acts.examples
@@ -20,7 +19,8 @@ if __name__ == "__main__":
     )
     assert digiConfigFile.exists()
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

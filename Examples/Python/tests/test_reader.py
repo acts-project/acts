@@ -388,7 +388,9 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
