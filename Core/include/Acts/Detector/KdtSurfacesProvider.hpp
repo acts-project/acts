@@ -34,10 +34,10 @@ class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
   using KDTS =
-      KDTree<kDIM, std::shared_ptr<Surface>, ActsScalar, std::array, bSize>;
+      KDTree<kDIM, std::shared_ptr<Surface>, double, std::array, bSize>;
 
   /// Broadcast the query definition
-  using Query = std::array<ActsScalar, kDIM>;
+  using Query = std::array<double, kDIM>;
 
   /// Broadcast the entry
   using Entry = std::pair<Query, std::shared_ptr<Surface>>;
@@ -86,7 +86,7 @@ class KdtSurfaces {
   ///
   /// @return the matching surfaces from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(
-      const RangeXD<kDIM, ActsScalar>& range) const {
+      const RangeXD<kDIM, double>& range) const {
     // Strip the surfaces
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
@@ -101,7 +101,7 @@ class KdtSurfaces {
   ///
   /// @return the matching surfaces fpulled from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(const Extent& extent) const {
-    RangeXD<kDIM, ActsScalar> qRange;
+    RangeXD<kDIM, double> qRange;
     for (auto [ibv, v] : enumerate(m_casts)) {
       qRange[ibv] = extent.range(v);
     }
@@ -148,7 +148,7 @@ class KdtSurfaces {
     float weight = 1. / cQueries.size();
     for (auto& q : cQueries) {
       std::transform(c.begin(), c.end(), q.begin(), c.begin(),
-                     std::plus<ActsScalar>());
+                     std::plus<double>());
     }
     std::for_each(c.begin(), c.end(), [&](auto& v) { v *= weight; });
     return c;

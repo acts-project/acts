@@ -42,7 +42,7 @@ Acts::FreeVector Acts::transformBoundToFreeParameters(
 
 Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
-    const GeometryContext& geoCtx, ActsScalar tolerance) {
+    const GeometryContext& geoCtx, double tolerance) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
@@ -65,10 +65,9 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
 }
 
 Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
-    const Acts::Vector3& position, ActsScalar time,
-    const Acts::Vector3& direction, ActsScalar qOverP,
-    const Acts::Surface& surface, const Acts::GeometryContext& geoCtx,
-    ActsScalar tolerance) {
+    const Acts::Vector3& position, double time, const Acts::Vector3& direction,
+    double qOverP, const Acts::Surface& surface,
+    const Acts::GeometryContext& geoCtx, double tolerance) {
   // initialize the bound vector
   BoundVector bp = BoundVector::Zero();
   // convert global to local position on the surface
@@ -88,8 +87,10 @@ Acts::Result<Acts::BoundVector> Acts::transformFreeToBoundParameters(
   return Result<Acts::BoundVector>::success(bp);
 }
 
-Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
-    ActsScalar time, ActsScalar phi, ActsScalar theta, ActsScalar qOverP) {
+Acts::BoundVector Acts::transformFreeToCurvilinearParameters(double time,
+                                                             double phi,
+                                                             double theta,
+                                                             double qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;
@@ -100,7 +101,7 @@ Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
 }
 
 Acts::BoundVector Acts::transformFreeToCurvilinearParameters(
-    ActsScalar time, const Vector3& direction, ActsScalar qOverP) {
+    double time, const Vector3& direction, double qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction
   bp[eBoundTime] = time;

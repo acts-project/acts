@@ -78,10 +78,10 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // Fill "paramVec", "pca", and "momentumAtPCA"
   {
     Vector3 globalCoords = endParams.position(gctx);
-    ActsScalar globalTime = endParams.time();
-    ActsScalar phi = perigeeParams(BoundIndices::eBoundPhi);
-    ActsScalar theta = perigeeParams(BoundIndices::eBoundTheta);
-    ActsScalar qOvP = perigeeParams(BoundIndices::eBoundQOverP);
+    double globalTime = endParams.time();
+    double phi = perigeeParams(BoundIndices::eBoundPhi);
+    double theta = perigeeParams(BoundIndices::eBoundTheta);
+    double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
     paramVec << globalCoords, globalTime, phi, theta, qOvP;
     pca << globalCoords, globalTime;

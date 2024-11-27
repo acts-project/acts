@@ -157,8 +157,7 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
   // Endcaps
   std::vector<std::shared_ptr<Acts::Experimental::IDetectorComponentBuilder>>
       endcapBuilders;
-  for (auto [ie, ep] :
-       Acts::enumerate(std::vector<Acts::ActsScalar>({-710., 710.}))) {
+  for (auto [ie, ep] : Acts::enumerate(std::vector<double>({-710., 710.}))) {
     auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                             55., ep, 2., 22u);
 

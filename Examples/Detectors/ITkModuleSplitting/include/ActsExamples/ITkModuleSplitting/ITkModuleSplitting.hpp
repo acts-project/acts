@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-#include <sstream>
 
 namespace ActsExamples::ITk {
 
