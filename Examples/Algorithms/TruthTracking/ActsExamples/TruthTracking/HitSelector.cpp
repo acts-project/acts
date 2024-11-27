@@ -16,13 +16,14 @@ namespace ActsExamples {
 
 HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
     : IAlgorithm("HitSelector", level), m_cfg(config) {
-  if (m_cfg.minX >= m_cfg.maxX || m_cfg.minY >= m_cfg.maxY || 
+  if (m_cfg.minX >= m_cfg.maxX || m_cfg.minY >= m_cfg.maxY ||
       m_cfg.minZ >= m_cfg.maxZ || m_cfg.minR >= m_cfg.maxR ||
-      m_cfg.minTime >= m_cfg.maxTime || 
+      m_cfg.minTime >= m_cfg.maxTime ||
       m_cfg.minEnergyLoss >= m_cfg.maxEnergyLoss ||
       m_cfg.minPrimaryVertexId >= m_cfg.maxPrimaryVertexId) {
     throw std::invalid_argument(
-        "Invalid bounds configuration: min values must be less than max values");
+        "Invalid bounds configuration: min values must be less than max "
+        "values");
   }
   m_inputHits.initialize(m_cfg.inputHits);
   m_inputParticlesSelected.maybeInitialize(m_cfg.inputParticlesSelected);
