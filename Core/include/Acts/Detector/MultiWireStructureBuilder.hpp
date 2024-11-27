@@ -38,7 +38,7 @@ class MultiWireStructureBuilder {
     Transform3 transform = Transform3::Identity();
 
     /// The bounds of the multi-wire volume
-    std::vector<ActsScalar> mlBounds = {};
+    std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
     std::vector<ProtoBinning> mlBinning = {};

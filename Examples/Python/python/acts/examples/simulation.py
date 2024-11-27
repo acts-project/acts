@@ -778,8 +778,8 @@ def addDigitization(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
+    digiCfg = acts.examples.DigitizationAlgorithm.Config(
+        digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
@@ -788,7 +788,9 @@ def addDigitization(
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",
-        doMerge=doMerge,
+        **acts.examples.defaultKWArgs(
+            doMerge=doMerge,
+        ),
     )
 
     # Not sure how to do this in our style
@@ -811,7 +813,6 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
 
     if outputDirCsv is not None:

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 
@@ -22,7 +21,7 @@
 
 class G4Track;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// The G4UserTrackingAction that is called for every track in
 /// the simulation process.
@@ -82,4 +81,4 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

@@ -22,7 +22,7 @@ namespace Acts {
 class Volume;
 }  // namespace Acts
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A G4SteppingAction that is called for every step in the simulation process.
 ///
@@ -67,4 +67,4 @@ class ParticleKillAction : public G4UserSteppingAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4
