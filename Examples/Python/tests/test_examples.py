@@ -28,7 +28,6 @@ from acts.examples import (
     Sequencer,
     GenericDetectorFactory,
     AlignedDetectorFactory,
-    AlignedDetector,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -951,12 +950,12 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
     contents = [f.read_text() for f in detector_files]
     ref = contents[0]
     for c in contents[1:]:
-        if isinstance(detector, AlignedDetector):
+        if isinstance(geoFactory, AlignedDetectorFactory):
             assert c != ref, "Detector writeout is expected to be different"
         else:
             assert c == ref, "Detector writeout is expected to be identical"
 
-    if not isinstance(detector, AlignedDetector):
+    if not isinstance(geoFactory, AlignedDetectorFactory):
         for f in [json_dir / f"event{i:>09}-detector.json" for i in range(events)]:
             assert detector_file.exists()
             with f.open() as fh:

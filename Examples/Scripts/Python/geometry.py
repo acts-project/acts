@@ -7,8 +7,6 @@ import acts
 from acts import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
-    GenericDetector,
-    AlignedDetector,
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
