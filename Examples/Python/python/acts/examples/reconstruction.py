@@ -1453,7 +1453,7 @@ def addCKFTracks(
 
     overwriteArgs = dict() if len(tslist) == 1 else dict(absEtaMax=None)
     cutSets = [
-        acts.TrackSelector.Config(trackSelectorDefaultKWArgs(c).update(overwriteArgs))
+        acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c) | overwriteArgs))
         for c in tslist
     ]
     if len(tslist) == 0:
@@ -1706,7 +1706,7 @@ def addTrackSelection(
 
     # single cut config for implicit single bin eta configuration
     selectorConfig = acts.TrackSelector.Config(
-        trackSelectorDefaultKWArgs(trackSelectorConfig)
+        **trackSelectorDefaultKWArgs(trackSelectorConfig)
     )
 
     trackSelector = acts.examples.TrackSelectorAlgorithm(
