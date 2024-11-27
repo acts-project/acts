@@ -209,6 +209,13 @@ def basic_prop_seq(rng):
             rnd=rng,
         )
 
+        trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+            level=acts.logging.WARNING,
+            inputParticles="particles_input",
+            outputTrackParameters="params_particles_input",
+        )
+        s.addAlgorithm(trkParamExtractor)
+
         nav = acts.Navigator(trackingGeometry=geo)
         stepper = acts.StraightLineStepper()
 
@@ -218,11 +225,11 @@ def basic_prop_seq(rng):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             sterileLogger=False,
-            inputTrackParameters="particle_track_parameters",
+            inputTrackParameters="params_particles_input",
             outputSummaryCollection="propagation_summary",
         )
-
         s.addAlgorithm(alg)
+
         return s, alg
 
     return _basic_prop_seq_factory

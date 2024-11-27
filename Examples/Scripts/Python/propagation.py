@@ -31,6 +31,13 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         rnd=rnd,
     )
 
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.WARNING,
+        inputParticles="particles_input",
+        outputTrackParameters="params_particles_input",
+    )
+    s.addAlgorithm(trkParamExtractor)
+
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
     stepper = acts.EigenStepper(field)
@@ -43,7 +50,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         propagatorImpl=propagator,
         level=acts.logging.INFO,
         sterileLogger=True,
-        inputTrackParameters="particle_track_parameters",
+        inputTrackParameters="params_particles_input",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)

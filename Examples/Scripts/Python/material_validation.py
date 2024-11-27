@@ -40,16 +40,22 @@ def runMaterialValidation(
         rnd=rnd,
     )
 
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.INFO,
+        inputParticles="particles_input",
+        outputTrackParameters="params_particles_input",
+    )
+    s.addAlgorithm(trkParamExtractor)
+
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         sterileLogger=True,
         recordMaterialInteractions=True,
-        inputTrackParameters="particle_track_parameters",
+        inputTrackParameters="params_particles_input",
         outputSummaryCollection="propagation_summary",
         outputMaterialCollection="material_tracks",
     )
-
     s.addAlgorithm(alg)
 
     s.addWriter(

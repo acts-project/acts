@@ -10,6 +10,8 @@ import acts
 
 
 def runMaterialValidation(
+    nevents,
+    ntracks,
     trackingGeometry,
     decorators,
     field,
@@ -18,7 +20,8 @@ def runMaterialValidation(
     dumpPropagationSteps=False,
     s=None,
 ):
-    s = s or Sequencer(events=1000, numThreads=-1)
+    # Create a sequencer
+    s = s or Sequencer(events=nevents, numThreads=-1)
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -44,16 +47,22 @@ def runMaterialValidation(
         rnd=rnd,
     )
 
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.INFO,
+        inputParticles="particles_input",
+        outputTrackParameters="params_particles_input",
+    )
+    s.addAlgorithm(trkParamExtractor)
+
     alg = acts.examples.PropagationAlgorithm(
         propagatorImpl=prop,
         level=acts.logging.INFO,
         sterileLogger=False,
         recordMaterialInteractions=True,
-        inputTrackParameters="particle_track_parameters",
+        inputTrackParameters="params_particles_input",
         outputPropagationSteps="propagation_steps",
         outputMaterialTracks="material-tracks",
     )
-
     s.addAlgorithm(alg)
 
     s.addWriter(
