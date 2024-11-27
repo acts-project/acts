@@ -21,7 +21,7 @@ namespace {
 
 using Acts::detail::combineSlabs;
 
-constexpr auto eps = std::numeric_limits<float>::epsilon();
+constexpr auto eps = std::numeric_limits<double>::epsilon();
 
 // vacuum w/ different thickness
 const Acts::MaterialSlab zeroVacuum = Acts::MaterialSlab(0);
