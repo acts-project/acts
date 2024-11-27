@@ -248,7 +248,7 @@ class LineSurface : public Surface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      ActsScalar tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces

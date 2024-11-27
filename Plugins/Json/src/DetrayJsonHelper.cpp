@@ -10,7 +10,7 @@
 
 namespace Acts::DetrayJsonHelper {
 
-std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
+std::tuple<unsigned int, std::vector<double>> maskFromBounds(
     const Acts::SurfaceBounds& sBounds, bool portal) {
   auto bType = sBounds.type();
   auto bValues = sBounds.values();

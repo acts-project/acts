@@ -63,7 +63,7 @@ class NavigationStream {
     /// Convenience access to surface
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length
-    ActsScalar pathLength() const { return intersection.pathLength(); }
+    double pathLength() const { return intersection.pathLength(); }
 
     /// Order along the path length
     ///
@@ -156,7 +156,7 @@ class NavigationStream {
   bool initialize(const GeometryContext& gctx,
                   const NavigationStream::QueryPoint& queryPoint,
                   const BoundaryTolerance& cTolerance,
-                  ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
+                  double onSurfaceTolerance = s_onSurfaceTolerance);
 
   /// Convenience method to update a stream from a new query point,
   /// this could be called from navigation delegates that do not require
@@ -169,7 +169,7 @@ class NavigationStream {
   /// @return true if the stream is active, false indicate no valid candidates left
   bool update(const GeometryContext& gctx,
               const NavigationStream::QueryPoint& queryPoint,
-              ActsScalar onSurfaceTolerance = s_onSurfaceTolerance);
+              double onSurfaceTolerance = s_onSurfaceTolerance);
 
  private:
   /// The candidates of this navigation stream

@@ -242,6 +242,13 @@ concept MutableTrackStateProxyConcept =
 
       { v.allocateCalibrated(measdim) };
 
+      { v.allocateCalibrated(ActsVector<1>{}, ActsSquareMatrix<1>{}) };
+      // Assuming intermediate values are also allowed
+      {
+        v.allocateCalibrated(ActsVector<eBoundSize>{},
+                             ActsSquareMatrix<eBoundSize>{})
+      };
+
       { v.chi2() } -> std::same_as<double&>;
 
       { v.pathLength() } -> std::same_as<double&>;

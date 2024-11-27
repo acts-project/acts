@@ -278,7 +278,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -297,11 +297,11 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
       double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
-        status = IntersectionStatus::missed;
+        status = IntersectionStatus::unreachable;
       }
     } else if (!insideBounds(localCartesianToPolar(lcartesian),
                              boundaryTolerance)) {
-      status = IntersectionStatus::missed;
+      status = IntersectionStatus::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
@@ -425,25 +425,25 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
         "DiscSurface::merge: surfaces have bounds other than radial");
   }
 
-  ActsScalar minR = bounds->get(RadialBounds::eMinR);
-  ActsScalar maxR = bounds->get(RadialBounds::eMaxR);
+  double minR = bounds->get(RadialBounds::eMinR);
+  double maxR = bounds->get(RadialBounds::eMaxR);
 
-  ActsScalar hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
-  ActsScalar avgPhi = bounds->get(RadialBounds::eAveragePhi);
-  ActsScalar minPhi = detail::radian_sym(-hlPhi + avgPhi);
-  ActsScalar maxPhi = detail::radian_sym(hlPhi + avgPhi);
+  double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+  double avgPhi = bounds->get(RadialBounds::eAveragePhi);
+  double minPhi = detail::radian_sym(-hlPhi + avgPhi);
+  double maxPhi = detail::radian_sym(hlPhi + avgPhi);
 
   ACTS_VERBOSE(" this: r =   [" << minR << ", " << maxR << "]");
   ACTS_VERBOSE("       phi = ["
                << minPhi / 1_degree << ", " << maxPhi / 1_degree << "] ~> "
                << avgPhi / 1_degree << " +- " << hlPhi / 1_degree);
 
-  ActsScalar otherMinR = otherBounds->get(RadialBounds::eMinR);
-  ActsScalar otherMaxR = otherBounds->get(RadialBounds::eMaxR);
-  ActsScalar otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
-  ActsScalar otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
-  ActsScalar otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
-  ActsScalar otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
+  double otherMinR = otherBounds->get(RadialBounds::eMinR);
+  double otherMaxR = otherBounds->get(RadialBounds::eMaxR);
+  double otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  double otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
+  double otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
+  double otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
 
   ACTS_VERBOSE("other: r =   [" << otherMinR << ", " << otherMaxR << "]");
   ACTS_VERBOSE("       phi = [" << otherMinPhi / 1_degree << ", "
@@ -481,8 +481,8 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
           "DiscSurface::merge: surfaces have different half phi sector");
     }
 
-    ActsScalar newMinR = std::min(minR, otherMinR);
-    ActsScalar newMaxR = std::max(maxR, otherMaxR);
+    double newMinR = std::min(minR, otherMinR);
+    double newMaxR = std::max(maxR, otherMaxR);
     ACTS_VERBOSE("  new: r =   [" << newMinR << ", " << newMaxR << "]");
 
     auto newBounds =
@@ -502,7 +502,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
 
     // Figure out signed relative rotation
     Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();
-    ActsScalar zrotation = std::atan2(rotatedX[1], rotatedX[0]);
+    double zrotation = std::atan2(rotatedX[1], rotatedX[0]);
 
     ACTS_VERBOSE("this:  [" << avgPhi / 1_degree << " +- " << hlPhi / 1_degree
                             << "]");
@@ -511,7 +511,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
 
     ACTS_VERBOSE("Relative rotation around local z: " << zrotation / 1_degree);
 
-    ActsScalar prevOtherAvgPhi = otherAvgPhi;
+    double prevOtherAvgPhi = otherAvgPhi;
     otherAvgPhi = detail::radian_sym(otherAvgPhi + zrotation);
     ACTS_VERBOSE("~> local other average phi: "
                  << otherAvgPhi / 1_degree

@@ -36,7 +36,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
     for (auto ibv : allBinningValues()) {
       if (envelope[ibv] != zeroEnvelope) {
         jenvelope[binningValueName(ibv)] =
-            Range1D<ActsScalar>(envelope[ibv][0], envelope[ibv][1]);
+            Range1D<double>(envelope[ibv][0], envelope[ibv][1]);
       }
     }
     if (!jenvelope.empty()) {

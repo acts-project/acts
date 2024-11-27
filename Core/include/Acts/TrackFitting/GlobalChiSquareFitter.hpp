@@ -251,7 +251,7 @@ struct ScatteringProperties {
   /// @param invCovarianceMaterial_ The inverse covariance of the material.
   /// @param materialIsValid_ A boolean flag indicating whether the material is valid.
   ScatteringProperties(const BoundVector& scatteringAngles_,
-                       const ActsScalar invCovarianceMaterial_,
+                       const double invCovarianceMaterial_,
                        const bool materialIsValid_)
       : m_scatteringAngles(scatteringAngles_),
         m_invCovarianceMaterial(invCovarianceMaterial_),
@@ -264,7 +264,7 @@ struct ScatteringProperties {
   BoundVector& scatteringAngles() { return m_scatteringAngles; }
 
   // Accessor for the inverse covariance of the material.
-  ActsScalar invCovarianceMaterial() const { return m_invCovarianceMaterial; }
+  double invCovarianceMaterial() const { return m_invCovarianceMaterial; }
 
   // Accessor for the material validity flag.
   bool materialIsValid() const { return m_materialIsValid; }
@@ -276,7 +276,7 @@ struct ScatteringProperties {
 
   /// Inverse covariance of the material. Compute with e.g. the Highland
   /// formula.
-  ActsScalar m_invCovarianceMaterial;
+  double m_invCovarianceMaterial;
 
   /// Flag indicating whether the material is valid. Commonly vacuum and zero
   /// thickness material will be ignored.
@@ -503,7 +503,7 @@ void addMaterialToGx2fSums(
         "No scattering angles found for material surface.");
   }
 
-  const ActsScalar sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
+  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
 
   // The position, where we need to insert the values in aMatrix and bVector
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
@@ -511,7 +511,7 @@ void addMaterialToGx2fSums(
   const BoundVector& scatteringAngles =
       scatteringMapId->second.scatteringAngles();
 
-  const ActsScalar invCov = scatteringMapId->second.invCovarianceMaterial();
+  const double invCov = scatteringMapId->second.invCovarianceMaterial();
 
   // Phi contribution
   extendedSystem.aMatrix()(deltaPosition, deltaPosition) +=

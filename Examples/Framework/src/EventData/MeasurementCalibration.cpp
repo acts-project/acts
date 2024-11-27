@@ -41,10 +41,8 @@ void ActsExamples::PassThroughCalibrator::calibrate(
         static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
             measurement);
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = fixedMeasurement.parameters();
-    trackState.calibratedCovariance<kMeasurementSize>() =
-        fixedMeasurement.covariance();
+    trackState.allocateCalibrated(fixedMeasurement.parameters().eval(),
+                                  fixedMeasurement.covariance().eval());
     trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
