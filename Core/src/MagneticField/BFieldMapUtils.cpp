@@ -36,8 +36,8 @@ Acts::fieldMapRZ(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     std::vector<double> rPos, std::vector<double> zPos,
-    const std::vector<Acts::Vector2>& bField, double lengthUnit,
-    double BFieldUnit, bool firstQuadrant) {
+    const std::vector<Vector2>& bField, double lengthUnit, double BFieldUnit,
+    bool firstQuadrant) {
   // [1] Create Grid
   const auto [rMin, rMax, rBinCount] = detail::getMinMaxAndBinCount(rPos);
   auto [zMin, zMax, zBinCount] = detail::getMinMaxAndBinCount(zPos);
@@ -51,11 +51,11 @@ Acts::fieldMapRZ(
   }
 
   // Create the axis for the grid
-  Acts::Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
-  Acts::Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
+  Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  Grid grid(Type<Acts::Vector2>, std::move(rAxis), std::move(zAxis));
+  Grid grid(Type<Vector2>, std::move(rAxis), std::move(zAxis));
   using Grid_t = decltype(grid);
 
   // [2] Set the bField values
@@ -79,16 +79,15 @@ Acts::fieldMapRZ(
       }
     }
   }
-  grid.setExteriorBins(Acts::Vector2::Zero());
+  grid.setExteriorBins(Vector2::Zero());
 
   // [3] Create the transformation for the position map (x,y,z) -> (r,z)
-  auto transformPos = [](const Acts::Vector3& pos) {
-    return Acts::Vector2(perp(pos), pos.z());
+  auto transformPos = [](const Vector3& pos) {
+    return Vector2(perp(pos), pos.z());
   };
 
   // [4] Create the transformation for the bField map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField = [](const Acts::Vector2& field,
-                            const Acts::Vector3& pos) {
+  auto transformBField = [](const Vector2& field, const Vector3& pos) {
     const double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
     double cosPhi = 1.;
     double sinPhi = 0.;
@@ -99,11 +98,11 @@ Acts::fieldMapRZ(
       sinPhi = pos.y() * invRsinTheta;
     }
 
-    return Acts::Vector3(field.x() * cosPhi, field.x() * sinPhi, field.y());
+    return Vector3(field.x() * cosPhi, field.x() * sinPhi, field.y());
   };
 
   // [5] Create the mapper & BField Service create field mapping
-  return Acts::InterpolatedBFieldMap<Grid_t>(
+  return InterpolatedBFieldMap<Grid_t>(
       {transformPos, transformBField, std::move(grid)});
 }
 
@@ -116,7 +115,7 @@ Acts::fieldMapXYZ(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, const std::vector<Acts::Vector3>& bField,
+    std::vector<double> zPos, const std::vector<Vector3>& bField,
     double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   auto [xMin, xMax, xBinCount] = detail::getMinMaxAndBinCount(xPos);
@@ -136,9 +135,9 @@ Acts::fieldMapXYZ(
     nBinsZ = 2 * nBinsZ - 1;
   }
 
-  Acts::Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
-  Acts::Axis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
-  Acts::Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
+  Axis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
+  Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
   Grid grid(Type<Vector3>, std::move(xAxis), std::move(yAxis),
             std::move(zAxis));
@@ -172,17 +171,18 @@ Acts::fieldMapXYZ(
       }
     }
   }
-  grid.setExteriorBins(Acts::Vector3::Zero());
+  grid.setExteriorBins(Vector3::Zero());
 
   // [3] Create the transformation for the position map (x,y,z) -> (r,z)
-  auto transformPos = [](const Acts::Vector3& pos) { return pos; };
+  auto transformPos = [](const Vector3& pos) { return pos; };
 
   // [4] Create the transformation for the BField map (Bx,By,Bz) -> (Bx,By,Bz)
-  auto transformBField = [](const Acts::Vector3& field,
-                            const Acts::Vector3& /*pos*/) { return field; };
+  auto transformBField = [](const Vector3& field, const Vector3& /*pos*/) {
+    return field;
+  };
 
   // [5] Create the mapper & BField Service create field mapping
-  return Acts::InterpolatedBFieldMap<Grid_t>(
+  return InterpolatedBFieldMap<Grid_t>(
       {transformPos, transformBField, std::move(grid)});
 }
 
@@ -203,21 +203,20 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
   zMax += stepZ;
 
   // Create the axis for the grid
-  Acts::Axis rAxis(rMin, rMax, nBinsR);
-  Acts::Axis zAxis(zMin, zMax, nBinsZ);
+  Axis rAxis(rMin, rMax, nBinsR);
+  Axis zAxis(zMin, zMax, nBinsZ);
 
   // Create the grid
-  Grid grid(Type<Acts::Vector2>, std::move(rAxis), std::move(zAxis));
+  Grid grid(Type<Vector2>, std::move(rAxis), std::move(zAxis));
   using Grid_t = decltype(grid);
 
   // Create the transformation for the position map (x,y,z) -> (r,z)
-  auto transformPos = [](const Acts::Vector3& pos) {
-    return Acts::Vector2(perp(pos), pos.z());
+  auto transformPos = [](const Vector3& pos) {
+    return Vector2(perp(pos), pos.z());
   };
 
   // Create the transformation for the bField map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField = [](const Acts::Vector2& bField,
-                            const Acts::Vector3& pos) {
+  auto transformBField = [](const Vector2& bField, const Vector3& pos) {
     const double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
     double cosPhi = 1.;
     double sinPhi = 0.;
@@ -228,7 +227,7 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
       sinPhi = pos.y() * invRsinTheta;
     }
 
-    return Acts::Vector3(bField.x() * cosPhi, bField.x() * sinPhi, bField.y());
+    return Vector3(bField.x() * cosPhi, bField.x() * sinPhi, bField.y());
   };
 
   // iterate over all bins, set their value to the solenoid value at their lower
@@ -250,7 +249,7 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
   }
 
   // Create the mapper & BField Service create field mapping
-  Acts::InterpolatedBFieldMap<Grid_t> map(
+  InterpolatedBFieldMap<Grid_t> map(
       {transformPos, transformBField, std::move(grid)});
   return map;
 }
