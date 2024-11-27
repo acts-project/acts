@@ -143,7 +143,7 @@ void addDetector(Context& ctx) {
     using Detector = TelescopeDetector;
 
     py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-        m, "TelescopeDetector");
+        m, "AlignedDetector");
   }
 
   {
