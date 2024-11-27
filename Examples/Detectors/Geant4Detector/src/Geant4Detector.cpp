@@ -23,9 +23,10 @@
 #include "G4Transform3D.hh"
 #include "G4VPhysicalVolume.hh"
 
-auto ActsExamples::Geant4::Geant4Detector::constructDetector(
-    const ActsExamples::Geant4::Geant4Detector::Config& cfg,
-    const Acts::Logger& logger)
+namespace ActsExamples {
+
+auto Geant4Detector::constructDetector(const Geant4Detector::Config& cfg,
+                                       const Acts::Logger& logger)
     -> std::tuple<DetectorPtr, ContextDecorators, DetectorElements> {
   if (cfg.g4World == nullptr) {
     throw std::invalid_argument(
@@ -44,9 +45,8 @@ auto ActsExamples::Geant4::Geant4Detector::constructDetector(
   return std::tie(detector, decorators, elements);
 }
 
-auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
-    const ActsExamples::Geant4::Geant4Detector::Config& cfg,
-    const Acts::Logger& logger)
+auto Geant4Detector::constructTrackingGeometry(
+    const Geant4Detector::Config& cfg, const Acts::Logger& logger)
     -> std::tuple<TrackingGeometryPtr, ContextDecorators, DetectorElements> {
   if (cfg.g4World == nullptr) {
     throw std::invalid_argument(
@@ -104,10 +104,9 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
   return std::tie(trackingGeometry, decorators, elements);
 }
 
-auto ActsExamples::Geant4::Geant4Detector::convertGeant4Volumes(
-    const Geant4Detector::Config& cfg, const Acts::Logger& logger) const
-    -> std::tuple<ActsExamples::Geant4::Geant4Detector::Surfaces,
-                  ActsExamples::Geant4::Geant4Detector::DetectorElements> {
+auto Geant4Detector::convertGeant4Volumes(const Geant4Detector::Config& cfg,
+                                          const Acts::Logger& logger) const
+    -> std::tuple<Geant4Detector::Surfaces, Geant4Detector::DetectorElements> {
   // Generate the surface cache
   Acts::Geant4DetectorSurfaceFactory::Cache g4SurfaceCache;
   G4Transform3D g4ToWorld;
@@ -143,3 +142,5 @@ auto ActsExamples::Geant4::Geant4Detector::convertGeant4Volumes(
 
   return std::tie(surfaces, elements);
 }
+
+}  // namespace ActsExamples

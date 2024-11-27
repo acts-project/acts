@@ -47,7 +47,7 @@ struct TestSourceLink final {
   Acts::ActsSquareMatrix<2> covariance;
 
   /// Construct a source link for a 1d measurement.
-  TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
+  TestSourceLink(BoundIndices idx, double val, double var,
                  GeometryIdentifier gid = GeometryIdentifier(),
                  std::size_t sid = 0u)
       : m_geometryId(gid),

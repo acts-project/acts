@@ -121,11 +121,11 @@ class TestAxis : public IAxis {
     return AxisBoundaryType::Closed;
   }
 
-  std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }
+  std::vector<double> getBinEdges() const final { return {-1, 1}; }
 
-  ActsScalar getMin() const final { return -1.; }
+  double getMin() const final { return -1.; }
 
-  ActsScalar getMax() const final { return 1.; }
+  double getMax() const final { return 1.; }
 
   std::size_t getNBins() const final { return 1; };
 
@@ -135,10 +135,10 @@ class TestAxis : public IAxis {
 class MultiGrid1D {
  public:
   static constexpr std::size_t DIM = 1u;
-  using point_t = std::array<ActsScalar, DIM>;
+  using point_t = std::array<double, DIM>;
 
   const std::vector<std::size_t>& atPosition(
-      const std::array<ActsScalar, 1u>& /*position*/) const {
+      const std::array<double, 1u>& /*position*/) const {
     return e;
   }
 
@@ -152,10 +152,10 @@ class MultiGrid1D {
 class MultiGrid2D {
  public:
   static constexpr std::size_t DIM = 2u;
-  using point_t = std::array<ActsScalar, DIM>;
+  using point_t = std::array<double, DIM>;
 
   const std::vector<std::size_t>& atPosition(
-      const std::array<ActsScalar, 2u>& /*position*/) const {
+      const std::array<double, 2u>& /*position*/) const {
     return e;
   }
 

@@ -189,9 +189,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) = output[iVar0];
     calibratedCovariance(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
     trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

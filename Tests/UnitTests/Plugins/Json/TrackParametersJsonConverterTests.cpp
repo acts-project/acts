@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
 
   // Track parameters
   Acts::Vector4 position(1., 2., 3., 4.);
-  Acts::ActsScalar phi = 0.1;
-  Acts::ActsScalar theta = 0.2;
-  Acts::ActsScalar qOverP = 3.0;
+  double phi = 0.1;
+  double theta = 0.2;
+  double qOverP = 3.0;
   Acts::ParticleHypothesis particle = Acts::ParticleHypothesis::electron();
   Acts::FreeMatrix freeCov = Acts::FreeMatrix::Identity();
   Acts::BoundMatrix boundCov = Acts::BoundMatrix::Identity();
