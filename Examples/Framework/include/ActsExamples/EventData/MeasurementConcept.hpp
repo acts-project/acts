@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <concepts>
@@ -23,4 +22,5 @@ concept MeasurementConcept = requires(const T& m) {
   { m.parameters() };
   { m.covariance() };
 };
+
 }  // namespace ActsExamples

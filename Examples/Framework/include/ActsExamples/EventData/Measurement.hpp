@@ -10,25 +10,16 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/EventData/detail/ParameterTraits.hpp"
-#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Iterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 
-#include <array>
-#include <compare>
-#include <concepts>
 #include <cstddef>
-#include <iosfwd>
-#include <iterator>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
@@ -137,6 +128,11 @@ class MeasurementContainer {
   FixedProxy<Size> makeMeasurement(Acts::GeometryIdentifier geometryId) {
     return getMeasurement<Size>(addMeasurement(Size, geometryId));
   }
+
+  template <MeasurementConcept OtherDerived>
+  VariableProxy copyMeasurement(const OtherDerived& other);
+  template <MeasurementConcept OtherDerived, std::size_t Size>
+  FixedProxy<Size> copyMeasurement(const OtherDerived& other);
 
   template <typename... Args>
   VariableProxy emplaceMeasurement(std::uint8_t size,
@@ -493,6 +489,22 @@ class VariableMeasurementProxy
         size, size};
   }
 };
+
+template <MeasurementConcept OtherDerived>
+MeasurementContainer::VariableProxy MeasurementContainer::copyMeasurement(
+    const OtherDerived& other) {
+  VariableProxy meas = makeMeasurement(other.size(), other.geometryId());
+  meas.copyFrom(other);
+  return meas;
+}
+
+template <MeasurementConcept OtherDerived, std::size_t Size>
+MeasurementContainer::FixedProxy<Size> MeasurementContainer::copyMeasurement(
+    const OtherDerived& other) {
+  FixedProxy<Size> meas = makeMeasurement<Size>(other.geometryId());
+  meas.copyFrom(other);
+  return meas;
+}
 
 template <typename... Args>
 MeasurementContainer::VariableProxy MeasurementContainer::emplaceMeasurement(
