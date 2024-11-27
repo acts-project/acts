@@ -44,8 +44,8 @@ auto Acts::materialMapperRZ(
   }
 
   // [2] Create Grid
-  const auto [rMin, rMax, nBinsR] = Acts::getMinMaxAndBinCount(rPos);
-  const auto [zMin, zMax, nBinsZ] = Acts::getMinMaxAndBinCount(zPos);
+  const auto [rMin, rMax, nBinsR] = detail::getMinMaxAndBinCount(rPos);
+  const auto [zMin, zMax, nBinsZ] = detail::getMinMaxAndBinCount(zPos);
 
   // Create the axis for the grid
   Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
@@ -101,9 +101,9 @@ auto Acts::materialMapperXYZ(
   }
 
   // [2] Create Grid
-  const auto [xMin, xMax, nBinsX] = Acts::getMinMaxAndBinCount(xPos);
-  const auto [yMin, yMax, nBinsY] = Acts::getMinMaxAndBinCount(yPos);
-  const auto [zMin, zMax, nBinsZ] = Acts::getMinMaxAndBinCount(zPos);
+  const auto [xMin, xMax, nBinsX] = detail::getMinMaxAndBinCount(xPos);
+  const auto [yMin, yMax, nBinsY] = detail::getMinMaxAndBinCount(yPos);
+  const auto [zMin, zMax, nBinsZ] = detail::getMinMaxAndBinCount(zPos);
 
   // Create the axis for the grid
   Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);

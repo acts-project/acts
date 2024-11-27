@@ -221,6 +221,8 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
+namespace detail {
+
 /// Computes the minimum, maximum, and bin count for a given vector of values.
 ///
 /// This function processes a vector of doubles to compute:
@@ -259,5 +261,7 @@ inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
   // Return all values as a tuple
   return std::make_tuple(xMin, xMax, xBinCount);
 }
+
+}  // namespace detail
 
 }  // namespace Acts

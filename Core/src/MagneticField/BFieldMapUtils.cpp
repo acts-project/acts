@@ -39,8 +39,8 @@ Acts::fieldMapRZ(
     const std::vector<Acts::Vector2>& bField, double lengthUnit,
     double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
-  const auto [rMin, rMax, rBinCount] = Acts::getMinMaxAndBinCount(rPos);
-  auto [zMin, zMax, zBinCount] = Acts::getMinMaxAndBinCount(zPos);
+  const auto [rMin, rMax, rBinCount] = detail::getMinMaxAndBinCount(rPos);
+  auto [zMin, zMax, zBinCount] = detail::getMinMaxAndBinCount(zPos);
 
   const std::size_t nBinsR = rBinCount;
   std::size_t nBinsZ = zBinCount;
@@ -119,9 +119,9 @@ Acts::fieldMapXYZ(
     std::vector<double> zPos, const std::vector<Acts::Vector3>& bField,
     double lengthUnit, double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
-  auto [xMin, xMax, xBinCount] = Acts::getMinMaxAndBinCount(xPos);
-  auto [yMin, yMax, yBinCount] = Acts::getMinMaxAndBinCount(yPos);
-  auto [zMin, zMax, zBinCount] = Acts::getMinMaxAndBinCount(zPos);
+  auto [xMin, xMax, xBinCount] = detail::getMinMaxAndBinCount(xPos);
+  auto [yMin, yMax, yBinCount] = detail::getMinMaxAndBinCount(yPos);
+  auto [zMin, zMax, zBinCount] = detail::getMinMaxAndBinCount(zPos);
 
   std::size_t nBinsX = xBinCount;
   std::size_t nBinsY = yBinCount;
