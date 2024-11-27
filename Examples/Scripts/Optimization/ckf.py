@@ -6,7 +6,7 @@ import argparse
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetector, RootParticleReader
+from acts.examples import GenericDetectorFactory, RootParticleReader
 
 
 def getArgumentParser():
@@ -259,7 +259,9 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

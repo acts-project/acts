@@ -41,7 +41,7 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
-    GenericDetector,
+    GenericDetectorFactory,
 )
 from acts.examples.odd import getOpenDataDetectorDirectory
 
@@ -199,7 +199,8 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
 
 @pytest.mark.root
 def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     s = Sequencer(numThreads=1, events=10)
 
@@ -404,7 +405,8 @@ def test_json_material_writer(tmp_path, fmt):
 
 @pytest.mark.csv
 def test_csv_multitrajectory_writer(tmp_path):
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -602,7 +604,8 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -651,7 +654,8 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 def test_edm4hep_tracks_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman

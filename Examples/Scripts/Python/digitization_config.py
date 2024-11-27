@@ -6,7 +6,7 @@ from acts.examples import (
     readDigiConfigFromJson,
     DigitizationConfigurator,
     writeDigiConfigToJson,
-    GenericDetector,
+    GenericDetectorFactory,
     DigiConfigContainer,
 )
 
@@ -33,7 +33,8 @@ def runDigitizationConfig(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, _ = GenericDetector.create()
+    detector = GenericDetectorFactory().buildDetector()
+    trackingGeometry = detector.gen1Geometry()
 
     runDigitizationConfig(
         trackingGeometry=trackingGeometry,
