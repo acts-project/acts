@@ -17,10 +17,11 @@
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
@@ -103,81 +104,7 @@ inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
 
 BOOST_AUTO_TEST_SUITE(Geometry);
 
-BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
-
-BOOST_AUTO_TEST_CASE(StaticBlueprintNodeConstruction) {
-  Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 2_mm};
-  Blueprint root{cfg};
-
-  ActsScalar hlZ = 30_mm;
-  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
-  auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
-                                              "root");
-
-  const auto* cylPtr = cyl.get();
-
-  auto node = std::make_unique<StaticBlueprintNode>(std::move(cyl));
-
-  BOOST_CHECK_EQUAL(node->name(), "root");
-
-  BOOST_CHECK_EQUAL(&node->build({}, gctx), cylPtr);
-
-  ObjVisualization3D vis;
-  // Add some children
-  ActsScalar z0 = -200_mm;
-  for (std::size_t i = 0; i < 10; i++) {
-    auto childCyl = std::make_unique<TrackingVolume>(
-        Transform3::Identity() *
-            Translation3{Vector3{0, 0, z0 + i * 2 * hlZ * 1.2}},
-        cylBounds, "child" + std::to_string(i));
-
-    GeometryView3D::drawVolume(vis, *childCyl, gctx);
-
-    node->addChild(std::make_unique<StaticBlueprintNode>(std::move(childCyl)));
-  }
-
-  BOOST_CHECK_EQUAL(node->children().size(), 10);
-
-  root.addChild(std::move(node));
-
-  std::ofstream ofs{"static.obj"};
-  vis.write(ofs);
-
-  auto tGeometry = root.construct({}, gctx, *logger);
-
-  BOOST_REQUIRE(tGeometry);
-
-  BOOST_CHECK_EQUAL(tGeometry->highestTrackingVolume()->volumes().size(), 1);
-  std::size_t nVolumes = 0;
-  tGeometry->visitVolumes(
-      [&](const TrackingVolume* /*volume*/) { nVolumes++; });
-
-  BOOST_CHECK_EQUAL(nVolumes, 12);
-}
-
-BOOST_AUTO_TEST_CASE(CylinderContainerNode) {
-  ActsScalar hlZ = 30_mm;
-  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
-
-  Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
-  auto root = std::make_unique<Blueprint>(cfg);
-
-  auto& cyl = root->addCylinderContainer("Container", BinningValue::binZ);
-
-  ActsScalar z0 = -200_mm;
-  for (std::size_t i = 0; i < 10; i++) {
-    auto childCyl = std::make_unique<TrackingVolume>(
-        Transform3::Identity() *
-            Translation3{Vector3{0, 0, z0 + i * 2 * hlZ * 1.2}},
-        cylBounds, "child" + std::to_string(i));
-    cyl.addStaticVolume(std::move(childCyl));
-  }
-
-  root->construct({}, gctx, *logger);
-}
+BOOST_AUTO_TEST_SUITE(BlueprintApiTest);
 
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       Vector3 position, const Vector3& direction,
@@ -314,41 +241,6 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
 
     ACTS_VERBOSE("-----");
   }
-}
-
-void portalSamples(const TrackingGeometry& trackingGeometry, Vector3 position,
-                   const Vector3& direction, std::ostream& csv,
-                   std::size_t run) {
-  std::set<const Surface*> visitedSurfaces;
-
-  trackingGeometry.visitVolumes([&](const TrackingVolume* volume) {
-    for (const auto& portal : volume->portals()) {
-      if (visitedSurfaces.contains(&portal.surface())) {
-        continue;
-      }
-      visitedSurfaces.insert(&portal.surface());
-
-      auto multiIntersection = portal.surface().intersect(
-          gctx, position, direction, BoundaryTolerance::None());
-
-      for (const auto& intersection : multiIntersection.split()) {
-        if (intersection.isValid()) {
-          Vector3 newPosition = intersection.position();
-          csv << run << "," << position[0] << "," << position[1] << ","
-              << position[2];
-          csv << "," << volume->geometryId().volume();
-          csv << "," << volume->geometryId().boundary();
-          csv << std::endl;
-          csv << run << "," << newPosition[0] << "," << newPosition[1] << ","
-              << newPosition[2];
-          csv << "," << portal.surface().geometryId().volume();
-          csv << "," << portal.surface().geometryId().boundary();
-          csv << std::endl;
-          position = newPosition;
-        }
-      }
-    }
-  });
 }
 
 BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
@@ -507,177 +399,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
     pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2,
                      *logger->clone(std::nullopt, Logging::DEBUG));
-
-    // portalSamples(*trackingGeometry, position, direction, csv, i);
   }
-}
-
-BOOST_AUTO_TEST_CASE(NodeApiTestConfined) {
-  // Transform3 base{AngleAxis3{30_degree, Vector3{1, 0, 0}}};
-  Transform3 base{Transform3::Identity()};
-
-  Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {0_mm, 20_mm};
-  auto root = std::make_unique<Blueprint>(cfg);
-
-  root->addCylinderContainer("Detector", BinningValue::binR, [&](auto& det) {
-    det.addStaticVolume(
-        base, std::make_shared<CylinderVolumeBounds>(50_mm, 400_mm, 1000_mm),
-        "PixelWrapper", [&](auto& wrap) {
-          ActsScalar rMin = 100_mm;
-          ActsScalar rMax = 350_mm;
-          ActsScalar hlZ = 100_mm;
-
-          wrap.addStaticVolume(
-              base * Translation3{Vector3{0, 0, -600_mm}},
-              std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ),
-              "PixelNeg1");
-
-          wrap.addStaticVolume(
-              base * Translation3{Vector3{0, 0, -200_mm}},
-              std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ),
-              "PixelNeg2");
-
-          wrap.addStaticVolume(
-              base * Translation3{Vector3{0, 0, 200_mm}},
-              std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ),
-              "PixelPos1");
-
-          wrap.addStaticVolume(
-              base * Translation3{Vector3{0, 0, 600_mm}},
-              std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ),
-              "PixelPos2");
-        });
-
-    det.addStaticVolume(
-        base, std::make_shared<CylinderVolumeBounds>(0_mm, 23_mm, 1000_mm),
-        "BeamPipe");
-  });
-
-  std::ofstream dot{"api_test_confined.dot"};
-  root->graphViz(dot);
-
-  auto trackingGeometry = root->construct({}, gctx, *logger);
-
-  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
-    std::cout << volume->volumeName() << std::endl;
-    std::cout << " -> id: " << volume->geometryId() << std::endl;
-    std::cout << " -> " << volume->portals().size() << " portals" << std::endl;
-  });
-
-  ObjVisualization3D vis;
-
-  trackingGeometry->visualize(vis, gctx, {}, {});
-
-  vis.write("api_test_confined.obj");
-
-  const auto* wrapper =
-      trackingGeometry->findVolume(GeometryIdentifier{}.setVolume(2));
-  BOOST_REQUIRE_NE(wrapper, nullptr);
-
-  std::cout << wrapper->volumeName() << std::endl;
-
-  BOOST_CHECK_EQUAL(wrapper->portals().size(), 20);
-  BOOST_CHECK_EQUAL(wrapper->volumes().size(), 4);
-}
-
-BOOST_AUTO_TEST_CASE(LayerNodeDisk) {
-  double yrot = 45_degree;
-  Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
-
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
-
-  auto makeFan = [&](double thickness) {
-    detectorElements.clear();
-    return makeFanLayer(base, detectorElements, 200_mm, 10, thickness);
-  };
-
-  std::vector<std::shared_ptr<Surface>> surfaces = makeFan(2.5_mm);
-
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
-
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Disc)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {0.1_mm, 0.1_mm},
-            .r = {1_mm, 1_mm},
-        }})
-        .setTransform(base);
-  });
-
-  std::ofstream dot{"layer_node_disk.dot"};
-  root.graphViz(dot);
-
-  auto trackingGeometry =
-      root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
-
-  ObjVisualization3D vis;
-
-  trackingGeometry->visualize(vis, gctx, {}, {});
-
-  vis.write("layer_node_disk.obj");
-
-  std::size_t nSurfaces = 0;
-
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
-
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-}
-
-BOOST_AUTO_TEST_CASE(LayerNodeCylinder) {
-  double yrot = 0_degree;
-  Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
-
-  std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
-
-  std::vector<std::shared_ptr<Surface>> surfaces =
-      makeBarrelLayer(base, detectorElements, 300_mm, 24, 8, 2.5_mm);
-
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
-
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {10_mm, 10_mm},
-            .r = {20_mm, 10_mm},
-        }})
-        .setTransform(base);
-  });
-
-  std::ofstream dot{"layer_node_cyl.dot"};
-  root.graphViz(dot);
-
-  auto trackingGeometry =
-      root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
-
-  ObjVisualization3D vis;
-
-  trackingGeometry->visualize(vis, gctx, {}, {});
-
-  vis.write("layer_node_cyl.obj");
-
-  std::size_t nSurfaces = 0;
-
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
-
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END();
