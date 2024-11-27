@@ -31,7 +31,6 @@ def runTruthTrackingGsf(
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TrackSmearingSigmas,
         addTruthTrackingGsf,
     )
 
@@ -101,27 +100,6 @@ def runTruthTrackingGsf(
         rnd=rnd,
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-        trackSmearingSigmas=TrackSmearingSigmas(
-            # zero eveything so the CKF has a chance to find the measurements
-            loc0=0,
-            loc0PtA=0,
-            loc0PtB=0,
-            loc1=0,
-            loc1PtA=0,
-            loc1PtB=0,
-            time=0,
-            phi=0,
-            theta=0,
-            ptRel=0,
-        ),
-        initialSigmas=[
-            1 * u.mm,
-            1 * u.mm,
-            1 * u.degree,
-            1 * u.degree,
-            0.1 * u.e / u.GeV,
-            1 * u.ns,
-        ],
         initialSigmaPtRel=0.01,
         initialVarInflation=[1.0] * 6,
         particleHypothesis=acts.ParticleHypothesis.electron,
