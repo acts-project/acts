@@ -160,7 +160,7 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -175,7 +175,7 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                       boundaryTolerance)) {
-      status = IntersectionStatus::missed;
+      status = IntersectionStatus::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),

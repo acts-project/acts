@@ -62,6 +62,12 @@ class ParticleSelector final : public IAlgorithm {
     bool removeSecondaries = false;
     /// Exclude particles depending on absolute pdg value
     std::vector<int> excludeAbsPdgs;
+
+    /// Min primary vertex ID cut
+    std::uint64_t minPrimaryVertexId = 0;
+    /// Max primary vertex ID cut
+    std::uint64_t maxPrimaryVertexId =
+        std::numeric_limits<std::uint64_t>::max();
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);

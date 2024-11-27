@@ -33,8 +33,8 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   OnnxEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~OnnxEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges,
+  std::tuple<std::any, std::any, std::any, std::any> operator()(
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
       torch::Device device = torch::Device(torch::kCPU)) override;
 
   Config config() const { return m_cfg; }
@@ -49,9 +49,8 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 
-  std::string m_inputNameNodes;
-  std::string m_inputNameEdges;
-  std::string m_outputNameScores;
+  std::vector<std::string> m_inputNames;
+  std::string m_outputName;
 };
 
 }  // namespace Acts

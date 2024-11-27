@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
+#include "Acts/Propagator/MultiStepperError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -67,8 +68,7 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
     State& state, bool transportCov) const -> CurvilinearState {
   assert(!state.components.empty());
 
-  std::vector<
-      std::tuple<double, Vector4, Vector3, ActsScalar, BoundSquareMatrix>>
+  std::vector<std::tuple<double, Vector4, Vector3, double, BoundSquareMatrix>>
       cmps;
   cmps.reserve(numberComponents(state));
   double accumulatedPathLength = 0.0;
@@ -112,7 +112,7 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
         m_stepLimitAfterFirstComponentOnSurface) {
       for (auto& cmp : components) {
         if (cmp.status != Status::onSurface) {
-          cmp.status = Status::missed;
+          cmp.status = Status::unreachable;
         }
       }
 

@@ -23,8 +23,6 @@ namespace ActsExamples {
 
 /// Space point representation of a measurement suitable for track seeding.
 class SimSpacePoint {
-  using Scalar = Acts::ActsScalar;
-
  public:
   /// Construct the space point from global position and selected variances.
   ///
@@ -44,10 +42,10 @@ class SimSpacePoint {
   /// @param validDoubleMeasurementDetails boolean to check if double measurements are valid
   template <typename position_t>
   SimSpacePoint(
-      const Eigen::MatrixBase<position_t>& pos, std::optional<Scalar> t,
-      Scalar varRho, Scalar varZ, std::optional<Scalar> varT,
+      const Eigen::MatrixBase<position_t>& pos, std::optional<double> t,
+      double varRho, double varZ, std::optional<double> varT,
       boost::container::static_vector<Acts::SourceLink, 2> sourceLinks,
-      Scalar topHalfStripLength, Scalar bottomHalfStripLength,
+      double topHalfStripLength, double bottomHalfStripLength,
       const Acts::Vector3& topStripDirection,
       const Acts::Vector3& bottomStripDirection,
       const Acts::Vector3& stripCenterDistance,
@@ -82,8 +80,8 @@ class SimSpacePoint {
   /// @param sourceLinks sourceLinks of the measurements
   template <typename position_t>
   SimSpacePoint(
-      const Eigen::MatrixBase<position_t>& pos, std::optional<Scalar> t,
-      Scalar varRho, Scalar varZ, std::optional<Scalar> varT,
+      const Eigen::MatrixBase<position_t>& pos, std::optional<double> t,
+      double varRho, double varZ, std::optional<double> varT,
       boost::container::static_vector<Acts::SourceLink, 2> sourceLinks)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
@@ -97,14 +95,14 @@ class SimSpacePoint {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 
-  constexpr Scalar x() const { return m_x; }
-  constexpr Scalar y() const { return m_y; }
-  constexpr Scalar z() const { return m_z; }
-  constexpr std::optional<Scalar> t() const { return m_t; }
-  constexpr Scalar r() const { return m_rho; }
-  constexpr Scalar varianceR() const { return m_varianceRho; }
-  constexpr Scalar varianceZ() const { return m_varianceZ; }
-  constexpr std::optional<Scalar> varianceT() const { return m_varianceT; }
+  constexpr double x() const { return m_x; }
+  constexpr double y() const { return m_y; }
+  constexpr double z() const { return m_z; }
+  constexpr std::optional<double> t() const { return m_t; }
+  constexpr double r() const { return m_rho; }
+  constexpr double varianceR() const { return m_varianceRho; }
+  constexpr double varianceZ() const { return m_varianceZ; }
+  constexpr std::optional<double> varianceT() const { return m_varianceT; }
 
   const boost::container::static_vector<Acts::SourceLink, 2>& sourceLinks()
       const {
@@ -127,15 +125,15 @@ class SimSpacePoint {
 
  private:
   // Global position
-  Scalar m_x;
-  Scalar m_y;
-  Scalar m_z;
-  std::optional<Scalar> m_t;
-  Scalar m_rho;
+  double m_x;
+  double m_y;
+  double m_z;
+  std::optional<double> m_t;
+  double m_rho;
   // Variance in rho/z of the global coordinates
-  Scalar m_varianceRho;
-  Scalar m_varianceZ;
-  std::optional<Scalar> m_varianceT;
+  double m_varianceRho;
+  double m_varianceZ;
+  std::optional<double> m_varianceT;
   // SourceLinks of the corresponding measurements. A Pixel (strip) SP has one
   // (two) sourceLink(s).
   boost::container::static_vector<Acts::SourceLink, 2> m_sourceLinks;

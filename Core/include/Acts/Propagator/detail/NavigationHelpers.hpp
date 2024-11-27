@@ -36,7 +36,7 @@ struct NavigationObjectCandidate {
 
   std::pair<SurfaceMultiIntersection, AnyIntersectionObject> intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, ActsScalar tolerance) const {
+      const Vector3& direction, double tolerance) const {
     auto intersection = representation->intersect(gctx, position, direction,
                                                   boundaryTolerance, tolerance);
 

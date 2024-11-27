@@ -485,7 +485,7 @@ struct GsfActor {
       // we set ignored components to missed, so we can remove them after
       // the loop
       if (tmpStates.weights.at(idx) < m_cfg.weightCutoff) {
-        cmp.status() = IntersectionStatus::missed;
+        cmp.status() = IntersectionStatus::unreachable;
         continue;
       }
 

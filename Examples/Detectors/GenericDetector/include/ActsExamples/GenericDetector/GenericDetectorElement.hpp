@@ -22,7 +22,7 @@ class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
 
 /// @class GenericDetectorElement
 ///
@@ -101,28 +101,4 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;
 };
 
-inline const Acts::Transform3&
-ActsExamples::Generic::GenericDetectorElement::transform(
-    const Acts::GeometryContext& /*gctx*/) const {
-  return *m_elementTransform;
-}
-
-inline const Acts::Surface&
-ActsExamples::Generic::GenericDetectorElement::surface() const {
-  return *m_elementSurface;
-}
-
-inline Acts::Surface& ActsExamples::Generic::GenericDetectorElement::surface() {
-  return *m_elementSurface;
-}
-
-inline double ActsExamples::Generic::GenericDetectorElement::thickness() const {
-  return m_elementThickness;
-}
-
-inline ActsExamples::Generic::GenericDetectorElement::Identifier
-ActsExamples::Generic::GenericDetectorElement::identifier() const {
-  return m_elementIdentifier;
-}
-
-}  // namespace ActsExamples::Generic
+}  // namespace ActsExamples

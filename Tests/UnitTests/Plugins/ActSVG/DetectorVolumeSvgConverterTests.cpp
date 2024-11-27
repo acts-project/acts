@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(TubeCylindricalDetectorVolume) {
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
   // The volume definitions
-  Acts::ActsScalar rInner = 10.;
-  Acts::ActsScalar rOuter = 100.;
-  Acts::ActsScalar zHalfL = 300.;
+  double rInner = 10.;
+  double rOuter = 100.;
+  double zHalfL = 300.;
 
   Acts::Svg::Style portalStyle;
   portalStyle.fillColor = {255, 255, 255};
@@ -95,11 +95,11 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
   // The volume definitions
-  Acts::ActsScalar rInner = 10.;
-  Acts::ActsScalar rOuter = 100.;
-  Acts::ActsScalar zHalfL = 300.;
-  Acts::ActsScalar phiSector = std::numbers::pi / 4.;
-  std::vector<Acts::ActsScalar> avgPhi = {0., 0.75};
+  double rInner = 10.;
+  double rOuter = 100.;
+  double zHalfL = 300.;
+  double phiSector = std::numbers::pi / 4.;
+  std::vector<double> avgPhi = {0., 0.75};
   std::vector<std::string> avgPhiTag = {"zero", "nonzero"};
 
   Acts::Svg::Style portalStyle;

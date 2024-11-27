@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   sp1DCfg.g4World = world;
 
   auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
-  kdt1DOpt.range = Acts::RangeXD<1, Acts::ActsScalar>();
+  kdt1DOpt.range = Acts::RangeXD<1, double>();
   kdt1DOpt.range[0].set(8, 12);
   kdt1DOpt.binningValues = {Acts::BinningValue::binZ};
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   sp2DCfg.g4World = world;
 
   auto kdt2DOpt = Acts::Experimental::Geant4SurfaceProvider<2>::kdtOptions();
-  kdt2DOpt.range = Acts::RangeXD<2, Acts::ActsScalar>();
+  kdt2DOpt.range = Acts::RangeXD<2, double>();
   kdt2DOpt.range[0].set(8, 12);
   kdt2DOpt.range[1].set(armOffset - 5, armOffset + 100);
   kdt2DOpt.binningValues = {Acts::BinningValue::binZ};
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
           std::vector<std::string>{"b_pv"}, true);
 
   auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
-  kdt1DOpt.range = Acts::RangeXD<1, Acts::ActsScalar>();
+  kdt1DOpt.range = Acts::RangeXD<1, double>();
   kdt1DOpt.range[0].set(-100, 100);
   kdt1DOpt.binningValues = {Acts::BinningValue::binZ};
 

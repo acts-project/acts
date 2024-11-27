@@ -11,7 +11,6 @@
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
 #include <limits>
-#include <numeric>
 #include <ostream>
 #include <stdexcept>
 

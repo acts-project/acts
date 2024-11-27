@@ -29,7 +29,7 @@ Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
                                           const Transform3& absTransform,
                                           bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -38,28 +38,28 @@ Acts::detail::GeoTrdConverter::operator()(const PVConstLink& geoPV,
 
   // GeoTrd coordinates: x is the extrusion direction, y is orthogonal to the
   // symmetry axis and z is along the symmetry axis
-  ActsScalar halfX1 = geoTrd.getXHalfLength1();
-  ActsScalar halfX2 = geoTrd.getXHalfLength2();
-  ActsScalar halfY1 = geoTrd.getYHalfLength1();
-  ActsScalar halfY2 = geoTrd.getYHalfLength2();
-  ActsScalar halfZ = geoTrd.getZHalfLength();
+  double halfX1 = geoTrd.getXHalfLength1();
+  double halfX2 = geoTrd.getXHalfLength2();
+  double halfY1 = geoTrd.getYHalfLength1();
+  double halfY2 = geoTrd.getYHalfLength2();
+  double halfZ = geoTrd.getZHalfLength();
 
   // The diffs
-  ActsScalar diffX = std::abs(halfX2 - halfX1);
-  ActsScalar diffY = std::abs(halfY2 - halfY1);
+  double diffX = std::abs(halfX2 - halfX1);
+  double diffY = std::abs(halfY2 - halfY1);
 
   // If both X and Y are trapezoidal - consider
-  if (diffX > 2 * std::numeric_limits<ActsScalar>::epsilon() &&
-      diffY > 2 * std::numeric_limits<ActsScalar>::epsilon()) {
+  if (diffX > 2 * std::numeric_limits<double>::epsilon() &&
+      diffY > 2 * std::numeric_limits<double>::epsilon()) {
     throw std::invalid_argument(
         "GeoModelSurfaceConverter: GeoTrd conversion to Trapezoid "
         "ambiguous.");
   }
 
   // And its interpretation
-  ActsScalar minHalfX = unitLength * (diffX > diffY ? halfX1 : halfY1);
-  ActsScalar maxHalfX = unitLength * (diffX > diffY ? halfX2 : halfY2);
-  ActsScalar thickness = unitLength * (diffX > diffY ? diffY : diffX);
+  double minHalfX = unitLength * (diffX > diffY ? halfX1 : halfY1);
+  double maxHalfX = unitLength * (diffX > diffY ? halfX2 : halfY2);
+  double thickness = unitLength * (diffX > diffY ? diffY : diffX);
 
   // This is a convention of the TrapezoidBounds
   int swapZ = (maxHalfX < minHalfX) ? -1 : 1;

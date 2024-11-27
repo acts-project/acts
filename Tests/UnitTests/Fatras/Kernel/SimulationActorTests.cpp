@@ -43,15 +43,15 @@ using namespace ActsFatras;
 
 namespace {
 
-constexpr auto tol = 4 * std::numeric_limits<Particle::Scalar>::epsilon();
-constexpr auto inf = std::numeric_limits<Particle::Scalar>::infinity();
+constexpr auto tol = 4 * std::numeric_limits<double>::epsilon();
+constexpr auto inf = std::numeric_limits<double>::infinity();
 
 struct MockDecay {
-  Particle::Scalar properTimeLimit = inf;
+  double properTimeLimit = inf;
 
   template <typename generator_t>
-  constexpr Particle::Scalar generateProperTimeLimit(
-      generator_t & /*generator*/, const Particle &particle) const {
+  constexpr double generateProperTimeLimit(generator_t & /*generator*/,
+                                           const Particle &particle) const {
     return particle.properTime() + properTimeLimit;
   }
   template <typename generator_t>
@@ -96,26 +96,21 @@ struct MockInteractionList {
 };
 
 struct MockStepperState {
-  using Scalar = Acts::ActsScalar;
-  using Vector3 = Acts::ActsVector<3>;
-
-  Vector3 pos = Vector3::Zero();
-  Scalar time = 0;
-  Vector3 dir = Vector3::Zero();
-  Scalar p = 0;
+  Acts::Vector3 pos = Acts::Vector3::Zero();
+  double time = 0;
+  Acts::Vector3 dir = Acts::Vector3::Zero();
+  double p = 0;
 };
 
 struct MockStepper {
   using State = MockStepperState;
-  using Scalar = MockStepperState::Scalar;
-  using Vector3 = MockStepperState::Vector3;
 
   auto position(const State &state) const { return state.pos; }
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
   auto absoluteMomentum(const State &state) const { return state.p; }
-  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
-              Scalar time) {
+  void update(State &state, const Acts::Vector3 &pos, const Acts::Vector3 &dir,
+              double qop, double time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
@@ -171,10 +166,10 @@ struct Fixture {
   Barcode pid = Barcode().setVertexPrimary(12u).setParticle(3u);
   ProcessType proc = ProcessType::eUndefined;
   Acts::PdgParticle pdg = Acts::PdgParticle::eProton;
-  Particle::Scalar q = 1_e;
-  Particle::Scalar m = 1_GeV;
-  Particle::Scalar p = 1_GeV;
-  Particle::Scalar e;
+  double q = 1_e;
+  double m = 1_GeV;
+  double p = 1_GeV;
+  double e;
   Generator generator;
   std::shared_ptr<Acts::Surface> surface;
   Actor actor;

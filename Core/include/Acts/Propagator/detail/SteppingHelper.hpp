@@ -34,7 +34,7 @@ template <typename stepper_t>
 Acts::IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction navDir,
-    const BoundaryTolerance& boundaryTolerance, ActsScalar surfaceTolerance,
+    const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
     const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));

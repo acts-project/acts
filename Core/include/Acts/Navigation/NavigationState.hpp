@@ -77,7 +77,7 @@ struct NavigationState {
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();
 
   /// An overstep tolerance
-  ActsScalar overstepTolerance = -100 * UnitConstants::um;
+  double overstepTolerance = -100 * UnitConstants::um;
 
   /// Auxiliary attached information
   std::any auxiliary;

@@ -294,7 +294,7 @@ class DiscSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      ActsScalar tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
   ///
