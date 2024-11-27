@@ -23,20 +23,16 @@ class IMaterialDecorator;
 }  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
-namespace Generic {
-class GenericDetectorElement;
-}  // namespace Generic
-}  // namespace ActsExamples
 
-namespace ActsExamples::Contextual {
+class IContextDecorator;
+class GenericDetectorElement;
+
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
 class AlignedDetector {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config : public GenericDetector::Config {
@@ -69,15 +65,15 @@ class AlignedDetector {
       const Config& cfg,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 
-  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
+  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>&
   detectorStore() {
     return m_detectorStore;
   }
 
  private:
   /// The Store of the detector elements (lifetime: job)
-  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
+  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
       m_detectorStore;
 };
 
-}  // namespace ActsExamples::Contextual
+}  // namespace ActsExamples

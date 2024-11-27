@@ -35,13 +35,6 @@ if(ACTS_SOURCELINK_SBO_SIZE)
     )
 endif()
 
-if(ACTS_CUSTOM_SCALARTYPE)
-    target_compile_definitions(
-        ActsCore
-        PUBLIC -DACTS_CUSTOM_SCALARTYPE=${ACTS_CUSTOM_SCALARTYPE}
-    )
-endif()
-
 if(ACTS_LOG_FAILURE_THRESHOLD)
     message(
         STATUS
