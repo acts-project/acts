@@ -29,17 +29,14 @@ class IMaterialDecorator;
 }  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
 
-namespace ActsExamples {
+class IContextDecorator;
 
 struct TGeoDetector {
   using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
 
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   /// The Store of the detector elements (lifetime: job)

@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -64,7 +65,7 @@ class DiscSurface : public RegularSurface {
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
   DiscSurface(const Transform3& transform, double rmin, double rmax,
-              double hphisec = M_PI);
+              double hphisec = std::numbers::pi);
 
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -293,7 +294,7 @@ class DiscSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      ActsScalar tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
   ///

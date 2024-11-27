@@ -26,7 +26,7 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   /// @param regionCreators are the region creators
   GdmlDetectorConstruction(
       std::string path,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
 
   /// Read the file and parse it to construct the Geant4 description
   ///
@@ -38,17 +38,17 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   /// Path to the Gdml file
   std::string m_path;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// Cached world volume
   G4VPhysicalVolume* m_world = nullptr;
 };
 
 class GdmlDetectorConstructionFactory final
-    : public DetectorConstructionFactory {
+    : public Geant4::DetectorConstructionFactory {
  public:
   GdmlDetectorConstructionFactory(
       std::string path,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 
@@ -56,7 +56,7 @@ class GdmlDetectorConstructionFactory final
   /// Path to the Gdml file
   std::string m_path;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples

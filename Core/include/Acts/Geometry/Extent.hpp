@@ -24,7 +24,7 @@
 
 namespace Acts {
 
-using Envelope = std::array<ActsScalar, 2>;
+using Envelope = std::array<double, 2>;
 
 constexpr Envelope zeroEnvelope = {0, 0};
 
@@ -182,19 +182,19 @@ class Extent {
   /// @param bValue the binning identification
   /// @param min the minimum parameter
   /// @param max the maximum parameter
-  void set(BinningValue bValue, ActsScalar min, ActsScalar max);
+  void set(BinningValue bValue, double min, double max);
 
   /// Set a min value for a dedicated binning value
   ///
   /// @param bValue the binning identification
   /// @param min the minimum parameter
-  void setMin(BinningValue bValue, ActsScalar min);
+  void setMin(BinningValue bValue, double min);
 
   /// Set a max value for a dedicated binning value
   ///
   /// @param bValue the binning identification
   /// @param max the maximum parameter
-  void setMax(BinningValue bValue, ActsScalar max);
+  void setMax(BinningValue bValue, double max);
 
   /// (re-)Set the envelope
   ///
@@ -213,10 +213,10 @@ class Extent {
   /// @param bValue is the binning value to be returned
   ///
   /// @return a one dimensional arrange
-  Range1D<ActsScalar> range(BinningValue bValue) const;
+  Range1D<double> range(BinningValue bValue) const;
 
   /// Return the N-dimension range
-  const RangeXD<numBinningValues(), ActsScalar>& range() const;
+  const RangeXD<numBinningValues(), double>& range() const;
 
   /// Return an D-dimensional sub range according to the
   /// the given binvalues
@@ -224,9 +224,9 @@ class Extent {
   /// @param binValues the binning values
   /// @return the sub range
   template <unsigned int kSUBDIM>
-  RangeXD<kSUBDIM, ActsScalar> range(
+  RangeXD<kSUBDIM, double> range(
       const std::array<BinningValue, kSUBDIM>& binValues) const {
-    RangeXD<kSUBDIM, ActsScalar> rRange;
+    RangeXD<kSUBDIM, double> rRange;
     for (auto [i, v] : enumerate(binValues)) {
       rRange[i] = range(v);
     }
@@ -242,27 +242,27 @@ class Extent {
   /// Return the histogram store
   ///
   /// The histogram store can be used for automated binning detection
-  const std::array<std::vector<ActsScalar>, numBinningValues()>&
-  valueHistograms() const;
+  const std::array<std::vector<double>, numBinningValues()>& valueHistograms()
+      const;
 
   /// Access the minimum parameter
   ///
   /// @param bValue the binning identification
-  ActsScalar min(BinningValue bValue) const {
+  double min(BinningValue bValue) const {
     return m_range[toUnderlying(bValue)].min();
   }
 
   /// Access the maximum parameter
   ///
   /// @param bValue the binning identification
-  ActsScalar max(BinningValue bValue) const {
+  double max(BinningValue bValue) const {
     return m_range[toUnderlying(bValue)].max();
   }
 
   /// Access the midpoint
   ///
   /// @param bValue the binning identification
-  ActsScalar medium(BinningValue bValue) const {
+  double medium(BinningValue bValue) const {
     return 0.5 * (m_range[toUnderlying(bValue)].min() +
                   m_range[toUnderlying(bValue)].max());
   }
@@ -270,7 +270,7 @@ class Extent {
   /// Access the parameter interval (i.e. the range span)
   ///
   /// @param bValue the binning identification
-  ActsScalar interval(BinningValue bValue) const {
+  double interval(BinningValue bValue) const {
     return m_range[toUnderlying(bValue)].size();
   }
 
@@ -318,18 +318,18 @@ class Extent {
   /// A bitset that remembers the constraint values
   std::bitset<numBinningValues()> m_constrains{0};
   /// The actual range store
-  RangeXD<numBinningValues(), ActsScalar> m_range;
+  RangeXD<numBinningValues(), double> m_range;
   /// A potential envelope
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   /// (Optional) Value histograms for bin detection
-  std::array<std::vector<ActsScalar>, numBinningValues()> m_valueHistograms;
+  std::array<std::vector<double>, numBinningValues()> m_valueHistograms;
 };
 
-inline Range1D<ActsScalar> Acts::Extent::range(BinningValue bValue) const {
+inline Range1D<double> Acts::Extent::range(BinningValue bValue) const {
   return m_range[toUnderlying(bValue)];
 }
 
-inline const RangeXD<numBinningValues(), ActsScalar>& Extent::range() const {
+inline const RangeXD<numBinningValues(), double>& Extent::range() const {
   return m_range;
 }
 
@@ -341,7 +341,7 @@ inline const ExtentEnvelope& Extent::envelope() const {
   return m_envelope;
 }
 
-inline const std::array<std::vector<ActsScalar>, numBinningValues()>&
+inline const std::array<std::vector<double>, numBinningValues()>&
 Extent::valueHistograms() const {
   return m_valueHistograms;
 }

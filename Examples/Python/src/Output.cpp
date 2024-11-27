@@ -12,8 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
@@ -49,11 +48,11 @@
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
 
-#include <array>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -193,8 +192,8 @@ void addOutput(Context& ctx) {
                              inputSummaryCollection, filePath, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootParticleWriter, mex,
-                             "RootParticleWriter", inputParticles,
-                             inputParticlesFinal, filePath, fileMode, treeName);
+                             "RootParticleWriter", inputParticles, filePath,
+                             fileMode, treeName);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootVertexWriter, mex,
                              "RootVertexWriter", inputVertices, filePath,
@@ -268,13 +267,6 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    c.def("addBoundIndicesFromDigiConfig",
-          [](Writer::Config& self, const DigitizationConfig& digiCfg) {
-            self.boundIndices =
-                Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>>(
-                    digiCfg.getBoundIndices());
-          });
-
     ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputClusters);
@@ -282,13 +274,20 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(filePath);
     ACTS_PYTHON_MEMBER(fileMode);
-    ACTS_PYTHON_MEMBER(boundIndices);
     ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_STRUCT_END();
   }
 
   py::class_<IMaterialWriter, std::shared_ptr<IMaterialWriter>>(
       mex, "IMaterialWriter");
+
+  py::class_<ActsExamples::ITrackParamsLookupWriter,
+             std::shared_ptr<ActsExamples::ITrackParamsLookupWriter>>(
+      mex, "ITrackParamsLookupWriter");
+
+  py::class_<ActsExamples::ITrackParamsLookupReader,
+             std::shared_ptr<ActsExamples::ITrackParamsLookupReader>>(
+      mex, "ITrackParamsLookupReader");
 
   {
     using Writer = ActsExamples::RootMaterialWriter;

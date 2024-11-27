@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <fstream>
 #include <mutex>
+#include <numbers>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -30,9 +31,9 @@ namespace Acts {
 namespace detail {
 
 struct GaussianComponent {
-  ActsScalar weight = 0.0;
-  ActsScalar mean = 0.0;
-  ActsScalar var = 0.0;
+  double weight = 0.0;
+  double mean = 0.0;
+  double var = 0.0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
@@ -72,7 +73,7 @@ struct BetheHeitlerApproxSingleCmp {
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
-  constexpr bool validXOverX0(ActsScalar x) const {
+  constexpr bool validXOverX0(double x) const {
     return x < 0.002;
     ;
   }
@@ -81,12 +82,12 @@ struct BetheHeitlerApproxSingleCmp {
   /// Bethe-Heitler-Distribution
   ///
   /// @param x pathlength in terms of the radiation length
-  static auto mixture(const ActsScalar x) {
+  static auto mixture(const double x) {
     std::array<detail::GaussianComponent, 1> ret{};
 
     ret[0].weight = 1.0;
 
-    const double c = x / std::log(2);
+    const double c = x / std::numbers::ln2;
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
@@ -108,9 +109,9 @@ class AtlasBetheHeitlerApprox {
 
  public:
   struct PolyData {
-    std::array<ActsScalar, PolyDegree + 1> weightCoeffs;
-    std::array<ActsScalar, PolyDegree + 1> meanCoeffs;
-    std::array<ActsScalar, PolyDegree + 1> varCoeffs;
+    std::array<double, PolyDegree + 1> weightCoeffs;
+    std::array<double, PolyDegree + 1> meanCoeffs;
+    std::array<double, PolyDegree + 1> varCoeffs;
   };
 
   using Data = std::array<PolyData, NComponents>;
@@ -159,7 +160,7 @@ class AtlasBetheHeitlerApprox {
   /// Checks if an input is valid for the parameterization
   ///
   /// @param x pathlength in terms of the radiation length
-  constexpr bool validXOverX0(ActsScalar x) const {
+  constexpr bool validXOverX0(double x) const {
     if (m_clampToRange) {
       return true;
     } else {
@@ -171,7 +172,7 @@ class AtlasBetheHeitlerApprox {
   /// that the sum of all weights is 1
   ///
   /// @param x pathlength in terms of the radiation length
-  auto mixture(ActsScalar x) const {
+  auto mixture(double x) const {
     using Array =
         boost::container::static_vector<detail::GaussianComponent, NComponents>;
 
@@ -180,9 +181,9 @@ class AtlasBetheHeitlerApprox {
     }
 
     // Build a polynom
-    auto poly = [](ActsScalar xx,
-                   const std::array<ActsScalar, PolyDegree + 1> &coeffs) {
-      ActsScalar sum{0.};
+    auto poly = [](double xx,
+                   const std::array<double, PolyDegree + 1> &coeffs) {
+      double sum{0.};
       for (const auto c : coeffs) {
         sum = xx * sum + c;
       }
@@ -194,7 +195,7 @@ class AtlasBetheHeitlerApprox {
     auto make_mixture = [&](const Data &data, double xx, bool transform) {
       // Value initialization should garanuee that all is initialized to zero
       Array ret(NComponents);
-      ActsScalar weight_sum = 0;
+      double weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
         // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)

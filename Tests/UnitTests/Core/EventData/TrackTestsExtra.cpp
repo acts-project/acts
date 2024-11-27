@@ -457,8 +457,6 @@ BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {
   auto track1 = tc.makeTrack();
   auto ts = track1.appendTrackState(TrackStatePropMask::Calibrated);
   ts.allocateCalibrated(kMeasurementSize);
-  ts.calibrated<kMeasurementSize>() = Vector3::Ones();
-  ts.calibratedCovariance<kMeasurementSize>() = SquareMatrix3::Identity();
   ts.setSubspaceIndices(BoundSubspaceIndices{});
 
   auto tsCopy = track1.appendTrackState(TrackStatePropMask::Calibrated);

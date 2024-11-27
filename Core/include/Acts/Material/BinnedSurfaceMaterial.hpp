@@ -13,9 +13,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-#include <cstddef>
 #include <iosfwd>
-#include <vector>
 
 namespace Acts {
 
@@ -83,10 +81,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Destructor
   ~BinnedSurfaceMaterial() override = default;
 
-  /// Scale operator
+  /// Scale operation
   ///
-  /// @param scale is the scale factor for the full material
-  BinnedSurfaceMaterial& operator*=(double scale) final;
+  /// @param factor is the scale factor for the full material
+  BinnedSurfaceMaterial& scale(double factor) final;
 
   /// Return the BinUtility
   const BinUtility& binUtility() const;

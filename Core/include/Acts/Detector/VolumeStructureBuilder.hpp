@@ -42,7 +42,7 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
     /// The starting transform
     Transform3 transform = Transform3::Identity();
     /// The values (if already defined)
-    std::vector<ActsScalar> boundValues = {};
+    std::vector<double> boundValues = {};
     /// The optional extent to feed into the values
     std::optional<Extent> extent = std::nullopt;
     /// Some auxiliary information

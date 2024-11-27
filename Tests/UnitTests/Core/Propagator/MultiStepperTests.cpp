@@ -38,6 +38,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <random>
 #include <stdexcept>
@@ -127,11 +128,11 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
 
   // note that we are using the default random device
   std::mt19937 gen;
-  std::uniform_real_distribution<> locDis(-10.0, 10.0);
-  std::uniform_real_distribution<> phiDis(-M_PI, M_PI);
-  std::uniform_real_distribution<> thetaDis(0, M_PI);
-  std::uniform_real_distribution<> qOverPDis(-10.0, 10.0);
-  std::uniform_real_distribution<> timeDis(0.0, 100.0);
+  std::uniform_real_distribution<> locDis(-10., 10.);
+  std::uniform_real_distribution<> phiDis(-std::numbers::pi, std::numbers::pi);
+  std::uniform_real_distribution<> thetaDis(0., std::numbers::pi);
+  std::uniform_real_distribution<> qOverPDis(-10., 10.);
+  std::uniform_real_distribution<> timeDis(0., 100.);
 
   for (auto i = 0ul; i < n; ++i) {
     BoundVector params = BoundVector::Zero();
@@ -307,7 +308,7 @@ void test_multi_stepper_vs_eigen_stepper() {
   SingleStepper single_stepper(defaultBField);
 
   for (auto cmp : multi_stepper.componentIterable(multi_state)) {
-    cmp.status() = Acts::Intersection3D::Status::reachable;
+    cmp.status() = Acts::IntersectionStatus::reachable;
   }
 
   // Do some steps and check that the results match
@@ -451,9 +452,9 @@ void test_multi_stepper_surface_status_update() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundPhi] = M_PI;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
@@ -482,14 +483,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *right_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::reachable);
 
     BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), 1.0);
     BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), -1.0);
@@ -511,14 +512,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *right_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::onSurface);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::onSurface);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::onSurface);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::onSurface);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::onSurface);
   }
 
   // Start surface should be reachable
@@ -527,14 +528,14 @@ void test_multi_stepper_surface_status_update() {
         multi_state, *start_surface, 0, Direction::Forward,
         BoundaryTolerance::Infinite());
 
-    BOOST_CHECK_EQUAL(status, Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
     auto cmp_iterable = multi_stepper.constComponentIterable(multi_state);
     auto cmp_1 = *cmp_iterable.begin();
     auto cmp_2 = *(++cmp_iterable.begin());
 
-    BOOST_CHECK_EQUAL(cmp_1.status(), Intersection3D::Status::reachable);
-    BOOST_CHECK_EQUAL(cmp_2.status(), Intersection3D::Status::reachable);
+    BOOST_CHECK_EQUAL(cmp_1.status(), IntersectionStatus::reachable);
+    BOOST_CHECK_EQUAL(cmp_2.status(), IntersectionStatus::reachable);
 
     BOOST_CHECK_EQUAL(cmp_1.cmp.state.stepSize.value(), -1.0);
     BOOST_CHECK_EQUAL(cmp_2.cmp.state.stepSize.value(), 1.0);
@@ -563,9 +564,9 @@ void test_component_bound_state() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
-  std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
-  std::get<BoundVector>(cmps[1])[eBoundPhi] = M_PI;
-  std::get<BoundVector>(cmps[1])[eBoundTheta] = M_PI_2;
+  std::get<BoundVector>(cmps[0])[eBoundTheta] = std::numbers::pi / 2.;
+  std::get<BoundVector>(cmps[1])[eBoundPhi] = std::numbers::pi;
+  std::get<BoundVector>(cmps[1])[eBoundTheta] = std::numbers::pi / 2.;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 

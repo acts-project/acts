@@ -8,20 +8,16 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
-#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
-#include "ActsExamples/Utilities/HitSelector.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
-#include <array>
-#include <cstddef>
 #include <memory>
 
 #include <pybind11/pybind11.h>
@@ -45,48 +41,6 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
       inputMeasurementParticlesMap, outputProtoTracks);
 
-  {
-    using Alg = ActsExamples::TruthSeedSelector;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TruthSeedSelector")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(rhoMin);
-    ACTS_PYTHON_MEMBER(rhoMax);
-    ACTS_PYTHON_MEMBER(zMin);
-    ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(etaMin);
-    ACTS_PYTHON_MEMBER(etaMax);
-    ACTS_PYTHON_MEMBER(absEtaMin);
-    ACTS_PYTHON_MEMBER(absEtaMax);
-    ACTS_PYTHON_MEMBER(ptMin);
-    ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(keepNeutral);
-    ACTS_PYTHON_MEMBER(nHitsMin);
-    ACTS_PYTHON_MEMBER(nHitsMax);
-    ACTS_PYTHON_STRUCT_END();
-
-    pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
-    pythonRangeProperty(c, "z", &Config::zMin, &Config::zMax);
-    pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
-    pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
-    pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
-    pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
-    pythonRangeProperty(c, "nHits", &Config::nHitsMin, &Config::nHitsMax);
-  }
-
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
       outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
@@ -108,9 +62,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(inputParticlesFinal);
     ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
     ACTS_PYTHON_MEMBER(absZMin);
@@ -133,6 +85,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_MEMBER(excludeAbsPdgs);
+    ACTS_PYTHON_MEMBER(minPrimaryVertexId);
+    ACTS_PYTHON_MEMBER(maxPrimaryVertexId);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -145,6 +99,8 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     pythonRangeProperty(c, "measurements", &Config::measurementsMin,
                         &Config::measurementsMax);
+    pythonRangeProperty(c, "primaryVertexId", &Config::minPrimaryVertexId,
+                        &Config::maxPrimaryVertexId);
   }
 
   {
@@ -202,7 +158,10 @@ void addTruthTracking(Context& ctx) {
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
-                                inputHits, outputHits, maxTime);
+                                inputHits, inputParticlesSelected, outputHits,
+                                minX, maxX, minY, maxY, minZ, maxZ, minR, maxR,
+                                minTime, maxTime, minEnergyLoss, maxEnergyLoss,
+                                minPrimaryVertexId, maxPrimaryVertexId);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,

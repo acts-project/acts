@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
                                         BoundaryTolerance::Infinite())
                             .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
-                                   Intersection3D::Status::reachable};
+                                   IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection.isValid());
   CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersect.position(),
                   1e-9);
@@ -597,7 +597,7 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -641,7 +641,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 

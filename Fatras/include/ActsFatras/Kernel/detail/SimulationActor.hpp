@@ -53,7 +53,7 @@ struct SimulationActor {
   Particle initialParticle;
 
   /// Relative tolerance of the particles proper time limit
-  Particle::Scalar properTimeRelativeTolerance = 1e-3;
+  double properTimeRelativeTolerance = 1e-3;
 
   /// Simulate the interaction with a single surface.
   ///
@@ -180,7 +180,7 @@ struct SimulationActor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar{0.5} * (before.fourPosition() + after.fourPosition()),
+          0.5 * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
 
       after.setNumberOfHits(result.hits.size());
