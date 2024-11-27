@@ -12,8 +12,9 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
-ActsExamples::HitSelector::HitSelector(const Config& config,
-                                       Acts::Logging::Level level)
+namespace ActsExamples {
+
+HitSelector::HitSelector(const Config& config, Acts::Logging::Level level)
     : IAlgorithm("HitSelector", level), m_cfg(config) {
   m_inputHits.initialize(m_cfg.inputHits);
   m_inputParticlesSelected.maybeInitialize(m_cfg.inputParticlesSelected);
@@ -33,8 +34,7 @@ ActsExamples::HitSelector::HitSelector(const Config& config,
                                              << ")");
 }
 
-ActsExamples::ProcessCode ActsExamples::HitSelector::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode HitSelector::execute(const AlgorithmContext& ctx) const {
   const SimHitContainer& hits = m_inputHits(ctx);
   const SimParticleContainer* particlesSelected =
       m_inputParticlesSelected.isInitialized() ? &m_inputParticlesSelected(ctx)
@@ -73,7 +73,9 @@ ActsExamples::ProcessCode ActsExamples::HitSelector::execute(
     }
   }
 
-  SimHitContainer selectedHits(unorderedHits.begin(), unorderedHits.end());
+  // hits are still sorted after filtering
+  SimHitContainer selectedHits(boost::container::ordered_range_t{},
+                               unorderedHits.begin(), unorderedHits.end());
 
   ACTS_DEBUG("selected " << selectedHits.size() << " from " << hits.size()
                          << " hits");
@@ -82,3 +84,5 @@ ActsExamples::ProcessCode ActsExamples::HitSelector::execute(
 
   return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples
