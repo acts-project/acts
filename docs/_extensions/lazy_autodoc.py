@@ -117,6 +117,7 @@ def run() -> None:
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
         "Acts::SourceLink",
+        "Acts::JsonDetectorElement",
     }
 
     role_instances["func"] = {
