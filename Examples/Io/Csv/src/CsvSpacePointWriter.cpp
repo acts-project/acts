@@ -27,7 +27,7 @@
 ActsExamples::CsvSpacePointWriter::CsvSpacePointWriter(
     const ActsExamples::CsvSpacePointWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputSpacepoints, "CsvSpacepointWriter", level),
+    : WriterT(config.inputSpacepoints, "CsvSpacePointWriter", level),
       m_cfg(config) {}
 
 ActsExamples::CsvSpacePointWriter::~CsvSpacePointWriter() = default;
