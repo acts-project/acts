@@ -103,14 +103,14 @@ if __name__ == "__main__":
     from acts.examples.odd import getOpenDataDetector
 
     detector = getOpenDataDetector()
-    trackingGeometry = detector.trackingGeometry()
+    trackingGeometry = detector.gen1Geometry()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
 
     ## GenericDetector
     # detector = acts.examples.GenericDetectorFactory().buildDetector()
-    # trackingGeometry = detector.trackingGeometry()
+    # trackingGeometry = detector.gen1Geometry()
     # digiConfigFile = (
     #     srcdir
     #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

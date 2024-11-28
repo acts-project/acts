@@ -106,7 +106,7 @@ if "__main__" == __name__:
     )
 
     detector = getOpenDataDetector(materialDecorator)
-    trackingGeometry = detector.trackingGeometry()
+    trackingGeometry = detector.gen1Geometry()
     decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
