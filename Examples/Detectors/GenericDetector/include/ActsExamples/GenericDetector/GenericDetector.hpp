@@ -24,17 +24,12 @@ namespace ActsExamples {
 class IContextDecorator;
 }  // namespace ActsExamples
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
+
 class GenericDetectorElement;
-}  // namespace ActsExamples::Generic
 
 struct GenericDetector {
-  using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
-  using DetectorElementPtr = std::shared_ptr<DetectorElement>;
-  using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
-
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
@@ -46,9 +41,12 @@ struct GenericDetector {
   };
 
   /// The Store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
+  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
+      detectorStore;
 
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const Config& cfg,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
+
+}  // namespace ActsExamples

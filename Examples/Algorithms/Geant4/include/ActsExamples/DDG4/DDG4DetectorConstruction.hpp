@@ -20,17 +20,16 @@ class G4VPhysicalVolume;
 namespace dd4hep {
 class Detector;
 }
+
 namespace ActsExamples {
 
-namespace DD4hep {
 struct DD4hepDetector;
-}
 
 /// Construct the Geant4 detector from a DD4hep description.
 class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   DDG4DetectorConstruction(
-      std::shared_ptr<DD4hep::DD4hepDetector> detector,
+      std::shared_ptr<DD4hepDetector> detector,
       std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
   ~DDG4DetectorConstruction() final;
 
@@ -45,7 +44,7 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
 
  private:
   /// The Acts DD4hep detector instance
-  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
+  std::shared_ptr<DD4hepDetector> m_detector;
   /// Region creators
   std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
@@ -59,7 +58,7 @@ class DDG4DetectorConstructionFactory final
     : public Geant4::DetectorConstructionFactory {
  public:
   DDG4DetectorConstructionFactory(
-      std::shared_ptr<DD4hep::DD4hepDetector> detector,
+      std::shared_ptr<DD4hepDetector> detector,
       std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
   ~DDG4DetectorConstructionFactory() final;
 
@@ -67,7 +66,7 @@ class DDG4DetectorConstructionFactory final
 
  private:
   /// The Acts DD4hep detector instance
-  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
+  std::shared_ptr<DD4hepDetector> m_detector;
   /// Region creators
   std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };

@@ -71,7 +71,7 @@ BOOST_DATA_TEST_CASE(Baseline,
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::make(strategies)),
                      angle, rotate, shift, offset, strategy) {
-  ActsScalar hlZ = 400_mm;
+  double hlZ = 400_mm;
 
   // Cylinder volumes which already line up, but have different1 radii
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, hlZ);
@@ -176,15 +176,15 @@ BOOST_DATA_TEST_CASE(Baseline,
       const auto* gapBounds2 =
           dynamic_cast<const CylinderVolumeBounds*>(&gap2->volumeBounds());
 
-      ActsScalar gapHlZ = (shift - 1.0) * hlZ;
+      double gapHlZ = (shift - 1.0) * hlZ;
 
       BOOST_CHECK(std::abs(gapBounds1->get(CylinderVolumeBounds::eHalfLengthZ) -
                            gapHlZ) < 1e-10);
       BOOST_CHECK(std::abs(gapBounds2->get(CylinderVolumeBounds::eHalfLengthZ) -
                            gapHlZ) < 1e-10);
 
-      ActsScalar gap1Z = (-2 * hlZ * shift) + hlZ + gapHlZ;
-      ActsScalar gap2Z = (2 * hlZ * shift) - hlZ - gapHlZ;
+      double gap1Z = (-2 * hlZ * shift) + hlZ + gapHlZ;
+      double gap2Z = (2 * hlZ * shift) - hlZ - gapHlZ;
 
       Transform3 gap1Transform = base * Translation3{0_mm, 0_mm, gap1Z};
       Transform3 gap2Transform = base * Translation3{0_mm, 0_mm, gap2Z};
@@ -211,14 +211,14 @@ BOOST_DATA_TEST_CASE(Baseline,
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
-      ActsScalar wGap = (shift - 1.0) * hlZ * 2;
+      double wGap = (shift - 1.0) * hlZ * 2;
 
       // Volume 1 got bigger and shifted right
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 2.0);
-      ActsScalar pZ1 = -2 * hlZ * shift + wGap / 2.0;
+      double pZ1 = -2 * hlZ * shift + wGap / 2.0;
       Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-14);
@@ -228,7 +228,7 @@ BOOST_DATA_TEST_CASE(Baseline,
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 2.0);
-      ActsScalar pZ2 = wGap / 2.0;
+      double pZ2 = wGap / 2.0;
       Transform3 expectedTransform2 = base * Translation3{0_mm, 0_mm, pZ2};
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
                            expectedTransform2.matrix(), 1e-10, 1e-14);
@@ -238,7 +238,7 @@ BOOST_DATA_TEST_CASE(Baseline,
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ);
-      ActsScalar pZ3 = 2 * hlZ * shift;
+      double pZ3 = 2 * hlZ * shift;
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
@@ -246,14 +246,14 @@ BOOST_DATA_TEST_CASE(Baseline,
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
-      ActsScalar wGap = (shift - 1.0) * hlZ * 2;
+      double wGap = (shift - 1.0) * hlZ * 2;
 
       // Volume 1 stayed the same
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ);
-      ActsScalar pZ1 = -2 * hlZ * shift;
+      double pZ1 = -2 * hlZ * shift;
       Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-14);
@@ -263,7 +263,7 @@ BOOST_DATA_TEST_CASE(Baseline,
           dynamic_cast<const CylinderVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds2->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 2.0);
-      ActsScalar pZ2 = -wGap / 2.0;
+      double pZ2 = -wGap / 2.0;
       Transform3 expectedTransform2 = base * Translation3{0_mm, 0_mm, pZ2};
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
                            expectedTransform2.matrix(), 1e-10, 1e-14);
@@ -273,7 +273,7 @@ BOOST_DATA_TEST_CASE(Baseline,
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 2.0);
-      ActsScalar pZ3 = 2 * hlZ * shift - wGap / 2.0;
+      double pZ3 = 2 * hlZ * shift - wGap / 2.0;
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
@@ -281,14 +281,14 @@ BOOST_DATA_TEST_CASE(Baseline,
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
-      ActsScalar wGap = (shift - 1.0) * hlZ * 2;
+      double wGap = (shift - 1.0) * hlZ * 2;
 
       // Volume 1 got bigger and shifted right
       auto newBounds1 =
           dynamic_cast<const CylinderVolumeBounds*>(&vol1->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds1->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 4.0);
-      ActsScalar pZ1 = -2 * hlZ * shift + wGap / 4.0;
+      double pZ1 = -2 * hlZ * shift + wGap / 4.0;
       Transform3 expectedTransform1 = base * Translation3{0_mm, 0_mm, pZ1};
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
                            expectedTransform1.matrix(), 1e-10, 1e-14);
@@ -306,7 +306,7 @@ BOOST_DATA_TEST_CASE(Baseline,
           dynamic_cast<const CylinderVolumeBounds*>(&vol3->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds3->get(CylinderVolumeBounds::eHalfLengthZ),
                         hlZ + wGap / 4.0);
-      ActsScalar pZ3 = 2 * hlZ * shift - wGap / 4.0;
+      double pZ3 = 2 * hlZ * shift - wGap / 4.0;
       Transform3 expectedTransform3 = base * Translation3{0_mm, 0_mm, pZ3};
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
@@ -315,12 +315,12 @@ BOOST_DATA_TEST_CASE(Baseline,
 }
 
 BOOST_AUTO_TEST_CASE(Asymmetric) {
-  ActsScalar hlZ1 = 200_mm;
-  ActsScalar pZ1 = -1100_mm;
-  ActsScalar hlZ2 = 600_mm;
-  ActsScalar pZ2 = -200_mm;
-  ActsScalar hlZ3 = 400_mm;
-  ActsScalar pZ3 = 850_mm;
+  double hlZ1 = 200_mm;
+  double pZ1 = -1100_mm;
+  double hlZ2 = 600_mm;
+  double pZ2 = -200_mm;
+  double hlZ3 = 400_mm;
+  double pZ3 = 850_mm;
 
   // Cylinder volumes which already line up, but have different1 radii
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, hlZ1);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric) {
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                     (std::abs(pZ1 - hlZ1) + pZ3 + hlZ3) / 2.0);
 
-  ActsScalar midZ = (pZ1 - hlZ1 + pZ3 + hlZ3) / 2.0;
+  double midZ = (pZ1 - hlZ1 + pZ3 + hlZ3) / 2.0;
   Transform3 expectedTransform{Translation3{0_mm, 0_mm, midZ}};
   CHECK_CLOSE_OR_SMALL(cylStack.transform().matrix(),
                        expectedTransform.matrix(), 1e-10, 1e-14);
@@ -363,9 +363,9 @@ BOOST_AUTO_TEST_CASE(Asymmetric) {
 
 BOOST_DATA_TEST_CASE(RotationInZ, boost::unit_test::data::make(strategies),
                      strategy) {
-  ActsScalar hlZ = 400_mm;
-  ActsScalar gap = 100_mm;
-  ActsScalar shift = 300_mm;
+  double hlZ = 400_mm;
+  double gap = 100_mm;
+  double shift = 300_mm;
 
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, hlZ);
   auto bounds2 = std::make_shared<CylinderVolumeBounds>(200_mm, 300_mm, hlZ);
@@ -450,7 +450,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
                       boost::unit_test::data::make(-100_mm, 0_mm, 100_mm) *
                       boost::unit_test::data::make(resizeStrategies)),
                      angle, offset, zshift, strategy) {
-  ActsScalar hlZ = 400_mm;
+  double hlZ = 400_mm;
 
   // Cylinder volumes which already line up, but have different1 radii
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 600_mm, hlZ);
@@ -989,10 +989,10 @@ BOOST_DATA_TEST_CASE(Baseline,
                                                    Vector3{0_mm, 0_mm, 20_mm}) *
                       boost::unit_test::data::make(strategies)),
                      angle, rotate, f, offset, strategy) {
-  ActsScalar hlZ = 400_mm;
+  double hlZ = 400_mm;
 
-  ActsScalar fInner = 1.0 + f;
-  ActsScalar fOuter = 1.0 - f;
+  double fInner = 1.0 + f;
+  double fOuter = 1.0 - f;
 
   // Cylinder volumes which already line up in r but have different z and hl
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(fInner * 100_mm,
@@ -1052,7 +1052,7 @@ BOOST_DATA_TEST_CASE(Baseline,
                     fInner * 100_mm);
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eMaxR),
                     fOuter * 900_mm);
-  ActsScalar expectedHalfLengthZ = (40_mm + 30_mm + 2 * hlZ) / 2.0;
+  double expectedHalfLengthZ = (40_mm + 30_mm + 2 * hlZ) / 2.0;
   BOOST_CHECK_EQUAL(stackBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                     expectedHalfLengthZ);
 
@@ -1092,13 +1092,13 @@ BOOST_DATA_TEST_CASE(Baseline,
     const auto* bBounds =
         dynamic_cast<const CylinderVolumeBounds*>(&b->volumeBounds());
 
-    ActsScalar aMidR = (aBounds->get(CylinderVolumeBounds::eMinR) +
-                        aBounds->get(CylinderVolumeBounds::eMaxR)) /
-                       2.0;
+    double aMidR = (aBounds->get(CylinderVolumeBounds::eMinR) +
+                    aBounds->get(CylinderVolumeBounds::eMaxR)) /
+                   2.0;
 
-    ActsScalar bMidR = (bBounds->get(CylinderVolumeBounds::eMinR) +
-                        bBounds->get(CylinderVolumeBounds::eMaxR)) /
-                       2.0;
+    double bMidR = (bBounds->get(CylinderVolumeBounds::eMinR) +
+                    bBounds->get(CylinderVolumeBounds::eMaxR)) /
+                   2.0;
 
     BOOST_CHECK_LT(aMidR, bMidR);
   }
@@ -1237,7 +1237,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
                       boost::unit_test::data::make(-100_mm, 0_mm, 100_mm) *
                       boost::unit_test::data::make(resizeStrategies)),
                      angle, offset, zshift, strategy) {
-  ActsScalar hlZ = 400_mm;
+  double hlZ = 400_mm;
 
   // Cylinder volumes which already line up in r but have different z and hl
   auto bounds1 = std::make_shared<CylinderVolumeBounds>(100_mm, 300_mm, hlZ);

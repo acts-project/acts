@@ -30,11 +30,9 @@ void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
     using namespace Acts;
     constexpr int Size = decltype(N)::value;
 
-    trackState.allocateCalibrated(Size);
-    trackState.template calibrated<Size>() =
-        sl.state.template calibrated<Size>();
-    trackState.template calibratedCovariance<Size>() =
-        sl.state.template calibratedCovariance<Size>();
+    trackState.allocateCalibrated(
+        sl.state.template calibrated<Size>().eval(),
+        sl.state.template calibratedCovariance<Size>().eval());
   });
 
   trackState.setBoundSubspaceIndices(sl.state.boundSubspaceIndices());
