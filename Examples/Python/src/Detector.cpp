@@ -221,6 +221,12 @@ void addDetector(Context& ctx) {
 
     patchKwargsConstructor(c);
   }
+
+  {
+    py::class_<Acts::DetectorElementBase,
+               std::shared_ptr<Acts::DetectorElementBase>>(
+        mex, "DetectorElementBase");
+  }
 }
 
 }  // namespace Acts::Python
