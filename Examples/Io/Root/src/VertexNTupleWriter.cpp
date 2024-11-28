@@ -345,24 +345,24 @@ ProcessCode VertexNTupleWriter::writeT(
   };
 
   // Helper function for computing the pull
-  auto pull =
-      [this](const Acts::ActsScalar& diff, const Acts::ActsScalar& variance,
-             const std::string& variableStr, const bool& afterFit = true) {
-        if (variance <= 0) {
-          std::string tempStr;
-          if (afterFit) {
-            tempStr = "after";
-          } else {
-            tempStr = "before";
-          }
-          ACTS_WARNING("Nonpositive variance "
-                       << tempStr << " vertex fit: Var(" << variableStr
-                       << ") = " << variance << " <= 0.");
-          return std::numeric_limits<double>::quiet_NaN();
-        }
-        double std = std::sqrt(variance);
-        return diff / std;
-      };
+  auto pull = [this](const double& diff, const double& variance,
+                     const std::string& variableStr,
+                     const bool& afterFit = true) {
+    if (variance <= 0) {
+      std::string tempStr;
+      if (afterFit) {
+        tempStr = "after";
+      } else {
+        tempStr = "before";
+      }
+      ACTS_WARNING("Nonpositive variance " << tempStr << " vertex fit: Var("
+                                           << variableStr << ") = " << variance
+                                           << " <= 0.");
+      return std::numeric_limits<double>::quiet_NaN();
+    }
+    double std = std::sqrt(variance);
+    return diff / std;
+  };
 
   auto calculateTruthPrimaryVertexDensity =
       [this, truthVertices](const Acts::Vertex& vtx) {
@@ -571,14 +571,14 @@ ProcessCode VertexNTupleWriter::writeT(
     m_recoZ.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eZ]);
     m_recoT.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eTime]);
 
-    Acts::ActsScalar varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
-                                                 Acts::CoordinateIndices::eX);
-    Acts::ActsScalar varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
-                                                 Acts::CoordinateIndices::eY);
-    Acts::ActsScalar varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
-                                                 Acts::CoordinateIndices::eZ);
-    Acts::ActsScalar varTime = vtx.fullCovariance()(
-        Acts::CoordinateIndices::eTime, Acts::CoordinateIndices::eTime);
+    double varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                       Acts::CoordinateIndices::eX);
+    double varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+                                       Acts::CoordinateIndices::eY);
+    double varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
+                                       Acts::CoordinateIndices::eZ);
+    double varTime = vtx.fullCovariance()(Acts::CoordinateIndices::eTime,
+                                          Acts::CoordinateIndices::eTime);
 
     m_covXX.push_back(varX);
     m_covYY.push_back(varY);

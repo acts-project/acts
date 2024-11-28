@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -687,13 +688,24 @@ class MultiTrajectory {
   /// Allocate storage for a calibrated measurement of specified dimension
   /// @param istate The track state to store for
   /// @param measdim the dimension of the measurement to store
-  /// @note Is a noop if the track state already has an allocation
-  ///       an the dimension is the same.
+  /// @note In case an allocation is already present, no additional allocation
+  ///       will be performed, but the existing allocation will be zeroed.
   void allocateCalibrated(IndexType istate, std::size_t measdim) {
     throw_assert(measdim > 0 && measdim <= eBoundSize,
                  "Invalid measurement dimension detected");
 
-    self().allocateCalibrated_impl(istate, measdim);
+    visit_measurement(measdim, [this, istate]<std::size_t DIM>(
+                                   std::integral_constant<std::size_t, DIM>) {
+      self().template allocateCalibrated_impl(
+          istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
+          ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
+    });
+  }
+
+  template <std::size_t measdim, typename val_t, typename cov_t>
+  void allocateCalibrated(IndexType istate, const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov) {
+    self().template allocateCalibrated_impl(istate, val, cov);
   }
 
   void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)

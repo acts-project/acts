@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
                                                    Acts::BinningValue::binY,
                                                    Acts::BinningValue::binZ};
 
-  using HlPos = std::array<Acts::ActsScalar, 2u>;
+  using HlPos = std::array<double, 2u>;
   using VolHlPos = std::array<HlPos, 3u>;
   using VolSetup = std::array<VolHlPos, 3u>;
 

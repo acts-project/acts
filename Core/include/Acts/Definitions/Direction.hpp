@@ -41,7 +41,7 @@ class Direction final {
   /// @param scalar is the signed value
   ///
   /// @return a direction enum
-  static constexpr Direction fromScalar(ActsScalar scalar) {
+  static constexpr Direction fromScalar(double scalar) {
     assert(scalar != 0);
     return scalar >= 0 ? Value::Positive : Value::Negative;
   }
@@ -53,7 +53,7 @@ class Direction final {
   /// @param scalar is the signed value
   ///
   /// @return a direction enum
-  static constexpr Direction fromScalarZeroAsPositive(ActsScalar scalar) {
+  static constexpr Direction fromScalarZeroAsPositive(double scalar) {
     return scalar >= 0 ? Value::Positive : Value::Negative;
   }
 

@@ -36,17 +36,17 @@ operator()(const Extent& lExtent) const {
   }
 
   // Min / Max z  with clearances adapted
-  ActsScalar minZ = lExtent.min(BinningValue::binZ) + std::abs(zClearance[0u]);
-  ActsScalar maxZ = lExtent.max(BinningValue::binZ) - std::abs(zClearance[1u]);
+  double minZ = lExtent.min(BinningValue::binZ) + std::abs(zClearance[0u]);
+  double maxZ = lExtent.max(BinningValue::binZ) - std::abs(zClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
-  ActsScalar avgPhi = 0.;
+  double hPhiSector = std::numbers::pi;
+  double avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
-    ActsScalar minPhi =
+    double minPhi =
         lExtent.min(BinningValue::binPhi) + std::abs(phiClearance[0u]);
-    ActsScalar maxPhi =
+    double maxPhi =
         lExtent.max(BinningValue::binPhi) - std::abs(phiClearance[1u]);
     hPhiSector = 0.5 * (maxPhi - minPhi);
     avgPhi = 0.5 * (minPhi + maxPhi);
@@ -58,8 +58,8 @@ operator()(const Extent& lExtent) const {
   }
 
   // The Radius estimation
-  ActsScalar r = rOffset < 0 ? lExtent.min(BinningValue::binR) + rOffset
-                             : lExtent.max(BinningValue::binR) + rOffset;
+  double r = rOffset < 0 ? lExtent.min(BinningValue::binR) + rOffset
+                         : lExtent.max(BinningValue::binR) + rOffset;
   if (rOffset == 0.) {
     r = lExtent.medium(BinningValue::binR);
   }
@@ -80,25 +80,25 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
   }
 
   // Min / Max r  with clearances adapted
-  ActsScalar minR = lExtent.min(BinningValue::binR) + std::abs(rClearance[0u]);
-  ActsScalar maxR = lExtent.max(BinningValue::binR) - std::abs(rClearance[1u]);
+  double minR = lExtent.min(BinningValue::binR) + std::abs(rClearance[0u]);
+  double maxR = lExtent.max(BinningValue::binR) - std::abs(rClearance[1u]);
 
   // Phi sector
-  ActsScalar hPhiSector = std::numbers::pi_v<ActsScalar>;
-  ActsScalar avgPhi = 0.;
+  double hPhiSector = std::numbers::pi;
+  double avgPhi = 0.;
   if (lExtent.constrains(BinningValue::binPhi)) {
     // Min / Max phi  with clearances adapted
-    ActsScalar minPhi =
+    double minPhi =
         lExtent.min(BinningValue::binPhi) + std::abs(phiClearance[0u]);
-    ActsScalar maxPhi =
+    double maxPhi =
         lExtent.max(BinningValue::binPhi) - std::abs(phiClearance[1u]);
     hPhiSector = 0.5 * (maxPhi - minPhi);
     avgPhi = 0.5 * (minPhi + maxPhi);
   }
 
   // The z position estimate
-  ActsScalar z = zOffset < 0 ? lExtent.min(BinningValue::binZ) + zOffset
-                             : lExtent.max(BinningValue::binZ) + zOffset;
+  double z = zOffset < 0 ? lExtent.min(BinningValue::binZ) + zOffset
+                         : lExtent.max(BinningValue::binZ) + zOffset;
   if (zOffset == 0.) {
     z = lExtent.medium(BinningValue::binZ);
   }
@@ -131,12 +131,12 @@ operator()(const Extent& lExtent) const {
   }
 
   // Make the rectangular shape
-  ActsScalar minX = lExtent.min(locals[0]) + std::abs(loc0Clearance[0u]);
-  ActsScalar maxX = lExtent.max(locals[0]) - std::abs(loc0Clearance[1u]);
-  ActsScalar minY = lExtent.min(locals[1]) + std::abs(loc1Clearance[0u]);
-  ActsScalar maxY = lExtent.max(locals[1]) - std::abs(loc1Clearance[1u]);
+  double minX = lExtent.min(locals[0]) + std::abs(loc0Clearance[0u]);
+  double maxX = lExtent.max(locals[0]) - std::abs(loc0Clearance[1u]);
+  double minY = lExtent.min(locals[1]) + std::abs(loc1Clearance[0u]);
+  double maxY = lExtent.max(locals[1]) - std::abs(loc1Clearance[1u]);
 
-  ActsScalar gPlacement = lExtent.medium(pPlacement) + pOffset;
+  double gPlacement = lExtent.medium(pPlacement) + pOffset;
   Vector3 placement = Vector3::Zero();
   placement[toUnderlying(pPlacement)] = gPlacement;
 
@@ -166,7 +166,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
         "surface type is not a cylinder.");
   }
 
-  std::array<ActsScalar, 6u> bounds = {};
+  std::array<double, 6u> bounds = {};
   std::copy_n(values.begin(), 6u, bounds.begin());
 
   // Return vector for generated surfaces
@@ -177,28 +177,27 @@ Acts::Experimental::detail::SupportSurfacesHelper::cylindricalSupport(
         transform, std::make_shared<CylinderBounds>(bounds)));
   } else {
     // Split into n(splits) planar surfaces, prep work:
-    ActsScalar r = bounds[0u];
-    ActsScalar halfZ = bounds[1u];
-    ActsScalar minPhi = bounds[3u] - bounds[2u];
-    ActsScalar maxPhi = bounds[3u] + bounds[2u];
-    ActsScalar dHalfPhi = (maxPhi - minPhi) / (2 * splits);
-    ActsScalar cosPhiHalf = std::cos(dHalfPhi);
-    ActsScalar sinPhiHalf = std::sin(dHalfPhi);
-    ActsScalar planeR = r * cosPhiHalf;
-    ActsScalar planeHalfX = r * sinPhiHalf;
-    ActsScalar planeZ = transform.translation().z();
+    double r = bounds[0u];
+    double halfZ = bounds[1u];
+    double minPhi = bounds[3u] - bounds[2u];
+    double maxPhi = bounds[3u] + bounds[2u];
+    double dHalfPhi = (maxPhi - minPhi) / (2 * splits);
+    double cosPhiHalf = std::cos(dHalfPhi);
+    double sinPhiHalf = std::sin(dHalfPhi);
+    double planeR = r * cosPhiHalf;
+    double planeHalfX = r * sinPhiHalf;
+    double planeZ = transform.translation().z();
 
     auto sRectangle =
         std::make_shared<Acts::RectangleBounds>(planeHalfX, halfZ);
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Get the moduleTransform
-      ActsScalar phi =
-          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
-      ActsScalar cosPhi = std::cos(phi);
-      ActsScalar sinPhi = std::sin(phi);
-      ActsScalar planeX = planeR * cosPhi;
-      ActsScalar planeY = planeR * sinPhi;
+      double phi = -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
+      double cosPhi = std::cos(phi);
+      double sinPhi = std::sin(phi);
+      double planeX = planeR * cosPhi;
+      double planeY = planeR * sinPhi;
 
       Acts::Vector3 planeCenter(planeX, planeY, planeZ);
       Acts::Vector3 planeAxisZ(cosPhi, sinPhi, 0.);
@@ -241,7 +240,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
         "surface type is not a disc.");
   }
 
-  std::array<ActsScalar, 4u> bounds = {};
+  std::array<double, 4u> bounds = {};
   std::copy_n(values.begin(), 4u, bounds.begin());
 
   // Return vector for generated surfaces
@@ -252,33 +251,31 @@ Acts::Experimental::detail::SupportSurfacesHelper::discSupport(
         transform, std::make_shared<RadialBounds>(bounds)));
   } else {
     // Split into n(splits) planar surfaces in phi, prep work:
-    ActsScalar minR = bounds[0u];
-    ActsScalar maxR = bounds[1u];
-    ActsScalar minPhi = bounds[3u] - bounds[2u];
-    ActsScalar maxPhi = bounds[3u] + bounds[2u];
-    ActsScalar dHalfPhi = (maxPhi - minPhi) / (2 * splits);
-    ActsScalar cosPhiHalf = std::cos(dHalfPhi);
-    ActsScalar sinPhiHalf = std::sin(dHalfPhi);
-    ActsScalar maxLocY = maxR * cosPhiHalf;
-    ActsScalar minLocY = minR * cosPhiHalf;
-    ActsScalar hR = 0.5 * (maxLocY + minLocY);
-    ActsScalar hY = 0.5 * (maxLocY - minLocY);
-    ActsScalar hXminY = minR * sinPhiHalf;
-    ActsScalar hXmaxY = maxR * sinPhiHalf;
+    double minR = bounds[0u];
+    double maxR = bounds[1u];
+    double minPhi = bounds[3u] - bounds[2u];
+    double maxPhi = bounds[3u] + bounds[2u];
+    double dHalfPhi = (maxPhi - minPhi) / (2 * splits);
+    double cosPhiHalf = std::cos(dHalfPhi);
+    double sinPhiHalf = std::sin(dHalfPhi);
+    double maxLocY = maxR * cosPhiHalf;
+    double minLocY = minR * cosPhiHalf;
+    double hR = 0.5 * (maxLocY + minLocY);
+    double hY = 0.5 * (maxLocY - minLocY);
+    double hXminY = minR * sinPhiHalf;
+    double hXmaxY = maxR * sinPhiHalf;
     // Split trapezoid
     auto sTrapezoid =
         std::make_shared<Acts::TrapezoidBounds>(hXminY, hXmaxY, hY);
     Vector3 zAxis = transform.rotation().col(2);
-    ActsScalar zPosition = transform.translation().z();
+    double zPosition = transform.translation().z();
     // Now create the Trapezoids
     for (unsigned int iphi = 0; iphi < splits; ++iphi) {
       // Create the split module transform
-      ActsScalar phi =
-          -std::numbers::pi_v<ActsScalar> + (2 * iphi + 1) * dHalfPhi;
+      double phi = -std::numbers::pi + (2 * iphi + 1) * dHalfPhi;
       auto sTransform = Transform3(
           Translation3(hR * std::cos(phi), hR * std::sin(phi), zPosition) *
-          AngleAxis3(phi - static_cast<ActsScalar>(std::numbers::pi / 2.),
-                     zAxis));
+          AngleAxis3(phi - std::numbers::pi / 2., zAxis));
       // Place it
       dSupport.push_back(
           Surface::makeShared<PlaneSurface>(sTransform, sTrapezoid));
@@ -307,7 +304,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::rectangularSupport(
         "surface type is not a plane.");
   }
 
-  std::array<ActsScalar, 4u> bounds = {};
+  std::array<double, 4u> bounds = {};
   std::copy_n(values.begin(), 4u, bounds.begin());
 
   return {Surface::makeShared<PlaneSurface>(

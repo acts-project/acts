@@ -58,10 +58,10 @@ struct GeometricConfig {
   bool strip = false;
 
   /// The variances for this digitization
-  std::map<Acts::BoundIndices, std::vector<Acts::ActsScalar>> varianceMap = {};
+  std::map<Acts::BoundIndices, std::vector<double>> varianceMap = {};
 
   /// Charge generation (configurable via the chargeSmearer)
-  Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
+  double charge(double path, RandomEngine &rng) const {
     if (!chargeSmearer) {
       return path;
     }
@@ -82,9 +82,8 @@ struct GeometricConfig {
   /// @param cmins is the cluster minimum in the different dimensions
   ///
   /// @return a vector of variances for the cluster
-  std::vector<Acts::ActsScalar> variances(
-      const std::array<std::size_t, 2u> &csizes,
-      const std::array<std::size_t, 2u> &cmins) const;
+  std::vector<double> variances(const std::array<std::size_t, 2u> &csizes,
+                                const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine

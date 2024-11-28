@@ -21,14 +21,16 @@
 #include <cstddef>
 #include <sstream>
 
-ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
-    const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
+namespace ActsExamples {
+
+TGeoITkModuleSplitter::TGeoITkModuleSplitter(
+    const TGeoITkModuleSplitter::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   initSplitCategories();
 }
 
-void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
+void TGeoITkModuleSplitter::initSplitCategories() {
   m_splitCategories.reserve(m_cfg.splitPatterns.size());
   for (const std::pair<const std::string, std::string>& pattern_split_category :
        m_cfg.splitPatterns) {
@@ -50,7 +52,7 @@ void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
 
 /// If applicable, returns a split detector element
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-ActsExamples::TGeoITkModuleSplitter::split(
+TGeoITkModuleSplitter::split(
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const Acts::TGeoDetectorElement> detElement) const {
   // Is the current node covered by this splitter?
@@ -66,10 +68,10 @@ ActsExamples::TGeoITkModuleSplitter::split(
                  " node " + sensorName + " using split ranges of category " +
                  std::get<1>(split_category));
       if (!std::get<2>(split_category)) {
-        return ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
+        return TGeoITkModuleSplitter::splitBarrelModule(
             gctx, detElement, m_cfg.barrelMap.at(std::get<1>(split_category)));
       } else {
-        return ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
+        return TGeoITkModuleSplitter::splitDiscModule(
             gctx, detElement, m_cfg.discMap.at(std::get<1>(split_category)));
       }
     }
@@ -83,7 +85,7 @@ ActsExamples::TGeoITkModuleSplitter::split(
 
 /// If applicable, returns a split detector element
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
+TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
@@ -101,11 +103,10 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
 
 /// If applicable, returns a split detector element
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
-ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
+TGeoITkModuleSplitter::splitDiscModule(
     const Acts::GeometryContext& gctx,
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
-    const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
-        splitRanges) const {
+    const std::vector<TGeoITkModuleSplitter::SplitRange>& splitRanges) const {
   auto name = detElement->tgeoNode().GetName();
 
   auto factory = [&](const auto& trafo, const auto& bounds) {
@@ -117,3 +118,5 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   return ITk::splitDiscModule(gctx, detElement, splitRanges, factory, name,
                               logger());
 }
+
+}  // namespace ActsExamples

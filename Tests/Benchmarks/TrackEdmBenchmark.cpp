@@ -111,6 +111,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
             << std::endl;
   for (std::size_t r = 0; r < runs; ++r) {
     tc.clear();
+    output.clear();
+
     for (std::size_t i = 0; i < nTracks; ++i) {
       auto track = tc.makeTrack();
 
@@ -133,17 +135,17 @@ int main(int /*argc*/, char** /*argv[]*/) {
           trackState.typeFlags().set(TrackStateFlag::MaterialFlag);
         } else {
           BenchmarkSourceLink bsl{gid, 123};
-          trackState.allocateCalibrated(measDimDist(rng));
+          std::size_t measdim = measDimDist(rng);
 
           const auto& [predicted, covariance] = parameters();
           trackState.predicted() = predicted;
           trackState.predictedCovariance() = covariance;
 
           visit_measurement(
-              trackState.calibratedSize(),
+              measdim,
               [&]<std::size_t N>(std::integral_constant<std::size_t, N> /*d*/) {
-                trackState.calibrated<N>().setOnes();
-                trackState.calibratedCovariance<N>().setIdentity();
+                trackState.allocateCalibrated(ActsVector<N>::Ones(),
+                                              ActsSquareMatrix<N>::Identity());
 
                 std::array<std::uint8_t, eBoundSize> indices{0};
                 std::iota(indices.begin(), indices.end(), 0);
