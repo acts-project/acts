@@ -9,17 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
-#include <iostream>
-#include <mutex>
-#include <vector>
-
-namespace ActsExamples::Contextual {
+namespace ActsExamples {
 
 /// @brief A mockup service that rotates the modules in a
 /// simple tracking geometry
@@ -85,4 +78,5 @@ class AlignmentDecorator : public IContextDecorator {
     }
   }
 };
-}  // namespace ActsExamples::Contextual
+
+}  // namespace ActsExamples

@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // The detector volume should have received maximum dimensions
   CHECK_CLOSE_ABS(detectorVolume.extent.min(Acts::BinningValue::binR), 0,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   CHECK_CLOSE_ABS(detectorVolume.extent.max(Acts::BinningValue::binR), 200.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The detector container should have binning in R
   BOOST_CHECK(detectorVolume.container.has_value());
@@ -128,11 +128,11 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   const auto& binBoundaries = cts.constituentBinning[0].boundaries();
   BOOST_CHECK_EQUAL(binBoundaries.size(), 3u);
   CHECK_CLOSE_ABS(binBoundaries[0u], 0.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(binBoundaries[1u], 35.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(binBoundaries[2u], 200.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The first volume is the beam pipe, it should have gotten the
   // z dimension
@@ -140,14 +140,14 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   BOOST_CHECK_EQUAL(beamPipe.name, "beam-pipe");
   CHECK_CLOSE_ABS(beamPipe.extent.min(Acts::BinningValue::binZ), -2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   CHECK_CLOSE_ABS(beamPipe.extent.max(Acts::BinningValue::binZ), 2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The new beam pipe radius should have been applied
   CHECK_CLOSE_ABS(beamPipe.extent.max(Acts::BinningValue::binR), 35.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The second volume is the pixel detector
   auto& pixelContainer = cts.constituentVolumes[1u];
@@ -155,13 +155,13 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // Pixel container should have fitting boundaries
   CHECK_CLOSE_ABS(pixelContainer.extent.min(Acts::BinningValue::binR), 35.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(pixelContainer.extent.max(Acts::BinningValue::binR), 200.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(pixelContainer.extent.min(Acts::BinningValue::binZ), -2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(pixelContainer.extent.max(Acts::BinningValue::binZ), 2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The Pixel container has constituents
   BOOST_CHECK(pixelContainer.container.has_value());
@@ -171,10 +171,10 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   // inner & outer boundaries
   for (auto& pv : cts1.constituentVolumes) {
     CHECK_CLOSE_ABS(pv.extent.min(Acts::BinningValue::binR), 35.,
-                    std::numeric_limits<ActsScalar>::epsilon());
+                    std::numeric_limits<double>::epsilon());
 
     CHECK_CLOSE_ABS(pv.extent.max(Acts::BinningValue::binR), 200.,
-                    std::numeric_limits<ActsScalar>::epsilon());
+                    std::numeric_limits<double>::epsilon());
   }
 
   // The binning should have been estimated
@@ -186,13 +186,13 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   const auto& binBoundariesZ = cts1.constituentBinning[0].boundaries();
   BOOST_CHECK_EQUAL(binBoundariesZ.size(), 4u);
   CHECK_CLOSE_ABS(binBoundariesZ[0u], -2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[1u], -575,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[2u], 575.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[3u], 2000.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // The second volume is the pixel barrel
   auto& pixelBarrel = cts1.constituentVolumes[1u];

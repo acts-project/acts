@@ -12,13 +12,10 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
-#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cmath>
 #include <limits>
 #include <random>
-#include <string>
-#include <tuple>
 #include <utility>
 
 namespace ActsExamples::Digitization {
