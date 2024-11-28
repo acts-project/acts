@@ -8,9 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -19,7 +17,6 @@
 #include "Acts/TrackFitting/MbfSmoother.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <numbers>
 
@@ -59,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setProjectorSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices(projector);
 
   ts.filtered() << 0.301, 0.503, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
@@ -76,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setProjectorSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices(projector);
 
   ts.filtered() << 0.27, 0.53, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;
@@ -93,7 +90,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   ts.allocateCalibrated(2);
   ts.calibrated<2>() << 0.351, 0.473;
   ts.calibratedCovariance<2>() << 1e+8, 0., 0., 1e+8;
-  ts.setProjectorSubspaceIndices<2>(projector);
+  ts.setProjectorSubspaceIndices(projector);
 
   ts.filtered() << 0.33, 0.43, std::numbers::pi / 2., 0., 1 / 100., 0.;
   ts.filteredCovariance() = covTrk;

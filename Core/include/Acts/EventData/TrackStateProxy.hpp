@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
+#include <ranges>
 #include <span>
 
 #include <Eigen/Core>
@@ -598,61 +599,21 @@ class TrackStateProxy {
   /// @{
 
   /// Set the projector subspace indices
-  /// @param boundSubspace The projector subspace indices to set
-  void setProjectorSubspaceIndices(BoundSubspaceIndices boundSubspace)
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("projector")>());
-    component<SerializedSubspaceIndices, hashString("projector")>() =
-        serializeSubspaceIndices(boundSubspace);
-  }
-
-  /// Set the projector subspace indices
-  /// @param subspace The projector subspace indices to set
-  template <std::size_t measdim>
-  void setProjectorSubspaceIndices(SubspaceIndices<measdim> subspace)
-    requires(!ReadOnly && measdim <= eBoundSize)
-  {
-    assert(has<hashString("projector")>());
-    BoundSubspaceIndices boundSubspace{};
-    std::copy(subspace.begin(), subspace.end(), boundSubspace.begin());
-    setProjectorSubspaceIndices(boundSubspace);
-  }
-
-  /// Set the projector subspace indices
   /// @param subspaceIndices The projector subspace indices to set
-  template <std::size_t measdim, typename index_t>
-  void setProjectorSubspaceIndices(std::span<index_t, measdim> subspaceIndices)
-    requires(!ReadOnly && measdim <= eBoundSize)
+  template <std::ranges::sized_range index_range_t>
+  void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
+    requires(!ReadOnly &&
+             std::convertible_to<std::ranges::range_value_t<index_range_t>,
+                                 std::uint8_t>)
   {
-    assert(has<hashString("projector")>());
-    BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](index_t i) { return static_cast<std::uint8_t>(i); });
-    setProjectorSubspaceIndices(boundSubspace);
-  }
-
-  /// Set the projector subspace indices
-  /// @param subspaceIndices The projector subspace indices to set
-  template <typename index_t>
-  void setProjectorSubspaceIndices(std::span<index_t> subspaceIndices) {
     assert(has<hashString("projector")>());
     assert(subspaceIndices.size() <= eBoundSize);
     BoundSubspaceIndices boundSubspace{};
     std::transform(subspaceIndices.begin(), subspaceIndices.end(),
                    boundSubspace.begin(),
-                   [](index_t i) { return static_cast<std::uint8_t>(i); });
-    setProjectorSubspaceIndices(boundSubspace);
-  }
-
-  /// Set the projector subspace indices
-  /// @param subspaceIndices The projector subspace indices to set
-  template <std::size_t measdim, typename index_t>
-  void setProjectorSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
-    requires(!ReadOnly && measdim <= eBoundSize)
-  {
-    setProjectorSubspaceIndices(std::span(subspaceIndices));
+                   [](auto i) { return static_cast<std::uint8_t>(i); });
+    component<SerializedSubspaceIndices, hashString("projector")>() =
+        serializeSubspaceIndices(boundSubspace);
   }
 
   /// Returns whether a projector is set

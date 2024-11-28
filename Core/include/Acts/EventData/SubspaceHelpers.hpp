@@ -14,6 +14,8 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <ranges>
+
 #include <boost/container/static_vector.hpp>
 
 namespace Acts {
@@ -29,7 +31,7 @@ namespace Acts {
 /// @param subspaceSize the size of the subspace
 ///
 /// @return true if the indices are consistent
-template <std::ranges::range index_range_t>
+template <std::ranges::sized_range index_range_t>
 inline static bool checkSubspaceIndices(const index_range_t& indexRange,
                                         std::size_t fullSize,
                                         std::size_t subspaceSize) {
@@ -185,7 +187,7 @@ class VariableSubspaceHelper
   using IndexType = index_t;
   using Container = boost::container::static_vector<IndexType, FullSize>;
 
-  template <std::ranges::range other_index_range_t>
+  template <std::ranges::sized_range other_index_range_t>
   explicit VariableSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, indices.size()) &&
            "Invalid indices");
@@ -234,7 +236,7 @@ class FixedSubspaceHelper
   using IndexType = index_t;
   using Container = std::array<IndexType, kSubspaceSize>;
 
-  template <std::ranges::range other_index_range_t>
+  template <std::ranges::sized_range other_index_range_t>
   explicit FixedSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
            "Invalid indices");
