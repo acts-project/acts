@@ -1283,6 +1283,7 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
+    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1319,7 +1320,7 @@ def addKalmanTracks(
         calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
-    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+    s.addWhiteboardAlias(whiteboardAliasTracks, fitAlg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
@@ -1418,6 +1419,7 @@ def addCKFTracks(
     writePerformance: bool = True,
     writeCovMat=False,
     logLevel: Optional[acts.logging.Level] = None,
+    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     """This function steers the seeding
 
@@ -1520,7 +1522,7 @@ def addCKFTracks(
         ),
     )
     s.addAlgorithm(trackFinder)
-    s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
+    s.addWhiteboardAlias(whiteboardAliasTracks, trackFinder.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
@@ -1568,6 +1570,7 @@ def addGx2fTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
+    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1594,7 +1597,7 @@ def addGx2fTracks(
         calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
-    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
+    s.addWhiteboardAlias(whiteboardAliasTracks, fitAlg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
