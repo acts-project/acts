@@ -65,7 +65,7 @@ def test_steppers(conf_const, trk_geo):
             inputParticles="particles_input",
             outputTrackParameters="params_particles_input",
         )
-        s.addAlgorithm(trkParamExtractor)
+        seq.addAlgorithm(trkParamExtractor)
 
         alg = conf_const(
             acts.examples.PropagationAlgorithm,
