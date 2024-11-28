@@ -36,7 +36,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const GeometryContext geoCtx;
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 

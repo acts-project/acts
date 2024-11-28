@@ -92,9 +92,9 @@ class MultiLayerNavigation : public IInternalNavigation {
   /// Cast into a lookup position
   ///
   /// @param position is the position of the update call
-  std::array<ActsScalar, grid_type::DIM> castPosition(
+  std::array<double, grid_type::DIM> castPosition(
       const Vector3& position) const {
-    std::array<ActsScalar, grid_type::DIM> casted{};
+    std::array<double, grid_type::DIM> casted{};
     fillCasts(position, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
@@ -133,7 +133,7 @@ class MultiLayerNavigation : public IInternalNavigation {
 /// in the grid
 struct PathGridSurfacesGenerator {
   std::vector<Vector3> operator()(Vector3 startPosition,
-                                  const Vector3& direction, ActsScalar stepSize,
+                                  const Vector3& direction, double stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);

@@ -70,9 +70,9 @@ class PodioTrackStateContainerBase {
       case "smoothed"_hash:
         return data.ismoothed != kInvalid;
       case "calibrated"_hash:
-        return data.measdim != 0;
+        return data.measdim != kInvalid;
       case "calibratedCov"_hash:
-        return data.measdim != 0;
+        return data.measdim != kInvalid;
       case "jacobian"_hash:
         return data.ijacobian != kInvalid;
       case "projector"_hash:
@@ -472,7 +472,7 @@ class MutablePodioTrackStateContainer final
       m_jacs->create();
       data.ijacobian = m_jacs->size() - 1;
     }
-    data.measdim = 0;
+    data.measdim = kInvalid;
     data.hasProjector = false;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       data.hasProjector = true;
@@ -592,7 +592,7 @@ class MutablePodioTrackStateContainer final
         data.ijacobian = kInvalid;
         break;
       case TrackStatePropMask::Calibrated:
-        data.measdim = 0;
+        data.measdim = kInvalid;
         break;
       default:
         throw std::domain_error{"Unable to unset this component"};
@@ -615,10 +615,35 @@ class MutablePodioTrackStateContainer final
         {hashedKey, std::make_unique<podio_detail::DynamicColumn<T>>(key)});
   }
 
-  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
-    assert(measdim > 0 && "Zero measdim not supported");
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated_impl(IndexType istate,
+                               const Eigen::DenseBase<val_t>& val,
+                               const Eigen::DenseBase<cov_t>& cov)
+
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    constexpr std::size_t measdim = val_t::RowsAtCompileTime;
+
     auto& data = PodioUtil::getDataMutable(m_collection->at(istate));
+
+    if (data.measdim != kInvalid && data.measdim != measdim) {
+      throw std::invalid_argument{
+          "Measurement dimension does not match the allocated dimension"};
+    }
+
     data.measdim = measdim;
+
+    Eigen::Map<ActsVector<measdim>> valMap(data.measurement.data());
+    valMap = val;
+
+    Eigen::Map<ActsSquareMatrix<measdim>> covMap(
+        data.measurementCovariance.data());
+    covMap = cov;
   }
 
   void setUncalibratedSourceLink_impl(IndexType istate,

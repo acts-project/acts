@@ -10,12 +10,12 @@
 
 namespace ActsExamples {
 
-std::vector<Acts::ActsScalar> GeometricConfig::variances(
+std::vector<double> GeometricConfig::variances(
     const std::array<std::size_t, 2u>& csizes,
     const std::array<std::size_t, 2u>& cmins) const {
-  std::vector<Acts::ActsScalar> rVariances;
+  std::vector<double> rVariances;
   for (const auto& bIndex : indices) {
-    Acts::ActsScalar var = 0.;
+    double var = 0.;
     if (varianceMap.contains(bIndex)) {
       // Try to find the variance for this cluster size
       std::size_t lsize =

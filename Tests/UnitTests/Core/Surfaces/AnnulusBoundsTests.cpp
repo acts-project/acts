@@ -23,10 +23,10 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const ActsScalar minRadius = 7.2;
-const ActsScalar maxRadius = 12.0;
-const ActsScalar minPhi = 0.74195;
-const ActsScalar maxPhi = 1.33970;
+const double minRadius = 7.2;
+const double maxRadius = 12.0;
+const double minPhi = 0.74195;
+const double maxPhi = 1.33970;
 
 const Vector2 offset(-2., 2.);
 

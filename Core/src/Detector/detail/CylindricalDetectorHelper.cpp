@@ -80,9 +80,8 @@ namespace {
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createDiscReplacement(
-    const Acts::Transform3& transform,
-    const std::vector<Acts::ActsScalar>& rBoundaries,
-    const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
+    const Acts::Transform3& transform, const std::vector<double>& rBoundaries,
+    const std::vector<double>& phiBoundaries, unsigned int index,
     Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue = phiBoundaries.size() == 2u
@@ -117,9 +116,9 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createCylinderReplacement(
-    const Acts::Transform3& transform, Acts::ActsScalar r,
-    const std::vector<Acts::ActsScalar>& zBoundaries,
-    const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
+    const Acts::Transform3& transform, double r,
+    const std::vector<double>& zBoundaries,
+    const std::vector<double>& phiBoundaries, unsigned int index,
     Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue = phiBoundaries.size() == 2u
@@ -155,9 +154,8 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createSectorReplacement(
     const Acts::GeometryContext& gctx, const Acts::Vector3& volumeCenter,
-    const Acts::Surface& refSurface,
-    const std::vector<Acts::ActsScalar>& boundaries, Acts::BinningValue binning,
-    unsigned int index, Acts::Direction dir) {
+    const Acts::Surface& refSurface, const std::vector<double>& boundaries,
+    Acts::BinningValue binning, unsigned int index, Acts::Direction dir) {
   // Get a reference transform
   const auto& refTransform = refSurface.transform(gctx);
   auto refRotation = refTransform.rotation();
@@ -176,7 +174,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
     Acts::Vector3 pCenter = volumeCenter + medium * refRotation.col(1u);
     transform.pretranslate(pCenter);
     // Create the halflength
-    Acts::ActsScalar halfX =
+    double halfX =
         0.5 * (boundValues[Acts::RectangleBounds::BoundValues::eMaxX] -
                boundValues[Acts::RectangleBounds::BoundValues::eMinX]);
     // New joint bounds
@@ -187,12 +185,12 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
     // Center R calculation, using projection onto vector
     const auto& surfaceCenter = refSurface.center(gctx);
     Acts::Vector3 centerDiffs = (surfaceCenter - volumeCenter);
-    Acts::ActsScalar centerR = centerDiffs.dot(refRotation.col(2));
+    double centerR = centerDiffs.dot(refRotation.col(2));
     // New joint center
     Acts::Vector3 pCenter = volumeCenter + centerR * refRotation.col(2);
     transform.pretranslate(pCenter);
     // New joint bounds
-    Acts::ActsScalar halfY =
+    double halfY =
         0.5 * (boundValues[Acts::RectangleBounds::BoundValues::eMaxY] -
                boundValues[Acts::RectangleBounds::BoundValues::eMinY]);
     bounds = std::make_unique<Acts::RectangleBounds>(0.5 * range, halfY);
@@ -318,7 +316,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   DetectorComponent::PortalContainer dShell;
 
   // Innermost volume boundaries
-  std::vector<ActsScalar> rBoundaries = {};
+  std::vector<double> rBoundaries = {};
   auto refValues = volumes[0u]->volumeBounds().values();
 
   // Reference boundary values
@@ -329,9 +327,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   bool connectR = selectedOnly.empty() || rangeContainsValue(selectedOnly, 2u);
 
   // Get phi sector and average phi
-  ActsScalar phiSector =
+  double phiSector =
       refValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-  ActsScalar avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
+  double avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
 
   // Fuse the cylinders
   for (unsigned int iv = 1; iv < volumes.size(); ++iv) {
@@ -481,7 +479,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   auto addZboundary3D = [&](const Experimental::DetectorVolume& volume,
                             int side) -> void {
     const auto boundValues = volume.volumeBounds().values();
-    ActsScalar halflengthZ =
+    double halflengthZ =
         boundValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
     zBoundaries3D.push_back(volume.transform(gctx).translation() +
                             side * halflengthZ * rotation.col(2));
@@ -534,11 +532,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                << toString(combinedCenter));
 
   // Evaluate the series of z boundaries
-  std::vector<ActsScalar> zBoundaries = {};
+  std::vector<double> zBoundaries = {};
   for (const auto& zb3D : zBoundaries3D) {
     auto proj3D = (zb3D - combinedCenter).dot(rotation.col(2));
-    ActsScalar zBoundary =
-        std::copysign((zb3D - combinedCenter).norm(), proj3D);
+    double zBoundary = std::copysign((zb3D - combinedCenter).norm(), proj3D);
     zBoundaries.push_back(zBoundary);
   }
 
@@ -551,11 +548,11 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   const auto refValues = refVolume->volumeBounds().values();
 
   // Get phi sector and average phi
-  ActsScalar minR = refValues[CylinderVolumeBounds::BoundValues::eMinR];
-  ActsScalar maxR = refValues[CylinderVolumeBounds::BoundValues::eMaxR];
-  ActsScalar phiSector =
+  double minR = refValues[CylinderVolumeBounds::BoundValues::eMinR];
+  double maxR = refValues[CylinderVolumeBounds::BoundValues::eMaxR];
+  double phiSector =
       refValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-  ActsScalar avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
+  double avgPhi = refValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
 
   // Check if inner cylinder and sectors are present by the number of portals
   std::size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
@@ -569,7 +566,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // Disc assignments are forward for negative disc, backward for positive
   std::vector<Acts::Direction> cylinderDirs = {Acts::Direction::Backward};
   // Cylinder radii
-  std::vector<Acts::ActsScalar> cylinderR = {maxR};
+  std::vector<double> cylinderR = {maxR};
   if (innerPresent) {
     ACTS_VERBOSE("Inner surface present, tube geometry detected.");
     cylinderDirs.push_back(Direction::Forward);
@@ -657,7 +654,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
 
   // Sector offset
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
-  std::vector<ActsScalar> phiBoundaries = {};
+  std::vector<double> phiBoundaries = {};
   auto refValues = volumes[0u]->volumeBounds().values();
   phiBoundaries.push_back(
       refValues[CylinderVolumeBounds::BoundValues::eAveragePhi] -
@@ -679,10 +676,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
     // The current values
     auto curValues = volumes[iv]->volumeBounds().values();
     // Bail out if they do not match
-    ActsScalar lowPhi =
+    double lowPhi =
         curValues[CylinderVolumeBounds::BoundValues::eAveragePhi] -
         curValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-    ActsScalar highPhi =
+    double highPhi =
         curValues[CylinderVolumeBounds::BoundValues::eAveragePhi] +
         curValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
     // Check phi attachment
@@ -816,12 +813,11 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
           "cylinder volume.");
     }
     // We need a new cylinder spanning over the entire inner tube
-    ActsScalar hlZ = cylVolBounds->get(
+    double hlZ = cylVolBounds->get(
         Acts::CylinderVolumeBounds::BoundValues::eHalfLengthZ);
-    ActsScalar HlZ = ccylVolBounds->get(
+    double HlZ = ccylVolBounds->get(
         Acts::CutoutCylinderVolumeBounds::BoundValues::eHalfLengthZ);
-    ActsScalar innerR =
-        cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
+    double innerR = cylVolBounds->get(CylinderVolumeBounds::BoundValues::eMinR);
     // Create the inner replacement
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
@@ -1112,17 +1108,15 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     // Inner Container portal
     auto& centralSegment = innerContainer[3u];
     auto centralValues = centralSegment->surface().bounds().values();
-    ActsScalar centralHalfLengthZ =
+    double centralHalfLengthZ =
         centralValues[CylinderBounds::BoundValues::eHalfLengthZ];
     // The two segments
     auto& nSegment = wrappingVolume->portalPtrs()[6u];
     auto nValues = nSegment->surface().bounds().values();
-    ActsScalar nHalfLengthZ =
-        nValues[CylinderBounds::BoundValues::eHalfLengthZ];
+    double nHalfLengthZ = nValues[CylinderBounds::BoundValues::eHalfLengthZ];
     auto& pSegment = wrappingVolume->portalPtrs()[7u];
     auto pValues = pSegment->surface().bounds().values();
-    ActsScalar pHalfLengthZ =
-        pValues[CylinderBounds::BoundValues::eHalfLengthZ];
+    double pHalfLengthZ = pValues[CylinderBounds::BoundValues::eHalfLengthZ];
 
     auto sideVolumes =
         PortalHelper::stripSideVolumes({innerContainer}, {3u}, {3u}, logLevel);
@@ -1131,8 +1125,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     std::vector<std::shared_ptr<DetectorVolume>> innerVolumes = {
         wrappingVolume->getSharedPtr()};
 
-    std::vector<ActsScalar> zBoundaries = {
-        -centralHalfLengthZ - 2 * nHalfLengthZ, centralHalfLengthZ};
+    std::vector<double> zBoundaries = {-centralHalfLengthZ - 2 * nHalfLengthZ,
+                                       centralHalfLengthZ};
     // Loop over side volume and register the z boundaries
     for (auto& svs : sideVolumes) {
       for (auto& v : svs.second) {
@@ -1142,7 +1136,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
           throw std::invalid_argument(
               "CylindricalDetectorHelper: side volume must be a cylinder.");
         }
-        ActsScalar hlZ =
+        double hlZ =
             cylVolBounds->get(CylinderVolumeBounds::BoundValues::eHalfLengthZ);
         zBoundaries.push_back(zBoundaries.back() + 2 * hlZ);
         innerVolumes.push_back(v);

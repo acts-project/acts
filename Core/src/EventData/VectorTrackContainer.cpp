@@ -167,4 +167,8 @@ void VectorTrackContainer::clear() {
   }
 }
 
+std::size_t VectorTrackContainer::size() const {
+  return m_tipIndex.size();
+}
+
 }  // namespace Acts

@@ -31,11 +31,7 @@
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
-#include <array>
-#include <cmath>
 #include <cstddef>
-#include <iostream>
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>
@@ -108,7 +104,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 /// return a unique vector to the tracking geometry
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename detector_element_t::ContextType& gctxIn,
+    const Acts::GeometryContext& gctxIn,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,
     std::size_t level,
@@ -782,7 +778,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
           Acts::getDefaultLogger("TrackerGeometryBuilder", volumeLLevel));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry(gctx);
-  /// return the tracking geometry
+  // return the tracking geometry
   return trackingGeometry;
 }
 

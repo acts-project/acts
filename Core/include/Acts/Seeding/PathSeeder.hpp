@@ -81,7 +81,7 @@ class PathSeeder {
   ///
   /// @return The path width in the bin0 and bin1 direction
   /// defined with respect to the surface normal
-  using PathWidthLookup = Delegate<std::pair<ActsScalar, ActsScalar>(
+  using PathWidthLookup = Delegate<std::pair<double, double>(
       const GeometryContext&, const GeometryIdentifier&)>;
 
   /// @brief The nested configuration struct
@@ -146,10 +146,10 @@ class PathSeeder {
                 m_cfg.pathWidthProvider(gctx, geoId);
 
             // Get the bounds of the path
-            ActsScalar top0 = refPoint[0] + pathWidth0;
-            ActsScalar bot0 = refPoint[0] - pathWidth0;
-            ActsScalar top1 = refPoint[1] + pathWidth1;
-            ActsScalar bot1 = refPoint[1] - pathWidth1;
+            double top0 = refPoint[0] + pathWidth0;
+            double bot0 = refPoint[0] - pathWidth0;
+            double top1 = refPoint[1] + pathWidth1;
+            double bot1 = refPoint[1] - pathWidth1;
 
             // Get the lookup table for the source links
             auto grid = sourceLinkGridLookup.at(geoId);

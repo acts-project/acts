@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
       portalGenerator, tContext, "Gap0Volume", Transform3::Identity(),
       std::move(gap0VoumeBounds), {}, {}, tryNoVolumes(), tryAllPortals());
 
-  std::vector<ActsScalar> layer0Radii = {100, 102, 104, 106, 108, 110};
+  std::vector<double> layer0Radii = {100, 102, 104, 106, 108, 110};
   auto layer0VolumeBounds =
       std::make_unique<CylinderVolumeBounds>(80, 130, 200);
   std::vector<std::shared_ptr<Surface>> layer0Surfaces = {};

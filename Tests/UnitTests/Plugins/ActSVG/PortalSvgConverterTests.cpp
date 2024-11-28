@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(CylinderPortalsSvg) {
   portalStyle.strokeWidth = 0.5;
   portalStyle.quarterSegments = 72u;
 
-  Acts::ActsScalar rInner = 10.;
-  Acts::ActsScalar rOuter = 100.;
-  Acts::ActsScalar zHalfL = 200.;
+  double rInner = 10.;
+  double rOuter = 100.;
+  double zHalfL = 200.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(CylinderContainerPortalsSvg) {
   portalStyle.strokeWidth = 0.5;
   portalStyle.quarterSegments = 72u;
 
-  Acts::ActsScalar rInner = 10.;
-  Acts::ActsScalar rMiddle = 100.;
-  Acts::ActsScalar rOuter = 300.;
-  Acts::ActsScalar zHalfL = 200.;
+  double rInner = 10.;
+  double rMiddle = 100.;
+  double rOuter = 300.;
+  double zHalfL = 200.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
