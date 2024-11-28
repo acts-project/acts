@@ -370,8 +370,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
     for (auto it = hitsByParticle.begin(), end = hitsByParticle.end();
          it != end; it = hitsByParticle.upper_bound(it->first)) {
-      std::cout << "Particle " << it->first << " has "
-                << hitsByParticle.count(it->first) << " hits" << std::endl;
+      ACTS_DEBUG("Particle " << it->first << " has "
+                             << hitsByParticle.count(it->first) << " hits");
 
       std::vector<std::size_t> hitIndices;
       hitIndices.reserve(hitsByParticle.count(it->first));
