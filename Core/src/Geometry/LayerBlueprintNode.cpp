@@ -59,16 +59,16 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
   switch (m_layerType) {
     case Cylinder:
     case Disc: {
-      ActsScalar minR = extent.min(binR);
-      ActsScalar maxR = extent.max(binR);
-      ActsScalar hlZ = extent.interval(binZ) / 2.0;
+      double minR = extent.min(binR);
+      double maxR = extent.max(binR);
+      double hlZ = extent.interval(binZ) / 2.0;
       bounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
       break;
     }
     case Plane: {
-      ActsScalar hlX = extent.interval(binX) / 2.0;
-      ActsScalar hlY = extent.interval(binY) / 2.0;
-      ActsScalar hlZ = extent.interval(binZ) / 2.0;
+      double hlX = extent.interval(binX) / 2.0;
+      double hlY = extent.interval(binY) / 2.0;
+      double hlZ = extent.interval(binZ) / 2.0;
       bounds = std::make_shared<CuboidVolumeBounds>(hlX, hlY, hlZ);
       break;
     }
