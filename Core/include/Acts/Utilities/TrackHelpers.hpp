@@ -530,7 +530,7 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + predictedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the filtered residual and its covariance
@@ -566,7 +566,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + filteredCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the smoothed residual and its covariance
@@ -602,7 +602,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + smoothedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the predicted chi2
