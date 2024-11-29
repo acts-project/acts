@@ -99,7 +99,7 @@ EigenspaceComponents calculateEigenspace(const Vector& mean,
   // Transform the mean vector into eigenspace
   Vector meanEigenspace = eigenvectors * mean;
 
-  return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
+  return {eigenvalues, eigenvectors, meanEigenspace};
 }
 
 Parametrisation buildMomentumParameters(const EventCollection& events,

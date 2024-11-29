@@ -99,7 +99,7 @@ SpacePointUtility::globalCoords(
     tcov = std::nullopt;
   }
 
-  return std::make_tuple(globalPos, globalTime, gcov, tcov);
+  return {globalPos, globalTime, gcov, tcov};
 }
 
 Vector2 SpacePointUtility::calcRhoZVars(

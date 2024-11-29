@@ -121,7 +121,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   if (integral == 0.) {
     histoBorders.clear();
     temp_HistoContents.clear();
-    return std::make_tuple(histoBorders, temp_HistoContents, integral);
+    return {histoBorders, temp_HistoContents, integral};
   }
 
   // Set the bin borders
@@ -130,7 +130,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   }
   histoBorders[nBins] = hist->GetXaxis()->GetXmax();
 
-  return std::make_tuple(histoBorders, temp_HistoContents, integral);
+  return {histoBorders, temp_HistoContents, integral};
 }
 
 /// @brief This function combines neighbouring bins with the same value

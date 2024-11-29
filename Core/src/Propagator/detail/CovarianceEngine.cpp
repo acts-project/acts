@@ -97,8 +97,7 @@ CurvilinearState detail::curvilinearState(
       pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
       particleHypothesis);
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParams), fullTransportJacobian,
-                         accumulatedPath);
+  return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
 
 void detail::transportCovarianceToBound(
