@@ -169,7 +169,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
-    return std::make_pair(std::get<0>(map), std::vector<std::uint32_t>());
+    return {std::get<0>(map), std::vector<std::uint32_t>()};
   }
 
   // Set the bin content
@@ -183,7 +183,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 
   auto histoBorders = std::get<0>(map);
   reduceMap(histoBorders, normalisedHistoContents);
-  return std::make_pair(histoBorders, normalisedHistoContents);
+  return {histoBorders, normalisedHistoContents};
 }
 
 /// @brief This method transforms a probability distribution into components
@@ -208,7 +208,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
-    return std::make_pair(std::get<0>(map), std::vector<std::uint32_t>());
+    return {std::get<0>(map), std::vector<std::uint32_t>()};
   }
 
   // Set the bin content
@@ -223,7 +223,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
   std::vector<float> histoBorders = std::get<0>(map);
   reduceMap(histoBorders, normalisedHistoContents);
 
-  return std::make_pair(histoBorders, normalisedHistoContents);
+  return {histoBorders, normalisedHistoContents};
 }
 
 /// @brief This method builds decomposed cumulative probability distributions

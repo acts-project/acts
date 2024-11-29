@@ -156,7 +156,7 @@ AdaptiveGridTrackDensity::getMaxZTPosition(DensityMap& densityMap) const {
   double maxZ = getSpatialBinCenter(bin.first);
   double maxT = getTemporalBinCenter(bin.second);
 
-  return std::make_pair(maxZ, maxT);
+  return std::pair(maxZ, maxT);
 }
 
 Result<AdaptiveGridTrackDensity::ZTPositionAndWidth>
