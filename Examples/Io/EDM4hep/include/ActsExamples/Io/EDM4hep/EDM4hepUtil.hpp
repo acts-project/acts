@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -23,18 +24,6 @@
 #include <edm4hep/MutableTrackerHitPlane.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackerHitPlane.h>
-
-#if __has_include(<edm4hep/TrackerHit3D.h>)
-#include "edm4hep/TrackerHit3D.h"
-#include "edm4hep/TrackerHit3DCollection.h"
-#else
-#include <edm4hep/TrackerHit.h>
-#include <edm4hep/TrackerHitCollection.h>
-namespace edm4hep {
-using TrackerHit3DCollection = edm4hep::TrackerHitCollection;
-using TrackerHit3D = edm4hep::TrackerHit;
-}  // namespace edm4hep
-#endif
 
 namespace ActsExamples::EDM4hepUtil {
 
