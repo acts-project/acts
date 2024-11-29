@@ -31,19 +31,12 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         rnd=rnd,
     )
 
-    # Run particle smearing
-    trackParametersGenerator = acts.examples.ParticleSmearing(
-        level=acts.logging.INFO,
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+        level=acts.logging.WARNING,
         inputParticles="particles_input",
-        outputTrackParameters="start_parameters",
-        randomNumbers=rnd,
-        sigmaD0=0.0,
-        sigmaZ0=0.0,
-        sigmaPhi=0.0,
-        sigmaTheta=0.0,
-        sigmaPtRel=0.0,
+        outputTrackParameters="params_particles_input",
     )
-    s.addAlgorithm(trackParametersGenerator)
+    s.addAlgorithm(trkParamExtractor)
 
     nav = acts.Navigator(trackingGeometry=trackingGeometry)
 
@@ -57,7 +50,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         propagatorImpl=propagator,
         level=acts.logging.INFO,
         sterileLogger=True,
-        inputTrackParameters="start_parameters",
+        inputTrackParameters="params_particles_input",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)

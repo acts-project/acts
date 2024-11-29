@@ -179,6 +179,6 @@ void ActsExamples::ScalingCalibrator::calibrate(
     calibratedCovariance(boundLoc1, boundLoc1) *= ct.y_scale;
 
     trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

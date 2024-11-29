@@ -423,7 +423,7 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
       trackState.template calibrated<kMeasDim>();
 
   const ActsMatrix<kMeasDim, eBoundSize> projector =
-      trackState.projector().template topLeftCorner<kMeasDim, eBoundSize>();
+      trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
   const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
 

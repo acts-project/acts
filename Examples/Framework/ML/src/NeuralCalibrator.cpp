@@ -190,6 +190,6 @@ void ActsExamples::NeuralCalibrator::calibrate(
     calibratedCovariance(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
     trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
