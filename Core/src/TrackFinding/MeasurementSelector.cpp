@@ -9,7 +9,6 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -19,6 +18,8 @@
 #include <cstddef>
 #include <limits>
 #include <numbers>
+#include <span>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -99,7 +100,7 @@ double MeasurementSelector::calculateChi2(
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 
-        std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
             projector.begin(), projector.begin() + kMeasurementSize);
         FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
             validSubspaceIndices);

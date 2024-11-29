@@ -693,8 +693,11 @@ std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
   return visit_measurement(
       trackState.calibratedSize(),
       [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
-        auto H = trackState.projector()
-                     .template topLeftCorner<measdim, eBoundSize>();
+        FixedBoundSubspaceHelper<measdim> subspaceHelper =
+            trackState.template projectorSubspaceHelper<measdim>();
+
+        // TODO use subspace helper for projection instead
+        auto H = subspaceHelper.projector();
         auto s = trackState.smoothed();
         auto C = trackState.smoothedCovariance();
         auto m = trackState.template calibrated<measdim>();

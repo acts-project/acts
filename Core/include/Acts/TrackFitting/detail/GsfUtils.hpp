@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -154,9 +155,7 @@ double calculateDeterminant(
     const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
-        projector,
-    unsigned int calibratedSize);
+    BoundSubspaceIndices projector, unsigned int calibratedSize);
 
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
@@ -190,7 +189,8 @@ void computePosteriorWeights(
             .template calibratedCovariance<
                 MultiTrajectoryTraits::MeasurementSizeMax>()
             .data(),
-        state.predictedCovariance(), state.projector(), state.calibratedSize());
+        state.predictedCovariance(), state.projectorSubspaceIndices(),
+        state.calibratedSize());
 
     const auto factor = std::sqrt(1. / detR) * safeExp(-0.5 * chi2);
 
