@@ -1155,10 +1155,10 @@ class MultiTrajectoryTestsCommon {
       BOOST_CHECK_EQUAL(ts1.template component<T>(col), value);
     };
 
-    test("std::uint32_t", std::uint32_t{1});
-    test("std::uint64_t", std::uint64_t{2});
-    test("std::int32_t", std::int32_t{-3});
-    test("std::int64_t", std::int64_t{-4});
+    test("std_uint32_t", std::uint32_t{1});
+    test("std_uint64_t", std::uint64_t{2});
+    test("std_int32_t", std::int32_t{-3});
+    test("std_int64_t", std::int64_t{-4});
     test("float", float{8.9});
     test("double", double{656.2});
 

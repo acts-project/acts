@@ -80,6 +80,10 @@ class TrackSelector {
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
     double maxChi2 = inf;
 
+    /// Whether a reference surface is required for the track
+    /// If false, the parameter cuts are not evaluated
+    bool requireReferenceSurface = true;
+
     // Defaults to: no cut
     MeasurementCounter measurementCounter;
 
@@ -447,22 +451,33 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config& cuts = *cutsPtr;
 
-  return track.hasReferenceSurface() &&
-         within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
-         (!m_isUnbinned || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
-                            within(_eta, cuts.etaMin, cuts.etaMax))) &&
-         within(track.phi(), cuts.phiMin, cuts.phiMax) &&
-         within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
-         within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
-         within(track.time(), cuts.timeMin, cuts.timeMax) &&
-         checkMin(track.nMeasurements(), cuts.minMeasurements) &&
-         checkMax(track.nHoles(), cuts.maxHoles) &&
-         checkMax(track.nOutliers(), cuts.maxOutliers) &&
-         checkMax(track.nHoles() + track.nOutliers(),
-                  cuts.maxHolesAndOutliers) &&
-         checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
-         checkMax(track.chi2(), cuts.maxChi2) &&
-         cuts.measurementCounter.isValidTrack(track);
+  auto parameterCuts = [&]() {
+    return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
+           (!m_isUnbinned ||
+            (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
+             within(_eta, cuts.etaMin, cuts.etaMax))) &&
+           within(track.phi(), cuts.phiMin, cuts.phiMax) &&
+           within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
+           within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
+           within(track.time(), cuts.timeMin, cuts.timeMax);
+  };
+
+  auto trackCuts = [&]() {
+    return checkMin(track.nMeasurements(), cuts.minMeasurements) &&
+           checkMax(track.nHoles(), cuts.maxHoles) &&
+           checkMax(track.nOutliers(), cuts.maxOutliers) &&
+           checkMax(track.nHoles() + track.nOutliers(),
+                    cuts.maxHolesAndOutliers) &&
+           checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
+           checkMax(track.chi2(), cuts.maxChi2) &&
+           cuts.measurementCounter.isValidTrack(track);
+  };
+
+  if (cuts.requireReferenceSurface) {
+    return track.hasReferenceSurface() && parameterCuts() && trackCuts();
+  } else {
+    return trackCuts();
+  }
 }
 
 inline TrackSelector::TrackSelector(

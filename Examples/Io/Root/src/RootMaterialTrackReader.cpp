@@ -83,9 +83,6 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
              << " events this corresponds to a batch size of: " << m_batchSize);
-  std::cout << "The full chain has " << nentries << " entries for " << m_events
-            << " events this corresponds to a batch size of: " << m_batchSize
-            << std::endl;
 
   // Sort the entry numbers of the events
   {
