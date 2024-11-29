@@ -719,4 +719,12 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<double> m_binEdges;
 };
+
+/// Needed to ensure all TUs see all template instantiaions
+template class Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+template class Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
+template class Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+template class Axis<AxisType::Variable, AxisBoundaryType::Open>;
+template class Axis<AxisType::Variable, AxisBoundaryType::Bound>;
+template class Axis<AxisType::Variable, AxisBoundaryType::Closed>;
 }  // namespace Acts
