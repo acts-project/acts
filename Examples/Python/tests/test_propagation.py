@@ -56,34 +56,27 @@ def test_steppers(conf_const, trk_geo):
             rnd=rnd,
         )
 
-        # Run particle smearing
-        trackParametersGenerator = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
-            inputParticles="particles_input",
-            outputTrackParameters="start_parameters",
-            randomNumbers=rnd,
-            sigmaD0=0.0,
-            sigmaZ0=0.0,
-            sigmaPhi=0.0,
-            sigmaTheta=0.0,
-            sigmaPtRel=0.0,
-        )
-        seq.addAlgorithm(trackParametersGenerator)
-
         prop = acts.examples.ConcretePropagator(
             acts.Propagator(stepper=s, navigator=nav)
         )
+
+        trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+            level=acts.logging.WARNING,
+            inputParticles="particles_input",
+            outputTrackParameters="params_particles_input",
+        )
+        seq.addAlgorithm(trkParamExtractor)
 
         alg = conf_const(
             acts.examples.PropagationAlgorithm,
             level=acts.logging.WARNING,
             propagatorImpl=prop,
-            inputTrackParameters="start_parameters",
+            inputTrackParameters="params_particles_input",
             outputSummaryCollection="propagation_summary",
             sterileLogger=False,
         )
-
         seq.addAlgorithm(alg)
+
         chkAlg = AssertCollectionExistsAlg(
             "propagation_summary", "chk_alg", level=acts.logging.WARNING
         )
