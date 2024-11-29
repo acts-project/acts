@@ -234,6 +234,11 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
       return jGlobalToGridLocal;
     }
   }
+
+  if (jGlobalToGridLocal.empty()) {
+    throw std::invalid_argument(
+        "GridAccessJsonConverter: globalToGridLocal could not be encoded.");
+  }
   return jGlobalToGridLocal;
 }
 
