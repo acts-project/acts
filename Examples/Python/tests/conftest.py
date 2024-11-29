@@ -252,7 +252,9 @@ def trk_geo():
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
-        "detectorTuple",
+        "detector",
+        "trackingGeometry",
+        "decorators",
         "geometrySelection",
         "digiConfigFile",
         "name",
@@ -267,9 +269,11 @@ def detector_config(request):
     if request.param == "generic":
         detector = acts.examples.GenericDetectorFactory().buildDetector()
         trackingGeometry = detector.gen1Geometry()
-        contextDecorators = detector.contextDecorators()
+        decorators = detector.contextDecorators()
         return DetectorConfig(
-            (detector, trackingGeometry, contextDecorators),
+            detector,
+            trackingGeometry,
+            decorators,
             geometrySelection=(
                 srcdir
                 / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -292,7 +296,9 @@ def detector_config(request):
         trackingGeometry = detector.gen1Geometry()
         decorators = detector.contextDecorators()
         return DetectorConfig(
-            (detector, trackingGeometry, decorators),
+            detector,
+            trackingGeometry,
+            decorators,
             digiConfigFile=(
                 srcdir
                 / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"

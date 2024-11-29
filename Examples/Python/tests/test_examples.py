@@ -1172,10 +1172,10 @@ def test_ckf_tracks_example(
 
     from ckf_tracks import runCKFTracks
 
-    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
+    with detector_config.detector:
         runCKFTracks(
-            trackingGeometry,
-            decorators,
+            detector_config.trackingGeometry,
+            detector_config.decorators,
             field=field,
             outputCsv=True,
             outputDir=tmp_path,
