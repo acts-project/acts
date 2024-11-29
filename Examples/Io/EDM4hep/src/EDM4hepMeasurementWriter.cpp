@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -16,18 +17,9 @@
 
 #include <stdexcept>
 
-#include <podio/Frame.h>
-
-// Compatibility with EDM4hep < 0.99 and >= 0.99
-#if __has_include(<edm4hep/TrackerHit3DCollection.h>)
-#include <edm4hep/TrackerHit3DCollection.h>
-#else
-#include <edm4hep/TrackerHitCollection.h>
-namespace edm4hep {
-using TrackerHit3DCollection = edm4hep::TrackerHitCollection;
-}
-#endif
+#include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
