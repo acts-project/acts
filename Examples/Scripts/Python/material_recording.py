@@ -29,7 +29,7 @@ _material_recording_executed = False
 
 
 def runMaterialRecording(
-    detectorConstructionFactory,
+    detector,
     outputDir,
     tracksPerEvent=10000,
     s=None,
@@ -72,7 +72,7 @@ def runMaterialRecording(
 
     g4Alg = acts.examples.geant4.Geant4MaterialRecording(
         level=acts.logging.INFO,
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         randomNumbers=rnd,
         inputParticles=evGen.config.outputParticles,
         outputMaterialTracks="material-tracks",
