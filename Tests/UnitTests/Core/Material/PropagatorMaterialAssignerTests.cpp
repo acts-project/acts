@@ -40,9 +40,9 @@ namespace Acts::Test {
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
 
-ActsScalar rMin = 0.;
-ActsScalar rMid = 25.;
-ActsScalar rMax = 110.;
+double rMin = 0.;
+double rMid = 25.;
+double rMax = 110.;
 
 auto vCylinderOuter = std::make_shared<CylinderVolumeBounds>(rMid, rMax, 110.);
 
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
 
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
-  ActsScalar rInnerL0 = 19;
-  ActsScalar rOuterL0 = 21;
+  double rInnerL0 = 19;
+  double rOuterL0 = 21;
 
   Transform3 nominal = Transform3::Identity();
 

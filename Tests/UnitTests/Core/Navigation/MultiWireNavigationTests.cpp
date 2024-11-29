@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
     pos.y() = ipos.y() + 2 * (i + 1) * radius;
   }
 
-  std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesY * 2 * radius, halfZ};
+  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
   mlCfg.name = "Multi_Layer_With_Wires";

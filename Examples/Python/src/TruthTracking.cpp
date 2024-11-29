@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
@@ -16,7 +17,6 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
-#include "ActsExamples/Utilities/HitSelector.hpp"
 
 #include <memory>
 
@@ -85,6 +85,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_MEMBER(excludeAbsPdgs);
+    ACTS_PYTHON_MEMBER(minPrimaryVertexId);
+    ACTS_PYTHON_MEMBER(maxPrimaryVertexId);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -97,6 +99,8 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     pythonRangeProperty(c, "measurements", &Config::measurementsMin,
                         &Config::measurementsMax);
+    pythonRangeProperty(c, "primaryVertexId", &Config::minPrimaryVertexId,
+                        &Config::maxPrimaryVertexId);
   }
 
   {
@@ -154,7 +158,10 @@ void addTruthTracking(Context& ctx) {
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
-                                inputHits, outputHits, maxTime);
+                                inputHits, inputParticlesSelected, outputHits,
+                                minX, maxX, minY, maxY, minZ, maxZ, minR, maxR,
+                                minTime, maxTime, minEnergyLoss, maxEnergyLoss,
+                                minPrimaryVertexId, maxPrimaryVertexId);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,

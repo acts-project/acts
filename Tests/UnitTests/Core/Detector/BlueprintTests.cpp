@@ -20,7 +20,7 @@ class IInternalStructureBuilder {};
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(BlueprintTest) {
-  std::vector<Acts::ActsScalar> bValues = {0., 10., 100.};
+  std::vector<double> bValues = {0., 10., 100.};
 
   // Create  root node
   std::vector<Acts::BinningValue> binning = {Acts::BinningValue::binR};

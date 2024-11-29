@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(BoundToGridLocalTests) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTests) {
-  Acts::ActsScalar radius = 100.;
-  Acts::ActsScalar shift = 0.;
+  double radius = 100.;
+  double shift = 0.;
   Acts::GridAccess::BoundCylinderToZPhi bctzp(radius, shift);
 
   auto zphi = bctzp.toGridLocal(Vector2{0.25 * radius, 52.});

@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include <cstdint>
+
 namespace Acts {
 
 void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
@@ -42,23 +44,25 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        measurement.projector.begin(),
+        measurement.projector.begin() + kMeasurementSize);
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        validSubspaceIndices);
 
-    using MeasurementMatrix =
-        Eigen::Matrix<ActsScalar, kMeasurementSize, eBoundSize>;
+    using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
     using CovarianceMatrix =
-        Eigen::Matrix<ActsScalar, kMeasurementSize, kMeasurementSize>;
+        Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
     using KalmanGainMatrix =
-        Eigen::Matrix<ActsScalar, eBoundSize, kMeasurementSize>;
+        Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
         measurement.calibrated};
     typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
         calibratedCovariance{measurement.calibratedCovariance};
 
-    // Measurement matrix
-    const MeasurementMatrix H =
-        measurement.projector
-            .template topLeftCorner<kMeasurementSize, eBoundSize>();
+    // Projector matrix
+    const ProjectorMatrix H = subspaceHelper.projector();
 
     // Residual covariance
     const CovarianceMatrix S =
@@ -71,12 +75,12 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     const KalmanGainMatrix K = (ts.predictedCovariance * H.transpose() * SInv);
 
     const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
-    const Eigen::Matrix<ActsScalar, kMeasurementSize, 1> y =
+    const Eigen::Matrix<double, kMeasurementSize, 1> y =
         (calibrated - H * ts.predicted);
 
     const Acts::BoundMatrix bigLambdaTilde =
         (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
-    const Eigen::Matrix<ActsScalar, eBoundSize, 1> smallLambdaTilde =
+    const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
         (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
 
     bigLambdaHat = F.transpose() * bigLambdaTilde * F;

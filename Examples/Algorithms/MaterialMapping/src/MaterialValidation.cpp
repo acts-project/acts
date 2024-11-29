@@ -47,9 +47,9 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Loop over the number of tracks
   for (std::size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
     // Generate a random phi and eta
-    Acts::ActsScalar phi = phiDist(rng);
-    Acts::ActsScalar eta = etaDist(rng);
-    Acts::ActsScalar theta = 2 * std::atan(std::exp(-eta));
+    double phi = phiDist(rng);
+    double eta = etaDist(rng);
+    double theta = 2 * std::atan(std::exp(-eta));
     Acts::Vector3 direction(std::cos(phi) * std::sin(theta),
                             std::sin(phi) * std::sin(theta), std::cos(theta));
 

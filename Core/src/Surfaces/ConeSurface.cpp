@@ -189,8 +189,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
-  ActsScalar minZ = bounds().get(ConeBounds::eMinZ);
-  ActsScalar maxZ = bounds().get(ConeBounds::eMaxZ);
+  double minZ = bounds().get(ConeBounds::eMinZ);
+  double maxZ = bounds().get(ConeBounds::eMaxZ);
 
   if (minZ == -std::numeric_limits<double>::infinity() ||
       maxZ == std::numeric_limits<double>::infinity()) {
@@ -208,15 +208,15 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   }
 
   // Cone parameters
-  ActsScalar hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
-  ActsScalar avgPhi = bounds().get(ConeBounds::eAveragePhi);
-  std::vector<ActsScalar> refPhi = {};
-  if (bool fullCone = (hPhiSec == std::numbers::pi_v<ActsScalar>); !fullCone) {
+  double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
+  double avgPhi = bounds().get(ConeBounds::eAveragePhi);
+  std::vector<double> refPhi = {};
+  if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
     refPhi = {avgPhi};
   }
 
   // Add the cone sizes
-  std::vector<ActsScalar> coneSides;
+  std::vector<double> coneSides;
   if (std::abs(minZ) > s_onSurfaceTolerance) {
     coneSides.push_back(minZ);
   }
@@ -284,7 +284,7 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
 Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -295,23 +295,23 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status1 = std::abs(qe.first) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
 
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution1, direction, boundaryTolerance)) {
-    status1 = Intersection3D::Status::missed;
+    status1 = IntersectionStatus::unreachable;
   }
 
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
-  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
-                                       ? Intersection3D::Status::onSurface
-                                       : Intersection3D::Status::reachable;
+  IntersectionStatus status2 = std::abs(qe.second) < std::abs(tolerance)
+                                   ? IntersectionStatus::onSurface
+                                   : IntersectionStatus::reachable;
   if (!boundaryTolerance.isInfinite() &&
       !isOnSurface(gctx, solution2, direction, boundaryTolerance)) {
-    status2 = Intersection3D::Status::missed;
+    status2 = IntersectionStatus::unreachable;
   }
 
   const auto& tf = transform(gctx);
