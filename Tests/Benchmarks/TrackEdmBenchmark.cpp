@@ -149,7 +149,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
                 std::array<std::uint8_t, eBoundSize> indices{0};
                 std::iota(indices.begin(), indices.end(), 0);
-                trackState.setBoundSubspaceIndices(indices);
+                trackState.setProjectorSubspaceIndices(indices);
               });
 
           trackState.typeFlags().set(TrackStateFlag::MeasurementFlag);
