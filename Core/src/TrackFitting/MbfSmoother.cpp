@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 
+#include <cstdint>
+
 namespace Acts {
 
 void MbfSmoother::calculateSmoothed(InternalTrackState& ts,
@@ -42,9 +44,13 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
 
   visit_measurement(measurement.calibratedSize, [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
+    std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        measurement.projector.begin(),
+        measurement.projector.begin() + kMeasurementSize);
+    FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
+        validSubspaceIndices);
 
-    using MeasurementMatrix =
-        Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
+    using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
     using CovarianceMatrix =
         Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
     using KalmanGainMatrix =
@@ -55,10 +61,8 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
         calibratedCovariance{measurement.calibratedCovariance};
 
-    // Measurement matrix
-    const MeasurementMatrix H =
-        measurement.projector
-            .template topLeftCorner<kMeasurementSize, eBoundSize>();
+    // Projector matrix
+    const ProjectorMatrix H = subspaceHelper.projector();
 
     // Residual covariance
     const CovarianceMatrix S =
