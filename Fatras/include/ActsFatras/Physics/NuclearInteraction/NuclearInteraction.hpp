@@ -291,8 +291,8 @@ struct NuclearInteraction {
   ///
   /// @return Azimuthal and polar angle of the second particle in the global
   /// coordinate system
-  std::pair<double, double> globalAngle(double phi1, double theta1, float phi2,
-                                        float theta2) const;
+  std::pair<double, double> globalAngle(double phi1, double theta1, double phi2,
+                                        double theta2) const;
 
   /// Converter from sampled numbers to a vector of particles
   ///
@@ -483,7 +483,7 @@ NuclearInteraction::sampleKinematics(
     if (trials == nMatchingTrialsTotal) {
       return std::nullopt;
     }
-    // Re-sampole invariant masses if no fitting momenta were found
+    // Re-sample invariant masses if no fitting momenta were found
     if (trials++ % nMatchingTrials == 0) {
       invariantMasses = sampleInvariantMasses(generator, parameters);
     } else {
@@ -513,13 +513,13 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     const float momentum = momenta[i];
     const float invariantMass = invariantMasses[i];
     const float p1p2 = 2. * momentum * parametrizedMomentum;
-    const float costheta = 1. - invariantMass * invariantMass / p1p2;
+    const double costheta = 1. - invariantMass * invariantMass / p1p2;
 
-    const auto phiTheta = globalAngle(
+    const auto [phiGlobal, thetaGlobal] = globalAngle(
         phi, theta, uniformDistribution(generator) * 2. * std::numbers::pi,
         std::acos(costheta));
     const auto direction =
-        Acts::makeDirectionFromPhiTheta(phiTheta.first, phiTheta.second);
+        Acts::makeDirectionFromPhiTheta(phiGlobal, thetaGlobal);
 
     Particle p = Particle(initialParticle.particleId().makeDescendant(i),
                           static_cast<Acts::PdgParticle>(pdgId[i]));

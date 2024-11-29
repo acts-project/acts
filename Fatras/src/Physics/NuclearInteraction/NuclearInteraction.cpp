@@ -113,8 +113,8 @@ unsigned int NuclearInteraction::finalStateMultiplicity(
 
 std::pair<double, double> NuclearInteraction::globalAngle(double phi1,
                                                           double theta1,
-                                                          float phi2,
-                                                          float theta2) const {
+                                                          double phi2,
+                                                          double theta2) const {
   // Rotation around the global y-axis
   Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);
@@ -138,10 +138,10 @@ std::pair<double, double> NuclearInteraction::globalAngle(double phi1,
   const Acts::Vector3 vectorSum = rotZ * rotY * vector2;
 
   // Calculate the global angles
-  const float theta = std::acos(vectorSum.z() / vectorSum.norm());
-  const float phi = std::atan2(vectorSum.y(), vectorSum.x());
+  const double theta = std::acos(vectorSum.z() / vectorSum.norm());
+  const double phi = std::atan2(vectorSum.y(), vectorSum.x());
 
-  return std::make_pair(phi, theta);
+  return {phi, theta};
 }
 
 bool NuclearInteraction::match(const Acts::ActsDynamicVector& momenta,
