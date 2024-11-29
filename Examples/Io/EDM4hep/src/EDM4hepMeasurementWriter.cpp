@@ -18,6 +18,17 @@
 
 #include <podio/Frame.h>
 
+// Compatibility with EDM4hep < 0.99 and >= 0.99
+#if __has_include(<edm4hep/TrackerHit3DCollection.h>)
+#include <edm4hep/TrackerHit3DCollection.h>
+#else
+#include <edm4hep/TrackerHitCollection.h>
+namespace edm4hep {
+using TrackerHit3DCollection = edm4hep::TrackerHitCollection;
+}
+#endif
+#include <edm4hep/TrackerHitPlaneCollection.h>
+
 namespace ActsExamples {
 
 EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
@@ -44,7 +55,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
   podio::Frame frame;
 
   edm4hep::TrackerHitPlaneCollection hitsPlane;
-  edm4hep::TrackerHitCollection hits;
+  edm4hep::TrackerHit3DCollection hits;
 
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);

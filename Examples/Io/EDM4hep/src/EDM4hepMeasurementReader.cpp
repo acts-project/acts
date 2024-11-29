@@ -18,8 +18,18 @@
 #include <list>
 #include <stdexcept>
 
-#include <edm4hep/TrackerHit.h>
-#include <edm4hep/TrackerHitCollection.h>
+#if __has_include(<edm4hep/TrackerHit3D.h>)
+#include "edm4hep/TrackerHit3D.h"
+#include "edm4hep/TrackerHit3DCollection.h"
+#else
+#include "edm4hep/TrackerHit.h"
+#include "edm4hep/TrackerHitCollection.h"
+namespace edm4hep {
+using TrackerHit3DCollection = edm4hep::TrackerHitCollection;
+using TrackerHit3D = edm4hep::TrackerHit;
+}  // namespace edm4hep
+#endif
+
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
 
@@ -60,7 +70,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   const auto& trackerHitPlaneCollection =
       frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
   const auto& trackerHitRawCollection =
-      frame.get<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+      frame.get<edm4hep::TrackerHit3DCollection>("ActsTrackerHitsRaw");
 
   for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;
