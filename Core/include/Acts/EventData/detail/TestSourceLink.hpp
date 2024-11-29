@@ -18,9 +18,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
@@ -126,7 +124,7 @@ inline std::ostream& operator<<(std::ostream& os,
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
-void testSourceLinkCalibratorReturn(
+void testSourceLinkCalibrator(
     const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
     const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
@@ -139,30 +137,18 @@ void testSourceLinkCalibratorReturn(
     trackState.allocateCalibrated(2);
     trackState.template calibrated<2>() = sl.parameters;
     trackState.template calibratedCovariance<2>() = sl.covariance;
-    trackState.setSubspaceIndices(std::array{sl.indices[0], sl.indices[1]});
+    trackState.setProjectorSubspaceIndices(
+        std::array{sl.indices[0], sl.indices[1]});
   } else if (sl.indices[0] != Acts::eBoundSize) {
     trackState.allocateCalibrated(1);
     trackState.template calibrated<1>() = sl.parameters.head<1>();
     trackState.template calibratedCovariance<1>() =
         sl.covariance.topLeftCorner<1, 1>();
-    trackState.setSubspaceIndices(std::array{sl.indices[0]});
+    trackState.setProjectorSubspaceIndices(std::array{sl.indices[0]});
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");
   }
-}
-
-/// Extract the measurement from a TestSourceLink.
-///
-/// @param gctx Unused
-/// @param trackState TrackState to calibrated
-template <typename trajectory_t>
-void testSourceLinkCalibrator(
-    const GeometryContext& gctx, const CalibrationContext& cctx,
-    const SourceLink& sourceLink,
-    typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
-                                               trackState);
 }
 
 }  // namespace Acts::detail::Test

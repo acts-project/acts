@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -305,8 +306,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       auto simHit = EDM4hepUtil::readSimHit(
           hit,
           [&](const auto& inParticle) {
-            ACTS_VERBOSE("SimHit has source particle: "
-                         << hit.getMCParticle().getObjectID().index);
+            ACTS_VERBOSE(
+                "SimHit has source particle: "
+                << Acts::EDM4hepUtil::getParticle(hit).getObjectID().index);
             auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
             if (it == edm4hepParticleMap.end()) {
               ACTS_ERROR(

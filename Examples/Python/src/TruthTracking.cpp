@@ -10,9 +10,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -41,12 +42,16 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
       inputMeasurementParticlesMap, outputProtoTracks);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
+                                "ParticleTrackParamExtractor", inputParticles,
+                                outputTrackParameters);
+
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
-      outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
-      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPtRel,
-      initialSigmas, initialSigmaPtRel, initialVarInflation, particleHypothesis,
-      randomNumbers);
+      ActsExamples::TrackParameterSmearing, mex, "TrackParameterSmearing",
+      inputTrackParameters, outputTrackParameters, sigmaLoc0, sigmaLoc0PtA,
+      sigmaLoc0PtB, sigmaLoc1, sigmaLoc1PtA, sigmaLoc1PtB, sigmaTime, sigmaPhi,
+      sigmaTheta, sigmaPtRel, initialSigmas, initialSigmaPtRel,
+      initialVarInflation, particleHypothesis, randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
