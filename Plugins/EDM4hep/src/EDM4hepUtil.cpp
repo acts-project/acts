@@ -24,7 +24,8 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackState.h>
 
-namespace Acts::EDM4hepUtil::detail {
+namespace Acts::EDM4hepUtil {
+namespace detail {
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
@@ -189,6 +190,8 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   return {params.surface, targetPars, cov, params.particleHypothesis};
 }
 
+}  // namespace detail
+
 #if EDM4HEP_VERSION_MAJOR >= 1 || \
     (EDM4HEP_VERSION_MAJOR == 0 && EDM4HEP_VERSION_MINOR == 99)
 edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit) {
@@ -210,4 +213,4 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
 }
 #endif
 
-}  // namespace Acts::EDM4hepUtil::detail
+}  // namespace Acts::EDM4hepUtil
