@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/CheckedCast.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
@@ -257,7 +258,7 @@ namespace {
 template <typename ReferenceType, typename CheckTypeUniquePtr>
 bool checkType(const ReferenceType& /**unused*/,
                const CheckTypeUniquePtr& g2l) {
-  return (dynamic_cast<const ReferenceType*>(g2l.get()) != nullptr);
+  return (Acts::checked_cast<const ReferenceType*>(g2l.get()) != nullptr);
 }
 
 template <typename SubspactTuple>
@@ -476,7 +477,7 @@ BOOST_AUTO_TEST_CASE(BoundCylinderToZPhiTest) {
   BOOST_REQUIRE(boundCylinderToZPhiRead != nullptr);
 
   const Acts::GridAccess::BoundCylinderToZPhi* bct =
-      dynamic_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
+      Acts::checked_cast<const Acts::GridAccess::BoundCylinderToZPhi*>(
           boundCylinderToZPhiRead.get());
 
   auto delegate =

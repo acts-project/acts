@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/CheckedCast.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cstdio>
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     Axis axis2Expected{AxisBound, -100_mm, 100_mm, 10};
     BOOST_CHECK_EQUAL(*axis2, axis2Expected);
 
-    auto& concrete = dynamic_cast<
+    auto& concrete = Acts::checked_cast<
         GridPortalLinkT<decltype(axis1Expected), decltype(axis2Expected)>&>(
         *grid2dCyl1);
 
@@ -176,7 +177,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     BOOST_CHECK_EQUAL(*axis1, axis1Explicit);
     BOOST_CHECK_EQUAL(*axis2, axis2Expected);
 
-    auto& concrete2 = dynamic_cast<
+    auto& concrete2 = Acts::checked_cast<
         GridPortalLinkT<decltype(axis1Explicit), decltype(axis2Expected)>&>(
         *grid2dCyl1Explicit);
 
@@ -207,8 +208,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     BOOST_CHECK_EQUAL(*axis2Phi, axis2PhiExpected);
 
     auto& concrete3 =
-        dynamic_cast<GridPortalLinkT<decltype(axis1PhiExpected),
-                                     decltype(axis2PhiExpected)>&>(
+        Acts::checked_cast<GridPortalLinkT<decltype(axis1PhiExpected),
+                                           decltype(axis2PhiExpected)>&>(
             *grid2dCylPhi);
 
     checkAllBins(concrete3);
@@ -223,8 +224,8 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
     BOOST_CHECK_EQUAL(*axis2Phi, axis2PhiExpected);
 
     auto& concrete4 =
-        dynamic_cast<GridPortalLinkT<decltype(axis1PhiExplicit),
-                                     decltype(axis2PhiExpected)>&>(
+        Acts::checked_cast<GridPortalLinkT<decltype(axis1PhiExplicit),
+                                           decltype(axis2PhiExpected)>&>(
             *grid2dCylPhiExplicit);
 
     checkAllBins(concrete4);
@@ -362,8 +363,9 @@ BOOST_AUTO_TEST_CASE(Disc) {
     BOOST_CHECK_EQUAL(axis2->getBoundaryType(), AxisBoundaryType::Closed);
 
     checkAllBins(
-        dynamic_cast<GridPortalLinkT<decltype(axisPhi1Expected),
-                                     Axis<Equidistant, Closed>>&>(*grid2d));
+        Acts::checked_cast<GridPortalLinkT<decltype(axisPhi1Expected),
+                                           Axis<Equidistant, Closed>>&>(
+            *grid2d));
 
     Axis axis2Explicit{AxisClosed, -180_degree, 180_degree, 3};
     auto grid2dExplicit = grid1->extendTo2d(&axis2Explicit);
@@ -374,8 +376,8 @@ BOOST_AUTO_TEST_CASE(Disc) {
     BOOST_CHECK_EQUAL(*axis1, axis1Expected);
     BOOST_CHECK_EQUAL(*axis2, axis2Explicit);
 
-    checkAllBins(dynamic_cast<GridPortalLinkT<decltype(axisPhi1Expected),
-                                              decltype(axis2Explicit)>&>(
+    checkAllBins(Acts::checked_cast<GridPortalLinkT<decltype(axisPhi1Expected),
+                                                    decltype(axis2Explicit)>&>(
         *grid2dExplicit));
 
     auto gridPhiBinnedInR = GridPortalLink::make(
@@ -396,8 +398,8 @@ BOOST_AUTO_TEST_CASE(Disc) {
                       AxisBoundaryType::Bound);
 
     checkAllBins(
-        dynamic_cast<GridPortalLinkT<decltype(gridPhiBinnedInRExpected),
-                                     Axis<Equidistant, Bound>>&>(
+        Acts::checked_cast<GridPortalLinkT<decltype(gridPhiBinnedInRExpected),
+                                           Axis<Equidistant, Bound>>&>(
             *grid2dPhiNonClosed));
 
     Axis axisPhiNonClosedExplicit{AxisBound, -45_degree, 45_degree, 3};
@@ -410,10 +412,10 @@ BOOST_AUTO_TEST_CASE(Disc) {
     BOOST_CHECK_EQUAL(*grid2dPhiNonClosedExplicit->grid().axes().front(),
                       gridPhiBinnedInRExpected);
 
-    checkAllBins(
-        dynamic_cast<GridPortalLinkT<decltype(gridPhiBinnedInRExpected),
-                                     decltype(axisPhiNonClosedExplicit)>&>(
-            *grid2dPhiNonClosedExplicit));
+    checkAllBins(Acts::checked_cast<
+                 GridPortalLinkT<decltype(gridPhiBinnedInRExpected),
+                                 decltype(axisPhiNonClosedExplicit)>&>(
+        *grid2dPhiNonClosedExplicit));
 
     auto grid2dPhi = gridPhi->extendTo2d(nullptr);
     BOOST_REQUIRE(grid2dPhi);
@@ -423,8 +425,9 @@ BOOST_AUTO_TEST_CASE(Disc) {
     BOOST_CHECK_EQUAL(*grid2dPhi->grid().axes().back(), axisPhi1Expected);
 
     checkAllBins(
-        dynamic_cast<GridPortalLinkT<decltype(axis2dPhiExpected),
-                                     decltype(axisPhi1Expected)>&>(*grid2dPhi));
+        Acts::checked_cast<GridPortalLinkT<decltype(axis2dPhiExpected),
+                                           decltype(axisPhi1Expected)>&>(
+            *grid2dPhi));
 
     Axis axis2dPhiExplicit{AxisBound, 30_mm, 100_mm, 3};
     auto grid2dPhiExplicit = gridPhi->extendTo2d(&axis2dPhiExplicit);
@@ -435,9 +438,10 @@ BOOST_AUTO_TEST_CASE(Disc) {
     BOOST_CHECK_EQUAL(*grid2dPhiExplicit->grid().axes().back(),
                       axisPhi1Expected);
 
-    checkAllBins(dynamic_cast<GridPortalLinkT<decltype(axisPhi1Expected),
-                                              decltype(axis2dPhiExplicit)>&>(
-        *grid2dPhiExplicit));
+    checkAllBins(
+        Acts::checked_cast<GridPortalLinkT<decltype(axisPhi1Expected),
+                                           decltype(axis2dPhiExplicit)>&>(
+            *grid2dPhiExplicit));
   }
 
   BOOST_TEST_CONTEXT("2D") {
@@ -1465,7 +1469,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     using merged_type =
         GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
-    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    const auto* merged =
+        Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
     grid1->printContents(std::cout);
@@ -1503,7 +1508,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     using merged_type =
         GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
-    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    const auto* merged =
+        Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
     grid1->printContents(std::cout);
@@ -1655,7 +1661,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
         GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
                         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
-    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    const auto* merged =
+        Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
     checkCheckerBoard(merged->grid());
 
@@ -1666,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
     mergedPtr = GridPortalLink::merge(*discPhiGrid1, *discPhiGrid2,
                                       BinningValue::binR, *logger);
 
-    merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    merged = Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
     const auto* v1 = vol1.get();
@@ -1728,7 +1735,8 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
         GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
                         Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
-    const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    const auto* merged =
+        Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
     checkCheckerBoard(merged->grid());
@@ -1739,7 +1747,7 @@ BOOST_AUTO_TEST_CASE(BinFilling) {
 
     mergedPtr =
         GridPortalLink::merge(*grid1, *grid2, BinningValue::binPhi, *logger);
-    merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+    merged = Acts::checked_cast<const merged_type*>(mergedPtr.get());
     BOOST_REQUIRE(merged);
 
     const auto* v1 = vol1.get();
@@ -2013,7 +2021,7 @@ BOOST_AUTO_TEST_CASE(PhiDirection) {
       GridPortalLinkT<Axis<AxisType::Equidistant, AxisBoundaryType::Bound>,
                       Axis<AxisType::Equidistant, AxisBoundaryType::Bound>>;
 
-  const auto* merged = dynamic_cast<const merged_type*>(mergedPtr.get());
+  const auto* merged = Acts::checked_cast<const merged_type*>(mergedPtr.get());
   BOOST_REQUIRE_NE(merged, nullptr);
 
   BOOST_CHECK_EQUAL(merged->grid().axes().size(), 2);

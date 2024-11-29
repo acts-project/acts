@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/CheckedCast.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
@@ -52,7 +53,8 @@ void encodeSubspace(
     nlohmann::json& jGlobalToGridLocal,
     const Acts::GridAccess::IGlobalToGridLocal& globalToGridLocal,
     const Subspace& /*subspace*/) {
-  const Subspace* subspace = dynamic_cast<const Subspace*>(&globalToGridLocal);
+  const Subspace* subspace =
+      Acts::checked_cast<const Subspace*>(&globalToGridLocal);
   if (subspace != nullptr) {
     jGlobalToGridLocal["type"] = "subspace";
     jGlobalToGridLocal["accessors"] = subspace->bValues;
@@ -65,7 +67,7 @@ void encodeTransformedSubspace(
     const Acts::GridAccess::IGlobalToGridLocal& globalToGridLocal,
     const Subspace& subscpace) {
   const Acts::GridAccess::Affine3Transformed<Subspace>* tsubspace =
-      dynamic_cast<const Acts::GridAccess::Affine3Transformed<Subspace>*>(
+      Acts::checked_cast<const Acts::GridAccess::Affine3Transformed<Subspace>*>(
           &globalToGridLocal);
   if (tsubspace != nullptr) {
     encodeSubspace(jGlobalToGridLocal, tsubspace->globalToGridLocal, subscpace);
@@ -409,35 +411,40 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
   nlohmann::json jBoundToGridLocal;
 
   auto localSubSpace0 =
-      dynamic_cast<const GridAccess::LocalSubspace<0u>*>(&boundToGridLocal);
+      Acts::checked_cast<const GridAccess::LocalSubspace<0u>*>(
+          &boundToGridLocal);
   if (localSubSpace0 != nullptr) {
     jBoundToGridLocal["type"] = "subspace";
     jBoundToGridLocal["accessors"] = localSubSpace0->accessors;
   }
 
   auto localSubSpace1 =
-      dynamic_cast<const GridAccess::LocalSubspace<1u>*>(&boundToGridLocal);
+      Acts::checked_cast<const GridAccess::LocalSubspace<1u>*>(
+          &boundToGridLocal);
   if (localSubSpace1 != nullptr) {
     jBoundToGridLocal["type"] = "subspace";
     jBoundToGridLocal["accessors"] = localSubSpace1->accessors;
   }
 
   auto localSubSpace01 =
-      dynamic_cast<const GridAccess::LocalSubspace<0u, 1u>*>(&boundToGridLocal);
+      Acts::checked_cast<const GridAccess::LocalSubspace<0u, 1u>*>(
+          &boundToGridLocal);
   if (localSubSpace01 != nullptr) {
     jBoundToGridLocal["type"] = "subspace";
     jBoundToGridLocal["accessors"] = localSubSpace01->accessors;
   }
 
   auto localSubSpace10 =
-      dynamic_cast<const GridAccess::LocalSubspace<1u, 0u>*>(&boundToGridLocal);
+      Acts::checked_cast<const GridAccess::LocalSubspace<1u, 0u>*>(
+          &boundToGridLocal);
   if (localSubSpace10 != nullptr) {
     jBoundToGridLocal["type"] = "subspace";
     jBoundToGridLocal["accessors"] = localSubSpace10->accessors;
   }
 
   auto boundCylinderToZPhi =
-      dynamic_cast<const GridAccess::BoundCylinderToZPhi*>(&boundToGridLocal);
+      Acts::checked_cast<const GridAccess::BoundCylinderToZPhi*>(
+          &boundToGridLocal);
   if (boundCylinderToZPhi != nullptr) {
     jBoundToGridLocal["type"] = "cylinder_to_zphi";
     jBoundToGridLocal["radius"] = boundCylinderToZPhi->radius;
