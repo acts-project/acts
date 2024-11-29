@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Utilities/AngleHelpers.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -91,8 +92,8 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
   SimParticleContainer::sequence_type particles;
 
   // create the primary vertex
-  auto& primaryVertex = vertices.emplace_back(
-      SimVertexBarcode{0}, SimVertex::Vector4(0., 0., 0., 0.));
+  auto& primaryVertex =
+      vertices.emplace_back(SimVertexBarcode{0}, Acts::Vector4(0., 0., 0., 0.));
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
@@ -115,12 +116,12 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     const double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
 
     // construct the particle;
-    ActsFatras::Particle particle(pid, pdg, q, m_mass);
+    SimParticleState particle(pid, pdg, q, m_mass);
     particle.setDirection(dir);
     particle.setAbsoluteMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
-    particles.insert(particles.end(), std::move(particle));
+    particles.insert(particles.end(), SimParticle(particle, particle));
   }
 
   std::pair<SimVertexContainer, SimParticleContainer> out;

@@ -118,7 +118,7 @@ struct SurfaceReached {
 
     bool reached = false;
 
-    if (closest.status() == Intersection3D::Status::onSurface) {
+    if (closest.status() == IntersectionStatus::onSurface) {
       const double distance = closest.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "

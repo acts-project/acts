@@ -9,7 +9,6 @@
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
@@ -18,6 +17,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <numbers>
+#include <span>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -98,7 +100,7 @@ double MeasurementSelector::calculateChi2(
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 
-        std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+        std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
             projector.begin(), projector.begin() + kMeasurementSize);
         FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
             validSubspaceIndices);
@@ -121,7 +123,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
     const InternalCutBins& config, double theta) {
   // since theta is in [0, pi] and we have a symmetric cut in eta, we can just
   // look at the positive half of the Z axis
-  const double constrainedTheta = std::min(theta, M_PI - theta);
+  const double constrainedTheta = std::min(theta, std::numbers::pi - theta);
 
   auto it = std::ranges::find_if(
       config, [constrainedTheta](const InternalCutBin& cuts) {

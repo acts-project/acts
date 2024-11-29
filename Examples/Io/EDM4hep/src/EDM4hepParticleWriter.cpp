@@ -8,10 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <stdexcept>
 

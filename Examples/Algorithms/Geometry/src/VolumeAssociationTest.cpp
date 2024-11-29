@@ -14,6 +14,7 @@
 
 #include <exception>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -37,17 +38,17 @@ ActsExamples::ProcessCode ActsExamples::VolumeAssociationTest::execute(
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   // Setup random number distributions for some quantities
-  std::uniform_real_distribution<Acts::ActsScalar> phiDist(-M_PI, M_PI);
-  std::uniform_real_distribution<Acts::ActsScalar> rDist(0.,
-                                                         m_cfg.randomRange[0u]);
-  std::uniform_real_distribution<Acts::ActsScalar> zDist(-m_cfg.randomRange[1u],
-                                                         m_cfg.randomRange[1u]);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
+  std::uniform_real_distribution<double> rDist(0., m_cfg.randomRange[0u]);
+  std::uniform_real_distribution<double> zDist(-m_cfg.randomRange[1u],
+                                               m_cfg.randomRange[1u]);
 
   // Lemma for vector creation
   auto testPosition = [&]() -> Acts::Vector3 {
-    Acts::ActsScalar r = rDist(rng);
-    Acts::ActsScalar phi = phiDist(rng);
-    Acts::ActsScalar z = zDist(rng);
+    double r = rDist(rng);
+    double phi = phiDist(rng);
+    double z = zDist(rng);
     return Acts::Vector3(r * cos(phi), r * sin(phi), z);
   };
 

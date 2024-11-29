@@ -9,7 +9,6 @@
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -25,9 +24,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <memory>
 
 namespace {
+
 /// @note This does not really compare if the configs are equal, therefore
 /// it is no operator==. The contained std::function types cannot really
 /// be checked for equality.
@@ -47,6 +46,7 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
           ag.thickness == bg.thickness && ag.threshold == bg.threshold &&
           ag.digital == bg.digital);
 }
+
 }  // namespace
 
 void ActsExamples::DigitizationConfigurator::operator()(
@@ -82,8 +82,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
           case Acts::SurfaceBounds::eRectangle: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binX) {
-              Acts::ActsScalar minX = boundValues[Acts::RectangleBounds::eMinX];
-              Acts::ActsScalar maxX = boundValues[Acts::RectangleBounds::eMaxX];
+              double minX = boundValues[Acts::RectangleBounds::eMinX];
+              double maxX = boundValues[Acts::RectangleBounds::eMaxX];
               unsigned int nBins = static_cast<unsigned int>(std::round(
                   (maxX - minX) / inputSegmentation.binningData()[0].step));
               outputSegmentation += Acts::BinUtility(
@@ -95,8 +95,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              Acts::ActsScalar minY = boundValues[Acts::RectangleBounds::eMinY];
-              Acts::ActsScalar maxY = boundValues[Acts::RectangleBounds::eMaxY];
+              double minY = boundValues[Acts::RectangleBounds::eMinY];
+              double maxY = boundValues[Acts::RectangleBounds::eMaxY];
               unsigned int nBins = static_cast<unsigned int>(
                   std::round((maxY - minY) /
                              inputSegmentation.binningData()[accessBin].step));
@@ -110,7 +110,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
           case Acts::SurfaceBounds::eTrapezoid: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binX) {
-              Acts::ActsScalar maxX = std::max(
+              double maxX = std::max(
                   boundValues[Acts::TrapezoidBounds::eHalfLengthXnegY],
                   boundValues[Acts::TrapezoidBounds::eHalfLengthXposY]);
               unsigned int nBins = static_cast<unsigned int>(std::round(
@@ -124,8 +124,7 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              Acts::ActsScalar maxY =
-                  boundValues[Acts::TrapezoidBounds::eHalfLengthY];
+              double maxY = boundValues[Acts::TrapezoidBounds::eHalfLengthY];
               unsigned int nBins = static_cast<unsigned int>(
                   std::round((2 * maxY) /
                              inputSegmentation.binningData()[accessBin].step));
@@ -139,8 +138,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
           case Acts::SurfaceBounds::eAnnulus: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binR) {
-              Acts::ActsScalar minR = boundValues[Acts::AnnulusBounds::eMinR];
-              Acts::ActsScalar maxR = boundValues[Acts::AnnulusBounds::eMaxR];
+              double minR = boundValues[Acts::AnnulusBounds::eMinR];
+              double maxR = boundValues[Acts::AnnulusBounds::eMaxR];
               unsigned int nBins = static_cast<unsigned int>(std::round(
                   (maxR - minR) / inputSegmentation.binningData()[0].step));
               outputSegmentation += Acts::BinUtility(
@@ -152,11 +151,10 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              Acts::ActsScalar averagePhi =
-                  boundValues[Acts::AnnulusBounds::eAveragePhi];
-              Acts::ActsScalar minPhi =
+              double averagePhi = boundValues[Acts::AnnulusBounds::eAveragePhi];
+              double minPhi =
                   averagePhi - boundValues[Acts::AnnulusBounds::eMinPhiRel];
-              Acts::ActsScalar maxPhi =
+              double maxPhi =
                   averagePhi + boundValues[Acts::AnnulusBounds::eMaxPhiRel];
               unsigned int nBins = static_cast<unsigned int>(
                   std::round((maxPhi - minPhi) /
@@ -170,10 +168,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
 
           // The module is a Disc Trapezoid
           case Acts::SurfaceBounds::eDiscTrapezoid: {
-            Acts::ActsScalar minR =
-                boundValues[Acts::DiscTrapezoidBounds::eMinR];
-            Acts::ActsScalar maxR =
-                boundValues[Acts::DiscTrapezoidBounds::eMaxR];
+            double minR = boundValues[Acts::DiscTrapezoidBounds::eMinR];
+            double maxR = boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binR) {
@@ -188,16 +184,16 @@ void ActsExamples::DigitizationConfigurator::operator()(
                 inputSegmentation.dimensions() == 2) {
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
-              Acts::ActsScalar hxMinR =
+              double hxMinR =
                   boundValues[Acts::DiscTrapezoidBounds::eHalfLengthXminR];
-              Acts::ActsScalar hxMaxR =
+              double hxMaxR =
                   boundValues[Acts::DiscTrapezoidBounds::eHalfLengthXmaxR];
 
-              Acts::ActsScalar averagePhi =
+              double averagePhi =
                   boundValues[Acts::DiscTrapezoidBounds::eAveragePhi];
-              Acts::ActsScalar alphaMinR = std::atan2(minR, hxMinR);
-              Acts::ActsScalar alphaMaxR = std::atan2(maxR, hxMaxR);
-              Acts::ActsScalar alpha = std::max(alphaMinR, alphaMaxR);
+              double alphaMinR = std::atan2(minR, hxMinR);
+              double alphaMaxR = std::atan2(maxR, hxMaxR);
+              double alpha = std::max(alphaMinR, alphaMaxR);
               unsigned int nBins = static_cast<unsigned int>(std::round(
                   2 * alpha / inputSegmentation.binningData()[accessBin].step));
               outputSegmentation += Acts::BinUtility(
@@ -211,8 +207,8 @@ void ActsExamples::DigitizationConfigurator::operator()(
           case Acts::SurfaceBounds::eDisc: {
             if (inputSegmentation.binningData()[0].binvalue ==
                 Acts::BinningValue::binR) {
-              Acts::ActsScalar minR = boundValues[Acts::RadialBounds::eMinR];
-              Acts::ActsScalar maxR = boundValues[Acts::RadialBounds::eMaxR];
+              double minR = boundValues[Acts::RadialBounds::eMinR];
+              double maxR = boundValues[Acts::RadialBounds::eMaxR];
               unsigned int nBins = static_cast<unsigned int>(std::round(
                   (maxR - minR) / inputSegmentation.binningData()[0].step));
               outputSegmentation += Acts::BinUtility(
@@ -225,12 +221,11 @@ void ActsExamples::DigitizationConfigurator::operator()(
               unsigned int accessBin =
                   inputSegmentation.dimensions() == 2 ? 1 : 0;
 
-              Acts::ActsScalar averagePhi =
-                  boundValues[Acts::RadialBounds::eAveragePhi];
-              Acts::ActsScalar halfPhiSector =
+              double averagePhi = boundValues[Acts::RadialBounds::eAveragePhi];
+              double halfPhiSector =
                   boundValues[Acts::RadialBounds::eHalfPhiSector];
-              Acts::ActsScalar minPhi = averagePhi - halfPhiSector;
-              Acts::ActsScalar maxPhi = averagePhi + halfPhiSector;
+              double minPhi = averagePhi - halfPhiSector;
+              double maxPhi = averagePhi + halfPhiSector;
 
               unsigned int nBins = static_cast<unsigned int>(
                   std::round((maxPhi - minPhi) /

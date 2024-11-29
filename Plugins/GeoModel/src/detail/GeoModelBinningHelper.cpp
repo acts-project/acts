@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 
+#include <numbers>
+
 #include <boost/algorithm/string.hpp>
 
 Acts::Experimental::ProtoBinning
@@ -43,12 +45,12 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   // Bool auto_range
   bool autoRange = true;
   // The Range
-  ActsScalar rangeMin = 0.;
-  ActsScalar rangeMax = 0.;
+  double rangeMin = 0.;
+  double rangeMax = 0.;
   if (bValue == BinningValue::binPhi &&
       boundaryType == AxisBoundaryType::Closed) {
-    rangeMin = -M_PI;
-    rangeMax = M_PI;
+    rangeMin = -std::numbers::pi;
+    rangeMax = std::numbers::pi;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;

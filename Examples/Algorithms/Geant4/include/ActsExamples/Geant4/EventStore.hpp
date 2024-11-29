@@ -21,8 +21,10 @@
 #include "G4Types.hh"
 
 namespace ActsExamples {
-
 class WhiteBoard;
+}
+
+namespace ActsExamples::Geant4 {
 
 /// Common event store for all Geant4 related sub algorithms
 struct EventStore {
@@ -33,11 +35,13 @@ struct EventStore {
   /// Use a std::set here because it allows for fast insertion and ensures
   /// uniqueness. Thus particle collisions are detected early.
   using ParticleContainer =
-      std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+      std::set<SimParticle, ActsExamples::detail::CompareParticleId>;
 
-  /// Initial and final particle collections
+  /// Initial particle collection
   ParticleContainer particlesInitial;
-  ParticleContainer particlesFinal;
+
+  /// Simulated particle collection
+  ParticleContainer particlesSimulated;
 
   /// The hits in sensitive detectors
   SimHitContainer::sequence_type hits;
@@ -78,4 +82,4 @@ struct EventStore {
   std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

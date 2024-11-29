@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, BoundaryTolerance::Infinite());
   Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
-                                   Intersection3D::Status::reachable};
+                                   IntersectionStatus::reachable};
   BOOST_CHECK(sfIntersection[0].isValid());
   CHECK_CLOSE_ABS(sfIntersection[0].position(), expectedIntersect.position(),
                   1e-9);
@@ -540,7 +540,7 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -589,7 +589,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](ActsScalar v) {
+  auto a = [phiShift](double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 

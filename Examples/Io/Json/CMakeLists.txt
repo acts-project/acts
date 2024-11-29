@@ -4,7 +4,6 @@ add_library(
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
-    src/JsonSurfacesReader.cpp
     src/JsonDigitizationConfig.cpp
 )
 target_include_directories(

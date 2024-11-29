@@ -34,7 +34,7 @@ def runCKFTracks(
 
     from acts.examples.reconstruction import (
         addSeeding,
-        ParticleSmearingSigmas,
+        TrackSmearingSigmas,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
         SeedingAlgorithm,
@@ -99,15 +99,15 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+        TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
             # zero eveything so the CKF has a chance to find the measurements
-            d0=0,
-            d0PtA=0,
-            d0PtB=0,
-            z0=0,
-            z0PtA=0,
-            z0PtB=0,
-            t0=0,
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
             phi=0,
             theta=0,
             ptRel=0,

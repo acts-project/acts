@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <fstream>
+#include <numbers>
 
 BOOST_AUTO_TEST_SUITE(ActSvg)
 
@@ -52,11 +53,10 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   auto svgObject =
       Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyObject = Acts::Svg::View::xy(svgObject, identification);
-  auto xyAxes =
-      Acts::Svg::axesXY(static_cast<Acts::ActsScalar>(xyObject._x_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._x_range[1]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[0]),
-                        static_cast<Acts::ActsScalar>(xyObject._y_range[1]));
+  auto xyAxes = Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
+                                  static_cast<double>(xyObject._x_range[1]),
+                                  static_cast<double>(xyObject._y_range[0]),
+                                  static_cast<double>(xyObject._y_range[1]));
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  Acts::ActsScalar phi = 0.125 * M_PI;
-  Acts::ActsScalar radius = 150.;
+  double phi = std::numbers::pi / 8.;
+  double radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
   Acts::Vector3 localY(std::cos(phi), std::sin(phi), 0.);
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   runPlanarTests(*fullRing, discStyle, "full_ring");
 
   // Sectorial disc case
-  auto sectoralDiscBounds =
-      std::make_shared<Acts::RadialBounds>(0., 64., 0.25 * M_PI, 0.5 * M_PI);
+  auto sectoralDiscBounds = std::make_shared<Acts::RadialBounds>(
+      0., 64., std::numbers::pi / 4., std::numbers::pi / 2.);
   auto sectoralDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
       transform, sectoralDiscBounds);
   runPlanarTests(*sectoralDisc, discStyle, "full_disc");

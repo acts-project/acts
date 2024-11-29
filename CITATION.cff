@@ -89,6 +89,9 @@ authors:
   family-names: Russo
   affiliation: CERN / TU Wien
   orcid: https://orcid.org/0009-0005-8975-2245
+- given-names: Carlo
+  family-names: Varni
+  affiliation: UC Berkeley
 version: v37.4.0
 date-released: 2021-07-28
 repository-code: https://github.com/acts-project/acts

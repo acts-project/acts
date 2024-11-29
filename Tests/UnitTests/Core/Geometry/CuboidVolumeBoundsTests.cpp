@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
   for (auto bValue :
        {CuboidVolumeBounds::eHalfLengthX, CuboidVolumeBounds::eHalfLengthY,
         CuboidVolumeBounds::eHalfLengthZ}) {
-    ActsScalar target = 0.5 * box.get(bValue);
-    ActsScalar previous = box.get(bValue);
+    double target = 0.5 * box.get(bValue);
+    double previous = box.get(bValue);
     BOOST_CHECK_THROW(box.set(bValue, -1), std::logic_error);
     BOOST_CHECK_EQUAL(box.get(bValue), previous);
     box.set(bValue, target);

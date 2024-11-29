@@ -8,17 +8,11 @@
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
@@ -230,7 +224,7 @@ struct Simulation {
         // only need to switch between charged/neutral.
         SingleParticleSimulationResult result =
             SingleParticleSimulationResult::success({});
-        if (initialParticle.charge() != Particle::Scalar{0}) {
+        if (initialParticle.charge() != 0.) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -273,7 +267,7 @@ struct Simulation {
  private:
   /// Select if the particle should be simulated at all.
   bool selectParticle(const Particle &particle) const {
-    if (particle.charge() != Particle::Scalar{0}) {
+    if (particle.charge() != 0.) {
       return selectCharged(particle);
     } else {
       return selectNeutral(particle);

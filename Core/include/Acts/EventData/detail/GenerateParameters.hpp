@@ -236,7 +236,7 @@ template <typename generator_t>
 inline std::pair<BoundVector, BoundMatrix> generateBoundParametersCovariance(
     generator_t& rng, const GenerateBoundParametersOptions& options) {
   auto params = generateBoundParameters(rng, options);
-  auto cov = generateCovariance<ActsScalar, eBoundSize>(rng);
+  auto cov = generateCovariance<double, eBoundSize>(rng);
   return {params, cov};
 }
 
@@ -293,7 +293,7 @@ template <typename generator_t>
 inline std::pair<FreeVector, FreeMatrix> generateFreeParametersCovariance(
     generator_t& rng, const GenerateFreeParametersOptions& options) {
   auto params = generateFreeParameters(rng, options);
-  auto cov = generateCovariance<ActsScalar, eFreeSize>(rng);
+  auto cov = generateCovariance<double, eFreeSize>(rng);
   return {params, cov};
 }
 
