@@ -46,9 +46,6 @@ void addDetector(Context& ctx) {
   }
 
   {
-    py::class_<DetectorElementBase, std::shared_ptr<DetectorElementBase>>(
-        mex, "DetectorElementBase");
-
     py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
         .def("geometryContext", &DetectorBase::geometryContext)
         .def("gen1Geometry", &DetectorBase::gen1Geometry)
