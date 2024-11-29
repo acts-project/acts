@@ -149,7 +149,7 @@ def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as detector:
+    with getOpenDataDetector():
         pass
 
     csv = tmp_path / "csv"
@@ -1208,7 +1208,7 @@ def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as detector:
+    with getOpenDataDetector():
         pass
 
     script = (
@@ -1241,7 +1241,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as detector:
+    with getOpenDataDetector():
         pass
 
     script = (
@@ -1295,7 +1295,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     assert not (tmp_path / root_file).exists()
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as detector:
+    with getOpenDataDetector():
         pass
 
     script = (
