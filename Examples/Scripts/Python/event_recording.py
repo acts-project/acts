@@ -14,7 +14,7 @@ from acts.examples.odd import getOpenDataDetector
 u = acts.UnitConstants
 
 
-def runEventRecording(detectorConstructionFactory, outputDir, s=None):
+def runEventRecording(detector, outputDir, s=None):
     hepmc_dir = os.path.join(outputDir, "hepmc3")
     if not os.path.exists(hepmc_dir):
         os.mkdir(hepmc_dir)
@@ -53,7 +53,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
         outputHepMcTracks="geant-event",
         seed1=43,
         seed2=44,
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
     )
 
     erAlg = acts.examples.geant4.hepmc3.EventRecording(
@@ -76,12 +76,8 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
 
 if "__main__" == __name__:
     detector = getOpenDataDetector()
-    trackingGeometry = detector.gen1Geometry()
-    decorators = detector.contextDecorators()
-
-    detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
 
     runEventRecording(
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         outputDir=os.getcwd(),
     ).run()

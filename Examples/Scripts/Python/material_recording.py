@@ -107,25 +107,23 @@ def main():
 
     args = p.parse_args()
 
-    detectorConstructionFactory = None
+    detector = None
     if args.input == "":
         detector = getOpenDataDetector()
-
-        detectorConstructionFactory = detector.buildGeant4DetectorConstructionFactory()
     elif args.input.endswith(".gdml"):
-        detectorConstructionFactory = (
-            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
-        )
+        # TODO
+        detector = acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
         geoModelTree = acts.geomodel.readFromDb(args.input)
-        detectorConstructionFactory = (
+        # TODO
+        detector = (
             acts.examples.geant4.geomodel.GeoModelGeant4DetectorConstructionFactory(
                 geoModelTree
             )
         )
 
     runMaterialRecording(
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         tracksPerEvent=args.tracks,
         outputDir=os.getcwd(),
         s=acts.examples.Sequencer(events=args.events, numThreads=1),
