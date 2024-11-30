@@ -290,8 +290,8 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    multiprocessing.set_start_method("spawn")
-    p = multiprocessing.Process(
+    spawn_context = multiprocessing.get_context("spawn")
+    p = spawn_context.Process(
         target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
     )
     p.start()
