@@ -408,6 +408,7 @@ def material_recording_session():
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
+        multiprocessing.set_start_method("spawn")
         p = multiprocessing.Process(target=_do_material_recording, args=(d,))
         p.start()
         p.join()
