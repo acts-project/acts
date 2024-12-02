@@ -16,9 +16,6 @@
 
 #include <string>
 
-#include <edm4hep/TrackerHitCollection.h>
-#include <edm4hep/TrackerHitPlaneCollection.h>
-
 namespace ActsExamples {
 
 /// Write out a measurement cluster collection to EDM4hep.
