@@ -10,7 +10,7 @@
 
 #include <G4VUserPhysicsList.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 PhysicsListFactoryFunction::PhysicsListFactoryFunction(Function function)
     : m_function(std::move(function)) {}
@@ -20,4 +20,4 @@ std::unique_ptr<G4VUserPhysicsList> PhysicsListFactoryFunction::factorize()
   return m_function();
 }
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

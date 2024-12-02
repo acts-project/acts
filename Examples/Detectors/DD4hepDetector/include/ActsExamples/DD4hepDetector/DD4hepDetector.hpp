@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorStructure.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
@@ -32,15 +31,12 @@ class Detector;
 }  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
 
-namespace ActsExamples::DD4hep {
+class IContextDecorator;
 
 struct DD4hepDetector {
   /// @brief The context decorators
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
 
   /// @brief  The tracking geometry
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
@@ -92,4 +88,4 @@ struct DD4hepDetector {
   std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
 };
 
-}  // namespace ActsExamples::DD4hep
+}  // namespace ActsExamples

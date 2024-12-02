@@ -48,13 +48,13 @@ void RootBFieldWriter::run(const Config& config,
 
   // Setup ROOT I/O
   ACTS_INFO("Registering new ROOT output File : " << config.fileName);
-  TFile* outputFile =
-      TFile::Open(config.fileName.c_str(), config.fileMode.c_str());
+  std::unique_ptr<TFile> outputFile(
+      TFile::Open(config.fileName.c_str(), config.fileMode.c_str()));
   if (outputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + config.fileName + "'");
   }
   TTree* outputTree = new TTree(config.treeName.c_str(),
-                                config.treeName.c_str(), 99, outputFile);
+                                config.treeName.c_str(), 99, outputFile.get());
   if (outputTree == nullptr) {
     throw std::bad_alloc();
   }
@@ -277,6 +277,5 @@ void RootBFieldWriter::run(const Config& config,
   // Tear down ROOT I/O
   ACTS_INFO("Closing and Writing ROOT output File : " << config.fileName);
   outputTree->Write();
-  delete outputFile;
 }
 }  // namespace ActsExamples

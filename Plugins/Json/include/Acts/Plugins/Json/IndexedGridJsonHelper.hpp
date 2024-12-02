@@ -80,16 +80,16 @@ updator_type generateFromJson(const nlohmann::json& jUpdater,
   /// Helper extractor for equidistant axis
   /// @param jAxis is the axis
   auto eqExtractor = [](const nlohmann::json& jAxis)
-      -> std::tuple<std::array<ActsScalar, 2u>, std::size_t> {
-    std::array<ActsScalar, 2u> range = jAxis["range"];
+      -> std::tuple<std::array<double, 2u>, std::size_t> {
+    std::array<double, 2u> range = jAxis["range"];
     std::size_t bins = jAxis["bins"];
     return {range, bins};
   };
 
   /// Helper extractor for variable axis
   /// @param jAxis the axis
-  auto vExtractor = [](const nlohmann::json& jAxis) -> std::vector<ActsScalar> {
-    std::vector<ActsScalar> vEx(jAxis["boundaries"]);
+  auto vExtractor = [](const nlohmann::json& jAxis) -> std::vector<double> {
+    std::vector<double> vEx(jAxis["boundaries"]);
     return vEx;
   };
 

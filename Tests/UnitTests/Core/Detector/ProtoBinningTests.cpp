@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
   auto eq = ProtoBinning(Acts::BinningValue::binX,
                          Acts::AxisBoundaryType::Bound, 0., 10., 5u);
 
-  std::vector<Acts::ActsScalar> reference = {0., 2., 4., 6., 8., 10.};
+  std::vector<double> reference = {0., 2., 4., 6., 8., 10.};
   BOOST_CHECK_EQUAL(eq.bins(), 5u);
   BOOST_CHECK_EQUAL(eq.binValue, Acts::BinningValue::binX);
   BOOST_CHECK(eq.axisType == Acts::AxisType::Equidistant);
@@ -51,13 +51,13 @@ BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
 
 BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
   // An invalid binning, edge size < 2u
-  std::vector<Acts::ActsScalar> iedges = {12.};
+  std::vector<double> iedges = {12.};
   BOOST_CHECK_THROW(ProtoBinning(Acts::BinningValue::binX,
                                  Acts::AxisBoundaryType::Bound, iedges),
                     std::invalid_argument);
 
   // A valid binning
-  std::vector<Acts::ActsScalar> varEdges = {0., 12., 13., 15., 20.};
+  std::vector<double> varEdges = {0., 12., 13., 15., 20.};
   auto var = ProtoBinning(Acts::BinningValue::binX,
                           Acts::AxisBoundaryType::Bound, varEdges);
 

@@ -202,6 +202,11 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   ct.testMultiTrajectoryExtraColumnsRuntime();
 }
 
+BOOST_AUTO_TEST_CASE(MultiTrajectoryAllocateCalibratedInit) {
+  CommonTests ct;
+  ct.testMultiTrajectoryAllocateCalibratedInit(rng);
+}
+
 BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {
   using namespace HashedStringLiteral;
 

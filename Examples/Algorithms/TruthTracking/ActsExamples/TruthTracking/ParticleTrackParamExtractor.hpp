@@ -8,32 +8,29 @@
 
 #pragma once
 
-#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
-/// Select tracks by applying some selection cuts.
-class HitSelector final : public IAlgorithm {
+/// Extract track parameters from particles.
+class ParticleTrackParamExtractor final : public IAlgorithm {
  public:
   struct Config {
-    /// Input track collection.
-    std::string inputHits;
-    /// Output track collection
-    std::string outputHits;
-
-    /// Time cut
-    double maxTime = std::numeric_limits<double>::max();
+    /// The input particles collection.
+    std::string inputParticles;
+    /// The output track parameters collection.
+    std::string outputTrackParameters;
   };
 
-  HitSelector(const Config& config, Acts::Logging::Level level);
+  ParticleTrackParamExtractor(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -43,8 +40,9 @@ class HitSelector final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
-  WriteDataHandle<SimHitContainer> m_outputHits{this, "OutputHits"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
+#include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace ActsExamples {
+namespace Acts {
 
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>>
 JsonSurfacesReader::readHierarchyMap(
@@ -73,4 +73,27 @@ std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
   return surfaces;
 }
 
-}  // namespace ActsExamples
+std::vector<std::shared_ptr<Acts::JsonDetectorElement>>
+JsonSurfacesReader::readDetectorElements(const Options& options,
+                                         double thickness = 0.0) {
+  nlohmann::json j;
+  {
+    std::ifstream in(options.inputFile);
+    in >> j;
+  }
+
+  // Walk down the path to the surface entries
+  nlohmann::json jSurfaces = j;
+  for (const auto& jep : options.jsonEntryPath) {
+    jSurfaces = jSurfaces[jep];
+  }
+
+  std::vector<std::shared_ptr<Acts::JsonDetectorElement>> elements;
+  for (const auto& jSurface : jSurfaces) {
+    elements.emplace_back(
+        std::make_shared<Acts::JsonDetectorElement>(jSurface, thickness));
+  }
+  return elements;
+}
+
+}  // namespace Acts
