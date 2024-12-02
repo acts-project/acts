@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(Static) {
   cfg.envelope[BinningValue::binR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
-  ActsScalar hlZ = 30_mm;
+  double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
                                               "child");
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
   auto& cyl = root->addCylinderContainer("Container", BinningValue::binZ);
   cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap);
 
-  ActsScalar z0 = -200_mm;
-  ActsScalar hlZ = 30_mm;
+  double z0 = -200_mm;
+  double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   for (std::size_t i = 0; i < 3; i++) {
     auto childCyl = std::make_unique<TrackingVolume>(
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   cfg.envelope[BinningValue::binR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
-  ActsScalar hlZ = 30_mm;
+  double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
                                               "child");
