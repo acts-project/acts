@@ -353,12 +353,9 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
     if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCuboid) {
       auto cDirections = v->volumeBounds().values();
       // The min/max values
-      double halfX =
-          cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthX];
-      double halfY =
-          cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthY];
-      double halfZ =
-          cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
+      double halfX = cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthX];
+      double halfY = cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthY];
+      double halfZ = cDirections[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
       // Get the transform @todo use a center of gravity of the detector
       auto translation = v->transform(gctx).translation();
       // The min/max values

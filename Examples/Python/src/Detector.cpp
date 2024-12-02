@@ -84,7 +84,7 @@ void addDetector(Context& ctx) {
         .def_readwrite("bounds", &Config::bounds)
         .def_readwrite("thickness", &Config::thickness)
         .def_readwrite("surfaceType", &Config::surfaceType)
-        .def_readwrite("binValue", &Config::binValue);
+        .def_readwrite("axisDir", &Config::axisDir);
   }
 
   {

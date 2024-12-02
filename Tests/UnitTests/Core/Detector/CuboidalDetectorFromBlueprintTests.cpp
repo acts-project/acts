@@ -96,8 +96,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
 
   // Create  root node
   std::vector<Acts::AxisDirection> detectorBins = {Acts::AxisDirection::AxisX};
-  std::vector<double> detectorBounds = {detectorX, detectorY,
-                                                  detectorZ};
+  std::vector<double> detectorBounds = {detectorX, detectorY, detectorZ};
 
   // The root node - detector
   auto detectorBpr = std::make_unique<Acts::Experimental::Blueprint::Node>(

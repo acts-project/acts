@@ -151,8 +151,7 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 }
 
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<double>, std::vector<Acts::AxisDirection>,
-           std::string>
+           std::vector<double>, std::vector<Acts::AxisDirection>, std::string>
 Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
@@ -180,11 +179,11 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     }
     if (parsedExtent.constrains(AxisDirection::AxisZ)) {
       double minZ = parsedExtent.min(AxisDirection::AxisZ) > 0.
-                            ? std::floor(parsedExtent.min(AxisDirection::AxisZ))
-                            : std::ceil(parsedExtent.min(AxisDirection::AxisZ));
+                        ? std::floor(parsedExtent.min(AxisDirection::AxisZ))
+                        : std::ceil(parsedExtent.min(AxisDirection::AxisZ));
       double maxZ = parsedExtent.max(AxisDirection::AxisZ) > 0.
-                            ? std::floor(parsedExtent.max(AxisDirection::AxisZ))
-                            : std::ceil(parsedExtent.max(AxisDirection::AxisZ));
+                        ? std::floor(parsedExtent.max(AxisDirection::AxisZ))
+                        : std::ceil(parsedExtent.max(AxisDirection::AxisZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -254,7 +253,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
       auto internalsClearance =
           unitLength *
           Acts::getParamOr<double>(baseName + "_internals_clearance",
-                                       dd4hepElement, 0.);
+                                   dd4hepElement, 0.);
       auto internalAxisDirections = stringToAxisDirections(interenalsMeasure);
       if (!internalAxisDirections.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");

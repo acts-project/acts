@@ -21,8 +21,8 @@ Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(AxisDirection::AxisR)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
-  m_range[toUnderlying(AxisDirection::AxisPhi)] = Range1D<double>(
-      -std::numbers::pi_v<double>, std::numbers::pi_v<double>);
+  m_range[toUnderlying(AxisDirection::AxisPhi)] =
+      Range1D<double>(-std::numbers::pi_v<double>, std::numbers::pi_v<double>);
   m_range[toUnderlying(AxisDirection::AxisRPhi)] =
       Range1D<double>(0., std::numeric_limits<double>::max());
   m_range[toUnderlying(AxisDirection::AxisMag)] =

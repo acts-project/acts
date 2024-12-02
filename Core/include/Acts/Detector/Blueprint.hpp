@@ -51,8 +51,7 @@ struct Node final {
   /// @param cs the children of the node
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<double>& bv,
-       const std::vector<AxisDirection>& adrs,
+       const std::vector<double>& bv, const std::vector<AxisDirection>& adrs,
        std::vector<std::unique_ptr<Node>> cs = {}, const Extent& e = Extent())
       : name(n),
         transform(t),

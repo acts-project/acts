@@ -300,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     CHECK_SMALL(phi(tr * Vector3::UnitX()), 1e-6);
 
     // case 2: two modules sit symmetrically around pi / -pi
@@ -316,7 +316,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
     // case 3: two modules sit asymmetrically around pi / -pi shifted up
@@ -332,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
 
     // case 4: two modules sit asymmetrically around pi / -pi shifted down
@@ -350,7 +350,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
   }
 
@@ -369,7 +369,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     CHECK_SMALL(phi(tr * Vector3::UnitX()), 1e-6);
 
     // case 2: two modules sit symmetrically around pi / -pi
@@ -385,7 +385,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), -0.5 * step, 1e-3);
 
@@ -402,7 +402,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / -4., 1e-3);
 
@@ -419,7 +419,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
     BOOST_CHECK_EQUAL(axis.nBins, 30u);
     CHECK_CLOSE_REL(axis.max, std::numbers::pi, 1e-6);
     CHECK_CLOSE_REL(axis.min, -std::numbers::pi, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
     // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
     CHECK_CLOSE_REL(phi(tr * Vector3::UnitX()), step / 4., 1e-3);
   }
@@ -440,7 +440,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
 
   CHECK_CLOSE_ABS(axis.max, phi(Vector3(8, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, phi(Vector3(8, -1, 0)), 1e-3);
-  BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
@@ -456,7 +456,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
   CHECK_CLOSE_ABS(axis.max, 3, 1e-6);
   CHECK_CLOSE_ABS(axis.min, 0, 1e-6);
-  BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
 
   // z rows with varying starting point
   for (std::size_t i = 0; i <= 20; i++) {
@@ -476,7 +476,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
     BOOST_CHECK_EQUAL(axis.nBins, 10u);
     CHECK_CLOSE_ABS(axis.max, 30 + z0, 1e-6);
     CHECK_CLOSE_ABS(axis.min, z0, 1e-6);
-    BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+    BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
   }
 
   // z row where elements are rotated around y
@@ -492,7 +492,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
   BOOST_CHECK_EQUAL(axis.nBins, 10u);
   CHECK_CLOSE_ABS(axis.max, 30.9749, 1e-3);
   CHECK_CLOSE_ABS(axis.min, -0.974873, 1e-3);
-  BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
 }
 
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
@@ -508,7 +508,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   BOOST_CHECK_EQUAL(axis.nBins, 1u);
   CHECK_CLOSE_ABS(axis.max, perp(Vector3(17, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, 13, 1e-3);
-  BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
 
   // multiple rings
   surfaces.resize(0);
@@ -529,7 +529,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
   BOOST_CHECK_EQUAL(axis.nBins, 3u);
   CHECK_CLOSE_REL(axis.max, perp(Vector3(20 + 2, 1, 0)), 1e-3);
   CHECK_CLOSE_ABS(axis.min, 8, 1e-3);
-  BOOST_CHECK_EQUAL(axis.aType, AxisType::Equidistant);
+  BOOST_CHECK_EQUAL(axis.axisType, AxisType::Equidistant);
 }
 
 // if there are concentring disc or barrel modules, the bin count might be off

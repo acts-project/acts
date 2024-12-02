@@ -71,13 +71,14 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
       new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
 
   // Construct the rotation
-  // This assumes the binValue is AxisDirection::AxisX, AxisDirection::AxisY or
-  // AxisDirection::AxisZ. No reset is necessary in case of AxisDirection::AxisZ
+  // This assumes the axis direction is AxisDirection::AxisX,
+  // AxisDirection::AxisY or AxisDirection::AxisZ. No reset is necessary in case
+  // of AxisDirection::AxisZ
   G4RotationMatrix* rotation = nullptr;
-  if (static_cast<Acts::AxisDirection>(m_cfg.binValue) ==
+  if (static_cast<Acts::AxisDirection>(m_cfg.axisDir) ==
       Acts::AxisDirection::AxisX) {
     rotation = new G4RotationMatrix({0, 0, 1}, {0, 1, 0}, {-1, 0, 0});
-  } else if (static_cast<Acts::AxisDirection>(m_cfg.binValue) ==
+  } else if (static_cast<Acts::AxisDirection>(m_cfg.axisDir) ==
              Acts::AxisDirection::AxisY) {
     rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, 1}, {0, -1, 0});
   }

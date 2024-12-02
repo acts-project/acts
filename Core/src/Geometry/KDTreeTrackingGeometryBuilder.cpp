@@ -53,7 +53,7 @@ Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
     auto ext = s->polyhedronRepresentation(gctx, 1u).extent();
     surfacesMeasured.push_back(MeasuredSurface{
         std::array<double, 2u>{ext.medium(AxisDirection::AxisZ),
-                                   ext.medium(AxisDirection::AxisR)},
+                               ext.medium(AxisDirection::AxisR)},
         s});
   }
 

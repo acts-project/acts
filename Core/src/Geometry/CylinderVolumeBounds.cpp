@@ -239,8 +239,7 @@ Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
   return VolumeBounds::referenceOffset(aDir);
 }
 
-double CylinderVolumeBounds::referenceOffsetValue(
-    AxisDirection aDir) const {
+double CylinderVolumeBounds::referenceOffsetValue(AxisDirection aDir) const {
   if (aDir == AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }

@@ -207,7 +207,7 @@ class Extent {
   /// @param aDir the axis direction
   ///
   /// @return a one dimensional arrange
-  auto range(AxisDirection aDir) { return m_range[toUnderlying(bValue)]; }
+  auto range(AxisDirection aDir) { return m_range[toUnderlying(aDir)]; }
 
   /// Return the individual 1-dimensional range
   ///
@@ -243,8 +243,8 @@ class Extent {
   /// Return the histogram store
   ///
   /// The histogram store can be used for automated binning detection
-  const std::array<std::vector<double>, numAxisDirections()>&
-  valueHistograms() const;
+  const std::array<std::vector<double>, numAxisDirections()>& valueHistograms()
+      const;
 
   /// Access the minimum parameter
   ///

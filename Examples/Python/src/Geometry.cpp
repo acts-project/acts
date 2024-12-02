@@ -384,8 +384,8 @@ void addExperimentalGeometry(Context& ctx) {
         .def(py::init<AxisDirection, AxisBoundaryType,
                       const std::vector<double>&, std::size_t>(),
              "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
-        .def(py::init<AxisDirection, AxisBoundaryType, double,
-                      double, std::size_t, std::size_t>(),
+        .def(py::init<AxisDirection, AxisBoundaryType, double, double,
+                      std::size_t, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t,
                       std::size_t>(),

@@ -39,11 +39,9 @@ struct Object {};
 
 using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, double, 3>;
 
-using ObjectBBox = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
-
-using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
-using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
-using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
+using Vector2F = Eigen::Matrix<double, 2, 1>;
+using Vector3F = Eigen::Matrix<double, 3, 1>;
+using AngleAxis3F = Eigen::AngleAxis<double>;
 
 std::filesystem::path tmp_path = []() {
   auto tmpPath = std::filesystem::temp_directory_path() / "acts_unit_tests";
@@ -59,7 +57,7 @@ std::ofstream tmp(const std::string& path) {
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {
     Object o;
-    using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
+    using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
     Box bb(&o, {-1, -1}, {2, 2});
 
     typename Box::transform_type rot;
@@ -72,7 +70,7 @@ BOOST_AUTO_TEST_CASE(box_construction) {
 
   BOOST_TEST_CONTEXT("3D") {
     Object o;
-    using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
+    using Box = Acts::AxisAlignedBoundingBox<Object, double, 3>;
     Box bb(&o, {-1, -1, -1}, {2, 2, 2});
 
     typename Box::transform_type rot;
@@ -1207,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
 BOOST_AUTO_TEST_CASE(ostream_operator) {
   Object o;
-  using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
+  using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
   Box bb(&o, {-1, -1}, {2, 2});
 
   std::stringstream ss;

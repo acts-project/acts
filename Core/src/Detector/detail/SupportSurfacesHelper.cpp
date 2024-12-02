@@ -35,10 +35,8 @@ operator()(const Extent& lExtent) const {
   }
 
   // Min / Max z  with clearances adapted
-  double minZ =
-      lExtent.min(AxisDirection::AxisZ) + std::abs(zClearance[0u]);
-  double maxZ =
-      lExtent.max(AxisDirection::AxisZ) - std::abs(zClearance[1u]);
+  double minZ = lExtent.min(AxisDirection::AxisZ) + std::abs(zClearance[0u]);
+  double maxZ = lExtent.max(AxisDirection::AxisZ) - std::abs(zClearance[1u]);
 
   // Phi sector
   double hPhiSector = std::numbers::pi_v<double>;
@@ -60,7 +58,7 @@ operator()(const Extent& lExtent) const {
 
   // The Radius estimation
   double r = rOffset < 0 ? lExtent.min(AxisDirection::AxisR) + rOffset
-                             : lExtent.max(AxisDirection::AxisR) + rOffset;
+                         : lExtent.max(AxisDirection::AxisR) + rOffset;
   if (rOffset == 0.) {
     r = lExtent.medium(AxisDirection::AxisR);
   }
@@ -81,10 +79,8 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
   }
 
   // Min / Max r  with clearances adapted
-  double minR =
-      lExtent.min(AxisDirection::AxisR) + std::abs(rClearance[0u]);
-  double maxR =
-      lExtent.max(AxisDirection::AxisR) - std::abs(rClearance[1u]);
+  double minR = lExtent.min(AxisDirection::AxisR) + std::abs(rClearance[0u]);
+  double maxR = lExtent.max(AxisDirection::AxisR) - std::abs(rClearance[1u]);
 
   // Phi sector
   double hPhiSector = std::numbers::pi_v<double>;
@@ -101,7 +97,7 @@ Acts::Experimental::detail::SupportSurfacesHelper::DiscSupport::operator()(
 
   // The z position estimate
   double z = zOffset < 0 ? lExtent.min(AxisDirection::AxisZ) + zOffset
-                             : lExtent.max(AxisDirection::AxisZ) + zOffset;
+                         : lExtent.max(AxisDirection::AxisZ) + zOffset;
   if (zOffset == 0.) {
     z = lExtent.medium(AxisDirection::AxisZ);
   }

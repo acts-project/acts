@@ -93,8 +93,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   // Create  root node
   std::vector<Acts::AxisDirection> detectorBinning = {
       Acts::AxisDirection::AxisR};
-  std::vector<double> detectorBoundaries = {detectorIr, detectorOr,
-                                                      detectorHz};
+  std::vector<double> detectorBoundaries = {detectorIr, detectorOr, detectorHz};
 
   // The root node - detector
   auto detectorBpr = std::make_unique<Acts::Experimental::Blueprint::Node>(
@@ -113,16 +112,14 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(beamPipe));
 
   // A pixel system
-  std::vector<double> pixelBoundaries = {pixelIr, pixelOr,
-                                                   detectorHz};
+  std::vector<double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
   std::vector<Acts::AxisDirection> pixelBinning = {Acts::AxisDirection::AxisZ};
   auto pixel = std::make_unique<Acts::Experimental::Blueprint::Node>(
       "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       pixelBoundaries, pixelBinning);
 
   // Nec: Small differences to check if the adjustments are made
-  std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5.,
-                                                     pixelEcHz};
+  std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5., pixelEcHz};
   std::vector<Acts::AxisDirection> pixelEcBinning = {
       Acts::AxisDirection::AxisZ};
 
@@ -149,8 +146,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorFromBlueprintTest) {
   pixelNec->add(std::move(pixelNecLayer));
 
   // Barrel
-  std::vector<double> pixelBarrelBoundaries = {
-      pixelIr + 1, pixelOr - 1., detectorHz - 2 * pixelEcHz};
+  std::vector<double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
+                                               detectorHz - 2 * pixelEcHz};
   std::vector<Acts::AxisDirection> pixelBarrelBinning = {
       Acts::AxisDirection::AxisR};
 

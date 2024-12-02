@@ -155,8 +155,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createSectorReplacement(
     const Acts::GeometryContext& gctx, const Acts::Vector3& volumeCenter,
-    const Acts::Surface& refSurface,
-    const std::vector<double>& boundaries,
+    const Acts::Surface& refSurface, const std::vector<double>& boundaries,
     Acts::AxisDirection binning, unsigned int index, Acts::Direction dir) {
   // Get a reference transform
   const auto& refTransform = refSurface.transform(gctx);

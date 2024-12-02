@@ -38,16 +38,14 @@ Acts::DD4hepBinningHelpers::convertBinning(
               Experimental::ProtoBinning(bVal, bType, nBins, nExpansion));
         } else {
           // Equidistant binning
-          double minDefault = bVal == AxisDirection::AxisPhi
-                                      ? -std::numbers::pi_v<double>
-                                      : 0.;
-          double maxDefault = bVal == AxisDirection::AxisPhi
-                                      ? std::numbers::pi_v<double>
-                                      : 0.;
+          double minDefault =
+              bVal == AxisDirection::AxisPhi ? -std::numbers::pi_v<double> : 0.;
+          double maxDefault =
+              bVal == AxisDirection::AxisPhi ? std::numbers::pi_v<double> : 0.;
           auto min = getParamOr<double>(bname + "_" + ab + "_min",
-                                            dd4hepElement, minDefault);
+                                        dd4hepElement, minDefault);
           auto max = getParamOr<double>(bname + "_" + ab + "_max",
-                                            dd4hepElement, maxDefault);
+                                        dd4hepElement, maxDefault);
           // Check for closed phi binning
           if (bVal == AxisDirection::AxisPhi &&
               (max - min) > 1.9 * std::numbers::pi) {

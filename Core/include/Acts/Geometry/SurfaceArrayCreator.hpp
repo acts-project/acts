@@ -57,9 +57,10 @@ class SurfaceArrayCreator {
   friend struct Acts::Test::SurfaceArrayCreatorFixture;
   friend class Acts::SurfaceArray;
 
+  //!< todo follow-up PR ... merge this with ProtoBinning
   struct ProtoAxis {
-    AxisType aType = AxisType::Equidistant;
-    AxisDirection aDir = AxisDirection::AxisX;
+    AxisType axisType = AxisType::Equidistant;
+    AxisDirection axisDir = AxisDirection::AxisX;
     std::size_t nBins = 0;
     AxisScalar min = 0;
     AxisScalar max = 0;
@@ -143,8 +144,8 @@ class SurfaceArrayCreator {
   /// need to be valid, since no check is performed
   /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param aTypePhi theaxis type in phi direction (Equidistant/Variable)
-  /// @param aTypeZ theaxis type in z direction (Equidistant/Variable)
+  /// @param aTypePhi the axis type in phi direction (Equidistant/Variable)
+  /// @param aTypeZ the axis type in z direction (Equidistant/Variable)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -191,8 +192,8 @@ class SurfaceArrayCreator {
   /// @warning This function requires the disc aligned with the z-axis
   /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param aTypeR theaxis type in r direction (Equidistant/Variable)
-  /// @param aTypePhi theaxis type in phi direction (Equidistant/Variable)
+  /// @param aTypeR the axis type in r direction (Equidistant/Variable)
+  /// @param aTypePhi the axis type in phi direction (Equidistant/Variable)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -243,8 +244,8 @@ class SurfaceArrayCreator {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
-    if (aDir == AxisDirection::AxisPhi) {
-      // Take the two reference positions
+    if (aDir == Acts::AxisDirection::AxisPhi) {
+      // Take the two binning positions
       auto pos1 = a->referencePosition(gctx, AxisDirection::AxisR),
            pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
 
@@ -261,13 +262,13 @@ class SurfaceArrayCreator {
       return std::abs(dPhi) < std::numbers::pi / 180.;
     }
 
-    if (aDir == AxisDirection::AxisZ) {
+    if (aDir == Acts::AxisDirection::AxisZ) {
       return (std::abs(a->referencePosition(gctx, AxisDirection::AxisR).z() -
                        b->referencePosition(gctx, AxisDirection::AxisR).z()) <
               1_um);
     }
 
-    if (aDir == AxisDirection::AxisR) {
+    if (aDir == Acts::AxisDirection::AxisR) {
       return (std::abs(perp(a->referencePosition(gctx, AxisDirection::AxisR)) -
                        perp(b->referencePosition(gctx, AxisDirection::AxisR))) <
               1_um);
@@ -311,8 +312,8 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
-  /// @param aDir the axis direction for the binning/ordering
-  /// (currently possible: AxisPhi, AixisR, AxisZ)
+  /// @param aDir the AxisDirection in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @return Instance of @c ProtoAxis containing determined properties
@@ -337,8 +338,8 @@ class SurfaceArrayCreator {
   /// @todo implement for x,y binning
   /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
-  /// @param aDir the axis direction for the binning/ordering
-  /// (currently possible: AxisPhi, AxisR, AxisZ)
+  /// @param aDir the AxisDirection in which direction should be binned
+  /// (currently possible: binPhi, binR, binZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @param nBins Number of bins to use, 0 means determine automatically
@@ -356,8 +357,8 @@ class SurfaceArrayCreator {
   /// @brief Creates a SurfaceGridLookup instance within an any
   /// This is essentially a factory which absorbs some if/else logic
   /// that is required by the templating.
-  /// @tparam bdtA AxisBoundaryType of axis A
-  /// @tparam bdtB AxisBoundaryType of axis B
+  /// @tparam bdtA AxisType of axis A
+  /// @tparam bdtB AxisType of axis B
   /// @tparam F1 type-deducted value of g2l lambda
   /// @tparam F2 type-deducted value of l2g lambda
   /// @param globalToLocal transform callable
@@ -374,61 +375,41 @@ class SurfaceArrayCreator {
 
     // this becomes completely unreadable otherwise
     // clang-format off
-    if (pAxisA.aType == AxisType::Equidistant && pAxisB.aType == AxisType::Equidistant) {
+    if (pAxisA.axisType == AxisType::Equidistant && pAxisB.axisType == AxisType::Equidistant) {
 
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-<<<<<<< HEAD
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
-=======
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.aDir, pAxisB.aDir})));
->>>>>>> 24a5470f1 (bType to aType)
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
-    } else if (pAxisA.aType == AxisType::Equidistant && pAxisB.aType == AxisType::Variable) {
+    } else if (pAxisA.axisType == AxisType::Equidistant && pAxisB.axisType == AxisType::Variable) {
 
       Axis<AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-<<<<<<< HEAD
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
-=======
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.aDir, pAxisB.aDir})));
->>>>>>> 24a5470f1 (bType to aType)
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
-    } else if (pAxisA.aType == AxisType::Variable && pAxisB.aType == AxisType::Equidistant) {
+    } else if (pAxisA.axisType == AxisType::Variable && pAxisB.axisType == AxisType::Equidistant) {
 
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-<<<<<<< HEAD
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
-=======
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.aDir, pAxisB.aDir})));
->>>>>>> 24a5470f1 (bType to aType)
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
 
-    } else /*if (pAxisA.aType == AxisType::Variable && pAxisB.aType == AxisType::Variable)*/ {
+    } else /*if (pAxisA.axisType == AxisType::Variable && pAxisB.axisType == AxisType::Variable)*/ {
 
       Axis<AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
       Axis<AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
 
       using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-<<<<<<< HEAD
       ptr = std::make_unique<SGL>(
-            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.bValue, pAxisB.bValue});
-=======
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB), {pAxisA.aDir, pAxisB.aDir})));
->>>>>>> 24a5470f1 (bType to aType)
+            globalToLocal, localToGlobal, std::pair{axisA, axisB}, std::vector{pAxisA.axisDir, pAxisB.axisDir});
     }
     // clang-format on
 

@@ -29,7 +29,7 @@ auto TelescopeDetector::finalize(
         "The surface type could either be 0 for plane surface or 1 for disc "
         "surface.");
   }
-  if (cfg.binValue > 2) {
+  if (cfg.axisDir > 2) {
     throw std::invalid_argument("The axis value could only be 0, 1, or 2.");
   }
   // Check if the bounds values are valid
@@ -51,13 +51,14 @@ auto TelescopeDetector::finalize(
   std::vector<double> stereos = cfg.stereos;
   std::ranges::sort(positions);
 
-  /// Return the telescope detector
-  TrackingGeometryPtr gGeometry = ActsExamples::buildTelescopeDetector(
-      nominalContext, detectorStore, positions, stereos, cfg.offsets,
-      cfg.bounds, cfg.thickness,
-      static_cast<ActsExamples::TelescopeSurfaceType>(
-          cfg.surfaceType),
-      static_cast<Acts::AxisDirection>(cfg.binValue));
+  Acts::GeometryContext geometryContext(nominalContext);
+
+  // Return the telescope detector
+  TrackingGeometryPtr gGeometry =
+      buildTelescopeDetector(geometryContext, detectorStore, positions, stereos,
+                             cfg.offsets, cfg.bounds, cfg.thickness,
+                             static_cast<TelescopeSurfaceType>(cfg.surfaceType),
+                             static_cast<Acts::AxisDirection>(cfg.axisDir));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
