@@ -172,7 +172,7 @@ class RootAthenaDumpReader : public IReader {
   /// Vector of {eventNr, entryMin, entryMax}
   std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
   std::shared_ptr<TChain> m_inputchain;
-  long unsigned int m_events;
+  std::size_t m_events;
   bool m_haveStripFeatures = true;
 
   static constexpr unsigned int maxCL = 1500000;
