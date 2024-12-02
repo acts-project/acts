@@ -13,9 +13,20 @@ SeedingAlgorithm = Enum(
     "Default TruthSmeared TruthEstimated Orthogonal HoughTransform Gbts Hashing",
 )
 
-ParticleSmearingSigmas = namedtuple(
-    "ParticleSmearingSigmas",
-    ["d0", "d0PtA", "d0PtB", "z0", "z0PtA", "z0PtB", "t0", "phi", "theta", "ptRel"],
+TrackSmearingSigmas = namedtuple(
+    "TrackSmearingSigmas",
+    [
+        "loc0",
+        "loc0PtA",
+        "loc0PtB",
+        "loc1",
+        "loc1PtA",
+        "loc1PtB",
+        "time",
+        "phi",
+        "theta",
+        "ptRel",
+    ],
     defaults=[None] * 10,
 )
 
@@ -256,7 +267,7 @@ class VertexFinder(Enum):
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
-    particleSmearingSigmas=ParticleSmearingSigmas,
+    trackSmearingSigmas=TrackSmearingSigmas,
     seedFinderConfigArg=SeedFinderConfigArg,
     seedFinderOptionsArg=SeedFinderOptionsArg,
     seedFilterConfigArg=SeedFilterConfigArg,
@@ -275,7 +286,7 @@ def addSeeding(
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
     connector_inputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
+    trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
     initialSigmaPtRel: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
@@ -313,15 +324,15 @@ def addSeeding(
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
     seedingAlgorithm : SeedingAlgorithm, Default
         seeding algorithm to use: one of Default (no truth information used), TruthSmeared, TruthEstimated
-    particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, ptRel)
-        ParticleSmearing configuration.
-        Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+    trackSmearingSigmas : TrackSmearingSigmas(loc0, loc0PtA, loc0PtB, loc1, loc1PtA, loc1PtB, time, phi, theta, ptRel)
+        TrackSmearing configuration.
+        Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
     initialSigmas : list
         Sets the initial covariance matrix diagonal. This is ignored in case of TruthSmearing.
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
-        Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+        Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackParameterSmearing.hpp
     seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z.
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
@@ -366,7 +377,7 @@ def addSeeding(
             s=s,
             rnd=rnd,
             selectedParticles=selectedParticles,
-            particleSmearingSigmas=particleSmearingSigmas,
+            trackSmearingSigmas=trackSmearingSigmas,
             initialSigmas=initialSigmas,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
@@ -520,7 +531,7 @@ def addTruthSmearedSeeding(
     s: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
     selectedParticles: str,
-    particleSmearingSigmas: ParticleSmearingSigmas,
+    trackSmearingSigmas: TrackSmearingSigmas,
     initialSigmas: Optional[List[float]],
     initialSigmaPtRel: Optional[float],
     initialVarInflation: Optional[List[float]],
@@ -532,31 +543,39 @@ def addTruthSmearedSeeding(
     """
 
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
-    # Run particle smearing
-    ptclSmear = acts.examples.ParticleSmearing(
+
+    trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
         level=logLevel,
         inputParticles=selectedParticles,
+        outputTrackParameters="trueparameters",
+    )
+    s.addAlgorithm(trkParamExtractor)
+
+    # Smearing track parameters
+    trkSmear = acts.examples.TrackParameterSmearing(
+        level=logLevel,
+        inputTrackParameters=trkParamExtractor.config.outputTrackParameters,
         outputTrackParameters="estimatedparameters",
         randomNumbers=rnd,
         # gaussian sigmas to smear particle parameters
         **acts.examples.defaultKWArgs(
-            sigmaD0=particleSmearingSigmas.d0,
-            sigmaD0PtA=particleSmearingSigmas.d0PtA,
-            sigmaD0PtB=particleSmearingSigmas.d0PtB,
-            sigmaZ0=particleSmearingSigmas.z0,
-            sigmaZ0PtA=particleSmearingSigmas.z0PtA,
-            sigmaZ0PtB=particleSmearingSigmas.z0PtB,
-            sigmaT0=particleSmearingSigmas.t0,
-            sigmaPhi=particleSmearingSigmas.phi,
-            sigmaTheta=particleSmearingSigmas.theta,
-            sigmaPtRel=particleSmearingSigmas.ptRel,
+            sigmaLoc0=trackSmearingSigmas.loc0,
+            sigmaLoc0PtA=trackSmearingSigmas.loc0PtA,
+            sigmaLoc0PtB=trackSmearingSigmas.loc0PtB,
+            sigmaLoc1=trackSmearingSigmas.loc1,
+            sigmaLoc1PtA=trackSmearingSigmas.loc1PtA,
+            sigmaLoc1PtB=trackSmearingSigmas.loc1PtB,
+            sigmaTime=trackSmearingSigmas.time,
+            sigmaPhi=trackSmearingSigmas.phi,
+            sigmaTheta=trackSmearingSigmas.theta,
+            sigmaPtRel=trackSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
         ),
     )
-    s.addAlgorithm(ptclSmear)
+    s.addAlgorithm(trkSmear)
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
@@ -1283,7 +1302,6 @@ def addKalmanTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
-    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1320,7 +1338,7 @@ def addKalmanTracks(
         calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
-    s.addWhiteboardAlias(whiteboardAliasTracks, fitAlg.config.outputTracks)
+    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
@@ -1419,7 +1437,6 @@ def addCKFTracks(
     writePerformance: bool = True,
     writeCovMat=False,
     logLevel: Optional[acts.logging.Level] = None,
-    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     """This function steers the seeding
 
@@ -1522,7 +1539,7 @@ def addCKFTracks(
         ),
     )
     s.addAlgorithm(trackFinder)
-    s.addWhiteboardAlias(whiteboardAliasTracks, trackFinder.config.outputTracks)
+    s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
@@ -1570,7 +1587,6 @@ def addGx2fTracks(
     clusters: str = None,
     calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
-    whiteboardAliasTracks: str = "tracks",
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1597,7 +1613,7 @@ def addGx2fTracks(
         calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
-    s.addWhiteboardAlias(whiteboardAliasTracks, fitAlg.config.outputTracks)
+    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),

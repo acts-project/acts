@@ -101,25 +101,23 @@ with tempfile.TemporaryDirectory() as temp:
         nUpdateMax=17,
         relChi2changeCutOff=1e-7,
         multipleScattering=True,
-        whiteboardAliasTracks="tracks-gx2f",
     )
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
             level=acts.logging.INFO,
-            inputTracks="tracks-gx2f",
+            inputTracks="tracks",
             outputTracks="selected-tracks-gx2f",
             selectorConfig=acts.TrackSelector.Config(
                 minMeasurements=7,
             ),
         )
     )
-    s.addWhiteboardAlias("tracks-gx2f", "selected-tracks-gx2f")
 
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks-gx2f",
+            inputTracks="selected-tracks-gx2f",
             inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_trackfitting_gx2f.root"),
@@ -132,25 +130,23 @@ with tempfile.TemporaryDirectory() as temp:
         field,
         directNavigation=False,
         reverseFilteringMomThreshold=0 * u.GeV,
-        whiteboardAliasTracks="tracks-kf",
     )
 
     s.addAlgorithm(
         acts.examples.TrackSelectorAlgorithm(
             level=acts.logging.INFO,
-            inputTracks="tracks-kf",
+            inputTracks="tracks",
             outputTracks="selected-tracks-kf",
             selectorConfig=acts.TrackSelector.Config(
                 minMeasurements=7,
             ),
         )
     )
-    s.addWhiteboardAlias("tracks-kf", "selected-tracks-kf")
 
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks-kf",
+            inputTracks="selected-tracks-kf",
             inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_trackfitting_kf.root"),
