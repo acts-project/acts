@@ -43,7 +43,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
 
     trackState.allocateCalibrated(fixedMeasurement.parameters().eval(),
                                   fixedMeasurement.covariance().eval());
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
 

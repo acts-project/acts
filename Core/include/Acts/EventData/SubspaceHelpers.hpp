@@ -14,8 +14,7 @@
 #include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
-#include <bitset>
-#include <span>
+#include <ranges>
 
 #include <boost/container/static_vector.hpp>
 
@@ -25,30 +24,30 @@ namespace Acts {
 ///
 /// Indices must be unique and within the full size of the subspace
 ///
-/// @tparam Container type of the container
+/// @tparam index_range_t the type of the container of indices
 ///
-/// @param container the container of indices
+/// @param indexRange the range of indices
 /// @param fullSize the full size of the subspace
 /// @param subspaceSize the size of the subspace
 ///
 /// @return true if the indices are consistent
-template <typename Container>
-inline static bool checkSubspaceIndices(const Container& container,
+template <std::ranges::sized_range index_range_t>
+inline static bool checkSubspaceIndices(const index_range_t& indexRange,
                                         std::size_t fullSize,
                                         std::size_t subspaceSize) {
   if (subspaceSize > fullSize) {
     return false;
   }
-  if (static_cast<std::size_t>(container.size()) != subspaceSize) {
+  if (static_cast<std::size_t>(indexRange.size()) != subspaceSize) {
     return false;
   }
-  for (auto it = container.begin(); it != container.end();) {
+  for (auto it = indexRange.begin(); it != indexRange.end();) {
     auto index = *it;
     if (index >= fullSize) {
       return false;
     }
     ++it;
-    if (std::find(it, container.end(), index) != container.end()) {
+    if (std::find(it, indexRange.end(), index) != indexRange.end()) {
       return false;
     }
   }
@@ -69,7 +68,8 @@ inline static SerializedSubspaceIndices serializeSubspaceIndices(
 {
   SerializedSubspaceIndices result = 0;
   for (std::size_t i = 0; i < FullSize; ++i) {
-    result |= static_cast<SerializedSubspaceIndices>(indices[i]) << (i * 8);
+    result |= static_cast<SerializedSubspaceIndices>(indices[i] & 0xFF)
+              << (i * 8);
   }
   return result;
 }
@@ -88,7 +88,7 @@ inline static SubspaceIndices<FullSize> deserializeSubspaceIndices(
 {
   SubspaceIndices<FullSize> result;
   for (std::size_t i = 0; i < FullSize; ++i) {
-    result[i] = static_cast<std::uint8_t>(serialized >> (i * 8));
+    result[i] = static_cast<std::uint8_t>((serialized >> (i * 8)) & 0xFF);
   }
   return result;
 }
@@ -187,8 +187,8 @@ class VariableSubspaceHelper
   using IndexType = index_t;
   using Container = boost::container::static_vector<IndexType, FullSize>;
 
-  template <typename OtherContainer>
-  explicit VariableSubspaceHelper(const OtherContainer& indices) {
+  template <std::ranges::sized_range other_index_range_t>
+  explicit VariableSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, indices.size()) &&
            "Invalid indices");
     m_indices.resize(indices.size());
@@ -236,8 +236,8 @@ class FixedSubspaceHelper
   using IndexType = index_t;
   using Container = std::array<IndexType, kSubspaceSize>;
 
-  template <typename OtherContainer>
-  explicit FixedSubspaceHelper(const OtherContainer& indices) {
+  template <std::ranges::sized_range other_index_range_t>
+  explicit FixedSubspaceHelper(const other_index_range_t& indices) {
     assert(checkSubspaceIndices(indices, kFullSize, kSubspaceSize) &&
            "Invalid indices");
     std::transform(indices.begin(), indices.end(), m_indices.begin(),
