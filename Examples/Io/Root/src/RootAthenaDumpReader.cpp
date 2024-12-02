@@ -13,11 +13,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
-
-#include <cmath>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
@@ -40,7 +38,8 @@ std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
 /// constructor to speed up the set creation.
-inline auto particleVectorToSet(std::vector<ActsFatras::Particle>& particles) {
+inline auto particleVectorToSet(
+    std::vector<ActsExamples::SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
     return a.particleId().value() == b.particleId().value();
@@ -252,7 +251,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
 }  // constructor
 
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
-  std::vector<ActsFatras::Particle> particles;
+  std::vector<SimParticle> particles;
   particles.reserve(nPartEVT);
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
@@ -261,8 +260,8 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     }
 
     auto dummyBarcode = concatInts(Part_barcode[ip], Part_event_number[ip]);
-    SimParticle particle(dummyBarcode,
-                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+    SimParticleState particle(dummyBarcode,
+                              static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
     Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
                       Acts::UnitConstants::MeV;
@@ -273,7 +272,7 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
     particle.setPosition4(x);
 
-    particles.push_back(particle);
+    particles.push_back(SimParticle(particle, particle));
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
@@ -306,7 +305,6 @@ RootAthenaDumpReader::readMeasurements(
   IndexMultimap<ActsFatras::Barcode> measPartMap;
 
   // We cannot use im for the index since we might skip measurements
-  std::size_t idx = 0;
   std::unordered_map<int, std::size_t> imIdxMap;
 
   for (int im = 0; im < nCL; im++) {
@@ -382,7 +380,7 @@ RootAthenaDumpReader::readMeasurements(
                                 << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
-    std::optional<IndexSourceLink> sl;
+    Acts::GeometryIdentifier geoId;
     std::vector<double> localParams;
     if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
       const auto& geoIdMap = m_cfg.geometryIdMap->left;
@@ -391,8 +389,7 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      auto geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
-      sl = IndexSourceLink(geoId, idx);
+      geoId = m_cfg.geometryIdMap->left.at(CLmoduleID[im]);
 
       auto surface = m_cfg.trackingGeometry->findSurface(geoId);
       if (surface == nullptr) {
@@ -434,7 +431,7 @@ RootAthenaDumpReader::readMeasurements(
       // bounds?
       localParams = std::vector<double>(loc->begin(), loc->end());
     } else {
-      sl = IndexSourceLink(Acts::GeometryIdentifier(CLmoduleID[im]), idx);
+      geoId = Acts::GeometryIdentifier(CLmoduleID[im]);
       localParams = {CLloc_direction1[im], CLloc_direction2[im]};
     }
 
@@ -451,7 +448,8 @@ RootAthenaDumpReader::readMeasurements(
       digiPars.values = {localParams[0]};
     }
 
-    createMeasurement(measurements, digiPars, *sl);
+    std::size_t measIndex = measurements.size();
+    createMeasurement(measurements, geoId, digiPars);
 
     // Create measurement particles map and particles container
     for (const auto& [subevt, barcode] :
@@ -466,12 +464,10 @@ RootAthenaDumpReader::readMeasurements(
         particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
       }
       measPartMap.insert(
-          std::pair<Index, ActsFatras::Barcode>{idx, dummyBarcode});
+          std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
     }
 
-    // Finally increment the measurement index
-    imIdxMap.emplace(im, idx);
-    ++idx;
+    imIdxMap.emplace(im, measIndex);
   }
 
   if (measurements.size() < static_cast<std::size_t>(nCL)) {
@@ -641,7 +637,7 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
-  std::vector<ActsFatras::Particle> newParticles;
+  std::vector<ActsExamples::SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <concepts>
 
@@ -17,9 +17,10 @@ namespace ActsExamples {
 template <typename T>
 concept MeasurementConcept = requires(const T& m) {
   { m.size() } -> std::integral;
-  { m.sourceLink() } -> Acts::Concepts::decayed_same_as<Acts::SourceLink>;
+  { m.geometryId() } -> std::same_as<Acts::GeometryIdentifier>;
   { m.subspaceIndexVector() };
   { m.parameters() };
   { m.covariance() };
 };
+
 }  // namespace ActsExamples

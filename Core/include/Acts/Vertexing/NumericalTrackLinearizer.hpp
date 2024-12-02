@@ -79,11 +79,11 @@ class NumericalTrackLinearizer {
 
     /// Tolerance determining how close we need to get to a surface to
     /// reach it during propagation
-    ActsScalar targetTolerance = 1e-12;
+    double targetTolerance = 1e-12;
 
     /// Setting size of the perturbation delta for calculation of numerical
     /// derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
-    ActsScalar delta = 1e-8;
+    double delta = 1e-8;
   };
 
   /// @brief Constructor

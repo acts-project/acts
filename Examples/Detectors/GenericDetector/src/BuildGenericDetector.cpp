@@ -9,11 +9,10 @@
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
 #include <cmath>
-
-namespace ActsExamples::Generic {
+#include <numbers>
 
 /// helper method for cylinder
-std::vector<Acts::Vector3> modulePositionsCylinder(
+std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsCylinder(
     double radius, double zStagger, double moduleHalfLength, double lOverlap,
     const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
@@ -22,8 +21,8 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   std::vector<Acts::Vector3> mPositions;
   mPositions.reserve(nPhiBins * nZbins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
@@ -44,7 +43,8 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 }
 
 /// helper method for disc
-std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
+std::vector<std::vector<Acts::Vector3>>
+ActsExamples::Generic::modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
     const std::vector<std::size_t>& discBinning,
@@ -94,16 +94,15 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 }
 
 /// Helper method for positioning
-std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
-                                               double phiStagger,
-                                               double phiSubStagger,
-                                               int nPhiBins) {
+std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsRing(
+    double z, double radius, double phiStagger, double phiSubStagger,
+    int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   // phi loop
   for (std::size_t iphi = 0; iphi < static_cast<std::size_t>(nPhiBins);
        ++iphi) {
@@ -129,5 +128,3 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   }
   return rPositions;
 }
-
-}  // namespace ActsExamples::Generic

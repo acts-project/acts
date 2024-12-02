@@ -12,7 +12,7 @@
 
 #include <G4VUserDetectorConstruction.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// Silly Geant4 will destroy the detector construction after the run manager is
 /// destructed. This class works around it by factorizing a factory.
@@ -23,4 +23,4 @@ class DetectorConstructionFactory {
   virtual std::unique_ptr<G4VUserDetectorConstruction> factorize() const = 0;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

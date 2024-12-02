@@ -19,6 +19,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
+#include <numbers>
+
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
     std::unique_ptr<const Acts::Logger> mlogger)
@@ -48,7 +50,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
 
   // The transform from the extent
   auto eTransform = Transform3::Identity();
-  std::vector<ActsScalar> boundValues = m_cfg.boundValues;
+  std::vector<double> boundValues = m_cfg.boundValues;
 
   // This code dispatches into the dedicated volume types
   switch (m_cfg.boundsType) {
@@ -62,8 +64,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             "object. It needs at least 5 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray = toArray<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
-          boundValues);
+      auto bArray =
+          toArray<ConeVolumeBounds::BoundValues::eSize, double>(boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCuboid: {
@@ -142,7 +144,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       }
       // Check if phi has been constraint, otherwise fill it with full coverage
       if (boundValues.size() == 3u) {
-        boundValues.push_back(M_PI);
+        boundValues.push_back(std::numbers::pi);
         boundValues.push_back(0.);
       }
       ACTS_VERBOSE(" - cylindrical shape with [iR, oR, hZ, sPhi, mPhi] = "

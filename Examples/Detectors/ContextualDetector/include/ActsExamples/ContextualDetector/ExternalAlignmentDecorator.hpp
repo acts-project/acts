@@ -9,12 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
@@ -30,8 +28,6 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 struct AlgorithmContext;
-
-namespace Contextual {
 
 /// @brief A mockup service that rotates the modules in a
 /// simple tracking geometry
@@ -96,6 +92,5 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
   /// @param tGeometry the tracking geometry
   void parseGeometry(const Acts::TrackingGeometry& tGeometry);
 };
-}  // namespace Contextual
 
 }  // namespace ActsExamples

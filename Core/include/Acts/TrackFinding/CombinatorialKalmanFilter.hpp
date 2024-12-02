@@ -34,6 +34,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -398,7 +399,7 @@ class CombinatorialKalmanFilter {
               measurementSelector(trackStateCandidates, isOutlier, logger);
       if (!selectorResult.ok()) {
         ACTS_ERROR("Selection of calibrated measurements failed: "
-                   << selectorResult.error());
+                   << selectorResult.error().message());
         resultTrackStateList =
             ResultTrackStateList::failure(selectorResult.error());
       } else {
@@ -463,7 +464,6 @@ class CombinatorialKalmanFilter {
         }
 
         // either copy ALL or everything except for predicted and jacobian
-        trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
         auto typeFlags = trackState.typeFlags();
@@ -579,7 +579,13 @@ class CombinatorialKalmanFilter {
           ACTS_ERROR("Error in filter: " << res.error());
           result.lastError = res.error();
         }
+
+        if (result.finished) {
+          return;
+        }
       }
+
+      assert(!result.activeBranches.empty() && "No active branches");
 
       const bool isEndOfWorldReached =
           endOfWorldReached.checkAbort(state, stepper, navigator, logger());
@@ -589,9 +595,8 @@ class CombinatorialKalmanFilter {
           state, stepper, navigator, logger());
       const bool isTargetReached =
           targetReached.checkAbort(state, stepper, navigator, logger());
-      const bool allBranchesStopped = result.activeBranches.empty();
-      if (isEndOfWorldReached || isPathLimitReached || isTargetReached ||
-          allBranchesStopped || isVolumeConstraintReached) {
+      if (isEndOfWorldReached || isVolumeConstraintReached ||
+          isPathLimitReached || isTargetReached) {
         if (isEndOfWorldReached) {
           ACTS_VERBOSE("End of world reached");
         } else if (isVolumeConstraintReached) {
@@ -620,26 +625,12 @@ class CombinatorialKalmanFilter {
           stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
         }
 
-        if (!allBranchesStopped) {
-          // Record the active branch and remove it from the list
-          storeLastActiveBranch(result);
-          result.activeBranches.pop_back();
-        } else {
-          // This can happen if we stopped all branches in the filter step
-          ACTS_VERBOSE("All branches stopped");
-        }
+        // Record the active branch and remove it from the list
+        storeLastActiveBranch(result);
+        result.activeBranches.pop_back();
 
-        // If no more active branches, done with filtering; Otherwise, reset
-        // propagation state to track state at next active branch
-        if (!result.activeBranches.empty()) {
-          ACTS_VERBOSE("Propagation jumps to branch with tip = "
-                       << result.activeBranches.back().tipIndex());
-          reset(state, stepper, navigator, result);
-        } else {
-          ACTS_VERBOSE("Stop Kalman filtering with "
-                       << result.collectedTracks.size() << " found tracks");
-          result.finished = true;
-        }
+        // Reset propagation state to track state at next active branch
+        reset(state, stepper, navigator, result);
       }
     }
 
@@ -665,8 +656,19 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     void reset(propagator_state_t& state, const stepper_t& stepper,
                const navigator_t& navigator, result_type& result) const {
+      if (result.activeBranches.empty()) {
+        ACTS_VERBOSE("Stop CKF with " << result.collectedTracks.size()
+                                      << " found tracks");
+        result.finished = true;
+
+        return;
+      }
+
       auto currentBranch = result.activeBranches.back();
       auto currentState = currentBranch.outermostTrackState();
+
+      ACTS_VERBOSE("Propagation jumps to branch with tip = "
+                   << currentBranch.tipIndex());
 
       // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
@@ -713,40 +715,67 @@ class CombinatorialKalmanFilter {
       using PM = TrackStatePropMask;
 
       bool isSensitive = surface->associatedDetectorElement() != nullptr;
-      bool isMaterial = surface->surfaceMaterial() != nullptr;
+      bool hasMaterial = surface->surfaceMaterial() != nullptr;
+      bool isMaterialOnly = hasMaterial && !isSensitive;
+      bool expectMeasurements = isSensitive;
 
-      std::size_t nBranchesOnSurface = 0;
-
-      if (auto [slBegin, slEnd] = m_sourceLinkAccessor(*surface);
-          slBegin != slEnd) {
-        // Screen output message
+      if (isSensitive) {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
+      } else if (isMaterialOnly) {
+        ACTS_VERBOSE("Material surface " << surface->geometryId()
+                                         << " detected.");
+      } else {
+        ACTS_VERBOSE("Passive surface " << surface->geometryId()
+                                        << " detected.");
+        return Result<void>::success();
+      }
 
-        // Transport the covariance to the surface
+      using SourceLinkRange = decltype(m_sourceLinkAccessor(*surface));
+      std::optional<SourceLinkRange> slRange = std::nullopt;
+      bool hasMeasurements = false;
+      if (isSensitive) {
+        slRange = m_sourceLinkAccessor(*surface);
+        hasMeasurements = slRange->first != slRange->second;
+      }
+      bool isHole = isSensitive && expectMeasurements && !hasMeasurements;
+
+      if (isHole) {
+        ACTS_VERBOSE("Detected hole before measurement selection on surface "
+                     << surface->geometryId());
+      }
+
+      // Transport the covariance to the surface
+      if (isMaterialOnly) {
+        stepper.transportCovarianceToCurvilinear(state.stepping);
+      } else {
         stepper.transportCovarianceToBound(state.stepping, *surface);
+      }
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
+      // Update state and stepper with pre material effects
+      materialInteractor(surface, state, stepper, navigator,
+                         MaterialUpdateStage::PreUpdate);
 
-        // Bind the transported state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
-        if (!boundStateRes.ok()) {
-          return boundStateRes.error();
-        }
-        auto& boundState = *boundStateRes;
-        auto& [boundParams, jacobian, pathLength] = boundState;
-        boundParams.covariance() = state.stepping.cov;
+      // Bind the transported state to the current surface
+      auto boundStateRes = stepper.boundState(state.stepping, *surface, false);
+      if (!boundStateRes.ok()) {
+        return boundStateRes.error();
+      }
+      auto& boundState = *boundStateRes;
+      auto& [boundParams, jacobian, pathLength] = boundState;
+      boundParams.covariance() = state.stepping.cov;
 
-        auto currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
+      auto currentBranch = result.activeBranches.back();
+      TrackIndexType prevTip = currentBranch.tipIndex();
 
-        // Create trackstates for all source links (will be filtered later)
-        using TrackStatesResult =
-            Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
-        TrackStatesResult tsRes = trackStateCandidateCreator(
+      // Create trackstates for all source links (will be filtered later)
+      using TrackStatesResult =
+          Acts::Result<CkfTypes::BranchVector<TrackIndexType>>;
+      TrackStatesResult tsRes = TrackStatesResult::success({});
+      if (hasMeasurements) {
+        auto [slBegin, slEnd] = *slRange;
+
+        tsRes = trackStateCandidateCreator(
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             slBegin, slEnd, prevTip, *result.trackStates,
             result.trackStateCandidates, *result.trackStates, logger());
@@ -755,174 +784,97 @@ class CombinatorialKalmanFilter {
               "Processing of selected track states failed: " << tsRes.error());
           return tsRes.error();
         }
-        const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
-            *tsRes;
+      }
+      const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
 
-        if (newTrackStateList.empty()) {
+      if (!newTrackStateList.empty()) {
+        Result<unsigned int> procRes =
+            processNewTrackStates(state.geoContext, newTrackStateList, result);
+        if (!procRes.ok()) {
+          ACTS_ERROR("Processing of selected track states failed: "
+                     << procRes.error());
+          return procRes.error();
+        }
+        unsigned int nBranchesOnSurface = *procRes;
+
+        if (nBranchesOnSurface == 0) {
+          ACTS_VERBOSE("All branches on surface " << surface->geometryId()
+                                                  << " have been stopped");
+
+          reset(state, stepper, navigator, result);
+
+          return Result<void>::success();
+        }
+
+        // `currentBranch` is invalidated after `processNewTrackStates`
+        currentBranch = result.activeBranches.back();
+        prevTip = currentBranch.tipIndex();
+      } else {
+        if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
-
-          // Setting the number of branches on the surface to 1 as the hole
-          // still counts as a branch
-          nBranchesOnSurface = 1;
-
-          auto stateMask = PM::Predicted | PM::Jacobian;
-
-          // Add a hole track state to the multitrajectory
-          TrackIndexType currentTip = addNonSourcelinkState(
-              stateMask, boundState, result, true, prevTip);
-          auto nonSourcelinkState =
-              result.trackStates->getTrackState(currentTip);
-          currentBranch.tipIndex() = currentTip;
-          currentBranch.nHoles()++;
-
-          BranchStopperResult branchStopperResult =
-              m_extensions.branchStopper(currentBranch, nonSourcelinkState);
-
-          // Check the branch
-          if (branchStopperResult == BranchStopperResult::Continue) {
-            // Remembered the active branch and its state
-          } else {
-            // No branch on this surface
-            nBranchesOnSurface = 0;
-            if (branchStopperResult == BranchStopperResult::StopAndKeep) {
-              storeLastActiveBranch(result);
-            }
-            // Remove the branch from list
-            result.activeBranches.pop_back();
-          }
-        } else {
-          Result<unsigned int> procRes = processNewTrackStates(
-              state.geoContext, newTrackStateList, result);
-          if (!procRes.ok()) {
-            ACTS_ERROR("Processing of selected track states failed: "
-                       << procRes.error());
-            return procRes.error();
-          }
-          nBranchesOnSurface = *procRes;
-
-          if (nBranchesOnSurface == 0) {
-            // All branches on the surface have been stopped. Reset happens at
-            // the end of the function
-            ACTS_VERBOSE("All branches on surface " << surface->geometryId()
-                                                    << " have been stopped");
-          } else {
-            // `currentBranch` is invalidated after `processNewTrackStates`
-            currentBranch = result.activeBranches.back();
-            prevTip = currentBranch.tipIndex();
-
-            auto currentState = currentBranch.outermostTrackState();
-
-            if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
-              // We don't need to update the stepper given an outlier state
-              ACTS_VERBOSE("Outlier state detected on surface "
-                           << surface->geometryId());
-            } else {
-              // If there are measurement track states on this surface
-              ACTS_VERBOSE("Filtering step successful with "
-                           << nBranchesOnSurface << " branches");
-              // Update stepping state using filtered parameters of last track
-              // state on this surface
-              stepper.update(state.stepping,
-                             MultiTrajectoryHelpers::freeFiltered(
-                                 state.options.geoContext, currentState),
-                             currentState.filtered(),
-                             currentState.filteredCovariance(), *surface);
-              ACTS_VERBOSE(
-                  "Stepping state is updated with filtered parameter:");
-              ACTS_VERBOSE("-> " << currentState.filtered().transpose()
-                                 << " of track state with tip = "
-                                 << currentState.index());
-            }
-          }
         }
 
-        // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
-      } else if (isSensitive || isMaterial) {
-        ACTS_VERBOSE("Handle " << (isSensitive ? "sensitive" : "passive")
-                               << " surface: " << surface->geometryId()
-                               << " without measurements");
-
-        // No splitting on the surface without source links. Set it to one
-        // first, but could be changed later
-        nBranchesOnSurface = 1;
-
-        auto currentBranch = result.activeBranches.back();
-        TrackIndexType prevTip = currentBranch.tipIndex();
-
-        // No source links on surface, add either hole or passive material
-        // TrackState. No storage allocation for uncalibrated/calibrated
-        // measurement and filtered parameter
         auto stateMask = PM::Predicted | PM::Jacobian;
-
-        // Transport the covariance to a curvilinear surface
-        stepper.transportCovarianceToCurvilinear(state.stepping);
-
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PreUpdate);
-
-        // Transport & bind the state to the current surface
-        auto boundStateRes =
-            stepper.boundState(state.stepping, *surface, false);
-        if (!boundStateRes.ok()) {
-          return boundStateRes.error();
-        }
-        auto& boundState = *boundStateRes;
-        auto& [boundParams, jacobian, pathLength] = boundState;
-        boundParams.covariance() = state.stepping.cov;
 
         // Add a hole or material track state to the multitrajectory
         TrackIndexType currentTip = addNonSourcelinkState(
-            stateMask, boundState, result, isSensitive, prevTip);
-        auto nonSourcelinkState = result.trackStates->getTrackState(currentTip);
+            stateMask, boundState, result, expectMeasurements, prevTip);
         currentBranch.tipIndex() = currentTip;
-
-        if (isSensitive) {
+        auto currentState = currentBranch.outermostTrackState();
+        if (expectMeasurements) {
           currentBranch.nHoles()++;
         }
 
         BranchStopperResult branchStopperResult =
-            m_extensions.branchStopper(currentBranch, nonSourcelinkState);
+            m_extensions.branchStopper(currentBranch, currentState);
 
         // Check the branch
         if (branchStopperResult == BranchStopperResult::Continue) {
           // Remembered the active branch and its state
         } else {
           // No branch on this surface
-          nBranchesOnSurface = 0;
           if (branchStopperResult == BranchStopperResult::StopAndKeep) {
             storeLastActiveBranch(result);
           }
           // Remove the branch from list
           result.activeBranches.pop_back();
-        }
 
-        // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::PostUpdate);
-      } else {
-        // Neither measurement nor material on surface, this branch is still
-        // valid. Count the branch on current surface
-        nBranchesOnSurface = 1;
-      }
+          // Branch on the surface has been stopped - reset
+          ACTS_VERBOSE("Branch on surface " << surface->geometryId()
+                                            << " has been stopped");
 
-      // Reset current branch if there is no branch on current surface
-      if (nBranchesOnSurface == 0) {
-        ACTS_DEBUG("Branch on surface " << surface->geometryId()
-                                        << " is stopped");
-        if (!result.activeBranches.empty()) {
-          ACTS_VERBOSE("Propagation jumps to branch with tip = "
-                       << result.activeBranches.back().tipIndex());
           reset(state, stepper, navigator, result);
-        } else {
-          ACTS_VERBOSE("Stop Kalman filtering with "
-                       << result.collectedTracks.size() << " found tracks");
-          result.finished = true;
+
+          return Result<void>::success();
         }
       }
+
+      auto currentState = currentBranch.outermostTrackState();
+
+      if (currentState.typeFlags().test(TrackStateFlag::OutlierFlag)) {
+        // We don't need to update the stepper given an outlier state
+        ACTS_VERBOSE("Outlier state detected on surface "
+                     << surface->geometryId());
+      } else if (currentState.typeFlags().test(
+                     TrackStateFlag::MeasurementFlag)) {
+        // If there are measurement track states on this surface
+        // Update stepping state using filtered parameters of last track
+        // state on this surface
+        stepper.update(state.stepping,
+                       MultiTrajectoryHelpers::freeFiltered(
+                           state.options.geoContext, currentState),
+                       currentState.filtered(),
+                       currentState.filteredCovariance(), *surface);
+        ACTS_VERBOSE("Stepping state is updated with filtered parameter:");
+        ACTS_VERBOSE("-> " << currentState.filtered().transpose()
+                           << " of track state with tip = "
+                           << currentState.index());
+      }
+
+      // Update state and stepper with post material effects
+      materialInteractor(surface, state, stepper, navigator,
+                         MaterialUpdateStage::PostUpdate);
 
       return Result<void>::success();
     }
@@ -947,12 +899,13 @@ class CombinatorialKalmanFilter {
 
       auto rootBranch = result.activeBranches.back();
 
-      // Build the new branches by forking the root branch. Reverse the order to
-      // process the best candidate first
+      // Build the new branches by forking the root branch. Reverse the order
+      // to process the best candidate first
       CkfTypes::BranchVector<TrackProxy> newBranches;
       for (auto it = newTrackStateList.rbegin(); it != newTrackStateList.rend();
            ++it) {
-        // Keep the root branch as the first branch, make a copy for the others
+        // Keep the root branch as the first branch, make a copy for the
+        // others
         auto newBranch = (it == newTrackStateList.rbegin())
                              ? rootBranch
                              : rootBranch.shallowCopy();

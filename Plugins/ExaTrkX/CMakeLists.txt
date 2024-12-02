@@ -7,18 +7,21 @@ add_library(
 )
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    set(OLD_MMG_API OFF)
+    option(ACTS_EXATRKX_OLD_MMG_API OFF)
 
     target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCpp.cpp)
 
-    if(OLD_MMG_API)
-        target_compile_definitions(ActsPluginExaTrkX PRIVATE OLD_MMG_API)
+    if(ACTS_EXATRKX_OLD_MMG_API)
+        target_compile_definitions(
+            ActsPluginExaTrkX
+            PRIVATE ACTS_EXATRKX_OLD_MMG_API
+        )
     endif()
 
     target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
-        if(OLD_MMG_API)
+        if(ACTS_EXATRKX_OLD_MMG_API)
             target_sources(
                 ActsPluginExaTrkX
                 PRIVATE src/GraphCreatorWrapperCuda.cu

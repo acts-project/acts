@@ -57,6 +57,7 @@ struct ProtoTrackSourceLinkAccessor
     }
   }
 };
+
 }  // namespace
 
 namespace ActsExamples {
@@ -93,13 +94,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     return ProcessCode::ABORT;
   }
 
-  IndexSourceLinkContainer sourceLinks;
-  sourceLinks.reserve(measurements.size());
-  for (const auto& meas : measurements) {
-    const auto& isl = meas.sourceLink().get<IndexSourceLink>();
-    sourceLinks.insert(isl);
-  }
-
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -124,9 +118,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
   sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
-  sourceLinkAccessor.container = &sourceLinks;
   sourceLinkAccessor.onlyPrototrackMeasurements =
       m_cfg.onlyPrototrackMeasurements;
+  sourceLinkAccessor.container = &measurements.orderedIndices();
 
   Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;
@@ -165,10 +159,14 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
 
     // Fill the source links via their indices from the container
     for (const auto hitIndex : protoTracks.at(i)) {
-      sourceLinkAccessor.protoTrackSourceLinks.insert(
-          measurements.getMeasurement(hitIndex)
-              .sourceLink()
-              .get<IndexSourceLink>());
+      if (auto it = measurements.orderedIndices().nth(hitIndex);
+          it != measurements.orderedIndices().end()) {
+        sourceLinkAccessor.protoTrackSourceLinks.insert(*it);
+      } else {
+        ACTS_FATAL("Proto track " << i << " contains invalid hit index"
+                                  << hitIndex);
+        return ProcessCode::ABORT;
+      }
     }
 
     auto rootBranch = tracks.makeTrack();
@@ -247,7 +245,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   // once this is done.
   // Compute shared hits from all the reconstructed tracks if
   // (m_cfg.computeSharedHits) {
-  //   computeSharedHits(sourceLinks, tracks);
+  //   computeSharedHits(measurements, tracks);
   // }
 
   ACTS_INFO("Event " << ctx.eventNumber << ": " << nFailed << " / " << nSeed

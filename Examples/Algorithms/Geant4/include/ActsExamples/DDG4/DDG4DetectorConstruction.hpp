@@ -20,18 +20,17 @@ class G4VPhysicalVolume;
 namespace dd4hep {
 class Detector;
 }
+
 namespace ActsExamples {
 
-namespace DD4hep {
 struct DD4hepDetector;
-}
 
 /// Construct the Geant4 detector from a DD4hep description.
 class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   DDG4DetectorConstruction(
-      std::shared_ptr<DD4hep::DD4hepDetector> detector,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::shared_ptr<DD4hepDetector> detector,
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
   ~DDG4DetectorConstruction() final;
 
   /// Convert the stored DD4hep detector to a Geant4 description.
@@ -45,9 +44,9 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
 
  private:
   /// The Acts DD4hep detector instance
-  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
+  std::shared_ptr<DD4hepDetector> m_detector;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
   /// The world volume
   G4VPhysicalVolume* m_world = nullptr;
 
@@ -56,20 +55,20 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
 };
 
 class DDG4DetectorConstructionFactory final
-    : public DetectorConstructionFactory {
+    : public Geant4::DetectorConstructionFactory {
  public:
   DDG4DetectorConstructionFactory(
-      std::shared_ptr<DD4hep::DD4hepDetector> detector,
-      std::vector<std::shared_ptr<RegionCreator>> regionCreators = {});
+      std::shared_ptr<DD4hepDetector> detector,
+      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
   ~DDG4DetectorConstructionFactory() final;
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 
  private:
   /// The Acts DD4hep detector instance
-  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
+  std::shared_ptr<DD4hepDetector> m_detector;
   /// Region creators
-  std::vector<std::shared_ptr<RegionCreator>> m_regionCreators;
+  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples

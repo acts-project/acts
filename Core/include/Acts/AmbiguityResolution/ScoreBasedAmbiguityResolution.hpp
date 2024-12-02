@@ -12,12 +12,14 @@
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/TrackStateProxy.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cstddef>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -80,11 +82,17 @@ class ScoreBasedAmbiguityResolution {
     std::size_t nSharedHits = 0;
   };
 
-  /// @brief MeasurementInfo : contains the measurement ID and the detector ID
-  struct MeasurementInfo {
-    std::size_t iMeasurement = 0;
-    std::size_t detectorId = 0;
-    bool isOutlier = false;
+  enum class TrackStateTypes : std::uint8_t {
+    // A measurement not yet used in any other track
+    UnsharedHit,
+    // A measurement shared with another track
+    SharedHit,
+    // A hit that needs to be removed from the track
+    RejectedHit,
+    // An outlier, to be copied in case
+    Outlier,
+    // Other trackstate types to be copied in case
+    OtherTrackStateType
   };
 
   /// @brief Configuration struct : contains the configuration for the ambiguity resolution.
@@ -103,8 +111,8 @@ class ScoreBasedAmbiguityResolution {
     double pTMin = 0 * UnitConstants::GeV;
     double pTMax = 1e5 * UnitConstants::GeV;
 
-    double phiMin = -M_PI * UnitConstants::rad;
-    double phiMax = M_PI * UnitConstants::rad;
+    double phiMin = -std::numbers::pi * UnitConstants::rad;
+    double phiMax = std::numbers::pi * UnitConstants::rad;
 
     double etaMin = -5;
     double etaMax = 5;
@@ -124,11 +132,17 @@ class ScoreBasedAmbiguityResolution {
 
     using OptionalScoreModifier =
         std::function<void(const track_proxy_t&, double&)>;
+
+    using OptionalHitSelection = std::function<void(
+        const track_proxy_t&,
+        const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>;
+
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
 
     /// applied only if useAmbiguityFunction is true
     std::vector<OptionalScoreModifier> scores = {};
+    std::vector<OptionalHitSelection> hitSelections = {};
   };
 
   ScoreBasedAmbiguityResolution(
@@ -140,16 +154,10 @@ class ScoreBasedAmbiguityResolution {
   /// Compute the initial state of the tracks.
   ///
   /// @param tracks is the input track container
-  /// @param sourceLinkHash is the  source links
-  /// @param sourceLinkEquality is the equality function for the source links
-  /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
-  /// @return a vector of the initial state of the tracks
-  template <TrackContainerFrontend track_container_t,
-            typename source_link_hash_t, typename source_link_equality_t>
-  std::vector<std::vector<MeasurementInfo>> computeInitialState(
-      const track_container_t& tracks, source_link_hash_t sourceLinkHash,
-      source_link_equality_t sourceLinkEquality,
-      std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors) const;
+  /// @return trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
+  template <TrackContainerFrontend track_container_t>
+  std::vector<std::vector<TrackFeatures>> computeInitialState(
+      const track_container_t& tracks) const;
 
   /// Compute the score of each track.
   ///
@@ -181,29 +189,35 @@ class ScoreBasedAmbiguityResolution {
   /// that have a score below a certain threshold or not enough hits.
   ///
   /// @brief Remove tracks that are not good enough based on cuts
+  /// @param track is the input track
   /// @param trackScore is the score of each track
-  /// @param trackFeaturesVectors is the trackFeatures map for each track
   /// @param measurementsPerTrack is the list of measurements for each track
+  /// @param nTracksPerMeasurement is the number of tracks per measurement
+  /// @param optionalHitSelections is the optional hit selections to be applied
   /// @return a vector of IDs of the tracks we want to keep
-  std::vector<bool> getCleanedOutTracks(
-      const std::vector<double>& trackScore,
-      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack)
-      const;
+  template <TrackProxyConcept track_proxy_t>
+  bool getCleanedOutTracks(
+      const track_proxy_t& track, const double& trackScore,
+      const std::vector<std::size_t>& measurementsPerTrack,
+      const std::map<std::size_t, std::size_t>& nTracksPerMeasurement,
+      const std::vector<std::function<
+          void(const track_proxy_t&,
+               const typename track_proxy_t::ConstTrackStateProxy&,
+               TrackStateTypes&)>>& optionalHitSelections = {}) const;
 
   /// Remove tracks that are bad based on cuts and weighted scores.
   ///
   /// @brief Remove tracks that are not good enough
   /// @param tracks is the input track container
-  /// @param measurementsPerTrack is the list of measurements for each track
-  /// @param trackFeaturesVectors is the map of detector id to trackFeatures for each track
+  /// @param sourceLinkHash is the  source links
+  /// @param sourceLinkEquality is the equality function for the source links
   /// @param optionalCuts is the optional cuts to be applied
   /// @return a vector of IDs of the tracks we want to keep
-  template <TrackContainerFrontend track_container_t>
+  template <TrackContainerFrontend track_container_t,
+            typename source_link_hash_t, typename source_link_equality_t>
   std::vector<int> solveAmbiguity(
-      const track_container_t& tracks,
-      const std::vector<std::vector<MeasurementInfo>>& measurementsPerTrack,
-      const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
+      const track_container_t& tracks, source_link_hash_t sourceLinkHash,
+      source_link_equality_t sourceLinkEquality,
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 

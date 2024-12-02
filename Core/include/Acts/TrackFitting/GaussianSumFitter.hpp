@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -123,15 +124,11 @@ struct GaussianSumFitter {
       using Actors = ActorList<GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
-      std::vector<const Surface*> backwardSequence(
-          std::next(sSequence.rbegin()), sSequence.rend());
-      backwardSequence.push_back(opts.referenceSurface);
-
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      propOptions.navigation.surfaces = backwardSequence;
+      propOptions.navigation.surfaces = sSequence;
       propOptions.actorList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
 
@@ -221,7 +218,7 @@ struct GaussianSumFitter {
             .closest()
             .status();
 
-    if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
+    if (intersectionStatusStartSurface != IntersectionStatus::onSurface) {
       ACTS_DEBUG(
           "Surface intersection of start parameters WITH bound-check failed");
     }

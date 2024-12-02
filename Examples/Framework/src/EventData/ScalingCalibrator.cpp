@@ -165,7 +165,8 @@ void ActsExamples::ScalingCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
     Acts::ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
@@ -177,9 +178,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) *= ct.x_scale;
     calibratedCovariance(boundLoc1, boundLoc1) *= ct.y_scale;
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
     trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

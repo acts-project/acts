@@ -364,12 +364,16 @@ void addBinning(Context& ctx) {
                           .value("binY", Acts::BinningValue::binY)
                           .value("binZ", Acts::BinningValue::binZ)
                           .value("binR", Acts::BinningValue::binR)
-                          .value("binPhi", Acts::BinningValue::binPhi);
+                          .value("binPhi", Acts::BinningValue::binPhi)
+                          .value("binRPhi", Acts::BinningValue::binRPhi)
+                          .value("binH", Acts::BinningValue::binH)
+                          .value("binEta", Acts::BinningValue::binEta)
+                          .value("binMag", Acts::BinningValue::binMag);
 
   auto boundaryType = py::enum_<Acts::AxisBoundaryType>(m, "AxisBoundaryType")
-                          .value("bound", Acts::AxisBoundaryType::Bound)
-                          .value("closed", Acts::AxisBoundaryType::Closed)
-                          .value("open", Acts::AxisBoundaryType::Open);
+                          .value("Bound", Acts::AxisBoundaryType::Bound)
+                          .value("Closed", Acts::AxisBoundaryType::Closed)
+                          .value("Open", Acts::AxisBoundaryType::Open);
 
   auto axisType = py::enum_<Acts::AxisType>(m, "AxisType")
                       .value("equidistant", Acts::AxisType::Equidistant)

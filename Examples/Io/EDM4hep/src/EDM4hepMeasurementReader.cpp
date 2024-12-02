@@ -37,7 +37,6 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
-  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
@@ -55,7 +54,6 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   ClusterContainer clusters;
   // TODO what about those?
   IndexMultimap<Index> measurementSimHitsMap;
-  IndexSourceLinkContainer sourceLinks;
 
   podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
 
@@ -76,7 +74,6 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   // Write the data to the EventStore
   m_outputMeasurements(ctx, std::move(measurements));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
-  m_outputSourceLinks(ctx, std::move(sourceLinks));
   if (!m_cfg.outputClusters.empty()) {
     m_outputClusters(ctx, std::move(clusters));
   }

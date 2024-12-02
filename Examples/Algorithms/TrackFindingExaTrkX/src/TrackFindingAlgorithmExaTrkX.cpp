@@ -43,14 +43,6 @@ struct LoopHook : public Acts::ExaTrkXHook {
   }
 };
 
-// TODO do we have these function in the repo somewhere?
-float theta(float r, float z) {
-  return std::atan2(r, z);
-}
-float eta(float r, float z) {
-  return -std::log(std::tan(0.5 * theta(r, z)));
-}
-
 }  // namespace
 
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(

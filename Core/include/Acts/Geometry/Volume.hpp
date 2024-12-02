@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iosfwd>
 #include <memory>
@@ -31,7 +32,7 @@ class VolumeBounds;
 /// information.
 class Volume : public GeometryObject {
  public:
-  using BoundingBox = AxisAlignedBoundingBox<Volume, ActsScalar, 3>;
+  using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
   /// Explicit constructor with shared arguments
   ///
@@ -83,8 +84,10 @@ class Volume : public GeometryObject {
   /// Set the volume bounds and optionally also update the volume transform
   /// @param volbounds The volume bounds to be assigned
   /// @param transform The transform to be assigned, can be optional
+  /// @param logger A logger object to log messages
   virtual void update(std::shared_ptr<VolumeBounds> volbounds,
-                      std::optional<Transform3> transform = std::nullopt);
+                      std::optional<Transform3> transform = std::nullopt,
+                      const Logger& logger = Acts::getDummyLogger());
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -103,7 +106,7 @@ class Volume : public GeometryObject {
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, ActsScalar tol = 0.) const;
+  bool inside(const Vector3& gpos, double tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded

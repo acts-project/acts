@@ -26,18 +26,17 @@
 #include "G4RunManager.hh"
 #include "G4SystemOfUnits.hh"
 
-ActsExamples::Telescope::TelescopeG4DetectorConstruction::
-    TelescopeG4DetectorConstruction(
-        const TelescopeDetector::Config& cfg,
-        std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+namespace ActsExamples {
+
+TelescopeG4DetectorConstruction::TelescopeG4DetectorConstruction(
+    const TelescopeDetector::Config& cfg,
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {
-  throw_assert(cfg.surfaceType ==
-                   static_cast<int>(Telescope::TelescopeSurfaceType::Plane),
+  throw_assert(cfg.surfaceType == static_cast<int>(TelescopeSurfaceType::Plane),
                "only plan is supported right now");
 }
 
-G4VPhysicalVolume*
-ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
+G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
   if (m_world != nullptr) {
     return m_world;
   }
@@ -162,21 +161,21 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Create regions
   for (const auto& regionCreator : m_regionCreators) {
-    regionCreator->Construct();
+    regionCreator->construct();
   }
 
   return m_world;
 }
 
-ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::
-    TelescopeG4DetectorConstructionFactory(
-        const TelescopeDetector::Config& cfg,
-        std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+TelescopeG4DetectorConstructionFactory::TelescopeG4DetectorConstructionFactory(
+    const TelescopeDetector::Config& cfg,
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_cfg(cfg), m_regionCreators(std::move(regionCreators)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>
-ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::factorize()
-    const {
+TelescopeG4DetectorConstructionFactory::factorize() const {
   return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg,
                                                            m_regionCreators);
 }
+
+}  // namespace ActsExamples

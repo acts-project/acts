@@ -176,16 +176,21 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
-    auto field = m_cfg.magneticField->getField(
+    auto fieldRes = m_cfg.magneticField->getField(
         {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
-    if (!field.ok()) {
-      ACTS_ERROR("Field lookup error: " << field.error());
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
+    Acts::Vector3 field = *fieldRes;
 
-    auto pars = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
-        m_cfg.bFieldMin, logger());
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
+      continue;
+    }
+
+    auto parsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), surface, field);
 
     auto printSeedDetails = [&]() {
       std::stringstream ss;
@@ -199,15 +204,16 @@ ProcessCode PrototracksToParameters::execute(
       return ss.str();
     };
 
-    if (!pars) {
+    if (!parsResult.ok()) {
       ACTS_DEBUG("Skip track because of bad parameters");
       ACTS_VERBOSE("Seed detail:\n" << printSeedDetails());
       estimationFailed++;
       continue;
     }
 
-    auto params = Acts::BoundTrackParameters(
-        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis);
+    auto params =
+        Acts::BoundTrackParameters(surface.getSharedPtr(), *parsResult,
+                                   m_covariance, m_cfg.particleHypothesis);
 
     if (params.absoluteMomentum() > 1.e5) {
       ACTS_WARNING("Momentum estimate is " << params.absoluteMomentum());
@@ -218,7 +224,7 @@ ProcessCode PrototracksToParameters::execute(
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
-    parameters.push_back(std::move(params));
+    parameters.push_back(params);
   }
 
   if (prototracks.size() - seededTracks.size() > 0) {

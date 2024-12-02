@@ -191,8 +191,9 @@ void addGeoModel(Context& ctx) {
         .def_readwrite(
             "topBoundsOverride",
             &Acts::GeoModelBlueprintCreater::Options::topBoundsOverride)
-        .def_readwrite("table",
-                       &Acts::GeoModelBlueprintCreater::Options::table);
+        .def_readwrite("table", &Acts::GeoModelBlueprintCreater::Options::table)
+        .def_readwrite("dotGraph",
+                       &Acts::GeoModelBlueprintCreater::Options::dotGraph);
   }
 
   gm.def(

@@ -15,6 +15,8 @@
 #include <c10/cuda/CUDAGuard.h>
 #endif
 
+#include <numbers>
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -144,7 +146,7 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   // **********************
 
   // TODO I think this is already somewhere in the codebase
-  const float pi = static_cast<float>(M_PI);
+  const float pi = std::numbers::pi_v<float>;
   auto resetAngle = [pi](float angle) {
     if (angle > pi) {
       return angle - 2.f * pi;

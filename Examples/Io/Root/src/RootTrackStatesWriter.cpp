@@ -12,28 +12,23 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cmath>
-#include <cstddef>
 #include <ios>
 #include <limits>
-#include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -43,8 +38,6 @@
 #include <TTree.h>
 
 namespace ActsExamples {
-
-class IndexSourceLink;
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -488,21 +481,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         }
         if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector() &&
             state.hasCalibrated()) {
-          // calculate the unbiased track parameters (i.e. fitted track
-          // parameters with this measurement removed) using Eq.(12a)-Eq.(12c)
-          // of NIMA 262, 444 (1987)
-          auto m = state.effectiveCalibrated();
-          auto H = state.effectiveProjector();
-          auto V = state.effectiveCalibratedCovariance();
-          auto K =
-              (state.smoothedCovariance() * H.transpose() *
-               (H * state.smoothedCovariance() * H.transpose() - V).inverse())
-                  .eval();
-          auto unbiasedParamsVec =
-              state.smoothed() + K * (m - H * state.smoothed());
-          auto unbiasedParamsCov =
-              state.smoothedCovariance() - K * H * state.smoothedCovariance();
-          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+          return Acts::calculateUnbiasedParametersCovariance(state);
         }
         return std::nullopt;
       };
@@ -620,7 +599,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
-            2 * M_PI);
+            2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
             static_cast<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(
