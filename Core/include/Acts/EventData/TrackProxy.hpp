@@ -21,7 +21,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
-#include <type_traits>
 
 namespace Acts {
 

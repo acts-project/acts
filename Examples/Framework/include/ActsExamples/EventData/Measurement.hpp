@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 
 #include <cstddef>
+#include <iterator>
 #include <type_traits>
 #include <vector>
 
