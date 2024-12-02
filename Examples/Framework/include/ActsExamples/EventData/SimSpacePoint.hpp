@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/SourceLink.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>
