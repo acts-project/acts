@@ -75,7 +75,7 @@ fieldMapRZ(const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                            std::array<std::size_t, 2> nBinsRZ)>&
                localToGlobalBin,
            std::vector<double> rPos, std::vector<double> zPos,
-           std::vector<Acts::Vector2> bField,
+           const std::vector<Acts::Vector2>& bField,
            double lengthUnit = UnitConstants::mm,
            double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
 
@@ -137,7 +137,7 @@ fieldMapXYZ(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, std::vector<Acts::Vector3> bField,
+    std::vector<double> zPos, const std::vector<Acts::Vector3>& bField,
     double lengthUnit = UnitConstants::mm, double BFieldUnit = UnitConstants::T,
     bool firstOctant = false);
 
@@ -145,17 +145,18 @@ fieldMapXYZ(
 /// creates a field mapper by sampling grid points from the analytical
 /// solenoid field.
 ///
-/// @param rlim pair of r bounds
-/// @param zlim pair of z bounds
-/// @param nbins pair of bin counts
+/// @param rLim pair of r bounds
+/// @param zLim pair of z bounds
+/// @param nBins pair of bin counts
 /// @param field the solenoid field instance
 ///
 /// @return A field map instance for use in interpolation.
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
-solenoidFieldMap(std::pair<double, double> rlim, std::pair<double, double> zlim,
-                 std::pair<std::size_t, std::size_t> nbins,
+solenoidFieldMap(const std::pair<double, double>& rLim,
+                 const std::pair<double, double>& zLim,
+                 const std::pair<std::size_t, std::size_t>& nBins,
                  const SolenoidBField& field);
 
 }  // namespace Acts
