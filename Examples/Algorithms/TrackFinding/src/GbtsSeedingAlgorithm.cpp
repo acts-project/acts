@@ -355,7 +355,7 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
     }
   });
 
-  for (long unsigned int i = 0; i < input_vector.size(); i++) {
+  for (std::size_t i = 0; i < input_vector.size(); i++) {
     input_vector[i].m_refCoord = input_vector[i].m_refCoord / count_vector[i];
   }
 
