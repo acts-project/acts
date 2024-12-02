@@ -27,9 +27,6 @@ class Detector;
 namespace ActsExamples {
 class IContextDecorator;
 struct Geant4ConstructionOptions;
-namespace Geant4 {
-class RegionCreator;
-}  // namespace Geant4
 }  // namespace ActsExamples
 
 class G4VUserDetectorConstruction;

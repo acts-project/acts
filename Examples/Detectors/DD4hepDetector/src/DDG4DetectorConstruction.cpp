@@ -42,7 +42,7 @@ G4VPhysicalVolume* DDG4DetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_options.regionCreators) {
-      regionCreator->construct();
+      regionCreator->buildRegion();
     }
   }
 

@@ -22,6 +22,7 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetector.hpp"
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
@@ -92,6 +93,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle")
       .def("tweakLogging", &Geant4Handle::tweakLogging);
+
+  {
+    py::class_<Geant4ConstructionOptions,
+               std::shared_ptr<Geant4ConstructionOptions>>(
+        mod, "Geant4ConstructionOptions")
+        .def(py::init<>())
+        .def_readwrite("regionCreators",
+                       &Geant4ConstructionOptions::regionCreators);
+  }
 
   {
     using Algorithm = Geant4SimulationBase;
@@ -268,6 +278,21 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
+    using DetectorFactory = GdmlDetectorFactory;
+    using Config = DetectorFactory::Config;
+
+    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
+                 mod, "GdmlDetectorFactory")
+                 .def(py::init<const Config&>());
+
+    auto c = py::class_<Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(path);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
     /// Helper function to test if the automatic geometry conversion works
     ///
     /// @param gdmlFileName is the name of the GDML file
@@ -360,10 +385,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   {
     using Tool = Geant4::RegionCreator;
     using Config = Tool::Config;
-    auto tool = py::class_<Tool, std::shared_ptr<Tool>>(mod, "RegionCreator")
-                    .def(py::init<const Config&, std::string, Logging::Level>(),
-                         py::arg("config"), py::arg("name"),
-                         py::arg("logLevel") = Logging::INFO)
+    auto tool = py::class_<Tool>(mod, "RegionCreator")
+                    .def(py::init<const Config&>(), py::arg("config"))
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());

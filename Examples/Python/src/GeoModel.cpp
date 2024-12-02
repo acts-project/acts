@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 
 #include <string>
@@ -59,6 +60,21 @@ void addGeoModel(Context& ctx) {
       .def("surface", [](Acts::GeoModelDetectorElement self) {
         return self.surface().getSharedPtr();
       });
+
+  {
+    using DetectorFactory = ActsExamples::GeoModelDetectorFactory;
+    using Config = DetectorFactory::Config;
+
+    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
+                 gm, "GdmlDetectorFactory")
+                 .def(py::init<const Config&>());
+
+    auto c = py::class_<Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(path);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_STRUCT_END();
+  }
 
   // Shape converters
   {

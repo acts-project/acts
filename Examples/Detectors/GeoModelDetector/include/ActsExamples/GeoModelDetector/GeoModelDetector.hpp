@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
@@ -15,7 +16,7 @@
 
 namespace ActsExamples {
 
-struct GdmlDetectorFactory : public DetectorFactoryBase {
+struct GeoModelDetectorFactory : public DetectorFactoryBase {
   struct Config {
     std::string path;
 
@@ -23,7 +24,7 @@ struct GdmlDetectorFactory : public DetectorFactoryBase {
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
 
-  explicit GdmlDetectorFactory(const Config& cfg);
+  explicit GeoModelDetectorFactory(const Config& cfg);
 
   std::shared_ptr<DetectorBase> buildDetector() const override;
 
@@ -31,15 +32,15 @@ struct GdmlDetectorFactory : public DetectorFactoryBase {
   Config m_cfg;
 };
 
-class GdmlDetector : public PreConstructedDetector {
+class GeoModelDetector : public PreConstructedDetector {
  public:
-  explicit GdmlDetector(const GdmlDetectorFactory::Config& config);
+  explicit GeoModelDetector(Acts::GeoModelTree geoModel);
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 
  private:
-  GdmlDetectorFactory::Config m_cfg;
+  Acts::GeoModelTree m_geoModel;
 };
 
 }  // namespace ActsExamples

@@ -111,16 +111,9 @@ def main():
     if args.input == "":
         detector = getOpenDataDetector()
     elif args.input.endswith(".gdml"):
-        # TODO
-        detector = acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
+        detector = acts.examples.geant4.GdmlDetectorFactory(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
-        geoModelTree = acts.geomodel.readFromDb(args.input)
-        # TODO
-        detector = (
-            acts.examples.geant4.geomodel.GeoModelGeant4DetectorConstructionFactory(
-                geoModelTree
-            )
-        )
+        detector = acts.examples.GeoModelDetectorFactory(path=args.input)
 
     runMaterialRecording(
         detector=detector,

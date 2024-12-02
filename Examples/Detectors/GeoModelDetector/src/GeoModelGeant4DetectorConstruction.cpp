@@ -8,6 +8,7 @@
 
 #include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4LogicalVolume.hh>
@@ -42,7 +43,7 @@ G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_options.regionCreators) {
-      regionCreator->construct();
+      regionCreator->buildRegion();
     }
   }
   return m_g4World;

@@ -18,8 +18,6 @@ class G4LogicalVolume;
 
 namespace ActsExamples {
 
-struct Geant4ConstructionOptions;
-
 class TelescopeG4DetectorConstruction final
     : public G4VUserDetectorConstruction {
  public:

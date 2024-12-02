@@ -15,6 +15,15 @@
 
 namespace ActsExamples {
 
+GdmlDetectorFactory::GdmlDetectorFactory(const Config& cfg)
+    : DetectorFactoryBase(
+          Acts::getDefaultLogger("GdmlDetectorFactory", cfg.logLevel)),
+      m_cfg(cfg) {}
+
+std::shared_ptr<DetectorBase> GdmlDetectorFactory::buildDetector() const {
+  return std::make_shared<GdmlDetector>(m_cfg);
+}
+
 GdmlDetector::GdmlDetector(const GdmlDetectorFactory::Config& config)
     : PreConstructedDetector(), m_cfg(config) {}
 
