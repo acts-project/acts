@@ -73,7 +73,6 @@ def runTruthTrackingKalman(
                 outputParticles="particles_input",
             )
         )
-        s.addWhiteboardAlias("particles", "particles_input")
 
     if inputHitsPath is None:
         addFatras(
@@ -136,12 +135,11 @@ def runTruthTrackingKalman(
             ),
         )
     )
-    s.addWhiteboardAlias("tracks", "selected-tracks")
 
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="selected-tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
@@ -153,7 +151,7 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="selected-tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf.root"),
@@ -163,7 +161,7 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="selected-tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_kf.root"),
