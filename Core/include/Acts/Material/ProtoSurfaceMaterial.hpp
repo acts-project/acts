@@ -27,29 +27,30 @@ namespace Acts {
 /// to mark the layers and surfaces on which the material should be mapped on
 /// at construction time of the geometry and to hand over the granularity of
 /// of the material map with the bin Utility.
-template <typename AxisType>
+template <typename ProtoBinningType>
 class ProtoSurfaceMaterialT : public ISurfaceMaterial {
  public:
   /// Constructor without binningType - homogeneous material
   ProtoSurfaceMaterialT() = default;
 
-  /// Constructor with AxisType
+  /// Constructor with ProtoBinningType
   /// @param binning a binning description for the material map binning
   /// @param mappingType is the type of surface mapping associated to the surface
-  ProtoSurfaceMaterialT(const AxisType& binning,
+  ProtoSurfaceMaterialT(const ProtoBinningType& binning,
                         MappingType mappingType = MappingType::Default)
       : ISurfaceMaterial(1., mappingType), m_binning(binning) {}
 
   /// Copy constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(const ProtoSurfaceMaterialT<AxisType>& smproxy) =
-      default;
+  ProtoSurfaceMaterialT(
+      const ProtoSurfaceMaterialT<ProtoBinningType>& smproxy) = default;
 
   /// Copy move constructor
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<AxisType>&& smproxy) = default;
+  ProtoSurfaceMaterialT(ProtoSurfaceMaterialT<ProtoBinningType>&& smproxy) =
+      default;
 
   /// Destructor
   ~ProtoSurfaceMaterialT() override = default;
@@ -57,23 +58,23 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT<AxisType>& operator=(
-      const ProtoSurfaceMaterialT<AxisType>& smproxy) = default;
+  ProtoSurfaceMaterialT<ProtoBinningType>& operator=(
+      const ProtoSurfaceMaterialT<ProtoBinningType>& smproxy) = default;
 
   /// Assignment move operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterialT<AxisType>& operator=(
-      ProtoSurfaceMaterialT<AxisType>&& smproxy) = default;
+  ProtoSurfaceMaterialT<ProtoBinningType>& operator=(
+      ProtoSurfaceMaterialT<ProtoBinningType>&& smproxy) = default;
 
   /// Scale operation - dummy implementation
   ///
-  ProtoSurfaceMaterialT<AxisType>& scale(double /*scale*/) final {
+  ProtoSurfaceMaterialT<ProtoBinningType>& scale(double /*scale*/) final {
     return (*this);
   }
 
   /// Return the BinUtility
-  const AxisType& binning() const { return (m_binning); }
+  const ProtoBinningType& binning() const { return (m_binning); }
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
@@ -102,7 +103,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
  private:
   /// A binning description
-  AxisType m_binning;
+  ProtoBinningType m_binning;
 
   /// Dummy material properties
   MaterialSlab m_materialSlab;

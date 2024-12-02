@@ -180,22 +180,22 @@ class Extent {
 
   /// Set a range for a dedicated binning value
   ///
-  /// @param bValue the binning identification
+  /// @param aDir the axis direction
   /// @param min the minimum parameter
   /// @param max the maximum parameter
-  void set(AxisDirection bValue, double min, double max);
+  void set(AxisDirection aDir, double min, double max);
 
   /// Set a min value for a dedicated binning value
   ///
-  /// @param bValue the binning identification
+  /// @param aDir the axis direction
   /// @param min the minimum parameter
-  void setMin(AxisDirection bValue, double min);
+  void setMin(AxisDirection aDir, double min);
 
   /// Set a max value for a dedicated binning value
   ///
-  /// @param bValue the binning identification
+  /// @param aDir the axis direction
   /// @param max the maximum parameter
-  void setMax(AxisDirection bValue, double max);
+  void setMax(AxisDirection aDir, double max);
 
   /// (re-)Set the envelope
   ///
@@ -204,17 +204,17 @@ class Extent {
 
   /// Return the individual 1-dimensional range
   ///
-  /// @param bValue is the binning value to be returned
+  /// @param aDir the axis direction
   ///
   /// @return a one dimensional arrange
-  auto range(AxisDirection bValue) { return m_range[toUnderlying(bValue)]; }
+  auto range(AxisDirection aDir) { return m_range[toUnderlying(bValue)]; }
 
   /// Return the individual 1-dimensional range
   ///
-  /// @param bValue is the binning value to be returned
+  /// @param aDir the axis direction
   ///
   /// @return a one dimensional arrange
-  Range1D<double> range(AxisDirection bValue) const;
+  Range1D<double> range(AxisDirection aDir) const;
 
   /// Return the N-dimension range
   const RangeXD<numAxisDirections(), double>& range() const;
@@ -222,13 +222,13 @@ class Extent {
   /// Return an D-dimensional sub range according to the
   /// the given axisDirections
   /// @tparam kSUBDIM the number of sub dimensions
-  /// @param binValues the binning values
+  /// @param aDirs the axis directions
   /// @return the sub range
   template <unsigned int kSUBDIM>
   RangeXD<kSUBDIM, double> range(
-      const std::array<AxisDirection, kSUBDIM>& binValues) const {
+      const std::array<AxisDirection, kSUBDIM>& aDirs) const {
     RangeXD<kSUBDIM, double> rRange;
-    for (auto [i, v] : enumerate(binValues)) {
+    for (auto [i, v] : enumerate(aDirs)) {
       rRange[i] = range(v);
     }
     return rRange;
@@ -248,42 +248,42 @@ class Extent {
 
   /// Access the minimum parameter
   ///
-  /// @param bValue the binning identification
-  double min(AxisDirection bValue) const {
-    return m_range[toUnderlying(bValue)].min();
+  /// @param aDir the axis direction
+  double min(AxisDirection aDir) const {
+    return m_range[toUnderlying(aDir)].min();
   }
 
   /// Access the maximum parameter
   ///
-  /// @param bValue the binning identification
-  double max(AxisDirection bValue) const {
-    return m_range[toUnderlying(bValue)].max();
+  /// @param aDir the axis direction
+  double max(AxisDirection aDir) const {
+    return m_range[toUnderlying(aDir)].max();
   }
 
   /// Access the midpoint
   ///
-  /// @param bValue the binning identification
-  double medium(AxisDirection bValue) const {
-    return 0.5 * (m_range[toUnderlying(bValue)].min() +
-                  m_range[toUnderlying(bValue)].max());
+  /// @param aDir the axis direction
+  double medium(AxisDirection aDir) const {
+    return 0.5 * (m_range[toUnderlying(aDir)].min() +
+                  m_range[toUnderlying(aDir)].max());
   }
 
   /// Access the parameter interval (i.e. the range span)
   ///
-  /// @param bValue the binning identification
-  double interval(AxisDirection bValue) const {
-    return m_range[toUnderlying(bValue)].size();
+  /// @param aDir the axis direction
+  double interval(AxisDirection aDir) const {
+    return m_range[toUnderlying(aDir)].size();
   }
 
   /// Contains check
   ///
   /// @param rhs the extent that is check if it is contained
-  /// @param bValue is the binning value, if set to nullopt
+  /// @param aDir is the axis direction, if set to nullopt
   ///               the check on all is done
   ///
   /// @return true if the rhs is contained
   bool contains(const Extent& rhs,
-                std::optional<AxisDirection> bValue = std::nullopt) const;
+                std::optional<AxisDirection> aDir = std::nullopt) const;
 
   /// Contains check for a single point
   ///
@@ -295,16 +295,16 @@ class Extent {
   /// Intersection checks
   ///
   /// @param rhs the extent that is check for intersection
-  /// @param bValue is the binning value, if set to nulloptr
+  /// @param aDir is the axis direction, if set to nullopt
   ///               the check on all is done
   ///
   /// @return true if the rhs intersects
   bool intersects(const Extent& rhs,
-                  std::optional<AxisDirection> bValue = std::nullopt) const;
+                  std::optional<AxisDirection> aDir = std::nullopt) const;
 
   /// Check if this object constrains a given direction
   ///
-  /// @param bValue is the binning value
+  /// @param aDir the axis direction
   bool constrains(AxisDirection bValue) const;
 
   /// Check if this object constrains any direction
@@ -326,8 +326,8 @@ class Extent {
   std::array<std::vector<double>, numAxisDirections()> m_valueHistograms;
 };
 
-inline Range1D<double> Acts::Extent::range(AxisDirection bValue) const {
-  return m_range[toUnderlying(bValue)];
+inline Range1D<double> Acts::Extent::range(AxisDirection aDir) const {
+  return m_range[toUnderlying(aDir)];
 }
 
 inline const RangeXD<numAxisDirections(), double>& Extent::range() const {

@@ -14,7 +14,6 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderGbtsConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <algorithm>
 #include <cmath>
