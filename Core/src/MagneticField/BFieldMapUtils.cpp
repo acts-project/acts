@@ -147,6 +147,12 @@ Acts::fieldMapXYZ(
   // [2] Set the bField values
   const std::array<std::size_t, 3> nIndices = {
       {xBinCount, yBinCount, zBinCount}};
+
+  auto calcAbsDiff = [](std::size_t val, std::size_t binCount) {
+    return std::abs(static_cast<std::ptrdiff_t>(val) -
+                    static_cast<std::ptrdiff_t>(binCount));
+  };
+
   for (std::size_t i = 1; i <= nBinsX; ++i) {
     for (std::size_t j = 1; j <= nBinsY; ++j) {
       for (std::size_t k = 1; k <= nBinsZ; ++k) {
@@ -155,12 +161,9 @@ Acts::fieldMapXYZ(
         // underflow or overflow bins in account this is why we need to subtract
         // by one
         if (firstOctant) {
-          std::size_t l = std::abs(static_cast<std::ptrdiff_t>(i) -
-                                   static_cast<std::ptrdiff_t>(xBinCount));
-          std::size_t m = std::abs(static_cast<std::ptrdiff_t>(j) -
-                                   static_cast<std::ptrdiff_t>(yBinCount));
-          std::size_t n = std::abs(static_cast<std::ptrdiff_t>(k) -
-                                   static_cast<std::ptrdiff_t>(zBinCount));
+          const std::size_t l = calcAbsDiff(i, xBinCount);
+          const std::size_t m = calcAbsDiff(j, yBinCount);
+          const std::size_t n = calcAbsDiff(k, zBinCount);
 
           grid.atLocalBins(indices) =
               bField.at(localToGlobalBin({{l, m, n}}, nIndices)) * BFieldUnit;
