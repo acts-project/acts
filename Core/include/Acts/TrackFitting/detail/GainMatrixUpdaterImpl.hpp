@@ -35,7 +35,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+  std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
       trackState.projector.begin(),
       trackState.projector.begin() + kMeasurementSize);
   FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
