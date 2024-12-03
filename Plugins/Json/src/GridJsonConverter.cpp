@@ -439,6 +439,11 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
     jBoundToGridLocal["shift"] = boundCylinderToZPhi->shift;
   }
 
+  if (jBoundToGridLocal.empty()) {
+    throw std::invalid_argument(
+        "GridAccessJsonConverter: boundToGridLocal type not supported.");
+  }
+
   return jBoundToGridLocal;
 }
 
