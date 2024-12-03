@@ -96,8 +96,8 @@ template <class identifier_t>
 Acts::HoughTransformUtils::HoughPlane<identifier_t>::HoughPlane(
     const HoughPlaneConfig& cfg)
     : m_cfg(cfg),
-      m_houghHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX),
-                  Axis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
+      m_houghHist(HoughAxis(0, m_cfg.nBinsX, m_cfg.nBinsX),
+                  HoughAxis(0, m_cfg.nBinsY, m_cfg.nBinsY)) {
   // instantiate our histogram.
   // m_houghHist = HoughHist(Axis(0, m_cfg.nBinsX, m_cfg.nBinsX), Axis(0,
   // m_cfg.nBinsY, m_cfg.nBinsY));
