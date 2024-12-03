@@ -26,10 +26,12 @@
 
 #include <Eigen/src/Core/util/Memory.h>
 #include <boost/graph/graph_traits.hpp>
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableTrack.h>
+#include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
-
-#include "edm4hep/MutableTrack.h"
 
 namespace Acts::EDM4hepUtil {
 
@@ -60,6 +62,12 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
+
+// Compatibility with EDM4hep < 0.99 and >= 0.99
+edm4hep::MCParticle getParticle(const edm4hep::SimTrackerHit& hit);
+
+void setParticle(edm4hep::MutableSimTrackerHit& hit,
+                 const edm4hep::MCParticle& particle);
 
 template <TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,

@@ -525,7 +525,7 @@ def full_chain(args):
 
     from acts.examples.reconstruction import (
         addSeeding,
-        ParticleSmearingSigmas,
+        TrackSmearingSigmas,
         addCKFTracks,
         CkfConfig,
         SeedingAlgorithm,
@@ -551,7 +551,7 @@ def full_chain(args):
         seedingAlgorithm=args.seeding_algorithm,
         **(
             dict(
-                particleSmearingSigmas=ParticleSmearingSigmas(ptRel=0.01),
+                trackSmearingSigmas=TrackSmearingSigmas(ptRel=0.01),
                 rnd=rnd,
             )
             if args.seeding_algorithm == SeedingAlgorithm.TruthSmeared

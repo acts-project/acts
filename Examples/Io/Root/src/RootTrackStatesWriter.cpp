@@ -452,8 +452,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_t_eT.push_back(static_cast<float>(truthParams[Acts::eBoundTime]));
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas = state.effectiveProjector().transpose() *
-                                 state.effectiveCalibrated();
+        Acts::BoundVector meas = state.projectorSubspaceHelper().expandVector(
+            state.effectiveCalibrated());
         // extract local and global position
         Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
         Acts::Vector3 global =
@@ -633,7 +633,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          auto H = state.effectiveProjector();
+          auto H =
+              state.projectorSubspaceHelper().fullProjector().topLeftCorner(
+                  state.calibratedSize(), Acts::eBoundSize);
           auto V = state.effectiveCalibratedCovariance();
           auto resCov = V + H * covariance * H.transpose();
           Acts::ActsDynamicVector res =

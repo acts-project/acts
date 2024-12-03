@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -19,7 +18,6 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
-#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,36 +26,38 @@ namespace ActsExamples {
 class RandomNumbers;
 struct AlgorithmContext;
 
-/// Create track states by smearing truth particle information.
+/// @brief Smear track parameters.
 ///
-/// Particles are smeared in the perigee frame anchored at their true vertex
-/// position. The `d0` and `z0` parameters are always defined within that
-/// perigee frame and not globally. The generated bound parameters are stored in
-/// the same order as the input particles.
-class ParticleSmearing final : public IAlgorithm {
+/// Track parameters are smeared in the local frame. The `loc0` and `loc1`
+/// parameters are always defined within that local frame and not globally. The
+/// generated bound parameters are stored in the same order as the input
+/// parameters.
+class TrackParameterSmearing final : public IAlgorithm {
  public:
   struct Config {
-    /// Input truth particles collection.
-    std::string inputParticles;
-    /// Output smeared tracks parameters collection.
+    /// Input track parameters collection.
+    std::string inputTrackParameters;
+    /// Output smeared track parameters collection.
     std::string outputTrackParameters;
 
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
 
     // Smearing parameters
-    /// Constant term of the d0 resolution.
-    double sigmaD0 = 20 * Acts::UnitConstants::um;
-    /// Pt-dependent d0 resolution of the form sigma_d0 = A*exp(-1.*abs(B)*pt).
-    double sigmaD0PtA = 30 * Acts::UnitConstants::um;
-    double sigmaD0PtB = 0.3 / Acts::UnitConstants::GeV;
-    /// Constant term of the z0 resolution.
-    double sigmaZ0 = 20 * Acts::UnitConstants::um;
-    /// Pt-dependent z0 resolution of the form sigma_z0 = A*exp(-1.*abs(B)*pt).
-    double sigmaZ0PtA = 30 * Acts::UnitConstants::um;
-    double sigmaZ0PtB = 0.3 / Acts::UnitConstants::GeV;
+    /// Constant term of the loc0 resolution.
+    double sigmaLoc0 = 20 * Acts::UnitConstants::um;
+    /// Pt-dependent loc0 resolution of the form sigma_loc0 =
+    /// A*exp(-1.*abs(B)*pt).
+    double sigmaLoc0PtA = 30 * Acts::UnitConstants::um;
+    double sigmaLoc0PtB = 0.3 / Acts::UnitConstants::GeV;
+    /// Constant term of the loc1 resolution.
+    double sigmaLoc1 = 20 * Acts::UnitConstants::um;
+    /// Pt-dependent loc1 resolution of the form sigma_loc1 =
+    /// A*exp(-1.*abs(B)*pt).
+    double sigmaLoc1PtA = 30 * Acts::UnitConstants::um;
+    double sigmaLoc1PtB = 0.3 / Acts::UnitConstants::GeV;
     /// Time resolution.
-    double sigmaT0 = 1 * Acts::UnitConstants::ns;
+    double sigmaTime = 1 * Acts::UnitConstants::ns;
     /// Phi angular resolution.
     double sigmaPhi = 1 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
@@ -77,7 +77,7 @@ class ParticleSmearing final : public IAlgorithm {
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };
 
-  ParticleSmearing(const Config& config, Acts::Logging::Level level);
+  TrackParameterSmearing(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
@@ -87,7 +87,8 @@ class ParticleSmearing final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
