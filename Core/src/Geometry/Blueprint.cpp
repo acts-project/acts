@@ -21,7 +21,7 @@ namespace Acts {
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
 const std::string &Blueprint::name() const {
-  static const std::string root = "root";
+  static const std::string root = "Root";
   return root;
 }
 
