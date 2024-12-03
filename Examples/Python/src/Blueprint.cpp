@@ -243,7 +243,7 @@ void addBlueprint(Context& ctx) {
       .def("__str__",
            [](const BlueprintNode& self) {
              std::stringstream ss;
-             self.toStream(ss);
+             ss << self;
              return ss.str();
            })
       .def("addChild", &BlueprintNode::addChild)

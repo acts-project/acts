@@ -40,8 +40,6 @@ class BlueprintNode {
 
   virtual const std::string& name() const = 0;
 
-  virtual void toStream(std::ostream& os) const;
-
   virtual Volume& build(const BlueprintOptions& options,
                         const GeometryContext& gctx,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
@@ -97,7 +95,14 @@ class BlueprintNode {
   void graphViz(std::ostream& os) const;
   virtual void addToGraphviz(std::ostream& os) const;
 
+  friend std::ostream& operator<<(std::ostream& os, const BlueprintNode& node) {
+    node.toStream(os);
+    return os;
+  }
+
  protected:
+  virtual void toStream(std::ostream& os) const;
+
   std::string prefix() const;
   std::string indent() const;
 
