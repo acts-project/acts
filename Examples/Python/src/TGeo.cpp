@@ -61,7 +61,6 @@ void addTGeo(Context& ctx) {
                    TGeoParser::Options tgpOptions;
                    tgpOptions.volumeNames = {tVolume->GetName()};
                    tgpOptions.targetNames = sensitiveMatches;
-                   tgpOptions.parseRanges = {};
                    tgpOptions.unit = scaleConversion;
                    TGeoParser::State tgpState;
                    tgpState.volume = tVolume;
@@ -70,7 +69,7 @@ void addTGeo(Context& ctx) {
                    TGeoParser::select(tgpState, tgpOptions, gmatrix);
                    tgElements.reserve(tgpState.selectedNodes.size());
 
-                   for (auto& snode : tgpState.selectedNodes) {
+                   for (const auto& snode : tgpState.selectedNodes) {
                      auto identifier = Acts::TGeoDetectorElement::Identifier();
                      auto tgElement = TGeoLayerBuilder::defaultElementFactory(
                          identifier, *snode.node, *snode.transform, localAxes,
