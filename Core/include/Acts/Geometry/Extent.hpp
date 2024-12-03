@@ -18,6 +18,7 @@
 
 #include <array>
 #include <bitset>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <vector>
