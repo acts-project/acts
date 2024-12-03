@@ -43,7 +43,7 @@ double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
 }
 
 std::int32_t AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
-  return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
+  return static_cast<std::int32_t>(std::floor(value / binExtent - 0.5) + 1);
 }
 
 std::uint32_t AdaptiveGridTrackDensity::getTrkGridSize(
