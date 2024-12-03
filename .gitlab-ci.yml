@@ -146,7 +146,9 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - docker-gpu-nvidia
   script:
@@ -156,7 +158,9 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:52
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - docker-gpu-nvidia
   script:
@@ -166,7 +170,7 @@ test_exatrkx_python:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
+    - pip3 install -r Examples/Python/tests/requirements.txt
     - nvidia-smi
     - pytest -rFsv -k torch --collect-only
     - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
