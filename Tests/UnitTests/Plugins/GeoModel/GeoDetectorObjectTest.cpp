@@ -43,7 +43,7 @@ void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
   for (const auto& box : cache.boundingBoxes) {
     const Acts::VolumeBounds& bounds = box->volumeBounds();
-    for (long unsigned int i = 0; i < geoDims.boxO.size(); i++) {
+    for (std::size_t i = 0; i < geoDims.boxO.size(); i++) {
       BOOST_CHECK(geoDims.boxO[i] == bounds.values()[i]);
     }
     std::vector<const Acts::Surface*> surfaces = box->surfaces();
@@ -75,7 +75,7 @@ void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
             dynamic_cast<const Acts::TrapezoidBounds*>(&sbounds);
         std::vector<Acts::Vector2> trapVerts = trapBounds->vertices();
 
-        for (long unsigned int i = 0; i < trapVerts.size(); i++) {
+        for (std::size_t i = 0; i < trapVerts.size(); i++) {
           BOOST_CHECK(trapVerts[i][0] == geoDims.trapVerts[i][0]);
           BOOST_CHECK(trapVerts[i][1] == geoDims.trapVerts[i][1]);
         }
