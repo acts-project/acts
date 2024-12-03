@@ -1792,13 +1792,12 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
-        metricLearningConfig["numFeatures"] = 3
+        metricLearningConfig["selectedFeatures"] = [0, 1, 2]
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
-        filterConfig["nChunks"] = 10
-        filterConfig["numFeatures"] = 3
+        filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
-        gnnConfig["numFeatures"] = 3
+        gnnConfig["selectedFeatures"] = [0, 1, 2]
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
