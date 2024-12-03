@@ -42,12 +42,8 @@ dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
   return *m_detector;
 }
 
-dd4hep::DetElement DD4hepDetector::dd4hepGeometry() {
-  return m_detector->world();
-}
-
 TGeoNode& DD4hepDetector::tgeoGeometry() {
-  return *dd4hepGeometry().placement().ptr();
+  return *m_detector->world().placement().ptr();
 }
 
 DD4hepDetectorFactory::DD4hepDetectorFactory(const Config& cfg)

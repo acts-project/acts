@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -52,9 +51,7 @@ EventRecording::EventRecording(const EventRecording::Config& config,
 
   // G4RunManager deals with the lifetime of these objects
   m_runManager->SetUserInitialization(
-      m_cfg.detector
-          ->buildGeant4DetectorConstruction(
-              {.regionCreators = m_cfg.regionCreators})
+      m_cfg.detector->buildGeant4DetectorConstruction(m_cfg.constructionOptions)
           .release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new Geant4::HepMC3::RunAction());

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -39,8 +40,8 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    /// Geant4 region creators.
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
+    /// Geant4 construction options.
+    Geant4ConstructionOptions constructionOptions;
 
     /// Detector instance to access Geant4 geometry construction.
     std::shared_ptr<DetectorBase> detector;

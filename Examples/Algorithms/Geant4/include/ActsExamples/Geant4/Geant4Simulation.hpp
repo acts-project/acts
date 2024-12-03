@@ -11,6 +11,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -46,7 +47,6 @@ struct Geant4Handle;
 namespace Geant4 {
 class SensitiveSurfaceMapper;
 struct EventStore;
-class RegionCreator;
 }  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
@@ -60,8 +60,8 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
 
-    /// Geant4 region creators.
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators;
+    /// Geant4 construction options.
+    Geant4ConstructionOptions constructionOptions;
 
     /// Detector instance to access Geant4 geometry construction.
     std::shared_ptr<DetectorBase> detector;
@@ -81,8 +81,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -157,8 +156,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -197,8 +195,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

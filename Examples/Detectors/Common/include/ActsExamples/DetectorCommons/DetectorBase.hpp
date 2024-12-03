@@ -33,6 +33,7 @@ class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
+/// Base class for detector instances
 class DetectorBase {
  public:
   DetectorBase();
@@ -51,6 +52,10 @@ class DetectorBase {
   virtual std::vector<std::shared_ptr<IContextDecorator>> contextDecorators()
       const;
 
+  /// Build the Geant4 detector construction
+  /// @note This throws an exception if Geant4 is not enabled
+  /// @param options The Geant4 construction options
+  /// @return The Geant4 detector construction
   virtual std::unique_ptr<G4VUserDetectorConstruction>
   buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const;
@@ -60,6 +65,7 @@ class DetectorBase {
   std::vector<std::shared_ptr<IContextDecorator>> m_contextDecorators;
 };
 
+/// Base class for detector factories
 class DetectorFactoryBase {
  public:
   explicit DetectorFactoryBase(std::unique_ptr<const Acts::Logger> logger);

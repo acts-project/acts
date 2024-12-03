@@ -33,7 +33,7 @@ DetectorBase::contextDecorators() const {
 std::unique_ptr<G4VUserDetectorConstruction>
 DetectorBase::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
-  throw std::runtime_error("Not implemented");
+  return nullptr;
 }
 
 PreConstructedDetector::PreConstructedDetector() = default;

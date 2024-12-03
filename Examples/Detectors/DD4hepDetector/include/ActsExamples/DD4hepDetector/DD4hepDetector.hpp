@@ -46,10 +46,6 @@ class DD4hepDetector : public PreConstructedDetector {
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& dd4hepDetector();
 
-  /// Interface method to access the DD4hep geometry
-  /// @return The world DD4hep DetElement
-  dd4hep::DetElement dd4hepGeometry();
-
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)
   TGeoNode& tgeoGeometry();

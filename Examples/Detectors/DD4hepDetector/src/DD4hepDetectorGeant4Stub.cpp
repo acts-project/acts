@@ -13,7 +13,7 @@ namespace ActsExamples {
 std::unique_ptr<G4VUserDetectorConstruction>
 DD4hepDetector::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
-  throw std::runtime_error("Not implemented");
+  return nullptr;
 }
 
 }  // namespace ActsExamples

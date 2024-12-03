@@ -96,6 +96,8 @@ if(ACTS_BUILD_PLUGIN_GEOMODEL)
         PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
     )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)

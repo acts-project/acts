@@ -24,7 +24,14 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
 
     target_sources(
         ActsExamplesDetectorGeoModel
-        PUBLIC src/GeoModelGeant4DetectorConstruction.cpp
+        PUBLIC
+            src/GeoModelGeant4DetectorConstruction.cpp
+            src/GeoModelDetectorGeant4.cpp
+    )
+else()
+    target_sources(
+        ActsExamplesDetectorDD4hep
+        PUBLIC src/GeoModelDetectorGeant4Stub.cpp
     )
 endif()
 

@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -84,8 +83,7 @@ void Geant4SimulationBase::commonInitialization() {
     m_detectorConstruction =
         config()
             .detector
-            ->buildGeant4DetectorConstruction(
-                {.regionCreators = config().regionCreators})
+            ->buildGeant4DetectorConstruction(config().constructionOptions)
             .release();
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();

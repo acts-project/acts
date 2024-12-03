@@ -11,7 +11,6 @@
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
 #include <G4GDMLParser.hh>
 
@@ -29,12 +28,5 @@ std::shared_ptr<DetectorBase> GeoModelDetectorFactory::buildDetector() const {
 
 GeoModelDetector::GeoModelDetector(Acts::GeoModelTree geoModel)
     : PreConstructedDetector(), m_geoModel(std::move(geoModel)) {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-GeoModelDetector::buildGeant4DetectorConstruction(
-    const Geant4ConstructionOptions& options) const {
-  return std::make_unique<GeoModelGeant4DetectorConstruction>(m_geoModel,
-                                                              options);
-}
 
 }  // namespace ActsExamples
