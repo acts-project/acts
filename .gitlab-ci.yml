@@ -152,6 +152,7 @@ test_exatrkx_unittests:
   tags:
     - docker-gpu-nvidia
   script:
+    - source CI/dependencies.sh
     - ctest --test-dir build -R ExaTrkX
 
 test_exatrkx_python:
@@ -172,6 +173,7 @@ test_exatrkx_python:
     - git checkout $HEAD_SHA
     - pip3 install -r Examples/Python/tests/requirements.txt
     - nvidia-smi
+    - source CI/dependencies.sh
     - pytest -rFsv -k torch --collect-only
     - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
 
