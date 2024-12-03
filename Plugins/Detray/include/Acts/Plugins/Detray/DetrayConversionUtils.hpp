@@ -65,26 +65,26 @@ struct Cache {
   }
 };
 
-/// Convert the binning option
+/// Convert the axis bopundary type
 ///
-/// @param bOption the binning option
+/// @param aBoundaryType the axis boundary type
 ///
-/// @return a detray binning option
-detray::axis::bounds convertAxisBoundaryType(AxisBoundaryType bOption);
+/// @return a detray axis::bounds value
+detray::axis::bounds convertAxisBoundaryType(AxisBoundaryType aBoundaryType);
 
-/// Convert the binning value
+/// Convert the axis direction
 ///
-/// @param bValue the binning value
+/// @param aDir the axis direction
 ///
-/// @return a detray binning value
-detray::axis::label convertAxisDirection(AxisDirection bValue);
+/// @return a detray axis label
+detray::axis::label convertAxisDirection(AxisDirection aDir);
 
-/// Convert the binning type
+/// Convert the axis type
 ///
-/// @param bType the binning type
+/// @param aType the axis type
 ///
 /// @return a detray binning type
-detray::axis::binning convertAxisType(AxisType bType);
+detray::axis::binning convertAxisType(AxisType aType);
 
 /// Convert the binning data to an axis
 ///

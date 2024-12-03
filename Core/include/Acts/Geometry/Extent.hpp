@@ -306,7 +306,7 @@ class Extent {
   /// Check if this object constrains a given direction
   ///
   /// @param aDir the axis direction
-  bool constrains(AxisDirection bValue) const;
+  bool constrains(AxisDirection aDir) const;
 
   /// Check if this object constrains any direction
   bool constrains() const;

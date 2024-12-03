@@ -75,7 +75,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
 
   double thickness = gridConfig.lineThickness;
   // Draw the grid itself
-  auto binning = surfaceArray.binningValues();
+  auto binning = surfaceArray.axisDirections();
   auto axes = surfaceArray.getAxes();
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
     // Cylinder surface array

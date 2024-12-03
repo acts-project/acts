@@ -28,7 +28,7 @@ class ObjectSorterT {
   /// Constructor from a binning value
   ///
   /// @param aDir is the axis direction offset
-  ObjectSorterT(AxisDirection bValue) : m_binningValue(bValue) {}
+  ObjectSorterT(AxisDirection aDir) : m_binningValue(aDir) {}
 
   /// Comparison operator
   ///
@@ -84,10 +84,10 @@ class DistanceSorterT {
  public:
   /// Constructor from a binning value
   ///
-  /// @param bValue is the value in which the binning is done
+  /// @param aDir is the axis direction in which the binning is done
   /// @param reference is the reference point
-  DistanceSorterT(AxisDirection bValue, Vector3 reference)
-      : m_binningValue(bValue),
+  DistanceSorterT(AxisDirection aDir, Vector3 reference)
+      : m_binningValue(aDir),
         m_reference(reference),
         m_refR(VectorHelpers::perp(reference)),
         m_refPhi(VectorHelpers::phi(reference)),
@@ -165,12 +165,12 @@ class GeometryObjectSorterT {
   /// Constructor from a binning value
   ///
   /// @param gctx The geometry context to use
-  /// @param bValue is the value in which the binning is done
+  /// @param aDir is the axis direction in which the binning is done
   /// @param transform is an optional transform to be performed
-  GeometryObjectSorterT(const GeometryContext& gctx, AxisDirection bValue,
+  GeometryObjectSorterT(const GeometryContext& gctx, AxisDirection aDir,
                         std::shared_ptr<const Transform3> transform = nullptr)
       : m_context(gctx),
-        m_objectSorter(bValue),
+        m_objectSorter(aDir),
         m_transform(std::move(transform)) {}
 
   /// Comparison operator

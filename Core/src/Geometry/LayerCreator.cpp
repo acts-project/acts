@@ -330,7 +330,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces, std::size_t bins1,
-    std::size_t bins2, AxisDirection bValue,
+    std::size_t bins2, AxisDirection aDir,
     std::optional<ProtoLayer> _protoLayer, const Transform3& transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -338,7 +338,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
 
   // remaining layer parameters
   double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
-  switch (bValue) {
+  switch (aDir) {
     case AxisDirection::AxisX: {
       layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
                           protoLayer.min(AxisDirection::AxisY));
@@ -387,9 +387,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
                << protoLayer.min(AxisDirection::AxisY) << " / "
                << protoLayer.max(AxisDirection::AxisY));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[bValue][0u]
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[aDir][0u]
                                         << " / "
-                                        << protoLayer.envelope[bValue][1u]);
+                                        << protoLayer.envelope[aDir][1u]);
 
   // create the layer transforms if not given
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
@@ -404,7 +404,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        gctx, std::move(surfaces), bins1, bins2, bValue, protoLayer, transform);
+        gctx, std::move(surfaces), bins1, bins2, aDir, protoLayer, transform);
 
     checkBinning(gctx, *sArray);
   }

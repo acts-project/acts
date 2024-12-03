@@ -107,7 +107,7 @@ class SurfaceArray {
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
-    virtual std::vector<AxisDirection> binningValues() const { return {}; };
+    virtual std::vector<AxisDirection> axisDirections() const { return {}; };
 
     /// Pure virtual destructor
     virtual ~ISurfaceGridLookup() = 0;
@@ -132,18 +132,18 @@ class SurfaceArray {
     /// @param globalToLocal Callable that converts from global to local
     /// @param localToGlobal Callable that converts from local to global
     /// @param axes The axes to build the grid data structure.
-    /// @param bValues What the axes represent (optional)
+    /// @param aDirs What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVector<DIM> else
     ///       @c std::array<double, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3&)> globalToLocal,
                       std::function<Vector3(const point_t&)> localToGlobal,
                       std::tuple<Axes...> axes,
-                      std::vector<AxisDirection> bValues = {})
+                      std::vector<AxisDirection> aDirs = {})
         : m_globalToLocal(std::move(globalToLocal)),
           m_localToGlobal(std::move(localToGlobal)),
           m_grid(std::move(axes)),
-          m_binValues(std::move(bValues)) {
+          m_axisDirs(std::move(aDirs)) {
       m_neighborMap.resize(m_grid.size());
     }
 
@@ -256,10 +256,9 @@ class SurfaceArray {
     /// @return Size of the grid data structure
     std::size_t size() const override { return m_grid.size(); }
 
-    /// @brief The binning values described by this surface grid lookup
-    /// They are in order of the axes
-    std::vector<AxisDirection> binningValues() const override {
-      return m_binValues;
+    /// @brief The ordered axis directions described by this surface grid lookup
+    std::vector<AxisDirection> axisDirections() const override {
+      return m_axisDirs;
     }
 
     /// @brief Gets the center position of bin @c bin in global coordinates
@@ -348,7 +347,7 @@ class SurfaceArray {
     std::function<point_t(const Vector3&)> m_globalToLocal;
     std::function<Vector3(const point_t&)> m_localToGlobal;
     Grid_t m_grid;
-    std::vector<AxisDirection> m_binValues;
+    std::vector<AxisDirection> m_axisDirs;
     std::vector<SurfaceVector> m_neighborMap;
   };
 
@@ -520,8 +519,8 @@ class SurfaceArray {
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes
-  std::vector<AxisDirection> binningValues() const {
-    return p_gridLookup->binningValues();
+  std::vector<AxisDirection> axisDirections() const {
+    return p_gridLookup->axisDirections();
   };
 
   /// @brief String representation of this @c SurfaceArray

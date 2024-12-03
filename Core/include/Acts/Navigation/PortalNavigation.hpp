@@ -81,16 +81,16 @@ struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   /// Allowed constructor with explicit arguments
   ///
   /// @param gBoundaries the grid boundaries
-  /// @param bValue the binning value
+  /// @param aDir the axis direction of the grid
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
   BoundVolumesGrid1Navigation(
-      const std::vector<double>& gBoundaries, AxisDirection bValue,
+      const std::vector<double>& gBoundaries, AxisDirection aDir,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
       : indexedUpdater(IndexedUpdater(VariableBoundIndexGrid1(std::make_tuple(
                                           VariableBoundAxis(gBoundaries))),
-                                      {bValue}, bTransform)) {
+                                      {aDir}, bTransform)) {
     indexedUpdater.extractor.dVolumes = cVolumes;
 
     if (gBoundaries.size() != cVolumes.size() + 1u) {

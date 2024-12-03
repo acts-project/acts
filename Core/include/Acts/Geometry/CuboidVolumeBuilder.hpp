@@ -175,9 +175,6 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::pair<double, double> binningRange(const GeometryContext& gctx,
                                          const VolumeConfig& cfg) const;
 
-  void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3>>& tapVec,
-                   AxisDirection bValue) const;
-
   /// @brief This function builds a world TrackingVolume based on a given
   /// configuration
   ///

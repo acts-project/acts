@@ -103,11 +103,11 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     double zMinRaw = 0.;
     double zMaxRaw = 0.;
 
-    AxisDirection bValue = AxisDirection::AxisR;
+    AxisDirection aDir = AxisDirection::AxisR;
 
     // check the dimension and fill raw data
     if (!estimateAndCheckDimension(gctx, layers, cylinderBounds, transform,
-                                   rMinRaw, rMaxRaw, zMinRaw, zMaxRaw, bValue,
+                                   rMinRaw, rMaxRaw, zMinRaw, zMaxRaw, aDir,
                                    bType)) {
       ACTS_WARNING(
           "[!] Problem with given dimensions - return nullptr and "
@@ -137,14 +137,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     ACTS_VERBOSE(
         "Filling the layers into an appropriate layer array - with "
         "binningValue = "
-        << bValue);
+        << aDir);
 
     // create the Layer Array
-    layerArray = (bValue == AxisDirection::AxisR)
+    layerArray = (aDir == AxisDirection::AxisR)
                      ? m_cfg.layerArrayCreator->layerArray(gctx, layers, rMin,
-                                                           rMax, bType, bValue)
+                                                           rMax, bType, aDir)
                      : m_cfg.layerArrayCreator->layerArray(gctx, layers, zMin,
-                                                           zMax, bType, bValue);
+                                                           zMax, bType, aDir);
 
   }  // layers are created and done
   // finally create the TrackingVolume
@@ -418,7 +418,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const GeometryContext& gctx, const LayerVector& layers,
     std::shared_ptr<CylinderVolumeBounds>& cylinderVolumeBounds,
     const Transform3& transform, double& rMinClean, double& rMaxClean,
-    double& zMinClean, double& zMaxClean, AxisDirection& bValue,
+    double& zMinClean, double& zMaxClean, AxisDirection& aDir,
     AxisType /*bType*/) const {
   // some verbose output
 
@@ -491,7 +491,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   }
 
   // set the binning value
-  bValue = radial ? AxisDirection::AxisR : AxisDirection::AxisZ;
+  aDir = radial ? AxisDirection::AxisR : AxisDirection::AxisZ;
 
   ACTS_VERBOSE(
       "Estimate/check CylinderVolumeBounds from/w.r.t. enclosed "

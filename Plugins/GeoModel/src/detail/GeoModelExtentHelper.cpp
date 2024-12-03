@@ -107,18 +107,18 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         AxisDirection::AxisR, AxisDirection::AxisR,   AxisDirection::AxisZ,
         AxisDirection::AxisZ, AxisDirection::AxisPhi, AxisDirection::AxisPhi};
     for (auto [iv, value] : enumerate(valuesEntry)) {
-      // Get the binning value
-      AxisDirection bValue = bvCyl.at(iv);
+      // Get the axis direction
+      AxisDirection aDir = bvCyl.at(iv);
       double val = std::numeric_limits<double>::max();
       bool isMin = (iv % 2 == 0);
       // Case "e" : exxternal extent
       if (value == "e") {
         // External parameters do not constrain it
-        if (!externalExtent.constrains(bValue)) {
+        if (!externalExtent.constrains(aDir)) {
           throw std::invalid_argument(
               "GeoModelExtentHelper: External extent does not constrain. ");
         }
-        val = isMin ? externalExtent.min(bValue) : externalExtent.max(bValue);
+        val = isMin ? externalExtent.min(aDir) : externalExtent.max(aDir);
       } else if (value == "i" || value[0u] == 'i') {
         // Add the envelope
         double envelope = 0.;
@@ -129,21 +129,21 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         }
 
         // Internals do not constrain it
-        if (!internalExtent.constrains(bValue)) {
+        if (!internalExtent.constrains(aDir)) {
           throw std::invalid_argument(
               "GeoModelExtentHelper: Internals do not constrain.");
         }
-        val = isMin ? internalExtent.min(bValue) - envelope
-                    : internalExtent.max(bValue) + envelope;
+        val = isMin ? internalExtent.min(aDir) - envelope
+                    : internalExtent.max(aDir) + envelope;
         // Case "i" : Inherited from mother
       } else {
         val = std::stod(value);
       }
       // Case value is a number -> shrink mother to it or set it
       if (isMin) {
-        extent.setMin(bValue, val);
+        extent.setMin(aDir, val);
       } else {
-        extent.setMax(bValue, val);
+        extent.setMax(aDir, val);
       }
     }
   }

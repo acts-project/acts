@@ -112,11 +112,11 @@ class PlaneSurface : public RegularSurface {
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the binning type to be used
+  /// @param aDir The axis direction of the reference position
   ///
   /// @return position that can beused for this binning
   Vector3 referencePosition(const GeometryContext& gctx,
-                            AxisDirection bValue) const final;
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

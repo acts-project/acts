@@ -56,9 +56,9 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   float min = j["min"];
   float max = j["max"];
   int bins = j["bins"];
-  auto bValue = j["value"].get<AxisDirection>();
+  auto aDir = j["value"].get<AxisDirection>();
   if (bins == 1 && !(j["type"] == "arbitrary")) {
-    bd = BinningData(bValue, min, max);
+    bd = BinningData(aDir, min, max);
     return;
   }
   AxisBoundaryType bOption = (j["option"] == "open") ? AxisBoundaryType::Bound
@@ -73,11 +73,11 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   }
 
   if (bType == AxisType::Equidistant) {
-    bd = BinningData(bOption, bValue, bins, min, max, std::move(subBinning),
+    bd = BinningData(bOption, aDir, bins, min, max, std::move(subBinning),
                      subBinningAdditive);
   } else {
     std::vector<float> boundaries = j["boundaries"];
-    bd = BinningData(bOption, bValue, boundaries, std::move(subBinning));
+    bd = BinningData(bOption, aDir, boundaries, std::move(subBinning));
   }
 }
 

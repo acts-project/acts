@@ -101,11 +101,11 @@ class CylinderSurface : public RegularSurface {
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the type of global binning to be done
+  /// @param aDir is the axis direction for the reference position
   ///
   /// @return is the global position to be used for binning
   Vector3 referencePosition(const GeometryContext& gctx,
-                            AxisDirection bValue) const final;
+                            AxisDirection aDir) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given

@@ -345,8 +345,8 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::DiscSurface::referencePosition(const GeometryContext& gctx,
-                                                   AxisDirection bValue) const {
-  if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisPhi) {
+                                                   AxisDirection aDir) const {
+  if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
@@ -355,15 +355,15 @@ Acts::Vector3 Acts::DiscSurface::referencePosition(const GeometryContext& gctx,
 }
 
 double Acts::DiscSurface::referencePositionValue(const GeometryContext& gctx,
-                                                 AxisDirection bValue) const {
-  if (bValue == AxisDirection::AxisR) {
-    return VectorHelpers::perp(referencePosition(gctx, bValue));
+                                                 AxisDirection aDir) const {
+  if (aDir == AxisDirection::AxisR) {
+    return VectorHelpers::perp(referencePosition(gctx, aDir));
   }
-  if (bValue == AxisDirection::AxisPhi) {
-    return VectorHelpers::phi(referencePosition(gctx, bValue));
+  if (aDir == AxisDirection::AxisPhi) {
+    return VectorHelpers::phi(referencePosition(gctx, aDir));
   }
 
-  return GeometryObject::referencePositionValue(gctx, bValue);
+  return GeometryObject::referencePositionValue(gctx, aDir);
 }
 
 double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,

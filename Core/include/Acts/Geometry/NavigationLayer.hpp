@@ -44,12 +44,11 @@ class NavigationLayer : public Layer {
   /// The binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the value for which the binning position is requested
-  ///  - as default the center is given, but may be overloaded
+  /// @param aDir is the axis direction for the reference position
   ///
   /// @return The return vector can be used for binning in a TrackingVolume
   Vector3 referencePosition(const GeometryContext& gctx,
-                            AxisDirection bValue) const final;
+                            AxisDirection aDir) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -118,8 +117,8 @@ inline Surface& NavigationLayer::surfaceRepresentation() {
 }
 
 inline Vector3 NavigationLayer::referencePosition(const GeometryContext& gctx,
-                                                  AxisDirection bValue) const {
-  return m_surfaceRepresentation->referencePosition(gctx, bValue);
+                                                  AxisDirection aDir) const {
+  return m_surfaceRepresentation->referencePosition(gctx, aDir);
 }
 
 inline bool NavigationLayer::isOnLayer(

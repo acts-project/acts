@@ -199,13 +199,13 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param rMaxClean the maximal radius given by layers
   /// @param zMinClean the smallest z extend given by layers
   /// @param zMaxClean the maximal z extend given by layers
-  /// @param bValue the binning value in which the binning works
+  /// @param aDir the axis direction in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool estimateAndCheckDimension(
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<CylinderVolumeBounds>& cylinderVolumeBounds,
       const Transform3& transform, double& rMinClean, double& rMaxClean,
-      double& zMinClean, double& zMaxClean, AxisDirection& bValue,
+      double& zMinClean, double& zMaxClean, AxisDirection& aDir,
       AxisType bType = AxisType::Variable) const;
 
   /// Private method - interglue all volumes contained by a TrackingVolume

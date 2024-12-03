@@ -29,7 +29,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
   const auto& surfaces = surfaceArray.surfaces();
 
   // The edges of the grid
-  auto binning = surfaceArray.binningValues();
+  auto binning = surfaceArray.axisDirections();
   auto axes = surfaceArray.getAxes();
 
   enum ViewType { cylinder, polar, planar, none };

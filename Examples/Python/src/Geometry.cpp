@@ -256,10 +256,10 @@ void addGeometry(Context& ctx) {
            py::arg("h") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
            py::arg("mag") = zeroEnvelope)
       .def_static("Zero", &ExtentEnvelope::Zero)
-      .def("__getitem__", [](ExtentEnvelope& self,
-                             AxisDirection bValue) { return self[bValue]; })
-      .def("__setitem__", [](ExtentEnvelope& self, AxisDirection bValue,
-                             const Envelope& value) { self[bValue] = value; })
+      .def("__getitem__",
+           [](ExtentEnvelope& self, AxisDirection aDir) { return self[aDir]; })
+      .def("__setitem__", [](ExtentEnvelope& self, AxisDirection aDir,
+                             const Envelope& value) { self[aDir] = value; })
       .def("__str__", [](const ExtentEnvelope& self) {
         std::array<std::string, numAxisDirections()> values;
 
@@ -383,13 +383,13 @@ void addExperimentalGeometry(Context& ctx) {
     py::class_<ProtoBinning>(m, "ProtoBinning")
         .def(py::init<AxisDirection, AxisBoundaryType,
                       const std::vector<double>&, std::size_t>(),
-             "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
+             "aDir"_a, "bType"_a, "e"_a, "exp"_a = 0u)
         .def(py::init<AxisDirection, AxisBoundaryType, double, double,
                       std::size_t, std::size_t>(),
-             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
+             "aDir"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
         .def(py::init<AxisDirection, AxisBoundaryType, std::size_t,
                       std::size_t>(),
-             "bValue"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
+             "aDir"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
   }
 
   {

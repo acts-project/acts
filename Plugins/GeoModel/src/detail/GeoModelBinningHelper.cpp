@@ -17,7 +17,7 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
-  AxisDirection bValue = toAxisDirection(binningTokens[0]);
+  AxisDirection aDir = toAxisDirection(binningTokens[0]);
 
   std::vector<std::string> binningDetails = {binningTokens.begin() + 1,
                                              binningTokens.end()};
@@ -47,7 +47,7 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   // The Range
   double rangeMin = 0.;
   double rangeMax = 0.;
-  if (bValue == AxisDirection::AxisPhi &&
+  if (aDir == AxisDirection::AxisPhi &&
       axisBoundaryType == AxisBoundaryType::Closed) {
     rangeMin = -std::numbers::pi_v<double>;
     rangeMax = std::numbers::pi_v<double>;
@@ -55,9 +55,9 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;
       rangeMin = std::stod(binningDetails[3]);
-    } else if (extent.has_value() && extent.value().constrains(bValue)) {
+    } else if (extent.has_value() && extent.value().constrains(aDir)) {
       autoRange = false;
-      rangeMin = extent.value().min(bValue);
+      rangeMin = extent.value().min(aDir);
     } else if (binningDetails[3] != "*") {
       throw std::invalid_argument(
           "GeoModelBinningHelper: Range minimum is not defined.");
@@ -66,9 +66,9 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     if (binningDetails.size() > 4u && binningDetails[4] != "*") {
       autoRange = false;
       rangeMax = std::stod(binningDetails[4]);
-    } else if (extent.has_value() && extent.value().constrains(bValue)) {
+    } else if (extent.has_value() && extent.value().constrains(aDir)) {
       autoRange = false;
-      rangeMax = extent.value().max(bValue);
+      rangeMax = extent.value().max(aDir);
     } else if (binningDetails[4] != "*") {
       throw std::invalid_argument(
           "GeoModelBinningHelper: Range maximum is not defined.");
@@ -76,8 +76,8 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   }
 
   return autoRange
-             ? Experimental::ProtoBinning(bValue, axisBoundaryType, nBins,
+             ? Experimental::ProtoBinning(aDir, axisBoundaryType, nBins,
                                           nExpansion)
-             : Experimental::ProtoBinning(bValue, axisBoundaryType, rangeMin,
+             : Experimental::ProtoBinning(aDir, axisBoundaryType, rangeMin,
                                           rangeMax, nBins, nExpansion);
 }

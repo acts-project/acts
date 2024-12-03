@@ -146,7 +146,7 @@ Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::PlaneSurface::referencePosition(
-    const GeometryContext& gctx, AxisDirection /*bValue*/) const {
+    const GeometryContext& gctx, AxisDirection /*aDir*/) const {
   return center(gctx);
 }
 

@@ -128,7 +128,7 @@ double Acts::LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
 }
 
 Acts::Vector3 Acts::LineSurface::referencePosition(
-    const GeometryContext& gctx, AxisDirection /*bValue*/) const {
+    const GeometryContext& gctx, AxisDirection /*aDir*/) const {
   return center(gctx);
 }
 

@@ -87,8 +87,8 @@ inline void GeometryObject::assignGeometryId(
 }
 
 inline double GeometryObject::referencePositionValue(
-    const GeometryContext& gctx, AxisDirection bValue) const {
-  return VectorHelpers::cast(referencePosition(gctx, bValue), bValue);
+    const GeometryContext& gctx, AxisDirection aDir) const {
+  return VectorHelpers::cast(referencePosition(gctx, aDir), aDir);
 }
 
 }  // namespace Acts

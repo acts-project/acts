@@ -77,7 +77,7 @@ class SurfaceStub : public RegularSurface {
 
   /// Inherited from GeometryObject base
   Vector3 referencePosition(const GeometryContext& /*txt*/,
-                            AxisDirection /*bValue*/) const final {
+                            AxisDirection /*aDir*/) const final {
     const Vector3 v{0., 0., 0.};
     return v;
   }

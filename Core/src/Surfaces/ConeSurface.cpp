@@ -62,11 +62,11 @@ Acts::ConeSurface::ConeSurface(const Transform3& transform,
 }
 
 Acts::Vector3 Acts::ConeSurface::referencePosition(const GeometryContext& gctx,
-                                                   AxisDirection bValue) const {
+                                                   AxisDirection aDir) const {
   const Vector3& sfCenter = center(gctx);
 
   // special binning type for R-type methods
-  if (bValue == AxisDirection::AxisR || bValue == AxisDirection::AxisRPhi) {
+  if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisRPhi) {
     return Vector3(sfCenter.x() + bounds().r(sfCenter.z()), sfCenter.y(),
                    sfCenter.z());
   }
