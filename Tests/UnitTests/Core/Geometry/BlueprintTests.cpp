@@ -72,6 +72,8 @@ BOOST_AUTO_TEST_SUITE(Geometry);
 BOOST_AUTO_TEST_SUITE(BlueprintNodeTest);
 
 BOOST_AUTO_TEST_CASE(InvalidRoot) {
+  Logging::ScopedFailureThreshold threshold{Logging::Level::FATAL};
+
   Blueprint::Config cfg;
   Blueprint root{cfg};
   BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
