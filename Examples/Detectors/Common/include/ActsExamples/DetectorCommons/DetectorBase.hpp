@@ -44,7 +44,7 @@ class DetectorBase {
 
   virtual const Acts::GeometryContext& geometryContext() const = 0;
 
-  virtual std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry()
+  virtual std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry()
       const = 0;
   virtual std::shared_ptr<Acts::Experimental::Detector> gen2Geometry()
       const = 0;
@@ -84,20 +84,21 @@ class PreConstructedDetector : public DetectorBase {
       Acts::GeometryContext geometryContext,
       std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
           detectorStore,
-      std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
       std::vector<std::shared_ptr<IContextDecorator>> contextDecorators);
   ~PreConstructedDetector() override;
 
   const Acts::GeometryContext& geometryContext() const override;
 
-  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry() const override;
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry()
+      const override;
 
   std::shared_ptr<Acts::Experimental::Detector> gen2Geometry() const override;
 
  private:
   Acts::GeometryContext m_geometryContext;
-  std::shared_ptr<const Acts::TrackingGeometry> m_gen1Geometry;
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
   std::shared_ptr<Acts::Experimental::Detector> m_gen2Geometry;
 };
 

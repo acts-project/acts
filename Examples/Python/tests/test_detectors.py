@@ -28,7 +28,7 @@ def check_extra_odd(srf):
 
 def test_generic_geometry():
     detector = acts.examples.GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
     assert detector is not None
     assert trackingGeometry is not None
@@ -47,7 +47,7 @@ def test_telescope_geometry():
         binValue=0,
     )
     detector = acts.examples.TelescopeDetectorFactory(config).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
 
     assert detector is not None
@@ -60,7 +60,7 @@ def test_telescope_geometry():
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
     with getOpenDataDetector() as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
 
         trackingGeometry.visitSurfaces(check_extra_odd)
 
@@ -69,7 +69,7 @@ def test_odd():
 
 def test_aligned_detector():
     detector = acts.examples.AlignedDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     assert detector is not None

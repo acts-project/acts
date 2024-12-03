@@ -91,7 +91,7 @@ if "__main__" == __name__:
     # detector = AlignedDetectorFactory().buildDetector()
     # detector = GenericDetectorFactory().buildDetector()
     detector = getOpenDataDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())

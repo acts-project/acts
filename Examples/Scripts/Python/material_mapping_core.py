@@ -301,7 +301,7 @@ if "__main__" == __name__:
             matDeco = acts.IMaterialDecorator.fromFile(args.matconfig)
 
         detector = getOpenDataDetector(matDeco)
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 

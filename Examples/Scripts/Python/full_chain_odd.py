@@ -163,7 +163,7 @@ oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
 detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
-trackingGeometry = detector.gen1Geometry()
+trackingGeometry = detector.trackingGeometry()
 decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)

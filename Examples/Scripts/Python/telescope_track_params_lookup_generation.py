@@ -106,7 +106,7 @@ if __name__ == "__main__":
         binValue=2,
         surfaceType=0,
     ).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     # Estimate the lookup
     estimateLookup(trackingGeometry, args.events, args.output)

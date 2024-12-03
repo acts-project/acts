@@ -99,7 +99,7 @@ if "__main__" == __name__:
     # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
     # detector = acts.examples.DD4hepDetectorFactory().buildDetector(dd4hepCfg)
 
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
 
     ## Magnetic field setup: Default: constant 2T longitudinal field

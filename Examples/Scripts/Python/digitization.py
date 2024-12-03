@@ -77,7 +77,7 @@ def runDigitization(
 
 if "__main__" == __name__:
     detector = acts.examples.GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     digiConfigFile = (
         Path(__file__).resolve().parent.parent.parent.parent

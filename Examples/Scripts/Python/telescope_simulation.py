@@ -22,7 +22,7 @@ if "__main__" == __name__:
         stereos=[0, 0, 0, 0, 0, 0, 0, 0, 0],
         binValue=2,
     ).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

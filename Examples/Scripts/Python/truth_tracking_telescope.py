@@ -15,7 +15,7 @@ if "__main__" == __name__:
         positions=[30, 60, 90, 120, 150, 180, 210, 240, 270],
         stereos=[0] * 9,
     ).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 

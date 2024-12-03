@@ -758,7 +758,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     s = Sequencer(numThreads=1)
 
     with getOpenDataDetector(mdecorator) as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
         runMaterialMapping(
@@ -796,7 +796,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     with getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
         runMaterialValidation(
@@ -831,7 +831,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     with getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
     ) as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
         runMaterialMapping(
@@ -870,7 +870,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     with getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     ) as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
 
         runMaterialValidation(
@@ -911,7 +911,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
     detector = detectorFactory()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     from geometry import runGeometry

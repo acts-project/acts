@@ -180,7 +180,7 @@ if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     detector = GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

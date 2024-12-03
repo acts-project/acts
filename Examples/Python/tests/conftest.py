@@ -245,7 +245,7 @@ def basic_prop_seq(rng):
 @pytest.fixture
 def trk_geo():
     detector = acts.examples.GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     yield trackingGeometry
 
 
@@ -268,7 +268,7 @@ def detector_config(request):
 
     if request.param == "generic":
         detector = acts.examples.GenericDetectorFactory().buildDetector()
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         return DetectorConfig(
             detector,
@@ -293,7 +293,7 @@ def detector_config(request):
             level=acts.logging.INFO,
         )
         detector = getOpenDataDetector(matDeco)
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         return DetectorConfig(
             detector,
@@ -408,6 +408,7 @@ def material_recording_session():
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
+        # explicitly ask for "spawn" as CI failures were observed with "fork"
         spawn_context = multiprocessing.get_context("spawn")
         p = spawn_context.Process(target=_do_material_recording, args=(d,))
         p.start()

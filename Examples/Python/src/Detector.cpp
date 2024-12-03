@@ -48,7 +48,7 @@ void addDetector(Context& ctx) {
   {
     py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
         .def("geometryContext", &DetectorBase::geometryContext)
-        .def("gen1Geometry", &DetectorBase::gen1Geometry)
+        .def("trackingGeometry", &DetectorBase::trackingGeometry)
         .def("gen2Geometry", &DetectorBase::gen2Geometry)
         .def("contextDecorators", &DetectorBase::contextDecorators)
         .def("__enter__",

@@ -23,7 +23,7 @@ sets up the particle propagation and runs a few events.
    import acts.examples
 
    detector = acts.examples.GenericDetectorFactory().buildDetector()
-   trackingGeometry = detector.gen1Geometry()
+   trackingGeometry = detector.trackingGeometry()
    s = acts.examples.Sequencer(events=10)
 
    rnd = acts.examples.RandomNumbers(seed=42)

@@ -290,6 +290,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
+    # explicitly ask for "spawn" as CI failures were observed with "fork"
     spawn_context = multiprocessing.get_context("spawn")
     p = spawn_context.Process(
         target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
@@ -302,7 +303,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     s = Sequencer(numThreads=1)
 
     with getOpenDataDetector() as detector:
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
 
         s.addReader(
             EDM4hepReader(
@@ -390,7 +391,7 @@ def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
     detector = acts.examples.GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

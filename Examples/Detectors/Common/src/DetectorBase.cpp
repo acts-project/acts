@@ -41,12 +41,12 @@ PreConstructedDetector::PreConstructedDetector() = default;
 PreConstructedDetector::PreConstructedDetector(
     Acts::GeometryContext geometryContext,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
-    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
     std::vector<std::shared_ptr<IContextDecorator>> contextDecorators)
     : DetectorBase(std::move(detectorStore), std::move(contextDecorators)),
       m_geometryContext(std::move(geometryContext)),
-      m_gen1Geometry(std::move(gen1Geometry)),
+      m_trackingGeometry(std::move(trackingGeometry)),
       m_gen2Geometry(std::move(gen2Geometry)) {}
 
 PreConstructedDetector::~PreConstructedDetector() = default;
@@ -56,8 +56,8 @@ const Acts::GeometryContext& PreConstructedDetector::geometryContext() const {
 }
 
 std::shared_ptr<const Acts::TrackingGeometry>
-PreConstructedDetector::gen1Geometry() const {
-  return m_gen1Geometry;
+PreConstructedDetector::trackingGeometry() const {
+  return m_trackingGeometry;
 }
 
 std::shared_ptr<Acts::Experimental::Detector>

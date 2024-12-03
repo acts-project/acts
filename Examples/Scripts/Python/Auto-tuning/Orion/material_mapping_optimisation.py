@@ -177,7 +177,7 @@ def runMaterialMappingVariance(
 
     # Decorate the detector with the MappingMaterialDecorator
     detector = getOpenDataDetector(matMapDeco)
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     # Sequence for the mapping, only use one thread when mapping material
@@ -469,7 +469,7 @@ if "__main__" == __name__:
         str(os.path.join(args.inputPath, "geometry-map.json"))
     )
     detector = getOpenDataDetector(matDeco)
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised

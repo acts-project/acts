@@ -20,7 +20,7 @@ if __name__ == "__main__":
     assert digiConfigFile.exists()
 
     detector = acts.examples.GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

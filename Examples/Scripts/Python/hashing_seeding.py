@@ -126,7 +126,7 @@ class Config:
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
             detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
-            trackingGeometry = detector.gen1Geometry()
+            trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
 
@@ -136,7 +136,7 @@ class Config:
             print("Create detector and tracking geometry")
 
             detector = acts.examples.GenericDetectorFactory().buildDetector()
-            trackingGeometry = detector.gen1Geometry()
+            trackingGeometry = detector.trackingGeometry()
             digiConfig = (
                 actsExamplesDir
                 / "Algorithms/Digitization/share/default-smearing-config-generic.json"

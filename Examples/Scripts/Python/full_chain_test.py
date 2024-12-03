@@ -286,7 +286,7 @@ def full_chain(args):
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         args.bf_constant = True
         detector = acts.examples.GenericDetectorFactory().buildDetector()
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
@@ -307,7 +307,7 @@ def full_chain(args):
             odd_dir=geo_dir,
             mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk

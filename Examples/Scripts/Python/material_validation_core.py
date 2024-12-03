@@ -245,7 +245,7 @@ if "__main__" == __name__:
 
     else:
         detector = getOpenDataDetector(materialDecorator)
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
 
         materialSurfaces = trackingGeometry.extractMaterialSurfaces()
 

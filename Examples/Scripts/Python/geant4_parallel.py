@@ -62,7 +62,7 @@ if "__main__" == __name__:
     from acts.examples.odd import getOpenDataDetector
 
     detector = getOpenDataDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     n_events = 100

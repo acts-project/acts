@@ -81,6 +81,6 @@ if "__main__" == __name__:
         runGeant4(detector, detector, field, Path.cwd()).run()
     else:
         detector = getOpenDataDetector()
-        trackingGeometry = detector.gen1Geometry()
+        trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

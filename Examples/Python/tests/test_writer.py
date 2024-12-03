@@ -200,7 +200,7 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
 @pytest.mark.root
 def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
     detector = GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     s = Sequencer(numThreads=1, events=10)
 
@@ -365,7 +365,7 @@ def test_root_material_writer(tmp_path, assert_root_hash):
     detector = DD4hepDetectorFactory(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     ).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     out = tmp_path / "material.root"
 
@@ -390,7 +390,7 @@ def test_json_material_writer(tmp_path, fmt):
     detector = DD4hepDetectorFactory(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     ).buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
 
@@ -408,7 +408,7 @@ def test_json_material_writer(tmp_path, fmt):
 @pytest.mark.csv
 def test_csv_multitrajectory_writer(tmp_path):
     detector = GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -607,7 +607,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
     detector = GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -657,7 +657,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter
 
     detector = GenericDetectorFactory().buildDetector()
-    trackingGeometry = detector.gen1Geometry()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
