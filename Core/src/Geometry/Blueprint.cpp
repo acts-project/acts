@@ -18,26 +18,26 @@
 
 namespace Acts {
 
-Blueprint::Blueprint(const Config &cfg) : m_cfg(cfg) {}
+Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
 const std::string &Blueprint::name() const {
   static const std::string root = "root";
   return root;
 }
 
-Volume &Blueprint::build(const Options & /*options*/,
+Volume &Blueprint::build(const BlueprintOptions & /*options*/,
                          const GeometryContext & /*gctx*/,
                          const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be built");
 }
 
-PortalShellBase &Blueprint::connect(const Options & /*options*/,
+PortalShellBase &Blueprint::connect(const BlueprintOptions & /*options*/,
                                     const GeometryContext & /*gctx*/,
                                     const Logger & /*logger*/) {
   throw std::logic_error("Root node cannot be connected");
 }
 
-void Blueprint::finalize(const Options & /*options*/,
+void Blueprint::finalize(const BlueprintOptions & /*options*/,
                          const GeometryContext & /*gctx*/,
                          TrackingVolume & /*parent*/,
                          const Logger & /*logger*/) {
@@ -53,7 +53,8 @@ void Blueprint::addToGraphviz(std::ostream &os) const {
 }
 
 std::unique_ptr<TrackingGeometry> Blueprint::construct(
-    const Options &options, const GeometryContext &gctx, const Logger &logger) {
+    const BlueprintOptions &options, const GeometryContext &gctx,
+    const Logger &logger) {
   using enum BinningValue;
 
   ACTS_INFO(prefix() << "Building tracking geometry from blueprint tree");

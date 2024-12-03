@@ -31,14 +31,14 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
 
   void toStream(std::ostream& os) const override;
 
-  Volume& build(const Options& options, const GeometryContext& gctx,
+  Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   PortalShellBase& connect(
-      const Options& options, const GeometryContext& gctx,
+      const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(const Options& options, const GeometryContext& gctx,
+  void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent, const Logger& logger) override;
 
   void addToGraphviz(std::ostream& os) const override;

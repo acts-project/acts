@@ -20,7 +20,7 @@ namespace Acts {
 StaticBlueprintNode::StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume)
     : m_volume(std::move(volume)) {}
 
-Volume& StaticBlueprintNode::build(const Options& options,
+Volume& StaticBlueprintNode::build(const BlueprintOptions& options,
                                    const GeometryContext& gctx,
                                    const Logger& logger) {
   ACTS_DEBUG(prefix() << "static build");
@@ -38,7 +38,7 @@ Volume& StaticBlueprintNode::build(const Options& options,
   return *m_volume;
 }
 
-PortalShellBase& StaticBlueprintNode::connect(const Options& options,
+PortalShellBase& StaticBlueprintNode::connect(const BlueprintOptions& options,
                                               const GeometryContext& gctx,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "Static connect");
@@ -73,7 +73,7 @@ PortalShellBase& StaticBlueprintNode::connect(const Options& options,
   return *m_shell;
 }
 
-void StaticBlueprintNode::finalize(const Options& options,
+void StaticBlueprintNode::finalize(const BlueprintOptions& options,
                                    const GeometryContext& gctx,
                                    TrackingVolume& parent,
                                    const Logger& logger) {

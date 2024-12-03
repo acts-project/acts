@@ -35,7 +35,7 @@ const std::string& CylinderContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& CylinderContainerBlueprintNode::build(const Options& options,
+Volume& CylinderContainerBlueprintNode::build(const BlueprintOptions& options,
                                               const GeometryContext& gctx,
                                               const Logger& logger) {
   ACTS_DEBUG(prefix() << "cylinder container build (dir=" << m_direction
@@ -68,7 +68,8 @@ Volume& CylinderContainerBlueprintNode::build(const Options& options,
 }
 
 CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
-    const Options& options, const GeometryContext& gctx, const Logger& logger) {
+    const BlueprintOptions& options, const GeometryContext& gctx,
+    const Logger& logger) {
   ACTS_DEBUG(prefix() << "Cylinder container connect");
   if (m_stack == nullptr) {
     ACTS_ERROR(prefix() << "Volume is not built");
@@ -145,7 +146,7 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
   return *m_shell;
 }
 
-void CylinderContainerBlueprintNode::finalize(const Options& options,
+void CylinderContainerBlueprintNode::finalize(const BlueprintOptions& options,
                                               const GeometryContext& gctx,
                                               TrackingVolume& parent,
                                               const Logger& logger) {

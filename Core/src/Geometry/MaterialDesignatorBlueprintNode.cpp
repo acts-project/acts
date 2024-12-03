@@ -26,7 +26,7 @@ void MaterialDesignatorBlueprintNode::toStream(std::ostream& os) const {
   os << "MaterialDesignatorBlueprintNode(" << name() << ")";
 }
 
-Volume& MaterialDesignatorBlueprintNode::build(const Options& options,
+Volume& MaterialDesignatorBlueprintNode::build(const BlueprintOptions& options,
                                                const GeometryContext& gctx,
                                                const Logger& logger) {
   if (children().size() != 1) {
@@ -40,7 +40,8 @@ Volume& MaterialDesignatorBlueprintNode::build(const Options& options,
 }
 
 PortalShellBase& MaterialDesignatorBlueprintNode::connect(
-    const Options& options, const GeometryContext& gctx, const Logger& logger) {
+    const BlueprintOptions& options, const GeometryContext& gctx,
+    const Logger& logger) {
   ACTS_DEBUG(prefix() << "MaterialDesignatorBlueprintNode::connect");
   if (children().size() != 1) {
     ACTS_ERROR(prefix() << "MaterialDesignatorBlueprintNode must have exactly "
@@ -125,7 +126,7 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
   return shell;
 }
 
-void MaterialDesignatorBlueprintNode::finalize(const Options& options,
+void MaterialDesignatorBlueprintNode::finalize(const BlueprintOptions& options,
                                                const GeometryContext& gctx,
                                                TrackingVolume& parent,
                                                const Logger& logger) {

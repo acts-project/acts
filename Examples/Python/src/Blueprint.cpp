@@ -259,8 +259,7 @@ void addBlueprint(Context& ctx) {
 
   // @TODO: Add ability to provide policy factories
   //        This needs a way to produce them in python!
-  py::class_<BlueprintNode::Options>(blueprintNode, "Options")
-      .def(py::init<>());
+  py::class_<BlueprintOptions>(m, "BlueprintOptions").def(py::init<>());
 
   py::class_<BlueprintNode::MutableChildRange>(blueprintNode,
                                                "MutableChildRange")
@@ -288,12 +287,11 @@ void addBlueprint(Context& ctx) {
     auto n = py::class_<Blueprint, std::shared_ptr<Blueprint>>(m, "Blueprint");
 
     n.def(py::init<const Blueprint::Config&>())
-        .def_property_readonly("name", &Blueprint::name)
         // Return value needs to be shared pointer because python otherwise
         // can't manage the lifetime
         .def(
             "construct",
-            [](Blueprint& self, const Blueprint::Options& options,
+            [](Blueprint& self, const BlueprintOptions& options,
                const GeometryContext& gctx,
                Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
               return self.construct(options, gctx,

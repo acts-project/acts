@@ -49,19 +49,6 @@ std::string BlueprintNode::prefix() const {
   return indent() + "[" + name() + "]: ";
 }
 
-void BlueprintNode::Options::validate() const {
-  if (!defaultNavigationPolicyFactory) {
-    throw std::invalid_argument("Navigation policy factory is nullptr");
-  }
-}
-
-std::unique_ptr<NavigationPolicyFactory>
-BlueprintNode::Options::makeDefaultNavigationPolicyFactory() {
-  return NavigationPolicyFactory::make()
-      .add<TryAllNavigationPolicy>()
-      .asUniquePtr();
-}
-
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     std::unique_ptr<TrackingVolume> volume,
     const std::function<void(StaticBlueprintNode& cylinder)>& callback) {

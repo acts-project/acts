@@ -17,7 +17,7 @@
 
 namespace Acts {
 
-Volume& LayerBlueprintNode::build(const BlueprintNode::Options& options,
+Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
                                   const Logger& logger) {
   if (m_surfaces.empty()) {
@@ -88,7 +88,7 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
       std::make_unique<TrackingVolume>(transform, std::move(bounds), m_name);
 }
 
-void LayerBlueprintNode::finalize(const BlueprintNode::Options& options,
+void LayerBlueprintNode::finalize(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
                                   TrackingVolume& parent,
                                   const Logger& logger) {

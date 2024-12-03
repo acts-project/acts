@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -33,17 +34,6 @@ class LayerBlueprintNode;
 
 class BlueprintNode {
  public:
-  struct Options {
-    std::unique_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
-        makeDefaultNavigationPolicyFactory()};
-
-    void validate() const;
-
-   private:
-    static std::unique_ptr<NavigationPolicyFactory>
-    makeDefaultNavigationPolicyFactory();
-  };
-
   BlueprintNode() = default;
 
   virtual ~BlueprintNode() = default;
@@ -52,15 +42,16 @@ class BlueprintNode {
 
   virtual void toStream(std::ostream& os) const;
 
-  virtual Volume& build(const Options& options, const GeometryContext& gctx,
+  virtual Volume& build(const BlueprintOptions& options,
+                        const GeometryContext& gctx,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
   virtual PortalShellBase& connect(
-      const Options& options, const GeometryContext& gctx,
+      const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) = 0;
 
-  virtual void finalize(const Options& options, const GeometryContext& gctx,
-                        TrackingVolume& parent,
+  virtual void finalize(const BlueprintOptions& options,
+                        const GeometryContext& gctx, TrackingVolume& parent,
                         const Logger& logger = Acts::getDummyLogger()) = 0;
 
   StaticBlueprintNode& addStaticVolume(
