@@ -44,7 +44,7 @@ void addTGeo(Context& ctx) {
     /// @param sensitiveMatches is a list of strings to match sensitive volumes
     /// @param localAxes is the TGeo->ACTS axis conversion convention
     /// @param scaleConversion is a unit scalor conversion factor
-    tgeo.def("convertToElements",
+    tgeo.def("_convertToElements",
              [](const std::string& rootFileName,
                 const std::vector<std::string>& sensitiveMatches,
                 const std::string& localAxes, double scaleConversion) {
