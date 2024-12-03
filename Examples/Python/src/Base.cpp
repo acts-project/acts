@@ -376,8 +376,8 @@ void addBinning(Context& ctx) {
                               .value("Open", AxisBoundaryType::Open);
 
   auto axisType = py::enum_<AxisType>(m, "AxisType")
-                      .value("equidistant", AxisType::Equidistant)
-                      .value("variable", AxisType::Variable);
+                      .value("Equidistant", AxisType::Equidistant)
+                      .value("Variable", AxisType::Variable);
 }
 
 }  // namespace Acts::Python

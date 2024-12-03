@@ -131,15 +131,13 @@ def run() -> None:
     }
 
     role_instances["enum"] = {
-        "AxisDirection",
-        "AxisType",
-        "AxisDirection",
+        "Acts::AxisBoundaryType",
+        "Acts::AxisType",
+        "Acts::AxisDirection",
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
         "Acts::TrackStatePropMask",
-        "AxisType",
-        "AxisBoundaryType",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

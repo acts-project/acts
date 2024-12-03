@@ -151,10 +151,6 @@ void addDetector(Context& ctx) {
         .value("Central", Config::SubVolume::Central)
         .value("Positive", Config::SubVolume::Positive);
 
-    py::enum_<AxisType>(c, "AxisType")
-        .value("equidistant", AxisType::Equidistant)
-        .value("arbitrary", AxisType::Variable);
-
     auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);
     ACTS_PYTHON_MEMBER(name);
