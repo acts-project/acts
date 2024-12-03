@@ -17,8 +17,41 @@ namespace Acts {
 
 class GeometryContext;
 
+/// This class is the top-level entry point to build a tracking geometry using
+/// the blueprint building mechanism. It forms the root of a tree of nodes where
+/// each node performs a portion of the construction. This top-level class has
+/// the main construction methods that execute the construction of the geometry.
+///
+/// ```
+///            +---------------+  +-----------+
+///            |               |  |           |
+///            |     Root      |  |           v
+///            |               |  |   +---------------+
+///            +---------------+  |   |               |
+///                    |          |   |    Child 1    |
+///         +----------+          |   |               |
+///         v          +----------+   +---------------+
+/// +---------------+                         |
+/// |               |          +--------------+
+/// |    Child 2    |          v         +----------+
+/// |               |     .---------.    |          |
+/// +---------------+    /           \   |          v
+///                     (  Proc node  )  |  +---------------+
+///                      `.         ,'   |  |               |
+///                        `-------'     |  |    Child 3    |
+///                            |         |  |               |
+///                            |         |  +---------------+
+///                            +---------+
+/// ```
+///
+/// The construction phases are documented in @c BlueprintNode, which is the
+/// base class for all nodes in the tree.
+/// @note This class inherits from @c BlueprintNode privately, because it is
+///       only ever intented to be the top-level node, and not anywhere else in
+///       the tree.
 class Blueprint : private BlueprintNode {
  public:
+  // Pull in convenience methods, despite privately inheriting
   using BlueprintNode::addChild;
   using BlueprintNode::addCylinderContainer;
   using BlueprintNode::addLayer;
@@ -28,19 +61,34 @@ class Blueprint : private BlueprintNode {
   using BlueprintNode::graphViz;
 
   struct Config {
+    /// Determine how much envelope space to produce from the highest volume
+    /// in the geometry hierarchy and the world volume.
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
+
+    /// The geometry identifier hook, passed through the `TrackingGeometry`
+    /// constructor. This will be superceded by a more integrated approach to
+    /// the identification scheme
     GeometryIdentifierHook geometryIdentifierHook = {};
   };
 
-  Blueprint(const Config& cfg);
+  /// Constructor from a config object
+  /// @param config The configuration object
+  Blueprint(const Config& config);
 
-  const std::string& name() const override;
-
+  /// Construct the tracking geometry from the blueprint tree
+  /// @param options The construction options, see @c BlueprintOptions
+  /// @param gctx The geometry context for construction. In almost all cases,
+  ///             this should be the *nominal* geometry context
+  /// @param logger The logger to use for output during construction
   std::unique_ptr<TrackingGeometry> construct(
-      const Options& options, const GeometryContext& gctx,
+      const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger());
 
  protected:
+  /// The name of the blueprint node, always "Root"
+  /// @return The name
+  const std::string& name() const override;
+
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 

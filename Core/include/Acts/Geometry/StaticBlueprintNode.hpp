@@ -15,20 +15,37 @@
 
 namespace Acts {
 
+/// The static blueprint node wraps a single already-constructred @c TrackingVolume.
+/// The node will present this volume to its hierarchy. The volume is given as
+/// mutable, and will be potentially enlarged in order to connect to neighboring
+/// volumes.
+/// - In case the volume already has child volumes, they will be retained.
+/// - In case the volume already has a registered navigation policy, it will be
+///   overwritten with the one configured on this node, regardless of content.
 class StaticBlueprintNode : public BlueprintNode {
  public:
+  /// Construct the static node from an existing volume
+  /// @param volume The volume to wrap
   StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);
 
+  /// Get the name of this node. It is automatically taken from the wrapped
+  /// volume
+  /// @return The name of the volume
   const std::string& name() const override;
 
+  /// @copydoc BlueprintNode::build
+  /// Build-phase of the blueprint construction. Returns the wrapped volume for
+  /// sizing.
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
 
                 const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// @copydoc BlueprintNode::connect
   PortalShellBase& connect(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// @copydoc BlueprintNode::finalize
   void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
