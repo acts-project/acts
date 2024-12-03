@@ -8,20 +8,20 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+
+namespace ActsExamples {
 
 auto GenericDetector::finalize(
     const Config& cfg,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  DetectorElement::ContextType nominalContext;
+  GenericDetectorElement::ContextType nominalContext;
   /// Return the generic detector
   TrackingGeometryPtr gGeometry =
-      ActsExamples::Generic::buildDetector<DetectorElement>(
+      Generic::buildDetector<GenericDetectorElement>(
           nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
           cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
           cfg.volumeLogLevel);
@@ -30,3 +30,5 @@ auto GenericDetector::finalize(
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(gGeometry), std::move(gContextDecorators));
 }
+
+}  // namespace ActsExamples

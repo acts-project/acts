@@ -18,7 +18,7 @@ using namespace ActsExamples;
 
 GdmlDetectorConstruction::GdmlDetectorConstruction(
     std::string path,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : G4VUserDetectorConstruction(),
       m_path(std::move(path)),
       m_regionCreators(std::move(regionCreators)) {}
@@ -32,7 +32,7 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
 
     // Create regions
     for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->Construct();
+      regionCreator->construct();
     }
   }
   return m_world;
@@ -40,7 +40,7 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
 
 GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
     std::string path,
-    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
     : m_path(std::move(path)), m_regionCreators(std::move(regionCreators)) {}
 
 std::unique_ptr<G4VUserDetectorConstruction>

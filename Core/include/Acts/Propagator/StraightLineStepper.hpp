@@ -23,11 +23,13 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
+#include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -141,6 +143,9 @@ class StraightLineStepper {
 
     // Cache the geometry context of this propagation
     std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// Statistics of the stepper
+    StepperStatistics statistics;
   };
 
   StraightLineStepper() = default;
@@ -237,10 +242,10 @@ class StraightLineStepper {
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A logger instance
-  Intersection3D::Status updateSurfaceStatus(
+  IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
@@ -336,8 +341,8 @@ class StraightLineStepper {
           direction(prop_state.stepping);
       // dt / ds
       prop_state.stepping.derivative(eFreeTime) =
-          std::hypot(1., prop_state.stepping.particleHypothesis.mass() /
-                             absoluteMomentum(prop_state.stepping));
+          fastHypot(1., prop_state.stepping.particleHypothesis.mass() /
+                            absoluteMomentum(prop_state.stepping));
       // d (dr/ds) / ds : == 0
       prop_state.stepping.derivative.template segment<3>(4) =
           Acts::Vector3::Zero().transpose();
@@ -424,11 +429,12 @@ class StraightLineStepper {
     const auto m = state.stepping.particleHypothesis.mass();
     const auto p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., m / p);
+    const auto dtds = fastHypot(1., m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
     state.stepping.pars[eFreeTime] += h * dtds;
+
     // Propagate the jacobian
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
@@ -449,7 +455,14 @@ class StraightLineStepper {
     ++state.stepping.nSteps;
     ++state.stepping.nStepTrials;
 
-    // return h
+    ++state.stepping.statistics.nAttemptedSteps;
+    ++state.stepping.statistics.nSuccessfulSteps;
+    if (state.options.direction != Direction::fromScalarZeroAsPositive(h)) {
+      ++state.stepping.statistics.nReverseSteps;
+    }
+    state.stepping.statistics.pathLength += h;
+    state.stepping.statistics.absolutePathLength += std::abs(h);
+
     return h;
   }
 };

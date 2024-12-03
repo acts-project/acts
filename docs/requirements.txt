@@ -4,52 +4,54 @@
 #
 #    pip-compile docs/requirements.in
 #
-aiohttp==3.9.1
+aiohappyeyeballs==2.4.3
+    # via aiohttp
+aiohttp==3.11.5
     # via -r docs/requirements.in
 aiosignal==1.3.1
     # via aiohttp
-alabaster==0.7.13
+alabaster==0.7.16
     # via sphinx
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via pydantic
-attrs==23.1.0
+attrs==24.2.0
     # via aiohttp
-babel==2.13.1
+babel==2.16.0
     # via sphinx
 breathe==4.35.0
     # via -r docs/requirements.in
-certifi==2023.11.17
+certifi==2024.8.30
     # via requests
-cffi==1.16.0
+cffi==1.17.1
     # via cryptography
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via typer
-cryptography==41.0.7
+cryptography==43.0.3
     # via pyjwt
-docutils==0.20.1
+docutils==0.21.2
     # via
     #   -r docs/requirements.in
     #   breathe
     #   myst-parser
     #   sphinx
     #   sphinx-rtd-theme
-frozenlist==1.4.0
+frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.12.0
+fsspec==2024.10.0
     # via -r docs/requirements.in
 gidgethub==5.3.0
     # via -r docs/requirements.in
-idna==3.6
+idna==3.10
     # via
     #   requests
     #   yarl
 imagesize==1.4.1
     # via sphinx
-jinja2==3.1.2
+jinja2==3.1.4
     # via
     #   -r docs/requirements.in
     #   myst-parser
@@ -59,85 +61,85 @@ markdown-it-py==3.0.0
     #   mdit-py-plugins
     #   myst-parser
     #   rich
-markupsafe==2.1.3
+markupsafe==3.0.2
     # via jinja2
-mdit-py-plugins==0.4.0
+mdit-py-plugins==0.4.2
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.0.4
+multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
-myst-parser==2.0.0
+myst-parser==4.0.0
     # via -r docs/requirements.in
-packaging==23.2
+packaging==24.2
     # via sphinx
-pycparser==2.21
+propcache==0.2.0
+    # via
+    #   aiohttp
+    #   yarl
+pycparser==2.22
     # via cffi
-pydantic==2.5.2
+pydantic==2.9.2
     # via -r docs/requirements.in
-pydantic-core==2.14.5
+pydantic-core==2.23.4
     # via pydantic
-pygments==2.17.2
+pygments==2.18.0
     # via
     #   rich
     #   sphinx
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.10.0
     # via gidgethub
-python-dotenv==1.0.0
+python-dotenv==1.0.1
     # via -r docs/requirements.in
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via myst-parser
-requests==2.31.0
+requests==2.32.3
     # via sphinx
-rich==13.7.0
-    # via -r docs/requirements.in
+rich==13.9.4
+    # via
+    #   -r docs/requirements.in
+    #   typer
+shellingham==1.5.4
+    # via typer
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.2.6
+sphinx==7.3.7
     # via
     #   -r docs/requirements.in
     #   breathe
     #   myst-parser
     #   sphinx-rtd-theme
-    #   sphinxcontrib-applehelp
-    #   sphinxcontrib-devhelp
-    #   sphinxcontrib-htmlhelp
     #   sphinxcontrib-jquery
-    #   sphinxcontrib-qthelp
-    #   sphinxcontrib-serializinghtml
-sphinx-rtd-theme==2.0.0
+sphinx-rtd-theme==3.0.2
     # via -r docs/requirements.in
-sphinxcontrib-applehelp==1.0.7
+sphinxcontrib-applehelp==2.0.0
     # via sphinx
-sphinxcontrib-devhelp==1.0.5
+sphinxcontrib-devhelp==2.0.0
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.4
+sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.6
+sphinxcontrib-qthelp==2.0.0
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.9
+sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 toml==0.10.2
     # via -r docs/requirements.in
-typer==0.9.0
+typer==0.13.1
     # via -r docs/requirements.in
-typing-extensions==4.8.0
+typing-extensions==4.12.2
     # via
     #   pydantic
     #   pydantic-core
     #   typer
 uritemplate==4.1.1
     # via gidgethub
-urllib3==2.1.0
+urllib3==2.2.3
     # via requests
-yarl==1.9.3
+yarl==1.17.2
     # via aiohttp
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools

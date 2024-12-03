@@ -14,7 +14,6 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-#include <cstddef>
 #include <iosfwd>
 
 namespace Acts {
@@ -67,9 +66,9 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   ProtoSurfaceMaterialT<BinningType>& operator=(
       ProtoSurfaceMaterialT<BinningType>&& smproxy) = default;
 
-  /// Scale operator - dummy implementation
+  /// Scale operation - dummy implementation
   ///
-  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*scale*/) final {
+  ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
     return (*this);
   }
 

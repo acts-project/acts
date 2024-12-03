@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the Acts project.
-//
-// Copyright (C) 2024 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
@@ -59,10 +51,9 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  public:
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
-                             const Transform3& sfTransform,
-                             ActsScalar thickness, int hardware,
-                             int barrelEndcap, int layerWheel, int etaModule,
-                             int phiModule, int side)
+                             const Transform3& sfTransform, double thickness,
+                             int hardware, int barrelEndcap, int layerWheel,
+                             int etaModule, int phiModule, int side)
       : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
                                 thickness),
         m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,

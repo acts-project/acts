@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -67,10 +68,10 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   std::vector<actsvg::svg::object> targets = {};
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
-      ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
+      double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
       for (auto [iy, y] : Acts::enumerate(edgesY)) {
         if (iy > 0u) {
-          ActsScalar yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
+          double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
           auto g = gridXY.globalBinFromPosition(p);
@@ -145,10 +146,10 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   std::size_t ig = 0;
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
-      ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
+      double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
       for (auto [iy, y] : Acts::enumerate(edgesY)) {
         if (iy > 0u) {
-          ActsScalar yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
+          double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
           auto g = gridXY.globalBinFromPosition(p);
@@ -206,7 +207,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -200., 200., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 6);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 6);
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
@@ -224,10 +225,10 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   std::size_t ig = 0;
   for (auto [iz, z] : Acts::enumerate(edgesZ)) {
     if (iz > 0u) {
-      ActsScalar zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
+      double zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
       for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
         if (iphi > 0u) {
-          ActsScalar phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
+          double phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
           decltype(gridZPhi)::point_t p = {zp, phip};
           // Get local and global index
           auto g = gridZPhi.globalBinFromPosition(p);
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   // r-phi Axes & Grid
   Axis axisR(AxisBound, 100., 400., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 4);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 4);
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
@@ -301,10 +302,10 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   std::size_t ig = 0;
   for (auto [ir, r] : Acts::enumerate(edgesR)) {
     if (ir > 0u) {
-      ActsScalar rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);
+      double rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);
       for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
         if (iphi > 0u) {
-          ActsScalar phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
+          double phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
           decltype(gridRPhi)::point_t p = {rp, phip};
           // Get local and global index
           auto g = gridRPhi.globalBinFromPosition(p);

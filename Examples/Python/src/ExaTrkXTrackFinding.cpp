@@ -30,6 +30,7 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace py::literals;
 
 namespace Acts::Python {
 
@@ -67,7 +68,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(numFeatures);
+    ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
@@ -91,11 +92,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(numFeatures);
+    ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
     ACTS_PYTHON_MEMBER(deviceID);
+    ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -174,36 +176,61 @@ void addExaTrkXTrackFinding(Context &ctx) {
       inputMeasurementSimHitsMap, inputMeasurementParticlesMap, outputGraph,
       targetMinPT, targetMinSize, uniqueModules);
 
-  py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
-      .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
-      .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
-      .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
-      .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
-      .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
-      .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
-      .value("ClusterX", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterX)
-      .value("ClusterY", TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterY)
-      .value("CellCount", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
-      .value("CellSum", TrackFindingAlgorithmExaTrkX::NodeFeature::eCellSum)
-      .value("Cluster1R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1R)
-      .value("Cluster2R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2R)
-      .value("Cluster1Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Phi)
-      .value("Cluster2Phi",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Phi)
-      .value("Cluster1Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Z)
-      .value("Cluster2Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Z)
-      .value("Cluster1Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster1Eta)
-      .value("Cluster2Eta",
-             TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster2Eta);
+  {
+    auto nodeFeatureEnum =
+        py::enum_<TrackFindingAlgorithmExaTrkX::NodeFeature>(mex, "NodeFeature")
+            .value("R", TrackFindingAlgorithmExaTrkX::NodeFeature::eR)
+            .value("Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::ePhi)
+            .value("Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eZ)
+            .value("X", TrackFindingAlgorithmExaTrkX::NodeFeature::eX)
+            .value("Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eY)
+            .value("Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eEta)
+            .value("ClusterX",
+                   TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc0)
+            .value("ClusterY",
+                   TrackFindingAlgorithmExaTrkX::NodeFeature::eClusterLoc1)
+            .value("CellCount",
+                   TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount)
+            .value("ChargeSum",
+                   TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, inputClusters,
-                                inputTruthGraph, outputProtoTracks, outputGraph,
-                                graphConstructor, edgeClassifiers, trackBuilder,
-                                nodeFeatures, featureScales, filterShortTracks);
+    // clang-format off
+#define ADD_FEATURE_ENUMS(n) \
+  nodeFeatureEnum \
+    .value("Cluster" #n "X", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##X) \
+    .value("Cluster" #n "Y", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Y) \
+    .value("Cluster" #n "Z", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Z) \
+    .value("Cluster" #n "R", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##R) \
+    .value("Cluster" #n "Phi", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Phi) \
+    .value("Cluster" #n "Eta", TrackFindingAlgorithmExaTrkX::NodeFeature::eCluster##n##Eta) \
+    .value("CellCount" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eCellCount##n) \
+    .value("ChargeSum" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eChargeSum##n) \
+    .value("LocEta" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocEta##n) \
+    .value("LocPhi" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocPhi##n) \
+    .value("LocDir0" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir0##n) \
+    .value("LocDir1" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir1##n) \
+    .value("LocDir2" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLocDir2##n) \
+    .value("LengthDir0" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir0##n) \
+    .value("LengthDir1" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir1##n) \
+    .value("LengthDir2" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eLengthDir2##n) \
+    .value("GlobEta" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobEta##n) \
+    .value("GlobPhi" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eGlobPhi##n) \
+    .value("EtaAngle" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::eEtaAngle##n) \
+    .value("PhiAngle" #n, TrackFindingAlgorithmExaTrkX::NodeFeature::ePhiAngle##n)
+    // clang-format on
+
+    ADD_FEATURE_ENUMS(1);
+    ADD_FEATURE_ENUMS(2);
+
+#undef ADD_FEATURE_ENUMS
+  }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
+      inputTruthGraph, outputProtoTracks, outputGraph, graphConstructor,
+      edgeClassifiers, trackBuilder, nodeFeatures, featureScales,
+      minMeasurementsPerTrack, geometryIdMap);
 
   {
     auto cls =
@@ -239,7 +266,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("graphConstructor"), py::arg("edgeClassifiers"),
                  py::arg("trackBuilder"), py::arg("level"))
             .def("run", &ExaTrkXPipeline::run, py::arg("features"),
-                 py::arg("spacepoints"), py::arg("hook") = Acts::ExaTrkXHook{},
+                 py::arg("moduleIds"), py::arg("spacepoints"),
+                 py::arg("hook") = Acts::ExaTrkXHook{},
                  py::arg("timing") = nullptr);
   }
 
@@ -251,9 +279,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
       "TrackFindingFromPrototrackAlgorithm", inputProtoTracks,
-      inputMeasurements, inputSourceLinks, inputInitialTrackParameters,
-      outputTracks, measurementSelectorCfg, trackingGeometry, magneticField,
-      findTracks, tag);
+      inputMeasurements, inputInitialTrackParameters, outputTracks,
+      measurementSelectorCfg, trackingGeometry, magneticField, findTracks, tag);
 }
 
 }  // namespace Acts::Python

@@ -90,7 +90,7 @@ def getOpenDataDetector(
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
         xmlFileNames=[str(odd_xml)],
         logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
     )
     detector = acts.examples.dd4hep.DD4hepDetector()

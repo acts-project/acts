@@ -116,6 +116,16 @@ jobs:
       - name: Check
         run: >
           CI/check_spelling
+  math_macros:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check
+        run: >
+          CI/check_math_macros.py . --exclude "thirdparty/*"
   missing_includes:
     runs-on: ubuntu-latest
     steps:
@@ -135,7 +145,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: >
-          pip install -r CI/requirements_fpe_masks.txt
+          pip install -r CI/fpe_masks/requirements.txt
       - name: Check
         run: >
           CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}

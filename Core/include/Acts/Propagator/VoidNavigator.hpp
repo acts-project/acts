@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 namespace Acts {
 
 class Surface;
@@ -30,6 +31,9 @@ struct VoidNavigator {
   /// @brief Nested State struct, minimal requirement
   struct State {
     Options options;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
   };
 
   State makeState(const Options& options) const {

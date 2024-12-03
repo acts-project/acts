@@ -10,6 +10,8 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <span>
+
 namespace Acts::detail {
 
 /// Check if a point is inside a box.
@@ -72,8 +74,7 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
 /// @param jacobianOpt The Jacobian to transform the distance to Cartesian
 ///
 /// @return True if the point is inside the polygon.
-template <typename Vector2Container>
-inline bool insidePolygon(const Vector2Container& vertices,
+inline bool insidePolygon(std::span<const Vector2> vertices,
                           const BoundaryTolerance& tolerance,
                           const Vector2& point,
                           const std::optional<SquareMatrix2>& jacobianOpt) {

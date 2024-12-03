@@ -31,7 +31,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
@@ -67,6 +67,14 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.time(), params.template get<eFreeTime>(), eps,
                        eps);
+
+  // reflection
+  FreeTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
 }
 
 }  // namespace

@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -32,8 +31,6 @@
 #include <G4VPhysicalVolume.hh>
 #include <G4VTouchable.hh>
 #include <boost/version.hpp>
-
-class G4PrimaryParticle;
 
 #if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>
@@ -72,19 +69,19 @@ ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
   G4ThreeVector postStepMomentum = convertEnergy * postStepPoint->GetMomentum();
   G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
 
-  Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
-  Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
-  Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
-  Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
+  double hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
+  double hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
+  double hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
+  double hT = 0.5 * (preStepTime + postStepTime);
 
-  Acts::ActsScalar mXpre = preStepMomentum[0];
-  Acts::ActsScalar mYpre = preStepMomentum[1];
-  Acts::ActsScalar mZpre = preStepMomentum[2];
-  Acts::ActsScalar mEpre = preStepEnergy;
-  Acts::ActsScalar mXpost = postStepMomentum[0];
-  Acts::ActsScalar mYpost = postStepMomentum[1];
-  Acts::ActsScalar mZpost = postStepMomentum[2];
-  Acts::ActsScalar mEpost = postStepEnergy;
+  double mXpre = preStepMomentum[0];
+  double mYpre = preStepMomentum[1];
+  double mZpre = preStepMomentum[2];
+  double mEpre = preStepEnergy;
+  double mXpost = postStepMomentum[0];
+  double mYpost = postStepMomentum[1];
+  double mZpost = postStepMomentum[2];
+  double mEpost = postStepEnergy;
 
   Acts::Vector4 particlePosition(hX, hY, hZ, hT);
   Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
@@ -95,12 +92,13 @@ ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
 }
 }  // namespace
 
-ActsExamples::SensitiveSteppingAction::SensitiveSteppingAction(
+namespace ActsExamples::Geant4 {
+
+SensitiveSteppingAction::SensitiveSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
-    const G4Step* step) {
+void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   // Unit conversions G4->::ACTS
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
 
@@ -279,3 +277,5 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   assert(false && "should never reach this");
 }
+
+}  // namespace ActsExamples::Geant4

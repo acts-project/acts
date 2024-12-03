@@ -16,6 +16,8 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -27,6 +29,8 @@
 #include <ostream>
 #include <string>
 #include <utility>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -47,6 +51,10 @@ TrackingVolume::TrackingVolume(
   createBoundarySurfaces();
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
+
+  DelegateChainBuilder{m_navigationDelegate}
+      .add<&INavigationPolicy::noopInitializeCandidates>()
+      .store(m_navigationDelegate);
 }
 
 TrackingVolume::TrackingVolume(Volume& volume, const std::string& volumeName)
@@ -61,6 +69,8 @@ TrackingVolume::TrackingVolume(const Transform3& transform,
                      {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() = default;
+TrackingVolume::TrackingVolume(TrackingVolume&&) noexcept = default;
+TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
@@ -83,6 +93,13 @@ const TrackingVolume* TrackingVolume::lowestTrackingVolume(
       if (denseVolume->inside(position, tol)) {
         return denseVolume.get();
       }
+    }
+  }
+
+  // @TODO: Abstract this into an accelerateable structure
+  for (const auto& volume : volumes()) {
+    if (volume.inside(position, tol)) {
+      return volume.lowestTrackingVolume(gctx, position, tol);
     }
   }
 
@@ -347,15 +364,6 @@ void TrackingVolume::closeGeometry(
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
-  if (!boundarySurfaces().empty() && !portals().empty()) {
-    ACTS_ERROR(
-        "TrackingVolume::closeGeometry: Volume "
-        << volumeName()
-        << " has both boundary surfaces and portals. This is not supported.");
-    throw std::invalid_argument(
-        "Volume has both boundary surfaces and portals");
-  }
-
   if (m_confinedVolumes && !volumes().empty()) {
     ACTS_ERROR(
         "TrackingVolume::closeGeometry: Volume "
@@ -742,6 +750,22 @@ void TrackingVolume::visualize(IVisualization3D& helper,
     child.visualize(helper, gctx, viewConfig, portalViewConfig,
                     sensitiveViewConfig);
   }
+}
+
+void TrackingVolume::setNavigationPolicy(
+    std::unique_ptr<INavigationPolicy> policy) {
+  if (policy == nullptr) {
+    throw std::invalid_argument("Navigation policy is nullptr");
+  }
+
+  m_navigationPolicy = std::move(policy);
+  m_navigationPolicy->connect(m_navigationDelegate);
+}
+
+void TrackingVolume::initializeNavigationCandidates(
+    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
+  m_navigationDelegate(args, stream, logger);
 }
 
 }  // namespace Acts

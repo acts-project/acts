@@ -186,8 +186,8 @@ int main(int argc, char** argv) {
   Acts::SeedFilterConfig sfconf;
 
   Acts::ATLASCuts<value_type> atlasCuts = Acts::ATLASCuts<value_type>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
-      Acts::SeedFilter<value_type>(sfconf, &atlasCuts));
+  config.seedFilter =
+      std::make_unique<Acts::SeedFilter<value_type>>(sfconf, &atlasCuts);
   Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>
       a;  // test creation of unconfigured finder
   a = Acts::SeedFinder<value_type, Acts::CylindricalSpacePointGrid<value_type>>(

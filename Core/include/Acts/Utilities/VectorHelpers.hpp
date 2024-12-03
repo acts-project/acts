@@ -73,7 +73,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
     assert(v.rows() >= 2 &&
            "Perp function not valid for vectors not at least 2D");
   }
-  return std::hypot(v[0], v[1]);
+  return v.template head<2>().norm();
 }
 
 /// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector
@@ -125,19 +125,19 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-inline std::array<ActsScalar, 4> evaluateTrigonomics(const Vector3& direction) {
-  const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
-  const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
-  const ActsScalar z = direction(2);  // == cos(theta)
+inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
+  const double x = direction(0);  // == cos(phi) * sin(theta)
+  const double y = direction(1);  // == sin(phi) * sin(theta)
+  const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
-  const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::sqrt(1 - z * z);
+  const double cosTheta = z;
+  const double sinTheta = std::sqrt(1 - z * z);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");
-  const ActsScalar invSinTheta = 1. / sinTheta;
-  const ActsScalar cosPhi = x * invSinTheta;
-  const ActsScalar sinPhi = y * invSinTheta;
+  const double invSinTheta = 1. / sinTheta;
+  const double cosPhi = x * invSinTheta;
+  const double sinPhi = y * invSinTheta;
 
   return {cosPhi, sinPhi, cosTheta, sinTheta};
 }

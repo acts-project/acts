@@ -39,6 +39,7 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace py::literals;
 
 namespace Acts::Python {
 
@@ -106,12 +107,17 @@ void addTrackFitting(Context& ctx) {
         .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles",
-                    &ActsExamples::BetheHeitlerApprox::loadFromFiles,
-                    py::arg("lowParametersPath"), py::arg("highParametersPath"),
-                    py::arg("lowLimit") = 0.1, py::arg("highLimit") = 0.2)
-        .def_static("makeDefault",
-                    []() { return Acts::makeDefaultBetheHeitlerApprox(); });
+        .def_static(
+            "loadFromFiles", &ActsExamples::BetheHeitlerApprox::loadFromFiles,
+            "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a = 0.1,
+            "highLimit"_a = 0.2, "clampToRange"_a = false)
+        .def_static(
+            "makeDefault",
+            [](bool clampToRange) {
+              return Acts::makeDefaultBetheHeitlerApprox(clampToRange);
+            },
+            "clampToRange"_a = false);
+
     mex.def(
         "makeGsfFitterFunction",
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,

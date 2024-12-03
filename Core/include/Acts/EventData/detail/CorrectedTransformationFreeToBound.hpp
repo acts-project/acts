@@ -27,12 +27,12 @@ struct FreeToBoundCorrection {
   bool apply = false;
 
   /// UKF tuning parameters
-  ActsScalar alpha = 0.1;
-  ActsScalar beta = 2;
+  double alpha = 0.1;
+  double beta = 2;
 
   /// The cutoff of incident angles cosine for correction
-  ActsScalar cosIncidentAngleMinCutoff = 1e-5;
-  ActsScalar cosIncidentAngleMaxCutoff = 0.99500417;
+  double cosIncidentAngleMinCutoff = 1e-5;
+  double cosIncidentAngleMaxCutoff = 0.99500417;
 
   /// Default constructor
   FreeToBoundCorrection() = default;
@@ -42,7 +42,7 @@ struct FreeToBoundCorrection {
   /// @param apply_ Whether to apply correction
   /// @param alpha_ The UKF tuning parameter alpha
   /// @param beta_ The UKF tuning parameter beta
-  FreeToBoundCorrection(bool apply_, ActsScalar alpha_, ActsScalar beta_);
+  FreeToBoundCorrection(bool apply_, double alpha_, double beta_);
 
   /// Construct from boolean only
   ///
@@ -65,9 +65,9 @@ struct CorrectedFreeToBoundTransformer {
   /// @param beta The UKF tuning parameter beta
   /// @param cosIncidentAngleMinCutoff The cosine of max incident angle
   /// @param cosIncidentAngleMaxCutoff The cosine of min incident angle
-  CorrectedFreeToBoundTransformer(ActsScalar alpha, ActsScalar beta,
-                                  ActsScalar cosIncidentAngleMinCutoff,
-                                  ActsScalar cosIncidentAngleMaxCutoff);
+  CorrectedFreeToBoundTransformer(double alpha, double beta,
+                                  double cosIncidentAngleMinCutoff,
+                                  double cosIncidentAngleMaxCutoff);
 
   /// Construct from a FreeToBoundCorrection
   ///
@@ -101,16 +101,16 @@ struct CorrectedFreeToBoundTransformer {
 
  private:
   /// The parameters to tune the weight in UKF (0 < alpha <=1)
-  ActsScalar m_alpha = 0.1;
-  ActsScalar m_beta = 2;
+  double m_alpha = 0.1;
+  double m_beta = 2;
 
   /// The maximum incident angle (i.e. minimum cos incident angle) cutoff for
   /// correction
-  ActsScalar m_cosIncidentAngleMinCutoff = 1e-5;
+  double m_cosIncidentAngleMinCutoff = 1e-5;
 
   /// The minimum incident angle (i.e. maximum cos incident angle) cutoff for
   /// correction, note cos(0.1) = 0.99500417
-  ActsScalar m_cosIncidentAngleMaxCutoff = 0.99500417;
+  double m_cosIncidentAngleMaxCutoff = 0.99500417;
 };
 
 }  // namespace detail

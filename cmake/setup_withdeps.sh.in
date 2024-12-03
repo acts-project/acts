@@ -51,6 +51,9 @@ if [[ -d "@Geant4_DIR@" ]]; then
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
+  # Without this, DD4hep's Xerces-C XML parsing fails with:
+  # > Could not load a transcoding service
+  export LC_ALL=C
 fi
 if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"

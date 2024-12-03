@@ -35,11 +35,11 @@ void addExampleAlgorithms(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
-      outputParticlesInitial, outputParticlesFinal, outputSimHits,
-      imputParametrisationNuclearInteraction, randomNumbers, trackingGeometry,
-      magneticField, pMin, emScattering, emEnergyLossIonisation,
-      emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
-      generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
+      outputParticles, outputSimHits, imputParametrisationNuclearInteraction,
+      randomNumbers, trackingGeometry, magneticField, pMin, emScattering,
+      emEnergyLossIonisation, emEnergyLossRadiation, emPhotonConversion,
+      generateHitsOnSensitive, generateHitsOnMaterial, generateHitsOnPassive,
+      averageHitsPerParticle);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
                                 "ParticlesPrinter", inputParticles);
@@ -109,6 +109,7 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(maxSharedHits);
       ACTS_PYTHON_MEMBER(maxChi2);
       ACTS_PYTHON_MEMBER(measurementCounter);
+      ACTS_PYTHON_MEMBER(requireReferenceSurface);
       ACTS_PYTHON_STRUCT_END();
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
