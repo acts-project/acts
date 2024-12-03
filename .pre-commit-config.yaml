@@ -44,7 +44,7 @@ repos:
     - id: license
       name: license
       language: system
-      entry: CI/check_license.py
+      entry: CI/check_license.py --fix
       files: \.(cpp|hpp|ipp|cu|cuh)$
 
   - repo: local
@@ -86,3 +86,18 @@ repos:
       language: system
       entry: docs/parse_cmake_options.py --write docs/getting_started.md
       files: ^CMakeLists.txt$
+
+  - repo: local
+    hooks:
+    - id: leftover_conflict_markers
+      name: Leftover conflict markers
+      language: system
+      entry: git --no-pager diff --staged --check
+
+  - repo: local
+    hooks:
+    - id: math_macros
+      name: math_macros
+      language: system
+      entry: CI/check_math_macros.py
+      files: \.(cpp|hpp|ipp|cu|cuh)$

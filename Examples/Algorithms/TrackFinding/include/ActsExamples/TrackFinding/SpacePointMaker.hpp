@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -46,8 +45,6 @@ struct AlgorithmContext;
 class SpacePointMaker final : public IAlgorithm {
  public:
   struct Config {
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input measurements collection.
     std::string inputMeasurements;
     /// Output space points collection.
@@ -85,9 +82,6 @@ class SpacePointMaker final : public IAlgorithm {
   std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
 
   Acts::SpacePointBuilder<SimSpacePoint> m_spacePointBuilder;
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};

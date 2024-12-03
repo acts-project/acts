@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/detail/BlueprintDrawer.hpp"
 #include "Acts/Detector/detail/BlueprintHelper.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
@@ -19,6 +20,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+
+#include <fstream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -127,6 +130,14 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   blueprint.name = topEntry->second.name;
   blueprint.topNode =
       createNode(cache, gctx, topEntry->second, blueprintTableMap, Extent());
+
+  // Export to dot graph if configured
+  if (!options.dotGraph.empty()) {
+    std::ofstream dotFile(options.dotGraph);
+    Experimental::detail::BlueprintDrawer::dotStream(dotFile,
+                                                     *blueprint.topNode);
+    dotFile.close();
+  }
 
   // Return the ready-to-use blueprint
   return blueprint;
@@ -334,8 +345,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
                                                        externalExtent);
 
       ACTS_VERBOSE("Requested range: " << rangeExtent.toString());
-      std::array<ActsScalar, 3u> mins = {};
-      std::array<ActsScalar, 3u> maxs = {};
+      std::array<double, 3u> mins = {};
+      std::array<double, 3u> maxs = {};
 
       // Fill what we have - follow the convention to fill up with the last
       for (std::size_t ibv = 0; ibv < 3u; ++ibv) {
@@ -349,7 +360,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
         maxs[ibv] = rangeExtent.max(m_cfg.kdtBinning.back());
       }
       // Create the search range
-      RangeXD<3u, ActsScalar> searchRange{mins, maxs};
+      RangeXD<3u, double> searchRange{mins, maxs};
       auto surfaces = cache.kdtSurfaces->surfaces(searchRange);
       // Loop over surfaces and create an internal extent
       for (auto& sf : surfaces) {
@@ -396,8 +407,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
   return std::make_tuple(nullptr, Extent());
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
-           std::vector<Acts::ActsScalar>, Acts::Vector3>
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
+           Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
@@ -406,7 +417,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
 
   // Create the return values
   Vector3 translation{0., 0., 0.};
-  std::vector<ActsScalar> boundValues = {};
+  std::vector<double> boundValues = {};
   auto [boundsType, extent] = detail::GeoModelExentHelper::extentFromTable(
       boundsEntrySplit, externalExtent, internalExtent);
 

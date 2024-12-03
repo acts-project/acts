@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
@@ -16,10 +17,12 @@
 #include <algorithm>
 #include <stdexcept>
 
-auto ActsExamples::Telescope::TelescopeDetector::finalize(
+namespace ActsExamples {
+
+auto TelescopeDetector::finalize(
     const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator>&
     /*mdecorator*/) -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  DetectorElement::ContextType nominalContext;
+  TelescopeDetectorElement::ContextType nominalContext;
 
   if (cfg.surfaceType > 1) {
     throw std::invalid_argument(
@@ -48,15 +51,18 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
   std::vector<double> stereos = cfg.stereos;
   std::ranges::sort(positions);
 
-  /// Return the telescope detector
-  TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
-      nominalContext, detectorStore, positions, stereos, cfg.offsets,
-      cfg.bounds, cfg.thickness,
-      static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(
-          cfg.surfaceType),
-      static_cast<Acts::BinningValue>(cfg.binValue));
+  Acts::GeometryContext geometryContext(nominalContext);
+
+  // Return the telescope detector
+  TrackingGeometryPtr gGeometry =
+      buildTelescopeDetector(geometryContext, detectorStore, positions, stereos,
+                             cfg.offsets, cfg.bounds, cfg.thickness,
+                             static_cast<TelescopeSurfaceType>(cfg.surfaceType),
+                             static_cast<Acts::BinningValue>(cfg.binValue));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(gGeometry), std::move(gContextDecorators));
 }
+
+}  // namespace ActsExamples

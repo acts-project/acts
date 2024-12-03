@@ -13,6 +13,8 @@
  *      Author: jhrdinka
  */
 
+#include "Acts/Utilities/AngleHelpers.hpp"
+
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
@@ -111,7 +113,7 @@ fullMaterial(std::string inFile,
   for (auto& mrecord : mrecords) {
     std::vector<Acts::MaterialStep> steps = mrecord.materialSteps();
     float                           theta = mrecord.theta();
-    float                           eta   = -log(tan(theta * 0.5));
+    float                           eta   = Acts::AngleHelpers::etaFromTheta(theta);
     float                           phi   = VectorHelpers::phi(mrecord);
 
     float thickness = 0.;

@@ -11,14 +11,14 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
-    ParticleSmearingSigmas,
+    TrackSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -72,6 +72,11 @@ def run_ckf_tracking(label, seeding):
             setup.field,
             enableInteractions=True,
             rnd=rnd,
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(0.9 * u.GeV, None),
+                measurements=(9, None),
+                removeNeutral=True,
+            ),
         )
 
         addDigitization(
@@ -86,16 +91,15 @@ def run_ckf_tracking(label, seeding):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
-            ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+            TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
                 # zero eveything so the CKF has a chance to find the measurements
-                d0=0,
-                d0PtA=0,
-                d0PtB=0,
-                z0=0,
-                z0PtA=0,
-                z0PtB=0,
-                t0=0,
+                loc0=0,
+                loc0PtA=0,
+                loc0PtB=0,
+                loc1=0,
+                loc1PtA=0,
+                loc1PtB=0,
+                time=0,
                 phi=0,
                 theta=0,
                 ptRel=0,
@@ -108,7 +112,7 @@ def run_ckf_tracking(label, seeding):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=500 * u.MeV,
+                minPt=0.5 * u.GeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
@@ -134,7 +138,7 @@ def run_ckf_tracking(label, seeding):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
+                pt=(0.9 * u.GeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
                 maxHoles=2,
@@ -159,8 +163,9 @@ def run_ckf_tracking(label, seeding):
             if seeding != SeedingAlgorithm.TruthSmeared
             else []
         ) + [
-            "performance_ckf.root",
             "tracksummary_ckf.root",
+            "performance_finding_ckf.root",
+            "performance_fitting_ckf.root",
         ]:
             perf_file = tp / file
             assert perf_file.exists(), f"Performance file not found {perf_file}"

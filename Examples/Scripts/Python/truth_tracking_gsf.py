@@ -24,13 +24,13 @@ def runTruthTrackingGsf(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addTruthTrackingGsf,
     )
 
@@ -77,6 +77,12 @@ def runTruthTrackingGsf(
         field,
         rnd=rnd,
         enableInteractions=True,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
     )
 
     addDigitization(
@@ -95,9 +101,6 @@ def runTruthTrackingGsf(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addTruthTrackingGsf(
@@ -122,7 +125,7 @@ def runTruthTrackingGsf(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -134,7 +137,7 @@ def runTruthTrackingGsf(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf.root"),
             writeGsfSpecific=True,
@@ -145,7 +148,7 @@ def runTruthTrackingGsf(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf.root"),
         )

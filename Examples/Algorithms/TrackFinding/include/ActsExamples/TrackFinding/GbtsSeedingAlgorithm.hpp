@@ -44,8 +44,6 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
 
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
-    std::string inputSourceLinks;
-
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
     std::map<std::pair<int, int>, std::pair<int, int>> ActsGbtsMap;
@@ -87,9 +85,6 @@ class GbtsSeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };

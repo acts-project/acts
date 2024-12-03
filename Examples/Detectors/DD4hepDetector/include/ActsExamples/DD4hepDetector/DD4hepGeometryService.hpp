@@ -35,7 +35,7 @@ namespace dd4hep {
 class Detector;
 }  // namespace dd4hep
 
-namespace ActsExamples::DD4hep {
+namespace ActsExamples {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
@@ -52,7 +52,7 @@ class DD4hepGeometryService {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
     /// Log level for DD4hep itself
-    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::INFO;
+    Acts::Logging::Level dd4hepLogLevel = Acts::Logging::Level::WARNING;
     /// XML-file with the detector description
     std::vector<std::string> xmlFileNames;
     /// The name of the service
@@ -87,7 +87,7 @@ class DD4hepGeometryService {
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  DD4hepGeometryService(const Config& cfg);
+  explicit DD4hepGeometryService(const Config& cfg);
   DD4hepGeometryService(const DD4hepGeometryService&) = delete;
   DD4hepGeometryService(DD4hepGeometryService&&) = delete;
   ~DD4hepGeometryService();
@@ -115,11 +115,10 @@ class DD4hepGeometryService {
 
  private:
   /// Private method to initiate building of the DD4hep geometry
-  ActsExamples::ProcessCode buildDD4hepGeometry();
+  ProcessCode buildDD4hepGeometry();
 
   /// Private method to initiate building of the ACTS tracking geometry
-  ActsExamples::ProcessCode buildTrackingGeometry(
-      const Acts::GeometryContext& gctx);
+  ProcessCode buildTrackingGeometry(const Acts::GeometryContext& gctx);
 
   /// The config class
   Config m_cfg;
@@ -135,4 +134,4 @@ class DD4hepGeometryService {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples::DD4hep
+}  // namespace ActsExamples

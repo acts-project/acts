@@ -154,25 +154,30 @@ ProcessCode PrototracksToParameters::execute(
                            .geometryId();
     const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
-    auto field = m_cfg.magneticField->getField(
+    auto fieldRes = m_cfg.magneticField->getField(
         {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
-    if (!field.ok()) {
-      ACTS_ERROR("Field lookup error: " << field.error());
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
+    Acts::Vector3 field = *fieldRes;
 
-    auto pars = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
-        m_cfg.bFieldMin);
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
+      continue;
+    }
 
-    if (not pars) {
+    auto parsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), surface, field);
+    if (!parsResult.ok()) {
       ACTS_WARNING("Skip track because of bad params");
     }
+    const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
     parameters.push_back(Acts::BoundTrackParameters(
-        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis));
+        surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
 
   if (skippedTracks > 0) {

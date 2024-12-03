@@ -9,10 +9,11 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 namespace Acts {
@@ -192,7 +193,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     Vector3 positionOnTrack = trkParams.position(gctx);
 
     // Distance between positionOnTrack and the 3D PCA
-    ActsScalar distanceToPca =
+    double distanceToPca =
         (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
 
     // 3D PCA
@@ -203,11 +204,11 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
       // Track time at positionOnTrack
       double timeOnTrack = trkParams.parameters()[BoundIndices::eBoundTime];
 
-      ActsScalar m0 = trkParams.particleHypothesis().mass();
-      ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
+      double m0 = trkParams.particleHypothesis().mass();
+      double p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
       // Speed in units of c
-      ActsScalar beta = p / std::hypot(p, m0);
+      double beta = p / fastHypot(p, m0);
 
       pcaStraightTrack[3] = timeOnTrack + distanceToPca / beta;
     }
@@ -278,11 +279,11 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     // Time at the 2D PCA P
     double tP = trkParams.parameters()[BoundIndices::eBoundTime];
 
-    ActsScalar m0 = trkParams.particleHypothesis().mass();
-    ActsScalar p = trkParams.particleHypothesis().extractMomentum(qOvP);
+    double m0 = trkParams.particleHypothesis().mass();
+    double p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
     // Speed in units of c
-    ActsScalar beta = p / std::hypot(p, m0);
+    double beta = p / fastHypot(p, m0);
 
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
@@ -525,7 +526,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   const double theta = params[BoundIndices::eBoundTheta];
 
   double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
-  double eta = -std::log(std::tan(theta / 2.));
+  double eta = AngleHelpers::etaFromTheta(theta);
   double dir_eta = VectorHelpers::eta(direction);
 
   double zs = (dir_eta - eta) * z0;

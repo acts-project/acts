@@ -50,7 +50,7 @@ class PropagatorInterface {
 template <typename propagator_t>
 class ConcretePropagator : public PropagatorInterface {
  public:
-  ConcretePropagator(propagator_t propagator)
+  explicit ConcretePropagator(propagator_t propagator)
       : m_propagator{std::move(propagator)} {}
 
   Acts::Result<PropagationOutput> execute(
@@ -116,6 +116,8 @@ class ConcretePropagator : public PropagatorInterface {
     auto& steppingResults =
         resultValue.template get<SteppingLogger::result_type>();
     summary.steps = std::move(steppingResults.steps);
+
+    summary.statistics = resultValue.statistics;
 
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {

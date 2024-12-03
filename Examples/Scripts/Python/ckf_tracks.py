@@ -27,14 +27,14 @@ def runCKFTracks(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
 
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
-        ParticleSmearingSigmas,
+        TrackSmearingSigmas,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
         SeedingAlgorithm,
@@ -80,6 +80,11 @@ def runCKFTracks(
         trackingGeometry,
         field,
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -94,16 +99,15 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
+        TrackSmearingSigmas(  # only used by SeedingAlgorithm.TruthSmeared
             # zero eveything so the CKF has a chance to find the measurements
-            d0=0,
-            d0PtA=0,
-            d0PtB=0,
-            z0=0,
-            z0PtA=0,
-            z0PtB=0,
-            t0=0,
+            loc0=0,
+            loc0PtA=0,
+            loc0PtB=0,
+            loc1=0,
+            loc1PtA=0,
+            loc1PtB=0,
+            time=0,
             phi=0,
             theta=0,
             ptRel=0,
@@ -166,6 +170,7 @@ def runCKFTracks(
         ),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
+        writeTrackStates=True,
     )
 
     return s

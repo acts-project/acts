@@ -407,8 +407,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   }
 
   // create the layer and push it back
-  std::shared_ptr<const PlanarBounds> pBounds(
-      new RectangleBounds(layerHalf1, layerHalf2));
+  auto pBounds = std::make_shared<RectangleBounds>(layerHalf1, layerHalf2);
 
   // create the layer
   MutableLayerPtr pLayer =

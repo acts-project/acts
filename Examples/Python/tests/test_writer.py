@@ -21,7 +21,7 @@ import acts
 from acts import UnitConstants as u
 from acts.examples import (
     ObjPropagationStepsWriter,
-    TrackFinderPerformanceWriter,
+    TrackFinderNTupleWriter,
     SeedingPerformanceWriter,
     RootPropagationStepsWriter,
     RootParticleWriter,
@@ -31,7 +31,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrackStatesWriter,
     RootTrackSummaryWriter,
-    VertexPerformanceWriter,
+    VertexNTupleWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvSimHitWriter,
@@ -165,7 +165,6 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         filePath=str(out),
         surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
-    config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
     s.run()
 
@@ -196,6 +195,43 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     assert out.exists()
     assert out.stat().st_size > 2e4
     assert_root_hash(out.name, out)
+
+
+@pytest.mark.root
+def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    s = Sequencer(numThreads=1, events=10)
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    # This also runs the RootTrackSummaryWriter with truth information
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    # Run the RootTrackSummaryWriter without the truth information
+    s.addWriter(
+        conf_const(
+            RootTrackSummaryWriter,
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            filePath=str(tmp_path / "track_summary_kf_no_truth.root"),
+        )
+    )
+
+    s.run()
+    assert (tmp_path / "tracksummary_kf.root").exists()
+    assert (tmp_path / "track_summary_kf_no_truth.root").exists()
 
 
 @pytest.mark.csv
@@ -250,7 +286,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
     [
         RootPropagationStepsWriter,
         RootParticleWriter,
-        TrackFinderPerformanceWriter,
+        TrackFinderNTupleWriter,
         SeedingPerformanceWriter,
         RootTrackParameterWriter,
         RootMaterialTrackWriter,
@@ -259,7 +295,7 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
         RootSimHitWriter,
         RootTrackStatesWriter,
         RootTrackSummaryWriter,
-        VertexPerformanceWriter,
+        VertexNTupleWriter,
         SeedingPerformanceWriter,
     ],
 )

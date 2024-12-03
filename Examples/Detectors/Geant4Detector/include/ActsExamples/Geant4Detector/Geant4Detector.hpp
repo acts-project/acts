@@ -31,9 +31,8 @@ class Detector;
 }  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
 
-namespace Geant4 {
+class IContextDecorator;
 
 struct Geant4Detector {
   using DetectorElements =
@@ -41,8 +40,7 @@ struct Geant4Detector {
   using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
   using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
 
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   /// Nested configuration struct
@@ -90,5 +88,4 @@ struct Geant4Detector {
       const Config& cfg, const Acts::Logger& logger) const;
 };
 
-}  // namespace Geant4
 }  // namespace ActsExamples

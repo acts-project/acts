@@ -89,7 +89,7 @@ bool Acts::TrapezoidBounds::inside(
 
   // at this stage, the point can only be in the triangles
   // run slow-ish polygon check
-  std::vector<Acts::Vector2> vertices = {
+  Vector2 vertices[] = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
   return detail::insidePolygon(vertices, boundaryTolerance, extPosition,
                                std::nullopt);

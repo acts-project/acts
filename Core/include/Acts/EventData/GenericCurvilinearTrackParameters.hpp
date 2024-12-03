@@ -30,7 +30,6 @@ class GenericCurvilinearTrackParameters
   using Base = GenericBoundTrackParameters<particle_hypothesis_t>;
 
  public:
-  using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
@@ -43,7 +42,7 @@ class GenericCurvilinearTrackParameters
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   GenericCurvilinearTrackParameters(const Vector4& pos4, const Vector3& dir,
-                                    Scalar qOverP,
+                                    double qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
       : Base(CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
@@ -58,8 +57,8 @@ class GenericCurvilinearTrackParameters
   /// @param qOverP Charge over momentum
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericCurvilinearTrackParameters(const Vector4& pos4, Scalar phi,
-                                    Scalar theta, Scalar qOverP,
+  GenericCurvilinearTrackParameters(const Vector4& pos4, double phi,
+                                    double theta, double qOverP,
                                     std::optional<CovarianceMatrix> cov,
                                     ParticleHypothesis particleHypothesis)
       : Base(CurvilinearSurface(pos4.segment<3>(ePos0),
@@ -110,6 +109,14 @@ class GenericCurvilinearTrackParameters
   /// Spatial position three-vector.
   Vector3 position() const {
     return GenericBoundTrackParameters<ParticleHypothesis>::position({});
+  }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericCurvilinearTrackParameters<ParticleHypothesis> reflect() const {
+    GenericCurvilinearTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 };
 

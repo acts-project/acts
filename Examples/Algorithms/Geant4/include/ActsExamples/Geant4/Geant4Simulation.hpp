@@ -39,14 +39,15 @@ class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
 
-class G4VUserDetectorConstruction;
-
 namespace ActsExamples {
+struct Geant4Handle;
 
+namespace Geant4 {
 class DetectorConstructionFactory;
 class SensitiveSurfaceMapper;
 struct EventStore;
-struct Geant4Handle;
+class RegionCreator;
+}  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {
@@ -61,7 +62,8 @@ class Geant4SimulationBase : public IAlgorithm {
 
     /// Detector construction object.
     /// G4RunManager will take care of deletion
-    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
+    std::shared_ptr<Geant4::DetectorConstructionFactory>
+        detectorConstructionFactory;
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
@@ -91,11 +93,11 @@ class Geant4SimulationBase : public IAlgorithm {
 
   G4RunManager& runManager() const;
 
-  EventStore& eventStore() const;
+  Geant4::EventStore& eventStore() const;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::shared_ptr<EventStore> m_eventStore;
+  std::shared_ptr<Geant4::EventStore> m_eventStore;
 
   int m_geant4Level{};
 
@@ -118,15 +120,12 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
 
-    /// Name of the output collection : initial particles
-    std::string outputParticlesInitial = "particles_initial";
-
-    /// Name of the output collection : final particles
-    std::string outputParticlesFinal = "particles_final";
+    /// Name of the output collection : simulated particles
+    std::string outputParticles = "particles_simulated";
 
     /// The ACTS sensitive surfaces in a mapper, used for hit creation
-    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
-        nullptr;
+    std::shared_ptr<const Geant4::SensitiveSurfaceMapper>
+        sensitiveSurfaceMapper = nullptr;
 
     /// The ACTS Magnetic field provider
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField = nullptr;
@@ -170,10 +169,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
   std::unique_ptr<G4MagneticField> m_magneticField;
   std::unique_ptr<G4FieldManager> m_fieldManager;
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
 };
 

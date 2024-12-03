@@ -15,6 +15,7 @@
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -50,8 +51,7 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
-std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
-           std::optional<ActsScalar>>
+std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
@@ -76,7 +76,7 @@ SpacePointUtility::globalCoords(
   //
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
+  auto scale = 2 / fastHypot(x, y);
   ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
@@ -92,8 +92,8 @@ SpacePointUtility::globalCoords(
   // optionally set time
   // TODO the current condition of checking the covariance is not optional but
   // should do for now
-  std::optional<ActsScalar> globalTime = par[eBoundTime];
-  std::optional<ActsScalar> tcov = cov(eBoundTime, eBoundTime);
+  std::optional<double> globalTime = par[eBoundTime];
+  std::optional<double> tcov = cov(eBoundTime, eBoundTime);
   if (tcov.value() <= 0) {
     globalTime = std::nullopt;
     tcov = std::nullopt;
@@ -112,8 +112,9 @@ Vector2 SpacePointUtility::calcRhoZVars(
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
   // strip1 and strip2 are tilted at +/- theta/2
-  double sigma_x = std::hypot(var1, var2) / (2 * sin(theta * 0.5));
-  double sigma_y = std::hypot(var1, var2) / (2 * cos(theta * 0.5));
+  double sigma = fastHypot(var1, var2);
+  double sigma_x = sigma / (2 * sin(theta * 0.5));
+  double sigma_y = sigma / (2 * cos(theta * 0.5));
 
   // projection to the surface with strip1.
   double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
@@ -138,7 +139,7 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
 
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
-  auto scale = 2 / std::hypot(x, y);
+  auto scale = 2 / globalPos.head<2>().norm();
   ActsMatrix<2, 3> jacXyzToRhoZ = ActsMatrix<2, 3>::Zero();
   jacXyzToRhoZ(0, ePos0) = scale * x;
   jacXyzToRhoZ(0, ePos1) = scale * y;
@@ -202,8 +203,8 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
   }
 
   // Check if m and n can be resolved in the interval (-1, 1)
-  if (fabs(spParams.m) <= spParams.limit &&
-      fabs(spParams.n) <= spParams.limit) {
+  if (std::abs(spParams.m) <= spParams.limit &&
+      std::abs(spParams.n) <= spParams.limit) {
     return Result<void>::success();
   }
   return Result<void>::failure(m_error);
@@ -224,7 +225,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
       spParams.limit + stripLengthGapTolerance / spParams.mag_firstBtmToTop;
 
   // Check if m is just slightly outside
-  if (fabs(spParams.m) > spParams.limitExtended) {
+  if (std::abs(spParams.m) > spParams.limitExtended) {
     return Result<void>::failure(m_error);
   }
   // Calculate n if not performed previously
@@ -234,7 +235,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
         spParams.secondBtmToTop.dot(spParams.firstBtmToTopXvtxToFirstMid2);
   }
   // Check if n is just slightly outside
-  if (fabs(spParams.n) > spParams.limitExtended) {
+  if (std::abs(spParams.n) > spParams.limitExtended) {
     return Result<void>::failure(m_error);
   }
   /// The following code considers an overshoot of m and n in the same direction
@@ -273,8 +274,8 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.n -= (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
 
-    if (fabs(spParams.m) < spParams.limit &&
-        fabs(spParams.n) < spParams.limit) {
+    if (std::abs(spParams.m) < spParams.limit &&
+        std::abs(spParams.n) < spParams.limit) {
       return Result<void>::success();
     } else {
       return Result<void>::failure(m_error);
@@ -292,8 +293,8 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    if (fabs(spParams.m) < spParams.limit &&
-        fabs(spParams.n) < spParams.limit) {
+    if (std::abs(spParams.m) < spParams.limit &&
+        std::abs(spParams.n) < spParams.limit) {
       return Result<void>::success();
     }
   }
@@ -323,7 +324,7 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
   double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
   double denom = spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
   // Check for numerical stability
-  if (fabs(denom) > 1e-6) {
+  if (std::abs(denom) > 1e-6) {
     // Return lambda0
     return Result<double>::success(
         (ac.dot(spParams.secondBtmToTop) * qr -

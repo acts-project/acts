@@ -12,6 +12,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -43,31 +44,8 @@ auto Acts::materialMapperRZ(
   }
 
   // [2] Create Grid
-  // sort the values
-  std::ranges::sort(rPos);
-  std::ranges::sort(zPos);
-  // Get unique values
-  rPos.erase(std::unique(rPos.begin(), rPos.end()), rPos.end());
-  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
-  rPos.shrink_to_fit();
-  zPos.shrink_to_fit();
-  // get the number of bins
-  std::size_t nBinsR = rPos.size();
-  std::size_t nBinsZ = zPos.size();
-
-  // get the minimum and maximum
-  auto minMaxR = std::minmax_element(rPos.begin(), rPos.end());
-  auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
-  double rMin = *minMaxR.first;
-  double zMin = *minMaxZ.first;
-  double rMax = *minMaxR.second;
-  double zMax = *minMaxZ.second;
-  // calculate maxima (add one last bin, because bin value always corresponds to
-  // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
-  rMax += stepR;
-  zMax += stepZ;
+  const auto [rMin, rMax, nBinsR] = detail::getMinMaxAndBinCount(rPos);
+  const auto [zMin, zMax, nBinsZ] = detail::getMinMaxAndBinCount(zPos);
 
   // Create the axis for the grid
   Axis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
@@ -79,13 +57,13 @@ auto Acts::materialMapperRZ(
   using Grid_t = decltype(grid);
 
   // [3] Set the material values
+  const std::array<std::size_t, 2> nIndices = {{nBinsR, nBinsZ}};
   for (std::size_t i = 1; i <= nBinsR; ++i) {
     for (std::size_t j = 1; j <= nBinsZ; ++j) {
-      std::array<std::size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
       Grid_t::index_t indices = {{i, j}};
-      // std::vectors begin with 0 and we do not want the user needing to
-      // take underflow or overflow bins in account this is why we need to
-      // subtract by one
+      // std::vectors begin with 0 and we do not want the user needing to take
+      // underflow or overflow bins in account this is why we need to subtract
+      // by one
       grid.atLocalBins(indices) = materialVector.at(
           materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
@@ -95,14 +73,12 @@ auto Acts::materialMapperRZ(
       0., 0., 0.;
   grid.setExteriorBins(vec);
 
-  // [4] Create the transformation for the position
-  // map (x,y,z) -> (r,z)
+  // [4] Create the transformation for the position map (x,y,z) -> (r,z)
   auto transformPos = [](const Vector3& pos) {
     return Vector2(perp(pos), pos.z());
   };
 
-  // [5] Create the mapper & BField Service
-  // create material mapping
+  // [5] Create the mapper & BField Service create material mapping
   return MaterialMapper(transformPos, std::move(grid));
 }
 
@@ -125,44 +101,11 @@ auto Acts::materialMapperXYZ(
   }
 
   // [2] Create Grid
-  // Sort the values
-  std::ranges::sort(xPos);
-  std::ranges::sort(yPos);
-  std::ranges::sort(zPos);
-  // Get unique values
-  xPos.erase(std::unique(xPos.begin(), xPos.end()), xPos.end());
-  yPos.erase(std::unique(yPos.begin(), yPos.end()), yPos.end());
-  zPos.erase(std::unique(zPos.begin(), zPos.end()), zPos.end());
-  xPos.shrink_to_fit();
-  yPos.shrink_to_fit();
-  zPos.shrink_to_fit();
-  // get the number of bins
-  std::size_t nBinsX = xPos.size();
-  std::size_t nBinsY = yPos.size();
-  std::size_t nBinsZ = zPos.size();
+  const auto [xMin, xMax, nBinsX] = detail::getMinMaxAndBinCount(xPos);
+  const auto [yMin, yMax, nBinsY] = detail::getMinMaxAndBinCount(yPos);
+  const auto [zMin, zMax, nBinsZ] = detail::getMinMaxAndBinCount(zPos);
 
-  // get the minimum and maximum
-  auto minMaxX = std::minmax_element(xPos.begin(), xPos.end());
-  auto minMaxY = std::minmax_element(yPos.begin(), yPos.end());
-  auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
   // Create the axis for the grid
-  // get minima
-  double xMin = *minMaxX.first;
-  double yMin = *minMaxY.first;
-  double zMin = *minMaxZ.first;
-  // get maxima
-  double xMax = *minMaxX.second;
-  double yMax = *minMaxY.second;
-  double zMax = *minMaxZ.second;
-  // calculate maxima (add one last bin, because bin value always corresponds to
-  // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
-  double stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
-  xMax += stepX;
-  yMax += stepY;
-  zMax += stepZ;
-
   Axis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
   Axis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   Axis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
@@ -172,15 +115,14 @@ auto Acts::materialMapperXYZ(
   using Grid_t = decltype(grid);
 
   // [3] Set the bField values
+  const std::array<std::size_t, 3> nIndices = {{nBinsX, nBinsY, nBinsZ}};
   for (std::size_t i = 1; i <= nBinsX; ++i) {
     for (std::size_t j = 1; j <= nBinsY; ++j) {
       for (std::size_t k = 1; k <= nBinsZ; ++k) {
         Grid_t::index_t indices = {{i, j, k}};
-        std::array<std::size_t, 3> nIndices = {
-            {xPos.size(), yPos.size(), zPos.size()}};
-        // std::vectors begin with 0 and we do not want the user needing to
-        // take underflow or overflow bins in account this is why we need to
-        // subtract by one
+        // std::vectors begin with 0 and we do not want the user needing to take
+        // underflow or overflow bins in account this is why we need to subtract
+        // by one
         grid.atLocalBins(indices) = materialVector.at(
             materialVectorToGridMapper({{i - 1, j - 1, k - 1}}, nIndices));
       }
@@ -191,11 +133,9 @@ auto Acts::materialMapperXYZ(
       0., 0., 0.;
   grid.setExteriorBins(vec);
 
-  // [4] Create the transformation for the position
-  // map (x,y,z) -> (r,z)
+  // [4] Create the transformation for the position map (x,y,z) -> (r,z)
   auto transformPos = [](const Vector3& pos) { return pos; };
 
-  // [5] Create the mapper & BField Service
-  // create material mapping
+  // [5] Create the mapper & BField Service create material mapping
   return MaterialMapper(transformPos, std::move(grid));
 }

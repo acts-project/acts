@@ -203,6 +203,11 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   ct.testMultiTrajectoryExtraColumnsRuntime();
 }
 
+BOOST_AUTO_TEST_CASE(MultiTrajectoryAllocateCalibratedInit) {
+  CommonTests ct;
+  ct.testMultiTrajectoryAllocateCalibratedInit(rng);
+}
+
 BOOST_AUTO_TEST_CASE(MemoryStats) {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
