@@ -37,7 +37,7 @@ class ILayerArrayCreator {
   /// LayerArrayCreator interface method
   ///
   /// @param gctx is the geometry context for witch the volume is built
-  /// @param layers are the layers to be moved into an array
+  /// @param layersInput are the layers to be moved into an array
   /// @param min is the minimul value for binning
   /// @param max is the maximum value for binning
   /// @param aType is the axis type: Equidistant, Variable
@@ -45,8 +45,8 @@ class ILayerArrayCreator {
   ///
   /// @return unique pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray> layerArray(
-      const GeometryContext& gctx, const LayerVector& layers, double min,
-      double max, AxisType bType = AxisType::Variable,
+      const GeometryContext& gctx, const LayerVector& layersInput, double min,
+      double max, AxisType aType = AxisType::Variable,
       AxisDirection aDir = AxisDirection::AxisX) const = 0;
 };
 }  // namespace Acts

@@ -128,7 +128,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   /// Reference offset value along a given axis direction
   ///
-  /// @param adir is the binning schema used
+  /// @param aDir is the binning schema used
   ///
   /// @return value offset to be used for the binning
   double referenceOffsetValue(AxisDirection aDir) const final;

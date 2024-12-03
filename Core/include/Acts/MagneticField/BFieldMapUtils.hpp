@@ -151,9 +151,9 @@ fieldMapXYZ(
 /// @return A field map instance for use in interpolation.
 InterpolatedBFieldMap<
     Grid<Vector2, Axis<AxisType::Equidistant>, Axis<AxisType::Equidistant>>>
-solenoidFieldMap(const std::pair<double, double>& rlim,
-                 const std::pair<double, double>& zlim,
-                 const std::pair<std::size_t, std::size_t>& nbins,
+solenoidFieldMap(const std::pair<double, double>& rLim,
+                 const std::pair<double, double>& zLim,
+                 const std::pair<std::size_t, std::size_t>& nBins,
                  const SolenoidBField& field);
 
 }  // namespace Acts
