@@ -8,13 +8,11 @@
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <cassert>
-#include <variant>
 
 namespace Acts {
 class VectorMultiTrajectory;

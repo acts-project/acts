@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
@@ -32,7 +31,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <variant>
 #include <vector>
