@@ -9,7 +9,6 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
