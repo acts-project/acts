@@ -13,11 +13,15 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
