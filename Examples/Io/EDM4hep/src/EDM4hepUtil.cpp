@@ -36,9 +36,9 @@ SimParticle EDM4hepUtil::readParticle(const edm4hep::MCParticle& from,
   // particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
 
   to.initialState().setPosition4(from.getVertex()[0] * Acts::UnitConstants::mm,
-                            from.getVertex()[1] * Acts::UnitConstants::mm,
-                            from.getVertex()[2] * Acts::UnitConstants::mm,
-                            from.getTime() * Acts::UnitConstants::ns);
+                                 from.getVertex()[1] * Acts::UnitConstants::mm,
+                                 from.getVertex()[2] * Acts::UnitConstants::mm,
+                                 from.getTime() * Acts::UnitConstants::ns);
 
   // Only used for direction; normalization/units do not matter
   Acts::Vector3 momentum = {from.getMomentum()[0], from.getMomentum()[1],

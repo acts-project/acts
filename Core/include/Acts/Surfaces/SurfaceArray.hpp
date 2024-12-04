@@ -361,7 +361,8 @@ class SurfaceArray {
 
     /// @brief Default constructor.
     /// @param elements the surfaces that are provided through a single lookup
-    explicit SingleElementLookup(const SurfaceVector& elements) : m_element(elements) {}
+    explicit SingleElementLookup(const SurfaceVector& elements)
+        : m_element(elements) {}
 
     /// @brief Lookup, always returns @c element
     /// @return reference to vector containing only @c element

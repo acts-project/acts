@@ -88,7 +88,8 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(false);
+  explicit ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(
+      false);
 
   /// Constructor from a fixed size array of vertices.
   /// This will throw if the vertices do not form a convex polygon.

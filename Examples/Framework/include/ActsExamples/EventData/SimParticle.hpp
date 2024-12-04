@@ -127,12 +127,16 @@ class SimParticle final {
   bool isSecondary() const { return initialState().isSecondary(); }
 
   /// Particle hypothesis.
-  Acts::ParticleHypothesis hypothesis() const { return initialState().hypothesis(); }
+  Acts::ParticleHypothesis hypothesis() const {
+    return initialState().hypothesis();
+  }
   /// Particl qOverP.
   double qOverP() const { return initialState().qOverP(); }
 
   /// Space-time position four-vector.
-  const Acts::Vector4& fourPosition() const { return initialState().fourPosition(); }
+  const Acts::Vector4& fourPosition() const {
+    return initialState().fourPosition();
+  }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return initialState().position(); }
   /// Time coordinate.
@@ -146,7 +150,9 @@ class SimParticle final {
   /// Azimuthal angle.
   double phi() const { return initialState().phi(); }
   /// Absolute momentum in the x-y plane.
-  double transverseMomentum() const { return initialState().transverseMomentum(); }
+  double transverseMomentum() const {
+    return initialState().transverseMomentum();
+  }
   /// Absolute momentum.
   double absoluteMomentum() const { return initialState().absoluteMomentum(); }
   /// Absolute momentum.
@@ -155,7 +161,9 @@ class SimParticle final {
   double energy() const { return initialState().energy(); }
 
   /// Energy loss over the particles lifetime or simulation time.
-  double energyLoss() const { return initialState().energy() - finalState().energy(); }
+  double energyLoss() const {
+    return initialState().energy() - finalState().energy();
+  }
 
   /// Accumulated path within material measured in radiation lengths.
   double pathInX0() const { return finalState().pathInX0(); }

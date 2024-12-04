@@ -129,7 +129,8 @@ class Grid final : public IGrid {
 
   /// @brief constructor from parameters pack of axes and type tag
   /// @param axes
-  explicit Grid(TypeTag<T> /*tag*/, const Axes&... axes) : m_axes(std::tuple(axes...)) {
+  explicit Grid(TypeTag<T> /*tag*/, const Axes&... axes)
+      : m_axes(std::tuple(axes...)) {
     m_values.resize(size());
   }
 
