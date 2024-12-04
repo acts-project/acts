@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -55,6 +56,9 @@ struct EventStore {
 
   /// Tracks recorded in material mapping
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> materialTracks;
+
+  /// Stepping records for step plotting
+  std::unordered_map<G4int, PropagationSummary> propagationRecords;
 
   /// Particle hit count (for hit indexing)
   std::unordered_map<SimBarcode, std::size_t> particleHitCount;
