@@ -116,6 +116,7 @@ SensitiveSteppingAction::SensitiveSteppingAction(
 void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   // Unit conversions G4->::ACTS
   static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
@@ -215,7 +216,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
       double xDirVtx = track->GetVertexMomentumDirection().x();
       double yDirVtx = track->GetVertexMomentumDirection().y();
       double zDirVtx = track->GetVertexMomentumDirection().z();
-      double absMomentum = track->GetMomentum().mag();
+      double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
       PropagationSummary iSummary(Acts::CurvilinearTrackParameters(
           Acts::Vector4(xVtx, yVtx, zVtx, 0.),
