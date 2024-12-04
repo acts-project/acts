@@ -10,18 +10,39 @@
 // STL include(s)
 #include <cassert>
 #include <ctime>
-#include <exception>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <thread>
 #include <utility>
+
+#include <Eigen/Core>
+
+namespace Acts {
+
+class Logger;
+
+class StructuredLoggerBase {
+ public:
+  virtual ~StructuredLoggerBase() {}
+  virtual void log(const Logger& logger, std::string_view msg) = 0;
+  virtual void log(std::string_view tag, std::string_view name,
+                   const Eigen::MatrixXd& m) = 0;
+  virtual void log(std::string_view tag, std::string_view name,
+                   const std::span<double>& s) = 0;
+};
+
+void setStructuredLogger(
+    std::unique_ptr<StructuredLoggerBase>&& structuredLogger);
+StructuredLoggerBase* getStructuredLogger();
+
+}  // namespace Acts
 
 /// @defgroup Logging Logging
 
@@ -71,6 +92,9 @@
       std::ostringstream os;                                                   \
       os << x;                                                                 \
       logger().log(level, os.str());                                           \
+      if( auto slog = Acts::getStructuredLogger(); slog != nullptr ) { \
+        slog->log(logger(), os.str()); \
+      } \
     }                                                                          \
   }                                                                            \
   while(0)
@@ -146,6 +170,18 @@
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::FATAL.
 #define ACTS_FATAL(x)  ACTS_LOG(Acts::Logging::FATAL, x)
+
+/// @brief macro for structured logging
+/// TODO This will not break the line before matrices unfortunately...
+/// maybe we can wire this in somehow
+#define ACTS_STRUCTURED(key, val) \
+    do { \
+        ACTS_VERBOSE("structured | " << key << ":" << val); \
+        if( auto slog = Acts::getStructuredLogger(); slog != nullptr ) { \
+           slog->log(logger().name(), key, val); \
+        } \
+    } while(0)
+
 // clang-format on
 
 namespace Acts {

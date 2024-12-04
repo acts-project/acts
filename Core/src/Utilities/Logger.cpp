@@ -144,4 +144,16 @@ const Logger& getDummyLogger() {
 
   return *logger;
 }
+
+static std::unique_ptr<Acts::StructuredLoggerBase> s_structuredLogger;
+
+void setStructuredLogger(
+    std::unique_ptr<StructuredLoggerBase>&& structuredLogger) {
+  s_structuredLogger = std::move(structuredLogger);
+}
+
+Acts::StructuredLoggerBase* getStructuredLogger() {
+  return s_structuredLogger.get();
+}
+
 }  // namespace Acts

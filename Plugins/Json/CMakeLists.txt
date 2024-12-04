@@ -24,6 +24,7 @@ add_library(
     src/DetrayJsonHelper.cpp
     src/JsonDetectorElement.cpp
     src/JsonSurfacesReader.cpp
+    src/StructuredLoggerJson.cpp
 )
 target_include_directories(
     ActsPluginJson

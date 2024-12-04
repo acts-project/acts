@@ -14,6 +14,7 @@
 #include "Acts/Plugins/Json/JsonSurfacesReader.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
+#include "Acts/Plugins/Json/StructuredLoggerJson.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -293,6 +294,16 @@ void addJson(Context& ctx) {
 
               return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
             });
+  }
+
+  {
+    mex.def(
+        "enableJsonStructuredLogging",
+        [](std::string jsonPath) {
+          auto sLogger = std::make_unique<Acts::StructuredLoggerJson>(jsonPath);
+          Acts::setStructuredLogger(std::move(sLogger));
+        },
+        "jsonPath"_a);
   }
 }
 }  // namespace Acts::Python

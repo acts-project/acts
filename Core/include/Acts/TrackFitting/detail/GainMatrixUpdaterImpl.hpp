@@ -32,8 +32,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
       calibratedCovariance{trackState.calibratedCovariance};
 
   ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
-  ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
-  ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
+  ACTS_STRUCTURED("Calibrated measurement", calibrated.transpose());
+  ACTS_STRUCTURED("Calibrated measurement covariance", calibratedCovariance);
 
   std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
       trackState.projector.begin(),
@@ -52,7 +52,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
                       .inverse())
                      .eval();
 
-  ACTS_VERBOSE("Gain Matrix K:\n" << K);
+  ACTS_STRUCTURED("Gain Matrix K", K);
 
   if (K.hasNaN()) {
     // set to error abort execution
@@ -65,8 +65,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   trackState.filtered = normalizeBoundParameters(trackState.filtered);
   trackState.filteredCovariance =
       (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
-  ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
-  ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
+  ACTS_STRUCTURED("Filtered parameters", trackState.filtered.transpose());
+  ACTS_STRUCTURED("Filtered covariance", trackState.filteredCovariance);
 
   ParametersVector residual;
   residual = calibrated - H * trackState.filtered;

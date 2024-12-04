@@ -191,6 +191,8 @@ if "__main__" == __name__:
     #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
     # )
 
+    acts.examples.enableJsonStructuredLogging("log.json")
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runTruthTrackingKalman(
