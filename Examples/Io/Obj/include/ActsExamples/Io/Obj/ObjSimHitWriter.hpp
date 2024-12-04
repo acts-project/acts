@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -48,9 +56,9 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     /// Draw line connections between hits
     bool drawConnections = true;
     /// Momentum threshold for hits
-    Acts::ActsScalar momentumThreshold = 0.05_GeV;
+    double momentumThreshold = 0.05_GeV;
     /// Momentum threshold for trajectories
-    Acts::ActsScalar momentumThresholdTraj = 0.05_GeV;
+    double momentumThresholdTraj = 0.05_GeV;
     /// Number of points to interpolate between hits
     unsigned int nInterpolatedPoints = 10;
   };

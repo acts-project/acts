@@ -1,3 +1,11 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 // This file is part of the Acts project.
 //
 // Copyright (C) 2024 CERN for the benefit of the Acts project
@@ -33,14 +41,13 @@ std::vector<Acts::Vector3> interpolatedPoints(
   for (unsigned int i = 0; i < inputs.size(); ++i) {
     points.col(i) = inputs[i].template head<3>().transpose();
   }
-  Eigen::Spline<Acts::ActsScalar, 3> spline3D =
-      Eigen::SplineFitting<Eigen::Spline<Acts::ActsScalar, 3>>::Interpolate(
-          points, 2);
+  Eigen::Spline<double, 3> spline3D =
+      Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
 
   std::vector<Acts::Vector3> output;
-  Acts::ActsScalar step = 1. / (nPoints - 1);
+  double step = 1. / (nPoints - 1);
   for (unsigned int i = 0; i < nPoints; ++i) {
-    Acts::ActsScalar t = i * step;
+    double t = i * step;
     Eigen::Vector3d point = spline3D(t);
     output.push_back(Acts::Vector3(point[0], point[1], point[2]));
   }
@@ -93,10 +100,10 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     }  // end simHit loop
   } else {
     // We need to associate first
-    std::unordered_map<uint64_t, std::vector<Acts::Vector4>> particleHits;
+    std::unordered_map<std::size_t, std::vector<Acts::Vector4>> particleHits;
     // Pre-loop over hits ... write those below threshold
     for (const auto& simHit : simHits) {
-      Acts::ActsScalar momentum = simHit.momentum4Before().head<3>().norm();
+      double momentum = simHit.momentum4Before().head<3>().norm();
       if (momentum < m_cfg.momentumThreshold) {
         ACTS_VERBOSE("Skipping : Hit below threshold: " << momentum);
         continue;
