@@ -69,7 +69,7 @@ ActsExamples::ObjSimHitWriter::ObjSimHitWriter(
 ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& simHits) {
   // ensure exclusive access to tree/file while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  std::scoped_lock lock(m_writeMutex);
 
   // open per-event file for all simhit components
   std::string pathSimHit = perEventFilepath(

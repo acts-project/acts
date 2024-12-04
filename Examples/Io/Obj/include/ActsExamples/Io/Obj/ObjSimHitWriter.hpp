@@ -26,8 +26,6 @@
 #include <mutex>
 #include <string>
 
-using namespace Acts::UnitLiterals;
-
 namespace ActsExamples {
 struct AlgorithmContext;
 
@@ -56,9 +54,9 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     /// Draw line connections between hits
     bool drawConnections = true;
     /// Momentum threshold for hits
-    double momentumThreshold = 0.05_GeV;
+    double momentumThreshold = 0.05 * Acts::UnitConstants::GeV;
     /// Momentum threshold for trajectories
-    double momentumThresholdTraj = 0.05_GeV;
+    double momentumThresholdTraj = 0.05 * Acts::UnitConstants::GeV;
     /// Number of points to interpolate between hits
     unsigned int nInterpolatedPoints = 10;
   };
