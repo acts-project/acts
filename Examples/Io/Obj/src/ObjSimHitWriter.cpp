@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the Acts project.
-//
-// Copyright (C) 2024 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -34,22 +26,37 @@
 
 namespace {
 
+/// @brief Helper function to interpolate points
+///
+/// @tparam input_vector_type
+/// @param inputs input vector points
+/// @param nPoints number of interpolation points
+///
+/// @return std::vector<Acts::Vector3> interpolated points
 template <typename input_vector_type>
 std::vector<Acts::Vector3> interpolatedPoints(
-    const std::vector<input_vector_type>& inputs, unsigned int nPoints) {
-  Eigen::MatrixXd points(3, inputs.size());
-  for (unsigned int i = 0; i < inputs.size(); ++i) {
-    points.col(i) = inputs[i].template head<3>().transpose();
-  }
-  Eigen::Spline<double, 3> spline3D =
-      Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
-
+    const std::vector<input_vector_type>& inputs, std::size_t nPoints) {
   std::vector<Acts::Vector3> output;
-  double step = 1. / (nPoints - 1);
-  for (unsigned int i = 0; i < nPoints; ++i) {
-    double t = i * step;
-    Eigen::Vector3d point = spline3D(t);
-    output.push_back(Acts::Vector3(point[0], point[1], point[2]));
+
+  if (nPoints < 1) {
+    // No interpolation done return simply the output vector
+    for (const auto& input : inputs) {
+      output.push_back(input.template head<3>());
+    }
+
+  } else {
+    Eigen::MatrixXd points(3, inputs.size());
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+      points.col(i) = inputs[i].template head<3>().transpose();
+    }
+    Eigen::Spline<double, 3> spline3D =
+        Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
+
+    double step = 1. / (nPoints - 1);
+    for (std::size_t i = 0; i < nPoints; ++i) {
+      double t = i * step;
+      output.push_back(spline3D(t));
+    }
   }
   return output;
 }
@@ -105,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     for (const auto& simHit : simHits) {
       double momentum = simHit.momentum4Before().head<3>().norm();
       if (momentum < m_cfg.momentumThreshold) {
-        ACTS_VERBOSE("Skipping : Hit below threshold: " << momentum);
+        ACTS_VERBOSE("Skipping: Hit below threshold: " << momentum);
         continue;
       } else if (momentum < m_cfg.momentumThresholdTraj) {
         ACTS_VERBOSE(
@@ -119,7 +126,7 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
                << std::endl;
         continue;
       }
-      ACTS_VERBOSE("Accepting : Hit above threshold: " << momentum);
+      ACTS_VERBOSE("Accepting: Hit above threshold: " << momentum);
 
       if (particleHits.find(simHit.particleId().value()) ==
           particleHits.end()) {
@@ -129,7 +136,7 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
           simHit.fourPosition());
     }
     // Draw loop
-    unsigned int lOffset = 1;
+    std::size_t lOffset = 1;
     for (auto& [pId, pHits] : particleHits) {
       // Draw the particle hits
       std::sort(pHits.begin(), pHits.end(),
@@ -163,7 +170,7 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
                      << hit[Acts::ePos2] / Acts::UnitConstants::mm << std::endl;
       }
       // Draw the line
-      for (unsigned int iv = lOffset + 1; iv < lOffset + trajectory.size();
+      for (std::size_t iv = lOffset + 1; iv < lOffset + trajectory.size();
            ++iv) {
         osTrajectory << "l " << iv - 1 << " " << iv << '\n';
       }

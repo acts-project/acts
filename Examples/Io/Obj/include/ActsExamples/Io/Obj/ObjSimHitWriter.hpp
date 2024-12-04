@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// This file is part of the Acts project.
-//
-// Copyright (C) 2024 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
@@ -29,17 +21,17 @@
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Write out a simhit collection before detector digitization
-/// as wavefront obj files.
+/// Write out a simhit collection before detector digitization as wavefront obj
+/// file(s per event).
 ///
-/// This writes one file per event containing information about the
-/// global space points, momenta (before and after interaction) and hit index
-/// into the configured output directory. By default it writes to the
-/// current working directory. Files are named using the following schema
+/// This writes two files per event, one for the hits one for the trajectory.
+/// The latter can be smoothed using a spline interpolation.
 ///
 ///     event000000001-<stem>.obj
+///     event000000001-<stem>_trajectory.obj
 ///     event000000002-<stem>.obj
-///     ...class ObjSimHitWriter final : public WriterT<SimHitContainer> {
+///     event000000002-<stem>_trajectory.obj
+///
 class ObjSimHitWriter : public WriterT<SimHitContainer> {
  public:
   struct Config {
@@ -58,7 +50,7 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     /// Momentum threshold for trajectories
     double momentumThresholdTraj = 0.05 * Acts::UnitConstants::GeV;
     /// Number of points to interpolate between hits
-    unsigned int nInterpolatedPoints = 10;
+    std::size_t nInterpolatedPoints = 10;
   };
 
   /// Construct the particle writer.
