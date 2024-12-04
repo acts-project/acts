@@ -252,6 +252,9 @@ jobs:
           - image: ubuntu2204
             std: 20
             cxx: clang++
+          - image: ubuntu2404_clang19
+            std: 20
+            cxx: clang++-19
     container: ghcr.io/acts-project/${{ matrix.image }}:71
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -264,7 +267,9 @@ jobs:
           lfs: true
 
       - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
+        run: |
+          DOTTED_UBUNTU_VERSION=$(echo "${{ matrix.image }}" | sed -rn "s/^ubuntu([[:digit:]]{2})([[:digit:]]{2}).*/\1.\2/p")
+          echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-${DOTTED_UBUNTU_VERSION}/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: CI/dependencies.sh
