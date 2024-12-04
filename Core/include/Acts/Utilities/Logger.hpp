@@ -38,6 +38,9 @@ class StructuredLoggerBase {
                    const std::span<double>& s) = 0;
 };
 
+/// TODO this is not meant to be the final version
+/// Ultimately the structured logger should be somehow part of Acts::Logger
+/// instance but was to lazy for now to do the wireing
 void setStructuredLogger(
     std::unique_ptr<StructuredLoggerBase>&& structuredLogger);
 StructuredLoggerBase* getStructuredLogger();
