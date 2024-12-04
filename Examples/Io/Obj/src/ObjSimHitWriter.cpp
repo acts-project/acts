@@ -38,7 +38,7 @@ std::vector<Acts::Vector3> interpolatedPoints(
     const std::vector<input_vector_type>& inputs, std::size_t nPoints) {
   std::vector<Acts::Vector3> output;
 
-  if (nPoints < 1) {
+  if (nPoints < 2) {
     // No interpolation done return simply the output vector
     for (const auto& input : inputs) {
       output.push_back(input.template head<3>());
