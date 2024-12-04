@@ -16,8 +16,9 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
-#include <CUDA_graph_creator>
+#include <CUDA_graph_creator_new>
 #include <TTree_hits>
+#include <functional>
 #include <graph>
 
 #include <cuda.h>
@@ -47,8 +48,7 @@ cudaError_t cudaMallocT(T **ptr, std::size_t size) {
 
 template <class T>
 __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
-                             const T *cuda_R, const T *cuda_phi,
-                             double phi_scale) {
+                             const T *cuda_R, const T *cuda_phi) {
   std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i >= nbHits) {
@@ -56,23 +56,36 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
   }
 
   double r = cuda_R[i];
-  double phi = cuda_phi[i] * phi_scale;
+  double phi = cuda_phi[i];
 
   cuda_x[i] = r * std::cos(phi);
   cuda_y[i] = r * std::sin(phi);
 
-  printf("%lu: %f, %f -> %f, %f\n", i, cuda_R[i], cuda_phi[i], cuda_x[i],
-         cuda_y[i]);
+  //printf("%lu: %f, %f -> %f, %f\n", i, cuda_R[i], cuda_phi[i], cuda_x[i],
+  //       cuda_y[i]);
 }
 
-__global__ void setHitId(std::size_t nbHits, std::size_t *hitIds) {
+template <class T>
+__global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
   std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i >= nbHits) {
     return;
   }
 
-  hitIds[i] = i;
+  data[i] *= scale;
+}
+
+template <typename T>
+void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
+  std::vector<T> data_cpu(size);
+  CUDA_CHECK(cudaMemcpy(data_cpu.data(), data, size * sizeof(T),
+                        cudaMemcpyDeviceToHost));
+  std::cout << name << "[" << size << "]: ";
+  for (int i = 0; i < size; ++i) {
+    std::cout << data_cpu.at(i) << "  ";
+  }
+  std::cout << std::endl;
 }
 
 }  // namespace
@@ -81,9 +94,8 @@ namespace Acts::detail {
 
 GraphCreatorWrapperCuda::GraphCreatorWrapperCuda(const std::string &path,
                                                  int device, int blocks) {
-  m_graphCreator = std::make_unique<CUDA_graph_creator<float>>(
-      blocks, device, path, 10,
-      std::pair<float, float>{0.f, std::numeric_limits<float>::max()});
+  m_graphCreator =
+      std::make_unique<CUDA_graph_creator<float>>(blocks, device, path);
 }
 
 GraphCreatorWrapperCuda::~GraphCreatorWrapperCuda() {}
@@ -100,17 +112,18 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
 
   dim3 block_dim = blockDim;
   dim3 grid_dim = gridDim;
-#if 0
   // TODO understand this algorithm
   std::vector<int> hit_indice;
   {
     const auto &module_map =
         m_graphCreator->get_module_map_doublet().module_map();
     std::vector<int> nb_hits(module_map.size(), 0);
+    std::vector<int> hits_bool_mask(nHits, 0);
 
-    for (std::size_t i = 0; i < nHits; ++i) {
-      const auto it = module_map.find(moduleIds[i]);
-      if (it != module_map.end()) {
+    for (auto i = 0ul; i < nHits; ++i) {
+      auto it = module_map.find(moduleIds.at(i));
+      if (it != module_map.end() && hits_bool_mask.at(i) == 0) {
+        hits_bool_mask.at(i) = 1;
         nb_hits[it->second] += 1;
       }
     }
@@ -121,8 +134,9 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
     }
   }
 
-  GC::input_hit_data_t inputData;
-  inputData.nb_graph_hits = moduleIds.size();
+#if 0
+  CUDA_hit_data<float> inputData;
+  inputData.size = nHits;
 
   std::size_t rOffset = 0;
   std::size_t phiOffset = 1;
@@ -165,22 +179,25 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   //                        features.data() + etaOffset, srcStride, width, height,
   //                        cudaMemcpyHostToDevice));
 
+  rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_z, 1000.f);
+  CUDA_CHECK(cudaGetLastError());
+  rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_R, 1000.f);
+  CUDA_CHECK(cudaGetLastError());
+  rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_phi, 3.141592654f);
+  CUDA_CHECK(cudaGetLastError());
+
+
   CUDA_CHECK(cudaMallocT(&inputData.cuda_x, nHits * sizeof(float)));
   CUDA_CHECK(cudaMallocT(&inputData.cuda_y, nHits * sizeof(float)));
 
-
   computeXandY<<<gridDim, blockDim>>>(nHits, inputData.cuda_x, inputData.cuda_y,
-                                      inputData.cuda_R, inputData.cuda_phi, 3.14152654);
+                                      inputData.cuda_R, inputData.cuda_phi);
   CUDA_CHECK(cudaGetLastError());
 
-  CUDA_CHECK(cudaMallocT(&inputData.cuda_hit_id, nHits * sizeof(std::size_t)));
-  setHitId<<<gridDim, blockDim>>>(nHits, inputData.cuda_hit_id);
-  CUDA_CHECK(cudaGetLastError());
-
-  CUDA_CHECK(cudaMallocT(&inputData.cuda_hit_indices, nHits * sizeof(int)));
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_hit_indices, hit_indice.data(),
+  int *cuda_hit_indice = nullptr;
+  CUDA_CHECK(cudaMallocT(&cuda_hit_indice, nHits * sizeof(int)));
+  CUDA_CHECK(cudaMemcpy(cuda_hit_indice, hit_indice.data(),
                         nHits * sizeof(int), cudaMemcpyHostToDevice));
-
   CUDA_CHECK(cudaGetLastError());
 #else
   hits<float> hitsCollection(false, false);
@@ -224,87 +241,96 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
       input_hits.size(), input_hits.cuda_x(), input_hits.cuda_y(),
       input_hits.cuda_z(), input_hits.cuda_R(), input_hits.cuda_eta(),
       input_hits.cuda_phi());
-  cudaDeviceSynchronize();
 
-  using input_hit_data_t = CUDA_graph_creator<float>::input_hit_data_t;
-  input_hit_data_t input_hit_data;
-  input_hit_data.nb_graph_hits = input_hits.size();
+  CUDA_hit_data<float> input_hit_data;
+  input_hit_data.size = input_hits.size();
   input_hit_data.cuda_R = input_hits.cuda_R();
   input_hit_data.cuda_z = input_hits.cuda_z();
   input_hit_data.cuda_eta = input_hits.cuda_eta();
   input_hit_data.cuda_phi = input_hits.cuda_phi();
-  input_hit_data.cuda_hit_id = input_hits.cuda_hit_id();
-  input_hit_data.cuda_hit_indices = input_hits.cuda_hit_indice();
   input_hit_data.cuda_x = input_hits.cuda_x();
   input_hit_data.cuda_y = input_hits.cuda_y();
 
   auto &inputData = input_hit_data;
+  int *cuda_hit_indice = input_hits.cuda_hit_indice();
 #endif
 
-  GC::statistics_t stats;
+  std::vector<int> data_cpu(
+      m_graphCreator->get_module_map_doublet().module_map().size() + 1);
+  CUDA_CHECK(
+      cudaMemcpy(data_cpu.data(), cuda_hit_indice,
+                 m_graphCreator->get_module_map_doublet().module_map().size() +
+                     1 * sizeof(int),
+                 cudaMemcpyDeviceToHost));
+  assert(data_cpu.size() == hit_indice.size());
+  for (int i = 0; i < data_cpu.size(); ++i) {
+    if (data_cpu[i] != hit_indice[i]) {
+      std::cout << i << ": " << data_cpu[i] << " != " << hit_indice[i] << "\n";
+    }
+  }
+  assert(data_cpu == hit_indice);
 
-  auto [edgeData, outHitData] =
-      m_graphCreator->build_implementation(inputData, stats);
+  copyFromDeviceAndPrint(inputData.cuda_x, nHits, "cuda_x");
+  copyFromDeviceAndPrint(inputData.cuda_y, nHits, "cuda_y");
+  copyFromDeviceAndPrint(inputData.cuda_z, nHits, "cuda_z");
+  copyFromDeviceAndPrint(inputData.cuda_R, nHits, "cuda_R");
+  copyFromDeviceAndPrint(inputData.cuda_phi, nHits, "cuda_phi");
+  copyFromDeviceAndPrint(inputData.cuda_eta, nHits, "cuda_eta");
+
+  cudaDeviceSynchronize();
+  auto edgeData = m_graphCreator->build(inputData, cuda_hit_indice);
   CUDA_CHECK(cudaGetLastError());
   cudaDeviceSynchronize();
 
-  std::cout << "Made " << stats.nb_doublet_edges << " doublet edges "
-            << std::endl;
-  std::cout << "Made " << edgeData.nb_graph_edges << " edges" << std::endl;
-  assert(edgeData.nb_graph_edges > 0 && edgeData.nb_graph_edges < 100'000'000);
+  std::cout << "Made " << edgeData.size << " edges" << std::endl;
+  assert(edgeData.size > 0 && edgeData.size < 100'000'000);
 
   int *edgeIndexPtr{};
-  CUDA_CHECK(
-      cudaMallocT(&edgeIndexPtr, 2 * edgeData.nb_graph_edges * sizeof(int)));
+  CUDA_CHECK(cudaMallocT(&edgeIndexPtr, 2 * edgeData.size * sizeof(int)));
   CUDA_CHECK(cudaMemcpy(edgeIndexPtr, edgeData.cuda_graph_M1_hits,
-                        edgeData.nb_graph_edges * sizeof(int),
-                        cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy(
-      edgeIndexPtr + edgeData.nb_graph_edges, edgeData.cuda_graph_M2_hits,
-      edgeData.nb_graph_edges * sizeof(int), cudaMemcpyDeviceToDevice));
+                        edgeData.size * sizeof(int), cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(edgeIndexPtr + edgeData.size,
+                        edgeData.cuda_graph_M2_hits,
+                        edgeData.size * sizeof(int), cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaDeviceSynchronize());
 
   // std::cout << "Make edge index from blob" << std::endl;
-  auto edgeIndex = torch::from_blob(
-      edgeIndexPtr, 2 * static_cast<long>(edgeData.nb_graph_edges),
-      at::TensorOptions().device(at::kCUDA).dtype(at::kInt));
+  auto edgeIndex =
+      torch::from_blob(edgeIndexPtr, 2 * static_cast<long>(edgeData.size),
+                       at::TensorOptions().device(at::kCUDA).dtype(at::kInt));
 
-  edgeIndex = edgeIndex.reshape({2, static_cast<long>(edgeData.nb_graph_edges)})
-                  .to(at::kLong);
+  edgeIndex =
+      edgeIndex.reshape({2, static_cast<long>(edgeData.size)}).to(at::kLong);
   // CUDA_CHECK(cudaFree(edgeIndexPtr));
 
   float *edgeFeaturePtr{};
-  cudaMallocT(&edgeFeaturePtr, 6 * edgeData.nb_graph_edges * sizeof(float));
+  cudaMallocT(&edgeFeaturePtr, 6 * edgeData.size * sizeof(float));
 
   CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr, 6 * sizeof(float),
                           edgeData.cuda_graph_dR, sizeof(float), sizeof(float),
-                          edgeData.nb_graph_edges, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 1, 6 * sizeof(float),
-                          edgeData.cuda_graph_dphi, sizeof(float),
-                          sizeof(float), edgeData.nb_graph_edges,
-                          cudaMemcpyDeviceToDevice));
+                          edgeData.size, cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy2D(
+      edgeFeaturePtr + 1, 6 * sizeof(float), edgeData.cuda_graph_dphi,
+      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 2, 6 * sizeof(float),
                           edgeData.cuda_graph_dz, sizeof(float), sizeof(float),
-                          edgeData.nb_graph_edges, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 3, 6 * sizeof(float),
-                          edgeData.cuda_graph_deta, sizeof(float),
-                          sizeof(float), edgeData.nb_graph_edges,
-                          cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 4, 6 * sizeof(float),
-                          edgeData.cuda_graph_phi_slope, sizeof(float),
-                          sizeof(float), edgeData.nb_graph_edges,
-                          cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 5, 6 * sizeof(float),
-                          edgeData.cuda_graph_r_phi_slope, sizeof(float),
-                          sizeof(float), edgeData.nb_graph_edges,
-                          cudaMemcpyDeviceToDevice));
+                          edgeData.size, cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy2D(
+      edgeFeaturePtr + 3, 6 * sizeof(float), edgeData.cuda_graph_deta,
+      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy2D(
+      edgeFeaturePtr + 4, 6 * sizeof(float), edgeData.cuda_graph_phi_slope,
+      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy2D(
+      edgeFeaturePtr + 5, 6 * sizeof(float), edgeData.cuda_graph_r_phi_slope,
+      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaDeviceSynchronize());
 
   // std::cout << "Make edge features from blob" << std::endl;
-  auto edgeFeatures = torch::from_blob(
-      edgeFeaturePtr, {static_cast<long>(edgeData.nb_graph_edges), 6},
-      //[](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },
-      at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
+  auto edgeFeatures =
+      torch::from_blob(edgeFeaturePtr, {static_cast<long>(edgeData.size), 6},
+                       //[](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },
+                       at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
 
 #if 0
   CUDA_CHECK(cudaFree(edgeData.cuda_graph_dR));
@@ -316,13 +342,6 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   CUDA_CHECK(cudaFree(edgeData.cuda_graph_M1_hits));
   CUDA_CHECK(cudaFree(edgeData.cuda_graph_M2_hits));
 #endif
-
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_R));
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_phi));
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_z));
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_eta));
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_phi_slope));
-  CUDA_CHECK(cudaFree(outHitData.cuda_graph_r_phi_slope));
 
   auto edgeFeaturesNew = edgeFeatures.clone();
 
