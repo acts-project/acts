@@ -209,9 +209,9 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   } else if (m_cfg.stepLogging) {
     if (!eventStore().propagationRecords.contains(track->GetTrackID())) {
       // Create the propagation summary
-      double xVtx = track->GetVertexPosition().x();
-      double yVtx = track->GetVertexPosition().y();
-      double zVtx = track->GetVertexPosition().z();
+      double xVtx = track->GetVertexPosition().x() * convertLength;
+      double yVtx = track->GetVertexPosition().y() * convertLength;
+      double zVtx = track->GetVertexPosition().z() * convertLength;
       double xDirVtx = track->GetVertexMomentumDirection().x();
       double yDirVtx = track->GetVertexMomentumDirection().y();
       double zDirVtx = track->GetVertexMomentumDirection().z();
