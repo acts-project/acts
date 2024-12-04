@@ -45,10 +45,10 @@
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
-#include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
-#include "ActsExamples/Plugins/Obj/ObjSimHitWriter.hpp"
-#include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
 
