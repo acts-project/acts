@@ -725,16 +725,17 @@ def addGeant4(
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
+        recordHitsOfCharged=True,
+        recordHitsOfNeutrals=False,
+        recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
+        recordPropagationSummaries=False,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
     __geant4Handle = alg.geant4Handle
 
-    # Sequencer
     s.addAlgorithm(alg)
-
-    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
