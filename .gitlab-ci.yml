@@ -154,7 +154,6 @@ test_exatrkx_unittests:
   script:
 
     - apt-get update -y
-    - apt-get install -y python3 libxxhash0
     - git clone $CLONE_URL src
     - source src/CI/dependencies.sh
     - ctest --test-dir build -R ExaTrkX
@@ -170,7 +169,6 @@ test_exatrkx_python:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - apt-get install -y python3 libxxhash0
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -178,7 +176,6 @@ test_exatrkx_python:
     - nvidia-smi
     - source CI/dependencies.sh
     - source ../build/this_acts_withdeps.sh
-    - source ../build/python/setup.sh
     - echo $PYTHONPATH
     - pytest -rFsv -k torch --collect-only
     - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
