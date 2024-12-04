@@ -179,8 +179,9 @@ test_exatrkx_python:
     - echo $PYTHONPATH
     - which python3
     - python3 --version
-    - pytest -rFsv -k torch --collect-only
-    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
+    - python3 -c "import acts"
+    - python3 -m pytest -rFsv -k torch --collect-only
+    - python3 -m pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
 
 build_linux_ubuntu:
   stage: build
