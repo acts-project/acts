@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
 
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(surface.get(),
+    nStreamTemplate.addSurfaceCandidate(*surface,
                                         Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializePlanes) {
 
   // (5) Test de-duplication
   nStream = nStreamTemplate;
-  nStreamTemplate.addSurfaceCandidate(surfaces[0].get(),
+  nStreamTemplate.addSurfaceCandidate(*surfaces.at(0),
                                       Acts::BoundaryTolerance::None());
   // One surface is duplicated in the stream
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 5u);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // reachable and intersections inside bounds
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidate(surface.get(),
+    nStreamTemplate.addSurfaceCandidate(*surface,
                                         Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   BOOST_CHECK_EQUAL(nStream.remainingCandidates(), 4u);
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 10.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // Let's push a bit closer to the surface
   qPoint.position = Vector3(0., 0., -22.);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Surface unchanged, but the intersection should be closer
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 2.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // Uuuups, an overstep
   qPoint.position = Vector3(0., 0., -19.5);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   // Surface still unchanged, but pathLength is now negative
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), -0.5,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // Finally hit it
   qPoint.position = Vector3(0., 0., -20.);
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[1u].get());
   CHECK_CLOSE_ABS(
       nStream.currentCandidate().pathLength(), s_onSurfaceTolerance,
-      std::numeric_limits<ActsScalar>::epsilon() + s_onSurfaceTolerance);
+      std::numeric_limits<double>::epsilon() + s_onSurfaceTolerance);
   BOOST_CHECK_EQUAL(nStream.currentCandidate().intersection.status(),
                     IntersectionStatus::onSurface);
   // Let's say the stepper confirms this
@@ -211,13 +211,13 @@ BOOST_AUTO_TEST_CASE(NavigationStream_UpdatePlanes) {
   BOOST_CHECK_EQUAL(&nStream.currentCandidate().surface(), surfaces[3u].get());
   // Distance should be the initial estimate from the intialializeStream() call
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 130.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   // Query update will re-evaluate this one: however, we will miss the surface
   // due to outside bounds - and will switch to the next candidate: which sits
   // at 200 and then will yield 220
   BOOST_CHECK(nStream.update(gContext, qPoint));
   CHECK_CLOSE_ABS(nStream.currentCandidate().pathLength(), 220.,
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   // Oh noooo, an actor just kicked in and changed the direction
   qPoint.direction = Vector3(0., 1., 1.).normalized();
   // All is lost, no surface is reachable anymore
@@ -231,7 +231,8 @@ BOOST_AUTO_TEST_CASE(NavigationStream_InitializeCylinders) {
   // Let us fill the surfaces into the navigation stream
   NavigationStream nStreamTemplate;
   for (const auto& surface : surfaces) {
-    nStreamTemplate.addSurfaceCandidates({surface.get()},
+    const Surface* pointer = surface.get();
+    nStreamTemplate.addSurfaceCandidates({&pointer, 1},
                                          Acts::BoundaryTolerance::None());
   }
   BOOST_CHECK_EQUAL(nStreamTemplate.remainingCandidates(), 4u);

@@ -396,7 +396,7 @@ class GridPortalLink : public PortalLinkBase {
 /// @tparam Axes The axis types of the grid
 template <typename... Axes>
   requires(sizeof...(Axes) <= 2)
-class GridPortalLinkT final : public GridPortalLink {
+class GridPortalLinkT : public GridPortalLink {
  public:
   /// The internal grid type
   using GridType = Grid<const TrackingVolume*, Axes...>;

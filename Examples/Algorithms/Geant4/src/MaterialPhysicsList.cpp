@@ -15,27 +15,31 @@
 #include <G4ProcessVector.hh>
 #include <G4UnitsTable.hh>
 
-ActsExamples::MaterialPhysicsList::MaterialPhysicsList(
+namespace ActsExamples::Geant4 {
+
+MaterialPhysicsList::MaterialPhysicsList(
     std::unique_ptr<const Acts::Logger> logger)
     : G4VUserPhysicsList(), m_logger(std::move(logger)) {
   defaultCutValue = 1.0 * CLHEP::cm;
 }
 
-void ActsExamples::MaterialPhysicsList::ConstructParticle() {
+void MaterialPhysicsList::ConstructParticle() {
   ACTS_DEBUG("Construct Geantinos and Charged Geantinos.");
   G4Geantino::GeantinoDefinition();
   G4ChargedGeantino::ChargedGeantinoDefinition();
 }
 
-void ActsExamples::MaterialPhysicsList::ConstructProcess() {
+void MaterialPhysicsList::ConstructProcess() {
   ACTS_DEBUG("Adding Transport as single supperted Process.");
   AddTransportation();
 }
 
-void ActsExamples::MaterialPhysicsList::SetCuts() {
+void MaterialPhysicsList::SetCuts() {
   SetCutsWithDefault();
 
   if (verboseLevel > 0) {
     DumpCutValuesTable();
   }
 }
+
+}  // namespace ActsExamples::Geant4

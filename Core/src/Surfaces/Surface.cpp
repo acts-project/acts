@@ -314,7 +314,7 @@ Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   // The measurement frame z axis
   const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis
-  const ActsScalar dz = refZAxis.dot(direction);
+  const double dz = refZAxis.dot(direction);
   // Initialize the derivative
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * refZAxis.transpose() / dz;

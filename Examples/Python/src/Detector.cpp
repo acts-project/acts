@@ -10,7 +10,6 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
@@ -18,12 +17,9 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-#include <array>
-#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -34,6 +30,7 @@ namespace py = pybind11;
 using namespace ActsExamples;
 
 namespace Acts::Python {
+
 void addDetector(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
   {
@@ -44,16 +41,17 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Config = GenericDetector::Config;
+    using Detector = GenericDetector;
+    using Config = Detector::Config;
 
-    auto gd = py::class_<GenericDetector, std::shared_ptr<GenericDetector>>(
-                  mex, "GenericDetector")
-                  .def(py::init<>())
-                  .def("finalize",
-                       py::overload_cast<
-                           const Config&,
-                           std::shared_ptr<const Acts::IMaterialDecorator>>(
-                           &GenericDetector::finalize));
+    auto gd =
+        py::class_<Detector, std::shared_ptr<Detector>>(mex, "GenericDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     std::shared_ptr<const Acts::IMaterialDecorator>>(
+                     &Detector::finalize));
 
     py::class_<Config>(gd, "Config")
         .def(py::init<>())
@@ -65,18 +63,18 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using TelescopeDetector = Telescope::TelescopeDetector;
-    using Config = TelescopeDetector::Config;
+    using Detector = TelescopeDetector;
+    using Config = Detector::Config;
 
     auto td =
-        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
-            mex, "TelescopeDetector")
+        py::class_<Detector, std::shared_ptr<Detector>>(mex,
+                                                        "TelescopeDetector")
             .def(py::init<>())
             .def("finalize",
                  py::overload_cast<
                      const Config&,
                      const std::shared_ptr<const Acts::IMaterialDecorator>&>(
-                     &TelescopeDetector::finalize));
+                     &Detector::finalize));
 
     py::class_<Config>(td, "Config")
         .def(py::init<>())
@@ -90,17 +88,17 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using AlignedDetector = Contextual::AlignedDetector;
-    using Config = AlignedDetector::Config;
+    using Detector = AlignedDetector;
+    using Config = Detector::Config;
 
-    auto d = py::class_<AlignedDetector, std::shared_ptr<AlignedDetector>>(
-                 mex, "AlignedDetector")
-                 .def(py::init<>())
-                 .def("finalize",
-                      py::overload_cast<
-                          const Config&,
-                          std::shared_ptr<const Acts::IMaterialDecorator>>(
-                          &AlignedDetector::finalize));
+    auto d =
+        py::class_<Detector, std::shared_ptr<Detector>>(mex, "AlignedDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     std::shared_ptr<const Acts::IMaterialDecorator>>(
+                     &Detector::finalize));
 
     auto c = py::class_<Config, GenericDetector::Config>(d, "Config")
                  .def(py::init<>());
@@ -124,16 +122,17 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using Config = TGeoDetector::Config;
+    using Detector = TGeoDetector;
+    using Config = Detector::Config;
 
-    auto d = py::class_<TGeoDetector, std::shared_ptr<TGeoDetector>>(
-                 mex, "TGeoDetector")
-                 .def(py::init<>())
-                 .def("finalize",
-                      py::overload_cast<
-                          const Config&,
-                          std::shared_ptr<const Acts::IMaterialDecorator>>(
-                          &TGeoDetector::finalize));
+    auto d =
+        py::class_<Detector, std::shared_ptr<Detector>>(mex, "TGeoDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     std::shared_ptr<const Acts::IMaterialDecorator>>(
+                     &Detector::finalize));
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())
@@ -221,6 +220,12 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
+  }
+
+  {
+    py::class_<Acts::DetectorElementBase,
+               std::shared_ptr<Acts::DetectorElementBase>>(
+        mex, "DetectorElementBase");
   }
 }
 

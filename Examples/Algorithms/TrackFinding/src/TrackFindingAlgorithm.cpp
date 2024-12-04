@@ -203,7 +203,7 @@ class BranchStopper {
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
             double theta = trackState.parameters()[Acts::eBoundTheta];
-            double eta = -std::log(std::tan(0.5 * theta));
+            double eta = Acts::AngleHelpers::etaFromTheta(theta);
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
@@ -532,6 +532,15 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
           Acts::BoundTrackParameters secondInitialParameters =
               trackCandidate.createParametersFromState(firstMeasurement);
 
+          if (!secondInitialParameters.referenceSurface().insideBounds(
+                  secondInitialParameters.localPosition())) {
+            m_nSkippedSecondPass++;
+            ACTS_DEBUG(
+                "Smoothing of first pass fit produced out-of-bounds parameters "
+                "relative to the surface. Skipping second pass.");
+            continue;
+          }
+
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFrom(trackCandidate, false);
           auto secondResult =
@@ -681,6 +690,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- found tracks: " << m_nFoundTracks);
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
+  ACTS_INFO("- skipped second pass: " << m_nSkippedSecondPass);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {

@@ -34,6 +34,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -46,7 +47,7 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
 const GeometryContext geoCtx;
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
@@ -76,12 +77,20 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
+
+  // reflection
+  BoundTrackParameters reflectedParams = params;
+  reflectedParams.reflectInPlace();
+  CHECK_CLOSE_OR_SMALL(params.reflect().parameters(),
+                       reflectedParams.parameters(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(reflectedParams.reflect().parameters(),
+                       params.parameters(), eps, eps);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
              double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
-  phi = ((0 < theta) && (theta < M_PI)) ? phi : 0.0;
+  phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 
   // global direction for reference
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);

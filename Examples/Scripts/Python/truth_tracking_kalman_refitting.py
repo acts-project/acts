@@ -51,7 +51,7 @@ def runRefittingKf(
         acts.examples.TrackTruthMatcher(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputTrackParticleMatching="refit_track_particle_matching",
             outputParticleTrackMatching="refit_particle_track_matching",
@@ -62,7 +62,7 @@ def runRefittingKf(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="kf_refit_tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -74,7 +74,7 @@ def runRefittingKf(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf_refit.root"),
         )
@@ -84,7 +84,7 @@ def runRefittingKf(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_kf_refit.root"),
         )

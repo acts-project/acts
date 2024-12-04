@@ -9,7 +9,6 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
@@ -19,7 +18,6 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -27,7 +25,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-#include <variant>
 
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)

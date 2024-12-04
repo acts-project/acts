@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -34,7 +35,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
   ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
   ACTS_VERBOSE("Calibrated measurement covariance:\n" << calibratedCovariance);
 
-  std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
+  std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(
       trackState.projector.begin(),
       trackState.projector.begin() + kMeasurementSize);
   FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
@@ -60,6 +61,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 
   trackState.filtered =
       trackState.predicted + K * (calibrated - H * trackState.predicted);
+  // Normalize phi and theta
+  trackState.filtered = normalizeBoundParameters(trackState.filtered);
   trackState.filteredCovariance =
       (BoundSquareMatrix::Identity() - K * H) * trackState.predictedCovariance;
   ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());

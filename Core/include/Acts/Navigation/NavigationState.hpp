@@ -60,10 +60,10 @@ struct NavigationState {
   Vector3 direction = Vector3(0., 0., 0.);
 
   /// The current absolute momentum
-  ActsScalar absMomentum = 0.;
+  double absMomentum = 0.;
 
   /// The current absolute charge
-  ActsScalar absCharge = 0.;
+  double absCharge = 0.;
 
   /// The current magnetic field
   Vector3 magneticField = Vector3(0., 0., 0.);
@@ -88,7 +88,7 @@ struct NavigationState {
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();
 
   /// An overstep tolerance
-  ActsScalar overstepTolerance = -100 * UnitConstants::um;
+  double overstepTolerance = -100 * UnitConstants::um;
 
   /// Auxiliary attached information
   std::any auxiliary;

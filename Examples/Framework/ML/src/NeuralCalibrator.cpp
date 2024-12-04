@@ -176,7 +176,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
     Acts::ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
@@ -188,9 +189,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) = output[iVar0];
     calibratedCovariance(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

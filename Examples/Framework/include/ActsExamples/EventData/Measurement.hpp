@@ -10,26 +10,17 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
 #include "Acts/EventData/Types.hpp"
-#include "Acts/EventData/detail/CalculateResiduals.hpp"
-#include "Acts/EventData/detail/ParameterTraits.hpp"
-#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Iterator.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
 
-#include <array>
-#include <compare>
-#include <concepts>
 #include <cstddef>
-#include <iosfwd>
 #include <iterator>
 #include <type_traits>
-#include <variant>
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
@@ -139,6 +130,11 @@ class MeasurementContainer {
     return getMeasurement<Size>(addMeasurement(Size, geometryId));
   }
 
+  template <MeasurementConcept OtherDerived>
+  VariableProxy copyMeasurement(const OtherDerived& other);
+  template <MeasurementConcept OtherDerived, std::size_t Size>
+  FixedProxy<Size> copyMeasurement(const OtherDerived& other);
+
   template <typename... Args>
   VariableProxy emplaceMeasurement(std::uint8_t size,
                                    Acts::GeometryIdentifier geometryId,
@@ -205,7 +201,7 @@ class MeasurementProxyBase {
   MeasurementProxyBase(Container& container_, Index index_)
       : m_container(&container_), m_index(index_) {}
   template <typename OtherDerived, bool OtherReadOnly>
-  MeasurementProxyBase(
+  explicit MeasurementProxyBase(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : m_container(&other.container()), m_index(other.index()) {}
@@ -358,7 +354,7 @@ class FixedMeasurementProxy
     assert(container().m_entries.at(index()).size == Size && "Size mismatch");
   }
   template <typename OtherDerived, bool OtherReadOnly>
-  FixedMeasurementProxy(
+  explicit FixedMeasurementProxy(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : Base(other) {
@@ -450,7 +446,7 @@ class VariableMeasurementProxy
   VariableMeasurementProxy(Container& container_, Index index_)
       : Base(container_, index_) {}
   template <typename OtherDerived, bool OtherReadOnly>
-  VariableMeasurementProxy(
+  explicit VariableMeasurementProxy(
       const MeasurementProxyBase<OtherDerived, FullSize, OtherReadOnly>& other)
     requires(ReadOnly == OtherReadOnly || ReadOnly)
       : Base(other) {}
@@ -494,6 +490,22 @@ class VariableMeasurementProxy
         size, size};
   }
 };
+
+template <MeasurementConcept OtherDerived>
+MeasurementContainer::VariableProxy MeasurementContainer::copyMeasurement(
+    const OtherDerived& other) {
+  VariableProxy meas = makeMeasurement(other.size(), other.geometryId());
+  meas.copyFrom(other);
+  return meas;
+}
+
+template <MeasurementConcept OtherDerived, std::size_t Size>
+MeasurementContainer::FixedProxy<Size> MeasurementContainer::copyMeasurement(
+    const OtherDerived& other) {
+  FixedProxy<Size> meas = makeMeasurement<Size>(other.geometryId());
+  meas.copyFrom(other);
+  return meas;
+}
 
 template <typename... Args>
 MeasurementContainer::VariableProxy MeasurementContainer::emplaceMeasurement(

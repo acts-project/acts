@@ -15,7 +15,6 @@
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
@@ -150,7 +149,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
 void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     const GeometryContext& gctx, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
-    ActsScalar thickness, const Options& options) const {
+    double thickness, const Options& options) const {
   // Bool proto material overrules converted material
   bool protoMaterial =
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);

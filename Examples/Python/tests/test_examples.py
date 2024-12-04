@@ -87,14 +87,14 @@ def test_pythia8(tmp_path, seq, assert_root_hash):
 
     (tmp_path / "csv").mkdir()
 
-    assert not (tmp_path / "pythia8_particles.root").exists()
+    assert not (tmp_path / "particles.root").exists()
     assert len(list((tmp_path / "csv").iterdir())) == 0
 
     events = seq.config.events
 
     runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
-    fp = tmp_path / "pythia8_particles.root"
+    fp = tmp_path / "particles.root"
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
@@ -130,8 +130,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
     seq = Sequencer(events=nevents)
     runFatras(trk_geo, field, str(tmp_path), s=seq).run()
 
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
     assert_csv_output(csv, "hits")
     for f, tn in root_files:
         rfp = tmp_path / f
@@ -186,8 +185,7 @@ def test_geant4(tmp_path, assert_root_hash):
         print(e.output.decode("utf-8"))
         raise
 
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
     assert_csv_output(csv, "hits")
     for f in root_files:
         rfp = tmp_path / f
@@ -244,8 +242,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 @pytest.mark.slow
@@ -304,8 +301,7 @@ def test_hashing_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
-    assert_csv_output(tmp_path, "particles_final")
-    assert_csv_output(tmp_path, "particles_initial")
+    assert_csv_output(tmp_path, "particles_simulated")
     assert_csv_output(tmp_path, "buckets")
     assert_csv_output(tmp_path, "seed")
 
@@ -363,8 +359,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
@@ -407,6 +402,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         EtaConfig,
         MomentumConfig,
         ParticleConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
@@ -428,6 +424,12 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirCsv=tmp_path / "csv",
         outputDirRoot=str(tmp_path),
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            eta=(-4, 4),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -442,7 +444,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
 
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
     )
     from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
@@ -450,12 +451,10 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
         outputDirRoot=str(tmp_path),
     )
 
@@ -471,8 +470,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
-    assert_csv_output(csv, "particles_final")
-    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "particles_simulated")
 
 
 @pytest.mark.slow
@@ -689,7 +687,7 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     seq = Sequencer(
-        events=3,
+        events=10,
         numThreads=1,
     )
 
@@ -1141,7 +1139,7 @@ def test_ckf_tracks_example(
 
     root_files = [
         (
-            "performance_ckf.root",
+            "performance_finding_ckf.root",
             None,
         ),
         (
@@ -1285,7 +1283,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
 def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     # This test literally only ensures that the full chain example can run without erroring out
 
-    root_file = "performance_ambiML.root"
+    root_file = "performance_finding_ambiML.root"
     output_dir = "odd_output"
     assert not (tmp_path / root_file).exists()
 

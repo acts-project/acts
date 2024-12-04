@@ -18,27 +18,27 @@
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <utility>
 
 namespace Acts {
 
-TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
-                                             ActsScalar maxhalex,
-                                             ActsScalar haley, ActsScalar halez)
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double maxhalex,
+                                             double haley, double halez)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthXposY] = maxhalex;
   m_values[eHalfLengthY] = haley;
   m_values[eHalfLengthZ] = halez;
   m_values[eAlpha] = atan2(2 * haley, (maxhalex - minhalex));
-  m_values[eBeta] = M_PI - get(eAlpha);
+  m_values[eBeta] = std::numbers::pi - get(eAlpha);
   checkConsistency();
   buildSurfaceBounds();
 }
 
-TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
-                                             ActsScalar haley, ActsScalar halez,
-                                             ActsScalar alpha, ActsScalar beta)
+TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
+                                             double halez, double alpha,
+                                             double beta)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthY] = haley;
@@ -46,8 +46,8 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(ActsScalar minhalex,
   m_values[eAlpha] = alpha;
   m_values[eBeta] = beta;
   // now calculate the remaining max half X
-  ActsScalar gamma =
-      (alpha > beta) ? (alpha - 0.5 * M_PI) : (beta - 0.5 * M_PI);
+  double gamma = (alpha > beta) ? (alpha - std::numbers::pi / 2.)
+                                : (beta - std::numbers::pi / 2.);
   m_values[eHalfLengthXposY] = minhalex + (2. * haley) * tan(gamma);
 
   checkConsistency();
@@ -77,16 +77,17 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
   oSurfaces.push_back(
       OrientedSurface{std::move(sf), Direction::OppositeNormal});
 
-  ActsScalar poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
-  ActsScalar neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
-  ActsScalar topShift = poshOffset + neghOffset;
+  double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
+  double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
+  double topShift = poshOffset + neghOffset;
 
   // Face surfaces yz
   // (3) - At point B, attached to beta opening angle
   Vector3 fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
-  auto fbTransform = transform * Translation3(fbPosition) *
-                     AngleAxis3(-0.5 * M_PI + get(eBeta), Vector3(0., 0., 1.)) *
-                     s_planeYZ;
+  auto fbTransform =
+      transform * Translation3(fbPosition) *
+      AngleAxis3(-std::numbers::pi / 2. + get(eBeta), Vector3(0., 0., 1.)) *
+      s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
   oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
@@ -95,7 +96,8 @@ std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
   Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
   auto faTransform =
       transform * Translation3(faPosition) *
-      AngleAxis3(-0.5 * M_PI + get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
+      AngleAxis3(-std::numbers::pi / 2. + get(eAlpha), Vector3(0., 0., 1.)) *
+      s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
   oSurfaces.push_back(
@@ -124,10 +126,12 @@ void TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthXnegY), get(eHalfLengthXposY), get(eHalfLengthY));
 
   m_faceAlphaRectangleBounds = std::make_shared<const RectangleBounds>(
-      get(eHalfLengthY) / cos(get(eAlpha) - 0.5 * M_PI), get(eHalfLengthZ));
+      get(eHalfLengthY) / cos(get(eAlpha) - std::numbers::pi / 2.),
+      get(eHalfLengthZ));
 
   m_faceBetaRectangleBounds = std::make_shared<const RectangleBounds>(
-      get(eHalfLengthY) / cos(get(eBeta) - 0.5 * M_PI), get(eHalfLengthZ));
+      get(eHalfLengthY) / cos(get(eBeta) - std::numbers::pi / 2.),
+      get(eHalfLengthZ));
 
   m_faceZXRectangleBoundsBottom = std::make_shared<const RectangleBounds>(
       get(eHalfLengthZ), get(eHalfLengthXnegY));
@@ -136,7 +140,7 @@ void TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthZ), get(eHalfLengthXposY));
 }
 
-bool TrapezoidVolumeBounds::inside(const Vector3& pos, ActsScalar tol) const {
+bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   if (std::abs(pos.z()) > get(eHalfLengthZ) + tol) {
     return false;
   }
@@ -163,10 +167,10 @@ std::ostream& TrapezoidVolumeBounds::toStream(std::ostream& os) const {
 Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  ActsScalar minx = get(eHalfLengthXnegY);
-  ActsScalar maxx = get(eHalfLengthXposY);
-  ActsScalar haley = get(eHalfLengthY);
-  ActsScalar halez = get(eHalfLengthZ);
+  double minx = get(eHalfLengthXnegY);
+  double maxx = get(eHalfLengthXposY);
+  double haley = get(eHalfLengthY);
+  double halez = get(eHalfLengthZ);
 
   std::array<Vector3, 8> vertices = {{{-minx, -haley, -halez},
                                       {+minx, -haley, -halez},
@@ -194,8 +198,8 @@ Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
   return {entity, vmin - envelope, vmax + envelope};
 }
 
-std::vector<ActsScalar> TrapezoidVolumeBounds::values() const {
-  std::vector<ActsScalar> valvector;
+std::vector<double> TrapezoidVolumeBounds::values() const {
+  std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }

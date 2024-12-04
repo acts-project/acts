@@ -209,19 +209,12 @@ def basic_prop_seq(rng):
             rnd=rng,
         )
 
-        # Run particle smearing
-        trackParametersGenerator = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
+        trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+            level=acts.logging.WARNING,
             inputParticles="particles_input",
-            outputTrackParameters="start_parameters",
-            randomNumbers=rng,
-            sigmaD0=0.0,
-            sigmaZ0=0.0,
-            sigmaPhi=0.0,
-            sigmaTheta=0.0,
-            sigmaPtRel=0.0,
+            outputTrackParameters="params_particles_input",
         )
-        s.addAlgorithm(trackParametersGenerator)
+        s.addAlgorithm(trkParamExtractor)
 
         nav = acts.Navigator(trackingGeometry=geo)
         stepper = acts.StraightLineStepper()
@@ -232,11 +225,11 @@ def basic_prop_seq(rng):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             sterileLogger=False,
-            inputTrackParameters="start_parameters",
+            inputTrackParameters="params_particles_input",
             outputSummaryCollection="propagation_summary",
         )
-
         s.addAlgorithm(alg)
+
         return s, alg
 
     return _basic_prop_seq_factory
@@ -342,8 +335,7 @@ def fatras(ptcl_gun, trk_geo, rng):
         simAlg = acts.examples.FatrasSimulation(
             level=acts.logging.INFO,
             inputParticles=evGen.config.outputParticles,
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticles="particles_simulated",
             outputSimHits="simhits",
             randomNumbers=rng,
             trackingGeometry=trk_geo,
@@ -358,8 +350,8 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
-        digiCfg = acts.examples.DigitizationConfig(
-            acts.examples.readDigiConfigFromJson(
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

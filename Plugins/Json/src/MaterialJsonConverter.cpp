@@ -35,6 +35,7 @@
 #include <functional>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -687,10 +688,12 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     if (bUtility.dimensions() == 1u) {
       if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                               BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                             BinningValue::binPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
@@ -761,17 +764,17 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         nlohmann::json jMaterialParams;
         if (slab.thickness() > 0.) {
           jMaterialParams["params"] =
-              std::vector<ActsScalar>{material.X0(),
-                                      material.L0(),
-                                      material.Ar(),
-                                      material.Z(),
-                                      material.massDensity(),
-                                      material.molarDensity(),
-                                      0.};
+              std::vector<double>{material.X0(),
+                                  material.L0(),
+                                  material.Ar(),
+                                  material.Z(),
+                                  material.massDensity(),
+                                  material.molarDensity(),
+                                  0.};
 
         } else {
           jMaterialParams["params"] =
-              std::vector<ActsScalar>{0., 0., 0., 0., 0., 0., 0.};
+              std::vector<double>{0., 0., 0., 0., 0., 0., 0.};
         }
         jContent["material"] = jMaterialParams;
         jContent["type"] = 6;
@@ -797,12 +800,12 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     jAxis["binning"] = 0u;
     jAxis["label"] = ib;
     jAxis["bins"] = bData.bins();
-    ActsScalar offset = 0;
+    double offset = 0;
     if (bData.binvalue == BinningValue::binZ) {
       offset = surface.center(Acts::GeometryContext{}).z();
     }
     jAxis["edges"] =
-        std::array<ActsScalar, 2>{bData.min + offset, bData.max + offset};
+        std::array<double, 2>{bData.min + offset, bData.max + offset};
     jAxes.push_back(jAxis);
   }
   return jAxes;

@@ -18,11 +18,7 @@ set(DETRAY_VERSION "v${_acts_detray_version}")
 FetchContent_Declare(Detray ${ACTS_DETRAY_SOURCE})
 
 # Options used in the build of Detray.
-if(ACTS_CUSTOM_SCALARTYPE)
-    set(ACTS_DETRAY_SCALARTYPE ${ACTS_CUSTOM_SCALARTYPE})
-else()
-    set(ACTS_DETRAY_SCALARTYPE "double")
-endif()
+set(ACTS_DETRAY_SCALARTYPE "double")
 
 set(DETRAY_CUSTOM_SCALARTYPE
     "${ACTS_DETRAY_SCALARTYPE}"

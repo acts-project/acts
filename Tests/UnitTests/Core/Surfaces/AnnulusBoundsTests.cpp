@@ -23,12 +23,12 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-ActsScalar minRadius = 7.2;
-ActsScalar maxRadius = 12.0;
-ActsScalar minPhi = 0.74195;
-ActsScalar maxPhi = 1.33970;
+const double minRadius = 7.2;
+const double maxRadius = 12.0;
+const double minPhi = 0.74195;
+const double maxPhi = 1.33970;
 
-Vector2 offset(-2., 2.);
+const Vector2 offset(-2., 2.);
 
 // Unit tests for AnnulusBounds constructors
 BOOST_AUTO_TEST_CASE(AnnulusBoundsConstruction) {
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsExcpetion) {
   // Exception for swapped radii
   BOOST_CHECK_THROW(AnnulusBounds(maxRadius, minRadius, minPhi, maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  min phi
+  // Exception for out of range min phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, -4., maxPhi, offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, minPhi, 4., offset),
                     std::logic_error);
-  // Exception for out of range  max phi
+  // Exception for out of range max phi
   BOOST_CHECK_THROW(AnnulusBounds(minRadius, maxRadius, maxPhi, minPhi, offset),
                     std::logic_error);
 }
@@ -76,7 +76,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   /// Test construction with radii and default sector
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
-  //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(aBounds.type(), SurfaceBounds::eAnnulus);
 

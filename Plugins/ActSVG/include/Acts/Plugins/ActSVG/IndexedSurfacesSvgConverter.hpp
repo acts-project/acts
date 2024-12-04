@@ -115,7 +115,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   if constexpr (index_grid::grid_type::DIM == 1u) {
     if (indexGrid.casts[0u] == BinningValue::binPhi) {
       auto estRangeR = constrain.range(BinningValue::binR);
-      std::array<ActsScalar, 2u> rRange = {estRangeR.min(), estRangeR.max()};
+      std::array<double, 2u> rRange = {estRangeR.min(), estRangeR.max()};
       gridOptions.optionalBound = {rRange, BinningValue::binR};
     }
   }
@@ -139,7 +139,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       // Register the bin naming
       std::string binInfo =
           std::string("- bin : [") + std::to_string(ib0) + std::string("]");
-      ActsScalar binCenter = 0.5 * (binEdges[ib0] + binEdges[ib0 - 1u]);
+      double binCenter = 0.5 * (binEdges[ib0] + binEdges[ib0 - 1u]);
       binInfo += "\n - center : (" + std::to_string(binCenter) + ")";
       pGrid._bin_ids.push_back(binInfo);
     }
@@ -158,8 +158,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
         std::string binInfo = std::string("- bin : [") + std::to_string(ib0) +
                               std::string(", ") + std::to_string(ib1) +
                               std::string("]");
-        ActsScalar binCenter0 = 0.5 * (binEdges0[ib0] + binEdges0[ib0 - 1u]);
-        ActsScalar binCenter1 = 0.5 * (binEdges1[ib1] + binEdges1[ib1 - 1u]);
+        double binCenter0 = 0.5 * (binEdges0[ib0] + binEdges0[ib0 - 1u]);
+        double binCenter1 = 0.5 * (binEdges1[ib1] + binEdges1[ib1 - 1u]);
         binInfo += "\n - center : (" + std::to_string(binCenter0) + ", " +
                    std::to_string(binCenter1) + ")";
         pGrid._bin_ids.push_back(binInfo);
@@ -170,7 +170,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
       }
     }
   }
-  return std::tie(pSurfaces, pGrid, highlightIndices);
+  return {pSurfaces, pGrid, highlightIndices};
 }
 
 /// @brief Convert the single delegate if it is of the type of the reference

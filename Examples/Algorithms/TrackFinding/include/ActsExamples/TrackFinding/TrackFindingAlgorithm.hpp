@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
@@ -32,12 +31,14 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <variant>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <tbb/combinable.h>
+#pragma GCC diagnostic pop
 
 namespace Acts {
 class MagneticFieldProvider;
@@ -179,6 +180,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_nFoundTracks{0};
   mutable std::atomic<std::size_t> m_nSelectedTracks{0};
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
+  mutable std::atomic<std::size_t> m_nSkippedSecondPass{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {

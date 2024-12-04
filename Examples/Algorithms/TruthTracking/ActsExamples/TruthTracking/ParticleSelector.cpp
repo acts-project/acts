@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -49,32 +46,23 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                        << ")");
   ACTS_DEBUG("selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax
                                       << ")");
+  ACTS_DEBUG("selection particle measurements ["
+             << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
   ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
-
-  // We only initialize this if we actually select on this
-  if (m_cfg.measurementsMin > 0 ||
-      m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max()) {
-    m_inputMap.initialize(m_cfg.inputMeasurementParticlesMap);
-    ACTS_DEBUG("selection particle number of measurements ["
-               << m_cfg.measurementsMin << "," << m_cfg.measurementsMax << ")");
+  ACTS_DEBUG("exclude pdgs: ");
+  for (auto pdg : m_cfg.excludeAbsPdgs) {
+    ACTS_DEBUG("  " << pdg);
   }
+  ACTS_DEBUG("primary vertex ID [" << m_cfg.minPrimaryVertexId << ","
+                                   << m_cfg.maxPrimaryVertexId << ")");
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const AlgorithmContext& ctx) const {
-  using ParticlesMeasurmentMap =
-      boost::container::flat_multimap<ActsFatras::Barcode, Index>;
-
   // prepare input/ output types
-  const auto& inputParticles = m_inputParticles(ctx);
-
-  // Make global particles measurement map if necessary
-  std::optional<ParticlesMeasurmentMap> particlesMeasMap;
-  if (m_inputMap.isInitialized()) {
-    particlesMeasMap = invertIndexMultimap(m_inputMap(ctx));
-  }
+  const SimParticleContainer& inputParticles = m_inputParticles(ctx);
 
   std::size_t nInvalidCharge = 0;
   std::size_t nInvalidMeasurementCount = 0;
@@ -84,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     return (min <= x) && (x < max);
   };
 
-  auto isValidParticle = [&](const ActsFatras::Particle& p) {
+  auto isValidParticle = [&](const SimParticle& p) {
     const auto eta = Acts::VectorHelpers::eta(p.direction());
     const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
@@ -93,21 +81,14 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const bool validCharged = (p.charge() != 0) && !m_cfg.removeCharged;
     const bool validCharge = validNeutral || validCharged;
     const bool validSecondary = !m_cfg.removeSecondaries || !p.isSecondary();
+    const bool validPrimaryVertexId =
+        within(p.particleId().vertexPrimary(), m_cfg.minPrimaryVertexId,
+               m_cfg.maxPrimaryVertexId);
 
     nInvalidCharge += static_cast<std::size_t>(!validCharge);
 
-    // default valid measurement count to true and only change if we have loaded
-    // the measurement particles map
-    bool validMeasurementCount = true;
-    if (particlesMeasMap) {
-      auto [b, e] = particlesMeasMap->equal_range(p.particleId());
-      validMeasurementCount =
-          within(static_cast<std::size_t>(std::distance(b, e)),
-                 m_cfg.measurementsMin, m_cfg.measurementsMax);
-
-      ACTS_VERBOSE("Found " << std::distance(b, e) << " measurements for "
-                            << p.particleId());
-    }
+    bool validMeasurementCount =
+        within(p.numberOfHits(), m_cfg.measurementsMin, m_cfg.measurementsMax);
 
     nInvalidMeasurementCount +=
         static_cast<std::size_t>(!validMeasurementCount);
@@ -121,7 +102,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
       }
     }
 
-    return validPdg && validCharge && validSecondary && validMeasurementCount &&
+    return validPdg && validCharge && validSecondary && validPrimaryVertexId &&
+           validMeasurementCount &&
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) &&
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) &&
            within(eta, m_cfg.etaMin, m_cfg.etaMax) &&
@@ -138,10 +120,11 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
 
   // copy selected particles
   for (const auto& inputParticle : inputParticles) {
-    if (isValidParticle(inputParticle)) {
-      // the input parameters should already be
-      outputParticles.insert(outputParticles.end(), inputParticle);
+    if (!isValidParticle(inputParticle)) {
+      continue;
     }
+
+    outputParticles.insert(outputParticles.end(), inputParticle);
   }
   outputParticles.shrink_to_fit();
 
@@ -153,5 +136,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
              << nInvalidMeasurementCount);
 
   m_outputParticles(ctx, std::move(outputParticles));
+
   return ProcessCode::SUCCESS;
 }

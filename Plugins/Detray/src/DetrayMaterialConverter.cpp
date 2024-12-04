@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <numbers>
 #include <stdexcept>
 
 namespace {
@@ -92,9 +93,7 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
             for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
                  ++itr) {
               // Make an identified link copy for every matching surface
-              detray::io::single_link_payload surfaceLink;
-              surfaceLink.link = itr->second;
-              slabPayload.surface = surfaceLink;
+              slabPayload.surface.link = itr->second;
               volumePayload.mat_slabs.push_back(slabPayload);
             }
           } else {
@@ -159,10 +158,12 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
         swapped = true;
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                               BinningValue::binPhi);
       } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                             BinningValue::binPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
@@ -281,7 +282,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
           DetrayMaterialGrid materialGrid =
               convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
           // Ignore if an empty payload is returned
-          if (materialGrid.axes.empty() && materialGrid.bins.empty()) {
+          if (materialGrid.axes.empty() || materialGrid.bins.empty()) {
             continue;
           }
 
