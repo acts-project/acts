@@ -41,6 +41,9 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     bool primary = true;
     bool secondary = true;
+
+    /// step logging mode
+    bool stepLogging = false;
   };
 
   /// Construct the stepping action
