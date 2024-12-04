@@ -47,6 +47,7 @@
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Plugins/Obj/ObjSimHitWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
 #include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
@@ -110,6 +111,10 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjPropagationStepsWriter, mex,
                              "ObjPropagationStepsWriter", collection, outputDir,
                              outputScalor, outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjSimHitWriter, mex,
+                             "ObjSimHitWriter", inputSimHits, outputDir,
+                             outputStem, outputPrecision, drawConnections);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
