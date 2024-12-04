@@ -361,6 +361,29 @@ struct Gx2fSystem {
   std::size_t m_ndf = 0u;
 };
 
+/// @brief Adds a measurement to the GX2F equation system in a modular backend function.
+///
+/// This function processes measurement data and integrates it into the GX2F
+/// system.
+///
+/// @param extendedSystem All parameters of the current equation system to update.
+/// @param jacobianFromStart The Jacobian matrix from the start to the current state.
+/// @param covarianceMeasurement The covariance matrix of the measurement.
+/// @param predicted The predicted state vector based on the track state.
+/// @param measurement The measurement vector.
+/// @param projector The projection matrix.
+/// @param logger A logger instance.
+///
+/// @note The dynamic Eigen matrices are suboptimal. We could think of
+/// templating again in the future on kMeasDims. We currently use dynamic
+/// matrices to reduce the memory during compile time.
+void addMeasurementToGx2fSumsBackend(
+    Gx2fSystem& extendedSystem,
+    const std::vector<BoundMatrix>& jacobianFromStart,
+    const Eigen::MatrixXd& covarianceMeasurement, const BoundVector& predicted,
+    const Eigen::VectorXd& measurement, const Eigen::MatrixXd& projector,
+    const Logger& logger);
+
 /// @brief Process measurements and fill the aMatrix and bVector
 ///
 /// The function processes each measurement for the GX2F Actor fitting process.
@@ -370,7 +393,7 @@ struct Gx2fSystem {
 /// @tparam kMeasDim Number of dimensions of the measurement
 /// @tparam track_state_t The type of the track state
 ///
-/// @param extendedSystem All parameters of the current equation system
+/// @param extendedSystem All parameters of the current equation system to update
 /// @param jacobianFromStart The Jacobian matrix from start to the current state
 /// @param trackState The track state to analyse
 /// @param logger A logger instance
@@ -379,43 +402,8 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
                               const std::vector<BoundMatrix>& jacobianFromStart,
                               const track_state_t& trackState,
                               const Logger& logger) {
-  // First we get back the covariance and try to invert it. If the inversion
-  // fails, we can already abort.
   const ActsSquareMatrix<kMeasDim> covarianceMeasurement =
       trackState.template calibratedCovariance<kMeasDim>();
-
-  const auto safeInvCovMeasurement = safeInverse(covarianceMeasurement);
-  if (!safeInvCovMeasurement) {
-    ACTS_WARNING("addMeasurementToGx2fSums: safeInvCovMeasurement failed.");
-    ACTS_VERBOSE("    covarianceMeasurement:\n" << covarianceMeasurement);
-    return;
-  }
-
-  // Create an extended Jacobian. This one contains only eBoundSize rows,
-  // because the rest is irrelevant. We fill it in the next steps.
-  // TODO make dimsExtendedParams template with unrolling
-  Eigen::MatrixXd extendedJacobian =
-      Eigen::MatrixXd::Zero(eBoundSize, extendedSystem.nDims());
-
-  // This part of the Jacobian comes from the material-less propagation
-  extendedJacobian.topLeftCorner<eBoundSize, eBoundSize>() =
-      jacobianFromStart[0];
-
-  // If we have material, loop here over all Jacobians. We add extra columns for
-  // their phi-theta projections. These parts account for the propagation of the
-  // scattering angles.
-  for (std::size_t matSurface = 1; matSurface < jacobianFromStart.size();
-       matSurface++) {
-    const BoundMatrix jac = jacobianFromStart[matSurface];
-
-    const ActsMatrix<eBoundSize, 2> jacPhiTheta =
-        jac * Gx2fConstants::phiThetaProjector;
-
-    // The position, where we need to insert the values in the extended Jacobian
-    const std::size_t deltaPosition = eBoundSize + 2 * (matSurface - 1);
-
-    extendedJacobian.block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
-  }
 
   const BoundVector predicted = trackState.smoothed();
 
@@ -425,54 +413,9 @@ void addMeasurementToGx2fSums(Gx2fSystem& extendedSystem,
   const ActsMatrix<kMeasDim, eBoundSize> projector =
       trackState.template projectorSubspaceHelper<kMeasDim>().projector();
 
-  const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
-
-  const ActsMatrix<kMeasDim, 1> projPredicted = projector * predicted;
-
-  const ActsVector<kMeasDim> residual = measurement - projPredicted;
-
-  // Finally contribute to chi2sum, aMatrix, and bVector
-  extendedSystem.chi2() +=
-      (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0);
-
-  extendedSystem.aMatrix() +=
-      (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-          .eval();
-
-  extendedSystem.bVector() +=
-      (residual.transpose() * (*safeInvCovMeasurement) * projJacobian)
-          .eval()
-          .transpose();
-
-  ACTS_VERBOSE(
-      "Contributions in addMeasurementToGx2fSums:\n"
-      << "    kMeasDim:    " << kMeasDim << "\n"
-      << "    predicted:   " << predicted.transpose() << "\n"
-      << "    measurement: " << measurement.transpose() << "\n"
-      << "    covarianceMeasurement:\n"
-      << covarianceMeasurement << "\n"
-      << "    projector:\n"
-      << projector.eval() << "\n"
-      << "    projJacobian:\n"
-      << projJacobian.eval() << "\n"
-      << "    projPredicted: " << (projPredicted.transpose()).eval() << "\n"
-      << "    residual: " << (residual.transpose()).eval() << "\n"
-      << "    extendedJacobian:\n"
-      << extendedJacobian << "\n"
-      << "    aMatrix contribution:\n"
-      << (projJacobian.transpose() * (*safeInvCovMeasurement) * projJacobian)
-             .eval()
-      << "\n"
-      << "    bVector contribution: "
-      << (residual.transpose() * (*safeInvCovMeasurement) * projJacobian).eval()
-      << "\n"
-      << "    chi2sum contribution: "
-      << (residual.transpose() * (*safeInvCovMeasurement) * residual)(0, 0)
-      << "\n"
-      << "    safeInvCovMeasurement:\n"
-      << (*safeInvCovMeasurement));
-
-  return;
+  addMeasurementToGx2fSumsBackend(extendedSystem, jacobianFromStart,
+                                  covarianceMeasurement, predicted, measurement,
+                                  projector, logger);
 }
 
 /// @brief Process material and fill the aMatrix and bVector
