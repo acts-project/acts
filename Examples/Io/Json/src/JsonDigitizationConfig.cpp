@@ -87,12 +87,12 @@ void from_json(
   if (sType == "Gauss") {
     f = Digitization::Gauss(j["stddev"]);
   } else if (sType == "GaussTrunc") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussTrunc(sigma, range);
   } else if (sType == "GaussClipped") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussClipped(sigma, range);
   } else if (sType == "Uniform") {
     Acts::BinningData bd;
@@ -139,7 +139,9 @@ void ActsExamples::to_json(nlohmann::json& j,
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
-  to_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    to_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -157,11 +159,13 @@ void ActsExamples::from_json(const nlohmann::json& j,
     for (const auto& jvar : jvariances) {
       auto idx =
           static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
-      auto vars = jvar["rms"].get<std::vector<Acts::ActsScalar>>();
+      auto vars = jvar["rms"].get<std::vector<double>>();
       gdc.varianceMap[idx] = vars;
     }
   }
-  from_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    from_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::to_json(nlohmann::json& j,

@@ -13,7 +13,7 @@
 
 class G4VUserPhysicsList;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A factory around G4VUserPhysicsList which allows on demand instantiation.
 class PhysicsListFactory {
@@ -28,7 +28,7 @@ class PhysicsListFactoryFunction final : public PhysicsListFactory {
  public:
   using Function = std::function<std::unique_ptr<G4VUserPhysicsList>()>;
 
-  PhysicsListFactoryFunction(Function function);
+  explicit PhysicsListFactoryFunction(Function function);
 
   std::unique_ptr<G4VUserPhysicsList> factorize() const final;
 
@@ -36,4 +36,4 @@ class PhysicsListFactoryFunction final : public PhysicsListFactory {
   Function m_function;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

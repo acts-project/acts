@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -29,10 +26,9 @@ class ParticleSelector final : public IAlgorithm {
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
-    /// Input measurement particles map (Optional)
-    std::string inputMeasurementParticlesMap;
     /// The output particles collection.
     std::string outputParticles;
+
     // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
@@ -66,6 +62,12 @@ class ParticleSelector final : public IAlgorithm {
     bool removeSecondaries = false;
     /// Exclude particles depending on absolute pdg value
     std::vector<int> excludeAbsPdgs;
+
+    /// Min primary vertex ID cut
+    std::uint64_t minPrimaryVertexId = 0;
+    /// Max primary vertex ID cut
+    std::uint64_t maxPrimaryVertexId =
+        std::numeric_limits<std::uint64_t>::max();
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
@@ -79,8 +81,6 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMap{
-      this, "InputMeasurementParticlesMap"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};

@@ -39,7 +39,7 @@ using G4Transform3D = HepGeom::Transform3D;
 namespace Acts {
 struct Geant4AlgebraConverter {
   // A potential scalar between Geant4 and ACTS
-  ActsScalar scale = 1.;
+  double scale = 1.;
 
   /// @brief Translate a geometry transform: translation only
   ///
@@ -88,7 +88,7 @@ class LineBounds;
 // thin surface.
 struct Geant4ShapeConverter {
   /// A scale between Geant4 and ACTS
-  ActsScalar scale = 1.;
+  double scale = 1.;
   /// A description to keep the axis order, if it is set to false
   /// cyclic re-ordering will happen, otherwise axis flip if needed in
   /// order to keep the system right-handed
@@ -99,7 +99,7 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Cylinder bounds object, and thickness
-  std::tuple<std::shared_ptr<CylinderBounds>, ActsScalar> cylinderBounds(
+  std::tuple<std::shared_ptr<CylinderBounds>, double> cylinderBounds(
       const G4Tubs& g4Tubs);
 
   /// @brief Convert to radial bounds
@@ -107,7 +107,7 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Radial bounds object and thickness
-  std::tuple<std::shared_ptr<RadialBounds>, ActsScalar> radialBounds(
+  std::tuple<std::shared_ptr<RadialBounds>, double> radialBounds(
       const G4Tubs& g4Tubs);
 
   /// @brief Convert to line/straw bounds
@@ -122,7 +122,7 @@ struct Geant4ShapeConverter {
   /// @param g4Box a Geant4 box shape
   ///
   /// @return an ACTS Rectangle bounds shape,  axis orientation, and thickness
-  std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, double>
   rectangleBounds(const G4Box& g4Box);
 
   /// @brief Convert to trapezoid bounds - from Trap
@@ -130,7 +130,7 @@ struct Geant4ShapeConverter {
   /// @param g4Trd a Geant4 trapezoid shape
   ///
   /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
-  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, double>
   trapezoidBounds(const G4Trd& g4Trd);
 
   /// @brief Convert to general solid into a planar shape
@@ -139,7 +139,7 @@ struct Geant4ShapeConverter {
   ///
   /// @return an ACTS Planar bounds object,
   /// the axes, and the thickness of the compressed dimension
-  std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>, double>
   planarBounds(const G4VSolid& g4Solid);
 };
 
@@ -158,7 +158,7 @@ struct Geant4PhysicalVolumeConverter {
   std::shared_ptr<Surface> surface(const G4VPhysicalVolume& g4PhysVol,
                                    const Transform3& toGlobal,
                                    bool convertMaterial = false,
-                                   ActsScalar compressed = 0.);
+                                   double compressed = 0.);
 };
 
 class Material;
@@ -166,7 +166,7 @@ class HomogeneousSurfaceMaterial;
 class HomogeneousVolumeMaterial;
 
 struct Geant4MaterialConverter {
-  Material material(const G4Material& g4Material, ActsScalar compression = 1);
+  Material material(const G4Material& g4Material, double compression = 1);
 
   /// @brief Convert a Geant4 material to a surface material description
   ///
@@ -175,7 +175,7 @@ struct Geant4MaterialConverter {
   /// @param compressed the compressed thickness
   ///
   std::shared_ptr<HomogeneousSurfaceMaterial> surfaceMaterial(
-      const G4Material& g4Material, ActsScalar original, ActsScalar compressed);
+      const G4Material& g4Material, double original, double compressed);
 };
 
 class CylinderVolumeBounds;

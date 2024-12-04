@@ -21,44 +21,40 @@
 
 namespace Acts {
 
-/// @brief Evaluater of the k_i's and elements of the transport matrix
+/// @brief Evaluator of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This implementation involves energy loss due to
-/// ioninisation, bremsstrahlung, pair production and photonuclear interaction
-/// in the propagation and the jacobian. These effects will only occur if the
+/// ionisation, bremsstrahlung, pair production and photonuclear interaction
+/// in the propagation and the Jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
 struct EigenStepperDenseExtension {
-  using Scalar = ActsScalar;
-  /// @brief Vector3 replacement for the custom scalar type
-  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
-
   /// Fallback extension
   EigenStepperDefaultExtension defaultExtension;
 
   /// Momentum at a certain point
-  Scalar currentMomentum = 0.;
+  double currentMomentum = 0.;
   /// Particles momentum at k1
-  Scalar initialMomentum = 0.;
+  double initialMomentum = 0.;
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<Scalar, 4> dLdl{};
+  std::array<double, 4> dLdl{};
   /// q/p at each sub-step
-  std::array<Scalar, 4> qop{};
+  std::array<double, 4> qop{};
   /// Derivatives dPds at each sub-step
-  std::array<Scalar, 4> dPds{};
+  std::array<double, 4> dPds{};
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
-  Scalar dgdqopValue = 0.;
+  double dgdqopValue = 0.;
   /// Derivative dEds at the initial point
-  Scalar g = 0.;
+  double g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<Scalar, 4> tKi{};
+  std::array<double, 4> tKi{};
   /// Lambda''_i
-  std::array<Scalar, 4> Lambdappi{};
+  std::array<double, 4> Lambdappi{};
   /// Energy at each sub-step
-  std::array<Scalar, 4> energy{};
+  std::array<double, 4> energy{};
 
-  /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
+  /// @brief Evaluator of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
   /// @tparam i Index of the k_i, i = [0, 3]
@@ -79,9 +75,9 @@ struct EigenStepperDenseExtension {
   template <int i, typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
-         std::array<Scalar, 4>& kQoP, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3::Zero())
+         const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const double h = 0.,
+         const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
     const auto* volumeMaterial =
@@ -98,7 +94,7 @@ struct EigenStepperDenseExtension {
     // i = 0 is used for setup and evaluation of k
     if constexpr (i == 0) {
       // Set up for energy loss
-      ThisVector3 position = stepper.position(state.stepping);
+      Vector3 position = stepper.position(state.stepping);
       material = volumeMaterial->material(position.template cast<double>());
       initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
@@ -217,7 +213,7 @@ struct EigenStepperDenseExtension {
   }
 
  private:
-  /// @brief Evaluates the transport matrix D for the jacobian
+  /// @brief Evaluates the transport matrix D for the Jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper

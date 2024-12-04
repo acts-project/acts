@@ -27,13 +27,13 @@ def runTruthTrackingKalman(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
+        ParticleSelectorConfig,
         addFatras,
         addDigitization,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addKalmanTracks,
     )
 
@@ -82,6 +82,12 @@ def runTruthTrackingKalman(
             field,
             rnd=rnd,
             enableInteractions=True,
+            postSelectParticles=ParticleSelectorConfig(
+                pt=(0.9 * u.GeV, None),
+                measurements=(7, None),
+                removeNeutral=True,
+                removeSecondaries=True,
+            ),
         )
     else:
         logger.info("Reading hits from %s", inputHitsPath.resolve())
@@ -110,9 +116,6 @@ def runTruthTrackingKalman(
         inputParticles="particles_input",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addKalmanTracks(
@@ -139,7 +142,7 @@ def runTruthTrackingKalman(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -151,7 +154,7 @@ def runTruthTrackingKalman(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf.root"),
         )
@@ -161,7 +164,7 @@ def runTruthTrackingKalman(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_kf.root"),
         )

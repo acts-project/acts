@@ -188,8 +188,7 @@ void Acts::detail::printFreeParameters(std::ostream& os,
 
 void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
                                     const std::uint8_t* indices,
-                                    const ActsScalar* params,
-                                    const ActsScalar* cov) {
+                                    const double* params, const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeBoundNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));
@@ -197,8 +196,7 @@ void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
 
 void Acts::detail::printMeasurement(std::ostream& os, FreeIndices size,
                                     const std::uint8_t* indices,
-                                    const ActsScalar* params,
-                                    const ActsScalar* cov) {
+                                    const double* params, const double* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeFreeNames(), indices,
                             ParametersMap(params, s), CovarianceMap(cov, s, s));

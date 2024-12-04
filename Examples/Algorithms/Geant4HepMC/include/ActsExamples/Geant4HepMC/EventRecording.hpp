@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -24,9 +22,12 @@
 
 class G4RunManager;
 
-namespace ActsExamples {
-
+namespace ActsExamples::Geant4 {
 class DetectorConstructionFactory;
+class RegionCreator;
+}  // namespace ActsExamples::Geant4
+
+namespace ActsExamples {
 
 class EventRecording final : public ActsExamples::IAlgorithm {
  public:
@@ -37,7 +38,8 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
+    std::shared_ptr<Geant4::DetectorConstructionFactory>
+        detectorConstructionFactory;
 
     /// random number seed 1
     int seed1 = 12345;

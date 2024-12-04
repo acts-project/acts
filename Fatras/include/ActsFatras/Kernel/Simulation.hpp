@@ -8,17 +8,11 @@
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
@@ -230,7 +224,7 @@ struct Simulation {
         // only need to switch between charged/neutral.
         SingleParticleSimulationResult result =
             SingleParticleSimulationResult::success({});
-        if (initialParticle.charge() != Particle::Scalar{0}) {
+        if (initialParticle.charge() != 0.) {
           result = charged.simulate(geoCtx, magCtx, generator, initialParticle);
         } else {
           result = neutral.simulate(geoCtx, magCtx, generator, initialParticle);
@@ -245,6 +239,9 @@ struct Simulation {
           continue;
         }
 
+        assert(result->particle.particleId() == initialParticle.particleId() &&
+               "Particle id must not change during simulation");
+
         copyOutputs(result.value(), simulatedParticlesInitial,
                     simulatedParticlesFinal, hits);
         // since physics processes are independent, there can be particle id
@@ -256,6 +253,10 @@ struct Simulation {
       }
     }
 
+    assert(
+        (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) &&
+        "Inconsistent final sizes of the simulated particle containers");
+
     // the overall function call succeeded, i.e. no fatal errors occurred.
     // yet, there might have been some particle for which the propagation
     // failed. thus, the successful result contains a list of failed particles.
@@ -266,7 +267,7 @@ struct Simulation {
  private:
   /// Select if the particle should be simulated at all.
   bool selectParticle(const Particle &particle) const {
-    if (particle.charge() != Particle::Scalar{0}) {
+    if (particle.charge() != 0.) {
       return selectCharged(particle);
     } else {
       return selectNeutral(particle);
@@ -284,12 +285,13 @@ struct Simulation {
     // initial particle state was already pushed to the container before
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
+    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
+
     // move generated secondaries that should be simulated to the output
     std::copy_if(
         result.generatedParticles.begin(), result.generatedParticles.end(),
         std::back_inserter(particlesInitial),
         [this](const Particle &particle) { return selectParticle(particle); });
-    std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));
   }
 
   /// Renumber particle ids in the tail of the container.

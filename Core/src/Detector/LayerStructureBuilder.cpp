@@ -48,8 +48,8 @@ void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
                        const Acts::Extent& extent) {
   for (auto& pb : pBinning) {
     // Starting values
-    Acts::ActsScalar vmin = pb.edges.front();
-    Acts::ActsScalar vmax = pb.edges.back();
+    double vmin = pb.edges.front();
+    double vmax = pb.edges.back();
     // Get the number of bins
     std::size_t nBins = pb.bins();
     // Check if extent overwrites that
@@ -61,7 +61,7 @@ void adaptBinningRange(std::vector<Acts::Experimental::ProtoBinning>& pBinning,
     }
     // Possibly update the edges
     if (pb.axisType == Acts::AxisType::Equidistant) {
-      Acts::ActsScalar binWidth = (vmax - vmin) / nBins;
+      double binWidth = (vmax - vmin) / nBins;
       // Fill the edges
       pb.edges = {vmin};
       pb.edges.resize(nBins + 1);

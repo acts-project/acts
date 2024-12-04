@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -176,8 +176,11 @@ class Navigator {
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-    // The navigation stage (@todo: integrate break, target)
+    /// The navigation stage (@todo: integrate break, target)
     Stage navigationStage = Stage::undefined;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
 
     void reset() {
       navSurfaces.clear();
@@ -205,8 +208,6 @@ class Navigator {
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
   State makeState(const Options& options) const {
-    assert(options.startSurface != nullptr && "Start surface must be set");
-
     State state;
     state.options = options;
     state.startSurface = options.startSurface;
@@ -429,6 +430,7 @@ class Navigator {
                  << "No targets found, we got lost! Attempt renavigation.");
 
     state.navigation.reset();
+    ++state.navigation.statistics.nRenavigations;
 
     // We might have punched through a boundary and entered another volume
     // so we have to reinitialize
@@ -578,6 +580,7 @@ class Navigator {
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
               state.navigation.navBoundaries.size();
+          ++state.navigation.statistics.nVolumeSwitches;
         }
       } else {
         // Set the navigation stage back to boundary target
@@ -646,7 +649,7 @@ class Navigator {
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
         BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
       // Set in navigation state, so actors and aborters can access it
@@ -722,7 +725,7 @@ class Navigator {
           state.stepping, *surface, intersection.index(),
           state.options.direction, boundaryTolerance,
           state.options.surfaceTolerance, logger());
-      if (surfaceStatus == Intersection3D::Status::reachable) {
+      if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
@@ -774,8 +777,6 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
-    using namespace UnitLiterals;
-
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -814,7 +815,7 @@ class Navigator {
           state.stepping, *layerSurface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
-      if (layerStatus == Intersection3D::Status::reachable) {
+      if (layerStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;
@@ -936,7 +937,7 @@ class Navigator {
           state.stepping, *boundarySurface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
-      if (boundaryStatus == Intersection3D::Status::reachable) {
+      if (boundaryStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
@@ -1159,7 +1160,7 @@ class Navigator {
           state.options.direction, BoundaryTolerance::None(),
           state.options.surfaceTolerance, logger());
       // the only advance could have been to the target
-      if (targetStatus == Intersection3D::Status::onSurface) {
+      if (targetStatus == IntersectionStatus::onSurface) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
         ACTS_VERBOSE(volInfo(state)

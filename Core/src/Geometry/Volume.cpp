@@ -55,7 +55,7 @@ Volume& Volume::operator=(const Volume& vol) {
   return *this;
 }
 
-bool Volume::inside(const Vector3& gpos, ActsScalar tol) const {
+bool Volume::inside(const Vector3& gpos, double tol) const {
   Vector3 posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
@@ -79,7 +79,8 @@ void Volume::assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds) {
 }
 
 void Volume::update(std::shared_ptr<VolumeBounds> volbounds,
-                    std::optional<Transform3> transform) {
+                    std::optional<Transform3> transform,
+                    const Logger& /*logger*/) {
   if (volbounds) {
     m_volumeBounds = std::move(volbounds);
   }

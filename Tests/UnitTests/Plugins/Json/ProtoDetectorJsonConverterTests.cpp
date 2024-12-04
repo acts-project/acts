@@ -22,6 +22,7 @@
 #include <cmath>
 #include <fstream>
 #include <iterator>
+#include <numbers>
 #include <optional>
 #include <string>
 #include <vector>
@@ -40,7 +41,7 @@ namespace {
 /// @param tolerance the tolerance
 /// @return a boolean to see if they are equal
 bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
-             const Acts::ActsScalar tolerance = 0.) {
+             const double tolerance = 0.) {
   bool nameEq = (one.name == two.name);
   // Name
   BOOST_CHECK(nameEq);
@@ -174,8 +175,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   Acts::BinningData pixEcBinningR =
       Acts::BinningData(Acts::open, Acts::BinningValue::binR, 2., 0., 1.);
-  Acts::BinningData pixEcBinningPhi = Acts::BinningData(
-      Acts::closed, Acts::BinningValue::binPhi, 30., -M_PI, M_PI);
+  Acts::BinningData pixEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::BinningValue::binPhi, 30.,
+                        -std::numbers::pi, std::numbers::pi);
 
   for (auto& cv : pixelNec.container.value().constituentVolumes) {
     cv.extent.setEnvelope(discLayerEnvelope);
@@ -278,8 +280,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   Acts::BinningData sstripEcBinningR =
       Acts::BinningData(Acts::open, Acts::BinningValue::binR, 3., 0., 1.);
-  Acts::BinningData sstripEcBinningPhi = Acts::BinningData(
-      Acts::closed, Acts::BinningValue::binPhi, 42., -M_PI, M_PI);
+  Acts::BinningData sstripEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::BinningValue::binPhi, 42.,
+                        -std::numbers::pi, std::numbers::pi);
 
   Acts::ProtoVolume sstripNec;
   sstripNec.name = "odd-sstrip-nec";

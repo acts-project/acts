@@ -9,11 +9,9 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -23,20 +21,19 @@
 #include <DD4hep/Fields.h>
 #include <boost/program_options.hpp>
 
-namespace ActsExamples::DD4hep {
+namespace ActsExamples {
 
 DD4hepDetector::DD4hepDetector(
     std::shared_ptr<DD4hepGeometryService> _geometryService)
     : geometryService(std::move(_geometryService)) {}
 
 auto DD4hepDetector::finalize(
-    ActsExamples::DD4hep::DD4hepGeometryService::Config config,
+    DD4hepGeometryService::Config config,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
   config.matDecorator = std::move(mdecorator);
-  geometryService =
-      std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
+  geometryService = std::make_shared<DD4hepGeometryService>(config);
   TrackingGeometryPtr dd4tGeometry =
       geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {
@@ -85,4 +82,4 @@ std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
   return std::make_shared<Acts::DD4hepFieldAdapter>(detector.field());
 }
 
-}  // namespace ActsExamples::DD4hep
+}  // namespace ActsExamples

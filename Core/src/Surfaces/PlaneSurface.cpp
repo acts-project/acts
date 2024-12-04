@@ -23,6 +23,7 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -107,8 +108,8 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
       auto vStore = bounds().values();
       innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon &&
                     vStore[EllipseBounds::eInnerRy] > s_epsilon;
-      coversFull =
-          std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
+      coversFull = std::abs(vStore[EllipseBounds::eHalfPhiSector] -
+                            std::numbers::pi) < s_epsilon;
     }
     // All of those can be described as convex
     // @todo same as for Discs: coversFull is not the right criterium
@@ -159,7 +160,7 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -167,14 +168,14 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status() != Intersection3D::Status::unreachable) {
+  if (intersection.status() != IntersectionStatus::unreachable) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     if (!insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                       boundaryTolerance)) {
-      status = Intersection3D::Status::missed;
+      status = IntersectionStatus::unreachable;
     }
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),

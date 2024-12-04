@@ -30,10 +30,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cstdlib>
 #include <fstream>
-#include <functional>
-#include <initializer_list>
 #include <limits>
 #include <list>
 #include <optional>
@@ -135,12 +132,12 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
               cdsConfig,
               logger.clone("TGeoCylinderDiscSplitter", config.layerLogLevel));
     } else if (volume.itkModuleSplit) {
-      ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
+      TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
       itkConfig.splitPatterns = volume.splitPatterns;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(
+          std::make_shared<TGeoITkModuleSplitter>(
               itkConfig,
               logger.clone("TGeoITkModuleSplitter", config.layerLogLevel));
     }

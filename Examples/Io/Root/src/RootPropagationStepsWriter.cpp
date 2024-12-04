@@ -9,15 +9,12 @@
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Propagator/ConstrainedStep.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
 
 #include <ios>
 #include <memory>

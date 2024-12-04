@@ -84,13 +84,13 @@ class DD4hepDetectorSurfaceFactory {
     /// Convert material directly
     bool convertMaterial = false;
     /// New reference material thickness for surfaces
-    ActsScalar surfaceMaterialThickness = 1_mm;
+    double surfaceMaterialThickness = 1_mm;
   };
 
   /// The DD4hep detector element factory
   ///
   /// @param mlogger a screen output logger
-  DD4hepDetectorSurfaceFactory(
+  explicit DD4hepDetectorSurfaceFactory(
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
 
@@ -108,7 +108,7 @@ class DD4hepDetectorSurfaceFactory {
 
  private:
   /// @brief  auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
 
   /// Logging instance
@@ -173,7 +173,7 @@ class DD4hepDetectorSurfaceFactory {
   void attachSurfaceMaterial(const GeometryContext& gctx,
                              const std::string& prefix,
                              const dd4hep::DetElement& dd4hepElement,
-                             Acts::Surface& surface, ActsScalar thickness,
+                             Acts::Surface& surface, double thickness,
                              const Options& options) const;
 };
 

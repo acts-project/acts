@@ -18,8 +18,8 @@ from acts.examples import (
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
 MomentumConfig = namedtuple(
     "MomentumConfig",
-    ["min", "max", "transverse"],
-    defaults=[None, None, None],
+    ["min", "max", "transverse", "logUniform"],
+    defaults=[None, None, None, None],
 )
 EtaConfig = namedtuple(
     "EtaConfig", ["min", "max", "uniform"], defaults=[None, None, None]
@@ -80,8 +80,8 @@ def addParticleGun(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    momentumConfig : MomentumConfig(min, max, transverse)
-        momentum configuration: minimum momentum, maximum momentum, transverse
+    momentumConfig : MomentumConfig(min, max, transverse, logUniform)
+        momentum configuration: minimum momentum, maximum momentum, transverse, log-uniform
     etaConfig : EtaConfig(min, max, uniform)
         pseudorapidity configuration: eta min, eta max, uniform
     phiConfig : PhiConfig(min, max)
@@ -118,6 +118,7 @@ def addParticleGun(
                     **acts.examples.defaultKWArgs(
                         p=(momentumConfig.min, momentumConfig.max),
                         pTransverse=momentumConfig.transverse,
+                        pLogUniform=momentumConfig.logUniform,
                         eta=(etaConfig.min, etaConfig.max),
                         phi=(phiConfig.min, phiConfig.max),
                         etaUniform=etaConfig.uniform,
@@ -335,7 +336,7 @@ def addPythia8(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
-                filePath=str(outputDirRoot / "pythia8_particles.root"),
+                filePath=str(outputDirRoot / "particles.root"),
             )
         )
 
@@ -343,7 +344,7 @@ def addPythia8(
             acts.examples.RootVertexWriter(
                 level=customLogLevel(),
                 inputVertices=evGen.config.outputVertices,
-                filePath=str(outputDirRoot / "pythia8_vertices.root"),
+                filePath=str(outputDirRoot / "vertices.root"),
             )
         )
 
@@ -355,7 +356,6 @@ def addParticleSelection(
     config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
-    inputMeasurementParticlesMap: str = "",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -370,7 +370,7 @@ def addParticleSelection(
     inputParticles: str
         the identifier for the input particles to be selected
     outputParticles: str
-        the identifier for the final selected particle collection
+        the identifier for the selected particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -402,7 +402,6 @@ def addParticleSelection(
             level=customLogLevel(),
             inputParticles=inputParticles,
             outputParticles=outputParticles,
-            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
         )
     )
 
@@ -417,11 +416,11 @@ def addFatras(
     enableInteractions: bool = True,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
-    outputParticlesInitial: str = "particles_initial",
-    outputParticlesFinal: str = "particles_final",
+    outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -439,37 +438,39 @@ def addFatras(
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preSelectParticles=None to inhibit ParticleSelector altogether.
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
+        Similar to preSelectParticles but applied after simulation to "particles_simulated", therefore also filters secondaries.
     enableInteractions : Enable the particle interactions in the simulation
     pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirObj : Path|str, path, None
+        the output folder for the Obj output, None triggers no output
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "fatras_particles_preselected"
+        particlesPreSelected = "fatras_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particlesSelected = inputParticles
+        particlesPreSelected = inputParticles
+
+    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
-            inputParticles=particlesSelected,
-            outputParticlesInitial=outputParticlesInitial,
-            outputParticlesFinal=outputParticlesFinal,
+            inputParticles=particlesPreSelected,
+            outputParticles=outputParticles,
             outputSimHits=outputSimHits,
             randomNumbers=rnd,
             trackingGeometry=trackingGeometry,
@@ -486,39 +487,30 @@ def addFatras(
     # Sequencer
     s.addAlgorithm(alg)
 
+    s.addWhiteboardAlias("particles", outputParticles)
+
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "fatras_particles_initial_selected"
+        particlesPostSelected = "fatras_particles_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=alg.config.outputParticlesInitial,
-            outputParticles=particlesInitial,
+            inputParticles=outputParticles,
+            outputParticles=particlesPostSelected,
         )
-
-        particlesFinal = "fatras_particles_final_selected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=alg.config.outputParticlesFinal,
-            outputParticles=particlesFinal,
-        )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
-        particlesInitial = alg.config.outputParticlesInitial
-        particlesFinal = alg.config.outputParticlesFinal
+        particlesPostSelected = outputParticles
 
-    # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", particlesInitial)
+    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
 
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesInitial,
-        particlesFinal,
+        particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
+        outputDirObj,
         logLevel,
     )
 
@@ -527,11 +519,11 @@ def addFatras(
 
 def addSimWriters(
     s: acts.examples.Sequencer,
-    simHits: Optional[str] = None,
-    particlesInitial="particles_initial",
-    particlesFinal="particles_final",
+    simHits: str = "simhits",
+    particlesSimulated: str = "particles_simulated",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -544,16 +536,8 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles=particlesInitial,
-                outputStem="particles_initial",
-            )
-        )
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=customLogLevel(),
-                outputDir=str(outputDirCsv),
-                inputParticles=particlesFinal,
-                outputStem="particles_final",
+                inputParticles=particlesSimulated,
+                outputStem="particles_simulated",
             )
         )
         s.addWriter(
@@ -572,8 +556,7 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles=particlesInitial,
-                inputFinalParticles=particlesFinal,
+                inputParticles=particlesSimulated,
                 filePath=str(outputDirRoot / "particles_simulation.root"),
             )
         )
@@ -582,6 +565,19 @@ def addSimWriters(
                 level=customLogLevel(),
                 inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
+            )
+        )
+
+    if outputDirObj is not None:
+        outputDirObj = Path(outputDirObj)
+        if not outputDirObj.exists():
+            outputDirObj.mkdir()
+        s.addWriter(
+            acts.examples.ObjSimHitWriter(
+                level=customLogLevel(),
+                inputSimHits=simHits,
+                outputDir=str(outputDirObj),
+                outputStem="hits",
             )
         )
 
@@ -634,8 +630,7 @@ def addGeant4(
     volumeMappings: List[str] = [],
     materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
-    outputParticlesInitial: str = "particles_initial",
-    outputParticlesFinal: str = "particles_final",
+    outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
@@ -643,6 +638,7 @@ def addGeant4(
     keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
@@ -665,11 +661,13 @@ def addGeant4(
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preSelectParticles=None to inhibit ParticleSelector altogether.
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
+        Similar to preSelectParticles but applied after simulation to "particles_simulated", therefore also filters secondaries.
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirObj : Path|str, path, None
+        the output folder for the Obj output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside this volume.
     killAfterTime: float
@@ -684,16 +682,17 @@ def addGeant4(
 
     # Selector
     if preSelectParticles is not None:
-        particlesSelected = "geant4_particles_preselected"
+        particlesPreSelected = "geant4_particles_preselected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=inputParticles,
-            outputParticles=particlesSelected,
+            outputParticles=particlesPreSelected,
         )
-        s.addWhiteboardAlias("particles_selected", particlesSelected)
     else:
-        particlesSelected = inputParticles
+        particlesPreSelected = inputParticles
+
+    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
     if g4DetectorConstructionFactory is None:
         if detector is None:
@@ -717,9 +716,8 @@ def addGeant4(
         geant4Handle=__geant4Handle,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
-        inputParticles=particlesSelected,
-        outputParticlesInitial=outputParticlesInitial,
-        outputParticlesFinal=outputParticlesFinal,
+        inputParticles=particlesPreSelected,
+        outputParticles=outputParticles,
         outputSimHits=outputSimHits,
         sensitiveSurfaceMapper=sensitiveMapper,
         magneticField=field,
@@ -727,48 +725,40 @@ def addGeant4(
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
+        recordHitsOfCharged=True,
+        recordHitsOfNeutrals=False,
+        recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
+        recordPropagationSummaries=False,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
     __geant4Handle = alg.geant4Handle
 
-    # Sequencer
     s.addAlgorithm(alg)
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "geant4_particles_initial_postselected"
+        particlesPostSelected = "geant4_particles_postselected"
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=alg.config.outputParticlesInitial,
-            outputParticles=particlesInitial,
+            inputParticles=outputParticles,
+            outputParticles=particlesPostSelected,
         )
-
-        particlesFinal = "geant4_particles_final_postselected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=alg.config.outputParticlesFinal,
-            outputParticles=particlesFinal,
-        )
-        s.addWhiteboardAlias("particles_selected", particlesFinal)
     else:
-        particlesInitial = alg.config.outputParticlesInitial
-        particlesFinal = alg.config.outputParticlesFinal
+        particlesPostSelected = outputParticles
 
-    # Only add alias for 'particles_initial' as this is the one we use most
-    s.addWhiteboardAlias("particles", particlesInitial)
+    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
 
     # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesInitial,
-        particlesFinal,
+        particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
+        outputDirObj,
         logLevel=logLevel,
     )
 
@@ -811,18 +801,19 @@ def addDigitization(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
+    digiCfg = acts.examples.DigitizationAlgorithm.Config(
+        digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
         ),
         surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         randomNumbers=rnd,
         inputSimHits="simhits",
-        outputSourceLinks="sourcelinks",
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",
-        doMerge=doMerge,
+        **acts.examples.defaultKWArgs(
+            doMerge=doMerge,
+        ),
     )
 
     # Not sure how to do this in our style
@@ -845,7 +836,6 @@ def addDigitization(
             filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
             surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
         )
-        rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
         s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
 
     if outputDirCsv is not None:
