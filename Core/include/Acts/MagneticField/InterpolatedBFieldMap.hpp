@@ -312,8 +312,11 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @note Cache is not used currently
   /// @todo return derivative
   std::pair<Vector3, SquareMatrix3> getFieldAndGradient(
-      const Vector3& /*position*/,
-      MagneticFieldProvider::Cache& /*cache*/) const final {
+      const Vector3& position,
+      MagneticFieldProvider::Cache& cache) const final {
+    (void)position;
+    (void)cache;
+
     throw std::runtime_error("not implemented");
   }
 
