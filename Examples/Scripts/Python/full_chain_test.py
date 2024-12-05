@@ -277,7 +277,11 @@ def full_chain(args):
     outputDirCsv = outputDir if args.output_csv != 0 else None
     outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
     outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
-    outputDirObj = outputDirLess if args.output_obj else outputDir if args.output_csv == 2 else None
+    outputDirObj = (
+        outputDirLess
+        if args.output_obj
+        else outputDir if args.output_csv == 2 else None
+    )
 
     # fmt: off
     if args.generic_detector:
