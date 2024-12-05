@@ -42,13 +42,6 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   virtual bool isInside(const Vector3& position) const = 0;
-
-  /// Get a field value without checking if the lookup position is within the
-  /// interpolation domain.
-  ///
-  /// @param position The lookup position in 3D
-  /// @return The field value at @p position
-  virtual Vector3 getFieldUnchecked(const Vector3& position) const = 0;
 };
 
 /// @ingroup MagneticField
@@ -186,7 +179,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
-  std::optional<FieldCell> getFieldCell(const Vector3& position) const {
+  FieldCell getFieldCell(const Vector3& position) const {
     const auto& gridPosition = m_cfg.transformPos(position);
     const auto& indices = m_cfg.grid.localBinsFromPosition(gridPosition);
     const auto& lowerLeft = m_cfg.grid.lowerLeftBinEdge(indices);
@@ -196,10 +189,6 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     constexpr std::size_t nCorners = 1 << DIM_POS;
     std::array<Vector3, nCorners> neighbors;
     const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
-
-    if (!isInsideLocal(gridPosition)) {
-      return std::nullopt;
-    }
 
     std::size_t i = 0;
     for (std::size_t index : cornerIndices) {
@@ -277,16 +266,6 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///      magnetic field map.
   Vector3 getField(const Vector3& position) const {
     const auto gridPosition = m_cfg.transformPos(position);
-    if (!isInsideLocal(gridPosition)) {
-      return Vector3::Zero();
-    }
-
-    return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
-                                 position);
-  }
-
-  Vector3 getFieldUnchecked(const Vector3& position) const final {
-    const auto gridPosition = m_cfg.transformPos(position);
     return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
                                  position);
   }
@@ -297,11 +276,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     Cache& lcache = cache.as<Cache>();
     const auto gridPosition = m_cfg.transformPos(position);
     if (!lcache.fieldCell || !(*lcache.fieldCell).isInside(gridPosition)) {
-      auto fieldCell = getFieldCell(position);
-      if (!fieldCell.has_value()) {
-        return Vector3::Zero();
-      }
-      lcache.fieldCell = *fieldCell;
+      lcache.fieldCell = getFieldCell(position);
     }
     return (*lcache.fieldCell).getField(gridPosition);
   }
