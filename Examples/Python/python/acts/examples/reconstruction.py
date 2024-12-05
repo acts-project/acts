@@ -1294,7 +1294,6 @@ def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    directNavigation: bool = False,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
@@ -1304,17 +1303,6 @@ def addKalmanTracks(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    if directNavigation:
-        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-            level=customLogLevel(),
-            inputProtoTracks=inputProtoTracks,
-            inputSimHits="simhits",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            outputProtoTracks="sorted_truth_particle_tracks",
-        )
-        s.addAlgorithm(srfSortAlg)
-        inputProtoTracks = srfSortAlg.config.outputProtoTracks
 
     kalmanOptions = {
         "multipleScattering": multipleScattering,
