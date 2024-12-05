@@ -1855,14 +1855,12 @@ def addExaTrkX(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
-    # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
                 inputTracks="tracks",
-                # the original selected particles after digitization
-                inputParticles="particles_initial",
+                inputParticles="particles",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
