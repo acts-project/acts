@@ -131,13 +131,13 @@ concept MutableMultiTrajectoryBackend =
       { v.template addColumn_impl<double>(col) };
 
       {
-        v.template allocateCalibrated_impl(istate, ActsVector<1>{},
-                                           ActsSquareMatrix<1>{})
+        v.allocateCalibrated_impl(istate, ActsVector<1>{},
+                                  ActsSquareMatrix<1>{})
       };
       // Assuming intermediate values also work
       {
-        v.template allocateCalibrated_impl(istate, ActsVector<eBoundSize>{},
-                                           ActsSquareMatrix<eBoundSize>{})
+        v.allocateCalibrated_impl(istate, ActsVector<eBoundSize>{},
+                                  ActsSquareMatrix<eBoundSize>{})
       };
 
       { v.setUncalibratedSourceLink_impl(istate, std::move(sl)) };
