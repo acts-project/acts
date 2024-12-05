@@ -141,16 +141,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
             // So we use getFieldUnchecked instead.
             bField = fieldMap->getFieldUnchecked(pos);
           } else {
-            Acts::Result<Acts::Vector3> flx = field.getField(pos, cache);
-
-            // The aforementioned method is not guaranteed to succeed, so we
-            // must check for a valid result, and then write it to disk. If the
-            // result is invalid, throw an exception.
-            if (flx.ok()) {
-              bField = *flx;
-            } else {
-              throw std::runtime_error("B-field returned a non-extant value!");
-            }
+            bField = field.getField(pos, cache);
           }
 
           writer.append(pos[0] / Acts::UnitConstants::mm,
@@ -197,17 +188,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
           // So we use getFieldUnchecked instead.
           bField = fieldMap->getFieldUnchecked(pos);
         } else {
-          Acts::Result<Acts::Vector3> flx = field.getField(pos, cache);
-
-          // Check the result, then write to disk. We write the r and z
-          // positions as they are, then we write the z component of the result
-          // vector as is, and we compute the r-value from the other components
-          // of the vector.
-          if (flx.ok()) {
-            bField = *flx;
-          } else {
-            throw std::runtime_error("B-field returned a non-extant value!");
-          }
+          bField = field.getField(pos, cache);
         }
 
         writer.append(
