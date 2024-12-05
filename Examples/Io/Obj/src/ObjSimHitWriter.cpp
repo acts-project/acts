@@ -114,16 +114,15 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
 
       // Interpolate the points, a minimum number of 3 hits is necessary for
       // that
-      std::vector<Acts::Vector3> trajectory;
+      std::vector<Acts::Vector4> trajectory;
       if (pHits.size() < 3 || m_cfg.nInterpolatedPoints == 0) {
-        for (const auto& hit : pHits) {
-          trajectory.push_back(hit.template head<3>());
-        }
+        trajectory = pHits;
       } else {
         // The total number of points is the number of hits times the number of
         // interpolated points plus the number of hits
         trajectory = Acts::Interpolation3D::spline(
-            pHits, pHits.size() * (m_cfg.nInterpolatedPoints + 1) - 1);
+            pHits, pHits.size() * (m_cfg.nInterpolatedPoints + 1) - 1,
+            m_cfg.keepOriginalHits);
       }
 
       osTrajectory << "o particle_trajectory_" << pId << std::endl;

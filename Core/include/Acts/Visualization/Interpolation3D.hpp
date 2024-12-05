@@ -17,30 +17,47 @@ namespace Acts::Interpolation3D {
 /// @brief Helper function to interpolate points using a spline
 /// from Eigen
 ///
-/// @tparam input_vector_type
-/// @param inputs input vector points
+/// The only requirement is that the input trajectory type has
+/// a method empty() and size() and that the elements can be
+/// accessed with operator[] and have themselves a operator[] to
+/// access the coordinates.
+///
+/// @tparam input_trajectory_type input trajectory type
+///
+/// @param inputsRaw input vector points
 /// @param nPoints number of interpolation points
+/// @param keepOriginalHits keep the original hits in the trajectory
 ///
 /// @return std::vector<Acts::Vector3> interpolated points
-template <typename input_vector_type>
-std::vector<Acts::Vector3> spline(const std::vector<input_vector_type>& inputs,
-                                  std::size_t nPoints) {
-  std::vector<Acts::Vector3> output;
-
-  if (inputs.empty()) {
+template <typename trajectory_type>
+trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
+                       bool keepOriginalHits = false) {
+  trajectory_type output;
+  if (inputsRaw.empty()) {
     return output;
   }
 
-  if (nPoints < 2) {
-    // No interpolation done return simply the output vector
-    for (const auto& input : inputs) {
-      output.push_back(input.template head<3>());
-    }
+  using InputVectorType = typename trajectory_type::value_type;
 
+  std::vector<Vector3> inputs;
+  // If input type is a vector of Vector3 we can use it directly
+  if constexpr (std::is_same_v<trajectory_type, std::vector<Vector3>>) {
+    inputs = inputsRaw;
+  } else {
+    inputs.reserve(inputsRaw.size());
+    for (const auto& input : inputsRaw) {
+      inputs.push_back(Vector3(input[0], input[1], input[2]));
+    }
+  }
+
+  // Don't do anything if we have less than 3 points or less interpolation
+  // points than input points
+  if (inputsRaw.size() < 3 || nPoints <= inputsRaw.size()) {
+    return inputsRaw;
   } else {
     Eigen::MatrixXd points(3, inputs.size());
     for (std::size_t i = 0; i < inputs.size(); ++i) {
-      points.col(i) = inputs[i].template head<3>().transpose();
+      points.col(i) = inputs[i].transpose();
     }
     Eigen::Spline<double, 3> spline3D =
         Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
@@ -48,9 +65,31 @@ std::vector<Acts::Vector3> spline(const std::vector<input_vector_type>& inputs,
     double step = 1. / (nPoints - 1);
     for (std::size_t i = 0; i < nPoints; ++i) {
       double t = i * step;
-      output.push_back(spline3D(t));
+      InputVectorType point;
+      point[0] = spline3D(t)[0];
+      point[1] = spline3D(t)[1];
+      point[2] = spline3D(t)[2];
+      output.push_back(point);
     }
   }
+  // If we want to keep the original hits, we add them to the output
+  // (first and last are there anyway)
+  if (keepOriginalHits) {
+    output.insert(output.begin(), inputsRaw.begin() + 1, inputsRaw.end() - 1);
+    // We need to sort the output in distance to first
+    std::sort(output.begin(), output.end(),
+              [&inputs](const auto& a, const auto& b) {
+                const auto ifront = inputs.front();
+                double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
+                             (a[1] - ifront[1]) * (a[1] - ifront[1]) +
+                             (a[2] - ifront[2]) * (a[2] - ifront[2]);
+                double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
+                             (b[1] - ifront[1]) * (b[1] - ifront[1]) +
+                             (b[2] - ifront[2]) * (b[2] - ifront[2]);
+                return da2 < db2;
+              });
+  }
+
   return output;
 }
 

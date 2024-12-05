@@ -17,7 +17,7 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(SplineInterpolation) {
+BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
   /// Define the input vector
   double R = 10.;
   std::vector<Acts::Vector3> inputs;
@@ -51,6 +51,26 @@ BOOST_AUTO_TEST_CASE(SplineInterpolation) {
     // Verify points remain in the XY plane
     CHECK_CLOSE_ABS(point.z(), 0., 0.1);
   }
+}
+
+BOOST_AUTO_TEST_CASE(SplineInterpolationArray) {
+  /// Define the input vector
+  std::vector<std::array<double, 3u>> inputs;
+
+  for (double x = 0; x < 10; x += 1) {
+    inputs.push_back({x, x * x, 0.});
+  }
+
+  // This time we keep the original hits
+  auto trajectory = Acts::Interpolation3D::spline(inputs, 100, true);
+
+  // Check the outpu type is correct
+  constexpr bool isOutput =
+      std::is_same_v<decltype(trajectory), decltype(inputs)>;
+  BOOST_CHECK(isOutput);
+
+  // Check the output size is correct
+  BOOST_CHECK_EQUAL(trajectory.size(), 108);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

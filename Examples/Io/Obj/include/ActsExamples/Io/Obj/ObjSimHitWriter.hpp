@@ -55,6 +55,8 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     /// Number of points to interpolated between hits to smooth the
     /// trajectory view in the obj file.
     std::size_t nInterpolatedPoints = 4;
+    /// Keep the original hits in the trajectory file
+    bool keepOriginalHits = false;
   };
 
   /// Construct the particle writer.
