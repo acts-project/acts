@@ -19,12 +19,41 @@
 
 namespace Acts {
 
+namespace {
+bool hasDescendent(const BlueprintNode& descendent,
+                   const BlueprintNode& ancestor) {
+  if (&descendent == &ancestor) {
+    return true;
+  }
+
+  for (const auto& child : ancestor.children()) {
+    if (hasDescendent(descendent, child)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+}  // namespace
+
 void BlueprintNode::toStream(std::ostream& os) const {
   os << "BlueprintNode(" << name() << ")";
 }
 
 BlueprintNode& BlueprintNode::addChild(std::shared_ptr<BlueprintNode> child) {
-  child->m_depth = m_depth + 1;
+  if (!child) {
+    throw std::invalid_argument("Child is nullptr");
+  }
+
+  if (child->depth() != 0) {
+    throw std::invalid_argument("Child has already been added to another node");
+  }
+
+  if (hasDescendent(*this, *child)) {
+    throw std::invalid_argument("Adding child would create a cycle");
+  }
+
+  child->incrementDepth();
   m_children.push_back(std::move(child));
   return *this;
 }
@@ -39,6 +68,13 @@ BlueprintNode::ChildRange BlueprintNode::children() const {
 
 std::size_t BlueprintNode::depth() const {
   return m_depth;
+}
+
+void BlueprintNode::incrementDepth() {
+  m_depth++;
+  for (auto& child : m_children) {
+    child->incrementDepth();
+  }
 }
 
 std::string BlueprintNode::indent() const {

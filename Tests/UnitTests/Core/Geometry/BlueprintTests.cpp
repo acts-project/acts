@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
+#include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
@@ -88,6 +89,73 @@ BOOST_AUTO_TEST_CASE(InvalidRoot) {
           Transform3::Identity(), cylBounds, "child2")));
 
   BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
+}
+
+class DummyNode : public BlueprintNode {
+ public:
+  DummyNode(const std::string& name) : m_name(name) {}
+
+  const std::string& name() const override { return m_name; }
+
+  Volume& build(const BlueprintOptions& /*options*/,
+                const GeometryContext& /*gctx*/,
+                const Acts::Logger& /*logger*/) override {
+    throw std::logic_error("Not implemented");
+  }
+
+  PortalShellBase& connect(const BlueprintOptions& /*options*/,
+                           const GeometryContext& /*gctx*/,
+                           const Logger& /*logger */) override {
+    throw std::logic_error("Not implemented");
+  }
+
+  void finalize(const BlueprintOptions& /*options*/,
+                const GeometryContext& /*gctx*/, TrackingVolume& /*parent*/,
+                const Logger& /*logger*/) override {
+    throw std::logic_error("Not implemented");
+  }
+
+ private:
+  std::string m_name;
+};
+
+BOOST_AUTO_TEST_CASE(AddChildInvalid) {
+  auto node = std::make_shared<DummyNode>("node");
+
+  // Add self
+  BOOST_CHECK_THROW(node->addChild(node), std::invalid_argument);
+
+  // Add nullptr
+  BOOST_CHECK_THROW(node->addChild(nullptr), std::invalid_argument);
+
+  auto nodeB = std::make_shared<DummyNode>("nodeB");
+  auto nodeC = std::make_shared<DummyNode>("nodeC");
+
+  node->addChild(nodeB);
+  nodeB->addChild(nodeC);
+  BOOST_CHECK_THROW(nodeC->addChild(node), std::invalid_argument);
+
+  // already has parent, can't be added as a child anywhere else
+  BOOST_CHECK_THROW(node->addChild(nodeC), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(Depth) {
+  auto node1 = std::make_shared<DummyNode>("node1");
+  auto node2 = std::make_shared<DummyNode>("node2");
+  auto node3 = std::make_shared<DummyNode>("node3");
+
+  BOOST_CHECK_EQUAL(node1->depth(), 0);
+  BOOST_CHECK_EQUAL(node2->depth(), 0);
+  BOOST_CHECK_EQUAL(node3->depth(), 0);
+
+  node2->addChild(node3);
+  BOOST_CHECK_EQUAL(node2->depth(), 0);
+  BOOST_CHECK_EQUAL(node3->depth(), 1);
+
+  node1->addChild(node2);
+  BOOST_CHECK_EQUAL(node1->depth(), 0);
+  BOOST_CHECK_EQUAL(node2->depth(), 1);
+  BOOST_CHECK_EQUAL(node3->depth(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(Static) {
