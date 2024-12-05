@@ -306,7 +306,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     return (*lcache.fieldCell).getField(gridPosition);
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
   ///
   /// @note currently the derivative is not calculated
   /// @note Cache is not used currently

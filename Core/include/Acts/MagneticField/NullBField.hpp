@@ -36,7 +36,7 @@ class NullBField final : public MagneticFieldProvider {
     return Vector3::Zero();
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,MagneticFieldProvider::Cache&) const
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
