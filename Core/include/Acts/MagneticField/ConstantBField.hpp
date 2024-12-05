@@ -48,8 +48,6 @@ class ConstantBField final : public MagneticFieldProvider {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
   std::pair<Vector3, SquareMatrix3> getFieldAndGradient(
       const Vector3& position,
       MagneticFieldProvider::Cache& cache) const override {

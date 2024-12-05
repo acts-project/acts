@@ -44,7 +44,6 @@ class MagneticFieldProvider {
   /// Requires a cache object created through makeCache().
   ///
   /// @param [in]  position   global 3D position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
   /// @param [in,out] cache Field provider specific cache object
   /// @return magnetic field vector at given position
   virtual std::pair<Vector3, SquareMatrix3> getFieldAndGradient(
