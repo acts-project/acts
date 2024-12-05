@@ -420,6 +420,7 @@ def addFatras(
     outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -444,6 +445,8 @@ def addFatras(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirObj : Path|str, path, None
+        the output folder for the Obj output, None triggers no output
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -507,6 +510,7 @@ def addFatras(
         particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
+        outputDirObj,
         logLevel,
     )
 
@@ -519,6 +523,7 @@ def addSimWriters(
     particlesSimulated: str = "particles_simulated",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -560,6 +565,19 @@ def addSimWriters(
                 level=customLogLevel(),
                 inputSimHits=simHits,
                 filePath=str(outputDirRoot / "hits.root"),
+            )
+        )
+
+    if outputDirObj is not None:
+        outputDirObj = Path(outputDirObj)
+        if not outputDirObj.exists():
+            outputDirObj.mkdir()
+        s.addWriter(
+            acts.examples.ObjSimHitWriter(
+                level=customLogLevel(),
+                inputSimHits=simHits,
+                outputDir=str(outputDirObj),
+                outputStem="hits",
             )
         )
 
@@ -620,6 +638,7 @@ def addGeant4(
     keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirObj: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
@@ -647,6 +666,8 @@ def addGeant4(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    outputDirObj : Path|str, path, None
+        the output folder for the Obj output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside this volume.
     killAfterTime: float
@@ -704,16 +725,17 @@ def addGeant4(
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         killSecondaries=killSecondaries,
+        recordHitsOfCharged=True,
+        recordHitsOfNeutrals=False,
+        recordHitsOfPrimaries=True,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
+        recordPropagationSummaries=False,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
     __geant4Handle = alg.geant4Handle
 
-    # Sequencer
     s.addAlgorithm(alg)
-
-    s.addWhiteboardAlias("particles", outputParticles)
 
     # Selector
     if postSelectParticles is not None:
@@ -736,7 +758,8 @@ def addGeant4(
         particlesPostSelected,
         outputDirCsv,
         outputDirRoot,
-        logLevel,
+        outputDirObj,
+        logLevel=logLevel,
     )
 
     return s
