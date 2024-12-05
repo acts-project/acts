@@ -87,6 +87,6 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
                     rotToCompositeLocalYAxis * relRotation(1, 2) +
                     rotToCompositeLocalZAxis * relRotation(2, 2);
 
-  return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
-                         std::move(rotToLocalZAxis));
+  return {std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
+          std::move(rotToLocalZAxis)};
 }

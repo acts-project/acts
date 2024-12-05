@@ -106,8 +106,7 @@ auto AlignedDetector::finalize(
   }
 
   // return the pair of geometry and the alignment decorator(s)
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(aTrackingGeometry), std::move(aContextDecorators));
+  return {std::move(aTrackingGeometry), std::move(aContextDecorators)};
 }
 
 }  // namespace ActsExamples

@@ -93,7 +93,7 @@ std::pair<Vector3, Vector3> stripEnds(
   auto gPos1 = surface->localToGlobal(gctx, lpos1, globalFakeMom);
   auto gPos2 = surface->localToGlobal(gctx, lpos2, globalFakeMom);
 
-  return std::make_pair(gPos1, gPos2);
+  return {gPos1, gPos2};
 }
 
 // Create a test context

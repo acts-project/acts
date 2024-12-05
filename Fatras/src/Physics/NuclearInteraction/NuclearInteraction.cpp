@@ -141,7 +141,7 @@ std::pair<double, double> NuclearInteraction::globalAngle(double phi1,
   const float theta = std::acos(vectorSum.z() / vectorSum.norm());
   const float phi = std::atan2(vectorSum.y(), vectorSum.x());
 
-  return std::make_pair(phi, theta);
+  return {phi, theta};
 }
 
 bool NuclearInteraction::match(const Acts::ActsDynamicVector& momenta,

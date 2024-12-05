@@ -839,7 +839,7 @@ std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
         const external_spacepoint_t& spM,
         const Acts::Range1D<float>& rMiddleSPRange) const {
   if (m_config.useVariableMiddleSPRange) {
-    return std::make_pair(rMiddleSPRange.min(), rMiddleSPRange.max());
+    return {rMiddleSPRange.min(), rMiddleSPRange.max()};
   }
   if (!m_config.rRangeMiddleSP.empty()) {
     /// get zBin position of the middle SP
@@ -848,10 +848,9 @@ std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
     int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
     /// protects against zM at the limit of zBinEdges
     zBin == 0 ? zBin : --zBin;
-    return std::make_pair(m_config.rRangeMiddleSP[zBin][0],
-                          m_config.rRangeMiddleSP[zBin][1]);
+    return {m_config.rRangeMiddleSP[zBin][0], m_config.rRangeMiddleSP[zBin][1]};
   }
-  return std::make_pair(m_config.rMinMiddle, m_config.rMaxMiddle);
+  return {m_config.rMinMiddle, m_config.rMaxMiddle};
 }
 
 }  // namespace Acts
