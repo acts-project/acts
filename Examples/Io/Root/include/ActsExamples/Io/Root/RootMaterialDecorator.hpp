@@ -128,7 +128,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
 
   /// Return the maps
   const Acts::DetectorMaterialMaps materialMaps() const {
-    return std::make_pair(m_surfaceMaterialMap, m_volumeMaterialMap);
+    return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 
   /// Get readonly access to the config parameters
