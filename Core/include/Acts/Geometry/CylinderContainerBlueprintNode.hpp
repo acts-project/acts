@@ -29,8 +29,6 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   const std::string& name() const override;
 
-  void setName(const std::string& name) { m_name = name; }
-
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
@@ -47,13 +45,10 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   CylinderContainerBlueprintNode& setResizeStrategy(
       CylinderVolumeStack::ResizeStrategy resizeStrategy);
 
-  BinningValue direction() const { return m_direction; }
-  CylinderVolumeStack::AttachmentStrategy attachmentStrategy() const {
-    return m_attachmentStrategy;
-  }
-  CylinderVolumeStack::ResizeStrategy resizeStrategy() const {
-    return m_resizeStrategy;
-  }
+  BinningValue direction() const;
+
+  CylinderVolumeStack::AttachmentStrategy attachmentStrategy() const;
+  CylinderVolumeStack::ResizeStrategy resizeStrategy() const;
 
  private:
   void addToGraphviz(std::ostream& os) const override;

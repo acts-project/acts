@@ -12,7 +12,6 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 
-#include <utility>
 #include <variant>
 
 namespace Acts {
@@ -43,19 +42,9 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
 
   void addToGraphviz(std::ostream& os) const override;
 
-  const std::optional<BinningConfig>& binning() { return m_binning; }
+  const std::optional<BinningConfig>& binning() const;
 
-  MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning) {
-    m_binning = std::move(binning);
-    return *this;
-  }
-
-  const std::string& getName() const { return m_name; }
-
-  MaterialDesignatorBlueprintNode& setName(std::string name) {
-    m_name = std::move(name);
-    return *this;
-  }
+  MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning);
 
  private:
   std::string m_name{};

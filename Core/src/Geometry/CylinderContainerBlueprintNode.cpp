@@ -162,7 +162,6 @@ void CylinderContainerBlueprintNode::finalize(const BlueprintOptions& options,
     throw std::runtime_error("Volume is not connected");
   }
 
-  // @TODO: Add ability to override this
   const auto* policyFactory = options.defaultNavigationPolicyFactory.get();
 
   ACTS_DEBUG(prefix() << "Registering " << m_gaps.size()
@@ -230,6 +229,20 @@ void CylinderContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
        << std::endl;
     child.addToGraphviz(os);
   }
+}
+
+BinningValue CylinderContainerBlueprintNode::direction() const {
+  return m_direction;
+}
+
+CylinderVolumeStack::AttachmentStrategy
+CylinderContainerBlueprintNode::attachmentStrategy() const {
+  return m_attachmentStrategy;
+}
+
+CylinderVolumeStack::ResizeStrategy
+CylinderContainerBlueprintNode::resizeStrategy() const {
+  return m_resizeStrategy;
 }
 
 }  // namespace Acts

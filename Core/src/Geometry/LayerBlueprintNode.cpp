@@ -88,13 +88,6 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
       std::make_unique<TrackingVolume>(transform, std::move(bounds), m_name);
 }
 
-void LayerBlueprintNode::finalize(const BlueprintOptions& options,
-                                  const GeometryContext& gctx,
-                                  TrackingVolume& parent,
-                                  const Logger& logger) {
-  StaticBlueprintNode::finalize(options, gctx, parent, logger);
-}
-
 const std::string& LayerBlueprintNode::name() const {
   return m_name;
 }
@@ -137,17 +130,6 @@ LayerBlueprintNode& LayerBlueprintNode::setLayerType(LayerType layerType) {
 
 const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
   return m_layerType;
-}
-
-LayerBlueprintNode& LayerBlueprintNode::setNavigationPolicyFactory(
-    std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory) {
-  m_navigationPolicyFactory = std::move(navigationPolicyFactory);
-  return *this;
-}
-
-const NavigationPolicyFactory* LayerBlueprintNode::navigationPolicyFactory()
-    const {
-  return m_navigationPolicyFactory.get();
 }
 
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {

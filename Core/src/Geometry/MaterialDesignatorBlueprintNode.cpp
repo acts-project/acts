@@ -36,6 +36,12 @@ Volume& MaterialDesignatorBlueprintNode::build(const BlueprintOptions& options,
     throw std::runtime_error(
         "MaterialDesignatorBlueprintNode must have exactly one child");
   }
+
+  if (!m_binning) {
+    ACTS_ERROR(prefix() << "Binning is not set");
+    throw std::runtime_error("Binning is not set");
+  }
+
   return children().at(0).build(options, gctx, logger);
 }
 
@@ -162,6 +168,17 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
   os << GraphViz::Node{
       .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Hexagon};
   BlueprintNode::addToGraphviz(os);
+}
+
+const std::optional<MaterialDesignatorBlueprintNode::BinningConfig>&
+MaterialDesignatorBlueprintNode::binning() const {
+  return m_binning;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::setBinning(
+    BinningConfig binning) {
+  m_binning = std::move(binning);
+  return *this;
 }
 
 }  // namespace Acts

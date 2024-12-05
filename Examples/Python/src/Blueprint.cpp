@@ -378,8 +378,6 @@ void addBlueprint(Context& ctx) {
                  std::shared_ptr<MaterialDesignatorBlueprintNode>>(
           m, "MaterialDesignatorBlueprintNode")
           .def(py::init<const std::string&>(), "name"_a)
-          .def_property("name", &MaterialDesignatorBlueprintNode::name,
-                        &MaterialDesignatorBlueprintNode::setName)
           .def_property("binning", &MaterialDesignatorBlueprintNode::binning,
                         &MaterialDesignatorBlueprintNode::setBinning);
 

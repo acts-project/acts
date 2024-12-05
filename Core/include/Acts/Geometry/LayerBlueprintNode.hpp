@@ -26,10 +26,6 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
-  void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
-                TrackingVolume& parent,
-                const Logger& logger = Acts::getDummyLogger()) override;
-
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
 
@@ -46,12 +42,6 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   LayerBlueprintNode& setLayerType(LayerType layerType);
 
   const LayerType& layerType() const;
-
-  LayerBlueprintNode& setNavigationPolicyFactory(
-      std::shared_ptr<NavigationPolicyFactory> navigationPolicyFactory)
-      override;
-
-  const NavigationPolicyFactory* navigationPolicyFactory() const;
 
   void addToGraphviz(std::ostream& os) const override;
 
