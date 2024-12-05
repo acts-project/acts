@@ -310,13 +310,14 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
     m_outputMeasurements(ctx, std::move(measurements));
     m_outputClusters(ctx, std::move(clusters));
 
-    m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
-    m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
-
+    // invert them before they are moved
     m_outputParticleMeasurementsMap(
         ctx, invertIndexMultimap(measurementParticlesMap));
     m_outputSimHitMeasurementsMap(ctx,
                                   invertIndexMultimap(measurementSimHitsMap));
+
+    m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+    m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
   }
 
   if (m_cfg.doOutputCells) {
