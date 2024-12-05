@@ -6,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
+
 #include <unsupported/Eigen/Splines>
 
 namespace Acts::Interpolation3D {
@@ -20,8 +23,8 @@ namespace Acts::Interpolation3D {
 ///
 /// @return std::vector<Acts::Vector3> interpolated points
 template <typename input_vector_type>
-std::vector<Acts::Vector3> spline(
-    const std::vector<input_vector_type>& inputs, std::size_t nPoints) {
+std::vector<Acts::Vector3> spline(const std::vector<input_vector_type>& inputs,
+                                  std::size_t nPoints) {
   std::vector<Acts::Vector3> output;
 
   if (nPoints < 2) {
