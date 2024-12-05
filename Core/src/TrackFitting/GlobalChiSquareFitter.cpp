@@ -89,7 +89,8 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
     // The position, where we need to insert the values in the extended Jacobian
     const std::size_t deltaPosition = eBoundSize + 2 * (matSurface - 1);
 
-    extendedJacobian.template block<eBoundSize, 2>(0, deltaPosition) = jacPhiTheta;
+    extendedJacobian.template block<eBoundSize, 2>(0, deltaPosition) =
+        jacPhiTheta;
   }
 
   const Eigen::MatrixXd projJacobian = projector * extendedJacobian;
