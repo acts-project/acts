@@ -178,7 +178,7 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// Calculate the inverse of an Eigen matrix after checking if it can be
 /// numerically inverted. This allows to catch potential FPEs before they occur.
 /// For matrices up to 4x4, the inverse is computed directly. For larger
-/// matrices, the FullPivLU is used.
+/// matrices, and dynamic matrices the FullPivLU is used.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
