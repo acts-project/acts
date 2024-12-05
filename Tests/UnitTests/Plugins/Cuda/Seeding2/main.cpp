@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
       -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 covariance(sp.m_varianceR, sp.m_varianceZ);
-    return std::make_tuple(position, covariance, std::nullopt);
+    return {position, covariance, std::nullopt};
   };
 
   // extent used to store r range for middle spacepoint

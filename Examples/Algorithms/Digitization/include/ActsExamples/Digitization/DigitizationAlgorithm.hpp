@@ -126,7 +126,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   Config m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
-  /// Geometric digtizer
+  /// Geometric digitizer
   ActsFatras::Channelizer m_channelizer;
 
   using CellsMap =
@@ -162,7 +162,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
-    for (int i = 0; i < static_cast<int>(kSmearDIM); ++i) {
+    for (std::size_t i = 0; i < kSmearDIM; ++i) {
       impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
       impl.smearing.smearFunctions[i] =
           cfg.smearingDigiConfig.at(i).smearFunction;
