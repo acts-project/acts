@@ -27,6 +27,10 @@ std::vector<Acts::Vector3> spline(const std::vector<input_vector_type>& inputs,
                                   std::size_t nPoints) {
   std::vector<Acts::Vector3> output;
 
+  if (inputs.empty()) {
+    return output;
+  }
+
   if (nPoints < 2) {
     // No interpolation done return simply the output vector
     for (const auto& input : inputs) {
