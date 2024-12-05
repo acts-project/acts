@@ -10,6 +10,7 @@
 
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -123,6 +124,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// Name of the output collection : simulated particles
     std::string outputParticles = "particles_simulated";
 
+    /// Name of the output collection : propagation records (debugging)
+    std::string outputPropagationSummaries = "propagation_summaries";
+
     /// The ACTS sensitive surfaces in a mapper, used for hit creation
     std::shared_ptr<const Geant4::SensitiveSurfaceMapper>
         sensitiveSurfaceMapper = nullptr;
@@ -137,11 +141,17 @@ class Geant4Simulation final : public Geant4SimulationBase {
     double killAfterTime = std::numeric_limits<double>::infinity();
     bool killSecondaries = false;
 
+    bool recordHitsOfCharged = true;
+
     bool recordHitsOfNeutrals = false;
+
+    bool recordHitsOfPrimaries = true;
 
     bool recordHitsOfSecondaries = true;
 
     bool keepParticlesWithoutHits = true;
+
+    bool recordPropagationSummaries = false;
   };
 
   /// Simulation constructor
@@ -172,6 +182,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
+
+  WriteDataHandle<PropagationSummaries> m_outputPropagationSummaries{
+      this, "OutputPropagationSummaries"};
 };
 
 class Geant4MaterialRecording final : public Geant4SimulationBase {
