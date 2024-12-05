@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
-#include "ActsExamples/Propagation/SimHitToSummaryConversion.hpp"
 
 #include <algorithm>
 #include <array>
@@ -119,11 +118,6 @@ void addPropagation(Context& ctx) {
       multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
       covarianceTransport, inputTrackParameters, outputSummaryCollection,
       outputMaterialCollection);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SimHitToSummaryConversion, mex,
-                                "SimHitToSummaryConversion", inputSimHits,
-                                inputParticles, outputSummaryCollection,
-                                surfaceByIdentifier);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(
