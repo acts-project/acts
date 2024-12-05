@@ -471,13 +471,13 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       auto getTrackParams = [&](unsigned int ipar)
           -> std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>> {
         if (ipar == ePredicted && state.hasPredicted()) {
-          return std::make_pair(state.predicted(), state.predictedCovariance());
+          return std::pair(state.predicted(), state.predictedCovariance());
         }
         if (ipar == eFiltered && state.hasFiltered()) {
-          return std::make_pair(state.filtered(), state.filteredCovariance());
+          return std::pair(state.filtered(), state.filteredCovariance());
         }
         if (ipar == eSmoothed && state.hasSmoothed()) {
-          return std::make_pair(state.smoothed(), state.smoothedCovariance());
+          return std::pair(state.smoothed(), state.smoothedCovariance());
         }
         if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector() &&
             state.hasCalibrated()) {
