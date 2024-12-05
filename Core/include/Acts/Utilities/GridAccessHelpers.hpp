@@ -212,7 +212,7 @@ class LocalSubspace : public IBoundToGridLocal {
   }
 };
 
-class BoundCylinderToZPhi final : public IBoundToGridLocal {
+class BoundCylinderToZPhi : public IBoundToGridLocal {
  public:
   double radius = 1.;
   double shift = 0.;
