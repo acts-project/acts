@@ -18,7 +18,7 @@
 
 #include <CUDA_graph_creator_new>
 #include <TTree_hits>
-#include <functional>
+#include <algorithm>
 #include <graph>
 
 #include <cuda.h>
@@ -60,9 +60,6 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
 
   cuda_x[i] = r * std::cos(phi);
   cuda_y[i] = r * std::sin(phi);
-
-  //printf("%lu: %f, %f -> %f, %f\n", i, cuda_R[i], cuda_phi[i], cuda_x[i],
-  //       cuda_y[i]);
 }
 
 template <class T>
@@ -74,6 +71,61 @@ __global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
   }
 
   data[i] *= scale;
+}
+
+constexpr float g_pi = 3.141592654f;
+
+template <typename T>
+__device__ T resetAngle(T angle) {
+  if (angle > g_pi) {
+    return angle - 2.f * g_pi;
+  }
+  if (angle < -g_pi) {
+    return angle + 2.f * g_pi;
+  }
+  return angle;
+};
+
+template <typename T>
+__global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
+                                 const int *tgtEdges, std::size_t nNodeFeatures,
+                                 const T *nodeFeatures, T *edgeFeatures) {
+  enum NodeFeatures { r = 0, phi, z, eta };
+  constexpr static int nEdgeFeatures = 6;
+
+  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i >= nEdges) {
+    return;
+  }
+
+  const int src = srcEdges[i];
+  const int tgt = tgtEdges[i];
+
+  const T *srcNodeFeatures = nodeFeatures + src * nNodeFeatures;
+  const T *tgtNodeFeatures = nodeFeatures + tgt * nNodeFeatures;
+
+  T dr = tgtNodeFeatures[r] - srcNodeFeatures[r];
+  T dphi =
+      resetAngle(g_pi * (tgtNodeFeatures[phi] - srcNodeFeatures[phi])) / g_pi;
+  T dz = tgtNodeFeatures[z] - srcNodeFeatures[z];
+  T deta = tgtNodeFeatures[eta] - srcNodeFeatures[eta];
+  T phislope = 0.0;
+  T rphislope = 0.0;
+
+  if (dr != 0.0) {
+    phislope = std::clamp(dphi / dr, -100.f, 100.f);
+    T avgR = T{0.5} * (tgtNodeFeatures[r] + srcNodeFeatures[r]);
+    rphislope = avgR * phislope;
+  }
+
+  T *efPtr = edgeFeatures + i * nEdgeFeatures;
+  efPtr[0] = dr;
+  efPtr[1] = dphi;
+  efPtr[2] = dz;
+  efPtr[3] = deta;
+  efPtr[4] = phislope;
+  efPtr[5] = rphislope;
 }
 
 template <typename T>
@@ -89,6 +141,18 @@ void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
 }
 
 }  // namespace
+
+template <typename T>
+void printPrefixSum(const std::vector<T> &vec) {
+  T prev = vec.front();
+  std::cout << 0 << ":" << vec[0] << "  ";
+  for (auto i = 0ul; i < vec.size(); ++i) {
+    if (vec[i] != prev) {
+      std::cout << i << ":" << vec[i] << "  ";
+      prev = vec[i];
+    }
+  }
+}
 
 namespace Acts::detail {
 
@@ -112,6 +176,7 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
 
   dim3 block_dim = blockDim;
   dim3 grid_dim = gridDim;
+
   // TODO understand this algorithm
   std::vector<int> hit_indice;
   {
@@ -134,7 +199,19 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
     }
   }
 
-#if 0
+  assert(!std::all_of(hit_indice.begin(), hit_indice.end(),
+                      [](auto v) { return v == 0; }));
+
+  // std::cout << "my prefix sum (" << hit_indice.size() << "): ";
+  // printPrefixSum(hit_indice);
+  // std::cout << std::endl;
+
+  float *cudaNodeFeatures{};
+  cudaMalloc(&cudaNodeFeatures, features.size() * sizeof(float));
+  cudaMemcpy(cudaNodeFeatures, features.data(), features.size() * sizeof(float),
+             cudaMemcpyHostToDevice);
+
+#if 1
   CUDA_hit_data<float> inputData;
   inputData.size = nHits;
 
@@ -143,49 +220,52 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   std::size_t zOffset = 2;
   std::size_t etaOffset = 3;
 
-  //const auto srcStride = sizeof(float) * nFeatures;
-  //const auto dstStride = sizeof(float);  // contiguous in destination
-  //const auto width = sizeof(float);      // only copy 1 column
-  //const auto height = nHits;
+  // const auto srcStride = sizeof(float) * nFeatures;
+  // const auto dstStride = sizeof(float);  // contiguous in destination
+  // const auto width = sizeof(float);      // only copy 1 column
+  // const auto height = nHits;
 
   std::vector<float> hostR(nHits), hostPhi(nHits), hostZ(nHits), hostEta(nHits);
-  for(auto i=0ul; i<nHits; ++i) {
-    hostR.at(i) = features.at(i*nFeatures + rOffset);
-    hostPhi.at(i) = features.at(i*nFeatures + phiOffset);
-    hostZ.at(i) = features.at(i*nFeatures + zOffset);
-    hostEta.at(i) = features.at(i*nFeatures + etaOffset);
+  for (auto i = 0ul; i < nHits; ++i) {
+    hostR.at(i) = features.at(i * nFeatures + rOffset);
+    hostPhi.at(i) = features.at(i * nFeatures + phiOffset);
+    hostZ.at(i) = features.at(i * nFeatures + zOffset);
+    hostEta.at(i) = features.at(i * nFeatures + etaOffset);
   }
 
-
   CUDA_CHECK(cudaMallocT(&inputData.cuda_R, nHits * sizeof(float)));
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_R, hostR.data(), nHits * sizeof(float), cudaMemcpyHostToDevice));
-  //CUDA_CHECK(cudaMemcpy2D(inputData.cuda_R, dstStride,
-  //                        features.data() + rOffset, srcStride, width, height,
-  //                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(inputData.cuda_R, hostR.data(), nHits * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  // CUDA_CHECK(cudaMemcpy2D(inputData.cuda_R, dstStride,
+  //                         features.data() + rOffset, srcStride, width,
+  //                         height, cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaMallocT(&inputData.cuda_phi, nHits * sizeof(float)));
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_phi, hostPhi.data(), nHits * sizeof(float), cudaMemcpyHostToDevice));
-  //CUDA_CHECK(cudaMemcpy2D(inputData.cuda_phi, dstStride,
-  //                        features.data() + phiOffset, srcStride, width, height,
-  //                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(inputData.cuda_phi, hostPhi.data(),
+                        nHits * sizeof(float), cudaMemcpyHostToDevice));
+  // CUDA_CHECK(cudaMemcpy2D(inputData.cuda_phi, dstStride,
+  //                         features.data() + phiOffset, srcStride, width,
+  //                         height, cudaMemcpyHostToDevice));
   CUDA_CHECK(cudaMallocT(&inputData.cuda_z, nHits * sizeof(float)))
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_z, hostZ.data(), nHits * sizeof(float), cudaMemcpyHostToDevice));
-  //CUDA_CHECK(cudaMemcpy2D(inputData.cuda_z, dstStride,
-  //                        features.data() + zOffset, srcStride, width, height,
-  //                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(inputData.cuda_z, hostZ.data(), nHits * sizeof(float),
+                        cudaMemcpyHostToDevice));
+  // CUDA_CHECK(cudaMemcpy2D(inputData.cuda_z, dstStride,
+  //                         features.data() + zOffset, srcStride, width,
+  //                         height, cudaMemcpyHostToDevice));
   CUDA_CHECK(cudaMallocT(&inputData.cuda_eta, nHits * sizeof(float)));
-  CUDA_CHECK(cudaMemcpy(inputData.cuda_eta, hostEta.data(), nHits * sizeof(float), cudaMemcpyHostToDevice));
-  //CUDA_CHECK(cudaMemcpy2D(inputData.cuda_eta, dstStride,
-  //                        features.data() + etaOffset, srcStride, width, height,
-  //                        cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(inputData.cuda_eta, hostEta.data(),
+                        nHits * sizeof(float), cudaMemcpyHostToDevice));
+  // CUDA_CHECK(cudaMemcpy2D(inputData.cuda_eta, dstStride,
+  //                         features.data() + etaOffset, srcStride, width,
+  //                         height, cudaMemcpyHostToDevice));
 
   rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_z, 1000.f);
   CUDA_CHECK(cudaGetLastError());
   rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_R, 1000.f);
   CUDA_CHECK(cudaGetLastError());
-  rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_phi, 3.141592654f);
+  rescaleFeature<<<gridDim, blockDim>>>(nHits, inputData.cuda_phi,
+                                        3.141592654f);
   CUDA_CHECK(cudaGetLastError());
-
 
   CUDA_CHECK(cudaMallocT(&inputData.cuda_x, nHits * sizeof(float)));
   CUDA_CHECK(cudaMallocT(&inputData.cuda_y, nHits * sizeof(float)));
@@ -195,9 +275,10 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   CUDA_CHECK(cudaGetLastError());
 
   int *cuda_hit_indice = nullptr;
-  CUDA_CHECK(cudaMallocT(&cuda_hit_indice, nHits * sizeof(int)));
+  CUDA_CHECK(cudaMallocT(&cuda_hit_indice, hit_indice.size() * sizeof(int)));
   CUDA_CHECK(cudaMemcpy(cuda_hit_indice, hit_indice.data(),
-                        nHits * sizeof(int), cudaMemcpyHostToDevice));
+                        hit_indice.size() * sizeof(int),
+                        cudaMemcpyHostToDevice));
   CUDA_CHECK(cudaGetLastError());
 #else
   hits<float> hitsCollection(false, false);
@@ -255,27 +336,24 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   int *cuda_hit_indice = input_hits.cuda_hit_indice();
 #endif
 
-  std::vector<int> data_cpu(
-      m_graphCreator->get_module_map_doublet().module_map().size() + 1);
-  CUDA_CHECK(
-      cudaMemcpy(data_cpu.data(), cuda_hit_indice,
-                 m_graphCreator->get_module_map_doublet().module_map().size() +
-                     1 * sizeof(int),
-                 cudaMemcpyDeviceToHost));
-  assert(data_cpu.size() == hit_indice.size());
-  for (int i = 0; i < data_cpu.size(); ++i) {
-    if (data_cpu[i] != hit_indice[i]) {
-      std::cout << i << ": " << data_cpu[i] << " != " << hit_indice[i] << "\n";
-    }
-  }
-  assert(data_cpu == hit_indice);
+  /*
+    std::vector<int> data_cpu(
+        m_graphCreator->get_module_map_doublet().module_map().size() + 1);
+    CUDA_CHECK(
+        cudaMemcpy(data_cpu.data(), cuda_hit_indice,
+                   (m_graphCreator->get_module_map_doublet().module_map().size()
+    + 1) * sizeof(int), cudaMemcpyDeviceToHost)); assert(data_cpu.size() ==
+    hit_indice.size()); std::cout << "MMG prefix sum: ";
+    printPrefixSum(data_cpu);
+    std::cout << std::endl;  assert(data_cpu == hit_indice);
 
-  copyFromDeviceAndPrint(inputData.cuda_x, nHits, "cuda_x");
-  copyFromDeviceAndPrint(inputData.cuda_y, nHits, "cuda_y");
-  copyFromDeviceAndPrint(inputData.cuda_z, nHits, "cuda_z");
-  copyFromDeviceAndPrint(inputData.cuda_R, nHits, "cuda_R");
-  copyFromDeviceAndPrint(inputData.cuda_phi, nHits, "cuda_phi");
-  copyFromDeviceAndPrint(inputData.cuda_eta, nHits, "cuda_eta");
+    copyFromDeviceAndPrint(inputData.cuda_x, nHits, "cuda_x");
+    copyFromDeviceAndPrint(inputData.cuda_y, nHits, "cuda_y");
+    copyFromDeviceAndPrint(inputData.cuda_z, nHits, "cuda_z");
+    copyFromDeviceAndPrint(inputData.cuda_R, nHits, "cuda_R");
+    copyFromDeviceAndPrint(inputData.cuda_phi, nHits, "cuda_phi");
+    copyFromDeviceAndPrint(inputData.cuda_eta, nHits, "cuda_eta");
+  */
 
   cudaDeviceSynchronize();
   auto edgeData = m_graphCreator->build(inputData, cuda_hit_indice);
@@ -294,60 +372,56 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
                         edgeData.size * sizeof(int), cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaDeviceSynchronize());
 
-  // std::cout << "Make edge index from blob" << std::endl;
   auto edgeIndex =
       torch::from_blob(edgeIndexPtr, 2 * static_cast<long>(edgeData.size),
                        at::TensorOptions().device(at::kCUDA).dtype(at::kInt));
 
   edgeIndex =
       edgeIndex.reshape({2, static_cast<long>(edgeData.size)}).to(at::kLong);
-  // CUDA_CHECK(cudaFree(edgeIndexPtr));
 
   float *edgeFeaturePtr{};
   cudaMallocT(&edgeFeaturePtr, 6 * edgeData.size * sizeof(float));
 
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr, 6 * sizeof(float),
-                          edgeData.cuda_graph_dR, sizeof(float), sizeof(float),
-                          edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(
-      edgeFeaturePtr + 1, 6 * sizeof(float), edgeData.cuda_graph_dphi,
-      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 2, 6 * sizeof(float),
-                          edgeData.cuda_graph_dz, sizeof(float), sizeof(float),
-                          edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(
-      edgeFeaturePtr + 3, 6 * sizeof(float), edgeData.cuda_graph_deta,
-      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(
-      edgeFeaturePtr + 4, 6 * sizeof(float), edgeData.cuda_graph_phi_slope,
-      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaMemcpy2D(
-      edgeFeaturePtr + 5, 6 * sizeof(float), edgeData.cuda_graph_r_phi_slope,
-      sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
-  CUDA_CHECK(cudaDeviceSynchronize());
+  dim3 gridDimEdges = (edgeData.size + blockDim.x - 1) / blockDim.x;
+  makeEdgeFeatures<<<gridDimEdges, blockDim>>>(
+      edgeData.size, edgeData.cuda_graph_M1_hits, edgeData.cuda_graph_M2_hits,
+      nFeatures, cudaNodeFeatures, edgeFeaturePtr);
+  /*
+    CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr, 6 * sizeof(float),
+                            edgeData.cuda_graph_dR, sizeof(float),
+    sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy2D(
+        edgeFeaturePtr + 1, 6 * sizeof(float), edgeData.cuda_graph_dphi,
+        sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy2D(edgeFeaturePtr + 2, 6 * sizeof(float),
+                            edgeData.cuda_graph_dz, sizeof(float),
+    sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy2D(
+        edgeFeaturePtr + 3, 6 * sizeof(float), edgeData.cuda_graph_deta,
+        sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy2D(
+        edgeFeaturePtr + 4, 6 * sizeof(float), edgeData.cuda_graph_phi_slope,
+        sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy2D(
+        edgeFeaturePtr + 5, 6 * sizeof(float), edgeData.cuda_graph_r_phi_slope,
+        sizeof(float), sizeof(float), edgeData.size, cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaDeviceSynchronize());
+  */
 
-  // std::cout << "Make edge features from blob" << std::endl;
   auto edgeFeatures =
       torch::from_blob(edgeFeaturePtr, {static_cast<long>(edgeData.size), 6},
                        //[](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },
                        at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
 
-#if 0
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_dR));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_dphi));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_dz));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_deta));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_phi_slope));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_r_phi_slope));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_M1_hits));
-  CUDA_CHECK(cudaFree(edgeData.cuda_graph_M2_hits));
-#endif
-
   auto edgeFeaturesNew = edgeFeatures.clone();
-
-  // std::cout << edgeIndex << std::endl;
-  // std::cout << edgeFeaturesNew << std::endl;
+  // copyFromDeviceAndPrint(edgeData.cuda_graph_dR, edgeData.size,
+  // "cuda_graph_dR");
+  //std::cout << "edgeIndex:\n" << edgeIndex << std::endl;
+  //std::cout << "edgeFeatures:\n" << edgeFeaturesNew << std::endl;
   CUDA_CHECK(cudaDeviceSynchronize());
+
+  // std::cout << "dR (0->1): " << hostR.at(1) - hostR.at(0) << std::endl;
+  // std::cout << "dR (0->2): " << hostR.at(2) - hostR.at(0) << std::endl;
 
   return {edgeIndex.clone(), edgeFeaturesNew};
 }
