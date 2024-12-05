@@ -36,7 +36,7 @@ option(ACTS_USE_SYSTEM_DETRAY "Use a system-provided detray installation" ${ACTS
 option(ACTS_USE_SYSTEM_TRACCC "Use a system-provided traccc installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_USE_SYSTEM_ALGEBRAPLUGINS "Use a system-provided algebra-plugins installation" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ON)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_SYSTEM_EIGEN3 "Use a system-provided eigen3" ON)
 
