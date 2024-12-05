@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 #include <functional>
 #include <optional>
@@ -189,7 +186,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
-  Result<FieldCell> getFieldCell(const Vector3& position) const {
+  std::optional<FieldCell> getFieldCell(const Vector3& position) const {
     const auto& gridPosition = m_cfg.transformPos(position);
     const auto& indices = m_cfg.grid.localBinsFromPosition(gridPosition);
     const auto& lowerLeft = m_cfg.grid.lowerLeftBinEdge(indices);
@@ -201,7 +198,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
 
     if (!isInsideLocal(gridPosition)) {
-      return MagneticFieldError::OutOfBounds;
+      return std::nullopt;
     }
 
     std::size_t i = 0;
@@ -278,14 +275,14 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   ///
   /// @pre The given @c position must lie within the range of the underlying
   ///      magnetic field map.
-  Result<Vector3> getField(const Vector3& position) const {
+  Vector3 getField(const Vector3& position) const {
     const auto gridPosition = m_cfg.transformPos(position);
     if (!isInsideLocal(gridPosition)) {
-      return Result<Vector3>::failure(MagneticFieldError::OutOfBounds);
+      return Vector3::Zero();
     }
 
-    return Result<Vector3>::success(
-        m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
+    return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
+                                 position);
   }
 
   Vector3 getFieldUnchecked(const Vector3& position) const final {
@@ -295,30 +292,29 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   }
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
-  Result<Vector3> getField(const Vector3& position,
-                           MagneticFieldProvider::Cache& cache) const final {
+  Vector3 getField(const Vector3& position,
+                   MagneticFieldProvider::Cache& cache) const final {
     Cache& lcache = cache.as<Cache>();
     const auto gridPosition = m_cfg.transformPos(position);
     if (!lcache.fieldCell || !(*lcache.fieldCell).isInside(gridPosition)) {
-      auto res = getFieldCell(position);
-      if (!res.ok()) {
-        return Result<Vector3>::failure(res.error());
+      auto fieldCell = getFieldCell(position);
+      if (!fieldCell.has_value()) {
+        return Vector3::Zero();
       }
-      lcache.fieldCell = *res;
+      lcache.fieldCell = *fieldCell;
     }
-    return Result<Vector3>::success((*lcache.fieldCell).getField(gridPosition));
+    return (*lcache.fieldCell).getField(gridPosition);
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
+  /// @copydoc MagneticFieldProvider::getFieldAndGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
   ///
   /// @note currently the derivative is not calculated
   /// @note Cache is not used currently
   /// @todo return derivative
-  Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
-      MagneticFieldProvider::Cache& cache) const final {
-    (void)derivative;
-    return getField(position, cache);
+  std::pair<Vector3, SquareMatrix3> getFieldAndGradient(
+      const Vector3& /*position*/,
+      MagneticFieldProvider::Cache& /*cache*/) const final {
+    throw std::runtime_error("not implemented");
   }
 
  private:
