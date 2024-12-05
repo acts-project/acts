@@ -73,6 +73,20 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationArray) {
   BOOST_CHECK_EQUAL(trajectory.size(), 108);
 }
 
+BOOST_AUTO_TEST_CASE(SplineInterpolationErrors) {
+  std::vector<std::array<double, 3u>> inputs;
+  
+  // Test with single point
+  inputs.push_back({0., 0., 0.});
+  auto result = Acts::Interpolation3D::spline(inputs, 10);
+  BOOST_CHECK_EQUAL(result.size(), 1);
+  
+  // Test with two points
+  inputs.push_back({1., 1., 1.});
+  result = Acts::Interpolation3D::spline(inputs, 10);
+  BOOST_CHECK_EQUAL(result.size(), 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
