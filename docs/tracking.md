@@ -97,16 +97,17 @@ position $l$ and the momentum vector $\vec p$ are shown.
 
 Aside from the nominal quantities captured in $\vec x$, the related
 uncertainties and correlations need to be taken into account as well. They
-can be expressed as a $5\times 5$ covariance matrix like
+can be expressed as a $6\times 6$ covariance matrix like
 
 \begin{equation*}
   C =
   \begin{bmatrix}
-   \sigma^2(l_0)& \text{cov}(l_0,l_1) & \text{cov}(l_0, \phi) & \text{cov}(l_0, \theta) & \text{cov}(l_0, q/p) \\
-   . & \sigma^2(l_1) & \text{cov}(l_1, \phi) & \text{cov}(l_1, \theta) & \text{cov}(l_1, q/p) \\
-   . & . &  \sigma^2(\phi) & \text{cov}(\phi,\theta) & \text{cov}(\phi, q/p) \\
-   . & . & . & \sigma^2(\theta) & \text{cov}(\theta, q/p) \\
-   . & . & . & . & \sigma^2(q/p)
+   \sigma^2(l_0)& \text{cov}(l_0,l_1) & \text{cov}(l_0, \phi) & \text{cov}(l_0, \theta) & \text{cov}(l_0, q/p) & \text{cov}(l_0, t) \\
+   . & \sigma^2(l_1) & \text{cov}(l_1, \phi) & \text{cov}(l_1, \theta) & \text{cov}(l_1, q/p) & \text{cov}(l_1, t) \\
+   . & . &  \sigma^2(\phi) & \text{cov}(\phi,\theta) & \text{cov}(\phi, q/p) & \text{cov}(\phi, t) \\
+   . & . & . & \sigma^2(\theta) & \text{cov}(\theta, q/p) & \text{cov}(\theta, t) \\
+   . & . & . & . & \sigma^2(q/p) & \text{cov}(q/p, t) \\
+   . & . & . & . & . & \sigma^2(t)
   \end{bmatrix}
 \end{equation*}
 
