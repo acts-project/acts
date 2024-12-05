@@ -138,3 +138,9 @@ void Acts::Experimental::addMeasurementToGx2fSumsBackend(
       << "    safeInvCovMeasurement:\n"
       << (*safeInvCovMeasurement));
 }
+
+Eigen::VectorXd Acts::Experimental::computeGx2fDeltaParams(
+    const Acts::Experimental::Gx2fSystem& extendedSystem) {
+  return extendedSystem.aMatrix().colPivHouseholderQr().solve(
+      extendedSystem.bVector());
+}

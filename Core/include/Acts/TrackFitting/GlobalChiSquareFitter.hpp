@@ -637,6 +637,15 @@ std::size_t countMaterialStates(
   return nMaterialSurfaces;
 }
 
+/// @brief Solve the gx2f system to get the delta parameters for the update
+///
+/// This function computes the delta parameters for the GX2F Actor fitting
+/// process by solving the linear equation system [a] * delta = b. It uses the
+/// column-pivoting Householder QR decomposition for numerical stability.
+///
+/// @param extendedSystem All parameters of the current equation system
+Eigen::VectorXd computeGx2fDeltaParams(const Gx2fSystem& extendedSystem);
+
 /// @brief Update parameters (and scattering angles if applicable)
 ///
 /// @param params Parameters to be updated
@@ -1334,10 +1343,8 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
-      // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          extendedSystem.aMatrix().colPivHouseholderQr().solve(
-              extendedSystem.bVector());
+          computeGx2fDeltaParams(extendedSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
@@ -1501,10 +1508,8 @@ class Gx2Fitter {
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
       }
 
-      // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          extendedSystem.aMatrix().colPivHouseholderQr().solve(
-              extendedSystem.bVector());
+          computeGx2fDeltaParams(extendedSystem);
 
       ACTS_VERBOSE("aMatrix:\n"
                    << extendedSystem.aMatrix() << "\n"
