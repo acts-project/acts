@@ -48,6 +48,10 @@ class DigitizationAlgorithm final : public IAlgorithm {
     std::string outputMeasurementParticlesMap = "measurement_particles_map";
     /// Output collection to map measured hits to simulated hits.
     std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
+    /// Output collection to map particles to simulated hits.
+    std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
 
     /// Map of surface by identifier to allow local - to global
     std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
@@ -139,6 +143,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
       this, "OutputMeasurementParticlesMap"};
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
+  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+      this, "OutputSimHitMeasurementsMap"};
 
   /// Construct a fixed-size smearer from a configuration.
   ///
