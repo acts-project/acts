@@ -70,12 +70,13 @@
   __local_acts_logger logger(log_object);
 
 // Debug level agnostic implementation of the ACTS_XYZ logging macros
-#define ACTS_LOG(level, x)                                                     \
+#define ACTS_LOG(level, x, ...)                                                     \
   do {                                                                         \
     if (logger().doPrint(level)) {                                             \
+  using namespace Acts::Logging::Literals; \
       std::ostringstream os;                                                   \
       os << x;                                                                 \
-      logger().log(level, os.str());                                           \
+      logger().log(level, os.str() __VA_OPT__(,) __VA_ARGS__);                                           \
     }                                                                          \
   }                                                                            \
   while(0)
@@ -90,7 +91,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::VERBOSE.
-#define ACTS_VERBOSE(x)  ACTS_LOG(Acts::Logging::VERBOSE, x)
+#define ACTS_VERBOSE(...)  ACTS_LOG(Acts::Logging::VERBOSE, __VA_ARGS__)
 
 /// @brief macro for debug debug output
 /// @ingroup Logging
@@ -102,7 +103,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::DEBUG.
-#define ACTS_DEBUG(x)  ACTS_LOG(Acts::Logging::DEBUG, x)
+#define ACTS_DEBUG(...)  ACTS_LOG(Acts::Logging::DEBUG, __VA_ARGS__)
 
 /// @brief macro for info debug output
 /// @ingroup Logging
@@ -114,7 +115,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::INFO.
-#define ACTS_INFO(x)  ACTS_LOG(Acts::Logging::INFO, x)
+#define ACTS_INFO(...)  ACTS_LOG(Acts::Logging::INFO, __VA_ARGS__)
 
 /// @brief macro for warning debug output
 /// @ingroup Logging
@@ -126,7 +127,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::WARNING.
-#define ACTS_WARNING(x)  ACTS_LOG(Acts::Logging::WARNING, x)
+#define ACTS_WARNING( ...)  ACTS_LOG(Acts::Logging::WARNING, __VA_ARGS__)
 
 /// @brief macro for error debug output
 /// @ingroup Logging
@@ -138,7 +139,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::ERROR.
-#define ACTS_ERROR(x)  ACTS_LOG(Acts::Logging::ERROR, x)
+#define ACTS_ERROR( ...)  ACTS_LOG(Acts::Logging::ERROR,  __VA_ARGS__)
 
 /// @brief macro for fatal debug output
 /// @ingroup Logging
@@ -150,7 +151,7 @@
 ///
 /// The debug message is printed if the current Acts::Logging::Level <=
 /// Acts::Logging::FATAL.
-#define ACTS_FATAL(x)  ACTS_LOG(Acts::Logging::FATAL, x)
+#define ACTS_FATAL(...)  ACTS_LOG(Acts::Logging::FATAL, __VA_ARGS__)
 // clang-format on
 
 namespace Acts {
@@ -274,6 +275,12 @@ class OutputPrintPolicy {
   /// @param [in] input text of debug message
   virtual void flush(const Level& lvl, const std::string& input) = 0;
 
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  virtual void flush(const Level& lvl, nlohmann::json&& json) = 0;
+
   /// Return the name of the print policy
   /// @return the name
   virtual const std::string& name() const = 0;
@@ -384,6 +391,14 @@ class OutputDecorator : public OutputPrintPolicy {
     m_wrappee->flush(lvl, input);
   }
 
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    m_wrappee->flush(lvl, std::move(json));
+  }
+
   /// Return the name of the output decorator (forwards to wrappee)
   /// @return the name
   const std::string& name() const override { return m_wrappee->name(); }
@@ -421,6 +436,15 @@ class NamedOutputDecorator final : public OutputDecorator {
     os << std::left << std::setw(m_maxWidth) << m_name.substr(0, m_maxWidth - 3)
        << input;
     OutputDecorator::flush(lvl, os.str());
+  }
+
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    json["name"] = m_name;
+    OutputDecorator::flush(lvl, std::move(json));
   }
 
   /// Make a copy of this print policy with a new name
@@ -468,6 +492,15 @@ class TimedOutputDecorator final : public OutputDecorator {
     std::ostringstream os;
     os << std::left << std::setw(12) << now() << input;
     OutputDecorator::flush(lvl, os.str());
+  }
+
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    json["time"] = now();
+    OutputDecorator::flush(lvl, std::move(json));
   }
 
   /// Make a copy of this print policy with a new name
@@ -521,6 +554,17 @@ class ThreadOutputDecorator final : public OutputDecorator {
     OutputDecorator::flush(lvl, os.str());
   }
 
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    std::ostringstream os;
+    os << std::this_thread::get_id();
+    json["thread"] = os.str();
+    OutputDecorator::flush(lvl, std::move(json));
+  }
+
   /// Make a copy of this print policy with a new name
   /// @param name the new name
   /// @return the copy
@@ -552,6 +596,15 @@ class LevelOutputDecorator final : public OutputDecorator {
     std::ostringstream os;
     os << std::left << std::setw(10) << toString(lvl) << input;
     OutputDecorator::flush(lvl, os.str());
+  }
+
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    json["level"] = toString(lvl);
+    OutputDecorator::flush(lvl, std::move(json));
   }
 
   /// Make a copy of this print policy with a new name
@@ -605,6 +658,14 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
     }
   }
 
+  /// @brief handle output as json
+  ///
+  /// @param [in] lvl   debug output level of message
+  /// @param [in] json json object representing the log record
+  void flush(const Level& lvl, nlohmann::json&& json) override {
+    flush(lvl, json.dump());
+  }
+
   /// Fulfill @c OutputPrintPolicy interface. This policy doesn't actually have a
   /// name, so the assumption is that somewhere in the decorator hierarchy,
   /// there is something that returns a name without delegating to a wrappee,
@@ -628,6 +689,8 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// pointer to destination output stream
   std::ostream* m_out;
 };
+
+namespace detail {
 
 template <typename T>
 concept JsonConvertible = requires(T t, nlohmann::json j) {
@@ -664,30 +727,35 @@ class structured_log_key {
 template <JsonConvertible T>
 class structured_log_key_v : public structured_log_key {
  public:
-  explicit structured_log_key_v(std::string_view key, T&& value)
-      : structured_log_key{key}, m_value{std::move(value)} {}
+  explicit structured_log_key_v(std::string_view key, const T& value)
+      : structured_log_key{key}, m_value{value} {}
 
   structured_log_key_v(const structured_log_key_v&) = delete;
   structured_log_key_v(structured_log_key_v&&) = delete;
   structured_log_key_v& operator=(const structured_log_key_v&) = delete;
   structured_log_key_v& operator=(structured_log_key_v&&) = delete;
 
-  T&& value() && { return std::move(m_value); }
+  const T& value() && { return m_value; }
 
  private:
-  T&& m_value;
+  const T& m_value;
 };
 
-using slog = structured_log_key;
+}  // namespace detail
+
+namespace Literals {
+/// This literal supports structured logging with key value pairs in the logging
+/// macros.
+/// @param key the key of the value
+/// @param len the length of the key
+/// @return a structured log key
+inline detail::structured_log_key operator""_key(const char* key,
+                                                 std::size_t len) {
+  return detail::structured_log_key{std::string_view{key, len}};
+}
+}  // namespace Literals
 
 }  // namespace Logging
-
-namespace LoggingLiterals {
-inline Logging::structured_log_key operator""_slog(const char* key,
-                                                   std::size_t len) {
-  return Logging::structured_log_key{std::string_view{key, len}};
-}
-}  // namespace LoggingLiterals
 
 /// @brief class for printing debug output
 ///
@@ -697,13 +765,48 @@ inline Logging::structured_log_key operator""_slog(const char* key,
 /// @ingroup Logging
 class Logger {
  public:
+  /// Controls the output mode of this logger.
+  enum class OutputMode {
+    /// This mode outputs log messages like:
+    /// ```
+    /// LoggerName LEVEL Message key1=value key2=value
+    /// ```
+    Default,
+
+    /// This mode outputs log messages like:
+    /// ```
+    /// LoggerName LEVEL Message
+    /// ```
+    ///
+    /// It discards all structured logging info
+    Plain,
+
+    /// This mode outputs the log entry as a JSON string
+    /// ```json
+    /// {"name":"LoggerName","level":"LEVEL","message":"Message","key1":"value","key2":"value"}
+    /// ```
+    Structured
+  };
+
   /// @brief construct from output print and filter policy
   ///
   /// @param [in] pPrint  policy for printing debug messages
   /// @param [in] pFilter policy for filtering debug messages
+  /// @param [in] mode The output mode for this logger
   Logger(std::unique_ptr<Logging::OutputPrintPolicy> pPrint,
-         std::unique_ptr<Logging::OutputFilterPolicy> pFilter)
-      : m_printPolicy(std::move(pPrint)), m_filterPolicy(std::move(pFilter)) {}
+         std::unique_ptr<Logging::OutputFilterPolicy> pFilter,
+         OutputMode mode = OutputMode::Default)
+      : m_printPolicy(std::move(pPrint)),
+        m_filterPolicy(std::move(pFilter)),
+        m_mode{mode} {}
+
+  /// Set the output mode for this logger
+  /// @param mode
+  void setOutputMode(OutputMode mode) { m_mode = mode; }
+
+  /// Get the output mode for this logger
+  /// @return the output mode
+  OutputMode outputMode() { return m_mode; }
 
   /// @brief decide whether a message with a given debug level has to be printed
   ///
@@ -724,27 +827,55 @@ class Logger {
     }
   }
 
+  /// @brief log a debug message with structured output
+  ///
+  /// @param [in] lvl debug level of debug message
+  /// @param [in] input text of debug message
+  /// @param [in] args key value pairs to be added to the log message, see @ref
+  ///             Acts::Logging::Literals::_key
   template <typename... Args>
   void log(Logging::Level lvl, const std::string& message,
-           Logging::structured_log_key_v<Args>&&... args) const {
+           Logging::detail::structured_log_key_v<Args>&&... args) const {
     if (!doPrint(lvl)) {
       return;
     }
 
-    nlohmann::json j;
-    auto add_to_json = [&j](auto&& arg) {
-      j[std::string{arg.key()}] = std::forward<decltype(arg)>(arg).value();
+    auto makeJson = [&]() {
+      nlohmann::json j;
+      auto add_to_json = [&j](auto&& arg) {
+        j[std::string{arg.key()}] = std::forward<decltype(arg)>(arg).value();
+      };
+      {
+        (add_to_json(
+             std::forward<Logging::detail::structured_log_key_v<Args>>(args)),
+         ...);
+      }
+      return j;
     };
-    {
-      (add_to_json(std::forward<Logging::structured_log_key_v<Args>>(args)),
-       ...);
+
+    switch (m_mode) {
+      using enum OutputMode;
+
+      case Plain:
+        m_printPolicy->flush(lvl, message);
+        break;
+      case Default: {
+        std::stringstream os;
+        os << message;
+        nlohmann::json j = makeJson();
+        for (const auto& [key, value] : j.items()) {
+          os << " " << key << "=" << value;
+        }
+        m_printPolicy->flush(lvl, os.str());
+        break;
+      }
+      case Structured: {
+        nlohmann::json j = makeJson();
+        j["message"] = message;
+        m_printPolicy->flush(lvl, std::move(j));
+        break;
+      }
     }
-
-    j["message"] = message;
-
-    std::ostringstream os;
-    os << "STRUCT: " << j.dump();
-    m_printPolicy->flush(lvl, os.str());
   }
 
   /// Return the print policy for this logger
@@ -806,6 +937,9 @@ class Logger {
 
   /// policy object for filtering debug messages
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
+
+  /// the stored output mode
+  OutputMode m_mode{OutputMode::Default};
 };
 
 /// @brief get default debug output logger
