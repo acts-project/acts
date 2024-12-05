@@ -629,14 +629,12 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   std::ostream* m_out;
 };
 
-#if defined(__cpp_concepts)
 template <typename T>
 concept JsonConvertible = requires(T t, nlohmann::json j) {
-  {j = t};
+  { j = t };
 };
-#endif
 
-template <ACTS_CONCEPT(JsonConvertible) T>
+template <JsonConvertible T>
 class structured_log_key_v;
 class structured_log_key {
  public:
@@ -652,7 +650,7 @@ class structured_log_key {
   structured_log_key& operator=(const structured_log_key&) = delete;
   structured_log_key& operator=(structured_log_key&&) = delete;
 
-  template <ACTS_CONCEPT(JsonConvertible) T>
+  template <JsonConvertible T>
   structured_log_key_v<T> operator=(T&& value) {
     return structured_log_key_v<T>{m_key, std::forward<T>(value)};
   }
@@ -663,7 +661,7 @@ class structured_log_key {
   std::string_view m_key;
 };
 
-template <ACTS_CONCEPT(JsonConvertible) T>
+template <JsonConvertible T>
 class structured_log_key_v : public structured_log_key {
  public:
   explicit structured_log_key_v(std::string_view key, T&& value)
