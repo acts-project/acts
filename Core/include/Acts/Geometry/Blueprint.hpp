@@ -89,17 +89,21 @@ class Blueprint : private BlueprintNode {
   /// @return The name
   const std::string& name() const override;
 
+  /// @copydoc BlueprintNode::build
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// @copydoc BlueprintNode::connect
   PortalShellBase& connect(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// @copydoc BlueprintNode::finalize
   void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
+  /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
  private:
