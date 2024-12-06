@@ -905,7 +905,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
                 pytest.mark.odd,
             ],
         ),
-        (AlignedDetector, False, 450),
+        (functools.partial(AlignedDetector, iovSize=1), False, 450),
     ],
 )
 @pytest.mark.slow
