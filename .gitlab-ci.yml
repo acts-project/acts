@@ -142,33 +142,46 @@ build_exatrkx:
     - cmake --build build -- -j6
     - ccache -s
 
-# test_exatrkx_unittests:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - ctest --test-dir build -R ExaTrkX
-#
-# test_exatrkx_python:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - apt-get update -y
-#     - apt-get install -y python3 libxxhash0
-#     - source build/this_acts_withdeps.sh
-#     - git clone $CLONE_URL src
-#     - cd src
-#     - git checkout $HEAD_SHA
-#     - pip3 install -r Examples/Python/tests/requirements.txt
-#     - nvidia-smi
-#     - pytest -rFsv -k test_exatrkx
+test_exatrkx_unittests:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - source src/CI/dependencies.sh
+    - ctest --test-dir build -R ExaTrkX
+
+test_exatrkx_python:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - nvidia-smi
+    - source CI/dependencies.sh
+    - source ../build/this_acts_withdeps.sh
+    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - echo $PYTHONPATH
+    - which python3
+    - python3 --version
+    - python3 -c "import acts"
+    - pytest -rFsv -k torch --collect-only
+    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
 
 build_linux_ubuntu:
   stage: build
