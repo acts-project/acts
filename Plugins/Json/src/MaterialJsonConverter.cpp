@@ -697,7 +697,7 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         bUtility = std::move(nbUtility);
         swapped = true;
       } else {
-        std::runtime_error("Unsupported binning for Detray");
+        throw std::runtime_error("Unsupported binning for Detray");
       }
     } else if (bUtility.dimensions() == 2u &&
                bUtility.binningData()[0u].binvalue == BinningValue::binZ &&

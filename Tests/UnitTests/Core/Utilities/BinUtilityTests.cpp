@@ -142,12 +142,12 @@ bool isEqual(const BinningData& ba, const BinningData& bb, float tolerance) {
                     (std::abs(ba.step - bb.step) < tolerance);
 
   BOOST_CHECK(equalRange);
-  bool euqalStructure =
+  bool equalStructure =
       (ba.subBinningData != nullptr)
           ? isEqual(*ba.subBinningData, *bb.subBinningData, tolerance)
           : (bb.subBinningData == nullptr);
 
-  BOOST_CHECK(euqalStructure);
+  BOOST_CHECK(equalStructure);
 
   bool equalBoundaries = (ba.boundaries().size() == bb.boundaries().size());
   if (equalBoundaries) {
@@ -161,7 +161,7 @@ bool isEqual(const BinningData& ba, const BinningData& bb, float tolerance) {
   }
   BOOST_CHECK(equalBoundaries);
 
-  return equalBool && equalRange && euqalStructure;
+  return equalBool && equalRange && equalStructure;
 }
 
 /// Check whether the BinUtility objects are equal
