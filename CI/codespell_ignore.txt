@@ -12,7 +12,6 @@ parm
 writet
 localy
 lastr
-digitial
 exprot
 pring
 aline
