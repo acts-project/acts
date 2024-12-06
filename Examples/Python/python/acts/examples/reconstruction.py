@@ -574,7 +574,7 @@ def addTruthSmearedSeeding(
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
         inputParticles=selectedParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",
+        inputParticleMeasurementsMap="particle_measurements_map",
         outputProtoTracks="truth_particle_tracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
@@ -595,7 +595,7 @@ def addTruthEstimatedSeeding(
     truthSeeding = acts.examples.TruthSeedingAlgorithm(
         level=logLevel,
         inputParticles=inputParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",
+        inputParticleMeasurementsMap="particle_measurements_map",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
@@ -1851,7 +1851,7 @@ def addExaTrkX(
                 inputProtoTracks=findingAlg.config.outputProtoTracks,
                 # the original selected particles after digitization
                 inputParticles="particles_initial",
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputParticleMeasurementsMap="particle_measurements_map",
                 inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
