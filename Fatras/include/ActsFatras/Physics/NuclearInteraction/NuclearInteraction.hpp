@@ -58,8 +58,8 @@ struct NuclearInteraction {
                                                const Particle& particle) const {
     // Fast exit: No parameterisation provided
     if (multiParticleParameterisation.empty()) {
-      return std::make_pair(std::numeric_limits<double>::infinity(),
-                            std::numeric_limits<double>::infinity());
+      return {std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity()};
     }
     // Find the parametrisation that corresponds to the particle type
     for (const auto& particleParametrisation : multiParticleParameterisation) {
@@ -77,15 +77,13 @@ struct NuclearInteraction {
         // Set the L0 limit if not done already
         const auto& distribution =
             parametrisation.nuclearInteractionProbability;
-        auto limits =
-            std::make_pair(std::numeric_limits<double>::infinity(),
-                           sampleContinuousValues(
-                               uniformDistribution(generator), distribution));
-        return limits;
+        return {std::numeric_limits<double>::infinity(),
+                sampleContinuousValues(uniformDistribution(generator),
+                                       distribution)};
       }
     }
-    return std::make_pair(std::numeric_limits<double>::infinity(),
-                          std::numeric_limits<double>::infinity());
+    return {std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity()};
   }
 
   /// This method performs a nuclear interaction.
@@ -483,14 +481,14 @@ NuclearInteraction::sampleKinematics(
     if (trials == nMatchingTrialsTotal) {
       return std::nullopt;
     }
-    // Re-sampole invariant masses if no fitting momenta were found
+    // Re-sample invariant masses if no fitting momenta were found
     if (trials++ % nMatchingTrials == 0) {
       invariantMasses = sampleInvariantMasses(generator, parameters);
     } else {
       momenta = sampleMomenta(generator, parameters, momentum);
     }
   }
-  return std::make_pair(momenta, invariantMasses);
+  return std::pair(momenta, invariantMasses);
 }
 
 template <typename generator_t>
