@@ -195,15 +195,19 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticles);
+    ACTS_PYTHON_MEMBER(outputPropagationSummaries);
     ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
     ACTS_PYTHON_MEMBER(magneticField);
     ACTS_PYTHON_MEMBER(physicsList);
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
     ACTS_PYTHON_MEMBER(killSecondaries);
+    ACTS_PYTHON_MEMBER(recordHitsOfCharged);
     ACTS_PYTHON_MEMBER(recordHitsOfNeutrals);
+    ACTS_PYTHON_MEMBER(recordHitsOfPrimaries);
     ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
     ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
+    ACTS_PYTHON_MEMBER(recordPropagationSummaries);
     ACTS_PYTHON_STRUCT_END();
   }
 

@@ -8,16 +8,12 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
-#include <iostream>
 #include <utility>
 
 #include <boost/bimap.hpp>
