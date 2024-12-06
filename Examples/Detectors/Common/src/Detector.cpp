@@ -29,7 +29,9 @@ std::vector<std::shared_ptr<IContextDecorator>> Detector::contextDecorators()
 std::unique_ptr<G4VUserDetectorConstruction>
 Detector::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
-  return nullptr;
+  throw std::runtime_error(
+      "Geant4 detector construction is not available. Not implemented or "
+      "Geant4 is not enabled.");
 }
 
 const Acts::GeometryContext& Detector::nominalGeometryContext() const {
@@ -38,10 +40,16 @@ const Acts::GeometryContext& Detector::nominalGeometryContext() const {
 
 std::shared_ptr<const Acts::TrackingGeometry> Detector::trackingGeometry()
     const {
+  if (m_trackingGeometry == nullptr) {
+    throw std::runtime_error("Tracking geometry is not built");
+  }
   return m_trackingGeometry;
 }
 
 std::shared_ptr<Acts::Experimental::Detector> Detector::gen2Geometry() const {
+  if (m_gen2Geometry == nullptr) {
+    throw std::runtime_error("Gen2 geometry is not built");
+  }
   return m_gen2Geometry;
 }
 
