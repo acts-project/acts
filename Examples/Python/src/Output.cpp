@@ -111,7 +111,9 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjSimHitWriter, mex,
                              "ObjSimHitWriter", inputSimHits, outputDir,
-                             outputStem, outputPrecision, drawConnections);
+                             outputStem, outputPrecision, drawConnections,
+                             momentumThreshold, momentumThresholdTraj,
+                             nInterpolatedPoints, keepOriginalHits);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
