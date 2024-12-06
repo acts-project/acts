@@ -47,7 +47,7 @@ ParticleSelectorConfig = namedtuple(
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 9 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 3,
 )
 
 

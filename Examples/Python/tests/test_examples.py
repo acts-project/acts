@@ -427,7 +427,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.9 * u.GeV, None),
             eta=(-4, 4),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
