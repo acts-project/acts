@@ -47,7 +47,7 @@ class GeometryContext;
 /// The construction phases are documented in @c BlueprintNode, which is the
 /// base class for all nodes in the tree.
 /// @note This class inherits from @c BlueprintNode privately, because it is
-///       only ever intented to be the top-level node, and not anywhere else in
+///       only ever intended to be the top-level node, and not anywhere else in
 ///       the tree.
 class Blueprint : private BlueprintNode {
  public:
@@ -66,7 +66,7 @@ class Blueprint : private BlueprintNode {
     ExtentEnvelope envelope = ExtentEnvelope::Zero();
 
     /// The geometry identifier hook, passed through the `TrackingGeometry`
-    /// constructor. This will be superceded by a more integrated approach to
+    /// constructor. This will be superseded by a more integrated approach to
     /// the identification scheme
     GeometryIdentifierHook geometryIdentifierHook = {};
   };

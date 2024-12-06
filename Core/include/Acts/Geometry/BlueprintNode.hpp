@@ -114,7 +114,7 @@ class BlueprintNode {
   /// - Creating navigation policies
   /// - (In future) Handle geometry identification assignment
   ///
-  /// At the end of this phase, each node will have transfered any temporary
+  /// At the end of this phase, each node will have transferred any temporary
   /// resources created during the build, that need to be retained, into the
   /// final @ref Acts::TrackingGeometry, and can be safely destroyed.
   ///
@@ -138,7 +138,7 @@ class BlueprintNode {
   /// @name Convenience methods
   /// These methods are meant to make the construction of a blueprint tree in
   /// code more ergonomic.
-  /// They usually take an optional `callback` paramater. The primary use for
+  /// They usually take an optional `callback` parameter. The primary use for
   /// this parameter is structural, as it facilitates introducing scopes to
   /// indicate in code that objects are nested.
   ///
