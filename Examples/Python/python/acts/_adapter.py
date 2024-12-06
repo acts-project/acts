@@ -90,9 +90,6 @@ def _patch_config(m):
         if name == "Config":
             _patchKwargsConstructor(cls)
 
-        if name.endswith("Detector"):
-            continue
-
         if hasattr(cls, "Config"):
             cls.__init__ = _make_config_adapter(cls.__init__)
             _patchKwargsConstructor(cls.Config)
