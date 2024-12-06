@@ -9,23 +9,18 @@
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <cstddef>
-#include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
-    Config cfg, Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("SurfaceSortingAlgorithm", level),
-      m_cfg(std::move(cfg)) {
+SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(Config cfg,
+                                                 Acts::Logging::Level level)
+    : IAlgorithm("SurfaceSortingAlgorithm", level), m_cfg(std::move(cfg)) {
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing input proto track collection");
   }
@@ -45,15 +40,15 @@ ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode SurfaceSortingAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& simHits = m_inputSimHits(ctx);
   const auto& simHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ProtoTrackContainer sortedTracks;
   sortedTracks.reserve(protoTracks.size());
-  TrackHitList trackHitList;
+  std::map<double, Index> trackHitList;
 
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     const auto& protoTrack = protoTracks[itrack];
@@ -83,5 +78,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
 
   m_outputProtoTracks(ctx, std::move(sortedTracks));
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

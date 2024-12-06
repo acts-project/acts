@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
       -> std::tuple<Acts::Vector3, Acts::Vector2, std::optional<float>> {
     Acts::Vector3 position(sp.x(), sp.y(), sp.z());
     Acts::Vector2 variance(sp.varianceR, sp.varianceZ);
-    return std::make_tuple(position, variance, std::nullopt);
+    return {position, variance, std::nullopt};
   };
 
   // setup spacepoint grid config
