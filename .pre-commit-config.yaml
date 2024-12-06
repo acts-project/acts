@@ -35,7 +35,8 @@ repos:
     - id: codespell
       args: [
         "-S", "*.ipynb,*.onnx,_build,*.svg",
-        "-I", "./CI/codespell_ignore.txt"
+        "-I", "./CI/codespell_ignore.txt",
+        "-w"
       ]
       exclude: ^CI/.*$
 
