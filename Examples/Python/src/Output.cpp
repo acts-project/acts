@@ -17,8 +17,8 @@
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
@@ -375,8 +375,8 @@ void addOutput(Context& ctx) {
                              "CsvSimHitWriter", inputSimHits, outputDir,
                              outputStem, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex,
-                             "CsvSpacepointWriter", inputSpacepoints, outputDir,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacePointWriter, mex,
+                             "CsvSpacePointWriter", inputSpacepoints, outputDir,
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacePointsBucketWriter, mex,
