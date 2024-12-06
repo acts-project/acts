@@ -34,7 +34,7 @@ ParticleSelector::ParticleSelector(const Config& config,
       m_cfg.inputParticleMeasurementsMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
 
-  if (m_inputParticleMeasurementsMap.isInitialized() &&
+  if (!m_inputParticleMeasurementsMap.isInitialized() &&
       (m_cfg.measurementsMin > 0 ||
        m_cfg.measurementsMax < std::numeric_limits<std::size_t>::max())) {
     throw std::invalid_argument(
