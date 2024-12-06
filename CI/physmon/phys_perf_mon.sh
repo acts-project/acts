@@ -265,6 +265,15 @@ function trackfinding() {
             $path/performance_finding_ckf_ambi.html \
             $path/performance_finding_ckf_ambi
     fi
+
+    if [ -f $refdir/$path/performance_finding_ckf_ml_solver.root ]; then
+        run_histcmp \
+            $outdir/data/$path/performance_finding_ckf_ml_solver.root \
+            $refdir/$path/performance_finding_ckf_ml_solver.root \
+            "ML Ambisolver | ${name}" \
+            $path/performance_finding_ckf_ml_solver.html \
+            $path/performance_finding_ckf_ml_solver
+    fi
 }
 
 function vertexing() {

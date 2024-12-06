@@ -17,6 +17,7 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementConcept.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -530,5 +531,11 @@ MeasurementContainer::FixedProxy<Size> MeasurementContainer::emplaceMeasurement(
 static_assert(
     std::random_access_iterator<MeasurementContainer::iterator> &&
     std::random_access_iterator<MeasurementContainer::const_iterator>);
+
+using MeasurementSimHitsMap = IndexMultimap<Index>;
+using MeasurementParticlesMap = IndexMultimap<SimBarcode>;
+
+using SimHitMeasurementsMap = InverseMultimap<Index>;
+using ParticleMeasurementsMap = InverseMultimap<SimBarcode>;
 
 }  // namespace ActsExamples

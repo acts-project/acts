@@ -493,6 +493,21 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    using RangeXDDim3 = Acts::RangeXD<3u, double>;
+
+    py::class_<RangeXDDim3>(m, "RangeXDDim3")
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1,
+                         const std::array<double, 2u>& range2) {
+          RangeXDDim3 range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          range[2].shrink(range2[0], range2[1]);
+          return range;
+        }));
+  }
+
+  {
     // The external volume structure builder
     py::class_<Acts::Experimental::IExternalStructureBuilder,
                std::shared_ptr<Acts::Experimental::IExternalStructureBuilder>>(
