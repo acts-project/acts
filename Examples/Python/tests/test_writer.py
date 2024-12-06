@@ -364,7 +364,7 @@ def test_root_material_writer(tmp_path, assert_root_hash):
 
     detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    ).buildDetector()
+    )
     trackingGeometry = detector.trackingGeometry()
 
     out = tmp_path / "material.root"
@@ -389,7 +389,7 @@ def test_json_material_writer(tmp_path, fmt):
 
     detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    ).buildDetector()
+    )
     trackingGeometry = detector.trackingGeometry()
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
