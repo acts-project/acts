@@ -51,6 +51,15 @@ BOOST_AUTO_TEST_CASE(safeInverseLargeMatrix) {
   BOOST_CHECK_EQUAL(*identityInv, identity);
 }
 
+BOOST_AUTO_TEST_CASE(safeInverseDynamicMatrix) {
+  Eigen::MatrixXd identity{Eigen::MatrixXd::Identity(2, 2)};
+
+  auto identityInv = Acts::safeInverse(identity);
+
+  BOOST_CHECK(identityInv);
+  BOOST_CHECK_EQUAL(*identityInv, identity);
+}
+
 BOOST_AUTO_TEST_CASE(SafeInverseBadSmallMatrix) {
   Eigen::Matrix<double, 2, 2> m;
   m << 1, 1, 2, 2;
@@ -107,13 +116,6 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 // BOOST_AUTO_TEST_CASE(SafeInverseNonsquareMatrix) {
 //   Eigen::Matrix<double, 2, 3> m;
 //   m << 1, 2, 3, 4, 5, 6;
-//
-//   auto mInv = Acts::safeInverse(m);
-// }
-
-/// This test should not compile
-// BOOST_AUTO_TEST_CASE(SafeInverseDynamicMatrix) {
-//   Eigen::MatrixXd m{Eigen::MatrixXd::Identity(2, 2)};
 //
 //   auto mInv = Acts::safeInverse(m);
 // }

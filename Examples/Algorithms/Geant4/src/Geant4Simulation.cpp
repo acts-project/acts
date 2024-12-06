@@ -220,10 +220,11 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     Geant4::SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
-    stepCfg.charged = true;
+    stepCfg.charged = cfg.recordHitsOfCharged;
     stepCfg.neutral = cfg.recordHitsOfNeutrals;
-    stepCfg.primary = true;
+    stepCfg.primary = cfg.recordHitsOfPrimaries;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
+    stepCfg.stepLogging = cfg.recordPropagationSummaries;
 
     Geant4::SteppingActionList::Config steppingCfg;
     steppingCfg.actions.push_back(std::make_unique<Geant4::ParticleKillAction>(
@@ -288,6 +289,10 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputSimHits.initialize(cfg.outputSimHits);
   m_outputParticles.initialize(cfg.outputParticles);
+
+  if (cfg.recordPropagationSummaries) {
+    m_outputPropagationSummaries.initialize(cfg.outputPropagationSummaries);
+  }
 }
 
 Geant4Simulation::~Geant4Simulation() = default;
@@ -313,6 +318,16 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
   m_outputSimHits(
       ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
 #endif
+
+  // Output the propagation summaries if requested
+  if (m_cfg.recordPropagationSummaries) {
+    PropagationSummaries summaries;
+    summaries.reserve(eventStore().propagationRecords.size());
+    for (auto& [trackId, summary] : eventStore().propagationRecords) {
+      summaries.push_back(std::move(summary));
+    }
+    m_outputPropagationSummaries(ctx, std::move(summaries));
+  }
 
   return ProcessCode::SUCCESS;
 }

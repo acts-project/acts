@@ -123,7 +123,7 @@ ConstructGeant4World() {
   parser.SetOutputFileOverwrite(true);
   parser.Write(gdmlPath.string(), physWorld);
 
-  return std::make_tuple(physWorld, names);
+  return {physWorld, names};
 }
 
 auto gctx = Acts::GeometryContext();

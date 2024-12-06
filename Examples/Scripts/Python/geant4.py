@@ -36,6 +36,7 @@ def runGeant4(
         field,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
+        outputDirObj=outputDir / "obj",
         rnd=rnd,
         materialMappings=materialMappings,
         volumeMappings=volumeMappings,

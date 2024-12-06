@@ -45,9 +45,9 @@ std::array<std::pair<int, int>, DIM> Acts::GridBinFinder<DIM>::getSizePerAxis(
           using value_t = typename std::decay_t<decltype(val)>;
           if constexpr (std::is_same_v<int, value_t>) {
             assert(val >= 0);
-            return std::make_pair(-val, val);
+            return {-val, val};
           } else if constexpr (std::is_same_v<std::pair<int, int>, value_t>) {
-            return std::make_pair(-val.first, val.second);
+            return {-val.first, val.second};
           } else {
             assert(locPosition.size() > i);
             assert(locPosition[i] > 0ul);
