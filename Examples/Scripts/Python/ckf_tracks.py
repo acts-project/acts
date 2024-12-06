@@ -5,7 +5,7 @@ from typing import Optional
 
 import acts
 from acts import UnitConstants as u
-from acts.examples import GenericDetectorFactory, RootParticleReader
+from acts.examples import GenericDetector, RootParticleReader
 
 
 def runCKFTracks(
@@ -179,7 +179,7 @@ def runCKFTracks(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector = GenericDetectorFactory().buildDetector()
+    detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 

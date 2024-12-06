@@ -3,7 +3,7 @@
 import os
 import acts
 import acts.examples
-from acts.examples import GenericDetectorFactory, AlignedDetectorFactory
+from acts.examples import GenericDetector, AlignedDetector
 from acts.examples.odd import getOpenDataDetectorDirectory
 from acts.examples.simulation import (
     addParticleGun,
@@ -72,25 +72,25 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetectorFactory().buildDetector(mdecorator=matDeco)
+    detector = GenericDetector(mdecorator=matDeco)
 
     ## Alternative: Aligned detector in a couple of modes
-    # detector = AlignedDetectorFactory().buildDetector(
+    # detector = AlignedDetector(
     #     decoratorLogLevel=acts.logging.INFO,
     #     # These parameters need to be tuned so that GC doesn't break
     #     # with multiple threads
     #     iovSize=10,
     #     flushSize=10,
     #     # External alignment store
-    #     mode=AlignedDetectorFactory.Config.Mode.External,
+    #     mode=AlignedDetector.Config.Mode.External,
     #     # OR: Internal alignment storage
-    #     # mode=AlignedDetectorFactory.Config.Mode.Internal,
+    #     # mode=AlignedDetector.Config.Mode.Internal,
     # )
 
     ## Alternative: DD4hep detector
-    # dd4hepCfg = acts.examples.DD4hepDetectorFactory.Config()
+    # dd4hepCfg = acts.examples.DD4hepDetector.Config()
     # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
-    # detector = acts.examples.DD4hepDetectorFactory().buildDetector(dd4hepCfg)
+    # detector = acts.examples.DD4hepDetector(dd4hepCfg)
 
     trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()

@@ -135,7 +135,7 @@ class Config:
         elif self.detector == DetectorName.generic:
             print("Create detector and tracking geometry")
 
-            detector = acts.examples.GenericDetectorFactory().buildDetector()
+            detector = acts.examples.GenericDetector()
             trackingGeometry = detector.trackingGeometry()
             digiConfig = (
                 actsExamplesDir

@@ -41,7 +41,7 @@ from acts.examples import (
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
-    GenericDetectorFactory,
+    GenericDetector,
 )
 from acts.examples.odd import getOpenDataDetectorDirectory
 
@@ -199,7 +199,7 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
 
 @pytest.mark.root
 def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
-    detector = GenericDetectorFactory().buildDetector()
+    detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     s = Sequencer(numThreads=1, events=10)
@@ -360,9 +360,9 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 @pytest.mark.odd
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_root_material_writer(tmp_path, assert_root_hash):
-    from acts.examples.dd4hep import DD4hepDetectorFactory
+    from acts.examples.dd4hep import DD4hepDetector
 
-    detector = DD4hepDetectorFactory(
+    detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     ).buildDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -385,9 +385,9 @@ def test_root_material_writer(tmp_path, assert_root_hash):
 @pytest.mark.parametrize("fmt", [JsonFormat.Json, JsonFormat.Cbor])
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_json_material_writer(tmp_path, fmt):
-    from acts.examples.dd4hep import DD4hepDetectorFactory
+    from acts.examples.dd4hep import DD4hepDetector
 
-    detector = DD4hepDetectorFactory(
+    detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     ).buildDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -407,7 +407,7 @@ def test_json_material_writer(tmp_path, fmt):
 
 @pytest.mark.csv
 def test_csv_multitrajectory_writer(tmp_path):
-    detector = GenericDetectorFactory().buildDetector()
+    detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -606,7 +606,7 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
-    detector = GenericDetectorFactory().buildDetector()
+    detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -656,7 +656,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 def test_edm4hep_tracks_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter
 
-    detector = GenericDetectorFactory().buildDetector()
+    detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

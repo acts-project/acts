@@ -76,27 +76,25 @@ def _makeLayerTriplet(*args, **kwargs):
         return obj
 
     if _type == bool:
-        return fill(TGeoDetectorFactory.Config.LayerTripletBool())
+        return fill(TGeoDetector.Config.LayerTripletBool())
     elif _type == list:
         if all(
             all(isinstance(v, str) for v in vv)
             for vv in (negative, central, positive)
             if vv is not None
         ):
-            return fill(TGeoDetectorFactory.Config.LayerTripletVectorString())
+            return fill(TGeoDetector.Config.LayerTripletVectorString())
         elif all(
             all(
                 (isinstance(v, tuple) or isinstance(v, list))
                 and isinstance(v[0], int)
-                and isinstance(
-                    v[1], inspect.unwrap(TGeoDetectorFactory.Config.BinningType)
-                )
+                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
                 for v in vv
             )
             for vv in (negative, central, positive)
             if vv is not None
         ):
-            return fill(TGeoDetectorFactory.Config.LayerTripletVectorBinning())
+            return fill(TGeoDetector.Config.LayerTripletVectorBinning())
         else:
             raise TypeError("Invalid types for list input")
     elif _type == tuple:
@@ -108,20 +106,20 @@ def _makeLayerTriplet(*args, **kwargs):
             negative = Interval(*negative) if negative is not None else None
             central = Interval(*central) if central is not None else None
             positive = Interval(*positive) if positive is not None else None
-            return fill(TGeoDetectorFactory.Config.LayerTripletInterval())
+            return fill(TGeoDetector.Config.LayerTripletInterval())
         else:
             raise TypeError("Invalid types for tuple input")
     elif _type == Interval:
-        return fill(TGeoDetectorFactory.Config.LayerTripletInterval())
+        return fill(TGeoDetector.Config.LayerTripletInterval())
     elif _type == str:
-        return fill(TGeoDetectorFactory.Config.LayerTripletString())
+        return fill(TGeoDetector.Config.LayerTripletString())
     elif _type == float:
-        return fill(TGeoDetectorFactory.Config.LayerTripletDouble())
+        return fill(TGeoDetector.Config.LayerTripletDouble())
     else:
         raise TypeError("Unknown type given")
 
 
-TGeoDetectorFactory.Config.LayerTriplet = _makeLayerTriplet
+TGeoDetector.Config.LayerTriplet = _makeLayerTriplet
 
 
 def _process_volume_intervals(kwargs):
@@ -129,10 +127,8 @@ def _process_volume_intervals(kwargs):
         return kwargs  # prevent infinite recursion
     _kwargs = kwargs.copy()
 
-    v = TGeoDetectorFactory.Config.Volume()
-    for name, value in inspect.getmembers(
-        inspect.unwrap(TGeoDetectorFactory.Config.Volume)
-    ):
+    v = TGeoDetector.Config.Volume()
+    for name, value in inspect.getmembers(inspect.unwrap(TGeoDetector.Config.Volume)):
         if not isinstance(getattr(v, name), inspect.unwrap(Interval)):
             continue
         if not name in _kwargs:
@@ -144,9 +140,7 @@ def _process_volume_intervals(kwargs):
     return _kwargs
 
 
-_patchKwargsConstructor(
-    TGeoDetectorFactory.Config.Volume, proc=_process_volume_intervals
-)
+_patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_intervals)
 
 
 def NamedTypeArgs(**namedTypeArgs):

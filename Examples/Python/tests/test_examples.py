@@ -26,8 +26,8 @@ from helpers import (
 import acts
 from acts.examples import (
     Sequencer,
-    GenericDetectorFactory,
-    AlignedDetectorFactory,
+    GenericDetector,
+    AlignedDetector,
 )
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
@@ -894,7 +894,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
-        (GenericDetectorFactory().buildDetector, True, 450),
+        (GenericDetector, True, 450),
         pytest.param(
             getOpenDataDetector,
             True,
@@ -905,7 +905,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
                 pytest.mark.odd,
             ],
         ),
-        (AlignedDetectorFactory(iovSize=1).buildDetector, False, 450),
+        (AlignedDetector, False, 450),
     ],
 )
 @pytest.mark.slow

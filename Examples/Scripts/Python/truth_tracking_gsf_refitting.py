@@ -109,7 +109,7 @@ if __name__ == "__main__":
     )
 
     ## GenericDetector
-    # detector = acts.examples.GenericDetectorFactory().buildDetector()
+    # detector = acts.examples.GenericDetector()
     # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir

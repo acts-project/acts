@@ -237,7 +237,7 @@ def basic_prop_seq(rng):
 
 @pytest.fixture
 def trk_geo():
-    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     yield trackingGeometry
 
@@ -260,7 +260,7 @@ def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     if request.param == "generic":
-        detector = acts.examples.GenericDetectorFactory().buildDetector()
+        detector = acts.examples.GenericDetector()
         trackingGeometry = detector.trackingGeometry()
         decorators = detector.contextDecorators()
         return DetectorConfig(

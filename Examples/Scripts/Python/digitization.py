@@ -76,7 +76,7 @@ def runDigitization(
 
 
 if "__main__" == __name__:
-    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
     digiConfigFile = (

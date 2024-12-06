@@ -390,7 +390,7 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
-    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

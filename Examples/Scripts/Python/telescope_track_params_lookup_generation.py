@@ -99,13 +99,13 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     # Initialize the geometry
-    detector = acts.examples.TelescopeDetectorFactory(
+    detector = acts.examples.TelescopeDetector(
         bounds=[4, 10],
         positions=[30, 60, 90],
         stereos=[0, 0, 0],
         binValue=2,
         surfaceType=0,
-    ).buildDetector()
+    )
     trackingGeometry = detector.trackingGeometry()
 
     # Estimate the lookup

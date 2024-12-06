@@ -119,7 +119,7 @@ def runVertexFitting(
 
 
 if "__main__" == __name__:
-    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

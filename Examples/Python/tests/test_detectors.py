@@ -27,7 +27,7 @@ def check_extra_odd(srf):
 
 
 def test_generic_geometry():
-    detector = acts.examples.GenericDetectorFactory().buildDetector()
+    detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
     assert detector is not None
@@ -40,13 +40,13 @@ def test_generic_geometry():
 def test_telescope_geometry():
     n_surfaces = 10
 
-    config = acts.examples.TelescopeDetectorFactory.Config(
+    config = acts.examples.TelescopeDetector.Config(
         bounds=[100, 100],
         positions=[10 * i for i in range(n_surfaces)],
         stereos=[0] * n_surfaces,
         binValue=0,
     )
-    detector = acts.examples.TelescopeDetectorFactory(config).buildDetector()
+    detector = acts.examples.TelescopeDetector(config)
     trackingGeometry = detector.trackingGeometry()
     contextDecorators = detector.contextDecorators()
 
@@ -68,7 +68,7 @@ def test_odd():
 
 
 def test_aligned_detector():
-    detector = acts.examples.AlignedDetectorFactory().buildDetector()
+    detector = acts.examples.AlignedDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
@@ -83,7 +83,7 @@ import itertools
 
 
 def test_tgeo_config_triplet(monkeypatch):
-    from acts.examples import TGeoDetectorFactory, Interval
+    from acts.examples import TGeoDetector, Interval
 
     # monkeypatch the comparison operator
     def eq(self, other):
@@ -91,8 +91,8 @@ def test_tgeo_config_triplet(monkeypatch):
 
     monkeypatch.setattr(Interval, "__eq__", eq)
 
-    LayerTriplet = TGeoDetectorFactory.Config.LayerTriplet
-    c = TGeoDetectorFactory.Config
+    LayerTriplet = TGeoDetector.Config.LayerTriplet
+    c = TGeoDetector.Config
 
     def assert_combinations(value, _type):
         t = LayerTriplet(value)
@@ -142,7 +142,7 @@ def test_tgeo_config_triplet(monkeypatch):
 
 
 def test_tgeo_config_volume(monkeypatch):
-    from acts.examples import TGeoDetectorFactory, Interval
+    from acts.examples import TGeoDetector, Interval
 
     # monkeypatch the comparison operator
     def eq(self, other):
@@ -150,7 +150,7 @@ def test_tgeo_config_volume(monkeypatch):
 
     monkeypatch.setattr(Interval, "__eq__", eq)
 
-    Volume = TGeoDetectorFactory.Config.Volume
+    Volume = TGeoDetector.Config.Volume
 
     v = Volume(name="blubb")
     assert v
