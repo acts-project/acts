@@ -42,8 +42,7 @@ auto DD4hepDetector::finalize(
   }
   ContextDecorators dd4ContextDecorators = {};
   // return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(dd4tGeometry), std::move(dd4ContextDecorators));
+  return {std::move(dd4tGeometry), std::move(dd4ContextDecorators)};
 }
 
 auto DD4hepDetector::finalize(

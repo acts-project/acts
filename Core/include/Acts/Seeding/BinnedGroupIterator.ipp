@@ -64,7 +64,7 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overread"
 #endif
-  return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
+  return {std::move(bottoms), global_index, std::move(tops)};
 #if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif

@@ -34,8 +34,7 @@ class AnyVector {
   static std::pair<AnyVector, std::vector<T>*> create(Args&&... args) {
     std::vector<T>* vector = new std::vector<T>(std::forward<Args>(args)...);
     std::function<void()> deleter = [vector] { delete vector; };
-    return std::make_pair(
-        AnyVector{static_cast<void*>(vector), std::move(deleter)}, vector);
+    return {AnyVector{static_cast<void*>(vector), std::move(deleter)}, vector};
   }
 
   // Default-construct a null type-erased vector

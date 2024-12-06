@@ -217,7 +217,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     Vector4 deltaRStraightTrack{Vector4::Zero()};
     deltaRStraightTrack.head<nDim>() = pcaStraightTrack - vtxPos;
 
-    return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
+    return std::pair(deltaRStraightTrack, momDirStraightTrack);
   }
 
   // Charged particles in a constant B field follow a helical trajectory. In
@@ -291,7 +291,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   Vector4 deltaR{Vector4::Zero()};
   deltaR.head<nDim>() = pca - vtxPos;
 
-  return std::make_pair(deltaR, momDir);
+  return std::pair(deltaR, momDir);
 }
 
 }  // namespace
