@@ -51,6 +51,7 @@ class RegionCreator {
   explicit RegionCreator(const Config& cfg);
 
   /// Construct the region
+  /// @note The lifetime of the returned region is managed by Geant4
   G4Region* buildRegion(
       const Acts::Logger& logger = Acts::getDummyLogger()) const;
 
