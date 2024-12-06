@@ -48,7 +48,8 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   /// This participates in the construction of the geometry via the blueprint
   /// tree. The steps are approximately as follows:
   /// -# Collect all child volumes
-  /// -# Package them into a @ref Acts::CylinderVolumeStack, which performs sizing and/or gap cration
+  /// -# Package them into a @ref Acts::CylinderVolumeStack, which performs
+  ///    sizing and/or gap creation
   /// -# Return the @ref Acts::CylinderVolumeStack as a volume up the tree
   ///
   /// @param options The global blueprint options
@@ -81,7 +82,7 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   /// -# Register portals created for gap volumes, as they're not handled by
   ///    dedicated nodes
   /// -# Register gap volumes in the @p parent volume
-  /// -# Create a configured @ref Acts::NavigationPolicy for the gap
+  /// -# Create a configured @ref Acts::INavigationPolicy for the gap
   /// -# Call `finalize` on all children while passing through @p parent.
   ///
   /// @param options The global blueprint options

@@ -54,11 +54,12 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// It receives the populated portal shell from its only child and attaches
   /// material proxies by consulting the configuration stored in the node.
   /// @note Currently, this node will unconditionally attach
-  ///       @ref Acrs::ProtoGridSurfaceMaterial
+  ///       @ref Acts::ProtoGridSurfaceMaterial
   ///
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
+  /// @return The portal shell with material proxies attached
   PortalShellBase& connect(
       const BlueprintOptions& options, const GeometryContext& gctx,
       const Logger& logger = Acts::getDummyLogger()) override;
@@ -68,6 +69,7 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param parent The parent volume
+  /// @param logger The logger to use during construction
   void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent, const Logger& logger) override;
 
