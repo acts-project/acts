@@ -13,7 +13,7 @@ namespace ActsExamples {
 std::unique_ptr<G4VUserDetectorConstruction>
 TelescopeDetector::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
-  return nullptr;
+  throw std::runtime_error("Geant4 is not enabled");
 }
 
 }  // namespace ActsExamples

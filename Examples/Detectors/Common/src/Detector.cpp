@@ -29,9 +29,7 @@ std::vector<std::shared_ptr<IContextDecorator>> Detector::contextDecorators()
 std::unique_ptr<G4VUserDetectorConstruction>
 Detector::buildGeant4DetectorConstruction(
     const Geant4ConstructionOptions& /*options*/) const {
-  throw std::runtime_error(
-      "Geant4 detector construction is not available. Not implemented or "
-      "Geant4 is not enabled.");
+  throw std::runtime_error("Geant4 detector construction is not available.");
 }
 
 const Acts::GeometryContext& Detector::nominalGeometryContext() const {
