@@ -15,7 +15,7 @@ namespace Acts {
 class NavigationPolicyFactory;
 
 struct BlueprintOptions {
-  std::unique_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
+  std::shared_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
       makeDefaultNavigationPolicyFactory()};
 
   void validate() const;

@@ -137,8 +137,6 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   child.finalize(options, gctx, *world, logger);
 
-  // @TODO: Maybe add a name uniqueness check
-
   std::set<std::string> names;
 
   world->visitVolumes([&](const auto *volume) {

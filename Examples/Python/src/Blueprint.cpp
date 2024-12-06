@@ -225,17 +225,46 @@ void addBlueprint(Context& ctx) {
       py::class_<BlueprintNode, std::shared_ptr<BlueprintNode>>(
           m, "BlueprintNode");
 
+  auto rootNode =
+      py::class_<Blueprint, std::shared_ptr<Blueprint>>(m, "Blueprint");
+
+  rootNode
+      .def(py::init<const Blueprint::Config&>())
+      // Return value needs to be shared pointer because python otherwise
+      // can't manage the lifetime
+      .def(
+          "construct",
+          [](Blueprint& self, const BlueprintOptions& options,
+             const GeometryContext& gctx,
+             Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
+            return self.construct(options, gctx,
+                                  *getDefaultLogger("Blueprint", level));
+          },
+          py::arg("options"), py::arg("gctx"),
+          py::arg("level") = Logging::INFO);
+
+  {
+    auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
+    ACTS_PYTHON_MEMBER(envelope);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
-    using type = class_::type;
+    using type = typename class_::type;
     cls.def("__enter__", [](type& self) -> type& { return self; })
         .def("__exit__", [](type& /*self*/, const py::object& /*exc_type*/,
                             const py::object& /*exc_value*/,
                             const py::object& /*traceback*/) {});
   };
 
-  auto addNodeMethods = [&blueprintNode](const std::string& name,
-                                         auto&& callable, auto&&... args) {
+  auto addNodeMethods = [&blueprintNode, &rootNode](const std::string& name,
+                                                    auto&& callable,
+                                                    auto&&... args) {
     blueprintNode.def(name.c_str(), callable, args...)
+        .def(("add" + name).c_str(), callable, args...);
+    rootNode.def(name.c_str(), callable, args...)
         .def(("add" + name).c_str(), callable, args...);
   };
 
@@ -257,9 +286,10 @@ void addBlueprint(Context& ctx) {
         fh.attr("write")(ss.str());
       });
 
-  // @TODO: Add ability to provide policy factories
-  //        This needs a way to produce them in python!
-  py::class_<BlueprintOptions>(m, "BlueprintOptions").def(py::init<>());
+  py::class_<BlueprintOptions>(m, "BlueprintOptions")
+      .def(py::init<>())
+      .def_readwrite("defaultNavigationPolicyFactory",
+                     &BlueprintOptions::defaultNavigationPolicyFactory);
 
   py::class_<BlueprintNode::MutableChildRange>(blueprintNode,
                                                "MutableChildRange")
@@ -282,30 +312,6 @@ void addBlueprint(Context& ctx) {
       .def("__len__", [](const BlueprintNode::MutableChildRange& self) {
         return self.size();
       });
-
-  {
-    auto n = py::class_<Blueprint, std::shared_ptr<Blueprint>>(m, "Blueprint");
-
-    n.def(py::init<const Blueprint::Config&>())
-        // Return value needs to be shared pointer because python otherwise
-        // can't manage the lifetime
-        .def(
-            "construct",
-            [](Blueprint& self, const BlueprintOptions& options,
-               const GeometryContext& gctx,
-               Logging::Level level) -> std::shared_ptr<TrackingGeometry> {
-              return self.construct(options, gctx,
-                                    *getDefaultLogger("Blueprint", level));
-            },
-            py::arg("options"), py::arg("gctx"),
-            py::arg("level") = Logging::INFO);
-
-    auto c = py::class_<Blueprint::Config>(n, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
-    ACTS_PYTHON_STRUCT_END();
-  }
 
   auto staticNode =
       py::class_<Acts::StaticBlueprintNode, Acts::BlueprintNode,
