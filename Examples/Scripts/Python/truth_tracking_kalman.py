@@ -83,7 +83,7 @@ def runTruthTrackingKalman(
             enableInteractions=True,
             postSelectParticles=ParticleSelectorConfig(
                 pt=(0.9 * u.GeV, None),
-                measurements=(7, None),
+                hits=(7, None),
                 removeNeutral=True,
                 removeSecondaries=True,
             ),
