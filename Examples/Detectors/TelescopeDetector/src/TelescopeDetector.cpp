@@ -15,9 +15,8 @@
 
 namespace ActsExamples {
 
-TelescopeDetectorFactory::TelescopeDetectorFactory(const Config& cfg)
-    : DetectorFactoryBase(
-          Acts::getDefaultLogger("TelescopeDetectorFactory", cfg.logLevel)),
+TelescopeDetector::TelescopeDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("TelescopeDetector", cfg.logLevel)),
       m_cfg(cfg) {
   if (m_cfg.surfaceType > 1) {
     throw std::invalid_argument(
@@ -38,38 +37,14 @@ TelescopeDetectorFactory::TelescopeDetectorFactory(const Config& cfg)
         "The number of provided positions must match the number of "
         "provided stereo angles.");
   }
-}
 
-std::shared_ptr<DetectorBase> TelescopeDetectorFactory::buildDetector() const {
-  Acts::GeometryContext geometryContext;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
-  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
-  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
+  m_nominalGeometryContext = Acts::GeometryContext();
 
-  geometryContext = Acts::GeometryContext();
-
-  gen1Geometry = buildTelescopeDetector(
-      geometryContext, detectorStore, m_cfg.positions, m_cfg.stereos,
+  m_trackingGeometry = buildTelescopeDetector(
+      m_nominalGeometryContext, m_detectorStore, m_cfg.positions, m_cfg.stereos,
       m_cfg.offsets, m_cfg.bounds, m_cfg.thickness,
       static_cast<TelescopeSurfaceType>(m_cfg.surfaceType),
       static_cast<Acts::BinningValue>(m_cfg.binValue));
-
-  return std::make_shared<TelescopeDetector>(
-      std::move(geometryContext), std::move(detectorStore),
-      std::move(gen1Geometry), std::move(gen2Geometry),
-      std::move(contextDecorators));
 }
-
-TelescopeDetector::TelescopeDetector(
-    Acts::GeometryContext geometryContext,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
-    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
-    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators)
-    : PreConstructedDetector(std::move(geometryContext),
-                             std::move(detectorStore), std::move(gen1Geometry),
-                             std::move(gen2Geometry),
-                             std::move(contextDecorators)) {}
 
 }  // namespace ActsExamples

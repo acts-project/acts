@@ -14,7 +14,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <memory>
 #include <utility>
@@ -35,16 +34,13 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    using DetectorFactory = DD4hepDetectorFactory;
-    using Config = DetectorFactory::Config;
-
     auto f =
-        py::class_<DetectorFactory, DetectorFactoryBase,
-                   std::shared_ptr<DetectorFactory>>(m, "DD4hepDetectorFactory")
-            .def(py::init<const Config&>());
+        py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(
+            m, "DD4hepDetector")
+            .def(py::init<const DD4hepDetector::Config&>());
 
-    auto c = py::class_<Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, DD4hepDetector::Config);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(dd4hepLogLevel);
     ACTS_PYTHON_MEMBER(xmlFileNames);
@@ -60,11 +56,6 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
-
-    using Detector = DD4hepDetector;
-
-    py::class_<Detector, DetectorBase, std::shared_ptr<Detector>>(
-        m, "DD4hepDetector");
   }
 
   {

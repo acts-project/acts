@@ -9,13 +9,14 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <memory>
 
 namespace ActsExamples {
 
-struct GdmlDetectorFactory : public DetectorFactoryBase {
+class GdmlDetector : public Detector {
+ public:
   struct Config {
     std::string path;
 
@@ -23,23 +24,13 @@ struct GdmlDetectorFactory : public DetectorFactoryBase {
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
 
-  explicit GdmlDetectorFactory(const Config& cfg);
-
-  std::shared_ptr<DetectorBase> buildDetector() const override;
-
- private:
-  Config m_cfg;
-};
-
-class GdmlDetector : public PreConstructedDetector {
- public:
-  explicit GdmlDetector(const GdmlDetectorFactory::Config& config);
+  explicit GdmlDetector(const Config& cfg);
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 
  private:
-  GdmlDetectorFactory::Config m_cfg;
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples

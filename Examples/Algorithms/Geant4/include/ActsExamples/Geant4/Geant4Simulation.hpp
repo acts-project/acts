@@ -10,8 +10,7 @@
 
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -19,6 +18,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
@@ -65,7 +65,7 @@ class Geant4SimulationBase : public IAlgorithm {
     Geant4ConstructionOptions constructionOptions;
 
     /// Detector instance to access Geant4 geometry construction.
-    std::shared_ptr<DetectorBase> detector;
+    std::shared_ptr<Detector> detector;
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;

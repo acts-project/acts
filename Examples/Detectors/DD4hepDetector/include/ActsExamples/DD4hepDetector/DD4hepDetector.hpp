@@ -14,7 +14,7 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <functional>
 #include <memory>
@@ -32,44 +32,14 @@ namespace ActsExamples {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
-class DD4hepDetector : public PreConstructedDetector {
- public:
-  DD4hepDetector(
-      Acts::GeometryContext geometryContext,
-      std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
-          detectorStore,
-      std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
-      std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-      std::vector<std::shared_ptr<IContextDecorator>> contextDecorators,
-      std::shared_ptr<dd4hep::Detector> detector);
-
-  /// Interface method to access to the DD4hep geometry
-  dd4hep::Detector& dd4hepDetector();
-
-  /// Interface method to Access the TGeo geometry
-  /// @return The world TGeoNode (physical volume)
-  TGeoNode& tgeoGeometry();
-
-  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
-      const Geant4ConstructionOptions& options) const override;
-
- private:
-  /// Pointer to the interface to the DD4hep geometry
-  std::shared_ptr<dd4hep::Detector> m_detector;
-};
-
-/// @class DD4hepDetectorFactory
+/// @class DD4hepDetector
 ///
 /// @brief geometries from dd4hep input
 ///
-/// The DD4hepDetectorFactory creates the DD4hep, the TGeo and the ACTS
-/// TrackingGeometry from DD4hep xml input. The geometries are created only on
-/// demand.
-class DD4hepDetectorFactory : public DetectorFactoryBase {
+/// The DD4hepDetector creates the DD4hep, the TGeo and the ACTS
+/// TrackingGeometry from DD4hep xml input.
+class DD4hepDetector : public Detector {
  public:
-  /// @brief The context decorators
-  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
-
   struct Config {
     /// Log level for the geometry service.
     Acts::Logging::Level logLevel = Acts::Logging::Level::INFO;
@@ -109,20 +79,25 @@ class DD4hepDetectorFactory : public DetectorFactoryBase {
         std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
-  explicit DD4hepDetectorFactory(const Config& cfg);
-  DD4hepDetectorFactory(const DD4hepDetectorFactory&) = delete;
-  DD4hepDetectorFactory(DD4hepDetectorFactory&&);
-  ~DD4hepDetectorFactory() override;
-  DD4hepDetectorFactory& operator=(const DD4hepDetectorFactory&) = delete;
-  DD4hepDetectorFactory& operator=(DD4hepDetectorFactory&&);
+  explicit DD4hepDetector(const Config& cfg);
 
-  std::unique_ptr<dd4hep::Detector> buildDD4hepGeometry() const;
+  /// Interface method to access to the DD4hep geometry
+  dd4hep::Detector& dd4hepDetector();
 
-  std::shared_ptr<DetectorBase> buildDetector() const override;
+  /// Interface method to Access the TGeo geometry
+  /// @return The world TGeoNode (physical volume)
+  TGeoNode& tgeoGeometry();
+
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      const Geant4ConstructionOptions& options) const override;
 
  private:
-  /// The config class
   Config m_cfg;
+
+  /// Pointer to the interface to the DD4hep geometry
+  std::shared_ptr<dd4hep::Detector> m_detector;
+
+  std::unique_ptr<dd4hep::Detector> buildDD4hepGeometry() const;
 };
 
 }  // namespace ActsExamples

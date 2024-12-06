@@ -10,15 +10,19 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <array>
 #include <memory>
 #include <vector>
 
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
+
 namespace ActsExamples {
 
-class TelescopeDetectorFactory : public DetectorFactoryBase {
+class TelescopeDetector : public Detector {
  public:
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
@@ -32,29 +36,13 @@ class TelescopeDetectorFactory : public DetectorFactoryBase {
     Acts::Logging::Level logLevel{Acts::Logging::WARNING};
   };
 
-  explicit TelescopeDetectorFactory(const Config& cfg);
-
-  std::shared_ptr<DetectorBase> buildDetector() const override;
-
- private:
-  Config m_cfg;
-};
-
-class TelescopeDetector : public PreConstructedDetector {
- public:
-  TelescopeDetector(
-      Acts::GeometryContext geometryContext,
-      std::vector<std::shared_ptr<const Acts::DetectorElementBase>>
-          detectorStore,
-      std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
-      std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-      std::vector<std::shared_ptr<IContextDecorator>> contextDecorators);
+  explicit TelescopeDetector(const Config& cfg);
 
   std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
       const Geant4ConstructionOptions& options) const override;
 
  private:
-  TelescopeDetectorFactory::Config m_cfg;
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples

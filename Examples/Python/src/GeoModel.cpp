@@ -62,15 +62,15 @@ void addGeoModel(Context& ctx) {
       });
 
   {
-    using DetectorFactory = ActsExamples::GeoModelDetectorFactory;
-    using Config = DetectorFactory::Config;
+    auto f =
+        py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
+                   std::shared_ptr<ActsExamples::GeoModelDetector>>(
+            gm, "GeoModelDetector")
+            .def(py::init<const ActsExamples::GeoModelDetector::Config&>());
 
-    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
-                 gm, "GdmlDetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, ActsExamples::GeoModelDetector::Config);
     ACTS_PYTHON_MEMBER(path);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();

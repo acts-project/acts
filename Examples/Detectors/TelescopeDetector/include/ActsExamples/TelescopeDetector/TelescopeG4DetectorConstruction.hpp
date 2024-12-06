@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include "G4VUserDetectorConstruction.hh"
@@ -21,14 +21,14 @@ namespace ActsExamples {
 class TelescopeG4DetectorConstruction final
     : public G4VUserDetectorConstruction {
  public:
-  TelescopeG4DetectorConstruction(const TelescopeDetectorFactory::Config& cfg,
+  TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg,
                                   const Geant4ConstructionOptions& options);
 
   G4VPhysicalVolume* Construct() final;
 
  private:
   /// The configuration of the telescope detector
-  TelescopeDetectorFactory::Config m_cfg;
+  TelescopeDetector::Config m_cfg;
   /// The Geant4 construction options
   Geant4ConstructionOptions m_options;
   /// The world volume

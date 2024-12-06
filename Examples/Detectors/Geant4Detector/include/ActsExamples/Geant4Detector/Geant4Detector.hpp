@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <memory>
 #include <string>
@@ -21,21 +21,9 @@
 
 class G4VPhysicalVolume;
 
-namespace Acts {
-class TrackingGeometry;
-class Geant4DetectorElement;
-class Surface;
-
-namespace Experimental {
-class Detector;
-}
-}  // namespace Acts
-
 namespace ActsExamples {
 
-class IContextDecorator;
-
-struct Geant4DetectorFactory : public DetectorFactoryBase {
+struct Geant4Detector : public Detector {
   /// Nested configuration struct
   struct Config {
     /// The detector/geometry name
@@ -53,19 +41,17 @@ struct Geant4DetectorFactory : public DetectorFactoryBase {
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
   };
 
-  explicit Geant4DetectorFactory(const Config& cfg);
-
   /// @brief Convert Geant4VPhysicalVolume objects into Acts components
   ///
   /// @param cfg the configuration of the Geant4 detector
   /// @param logger a logger instance
   ///
   /// @return a tuple of surfaces and detector elements
-  std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
-             std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
-  buildGeant4Volumes() const;
+  static std::tuple<std::vector<std::shared_ptr<Acts::Surface>>,
+                    std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>>
+  buildGeant4Volumes(const Config& cfg, const Acts::Logger& logger);
 
-  std::shared_ptr<DetectorBase> buildDetector() const override;
+  explicit Geant4Detector(const Config& cfg);
 
  private:
   Config m_cfg;

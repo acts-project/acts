@@ -13,7 +13,7 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstddef>
@@ -26,7 +26,7 @@
 
 namespace ActsExamples {
 
-class TGeoDetectorFactory : public DetectorFactoryBase {
+class TGeoDetector : public Detector {
  public:
   struct Config {
     Acts::Logging::Level logLevel = Acts::Logging::WARNING;
@@ -136,9 +136,7 @@ class TGeoDetectorFactory : public DetectorFactoryBase {
   static void readTGeoLayerBuilderConfigsFile(const std::string& path,
                                               Config& config);
 
-  explicit TGeoDetectorFactory(const Config& cfg);
-
-  std::shared_ptr<DetectorBase> buildDetector() const override;
+  explicit TGeoDetector(const Config& cfg);
 
  private:
   Config m_cfg;

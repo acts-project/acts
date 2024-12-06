@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 
 #include <string>
 

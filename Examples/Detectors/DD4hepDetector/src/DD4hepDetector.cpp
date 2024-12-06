@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -25,18 +24,24 @@
 
 namespace ActsExamples {
 
-DD4hepDetector::DD4hepDetector(
-    Acts::GeometryContext geometryContext,
-    std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore,
-    std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry,
-    std::shared_ptr<Acts::Experimental::Detector> gen2Geometry,
-    std::vector<std::shared_ptr<IContextDecorator>> contextDecorators,
-    std::shared_ptr<dd4hep::Detector> detector)
-    : PreConstructedDetector(std::move(geometryContext),
-                             std::move(detectorStore), std::move(gen1Geometry),
-                             std::move(gen2Geometry),
-                             std::move(contextDecorators)),
-      m_detector(std::move(detector)) {}
+DD4hepDetector::DD4hepDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  if (m_cfg.xmlFileNames.empty()) {
+    throw std::invalid_argument("Missing DD4hep XML filenames");
+  }
+
+  m_nominalGeometryContext = Acts::GeometryContext();
+
+  m_detector = buildDD4hepGeometry();
+
+  auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
+  m_trackingGeometry = Acts::convertDD4hepDetector(
+      m_detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
+      m_cfg.sortDetectors, m_nominalGeometryContext, m_cfg.materialDecorator,
+      m_cfg.geometryIdentifierHook);
+}
 
 dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
   return *m_detector;
@@ -46,24 +51,7 @@ TGeoNode& DD4hepDetector::tgeoGeometry() {
   return *m_detector->world().placement().ptr();
 }
 
-DD4hepDetectorFactory::DD4hepDetectorFactory(const Config& cfg)
-    : DetectorFactoryBase(
-          Acts::getDefaultLogger("DD4hepDetector", cfg.logLevel)),
-      m_cfg(cfg) {
-  if (m_cfg.xmlFileNames.empty()) {
-    throw std::invalid_argument("Missing DD4hep XML filenames");
-  }
-}
-
-DD4hepDetectorFactory::DD4hepDetectorFactory(DD4hepDetectorFactory&&) = default;
-
-DD4hepDetectorFactory::~DD4hepDetectorFactory() = default;
-
-DD4hepDetectorFactory& DD4hepDetectorFactory::operator=(
-    DD4hepDetectorFactory&&) = default;
-
-std::unique_ptr<dd4hep::Detector> DD4hepDetectorFactory::buildDD4hepGeometry()
-    const {
+std::unique_ptr<dd4hep::Detector> DD4hepDetector::buildDD4hepGeometry() const {
   const int old_gErrorIgnoreLevel = gErrorIgnoreLevel;
   switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
@@ -109,30 +97,6 @@ std::unique_ptr<dd4hep::Detector> DD4hepDetectorFactory::buildDD4hepGeometry()
   std::cout.clear();
 
   return detector;
-}
-
-std::shared_ptr<DetectorBase> DD4hepDetectorFactory::buildDetector() const {
-  Acts::GeometryContext geometryContext;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
-  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
-  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
-  std::unique_ptr<dd4hep::Detector> detector;
-
-  geometryContext = Acts::GeometryContext();
-
-  detector = buildDD4hepGeometry();
-
-  auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
-  gen1Geometry = Acts::convertDD4hepDetector(
-      detector->world(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
-      m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
-      m_cfg.sortDetectors, geometryContext, m_cfg.materialDecorator,
-      m_cfg.geometryIdentifierHook);
-
-  return std::make_shared<DD4hepDetector>(
-      geometryContext, detectorStore, gen1Geometry, gen2Geometry,
-      contextDecorators, std::move(detector));
 }
 
 }  // namespace ActsExamples

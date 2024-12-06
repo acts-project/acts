@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include <cstddef>
@@ -20,9 +20,9 @@ namespace ActsExamples {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetectorFactory : public DetectorFactoryBase {
+class AlignedDetector : public Detector {
  public:
-  struct Config : public GenericDetectorFactory::Config {
+  struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
     std::size_t seed = 1324354657;
     /// Size of a valid IOV.
@@ -50,9 +50,7 @@ class AlignedDetectorFactory : public DetectorFactoryBase {
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  explicit AlignedDetectorFactory(const Config& cfg);
-
-  std::shared_ptr<DetectorBase> buildDetector() const override;
+  explicit AlignedDetector(const Config& cfg);
 
  private:
   Config m_cfg;

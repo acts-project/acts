@@ -8,43 +8,28 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
 namespace ActsExamples {
 
-GenericDetectorFactory::GenericDetectorFactory(const Config& cfg)
-    : DetectorFactoryBase(
-          Acts::getDefaultLogger("GenericDetectorFactory", cfg.logLevel)),
-      m_cfg(cfg) {}
-
-std::shared_ptr<DetectorBase> GenericDetectorFactory::buildDetector() const {
-  Acts::GeometryContext geometryContext;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
-  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
-  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
-
-  geometryContext = Acts::GeometryContext();
+GenericDetector::GenericDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_nominalGeometryContext = Acts::GeometryContext();
 
   std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
       specificDetectorStore;
-  gen1Geometry = Generic::buildDetector<GenericDetectorElement>(
-      geometryContext, specificDetectorStore, m_cfg.buildLevel,
+  m_trackingGeometry = Generic::buildDetector<GenericDetectorElement>(
+      m_nominalGeometryContext, specificDetectorStore, m_cfg.buildLevel,
       m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
       m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
   for (const auto& something : specificDetectorStore) {
     for (const auto& element : something) {
-      detectorStore.push_back(element);
+      m_detectorStore.push_back(element);
     }
   }
-
-  return std::make_shared<PreConstructedDetector>(
-      std::move(geometryContext), std::move(detectorStore),
-      std::move(gen1Geometry), std::move(gen2Geometry),
-      std::move(contextDecorators));
 }
 
 }  // namespace ActsExamples

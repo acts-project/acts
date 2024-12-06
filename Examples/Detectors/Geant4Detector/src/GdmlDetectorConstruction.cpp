@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <utility>

@@ -25,7 +25,6 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 
@@ -52,7 +51,7 @@ namespace {
 /// @param config The input config
 /// @return Vector of layer builder configs
 std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
-    const TGeoDetectorFactory::Config& config, const Acts::Logger& logger) {
+    const TGeoDetector::Config& config, const Acts::Logger& logger) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // iterate over all configured detector volumes
@@ -81,9 +80,9 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // loop over the negative/central/positive layer configurations
     for (auto ncp : {
-             TGeoDetectorFactory::Config::Negative,
-             TGeoDetectorFactory::Config::Central,
-             TGeoDetectorFactory::Config::Positive,
+             TGeoDetector::Config::Negative,
+             TGeoDetector::Config::Central,
+             TGeoDetector::Config::Positive,
          }) {
       if (!volume.layers.at(ncp)) {
         continue;
@@ -159,8 +158,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 ///
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
-    const TGeoDetectorFactory::Config& config,
-    const Acts::GeometryContext& context,
+    const TGeoDetector::Config& config, const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
@@ -339,8 +337,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
 }  // namespace
 
 /// Read the TGeo layer builder configurations from the user configuration.
-void TGeoDetectorFactory::readTGeoLayerBuilderConfigsFile(
-    const std::string& path, Config& config) {
+void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
+                                                   Config& config) {
   if (path.empty()) {
     return;
   }
@@ -366,31 +364,18 @@ void TGeoDetectorFactory::readTGeoLayerBuilderConfigsFile(
   }
 }
 
-TGeoDetectorFactory::TGeoDetectorFactory(const Config& cfg)
-    : DetectorFactoryBase(
-          Acts::getDefaultLogger("TGeoDetectorFactory", cfg.logLevel)),
-      m_cfg(cfg) {}
+TGeoDetector::TGeoDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_nominalGeometryContext = Acts::GeometryContext();
 
-void TGeoDetectorFactory::Config::readJson(const std::string& jsonFile) {
-  readTGeoLayerBuilderConfigsFile(jsonFile, *this);
+  m_trackingGeometry =
+      buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,
+                        m_cfg.materialDecorator, logger());
 }
 
-std::shared_ptr<DetectorBase> TGeoDetectorFactory::buildDetector() const {
-  Acts::GeometryContext geometryContext;
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
-  std::shared_ptr<const Acts::TrackingGeometry> gen1Geometry;
-  std::shared_ptr<Acts::Experimental::Detector> gen2Geometry;
-  std::vector<std::shared_ptr<IContextDecorator>> contextDecorators;
-
-  geometryContext = Acts::GeometryContext();
-
-  gen1Geometry = buildTGeoDetector(m_cfg, geometryContext, detectorStore,
-                                   m_cfg.materialDecorator, logger());
-
-  return std::make_shared<PreConstructedDetector>(
-      std::move(geometryContext), std::move(detectorStore),
-      std::move(gen1Geometry), std::move(gen2Geometry),
-      std::move(contextDecorators));
+void TGeoDetector::Config::readJson(const std::string& jsonFile) {
+  readTGeoLayerBuilderConfigsFile(jsonFile, *this);
 }
 
 }  // namespace ActsExamples

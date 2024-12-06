@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
 

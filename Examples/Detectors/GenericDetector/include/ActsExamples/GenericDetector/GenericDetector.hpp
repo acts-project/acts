@@ -9,16 +9,20 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <cstddef>
 #include <memory>
+
+namespace Acts {
+class IMaterialDecorator;
+}
 
 namespace ActsExamples {
 
 class GenericDetectorElement;
 
-class GenericDetectorFactory : public DetectorFactoryBase {
+class GenericDetector : public Detector {
  public:
   struct Config {
     std::size_t buildLevel = 3;
@@ -30,9 +34,7 @@ class GenericDetectorFactory : public DetectorFactoryBase {
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  explicit GenericDetectorFactory(const Config& cfg);
-
-  std::shared_ptr<DetectorBase> buildDetector() const override;
+  explicit GenericDetector(const Config& cfg);
 
  private:
   Config m_cfg;

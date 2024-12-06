@@ -10,23 +10,15 @@
 
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
 
 #include <G4GDMLParser.hh>
 
 namespace ActsExamples {
 
-GeoModelDetectorFactory::GeoModelDetectorFactory(const Config& cfg)
-    : DetectorFactoryBase(
-          Acts::getDefaultLogger("GeoModelDetectorFactory", cfg.logLevel)),
-      m_cfg(cfg) {}
-
-std::shared_ptr<DetectorBase> GeoModelDetectorFactory::buildDetector() const {
-  return std::make_shared<GeoModelDetector>(
-      Acts::GeoModelReader::readFromDb(m_cfg.path));
+GeoModelDetector::GeoModelDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("GeoModelDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_geoModel = Acts::GeoModelReader::readFromDb(m_cfg.path);
 }
-
-GeoModelDetector::GeoModelDetector(Acts::GeoModelTree geoModel)
-    : PreConstructedDetector(), m_geoModel(std::move(geoModel)) {}
 
 }  // namespace ActsExamples

@@ -14,7 +14,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -46,35 +46,28 @@ void addDetector(Context& ctx) {
   }
 
   {
-    py::class_<DetectorBase, std::shared_ptr<DetectorBase>>(mex, "DetectorBase")
-        .def("geometryContext", &DetectorBase::geometryContext)
-        .def("trackingGeometry", &DetectorBase::trackingGeometry)
-        .def("gen2Geometry", &DetectorBase::gen2Geometry)
-        .def("contextDecorators", &DetectorBase::contextDecorators)
+    py::class_<Detector, std::shared_ptr<Detector>>(mex, "DetectorBase")
+        .def("nominalGeometryContext", &Detector::nominalGeometryContext)
+        .def("trackingGeometry", &Detector::trackingGeometry)
+        .def("gen2Geometry", &Detector::gen2Geometry)
+        .def("contextDecorators", &Detector::contextDecorators)
         .def("__enter__",
-             [](const std::shared_ptr<DetectorBase>& self) { return self; })
+             [](const std::shared_ptr<Detector>& self) { return self; })
         .def("__exit__",
-             [](std::shared_ptr<DetectorBase>& self,
+             [](std::shared_ptr<Detector>& self,
                 const std::optional<py::object>&,
                 const std::optional<py::object>&,
                 const std::optional<py::object>&) { self.reset(); });
-
-    py::class_<DetectorFactoryBase, std::shared_ptr<DetectorFactoryBase>>(
-        mex, "DetectorFactoryBase")
-        .def("buildDetector", &DetectorFactoryBase::buildDetector);
   }
 
   {
-    using DetectorFactory = GenericDetectorFactory;
-    using Config = DetectorFactory::Config;
+    auto d =
+        py::class_<GenericDetector, Detector, std::shared_ptr<GenericDetector>>(
+            mex, "GenericDetector")
+            .def(py::init<const GenericDetector::Config&>());
 
-    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
-                        std::shared_ptr<DetectorFactory>>(
-                 mex, "GenericDetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, GenericDetector::Config);
     ACTS_PYTHON_MEMBER(buildLevel);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
@@ -86,16 +79,14 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using DetectorFactory = TelescopeDetectorFactory;
-    using Config = DetectorFactory::Config;
+    auto d =
+        py::class_<TelescopeDetector, Detector,
+                   std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
+            .def(py::init<const TelescopeDetector::Config&>());
 
-    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
-                        std::shared_ptr<DetectorFactory>>(
-                 mex, "TelescopeDetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c =
+        py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, TelescopeDetector::Config);
     ACTS_PYTHON_MEMBER(positions);
     ACTS_PYTHON_MEMBER(stereos);
     ACTS_PYTHON_MEMBER(offsets);
@@ -109,17 +100,15 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using DetectorFactory = AlignedDetectorFactory;
-    using Config = DetectorFactory::Config;
+    auto d =
+        py::class_<AlignedDetector, Detector, std::shared_ptr<AlignedDetector>>(
+            mex, "AlignedDetector")
+            .def(py::init<const AlignedDetector::Config&>());
 
-    auto d = py::class_<DetectorFactory, DetectorFactoryBase,
-                        std::shared_ptr<DetectorFactory>>(
-                 mex, "AlignedDetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config, GenericDetectorFactory::Config>(d, "Config")
+    auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
+                 d, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c, AlignedDetector::Config);
     ACTS_PYTHON_MEMBER(seed);
     ACTS_PYTHON_MEMBER(iovSize);
     ACTS_PYTHON_MEMBER(flushSize);
@@ -133,19 +122,15 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(mode);
     ACTS_PYTHON_STRUCT_END();
 
-    py::enum_<Config::Mode>(c, "Mode")
-        .value("Internal", Config::Mode::Internal)
-        .value("External", Config::Mode::External);
+    py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
+        .value("Internal", AlignedDetector::Config::Mode::Internal)
+        .value("External", AlignedDetector::Config::Mode::External);
   }
 
   {
-    using DetectorFactory = TGeoDetectorFactory;
-    using Config = DetectorFactory::Config;
-
-    auto d =
-        py::class_<DetectorFactory, DetectorFactoryBase,
-                   std::shared_ptr<DetectorFactory>>(mex, "TGeoDetectorFactory")
-            .def(py::init<const Config&>());
+    auto d = py::class_<TGeoDetector, Detector, std::shared_ptr<TGeoDetector>>(
+                 mex, "TGeoDetector")
+                 .def(py::init<const TGeoDetector::Config&>());
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())
@@ -153,23 +138,25 @@ void addDetector(Context& ctx) {
         .def_readwrite("lower", &Options::Interval::lower)
         .def_readwrite("upper", &Options::Interval::upper);
 
-    auto c = py::class_<Config>(d, "Config").def(py::init<>());
+    auto c = py::class_<TGeoDetector::Config>(d, "Config").def(py::init<>());
 
-    c.def_property(
-        "jsonFile", nullptr,
-        [](Config& cfg, const std::string& file) { cfg.readJson(file); });
+    c.def_property("jsonFile", nullptr,
+                   [](TGeoDetector::Config& cfg, const std::string& file) {
+                     cfg.readJson(file);
+                   });
 
-    py::enum_<Config::SubVolume>(c, "SubVolume")
-        .value("Negative", Config::SubVolume::Negative)
-        .value("Central", Config::SubVolume::Central)
-        .value("Positive", Config::SubVolume::Positive);
+    py::enum_<TGeoDetector::Config::SubVolume>(c, "SubVolume")
+        .value("Negative", TGeoDetector::Config::SubVolume::Negative)
+        .value("Central", TGeoDetector::Config::SubVolume::Central)
+        .value("Positive", TGeoDetector::Config::SubVolume::Positive);
 
     py::enum_<Acts::BinningType>(c, "BinningType")
         .value("equidistant", Acts::BinningType::equidistant)
         .value("arbitrary", Acts::BinningType::arbitrary);
 
-    auto volume = py::class_<Config::Volume>(c, "Volume").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(volume, Config::Volume);
+    auto volume =
+        py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(volume, TGeoDetector::Config::Volume);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(binToleranceR);
     ACTS_PYTHON_MEMBER(binTolerancePhi);
@@ -198,15 +185,18 @@ void addDetector(Context& ctx) {
 
     auto regTriplet = [&c](const std::string& name, auto v) {
       using type = decltype(v);
-      py::class_<Config::LayerTriplet<type>>(c, name.c_str())
+      py::class_<TGeoDetector::Config::LayerTriplet<type>>(c, name.c_str())
           .def(py::init<>())
           .def(py::init<type>())
           .def(py::init<type, type, type>())
-          .def_readwrite("negative", &Config::LayerTriplet<type>::negative)
-          .def_readwrite("central", &Config::LayerTriplet<type>::central)
-          .def_readwrite("positive", &Config::LayerTriplet<type>::positive)
-          .def("at", py::overload_cast<Config::SubVolume>(
-                         &Config::LayerTriplet<type>::at));
+          .def_readwrite("negative",
+                         &TGeoDetector::Config::LayerTriplet<type>::negative)
+          .def_readwrite("central",
+                         &TGeoDetector::Config::LayerTriplet<type>::central)
+          .def_readwrite("positive",
+                         &TGeoDetector::Config::LayerTriplet<type>::positive)
+          .def("at", py::overload_cast<TGeoDetector::Config::SubVolume>(
+                         &TGeoDetector::Config::LayerTriplet<type>::at));
     };
 
     regTriplet("LayerTripletBool", true);
@@ -217,7 +207,7 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorBinning",
                std::vector<std::pair<int, Acts::BinningType>>{});
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c, TGeoDetector::Config);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
     ACTS_PYTHON_MEMBER(layerLogLevel);
     ACTS_PYTHON_MEMBER(volumeLogLevel);

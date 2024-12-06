@@ -23,7 +23,7 @@
 namespace ActsExamples {
 
 TelescopeG4DetectorConstruction::TelescopeG4DetectorConstruction(
-    const TelescopeDetectorFactory::Config& cfg,
+    const TelescopeDetector::Config& cfg,
     const Geant4ConstructionOptions& options)
     : m_cfg(cfg), m_options(options) {
   throw_assert(cfg.surfaceType == static_cast<int>(TelescopeSurfaceType::Plane),

@@ -9,13 +9,13 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 
 #include <memory>
 #include <mutex>
@@ -44,7 +44,7 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     Geant4ConstructionOptions constructionOptions;
 
     /// Detector instance to access Geant4 geometry construction.
-    std::shared_ptr<DetectorBase> detector;
+    std::shared_ptr<Detector> detector;
 
     /// random number seed 1
     int seed1 = 12345;

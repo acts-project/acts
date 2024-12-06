@@ -16,8 +16,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DetectorCommons/DetectorBase.hpp"
-#include "ActsExamples/DetectorCommons/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/RegionCreator.hpp"
@@ -173,8 +172,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     sm.def(
         "remapSensitiveNames",
         [](Geant4::SensitiveSurfaceMapper& self, State& state,
-           GeometryContext& gctx, DetectorBase& detector,
-           Transform3& transform) {
+           GeometryContext& gctx, Detector& detector, Transform3& transform) {
           return self.remapSensitiveNames(
               state, gctx,
               detector.buildGeant4DetectorConstruction({})->Construct(),
@@ -259,19 +257,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    py::class_<Acts::Geant4DetectorElement,
-               std::shared_ptr<Acts::Geant4DetectorElement>>(
-        mod, "Geant4DetectorElement");
+    auto f =
+        py::class_<Geant4Detector, Detector, std::shared_ptr<Geant4Detector>>(
+            mod, "Geant4Detector")
+            .def(py::init<const Geant4Detector::Config&>());
 
-    using DetectorFactory = Geant4DetectorFactory;
-    using Config = DetectorFactory::Config;
-
-    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
-                 mod, "Geant4DetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(g4World);
     ACTS_PYTHON_MEMBER(g4SurfaceOptions);
@@ -282,15 +274,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    using DetectorFactory = GdmlDetectorFactory;
-    using Config = DetectorFactory::Config;
+    auto f = py::class_<GdmlDetector, Detector, std::shared_ptr<GdmlDetector>>(
+                 mod, "GdmlDetector")
+                 .def(py::init<const GdmlDetector::Config&>());
 
-    auto f = py::class_<DetectorFactory, std::shared_ptr<DetectorFactory>>(
-                 mod, "GdmlDetectorFactory")
-                 .def(py::init<const Config&>());
-
-    auto c = py::class_<Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    auto c = py::class_<GdmlDetector::Config>(f, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, GdmlDetector::Config);
     ACTS_PYTHON_MEMBER(path);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
