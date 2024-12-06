@@ -20,7 +20,7 @@ namespace Acts {
 /// blueprint construction. It is configured ahead of time which volume faces to
 /// mark up, and how do to so.
 /// @note This node can only have a single child. This is not an error during
-///       tree building, but during geometry constuction.
+///       tree building, but during geometry construction.
 /// @note This currently only supports a cylinder volume child
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
@@ -71,9 +71,6 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent, const Logger& logger) override;
 
-  /// @copydoc BlueprintNode::addToGraphviz
-  void addToGraphviz(std::ostream& os) const override;
-
   /// Retrieve the binning configuration
   /// @return The binning configuration
   const std::optional<BinningConfig>& binning() const;
@@ -83,6 +80,9 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning);
 
  private:
+  /// @copydoc BlueprintNode::addToGraphviz
+  void addToGraphviz(std::ostream& os) const override;
+
   std::string m_name{};
 
   std::optional<BinningConfig> m_binning{};

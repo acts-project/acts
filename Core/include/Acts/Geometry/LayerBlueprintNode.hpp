@@ -100,10 +100,10 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @return The layer type
   const LayerType& layerType() const;
 
+ private:
   /// @copydoc Acts::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
- private:
   /// Helper method that performs the volume creation from the configured
   /// surfaces. It converts from an @p extent object to an instance of @ref
   /// Acts::VolumeBounds.
