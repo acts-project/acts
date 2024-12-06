@@ -47,14 +47,10 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
     if (type == AxisBoundaryType::Bound) {
-      bmin = (static_cast<int>(bmin) - static_cast<int>(expand) > 0)
-                 ? bmin - expand
-                 : 1u;
+      bmin = bmin > expand ? bmin - expand : 1u;
       bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
     } else if (type == AxisBoundaryType::Open) {
-      bmin = (static_cast<int>(bmin) - static_cast<int>(expand) >= 0)
-                 ? bmin - expand
-                 : 0u;
+      bmin = bmin >= expand ? bmin - expand : 0u;
       bmax = (bmax + expand <= nBins + 1u) ? bmax + expand : nBins + 1u;
     }
     fill_linear(bmin, bmax);
@@ -62,13 +58,11 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     // Close case
     std::size_t span = bmax - bmin + 1u + 2 * expand;
     // Safe with respect to the closure point, treat as bound
-    if (2 * span < nBins && (bmax + expand <= nBins) &&
-        (static_cast<int>(bmin) - static_cast<int>(expand) > 0)) {
-      return binSequence({bmin, bmax}, expand, nBins, AxisBoundaryType::Bound);
+    if (2 * span < nBins && (bmax + expand <= nBins) && (bmin > expand)) {
+      return binSequence({bmin, bmax}, expand, nBins,
+                         AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
-      bmin = static_cast<int>(bmin) - static_cast<int>(expand) > 0
-                 ? bmin - expand
-                 : 1u;
+      bmin = bmin > expand ? bmin - expand : 1u;
       bmax = bmax + expand <= nBins ? bmax + expand : nBins;
       fill_linear(bmin, bmax);
       // deal with expansions over the phi boundary
@@ -76,9 +70,8 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
         std::size_t overstep = (bmax + expand - nBins);
         fill_linear(1u, overstep);
       }
-      if (static_cast<int>(bmin) - static_cast<int>(expand) < 1) {
-        std::size_t understep =
-            abs(static_cast<int>(bmin) - static_cast<int>(expand));
+      if (bmin <= expand) {
+        std::size_t understep = expand - bmin;
         fill_linear(nBins - understep, nBins);
       }
       std::ranges::sort(rBins);

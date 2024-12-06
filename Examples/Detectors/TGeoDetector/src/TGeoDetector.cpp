@@ -375,8 +375,7 @@ auto TGeoDetector::finalize(
 
   ContextDecorators tgeoContextDecorators = {};
   // Return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
+  return {std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators)};
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

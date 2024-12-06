@@ -320,7 +320,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
     const std::vector<AxisDirection>& internalConstraints) const {
   // Check if the internals entry is empty
   if (entry.internals.empty()) {
-    return std::make_tuple(nullptr, Extent());
+    return {nullptr, Extent()};
   }
 
   // Build a layer structure
@@ -393,10 +393,10 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
         lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
       }
 
-      return std::make_tuple(
+      return {
           std::make_shared<Experimental::LayerStructureBuilder>(
               lsbCfg, m_logger->clone(entry.name + "_LayerStructureBuilder")),
-          internalExtent);
+          internalExtent};
 
     } else {
       throw std::invalid_argument(
@@ -404,7 +404,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           entry.internals[1u] + "' / or now kdt surfaces provided.");
     }
   }
-  return std::make_tuple(nullptr, Extent());
+  return {nullptr, Extent()};
 }
 
 std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
@@ -434,5 +434,5 @@ Acts::GeoModelBlueprintCreater::parseBounds(
         "supported for the moment.");
   }
 
-  return std::make_tuple(boundsType, extent, boundValues, translation);
+  return {boundsType, extent, boundValues, translation};
 }

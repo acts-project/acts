@@ -61,8 +61,7 @@ auto TelescopeDetector::finalize(
                              static_cast<Acts::AxisDirection>(cfg.axisDir));
   ContextDecorators gContextDecorators = {};
   // return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDecorators));
+  return {std::move(gGeometry), std::move(gContextDecorators)};
 }
 
 }  // namespace ActsExamples

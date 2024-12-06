@@ -208,7 +208,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     aux += "vol. axis directions : " + axisDirString;
   }
   // Return the tuple
-  return std::make_tuple(transform, bValueType, bValues, axisDirections, aux);
+  return {transform, bValueType, bValues, axisDirections, aux};
 }
 
 std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
@@ -310,6 +310,5 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
         std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
   }
 
-  return std::make_tuple(internalsBuilder, rootsFinderBuilder, geoIdGenerator,
-                         aux, ext);
+  return {internalsBuilder, rootsFinderBuilder, geoIdGenerator, aux, ext};
 }

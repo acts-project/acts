@@ -2,6 +2,7 @@ add_library(
     ActsExamplesIoObj
     SHARED
     src/ObjTrackingGeometryWriter.cpp
+    src/ObjSimHitWriter.cpp
     src/ObjPropagationStepsWriter.cpp
 )
 

@@ -48,6 +48,10 @@ class DigitizationAlgorithm final : public IAlgorithm {
     std::string outputMeasurementParticlesMap = "measurement_particles_map";
     /// Output collection to map measured hits to simulated hits.
     std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
+    /// Output collection to map particles to simulated hits.
+    std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
 
     /// Map of surface by identifier to allow local - to global
     std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
@@ -122,7 +126,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   Config m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
-  /// Geometric digtizer
+  /// Geometric digitizer
   ActsFatras::Channelizer m_channelizer;
 
   using CellsMap =
@@ -140,6 +144,11 @@ class DigitizationAlgorithm final : public IAlgorithm {
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
 
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
+  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+      this, "OutputSimHitMeasurementsMap"};
+
   /// Construct a fixed-size smearer from a configuration.
   ///
   /// It's templated on the smearing dimension given by @tparam kSmearDIM
@@ -153,7 +162,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
-    for (int i = 0; i < static_cast<int>(kSmearDIM); ++i) {
+    for (std::size_t i = 0; i < kSmearDIM; ++i) {
       impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
       impl.smearing.smearFunctions[i] =
           cfg.smearingDigiConfig.at(i).smearFunction;

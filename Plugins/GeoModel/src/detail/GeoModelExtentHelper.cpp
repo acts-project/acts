@@ -111,7 +111,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
       AxisDirection aDir = bvCyl.at(iv);
       double val = std::numeric_limits<double>::max();
       bool isMin = (iv % 2 == 0);
-      // Case "e" : exxternal extent
+      // Case "e" : external extent
       if (value == "e") {
         // External parameters do not constrain it
         if (!externalExtent.constrains(aDir)) {
@@ -157,5 +157,5 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
     }
   }
 
-  return std::make_tuple(boundsType, extent);
+  return {boundsType, extent};
 }
