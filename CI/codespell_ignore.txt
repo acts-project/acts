@@ -1,6 +1,5 @@
 bu
 strack
-compres
 coner
 dthe
 iself
@@ -18,8 +17,6 @@ pring
 aline
 boxs
 ans
-dthe
-dthe
 vart
 pixelx
 millepede
