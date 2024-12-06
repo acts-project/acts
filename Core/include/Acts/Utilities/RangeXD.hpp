@@ -645,8 +645,8 @@ void to_json(nlohmann::json& j, const Range1D<Type>& r) {
 
 template <typename Type>
 void from_json(const nlohmann::json& j, Range1D<Type>& r) {
-  r.setMin(static_cast<Type>(j["min"]));
-  r.setMax(static_cast<Type>(j["max"]));
+  r.setMin(j.at("min").template get<Type>());
+  r.setMax(j.at("max").template get<Type>());
 }
 
 }  // namespace Acts
