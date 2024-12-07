@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <random>
 
+#include <boost/container/small_vector.hpp>
+
 namespace ActsExamples {
 struct AlgorithmContext;
 
@@ -19,6 +21,44 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 
 /// The seed type used in the framework.
 using RandomSeed = std::uint32_t;
+
+class RandomSeedSequence {
+ public:
+  using result_type = std::uint_least32_t;
+  static constexpr std::size_t N = 4;
+  using container_type = boost::container::small_vector<result_type, N>;
+
+  RandomSeedSequence();
+  explicit RandomSeedSequence(RandomSeed seed);
+  template <typename InputIterator>
+  RandomSeedSequence(InputIterator first, InputIterator last)
+      : m_seed(first, last) {}
+  template <typename InputRange>
+  RandomSeedSequence(const InputRange& range)
+      : m_seed(range.begin(), range.end()) {}
+  RandomSeedSequence(std::initializer_list<result_type> il)
+      : m_seed(il.begin(), il.end()) {}
+
+  std::size_t size() const;
+
+  container_type generate(std::size_t size) const;
+
+  template <typename OutputIterator>
+  void generate(OutputIterator first, OutputIterator last) const {
+    container_type result = generate(static_cast<std::size_t>(last - first));
+    std::copy(result.begin(), result.end(), first);
+  }
+
+  template <typename OutputIterator>
+  void param(OutputIterator first) const {
+    std::copy(m_seed.begin(), m_seed.end(), first);
+  }
+
+  RandomSeedSequence append(RandomSeed seed) const;
+
+ private:
+  container_type m_seed;
+};
 
 /// Provide event and algorithm specific random number generator.s
 ///
@@ -38,6 +78,12 @@ class RandomNumbers {
   };
 
   explicit RandomNumbers(const Config& cfg);
+
+  RandomSeedSequence createEventAlgorithmSeedSequence(
+      const AlgorithmContext& context) const;
+
+  RandomEngine createEventAlgorithmEngine(
+      const AlgorithmContext& context) const;
 
   /// Spawn an algorithm-local random number generator. To avoid inefficiencies
   /// and multiple uses of a given RNG seed, this should only be done once per
