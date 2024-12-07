@@ -273,7 +273,7 @@ else:
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
                 eta=(-3.0, 3.0),
-                measurements=(9, None),
+                hits=(9, None),
                 removeNeutral=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
@@ -300,7 +300,7 @@ else:
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
                 eta=(-3.0, 3.0),
-                measurements=(9, None),
+                hits=(9, None),
                 removeNeutral=True,
             ),
             enableInteractions=True,

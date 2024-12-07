@@ -84,6 +84,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(hitsMin);
+    ACTS_PYTHON_MEMBER(hitsMax);
     ACTS_PYTHON_MEMBER(measurementsMin);
     ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
