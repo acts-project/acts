@@ -1,4 +1,4 @@
-add_unittest(Blueprint BlueprintTests.cpp)
+add_unittest(Gen2Blueprint BlueprintTests.cpp)
 add_unittest(BlueprintHelper BlueprintHelperTests.cpp)
 add_unittest(CylindricalContainerBuilder CylindricalContainerBuilderTests.cpp)
 add_unittest(CylindricalDetectorFromBlueprint CylindricalDetectorFromBlueprintTests.cpp)

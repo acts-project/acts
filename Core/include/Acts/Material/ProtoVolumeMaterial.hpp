@@ -72,12 +72,11 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   Material m_material;
 };
 
-/// Return the material
 inline const Acts::Material Acts::ProtoVolumeMaterial::material(
     const Acts::Vector3& /*position*/) const {
   return m_material;
 }
-/// Return the bin Utility
+
 inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
   return m_binUtility;
 }

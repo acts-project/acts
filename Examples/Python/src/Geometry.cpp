@@ -30,6 +30,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -91,6 +92,9 @@ struct IdentifierSurfacesCollector {
 }  // namespace
 
 namespace Acts::Python {
+
+void addBlueprint(Context& ctx);
+
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -301,6 +305,8 @@ void addGeometry(Context& ctx) {
         .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
         .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
+
+  addBlueprint(ctx);
 }
 
 void addExperimentalGeometry(Context& ctx) {
@@ -702,6 +708,15 @@ void addExperimentalGeometry(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,
                                 "VolumeAssociationTest", name, ntests,
                                 randomNumbers, randomRange, detector);
+
+  py::class_<ProtoLayer>(m, "ProtoLayer")
+      .def(py::init<const GeometryContext&,
+                    const std::vector<std::shared_ptr<Surface>>&,
+                    const Transform3&>(),
+           "gctx"_a, "surfaces"_a, "transform"_a = Transform3::Identity())
+      .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
+      .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
+      .def_property_readonly("surfaces", &ProtoLayer::surfaces);
 }
 
 }  // namespace Acts::Python

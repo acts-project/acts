@@ -16,6 +16,7 @@ pybind11_add_module(ActsPythonBindings
   src/Material.cpp
   src/Geometry.cpp
   src/GeometryBuildingGen1.cpp
+  src/Blueprint.cpp
   src/ExampleAlgorithms.cpp
   src/MagneticField.cpp
   src/Output.cpp
