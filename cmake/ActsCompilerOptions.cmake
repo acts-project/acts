@@ -13,6 +13,11 @@ set(cxx_flags
     "-Wall -Wextra -Wpedantic -Wshadow -Wzero-as-null-pointer-constant -Wold-style-cast"
 )
 
+# Add assertions to standard libraries
+if(ACTS_FORCE_ASSERTIONS)
+    set(cxx_flags "${cxx_flags} -D_GLIBCXX_ASSERTIONS -D_LIBCPP_DEBUG")
+endif()
+
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion
 # is much more aggressive and also triggers on e.g., double-to-float
