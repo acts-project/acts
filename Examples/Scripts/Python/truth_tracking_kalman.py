@@ -17,7 +17,6 @@ def runTruthTrackingKalman(
     inputParticlePath: Optional[Path] = None,
     inputHitsPath: Optional[Path] = None,
     decorators=[],
-    directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
 ):
@@ -84,7 +83,7 @@ def runTruthTrackingKalman(
             enableInteractions=True,
             postSelectParticles=ParticleSelectorConfig(
                 pt=(0.9 * u.GeV, None),
-                measurements=(7, None),
+                hits=(7, None),
                 removeNeutral=True,
                 removeSecondaries=True,
             ),
@@ -122,7 +121,6 @@ def runTruthTrackingKalman(
         s,
         trackingGeometry,
         field,
-        directNavigation,
         reverseFilteringMomThreshold,
     )
 

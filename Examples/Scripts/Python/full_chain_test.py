@@ -374,7 +374,7 @@ def full_chain(args):
     postSelectParticles = ParticleSelectorConfig(
         pt=(ptMin, None),
         eta=etaRange if not args.generic_detector else (None, None),
-        measurements=(9, None),
+        hits=(9, None),
         removeNeutral=True,
     )
 

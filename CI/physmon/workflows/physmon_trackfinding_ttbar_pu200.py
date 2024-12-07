@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )

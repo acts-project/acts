@@ -427,7 +427,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.9 * u.GeV, None),
             eta=(-4, 4),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
@@ -579,9 +579,8 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-@pytest.mark.parametrize("directNavigation", [False, True])
 def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
+    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
 ):
     root_files = [
         ("trackstates_kf.root", "trackstates", 19),
@@ -606,7 +605,6 @@ def test_truth_tracking_kalman(
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             reverseFilteringMomThreshold=revFiltMomThresh,
-            directNavigation=directNavigation,
             s=seq,
         )
 

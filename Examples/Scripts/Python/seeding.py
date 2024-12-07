@@ -90,7 +90,7 @@ def runSeeding(
         postSelectParticles=ParticleSelectorConfig(
             pt=(1.0 * u.GeV, None),
             eta=(-2.5, 2.5),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
