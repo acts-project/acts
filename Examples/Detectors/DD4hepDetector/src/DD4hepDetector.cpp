@@ -86,8 +86,8 @@ std::unique_ptr<dd4hep::Detector> DD4hepDetector::buildDD4hepGeometry() const {
 
   std::unique_ptr<dd4hep::Detector> detector =
       dd4hep::Detector::make_unique(m_cfg.name);
-  for (auto& file : m_cfg.xmlFileNames) {
-    detector->fromCompact(file.c_str());
+  for (const auto& file : m_cfg.xmlFileNames) {
+    detector->fromCompact(file);
   }
   detector->volumeManager();
   detector->apply("DD4hepVolumeManager", 0, nullptr);
@@ -106,7 +106,7 @@ void ActsExamples::sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
   std::vector<dd4hep::DetElement> eCal;
   std::vector<dd4hep::DetElement> hCal;
   std::vector<dd4hep::DetElement> muon;
-  for (auto& detElement : det) {
+  for (const auto& detElement : det) {
     std::string detName = detElement.name();
     if (detName.find("Muon") != std::string::npos) {
       muon.push_back(detElement);
@@ -118,22 +118,22 @@ void ActsExamples::sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
       tracker.push_back(detElement);
     }
   }
-  sort(muon.begin(), muon.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(eCal.begin(), eCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(hCal.begin(), hCal.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
-  sort(tracker.begin(), tracker.end(),
-       [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
-         return (a.id() < b.id());
-       });
+  std::ranges::sort(
+      muon, [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+        return (a.id() < b.id());
+      });
+  std::ranges::sort(
+      eCal, [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+        return (a.id() < b.id());
+      });
+  std::ranges::sort(
+      hCal, [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+        return (a.id() < b.id());
+      });
+  std::ranges::sort(
+      tracker, [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
+        return (a.id() < b.id());
+      });
   det.clear();
   det = tracker;
 

@@ -13,8 +13,6 @@
 #include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include <cstddef>
-
 namespace ActsExamples {
 
 class InternallyAlignedDetectorElement;
@@ -24,11 +22,11 @@ class AlignedDetector : public Detector {
  public:
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
-    std::size_t seed = 1324354657;
+    unsigned int seed = 1324354657;
     /// Size of a valid IOV.
-    std::size_t iovSize = 100;
+    unsigned int iovSize = 100;
     /// Span until garbage collection is active.
-    std::size_t flushSize = 200;
+    unsigned int flushSize = 200;
     /// Run the garbage collection?
     bool doGarbageCollection = true;
     /// Sigma of the in-plane misalignment
@@ -46,8 +44,6 @@ class AlignedDetector : public Detector {
 
     enum class Mode { Internal, External };
     Mode mode = Mode::Internal;
-
-    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
   explicit AlignedDetector(const Config& cfg);
