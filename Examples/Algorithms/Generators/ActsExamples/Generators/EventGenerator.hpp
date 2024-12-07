@@ -24,7 +24,6 @@
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Event generator based on separate particles and vertex generators.
 ///
