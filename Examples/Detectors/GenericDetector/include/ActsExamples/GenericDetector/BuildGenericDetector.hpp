@@ -25,8 +25,8 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
@@ -155,21 +155,22 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
-  Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
-                                    Acts::BinningValue::binPhi);
-  pCylinderUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::open, Acts::BinningValue::binZ);
+  Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::AxisBoundaryType::Closed,
+                                    Acts::AxisDirection::AxisPhi);
+  pCylinderUtility += Acts::BinUtility(10, -1, 1, Acts::AxisBoundaryType::Bound,
+                                       Acts::AxisDirection::AxisZ);
   auto pCylinderMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderUtility);
   // - disc
-  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open, Acts::BinningValue::binR);
-  pDiscUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::BinningValue::binPhi);
+  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::AxisBoundaryType::Bound,
+                                Acts::AxisDirection::AxisR);
+  pDiscUtility += Acts::BinUtility(10, -1, 1, Acts::AxisBoundaryType::Closed,
+                                   Acts::AxisDirection::AxisPhi);
   auto pDiscMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscUtility);
   // - plane
-  Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::open,
-                                 Acts::BinningValue::binX);
+  Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::AxisBoundaryType::Bound,
+                                 Acts::AxisDirection::AxisX);
   auto pPlaneMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneUtility);
 

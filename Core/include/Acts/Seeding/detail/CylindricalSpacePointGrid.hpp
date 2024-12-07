@@ -30,11 +30,11 @@ concept CylindricalGridElement = requires(external_spacepoint_t sp) {
 /// Cylindrical Space Point bin is a 2D grid with (phi, z) bins
 /// It stores a vector of internal space points to external space points
 template <Acts::CylindricalGridElement external_spacepoint_t>
-using CylindricalSpacePointGrid = Acts::Grid<
-    std::vector<const external_spacepoint_t*>,
-    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Closed>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>,
-    Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Open>>;
+using CylindricalSpacePointGrid =
+    Acts::Grid<std::vector<const external_spacepoint_t*>,
+               Axis<AxisType::Equidistant, AxisBoundaryType::Closed>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>,
+               Axis<AxisType::Variable, AxisBoundaryType::Open>>;
 
 /// Cylindrical Binned Group
 template <typename external_spacepoint_t>

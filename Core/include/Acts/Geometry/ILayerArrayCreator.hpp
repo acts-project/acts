@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
 #include <vector>
@@ -27,11 +27,8 @@ using LayerVector = std::vector<LayerPtr>;
 
 /// @class ILayerArrayCreator
 ///
-/// Interface class ILayerArrayCreators, it inherits from IAlgTool.
-///
 /// It receives the LayerVector and creaets an array with NaivgationLayer
-/// objects
-/// filled in between.
+/// objects filled in between.
 class ILayerArrayCreator {
  public:
   /// Virtual destructor
@@ -40,16 +37,16 @@ class ILayerArrayCreator {
   /// LayerArrayCreator interface method
   ///
   /// @param gctx is the geometry context for witch the volume is built
-  /// @param layers are the layers to be moved into an array
+  /// @param layersInput are the layers to be moved into an array
   /// @param min is the minimul value for binning
   /// @param max is the maximum value for binning
-  /// @param btype is the binning type
-  /// @param bvalue is the value in which the binning should be done
+  /// @param aType is the axis type: Equidistant, Variable
+  /// @param aDir is the axis direction in which the ordering is done
   ///
   /// @return unique pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray> layerArray(
-      const GeometryContext& gctx, const LayerVector& layers, double min,
-      double max, BinningType btype = arbitrary,
-      BinningValue bvalue = BinningValue::binX) const = 0;
+      const GeometryContext& gctx, const LayerVector& layersInput, double min,
+      double max, AxisType aType = AxisType::Variable,
+      AxisDirection aDir = AxisDirection::AxisX) const = 0;
 };
 }  // namespace Acts

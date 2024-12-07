@@ -18,8 +18,8 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <cmath>
@@ -47,9 +47,10 @@ BOOST_AUTO_TEST_CASE(SegmentizerCartesian) {
       Acts::Transform3::Identity(), rectangleBounds);
 
   // The segmentation
-  Acts::BinUtility pixelated(20, -1., 1., Acts::open, Acts::BinningValue::binX);
-  pixelated +=
-      Acts::BinUtility(20, -1., 1., Acts::open, Acts::BinningValue::binY);
+  Acts::BinUtility pixelated(20, -1., 1., Acts::AxisBoundaryType::Bound,
+                             Acts::AxisDirection::AxisX);
+  pixelated += Acts::BinUtility(20, -1., 1., Acts::AxisBoundaryType::Bound,
+                                Acts::AxisDirection::AxisY);
 
   Segmentizer cl;
 
@@ -92,9 +93,10 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
       Acts::Transform3::Identity(), radialBounds);
 
   // The segmentation
-  Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::BinningValue::binR);
-  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open,
-                             Acts::BinningValue::binPhi);
+  Acts::BinUtility strips(2, 5., 10., Acts::AxisBoundaryType::Bound,
+                          Acts::AxisDirection::AxisR);
+  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::AxisBoundaryType::Bound,
+                             Acts::AxisDirection::AxisPhi);
 
   Segmentizer cl;
 
@@ -169,8 +171,10 @@ BOOST_DATA_TEST_CASE(
       }
       // 1 - write the grid
       grid.open("Segmentizer" + name + "Grid.csv");
-      if (segmentation.binningData()[0].binvalue == Acts::BinningValue::binX &&
-          segmentation.binningData()[1].binvalue == Acts::BinningValue::binY) {
+      if (segmentation.binningData()[0].axisDirection ==
+              Acts::AxisDirection::AxisX &&
+          segmentation.binningData()[1].axisDirection ==
+              Acts::AxisDirection::AxisY) {
         double bxmin = segmentation.binningData()[0].min;
         double bxmax = segmentation.binningData()[0].max;
         double bymin = segmentation.binningData()[1].min;
@@ -183,10 +187,10 @@ BOOST_DATA_TEST_CASE(
         for (const auto yval : yboundaries) {
           csvHelper.writeLine(grid, {bxmin, yval}, {bxmax, yval});
         }
-      } else if (segmentation.binningData()[0].binvalue ==
-                     Acts::BinningValue::binR &&
-                 segmentation.binningData()[1].binvalue ==
-                     Acts::BinningValue::binPhi) {
+      } else if (segmentation.binningData()[0].axisDirection ==
+                     Acts::AxisDirection::AxisR &&
+                 segmentation.binningData()[1].axisDirection ==
+                     Acts::AxisDirection::AxisPhi) {
         double brmin = segmentation.binningData()[0].min;
         double brmax = segmentation.binningData()[0].max;
         double bphimin = segmentation.binningData()[1].min;

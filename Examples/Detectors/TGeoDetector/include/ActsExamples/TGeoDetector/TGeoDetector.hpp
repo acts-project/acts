@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -119,8 +119,8 @@ struct TGeoDetector {
       LayerTriplet<Options::Interval> zRange;
       LayerTriplet<double> splitTolR{0};
       LayerTriplet<double> splitTolZ{0};
-      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning0;
-      LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning1;
+      LayerTriplet<std::vector<std::pair<int, Acts::AxisType>>> binning0;
+      LayerTriplet<std::vector<std::pair<int, Acts::AxisType>>> binning1;
 
       Options::Interval binToleranceR;
       Options::Interval binTolerancePhi;

@@ -33,8 +33,8 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -85,17 +85,23 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   using namespace Acts::UnitLiterals;
 
-  BinUtility bu1(4, 0_m, 1_m, open, BinningValue::binX);
-  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
-  bu1 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
+  BinUtility bu1(4, 0_m, 1_m, AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisY);
+  bu1 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisZ);
 
-  BinUtility bu2(4, 1_m, 2_m, open, BinningValue::binX);
-  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
-  bu2 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
+  BinUtility bu2(4, 1_m, 2_m, AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisY);
+  bu2 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisZ);
 
-  BinUtility bu3(4, 2_m, 3_m, open, BinningValue::binX);
-  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binY);
-  bu3 += BinUtility(2, -0.5_m, 0.5_m, open, BinningValue::binZ);
+  BinUtility bu3(4, 2_m, 3_m, AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisY);
+  bu3 += BinUtility(2, -0.5_m, 0.5_m, AxisBoundaryType::Bound,
+                    AxisDirection::AxisZ);
 
   // Build a vacuum volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;

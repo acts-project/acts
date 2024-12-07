@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <memory>
 #include <vector>
@@ -39,7 +39,7 @@ void checkRotationAlignment(
 ///
 /// @param gctx the geometry context
 /// @param volumes the input volumes to be checked
-/// @param axisValue the alignment axist
+/// @param axisDirection the alignment axis to check
 ///
 /// @note this will call checkRotationAlignment first
 /// @note throws exception if the volumes are not ordered
@@ -48,7 +48,7 @@ void checkRotationAlignment(
 std::vector<double> checkCenterAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
-    BinningValue axisValue);
+    AxisDirection axisDirection);
 
 }  // namespace detail::DetectorVolumeConsistency
 }  // namespace Acts::Experimental

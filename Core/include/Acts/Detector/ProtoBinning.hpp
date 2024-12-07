@@ -10,9 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <sstream>
 #include <stdexcept>
@@ -28,11 +27,11 @@ namespace Acts::Experimental {
 /// translated into concrete axis types
 struct ProtoBinning {
   /// The binning value of this
-  BinningValue binValue;
+  AxisDirection axisDirection;
   /// The axis type: equidistant or variable
-  Acts::AxisType axisType = Acts::AxisType::Equidistant;
+  AxisType axisType = AxisType::Equidistant;
   /// The axis boundary type: Open, Bound or Closed
-  Acts::AxisBoundaryType boundaryType = Acts::AxisBoundaryType::Bound;
+  AxisBoundaryType axisBoundaryType = AxisBoundaryType::Bound;
   /// The binning edges
   std::vector<double> edges = {};
   /// An expansion for the filling (in bins)
@@ -42,15 +41,15 @@ struct ProtoBinning {
 
   /// Convenience constructors - for variable binning
   ///
-  /// @param bValue the value/cast in which this is binned
+  /// @param aDescr The axis description/direction for the binning
   /// @param bType the axis boundary type
   /// @param e the bin edges (variable binning)
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
+  ProtoBinning(AxisDirection aDescr, AxisBoundaryType bType,
                const std::vector<double>& e, std::size_t exp = 0u)
-      : binValue(bValue),
-        axisType(Acts::AxisType::Variable),
-        boundaryType(bType),
+      : axisDirection(aDescr),
+        axisType(AxisType::Variable),
+        axisBoundaryType(bType),
         edges(e),
         expansion(exp) {
     if (edges.size() < 2u) {
@@ -61,18 +60,18 @@ struct ProtoBinning {
 
   /// Convenience constructors - for equidistant binning
   ///
-  /// @param bValue the value/cast in which this is binned
+  /// @param aDescr The axis description/direction for the binning
   /// @param bType the axis boundary type
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType, double minE,
+  ProtoBinning(AxisDirection aDescr, AxisBoundaryType bType, double minE,
                double maxE, std::size_t nbins, std::size_t exp = 0u)
-      : binValue(bValue), boundaryType(bType), expansion(exp) {
+      : axisDirection(aDescr), axisBoundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
       std::string msg = "ProtoBinning: Invalid binning for value '";
-      msg += binningValueName(bValue);
+      msg += axisDirectionToString(aDescr);
       msg += "', min edge (" + std::to_string(minE) + ") ";
       msg += " needs to be smaller than max edge (";
       msg += std::to_string(maxE) + ").";
@@ -96,14 +95,14 @@ struct ProtoBinning {
   /// when the actual extent is not yet evaluated, only works
   /// for equidistant binning obviously
   ///
-  /// @param bValue the value/cast in which this is binned
+  /// @param aDescr The axis description/direction for the binning
   /// @param bType the axis boundary type
   /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
-  ProtoBinning(BinningValue bValue, Acts::AxisBoundaryType bType,
-               std::size_t nbins, std::size_t exp = 0u)
-      : binValue(bValue),
-        boundaryType(bType),
+  ProtoBinning(AxisDirection aDescr, AxisBoundaryType bType, std::size_t nbins,
+               std::size_t exp = 0u)
+      : axisDirection(aDescr),
+        axisBoundaryType(bType),
         edges(nbins + 1, 0.),
         expansion(exp),
         autorange(true) {}
@@ -114,10 +113,8 @@ struct ProtoBinning {
   // Screen output
   std::string toString() const {
     std::stringstream ss;
-    ss << "ProtoBinning: " << bins() << " bins in "
-       << binningValueName(binValue);
-    ss << (axisType == Acts::AxisType::Variable ? ", variable "
-                                                : ", equidistant ");
+    ss << "ProtoBinning: " << bins() << " bins in " << axisDirection;
+    ss << axisType;
     if (!autorange) {
       ss << "within [" << edges.front() << ", " << edges.back() << "] ";
     } else {
@@ -135,21 +132,17 @@ struct BinningDescription {
   static BinningDescription fromBinUtility(const BinUtility& binUtility) {
     BinningDescription bDesc;
     for (const auto& bData : binUtility.binningData()) {
-      // One proto binning per binning data
-      Acts::AxisBoundaryType boundaryType =
-          bData.option == open ? Acts::AxisBoundaryType::Bound
-                               : Acts::AxisBoundaryType::Closed;
       std::vector<double> edges;
-      if (bData.type == equidistant) {
-        bDesc.binning.push_back(ProtoBinning(bData.binvalue, boundaryType,
-                                             bData.min, bData.max, bData.bins(),
-                                             0u));
+      if (bData.axisType == AxisType::Equidistant) {
+        bDesc.binning.push_back(ProtoBinning(bData.axisDirection,
+                                             bData.axisBoundaryType, bData.min,
+                                             bData.max, bData.bins(), 0u));
 
       } else {
         std::for_each(bData.boundaries().begin(), bData.boundaries().end(),
                       [&](double edge) { edges.push_back(edge); });
-        bDesc.binning.push_back(
-            ProtoBinning(bData.binvalue, boundaryType, edges, 0u));
+        bDesc.binning.push_back(ProtoBinning(
+            bData.axisDirection, bData.axisBoundaryType, edges, 0u));
       }
     }
     return bDesc;
@@ -160,17 +153,14 @@ struct BinningDescription {
   BinUtility toBinUtility() const {
     BinUtility binUtility;
     for (const auto& b : binning) {
-      Acts::BinningOption bOption =
-          b.boundaryType == Acts::AxisBoundaryType::Bound ? Acts::open
-                                                          : Acts::closed;
-      if (b.axisType == Acts::AxisType::Equidistant) {
+      if (b.axisType == AxisType::Equidistant) {
         binUtility += BinUtility(b.bins(), b.edges.front(), b.edges.back(),
-                                 bOption, b.binValue);
+                                 b.axisBoundaryType, b.axisDirection);
       } else {
         std::vector<float> edges;
         std::for_each(b.edges.begin(), b.edges.end(),
                       [&](double edge) { edges.push_back(edge); });
-        binUtility += BinUtility(edges, bOption, b.binValue);
+        binUtility += BinUtility(edges, b.axisBoundaryType, b.axisDirection);
       }
     }
     return binUtility;

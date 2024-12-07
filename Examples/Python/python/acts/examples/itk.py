@@ -64,8 +64,8 @@ def buildITkGeometry(
 
     Volume = TGeoDetector.Config.Volume
     LayerTriplet = TGeoDetector.Config.LayerTriplet
-    equidistant = TGeoDetector.Config.BinningType.equidistant
-    arbitrary = TGeoDetector.Config.BinningType.arbitrary
+    equidistant = TGeoDetector.Config.AxisType.equidistant
+    arbitrary = TGeoDetector.Config.AxisType.arbitrary
 
     # ## Create TGeo geometry from `tgeo_fileName = itk-hgtd/ATLAS-ITk-HGTD.tgeo.root`.
     # The `subVolumeName` and `sensitiveNames` specified below may change with new geometry versions

@@ -102,7 +102,7 @@ Acts::CylindricalSpacePointGridCreator::createGrid(
     phiBins = std::min(phiBins, config.maxPhiBins);
   }
 
-  Acts::Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
+  Axis<AxisType::Equidistant, AxisBoundaryType::Closed> phiAxis(
       config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z

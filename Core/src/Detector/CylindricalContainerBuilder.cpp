@@ -34,7 +34,7 @@ namespace {
 /// @tparam object_collection either a vector of volumes or containers
 /// @param gctx The geometry context of the this call
 /// @param objects The object vector
-/// @param binnning the chosen binning
+/// @param binnning the chosen axisDirections
 /// @param logLevel the logging output level
 ///
 /// @note no checking on consistency is done as the caller container builder
@@ -44,25 +44,25 @@ namespace {
 template <typename object_collection>
 Acts::Experimental::DetectorComponent::PortalContainer connect(
     const Acts::GeometryContext& gctx, object_collection& objects,
-    const std::vector<Acts::BinningValue>& binning,
+    const std::vector<Acts::AxisDirection>& axisDirections,
     Acts::Logging::Level logLevel) {
   // Return container object
   Acts::Experimental::DetectorComponent::PortalContainer portalContainer;
-  if (binning.size() == 1u) {
-    Acts::BinningValue bv = binning.front();
-    // 1-dimensional binning options
-    switch (bv) {
-      case Acts::BinningValue::binR: {
+  if (axisDirections.size() == 1u) {
+    Acts::AxisDirection ad = axisDirections.front();
+    // 1-dimensional axisDirections options
+    switch (ad) {
+      case Acts::AxisDirection::AxisR: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::BinningValue::binZ: {
+      case Acts::AxisDirection::AxisZ: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
                 gctx, objects, {}, logLevel);
       } break;
-      case Acts::BinningValue::binPhi: {
+      case Acts::AxisDirection::AxisPhi: {
         portalContainer =
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
                 gctx, objects, {}, logLevel);
@@ -70,9 +70,9 @@ Acts::Experimental::DetectorComponent::PortalContainer connect(
       default:
         break;
     }
-  } else if (binning ==
-                 std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
-                                                 Acts::BinningValue::binR} &&
+  } else if (axisDirections ==
+                 std::vector<Acts::AxisDirection>{Acts::AxisDirection::AxisZ,
+                                                  Acts::AxisDirection::AxisR} &&
              objects.size() == 2u) {
     portalContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
@@ -91,23 +91,25 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
     throw std::invalid_argument(
         "CylindricalContainerBuilder: no sub builders provided.");
   }
-  // Check if binning value is correctly chosen
-  if (m_cfg.binning.size() == 1u) {
+  // Check if axisDirections value is correctly chosen
+  if (m_cfg.axisDirections.size() == 1u) {
     // 1-dimensional case
-    auto b = m_cfg.binning.front();
-    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
-        b != Acts::BinningValue::binPhi) {
+    auto b = m_cfg.axisDirections.front();
+    if (b != AxisDirection::AxisR && b != AxisDirection::AxisZ &&
+        b != AxisDirection::AxisPhi) {
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
+          "CylindricalContainerBuilder: 1D axisDirections only supported in z, "
+          "r, or "
           "phi");
     }
-  } else if (m_cfg.binning.size() == 2u) {
+  } else if (m_cfg.axisDirections.size() == 2u) {
     // 2-dimensional case, this is for wrapping
-    if (m_cfg.binning !=
-        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
-                                        Acts::BinningValue::binR}) {
+    if (m_cfg.axisDirections !=
+        std::vector<AxisDirection>{AxisDirection::AxisZ,
+                                   AxisDirection::AxisR}) {
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 2D binning only supports wrapping in "
+          "CylindricalContainerBuilder: 2D axisDirections only supports "
+          "wrapping in "
           "z-r.");
     } else if (m_cfg.builders.size() != 2u) {
       // Wrapping needs exactly one inner (volume or container) and one outer
@@ -163,24 +165,26 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
     throw std::invalid_argument(
         "CylindricalContainerBuilder: no sub builders provided.");
   }
-  m_cfg.binning = bpNode.binning;
-  // Check if binning value is correctly chosen
-  if (m_cfg.binning.size() == 1u) {
+  m_cfg.axisDirections = bpNode.axisDirections;
+  // Check if axisDirections value is correctly chosen
+  if (m_cfg.axisDirections.size() == 1u) {
     // 1-dimensional case
-    auto b = m_cfg.binning.front();
-    if (b != Acts::BinningValue::binR && b != Acts::BinningValue::binZ &&
-        b != Acts::BinningValue::binPhi) {
+    auto b = m_cfg.axisDirections.front();
+    if (b != AxisDirection::AxisR && b != AxisDirection::AxisZ &&
+        b != AxisDirection::AxisPhi) {
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
+          "CylindricalContainerBuilder: 1D axisDirections only supported in z, "
+          "r, or "
           "phi");
     }
-  } else if (m_cfg.binning.size() == 2u) {
+  } else if (m_cfg.axisDirections.size() == 2u) {
     // 2-dimensional case, this is for wrapping
-    if (m_cfg.binning !=
-        std::vector<Acts::BinningValue>{Acts::BinningValue::binZ,
-                                        Acts::BinningValue::binR}) {
+    if (m_cfg.axisDirections !=
+        std::vector<AxisDirection>{AxisDirection::AxisZ,
+                                   AxisDirection::AxisR}) {
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 2D binning only supports wrapping in "
+          "CylindricalContainerBuilder: 2D axisDirections only supports "
+          "wrapping in "
           "z-r.");
     } else if (m_cfg.builders.size() != 2u) {
       // Wrapping needs exactly one inner (volume or container) and one outer
@@ -231,12 +235,13 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     ACTS_VERBOSE(
         "Component volumes are at navigation level: connecting volumes.");
     // Connect volumes
-    portalContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
+    portalContainer =
+        connect(gctx, volumes, m_cfg.axisDirections, logger().level());
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
     // Connect containers
     portalContainer =
-        connect(gctx, containers, m_cfg.binning, logger().level());
+        connect(gctx, containers, m_cfg.axisDirections, logger().level());
   }
   ACTS_VERBOSE("Number of root volumes: " << rootVolumes.size());
 

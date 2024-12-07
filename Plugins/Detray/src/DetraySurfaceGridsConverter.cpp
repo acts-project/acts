@@ -12,7 +12,7 @@
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <stdexcept>
@@ -26,7 +26,7 @@ namespace Acts {
 detray::io::axis_payload Acts::DetraySurfaceGridsConverter::convertAxis(
     const Acts::IAxis& ia) {
   detray::io::axis_payload axis_pd;
-  axis_pd.bounds = ia.getBoundaryType() == Acts::AxisBoundaryType::Bound
+  axis_pd.bounds = ia.getBoundaryType() == AxisBoundaryType::Bound
                        ? detray::axis::bounds::e_closed
                        : detray::axis::bounds::e_circular;
   axis_pd.binning = ia.isEquidistant() ? detray::axis::binning::e_regular
@@ -111,8 +111,8 @@ Acts::DetraySurfaceGridsConverter::convertImpl(const index_grid& indexGrid) {
 
   if constexpr (index_grid::grid_type::DIM == 2u) {
     // Check for axis swap
-    swapAxes = (indexGrid.casts[0u] == Acts::BinningValue::binZ &&
-                indexGrid.casts[1u] == Acts::BinningValue::binPhi);
+    swapAxes = (indexGrid.casts[0u] == AxisDirection::AxisZ &&
+                indexGrid.casts[1u] == AxisDirection::AxisPhi);
   }
 
   detray::io::grid_payload<std::size_t, detray::io::accel_id> grid_pd =

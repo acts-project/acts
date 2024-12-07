@@ -156,9 +156,8 @@ template <class identifier_t>
 class HoughPlane {
  public:
   /// @brief hough histogram representation as a 2D-indexable vector of hough cells
-  using Axis =
-      Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>;
-  using HoughHist = Grid<HoughCell<identifier_t>, Axis, Axis>;
+  using HoughAxis = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
+  using HoughHist = Grid<HoughCell<identifier_t>, HoughAxis, HoughAxis>;
   using Index = typename HoughHist::index_t;
 
   /// @brief instantiate the (empty) hough plane

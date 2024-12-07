@@ -20,7 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test binningPosition
   Vector3 binningPosition{0., 1., 2.};
   CHECK_CLOSE_ABS(
-      coneSurfaceObject->binningPosition(tgContext, BinningValue::binPhi),
+      coneSurfaceObject->referencePosition(tgContext, AxisDirection::AxisPhi),
       binningPosition, 1e-6);
 
   /// Test referenceFrame
@@ -225,21 +225,21 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
 
   double rMax = zMax * std::tan(alpha);
-  CHECK_CLOSE_ABS(zMin, pConeExtent.min(BinningValue::binZ),
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(AxisDirection::AxisZ),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(zMax, pConeExtent.max(BinningValue::binZ),
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(AxisDirection::AxisZ),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(0., pConeExtent.min(BinningValue::binR),
+  CHECK_CLOSE_ABS(0., pConeExtent.min(AxisDirection::AxisR),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binR),
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(AxisDirection::AxisR),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(BinningValue::binX),
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(AxisDirection::AxisX),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binX),
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(AxisDirection::AxisX),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(BinningValue::binY),
+  CHECK_CLOSE_ABS(-rMax, pConeExtent.min(AxisDirection::AxisY),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binY),
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(AxisDirection::AxisY),
                   s_onSurfaceTolerance);
 
   /// Now a sector
@@ -248,13 +248,13 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
   pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
 
-  CHECK_CLOSE_ABS(zMin, pConeExtent.min(BinningValue::binZ),
+  CHECK_CLOSE_ABS(zMin, pConeExtent.min(AxisDirection::AxisZ),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(zMax, pConeExtent.max(BinningValue::binZ),
+  CHECK_CLOSE_ABS(zMax, pConeExtent.max(AxisDirection::AxisZ),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(0., pConeExtent.min(BinningValue::binR),
+  CHECK_CLOSE_ABS(0., pConeExtent.min(AxisDirection::AxisR),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(rMax, pConeExtent.max(BinningValue::binR),
+  CHECK_CLOSE_ABS(rMax, pConeExtent.max(AxisDirection::AxisR),
                   s_onSurfaceTolerance);
 }
 

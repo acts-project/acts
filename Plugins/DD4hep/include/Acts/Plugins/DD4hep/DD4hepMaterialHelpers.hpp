@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -51,7 +51,7 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
-/// For both, cylinder and disc, the closed binning value is "binPhi"
+/// For both, cylinder and disc, the closed binning value is "AxisPhi"
 ///
 /// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material
@@ -59,8 +59,7 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 /// @param logger a @c Logger for output
 void addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger = getDummyLogger());
 
 /// Helper method to create proto material - to be called from the
@@ -72,8 +71,7 @@ void addLayerProtoMaterial(
 /// @param logger a @c Logger for output
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning,
+    const std::vector<std::pair<const std::string, AxisBoundaryType> >& binning,
     const Logger& logger = getDummyLogger());
 
 }  // namespace Acts

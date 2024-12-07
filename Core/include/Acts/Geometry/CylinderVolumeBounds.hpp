@@ -12,7 +12,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <initializer_list>
@@ -176,20 +176,19 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binR, Acts::BinningValue::binPhi,
-            Acts::BinningValue::binZ};
+  std::vector<AxisDirection> canonicalAxisDirections() const override {
+    return {AxisDirection::AxisR, AxisDirection::AxisPhi, AxisDirection::AxisZ};
   };
 
-  /// Binning offset - overloaded for some R-binning types
+  /// Reference offset position along a different axis direction
   ///
-  /// @param bValue is the type used for the binning
-  Vector3 binningOffset(BinningValue bValue) const override;
+  /// @param aDir is the axis direction used for sorting, binning
+  Vector3 referenceOffset(AxisDirection aDir) const override;
 
-  /// Binning borders in double
+  /// Reference offset value along a given axis direction
   ///
-  /// @param bValue is the type used for the binning
-  double binningBorder(BinningValue bValue) const override;
+  /// @param aDir is the type used for the binning
+  double referenceOffsetValue(AxisDirection aDir) const override;
 
   /// Output Method for std::ostream
   /// @param os is the output stream

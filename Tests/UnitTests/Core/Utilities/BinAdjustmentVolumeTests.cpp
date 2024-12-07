@@ -12,9 +12,9 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
 #include <memory>
@@ -27,9 +27,12 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
   CylinderVolumeBounds bound(10, 50, 150, std::numbers::pi / 2., 0);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binPhi);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisR);
+  bu += BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound,
+                   AxisDirection::AxisPhi);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -47,9 +50,12 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
   CutoutCylinderVolumeBounds bound(10, 20, 50, 100, 15);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
-  bu += BinUtility(1, 0, 1, Acts::closed, Acts::BinningValue::binPhi);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisR);
+  bu += BinUtility(1, 0, 1, Acts::AxisBoundaryType::Closed,
+                   AxisDirection::AxisPhi);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -65,9 +71,12 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cuboid) {
   CuboidVolumeBounds bound(13, 23, 42);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binX);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binY);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisY);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 

@@ -9,8 +9,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <utility>
 
@@ -18,8 +18,10 @@ namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
-  BinUtility smpBU(10, -10., 10., open, BinningValue::binX);
-  smpBU += BinUtility(10, -10., 10., open, BinningValue::binY);
+  BinUtility smpBU(10, -10., 10., AxisBoundaryType::Bound,
+                   AxisDirection::AxisX);
+  smpBU +=
+      BinUtility(10, -10., 10., AxisBoundaryType::Bound, AxisDirection::AxisY);
 
   // Constructor from arguments
   ProtoSurfaceMaterial smp(smpBU);

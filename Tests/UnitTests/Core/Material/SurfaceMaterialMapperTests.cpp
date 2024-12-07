@@ -24,8 +24,8 @@
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -40,7 +40,7 @@ namespace Acts {
 std::shared_ptr<const TrackingGeometry> trackingGeometry() {
   using namespace Acts::UnitLiterals;
 
-  BinUtility zbinned(8, -40, 40, open, BinningValue::binZ);
+  BinUtility zbinned(8, -40, 40, AxisBoundaryType::Bound, AxisDirection::AxisZ);
   auto matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
   Logging::Level surfaceLLevel = Logging::INFO;

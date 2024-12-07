@@ -85,7 +85,7 @@ def run() -> None:
         "Acts::BinningData",
         "Acts::Direction",
         "Acts::ConstrainedStep",
-        "Acts::Axis",
+        "Axis",
         "Acts::IAxis",
         "Acts::SeedFilter",
         "Acts::BoundaryTolerance",
@@ -131,15 +131,13 @@ def run() -> None:
     }
 
     role_instances["enum"] = {
-        "Acts::BinningValue",
-        "Acts::BinningType",
-        "Acts::BinningValue",
+        "Acts::AxisBoundaryType",
+        "Acts::AxisType",
+        "Acts::AxisDirection",
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",
         "Acts::TrackStatePropMask",
-        "Acts::AxisType",
-        "Acts::AxisBoundaryType",
     }
 
     role_ex = re.compile(r"[{:](" + "|".join(roles) + r")[}:]`(.+?)`")

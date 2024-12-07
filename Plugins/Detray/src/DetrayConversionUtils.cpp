@@ -8,20 +8,20 @@
 
 #include "Acts/Plugins/Detray/DetrayConversionUtils.hpp"
 
-detray::axis::label Acts::DetrayConversionUtils::convertBinningValue(
-    BinningValue bValue) {
+detray::axis::label Acts::DetrayConversionUtils::convertAxisDirection(
+    AxisDirection bValue) {
   switch (bValue) {
-    case BinningValue::binX:
+    case AxisDirection::AxisX:
       return detray::axis::label::e_x;
-    case BinningValue::binY:
+    case AxisDirection::AxisY:
       return detray::axis::label::e_y;
-    case BinningValue::binZ:
+    case AxisDirection::AxisZ:
       return detray::axis::label::e_z;
-    case BinningValue::binR:
+    case AxisDirection::AxisR:
       return detray::axis::label::e_r;
-    case BinningValue::binPhi:
+    case AxisDirection::AxisPhi:
       return detray::axis::label::e_phi;
-    case BinningValue::binRPhi:
+    case AxisDirection::AxisRPhi:
       return detray::axis::label::e_rphi;
     default:
       throw std::invalid_argument(
@@ -29,16 +29,16 @@ detray::axis::label Acts::DetrayConversionUtils::convertBinningValue(
   }
 }
 
-detray::axis::bounds Acts::DetrayConversionUtils::convertBinningOption(
-    BinningOption bOption) {
+detray::axis::bounds Acts::DetrayConversionUtils::convertAxisBoundaryType(
+    AxisBoundaryType bOption) {
   // That's a bit of a mind bender, but the conversion is correct
   // closed -> axis are closed, i.e. circular
   // open -> axis are not closed, but the range is closed (no overflow bin) ->
   // closed
   switch (bOption) {
-    case BinningOption::closed:
+    case AxisBoundaryType::Closed:
       return detray::axis::bounds::e_circular;
-    case BinningOption::open:
+    case AxisBoundaryType::Bound:
       return detray::axis::bounds::e_closed;
     default:
       throw std::invalid_argument(
@@ -46,12 +46,12 @@ detray::axis::bounds Acts::DetrayConversionUtils::convertBinningOption(
   }
 }
 
-detray::axis::binning Acts::DetrayConversionUtils::convertBinningType(
-    BinningType bType) {
+detray::axis::binning Acts::DetrayConversionUtils::convertAxisType(
+    AxisType bType) {
   switch (bType) {
-    case BinningType::equidistant:
+    case AxisType::Equidistant:
       return detray::axis::binning::e_regular;
-    case BinningType::arbitrary:
+    case AxisType::Variable:
       return detray::axis::binning::e_irregular;
     default:
       throw std::invalid_argument(
@@ -65,14 +65,14 @@ detray::io::axis_payload Acts::DetrayConversionUtils::convertBinningData(
 
   axis.bins = bData.bins();
   // Set the binning type
-  axis.binning = convertBinningType(bData.type);
+  axis.binning = convertAxisType(bData.axisType);
   // Set the binning option
-  axis.bounds = convertBinningOption(bData.option);
+  axis.bounds = convertAxisBoundaryType(bData.axisBoundaryType);
   // Set the binning value
-  axis.label = convertBinningValue(bData.binvalue);
+  axis.label = convertAxisDirection(bData.axisDirection);
   // Set the binning range
   axis.edges = {};
-  if (bData.type == BinningType::equidistant) {
+  if (bData.axisType == AxisType::Equidistant) {
     axis.edges = {bData.min, bData.max};
   } else {
     axis.edges.insert(axis.edges.end(), bData.boundaries().begin(),

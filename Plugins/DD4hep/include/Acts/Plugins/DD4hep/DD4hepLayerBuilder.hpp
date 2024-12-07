@@ -14,8 +14,8 @@
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -49,13 +49,13 @@ class DD4hepLayerBuilder : public ILayerBuilder {
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// the binning type of the contained surfaces in phi
     /// (equidistant/arbitrary)
-    BinningType bTypePhi = equidistant;
+    AxisType bTypePhi = AxisType::Equidistant;
     /// the binning type of the contained surfaces in r
     /// (equidistant/arbitrary)
-    BinningType bTypeR = equidistant;
+    AxisType bTypeR = AxisType::Equidistant;
     /// the binning type of the contained surfaces in z
     /// (equidistant/arbitrary)
-    BinningType bTypeZ = equidistant;
+    AxisType bTypeZ = AxisType::Equidistant;
     /// the DD4hep::DetElements of the layers of the negative volume (negative
     /// endcap)
     /// @note if the current volume has no endcaps or no layers this parameter

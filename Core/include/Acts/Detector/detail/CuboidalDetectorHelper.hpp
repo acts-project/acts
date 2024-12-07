@@ -13,7 +13,7 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -29,11 +29,11 @@ class Portal;
 
 namespace detail::CuboidalDetectorHelper {
 
-/// @brief Connect detector volumes given a binning value
+/// @brief Connect detector volumes given an axis direction to connect
 ///
 /// @param gctx The geometry context
 /// @param volumes the volumes
-/// @param bValue the binning value  (allowed are binX, binY, binZ)
+/// @param cDirection the connection direction (allowed are AxisX, AxisY, AxisZ)
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
@@ -43,15 +43,16 @@ namespace detail::CuboidalDetectorHelper {
 /// @return a proto container with the outside portals
 DetectorComponent::PortalContainer connect(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<DetectorVolume>>& volumes, BinningValue bValue,
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    AxisDirection cDirection,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
-/// @brief Connect containers given a binning value
+/// @brief Connect containers given  an axis direction to connect
 ///
 /// @param gctx The geometry context
 /// @param containers the containers
-/// @param bValue the binning value  (allowed are binX, binY, binZ)
+/// @param cDirection the connection direction (allowed are AxisX, AxisY, AxisZ)
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
@@ -62,7 +63,8 @@ DetectorComponent::PortalContainer connect(
 DetectorComponent::PortalContainer connect(
     const GeometryContext& gctx,
     const std::vector<DetectorComponent::PortalContainer>& containers,
-    BinningValue bValue, const std::vector<unsigned int>& selectedOnly = {},
+    AxisDirection cDirection,
+    const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Helper method to extract r,z,phi boundaries for

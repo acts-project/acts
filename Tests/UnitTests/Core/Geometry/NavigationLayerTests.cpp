@@ -13,7 +13,7 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/NavigationLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <cmath>
 #include <memory>
@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(NavigationLayerProperties) {
   auto rawSurfacePtr = pSurface.get();
   auto pNavigationLayer =
       NavigationLayer::create(std::move(pSurface), thickness);
-  BinningValue b{BinningValue::binZ};
+  AxisDirection b{AxisDirection::AxisZ};
   Vector3 origin{0., 0., 0.};
-  // binningPosition(), needs a better test
-  BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(tgContext, b), origin);
+  // referencePosition(), needs a better test
+  BOOST_CHECK_EQUAL(pNavigationLayer->referencePosition(tgContext, b), origin);
   // surfaceRepresentation() [looks dangerous]
   BOOST_CHECK_EQUAL(rawSurfacePtr,
                     &(pNavigationLayer->surfaceRepresentation()));

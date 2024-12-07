@@ -10,7 +10,7 @@
 
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -44,11 +44,10 @@ void to_json(nlohmann::json& j,
 }
 
 // enum specialization by nlohman library
-NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisType,
                              {
-                                 {Acts::BinningType::equidistant,
-                                  "equidistant"},
-                                 {Acts::BinningType::arbitrary, "arbitrary"},
+                                 {AxisType::Equidistant, "equidistant"},
+                                 {AxisType::Variable, "arbitrary"},
                              })
 
 }  // namespace Acts

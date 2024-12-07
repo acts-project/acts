@@ -13,8 +13,8 @@
 #include "Acts/EventData/detail/GenerateParameters.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
@@ -156,10 +156,10 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   ActsExamples::GeometricConfig gdc;
 
   Acts::BinUtility segmentation;
-  segmentation +=
-      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::BinningValue::binX);
-  segmentation +=
-      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::BinningValue::binY);
+  segmentation += Acts::BinUtility(
+      336, -8.4, 8.4, Acts::AxisBoundaryType::Bound, AxisDirection::AxisX);
+  segmentation += Acts::BinUtility(1280, -36, 36, Acts::AxisBoundaryType::Bound,
+                                   AxisDirection::AxisY);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;

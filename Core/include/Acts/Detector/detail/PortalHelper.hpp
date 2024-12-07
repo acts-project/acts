@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <map>
 #include <memory>
@@ -34,7 +34,7 @@ class Portal;
 /// gathered from the sub volumes, the binning description
 using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
-               std::vector<double>, BinningValue>;
+               std::vector<double>, AxisDirection>;
 
 namespace detail::PortalHelper {
 
@@ -42,7 +42,7 @@ namespace detail::PortalHelper {
 ///
 /// @param portal is the portal where the detector volume is going to be attached
 /// @param volume is the volume that is attached to the portal
-/// @param direction is the direction to which it is attached
+/// @param direction is the forward/backward direction to which it is attached
 ///
 void attachExternalNavigationDelegate(
     Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
@@ -55,15 +55,15 @@ void attachExternalNavigationDelegate(
 /// @param gctx the geometry context
 /// @param portal is the portal where the detector volume is going to be attached
 /// @param volumes are the volumes that are pointed to
-/// @param direction is the direction to which it is attached
+/// @param direction is the forward/backward direction to which it is attached
 /// @param boundaries are the value boundaries
-/// @param binning is the binning type
+/// @param axisDirection is the axis direction for the volume binning
 ///
 void attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const Direction& direction, const std::vector<double>& boundaries,
-    const BinningValue& binning);
+    const AxisDirection& axisDirection);
 
 /// @brief Create and attach the multi link updator, the portal will get
 /// a volume updator attached, that points to the different sub volumes

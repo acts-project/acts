@@ -24,7 +24,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -351,8 +351,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // Filling loop
           for (const auto& elay : endcapConfig.layers) {
             // Getting the reference radius
-            double test = elay->surfaceRepresentation().binningPositionValue(
-                gctx, BinningValue::binR);
+            double test = elay->surfaceRepresentation().referencePositionValue(
+                gctx, AxisDirection::AxisR);
             // Find the right bin
             auto ringVolume =
                 std::ranges::find_if(volumeRminRmax, [&](const auto& vrr) {

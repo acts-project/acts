@@ -14,7 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <algorithm>
@@ -194,7 +194,8 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   Vector3 zaxis(0., 0., 1.);
 
   for (auto& os : ccvbOrientedSurfaces) {
-    auto onSurface = os.surface->binningPosition(geoCtx, BinningValue::binR);
+    auto onSurface =
+        os.surface->referencePosition(geoCtx, AxisDirection::AxisR);
     auto locPos =
         os.surface->globalToLocal(geoCtx, onSurface, Vector3::Zero()).value();
     auto osNormal = os.surface->normal(geoCtx, locPos);

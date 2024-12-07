@@ -26,7 +26,7 @@
 using namespace Acts;
 
 struct O {};
-using Box = Acts::AxisAlignedBoundingBox<O, float, 3>;
+using Box = AxisAlignedBoundingBox<O, float, 3>;
 using VertexType = Box::VertexType;
 using vertex_array_type = Box::vertex_array_type;
 using value_type = Box::value_type;

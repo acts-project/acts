@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <exception>
 #include <optional>
@@ -19,20 +19,20 @@
 
 namespace Acts::detail::GeoModelBinningHelper {
 
-/// @brief Helper to transform binning string to BinningValue enum
+/// @brief Helper to transform binning string to AxisDirection enum
 ///
 /// @param binning the binning string
-inline BinningValue toBinningValue(const std::string& binning) {
+inline AxisDirection toAxisDirection(const std::string& binning) {
   if (binning == "x") {
-    return BinningValue::binX;
+    return AxisDirection::AxisX;
   } else if (binning == "y") {
-    return BinningValue::binY;
+    return AxisDirection::AxisY;
   } else if (binning == "z") {
-    return BinningValue::binZ;
+    return AxisDirection::AxisZ;
   } else if (binning == "r") {
-    return BinningValue::binR;
+    return AxisDirection::AxisR;
   } else if (binning == "phi") {
-    return BinningValue::binPhi;
+    return AxisDirection::AxisPhi;
   }
   throw std::invalid_argument("GeoModelBinningHelper: Unknown binning value '" +
                               binning + "'");

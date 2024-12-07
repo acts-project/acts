@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -141,8 +141,8 @@ class Affine3Transformed : public IGlobalToGridLocal {
 /// @brief A global (potentially casted) sub space of a global
 /// position
 /// @tparam ...Args
-template <BinningValue... Args>
-class GlobalSubspace : public IGlobalToGridLocal {
+template <AxisDirection... Args>
+class GlobalSubspace final : public IGlobalToGridLocal {
  public:
   using grid_local_t = std::array<double, sizeof...(Args)>;
 
@@ -158,7 +158,7 @@ class GlobalSubspace : public IGlobalToGridLocal {
   GlobalSubspace() = default;
 
   /// The binning values
-  static constexpr std::array<BinningValue, sizeof...(Args)> bValues = {
+  static constexpr std::array<AxisDirection, sizeof...(Args)> axisDirections = {
       Args...};
 
   /// Transform in to the local frame, then the grid local position
@@ -170,7 +170,7 @@ class GlobalSubspace : public IGlobalToGridLocal {
     // Fill the grid point from global
     grid_local_t glocal{};
     GridAccessHelpers::fillCasts(
-        position, bValues, glocal,
+        position, axisDirections, glocal,
         std::make_integer_sequence<std::size_t, sizeof...(Args)>{});
     return glocal;
   }

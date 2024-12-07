@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -151,11 +151,11 @@ class DiscSurface : public RegularSurface {
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue The binning type to be used
+  /// @param aDir The axis direction of the reference position
   ///
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -299,13 +299,13 @@ class DiscSurface : public RegularSurface {
   /// Implement the binningValue
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
+  /// @param aDir is the axis direction for the reference position value offset
   ///
   /// @note This calls the parent method except for binR
   ///
   /// @return float to be used for the binning schema
-  double binningPositionValue(const GeometryContext& gctx,
-                              BinningValue bValue) const final;
+  double referencePositionValue(const GeometryContext& gctx,
+                                AxisDirection aDir) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
@@ -336,14 +336,14 @@ class DiscSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have disc bounds
   ///       that align
   /// @param other The other disc surface to merge with
-  /// @param direction The binning direction: either @c binR or @c binPhi
+  /// @param direction The binning direction: either @c AxisR or @c AxisPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged disc surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<DiscSurface>, bool> mergedWith(
-      const DiscSurface& other, BinningValue direction, bool externalRotation,
+      const DiscSurface& other, AxisDirection direction, bool externalRotation,
       const Logger& logger = getDummyLogger()) const;
 
  protected:

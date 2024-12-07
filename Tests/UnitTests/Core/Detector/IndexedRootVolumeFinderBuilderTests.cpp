@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(IndexedRootVolumeFinderBuilderCylindrical) {
       innerV, middleLV, middleDV, middleUV, middleRV, outerV};
 
   IndexedRootVolumeFinderBuilder builder(
-      {Acts::BinningValue::binZ, Acts::BinningValue::binR});
+      {AxisDirection::AxisZ, AxisDirection::AxisR});
 
   // Let's construct a detector
   auto rootVolumeFinder = builder.construct(tContext, rootVolumes);

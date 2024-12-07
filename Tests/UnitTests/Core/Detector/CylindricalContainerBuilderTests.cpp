@@ -27,7 +27,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalDetector.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -84,19 +84,19 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in z, r, phi
   misCfg.builders = {nullptr};
-  misCfg.binning = {Acts::BinningValue::binX};
+  misCfg.axisDirections = {AxisDirection::AxisX};
   BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning not in z, r,
   misCfg.builders = {nullptr, nullptr};
-  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binPhi};
+  misCfg.axisDirections = {AxisDirection::AxisZ, AxisDirection::AxisPhi};
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
-  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binR};
+  misCfg.axisDirections = {AxisDirection::AxisZ, AxisDirection::AxisR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
@@ -127,12 +127,12 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   CylindricalContainerBuilder::Config tripleZCfg;
   tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
-  tripleZCfg.binning = {BinningValue::binZ};
+  tripleZCfg.axisDirections = {AxisDirection::AxisZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
   tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed,
+      {ProtoBinning(AxisDirection::AxisZ, AxisBoundaryType::Bound, 50),
+       ProtoBinning(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
                     -std::numbers::pi, std::numbers::pi, 12)}};
 
   // Let's test the reverse generation
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {BinningValue::binR};
+  barrelRCfg.axisDirections = {AxisDirection::AxisR};
   barrelRCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
   auto barrelR = std::make_shared<CylindricalContainerBuilder>(
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   // Create the container builder
   CylindricalContainerBuilder::Config barrelPhiCfg;
   barrelPhiCfg.auxiliary = "*** Test 2 - Build segmented phi barrel ***";
-  barrelPhiCfg.binning = {BinningValue::binPhi};
+  barrelPhiCfg.axisDirections = {AxisDirection::AxisPhi};
 
   unsigned int phiSectors = 5;
   double phiHalfSector = std::numbers::pi / phiSectors;
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {BinningValue::binR};
+  barrelRCfg.axisDirections = {AxisDirection::AxisR};
 
   auto barrel = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelEndcapCfg;
   barrelEndcapCfg.builders = {endcapN, barrel, endcapP};
-  barrelEndcapCfg.binning = {BinningValue::binZ};
+  barrelEndcapCfg.axisDirections = {AxisDirection::AxisZ};
 
   auto barrelEndcap = std::make_shared<CylindricalContainerBuilder>(
       barrelEndcapCfg,
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config detectorCfg;
   detectorCfg.builders = {beampipe, barrelEndcap};
-  detectorCfg.binning = {BinningValue::binR};
+  detectorCfg.axisDirections = {AxisDirection::AxisR};
 
   auto detector = std::make_shared<CylindricalContainerBuilder>(
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));

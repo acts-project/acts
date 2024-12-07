@@ -36,7 +36,7 @@ struct TelescopeDetector {
     std::array<double, 2> bounds{{25, 100}};
     double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
-    int binValue{2};
+    int axisDir{2};
   };
 
   Config config;

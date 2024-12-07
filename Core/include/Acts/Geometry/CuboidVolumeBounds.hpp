@@ -118,21 +118,20 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
-  /// for that fully describe the shape's extent
+  /// Get the canonical axis direction values, i.e. the axis directions
+  /// that fully describe the shape's extent
   ///
-  /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
-            Acts::BinningValue::binZ};
+  /// @return vector of canonical axis directions
+  std::vector<AxisDirection> canonicalAxisDirections() const override {
+    return {AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   };
 
-  /// Binning borders in double
+  /// Reference offset value along a given axis direction
   ///
-  /// @param bValue is the binning schema used
+  /// @param aDir is the binning schema used
   ///
-  /// @return float offset to be used for the binning
-  double binningBorder(BinningValue bValue) const final;
+  /// @return value offset to be used for the binning
+  double referenceOffsetValue(AxisDirection aDir) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access

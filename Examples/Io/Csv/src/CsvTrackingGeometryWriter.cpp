@@ -307,7 +307,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
             sfGrid.layer_id = layer->geometryId().layer();
 
             // Draw the grid itself
-            auto binning = sfArray->binningValues();
+            auto binning = sfArray->axisDirections();
             auto axes = sfArray->getAxes();
             if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
               auto loc0Values = axes[0]->getBinEdges();

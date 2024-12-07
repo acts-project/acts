@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <array>

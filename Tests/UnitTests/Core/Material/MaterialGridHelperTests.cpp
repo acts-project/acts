@@ -15,9 +15,8 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 #include <cmath>
@@ -29,7 +28,7 @@
 
 namespace Acts::Test {
 
-using EAxis = Acts::Axis<AxisType::Equidistant>;
+using EAxis = Axis<AxisType::Equidistant>;
 using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
@@ -40,8 +39,8 @@ using MaterialGrid3D =
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
 BOOST_AUTO_TEST_CASE(Square_Grid_test) {
-  BinUtility bu(7, -3., 3., open, BinningValue::binX);
-  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
+  BinUtility bu(7, -3., 3., AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu += BinUtility(3, -2., 2., AxisBoundaryType::Bound, AxisDirection::AxisY);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -129,9 +128,9 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
 /// @brief Various test for the Material in the case of a Cylindrical volume
 /// with a 2D grid
 BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
-  BinUtility bu(2, -2., 2., open, BinningValue::binZ);
-  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
-                   BinningValue::binPhi);
+  BinUtility bu(2, -2., 2., AxisBoundaryType::Bound, AxisDirection::AxisZ);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi,
+                   AxisBoundaryType::Closed, AxisDirection::AxisPhi);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -219,9 +218,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cuboid volume
 BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
-  BinUtility bu(7, -3., 3., open, BinningValue::binX);
-  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
-  bu += BinUtility(2, -1., 1., open, BinningValue::binZ);
+  BinUtility bu(7, -3., 3., AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu += BinUtility(3, -2., 2., AxisBoundaryType::Bound, AxisDirection::AxisY);
+  bu += BinUtility(2, -1., 1., AxisBoundaryType::Bound, AxisDirection::AxisZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -310,10 +309,11 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cylindrical volume
 BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
-  BinUtility bu(4, 1., 4., open, BinningValue::binR);
-  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
-                   BinningValue::binPhi);
-  bu += BinUtility(2, -2., 2., open, BinningValue::binZ);
+  BinUtility bu(4, 1., 4., AxisBoundaryType::Bound, AxisDirection::AxisR);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi,
+                   AxisBoundaryType::Closed, AxisDirection::AxisPhi);
+  bu += BinUtility(2, -2., 2., AxisBoundaryType::Bound, AxisDirection::AxisZ);
+
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 

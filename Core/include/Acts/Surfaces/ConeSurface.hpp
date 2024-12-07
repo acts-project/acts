@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -99,8 +99,8 @@ class ConeSurface : public RegularSurface {
   /// @param bValue defines the type of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

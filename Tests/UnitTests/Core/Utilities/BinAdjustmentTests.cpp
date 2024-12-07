@@ -13,9 +13,9 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
 #include <memory>
@@ -28,8 +28,10 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
   RadialBounds bound(50, 75, std::numbers::pi, 0);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binR);
-  bu += BinUtility(1, 0, 1, Acts::closed, Acts::BinningValue::binPhi);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisR);
+  bu += BinUtility(1, 0, 1, Acts::AxisBoundaryType::Closed,
+                   AxisDirection::AxisPhi);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -43,8 +45,10 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   CylinderBounds bound(25, 50, std::numbers::pi / 4, 0);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binPhi);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binZ);
+  bu += BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound,
+                   AxisDirection::AxisPhi);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisZ);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -60,8 +64,10 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
   RectangleBounds bound(20, 30);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binX);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binY);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisY);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 
@@ -75,8 +81,10 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
 BOOST_AUTO_TEST_CASE(BinAdjustment_Trapezoid) {
   TrapezoidBounds bound(5, 15, 30);
   BinUtility bu;
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binX);
-  bu += BinUtility(1, 0, 1, Acts::open, Acts::BinningValue::binY);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisX);
+  bu +=
+      BinUtility(1, 0, 1, Acts::AxisBoundaryType::Bound, AxisDirection::AxisY);
 
   BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
 

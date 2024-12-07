@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
@@ -68,13 +68,12 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     // Check if the binning
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
     for (auto& b : fCache.binnings) {
-      if (extent.constrains(b.binValue)) {
-        ACTS_VERBOSE("Binning '" << binningValueName(b.binValue)
-                                 << "' is patched.");
+      if (extent.constrains(b.axisDirection)) {
+        ACTS_VERBOSE("Binning '" << b.axisDirection << "' is patched.");
         ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
                                     << "]");
-        b.edges.front() = extent.min(b.binValue);
-        b.edges.back() = extent.max(b.binValue);
+        b.edges.front() = extent.min(b.axisDirection);
+        b.edges.back() = extent.max(b.axisDirection);
         ACTS_VERBOSE(" -> to   : [" << b.edges.front() << ", " << b.edges.back()
                                     << "]");
       }

@@ -106,7 +106,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   auto fillLayer = [&](const LayerSurfaceVector& lSurfaces,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
-    int nb0 = 0, nt0 = 0;
+    int nb0 = 0;
+    AxisType nt0 = AxisType::Equidistant;
     bool is_autobinning = ((lCfg.binning0.size() == 1) &&
                            (std::get<int>(lCfg.binning0.at(0)) <= 0));
     if (!is_autobinning && std::get<int>(lCfg.binning0.at(pl_id)) <= 0) {
@@ -120,13 +121,14 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(0));
       // Read the binning type
-      nt0 = std::get<BinningType>(lCfg.binning0.at(0));
+      nt0 = std::get<AxisType>(lCfg.binning0.at(0));
     } else if (pl_id < lCfg.binning0.size()) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb0 = std::get<int>(lCfg.binning0.at(pl_id));
     }
 
-    int nb1 = 0, nt1 = 0;
+    int nb1 = 0;
+    AxisType nt1 = AxisType::Equidistant;
     is_autobinning = (lCfg.binning1.size() == 1) &&
                      (std::get<int>(lCfg.binning1.at(0)) <= 0);
     if (!is_autobinning && std::get<int>(lCfg.binning1.at(pl_id)) <= 0) {
@@ -140,7 +142,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb1 = std::get<int>(lCfg.binning1.at(0));
       // For a binning type
-      nt1 = std::get<BinningType>(lCfg.binning1.at(0));
+      nt1 = std::get<AxisType>(lCfg.binning1.at(0));
     } else if (pl_id < lCfg.binning1.size()) {
       // Set binning by hand if nb0 > 0 and nb1 > 0
       nb1 = std::get<int>(lCfg.binning1.at(pl_id));
@@ -150,12 +152,12 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating CylinderLayer with "
                  << lSurfaces.size()
-                 << " surfaces at r = " << pl.medium(BinningValue::binR));
+                 << " surfaces at r = " << pl.medium(AxisDirection::AxisR));
 
-      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
-                                               lCfg.envelope.second};
-      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
-                                               lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisR] = {lCfg.envelope.first,
+                                           lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisZ] = {lCfg.envelope.second,
+                                           lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -167,12 +169,12 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ProtoLayer pl(gctx, lSurfaces);
       ACTS_DEBUG("- creating DiscLayer with "
                  << lSurfaces.size()
-                 << " surfaces at z = " << pl.medium(BinningValue::binZ));
+                 << " surfaces at z = " << pl.medium(AxisDirection::AxisZ));
 
-      pl.envelope[Acts::BinningValue::binR] = {lCfg.envelope.first,
-                                               lCfg.envelope.second};
-      pl.envelope[Acts::BinningValue::binZ] = {lCfg.envelope.second,
-                                               lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisR] = {lCfg.envelope.first,
+                                           lCfg.envelope.second};
+      pl.envelope[AxisDirection::AxisZ] = {lCfg.envelope.second,
+                                           lCfg.envelope.second};
       if (nb0 >= 0 && nb1 >= 0) {
         layers.push_back(
             m_cfg.layerCreator->discLayer(gctx, lSurfaces, nb0, nb1, pl));
@@ -192,16 +194,15 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     if (!layerCfg.parseRanges.empty()) {
       for (const auto& pRange : layerCfg.parseRanges) {
         ACTS_DEBUG("- layer parsing restricted in "
-                   << binningValueName(pRange.first) << " to ["
-                   << pRange.second.first << "/" << pRange.second.second
-                   << "].");
+                   << pRange.first << " to [" << pRange.second.first << "/"
+                   << pRange.second.second << "].");
       }
     }
     if (!layerCfg.splitConfigs.empty()) {
       for (const auto& sConfig : layerCfg.splitConfigs) {
         ACTS_DEBUG("- layer splitting attempt in "
-                   << binningValueName(sConfig.first) << " with tolerance "
-                   << sConfig.second << ".");
+                   << sConfig.first << " with tolerance " << sConfig.second
+                   << ".");
       }
     }
 
@@ -240,8 +241,8 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
                                 << " search restrictions.");
       for (const auto& prange : layerCfg.parseRanges) {
-        ACTS_VERBOSE(" - range " << binningValueName(prange.first)
-                                 << " within [ " << prange.second.first << ", "
+        ACTS_VERBOSE(" - range " << prange.first << " within [ "
+                                 << prange.second.first << ", "
                                  << prange.second.second << "]");
       }
 
