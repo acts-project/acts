@@ -11,10 +11,8 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <iterator>
 #include <ostream>
 #include <random>
