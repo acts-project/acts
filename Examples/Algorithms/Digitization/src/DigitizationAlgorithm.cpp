@@ -155,8 +155,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   measurementParticlesMap.reserve(simHits.size());
   measurementSimHitsMap.reserve(simHits.size());
 
-  // Setup random number generator
-  auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
+  RandomSeed eventSeed = m_cfg.randomNumbers->generateSeed(ctx);
 
   // Some statistics
   std::size_t skippedHits = 0;
@@ -164,6 +163,10 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Some algorithms do the clusterization themselves such as the traccc chain.
   // Thus we need to store the cell data from the simulation.
   CellsMap cellsMap;
+
+  // Count the number of hits per particle and module. Cleared before each
+  // module.
+  std::map<SimBarcode, std::uint32_t> particleOnModuleHitCount;
 
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {
@@ -194,6 +197,8 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
       ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
 
+    particleOnModuleHitCount.clear();
+
     // Run the digitizer. Iterate over the hits for this surface inside the
     // visitor so we do not need to lookup the variant object per-hit.
     std::visit(
@@ -205,6 +210,24 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
             const auto simHitIdx = simHits.index_of(h);
+
+            const auto hitIndex =
+                particleOnModuleHitCount[simHit.particleId()]++;
+
+            if (hitIndex > 0) {
+              ACTS_DEBUG("more than one hit for particle "
+                         << simHit.particleId() << " on module " << moduleGeoId
+                         << " - still forwarding it to the digitizer");
+            }
+
+            RandomSeed moduleSeed = (moduleGeoId.value() & 0xFFFFFFFF) ^
+                                    ((moduleGeoId.value() >> 32) & 0xFFFFFFFF);
+            RandomSeed particleSeed =
+                (simHit.particleId().value() & 0xFFFFFFFF) ^
+                ((simHit.particleId().value() >> 32) & 0xFFFFFFFF);
+            RandomSeed hitSeed =
+                eventSeed + moduleSeed + particleSeed + hitIndex;
+            RandomEngine rng(hitSeed);
 
             DigitizedParameters dParameters;
 

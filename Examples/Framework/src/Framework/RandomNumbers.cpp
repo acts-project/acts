@@ -20,7 +20,7 @@ RandomEngine RandomNumbers::spawnGenerator(
 }
 
 RandomSeed RandomNumbers::generateSeed(const AlgorithmContext& context) const {
-  return m_cfg.seed + context.eventNumber;
+  return m_cfg.seed + static_cast<RandomSeed>(context.eventNumber);
 }
 
 }  // namespace ActsExamples

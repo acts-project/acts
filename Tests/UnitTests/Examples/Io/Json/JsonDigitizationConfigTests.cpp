@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
     if (s.forcePositive[i]) {
       ref = std::abs(ref);
     }
-    CHECK_CLOSE_REL(par[i], ref, 0.15);
+    CHECK_CLOSE_ABS(par[i], ref, 0.15);
   }
 }
 
