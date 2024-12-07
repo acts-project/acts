@@ -155,7 +155,10 @@ test_exatrkx_unittests:
 
     - apt-get update -y
     - git clone $CLONE_URL src
-    - source src/CI/dependencies.sh
+    - cd src
+    - git checkout $HEAD_SHA
+    - source CI/dependencies.sh
+    - cd ..
     - ctest --test-dir build -R ExaTrkX
 
 test_exatrkx_python:
