@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -47,14 +46,14 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
 
   // The intersection is on surface already
   if (sIntersection.status() == IntersectionStatus::onSurface) {
-    // Release navigation step size
-    state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
+    stepper.updateStepSize(state, sIntersection.pathLength(),
+                           ConstrainedStep::actor);
     return IntersectionStatus::onSurface;
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
+  const double farLimit = std::numeric_limits<double>::max();
 
   if (sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
