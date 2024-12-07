@@ -7,25 +7,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <unordered_map>
-#include <vector>
 
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>

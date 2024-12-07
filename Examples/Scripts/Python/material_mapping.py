@@ -155,7 +155,9 @@ if "__main__" == __name__:
 
     mapName = args.outFile.split(".")[0]
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(None)
+    detector = getOpenDataDetector(None)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     runMaterialMapping(
         trackingGeometry,

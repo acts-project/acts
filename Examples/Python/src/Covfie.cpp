@@ -9,6 +9,8 @@
 #include "Acts/Plugins/Covfie/FieldConversion.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 
+#include <string>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 

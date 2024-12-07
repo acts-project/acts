@@ -1,9 +1,4 @@
-add_library(
-    ActsExamplesDetectorDD4hep
-    SHARED
-    src/DD4hepDetector.cpp
-    src/DD4hepGeometryService.cpp
-)
+add_library(ActsExamplesDetectorDD4hep SHARED src/DD4hepDetector.cpp)
 
 target_include_directories(
     ActsExamplesDetectorDD4hep
@@ -11,8 +6,36 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesDetectorDD4hep
-    PUBLIC ActsCore ActsPluginDD4hep ActsExamplesFramework
+    PUBLIC
+        ActsCore
+        ActsPluginDD4hep
+        ActsExamplesFramework
+        ActsExamplesDetectorsCommon
 )
+
+if(ACTS_BUILD_EXAMPLES_GEANT4)
+    if(${DD4hep_VERSION} VERSION_LESS 1.11)
+        target_link_libraries(
+            ActsExamplesDetectorDD4hep
+            PUBLIC ActsExamplesGeant4 ${DD4hep_DDG4_LIBRARY}
+        )
+    else()
+        target_link_libraries(
+            ActsExamplesDetectorDD4hep
+            PUBLIC ActsExamplesGeant4 DD4hep::DDG4
+        )
+    endif()
+
+    target_sources(
+        ActsExamplesDetectorDD4hep
+        PUBLIC src/DDG4DetectorConstruction.cpp src/DD4hepDetectorGeant4.cpp
+    )
+else()
+    target_sources(
+        ActsExamplesDetectorDD4hep
+        PUBLIC src/DD4hepDetectorGeant4Stub.cpp
+    )
+endif()
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
     target_include_directories(

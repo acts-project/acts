@@ -1,7 +1,6 @@
 import os
 import sys
 import math
-from collections import namedtuple
 from pathlib import Path
 from typing import Optional
 import acts
@@ -87,36 +86,19 @@ def getOpenDataDetector(
 
         return geoid
 
-    dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
-        xmlFileNames=[str(odd_xml)],
-        logLevel=customLogLevel(),
-        dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
-    )
-    detector = acts.examples.dd4hep.DD4hepDetector()
-
     if mdecorator is None:
         mdecorator = acts.examples.RootMaterialDecorator(
             fileName=str(odd_dir / "data/odd-material-maps.root"),
             level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
-    trackingGeometry, decorators = detector.finalize(dd4hepConfig, mdecorator)
-
-    OpenDataDetector = namedtuple(
-        "OpenDataDetector", ["detector", "trackingGeometry", "decorators"]
+    dd4hepConfig = acts.examples.dd4hep.DD4hepDetector.Config(
+        xmlFileNames=[str(odd_xml)],
+        name="OpenDataDetector",
+        logLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(minLevel=acts.logging.WARNING),
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
+        materialDecorator=mdecorator,
     )
-
-    class OpenDataDetectorContextManager(OpenDataDetector):
-        def __new__(cls, detector, trackingGeometry, decorators):
-            return super(OpenDataDetectorContextManager, cls).__new__(
-                cls, detector, trackingGeometry, decorators
-            )
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            self.detector.drop()
-
-    return OpenDataDetectorContextManager(detector, trackingGeometry, decorators)
+    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    return detector

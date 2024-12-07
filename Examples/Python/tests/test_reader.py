@@ -290,7 +290,9 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    p = multiprocessing.Process(
+    # explicitly ask for "spawn" as CI failures were observed with "fork"
+    spawn_context = multiprocessing.get_context("spawn")
+    p = spawn_context.Process(
         target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
     )
     p.start()
@@ -300,7 +302,9 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+
         s.addReader(
             EDM4hepReader(
                 level=acts.logging.INFO,
@@ -386,7 +390,9 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman

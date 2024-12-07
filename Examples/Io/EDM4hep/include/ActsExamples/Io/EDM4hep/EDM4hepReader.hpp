@@ -25,7 +25,7 @@
 
 namespace ActsExamples {
 
-struct DD4hepDetector;
+class DD4hepDetector;
 
 /// Read particles from EDM4hep.
 ///

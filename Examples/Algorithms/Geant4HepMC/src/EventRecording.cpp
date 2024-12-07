@@ -10,7 +10,6 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 
 #include <stdexcept>
 
@@ -41,7 +40,7 @@ EventRecording::EventRecording(const EventRecording::Config& config,
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (m_cfg.detectorConstructionFactory == nullptr) {
+  if (m_cfg.detector == nullptr) {
     throw std::invalid_argument("Missing detector construction object");
   }
 
@@ -52,7 +51,8 @@ EventRecording::EventRecording(const EventRecording::Config& config,
 
   // G4RunManager deals with the lifetime of these objects
   m_runManager->SetUserInitialization(
-      m_cfg.detectorConstructionFactory->factorize().release());
+      m_cfg.detector->buildGeant4DetectorConstruction(m_cfg.constructionOptions)
+          .release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(

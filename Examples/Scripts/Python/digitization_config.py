@@ -33,7 +33,8 @@ def runDigitizationConfig(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, _ = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     runDigitizationConfig(
         trackingGeometry=trackingGeometry,

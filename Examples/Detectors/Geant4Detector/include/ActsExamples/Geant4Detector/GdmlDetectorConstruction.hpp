@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4/RegionCreator.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 
 #include <string>
 
@@ -24,9 +23,8 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   /// @param path is the path to the Gdml file
   /// @param regionCreators are the region creators
-  GdmlDetectorConstruction(
-      std::string path,
-      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
+  GdmlDetectorConstruction(std::string path,
+                           const Geant4ConstructionOptions& options);
 
   /// Read the file and parse it to construct the Geant4 description
   ///
@@ -37,26 +35,10 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
  private:
   /// Path to the Gdml file
   std::string m_path;
-  /// Region creators
-  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
+  /// Construction options
+  Geant4ConstructionOptions m_options;
   /// Cached world volume
   G4VPhysicalVolume* m_world = nullptr;
-};
-
-class GdmlDetectorConstructionFactory final
-    : public Geant4::DetectorConstructionFactory {
- public:
-  GdmlDetectorConstructionFactory(
-      std::string path,
-      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
-
-  std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
-
- private:
-  /// Path to the Gdml file
-  std::string m_path;
-  /// Region creators
-  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples

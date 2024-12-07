@@ -24,6 +24,7 @@
 #include <map>
 #include <stdexcept>
 
+#include <DD4hep/Detector.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/SimTrackerHitCollection.h>
@@ -323,8 +324,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
           [&](std::uint64_t cellId) {
             ACTS_VERBOSE("CellID: " << cellId);
 
-            const auto& vm = m_cfg.dd4hepDetector->geometryService->detector()
-                                 .volumeManager();
+            const auto& vm =
+                m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
             const auto detElement = vm.lookupDetElement(cellId);
 

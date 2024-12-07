@@ -28,7 +28,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4Detector/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
 #include <algorithm>
@@ -47,7 +47,7 @@ namespace ActsExamples {
 MockupSectorBuilder::MockupSectorBuilder(
     const MockupSectorBuilder::Config& config) {
   mCfg = config;
-  GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath);
+  GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath, {});
   g4World = geo_gdml.Construct();
 }
 
@@ -78,13 +78,14 @@ MockupSectorBuilder::buildChamber(
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
   g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
 
-  auto g4detector = Geant4Detector();
-
-  auto [detector, surfaces, detectorElements] =
-      g4detector.constructDetector(g4WorldConfig, Acts::getDummyLogger());
+  auto g4Detector = Geant4Detector(g4WorldConfig);
+  // Trigger the build of the detector
+  auto [surface, elements] = Geant4Detector::buildGeant4Volumes(
+      g4WorldConfig,
+      *Acts::getDefaultLogger("MockupSectorBuilder", Acts::Logging::INFO));
 
   // The vector that holds the converted sensitive surfaces of the chamber
-  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
+  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces;
 
   std::array<std::pair<float, float>, 3> min_max;
   std::fill(min_max.begin(), min_max.end(),
@@ -92,7 +93,7 @@ MockupSectorBuilder::buildChamber(
                                          -std::numeric_limits<float>::max()));
 
   // Convert the physical volumes of the detector elements to straw surfaces
-  for (auto& detectorElement : detectorElements) {
+  for (const auto& detectorElement : elements) {
     auto context = Acts::GeometryContext();
     auto g4conv = Acts::Geant4PhysicalVolumeConverter();
 
