@@ -209,7 +209,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*first, intersection.pathLength());
+      return std::pair(*first, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -229,7 +229,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*last, intersection.pathLength());
+      return std::pair(*last, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -256,13 +256,13 @@ findTrackStateForExtrapolation(
       if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
-        return std::make_pair(*first, intersectionFirst.pathLength());
+        return std::pair(*first, intersectionFirst.pathLength());
       }
 
       if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
-        return std::make_pair(*last, intersectionLast.pathLength());
+        return std::pair(*last, intersectionLast.pathLength());
       }
 
       ACTS_ERROR("no intersection found");
@@ -531,7 +531,7 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + predictedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the filtered residual and its covariance
@@ -568,7 +568,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + filteredCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the smoothed residual and its covariance
@@ -605,7 +605,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + smoothedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the predicted chi2

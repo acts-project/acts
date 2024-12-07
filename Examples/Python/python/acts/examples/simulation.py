@@ -41,12 +41,13 @@ ParticleSelectorConfig = namedtuple(
         "absEta",  # (min,max)
         "pt",  # (min,max)
         "m",  # (min,max)
+        "hits",  # (min,max)
         "measurements",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 9 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 3,
 )
 
 
@@ -393,6 +394,8 @@ def addParticleSelection(
                 ptMax=config.pt[1],
                 mMin=config.m[0],
                 mMax=config.m[1],
+                hitsMin=config.hits[0],
+                hitsMax=config.hits[1],
                 measurementsMin=config.measurements[0],
                 measurementsMax=config.measurements[1],
                 removeCharged=config.removeCharged,
@@ -811,6 +814,8 @@ def addDigitization(
         outputMeasurements="measurements",
         outputMeasurementParticlesMap="measurement_particles_map",
         outputMeasurementSimHitsMap="measurement_simhits_map",
+        outputParticleMeasurementsMap="particle_measurements_map",
+        outputSimHitMeasurementsMap="simhit_measurements_map",
         **acts.examples.defaultKWArgs(
             doMerge=doMerge,
         ),

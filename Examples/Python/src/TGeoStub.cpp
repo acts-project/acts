@@ -6,15 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#pragma once
+namespace Acts::Python {
+struct Context;
+}  // namespace Acts::Python
 
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
-
-namespace ActsExamples {
-
-using SimHit = ::ActsFatras::Hit;
-/// Store hits ordered by geometry identifier.
-using SimHitContainer = GeometryIdMultiset<SimHit>;
-
-}  // namespace ActsExamples
+namespace Acts::Python {
+void addTGeo(Context& /*ctx*/) {}
+}  // namespace Acts::Python

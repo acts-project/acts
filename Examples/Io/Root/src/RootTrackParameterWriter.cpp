@@ -18,16 +18,13 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <ios>
 #include <iostream>
-#include <memory>
 #include <numbers>
 #include <stdexcept>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -43,8 +40,8 @@ namespace ActsExamples {
 
 RootTrackParameterWriter::RootTrackParameterWriter(
     const RootTrackParameterWriter::Config& config, Acts::Logging::Level level)
-    : TrackParameterWriter(config.inputTrackParameters,
-                           "RootTrackParameterWriter", level),
+    : WriterT<TrackParametersContainer>(config.inputTrackParameters,
+                                        "RootTrackParameterWriter", level),
       m_cfg(config) {
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing proto tracks input collection");
