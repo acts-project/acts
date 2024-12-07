@@ -30,6 +30,9 @@ class Result {
   Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
 
  public:
+  using ValueType = T;
+  using ErrorType = E;
+
   /// Default construction is disallowed.
   Result() = delete;
 
@@ -170,6 +173,144 @@ class Result {
   T value() && {
     checkValueAccess();
     return std::move(std::get<T>(m_var));
+  }
+
+  /// Retrieves the valid value from the result object, or returns a default
+  /// value if no valid value exists.
+  ///
+  /// @param[in] v The default value to use if no valid value exists.
+  /// @note This is the lvalue version.
+  /// @note This function always returns by value.
+  /// @return Either the valid value, or the given substitute.
+  template <typename U>
+  std::conditional_t<std::is_reference_v<U>, const T&, T> value_or(U&& v) const&
+    requires(std::same_as<std::decay_t<U>, T>)
+  {
+    if (ok()) {
+      return value();
+    } else {
+      return std::forward<U>(v);
+    }
+  }
+
+  /// Retrieves the valid value from the result object, or returns a default
+  /// value if no valid value exists.
+  ///
+  /// @param[in] v The default value to use if no valid value exists.
+  /// @note This is the rvalue version which moves the value out.
+  /// @note This function always returns by value.
+  /// @return Either the valid value, or the given substitute.
+  template <typename U>
+  T value_or(U&& v) &&
+    requires(std::same_as<std::decay_t<U>, T>)
+  {
+    if (ok()) {
+      return std::move(*this).value();
+    } else {
+      return std::forward<U>(v);
+    }
+  }
+
+  /// Transforms the value contained in this result.
+  ///
+  /// Applying a function `f` to a valid value `x` returns `f(x)`, while
+  /// applying `f` to an invalid value returns another invalid value.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the lvalue version.
+  /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto transform(C&& callable) const&
+    requires std::invocable<C, const T&>
+  {
+    using CallableReturnType = decltype(std::declval<C>()(std::declval<T>()));
+    using R = Result<std::decay_t<CallableReturnType>, E>;
+    if (ok()) {
+      return R::success(callable(value()));
+    } else {
+      return R::failure(error());
+    }
+  }
+
+  /// Transforms the value contained in this result.
+  ///
+  /// Applying a function `f` to a valid value `x` returns `f(x)`, while
+  /// applying `f` to an invalid value returns another invalid value.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the rvalue version.
+  /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto transform(C&& callable) &&
+    requires std::invocable<C, T&&>
+  {
+    using CallableReturnType = decltype(std::declval<C>()(std::declval<T>()));
+    using R = Result<std::decay_t<CallableReturnType>, E>;
+    if (ok()) {
+      return R::success(callable(std::move(*this).value()));
+    } else {
+      return R::failure(std::move(*this).error());
+    }
+  }
+
+  /// Bind a function to this result monadically.
+  ///
+  /// This function takes a function `f` and, if this result contains a valid
+  /// value `x`, returns `f(x)`. If the type of `x` is `T`, then `f` is
+  /// expected to accept type `T` and return `Result<U>`. In this case,
+  /// `transform` would return the unhelpful type `Result<Result<U>>`, so
+  /// `and_then` strips away the outer layer to return `Result<U>`. If the
+  /// value is invalid, this returns an invalid value in `Result<U>`.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the lvalue version.
+  /// @note This functions is `>>=` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto and_then(C&& callable) const&
+    requires std::invocable<C, const T&>
+  {
+    using R = decltype(std::declval<C>()(std::declval<T>()));
+
+    static_assert(std::same_as<typename R::ErrorType, ErrorType>,
+                  "bind must take a callable with the same error type");
+
+    if (ok()) {
+      return callable(value());
+    } else {
+      return R::failure(error());
+    }
+  }
+
+  /// Bind a function to this result monadically.
+  ///
+  /// This function takes a function `f` and, if this result contains a valid
+  /// value `x`, returns `f(x)`. If the type of `x` is `T`, then `f` is
+  /// expected to accept type `T` and return `Result<U>`. In this case,
+  /// `transform` would return the unhelpful type `Result<Result<U>>`, so
+  /// `and_then` strips away the outer layer to return `Result<U>`. If the
+  /// value is invalid, this returns an invalid value in `Result<U>`.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the rvalue version.
+  /// @note This functions is `>>=` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto and_then(C&& callable) &&
+    requires std::invocable<C, T&&>
+  {
+    using R = decltype(std::declval<C>()(std::declval<T>()));
+
+    static_assert(std::same_as<typename R::ErrorType, ErrorType>,
+                  "bind must take a callable with the same error type");
+
+    if (ok()) {
+      return callable(std::move(*this).value());
+    } else {
+      return R::failure(std::move(*this).error());
+    }
   }
 
  private:
