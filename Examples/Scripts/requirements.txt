@@ -6,11 +6,11 @@
 #
 annotated-types==0.7.0
     # via pydantic
-awkward==2.7.0
+awkward==2.7.2
     # via
     #   -r Examples/Scripts/requirements.in
     #   uproot
-awkward-cpp==41
+awkward-cpp==43
     # via awkward
 boost-histogram==1.5.0
     # via hist
@@ -24,7 +24,7 @@ cramjam==2.9.0
     # via uproot
 cycler==0.12.1
     # via matplotlib
-fonttools==4.55.0
+fonttools==4.55.2
     # via matplotlib
 fsspec==2024.10.0
     # via
@@ -38,7 +38,7 @@ kiwisolver==1.4.7
     # via matplotlib
 markdown-it-py==3.0.0
     # via rich
-matplotlib==3.9.2
+matplotlib==3.9.3
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
@@ -72,9 +72,9 @@ pandas==2.2.3
     # via -r Examples/Scripts/requirements.in
 pillow==11.0.0
     # via matplotlib
-pydantic==2.9.2
+pydantic==2.10.3
     # via -r Examples/Scripts/requirements.in
-pydantic-core==2.23.4
+pydantic-core==2.27.1
     # via pydantic
 pygments==2.18.0
     # via rich
@@ -96,9 +96,9 @@ scipy==1.14.1
     # via -r Examples/Scripts/requirements.in
 shellingham==1.5.4
     # via typer
-six==1.16.0
+six==1.17.0
     # via python-dateutil
-typer==0.13.1
+typer==0.15.1
     # via -r Examples/Scripts/requirements.in
 typing-extensions==4.12.2
     # via
@@ -111,7 +111,7 @@ uhi==0.5.0
     # via
     #   histoprint
     #   mplhep
-uproot==5.5.0
+uproot==5.5.1
     # via -r Examples/Scripts/requirements.in
 xxhash==3.5.0
     # via uproot
