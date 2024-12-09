@@ -117,8 +117,9 @@ class DirectNavigator {
     }
 
     void resetSurfaceIndex() {
-      surfaceIndex =
-          direction == Direction::Forward ? -1 : options.surfaces.size();
+      surfaceIndex = direction == Direction::Forward
+                         ? -1
+                         : static_cast<int>(options.surfaces.size());
     }
   };
 
