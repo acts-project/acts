@@ -23,6 +23,7 @@ class Surface;
 /// Composite portal links can graft together other portal link instances, for
 /// example grids that could not be merged due to invalid binnings.
 ///
+/// ```
 /// +-------+      +-------+
 /// |       |      |       |
 /// |       |      |       |
@@ -36,6 +37,7 @@ class Surface;
 /// |       |      +-------+
 /// |       |      |       |
 /// +-------+      +-------+
+/// ```
 ///
 /// During resolution, it will consult each of it's children and return
 /// the result on the first surface where the lookup position is within
