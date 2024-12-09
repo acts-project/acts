@@ -402,9 +402,10 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         EtaConfig,
         MomentumConfig,
         ParticleConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
 
     addParticleGun(
@@ -424,12 +425,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirCsv=tmp_path / "csv",
         outputDirRoot=str(tmp_path),
         rnd=rnd,
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.9 * u.GeV, None),
-            eta=(-4, 4),
-            hits=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -456,6 +451,16 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         outputDirRoot=str(tmp_path),
+    )
+
+    addDigiParticleSelection(
+        seq,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            eta=(-4, 4),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     seq.run()

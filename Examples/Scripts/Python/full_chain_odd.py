@@ -313,7 +313,7 @@ addDigiParticleSelection(
     ParticleSelectorConfig(
         pt=(1.0 * u.GeV, None),
         eta=(-3.0, 3.0),
-        hits=(9, None),
+        measurements=(9, None),
         removeNeutral=True,
     ),
 )

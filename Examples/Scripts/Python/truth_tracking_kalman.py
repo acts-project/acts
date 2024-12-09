@@ -26,9 +26,10 @@ def runTruthTrackingKalman(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
     from acts.examples.reconstruction import (
         addSeeding,
@@ -81,12 +82,6 @@ def runTruthTrackingKalman(
             field,
             rnd=rnd,
             enableInteractions=True,
-            postSelectParticles=ParticleSelectorConfig(
-                pt=(0.9 * u.GeV, None),
-                hits=(7, None),
-                removeNeutral=True,
-                removeSecondaries=True,
-            ),
         )
     else:
         logger.info("Reading hits from %s", inputHitsPath.resolve())
@@ -105,6 +100,16 @@ def runTruthTrackingKalman(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
     )
 
     addSeeding(

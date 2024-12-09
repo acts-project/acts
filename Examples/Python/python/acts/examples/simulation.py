@@ -436,12 +436,6 @@ def addFatras(
     field : magnetic field
     rnd : RandomNumbers
         random number generator
-    preSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
-        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
-        Specify preSelectParticles=None to inhibit ParticleSelector altogether.
-    postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        Similar to preSelectParticles but applied after simulation to "particles_simulated", therefore also filters secondaries.
     enableInteractions : Enable the particle interactions in the simulation
     pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
@@ -592,12 +586,6 @@ def addGeant4(
     field : magnetic field
     rnd : RandomNumbers, None
         random number generator
-    preSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        ParticleSelector configuration to select particles as input to Geant4. Each range is specified as a tuple of (min,max).
-        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
-        Specify preSelectParticles=None to inhibit ParticleSelector altogether.
-    postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        Similar to preSelectParticles but applied after simulation to "particles_simulated", therefore also filters secondaries.
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None

@@ -23,9 +23,10 @@ def runTruthTrackingGx2f(
         EtaConfig,
         PhiConfig,
         MomentumConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
     from acts.examples.reconstruction import (
         addSeeding,
@@ -74,12 +75,6 @@ def runTruthTrackingGx2f(
         field,
         rnd=rnd,
         enableInteractions=True,
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.9 * u.GeV, None),
-            hits=(7, None),
-            removeNeutral=True,
-            removeSecondaries=True,
-        ),
     )
 
     addDigitization(
@@ -88,6 +83,16 @@ def runTruthTrackingGx2f(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
     )
 
     addSeeding(

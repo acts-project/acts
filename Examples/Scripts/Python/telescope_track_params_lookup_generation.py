@@ -50,7 +50,6 @@ def estimateLookup(trackingGeometry, numEvents, outputPath):
         inputParticles="particles_generated",
         outputSimHits="sim_hits",
         rnd=rnd,
-        preSelectParticles=None,
     )
 
     # Set up the track lookup grid writer

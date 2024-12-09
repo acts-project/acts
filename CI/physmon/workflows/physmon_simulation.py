@@ -8,7 +8,6 @@ import acts
 from acts.examples.simulation import (
     addFatras,
     addGeant4,
-    ParticleSelectorConfig,
     addPythia8,
 )
 
@@ -78,8 +77,6 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         rnd,
         enableInteractions=True,
-        preSelectParticles=None,
-        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         inputParticles="particles_generated",
         outputParticles="particles_fatras",
         outputSimHits="simhits_fatras",
@@ -92,8 +89,6 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         rnd,
-        preSelectParticles=None,
-        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         killVolume=setup.trackingGeometry.highestTrackingVolume,
         killAfterTime=25 * u.ns,
         killSecondaries=True,
