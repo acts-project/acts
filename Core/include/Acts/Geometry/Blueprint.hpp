@@ -49,17 +49,8 @@ class GeometryContext;
 /// @note This class inherits from @c BlueprintNode privately, because it is
 ///       only ever intended to be the top-level node, and not anywhere else in
 ///       the tree.
-class Blueprint : private BlueprintNode {
+class Blueprint : public BlueprintNode {
  public:
-  // Pull in convenience methods, despite privately inheriting
-  using BlueprintNode::addChild;
-  using BlueprintNode::addCylinderContainer;
-  using BlueprintNode::addLayer;
-  using BlueprintNode::addMaterial;
-  using BlueprintNode::addStaticVolume;
-  using BlueprintNode::children;
-  using BlueprintNode::graphViz;
-
   struct Config {
     /// Determine how much envelope space to produce from the highest volume
     /// in the geometry hierarchy and the world volume.

@@ -226,7 +226,8 @@ void addBlueprint(Context& ctx) {
           m, "BlueprintNode");
 
   auto rootNode =
-      py::class_<Blueprint, std::shared_ptr<Blueprint>>(m, "Blueprint");
+      py::class_<Blueprint, BlueprintNode, std::shared_ptr<Blueprint>>(
+          m, "Blueprint");
 
   rootNode
       .def(py::init<const Blueprint::Config&>())
@@ -259,12 +260,9 @@ void addBlueprint(Context& ctx) {
                             const py::object& /*traceback*/) {});
   };
 
-  auto addNodeMethods = [&blueprintNode, &rootNode](const std::string& name,
-                                                    auto&& callable,
-                                                    auto&&... args) {
+  auto addNodeMethods = [&blueprintNode](const std::string& name,
+                                         auto&& callable, auto&&... args) {
     blueprintNode.def(name.c_str(), callable, args...)
-        .def(("add" + name).c_str(), callable, args...);
-    rootNode.def(name.c_str(), callable, args...)
         .def(("add" + name).c_str(), callable, args...);
   };
 
