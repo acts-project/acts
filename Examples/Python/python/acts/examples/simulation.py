@@ -51,6 +51,34 @@ ParticleSelectorConfig = namedtuple(
 )
 
 
+def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
+    return {
+        "rhoMin": config.rho[0],
+        "rhoMax": config.rho[1],
+        "absZMin": config.absZ[0],
+        "absZMax": config.absZ[1],
+        "timeMin": config.time[0],
+        "timeMax": config.time[1],
+        "phiMin": config.phi[0],
+        "phiMax": config.phi[1],
+        "etaMin": config.eta[0],
+        "etaMax": config.eta[1],
+        "absEtaMin": config.absEta[0],
+        "absEtaMax": config.absEta[1],
+        "ptMin": config.pt[0],
+        "ptMax": config.pt[1],
+        "mMin": config.m[0],
+        "mMax": config.m[1],
+        "hitsMin": config.hits[0],
+        "hitsMax": config.hits[1],
+        "measurementsMin": config.measurements[0],
+        "measurementsMax": config.measurements[1],
+        "removeCharged": config.removeCharged,
+        "removeNeutral": config.removeNeutral,
+        "removeSecondaries": config.removeSecondaries,
+    }
+
+
 @acts.examples.NamedTypeArgs(
     momentumConfig=MomentumConfig,
     etaConfig=EtaConfig,
@@ -101,10 +129,8 @@ def addParticleGun(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
-    # Input
     evGen = EventGenerator(
         level=customLogLevel(),
         generators=[
@@ -132,15 +158,17 @@ def addParticleGun(
                 ),
             )
         ],
-        outputParticles="particles_input",
-        outputVertices="vertices_input",
+        outputParticles="particles_generated",
+        outputVertices="vertices_generated",
         randomNumbers=rnd,
     )
-
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
     s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
+
+    s.addWhiteboardAlias("particles_selected", evGen.config.outputParticles)
+    s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
 
     if printParticles:
         s.addAlgorithm(
@@ -236,11 +264,12 @@ def addPythia8(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
+
     vtxGen = vtxGen or acts.examples.GaussianVertexGenerator(
         stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
     )
+
     if not isinstance(beam, Iterable):
         beam = (beam, beam)
 
@@ -292,19 +321,20 @@ def addPythia8(
             )
         )
 
-    # Input
     evGen = acts.examples.EventGenerator(
         level=customLogLevel(),
         generators=generators,
-        outputParticles="particles_input",
-        outputVertices="vertices_input",
+        outputParticles="particles_generated",
+        outputVertices="vertices_generated",
         randomNumbers=rnd,
     )
-
     s.addReader(evGen)
 
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
     s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
+
+    s.addWhiteboardAlias("particles_selected", evGen.config.outputParticles)
+    s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
 
     if printParticles:
         s.addAlgorithm(
@@ -352,15 +382,13 @@ def addPythia8(
     return s
 
 
-def addParticleSelection(
+def addGenParticleSelection(
     s: acts.examples.Sequencer,
     config: ParticleSelectorConfig,
-    inputParticles: str,
-    outputParticles: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
-    This function steers the particle selection.
+    This function steers the particle selection after generation.
 
     Parameters
     ----------
@@ -368,44 +396,20 @@ def addParticleSelection(
         the sequencer module to which we add the ParticleSelector
     config: ParticleSelectorConfig
         the particle selection configuration
-    inputParticles: str
-        the identifier for the input particles to be selected
-    outputParticles: str
-        the identifier for the selected particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    s.addAlgorithm(
-        acts.examples.ParticleSelector(
-            **acts.examples.defaultKWArgs(
-                rhoMin=config.rho[0],
-                rhoMax=config.rho[1],
-                absZMin=config.absZ[0],
-                absZMax=config.absZ[1],
-                timeMin=config.time[0],
-                timeMax=config.time[1],
-                phiMin=config.phi[0],
-                phiMax=config.phi[1],
-                etaMin=config.eta[0],
-                etaMax=config.eta[1],
-                absEtaMin=config.absEta[0],
-                absEtaMax=config.absEta[1],
-                ptMin=config.pt[0],
-                ptMax=config.pt[1],
-                mMin=config.m[0],
-                mMax=config.m[1],
-                hitsMin=config.hits[0],
-                hitsMax=config.hits[1],
-                measurementsMin=config.measurements[0],
-                measurementsMax=config.measurements[1],
-                removeCharged=config.removeCharged,
-                removeNeutral=config.removeNeutral,
-                removeSecondaries=config.removeSecondaries,
-            ),
-            level=customLogLevel(),
-            inputParticles=inputParticles,
-            outputParticles=outputParticles,
-        )
+    selector = acts.examples.ParticleSelector(
+        **_getParticleSelectionKWargs(config),
+        level=customLogLevel(),
+        inputParticles="particles_generated",
+        outputParticles="tmp_particles_generated_selected",
+    )
+    s.addAlgorithm(selector)
+
+    s.addWhiteboardAlias("particles_selected", selector.config.outputParticles)
+    s.addWhiteboardAlias(
+        "particles_generated_selected", selector.config.outputParticles
     )
 
 
@@ -414,11 +418,9 @@ def addFatras(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
-    postSelectParticles: Optional[ParticleSelectorConfig] = None,
     enableInteractions: bool = True,
     pMin: Optional[float] = None,
-    inputParticles: str = "particles_input",
+    inputParticles: str = "particles_generated_selected",
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -454,25 +456,10 @@ def addFatras(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Selector
-    if preSelectParticles is not None:
-        particlesPreSelected = "fatras_particles_preselected"
-        addParticleSelection(
-            s,
-            preSelectParticles,
-            inputParticles=inputParticles,
-            outputParticles=particlesPreSelected,
-        )
-    else:
-        particlesPreSelected = inputParticles
-
-    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
-
-    # Simulation
     alg = acts.examples.FatrasSimulation(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
-            inputParticles=particlesPreSelected,
+            inputParticles=inputParticles,
             outputParticles=outputParticles,
             outputSimHits=outputSimHits,
             randomNumbers=rnd,
@@ -486,31 +473,17 @@ def addFatras(
             pMin=pMin,
         )
     )
-
-    # Sequencer
     s.addAlgorithm(alg)
 
     s.addWhiteboardAlias("particles", outputParticles)
 
-    # Selector
-    if postSelectParticles is not None:
-        particlesPostSelected = "fatras_particles_postselected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=outputParticles,
-            outputParticles=particlesPostSelected,
-        )
-    else:
-        particlesPostSelected = outputParticles
+    s.addWhiteboardAlias("particles_selected", outputParticles)
+    s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
-    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
-
-    # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesPostSelected,
+        outputParticles,
         outputDirCsv,
         outputDirRoot,
         outputDirObj,
@@ -597,11 +570,9 @@ def addGeant4(
     rnd: acts.examples.RandomNumbers,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = ["Silicon"],
-    inputParticles: str = "particles_input",
+    inputParticles: str = "particles_generated_selected",
     outputParticles: str = "particles_simulated",
     outputSimHits: str = "simhits",
-    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
-    postSelectParticles: Optional[ParticleSelectorConfig] = None,
     recordHitsOfSecondaries=True,
     keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -648,20 +619,6 @@ def addGeant4(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Selector
-    if preSelectParticles is not None:
-        particlesPreSelected = "geant4_particles_preselected"
-        addParticleSelection(
-            s,
-            preSelectParticles,
-            inputParticles=inputParticles,
-            outputParticles=particlesPreSelected,
-        )
-    else:
-        particlesPreSelected = inputParticles
-
-    s.addWhiteboardAlias("particles_selected", particlesPreSelected)
-
     global __geant4Handle
 
     smmConfig = SensitiveSurfaceMapper.Config()
@@ -671,13 +628,12 @@ def addGeant4(
         smmConfig, customLogLevel(), trackingGeometry
     )
 
-    # Simulation
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
         detector=detector,
         randomNumbers=rnd,
-        inputParticles=particlesPreSelected,
+        inputParticles=inputParticles,
         outputParticles=outputParticles,
         outputSimHits=outputSimHits,
         sensitiveSurfaceMapper=sensitiveMapper,
@@ -693,30 +649,18 @@ def addGeant4(
         recordPropagationSummaries=False,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
-
     __geant4Handle = alg.geant4Handle
-
     s.addAlgorithm(alg)
 
-    # Selector
-    if postSelectParticles is not None:
-        particlesPostSelected = "geant4_particles_postselected"
-        addParticleSelection(
-            s,
-            postSelectParticles,
-            inputParticles=outputParticles,
-            outputParticles=particlesPostSelected,
-        )
-    else:
-        particlesPostSelected = outputParticles
+    s.addWhiteboardAlias("particles", outputParticles)
 
-    s.addWhiteboardAlias("particles_selected", particlesPostSelected)
+    s.addWhiteboardAlias("particles_selected", outputParticles)
+    s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
-    # Output
     addSimWriters(
         s,
         alg.config.outputSimHits,
-        particlesPostSelected,
+        outputParticles,
         outputDirCsv,
         outputDirRoot,
         outputDirObj,
@@ -724,6 +668,37 @@ def addGeant4(
     )
 
     return s
+
+
+def addSimParticleSelection(
+    s: acts.examples.Sequencer,
+    config: ParticleSelectorConfig,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    """
+    This function steers the particle selection after simulation.
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the ParticleSelector
+    config: ParticleSelectorConfig
+        the particle selection configuration
+    """
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    selector = acts.examples.ParticleSelector(
+        **_getParticleSelectionKWargs(config),
+        level=customLogLevel(),
+        inputParticles="particles_simulated",
+        outputParticles="tmp_particles_simulated_selected",
+    )
+    s.addAlgorithm(selector)
+
+    s.addWhiteboardAlias("particles_selected", selector.config.outputParticles)
+    s.addWhiteboardAlias(
+        "particles_simulated_selected", selector.config.outputParticles
+    )
 
 
 def addDigitization(
@@ -758,10 +733,8 @@ def addDigitization(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
 
-    # Digitization
     digiCfg = acts.examples.DigitizationAlgorithm.Config(
         digitizationConfigs=acts.examples.readDigiConfigFromJson(
             str(digiConfigFile),
@@ -816,3 +789,34 @@ def addDigitization(
         )
 
     return s
+
+
+def addDigiParticleSelection(
+    s: acts.examples.Sequencer,
+    config: ParticleSelectorConfig,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    """
+    This function steers the particle selection after digitization.
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the ParticleSelector
+    config: ParticleSelectorConfig
+        the particle selection configuration
+    """
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    selector = acts.examples.ParticleSelector(
+        **_getParticleSelectionKWargs(config),
+        level=customLogLevel(),
+        inputParticles="particles_simulated_selected",
+        outputParticles="tmp_particles_digitized_selected",
+    )
+    s.addAlgorithm(selector)
+
+    s.addWhiteboardAlias("particles_selected", selector.config.outputParticles)
+    s.addWhiteboardAlias(
+        "particles_digitized_selected", selector.config.outputParticles
+    )
