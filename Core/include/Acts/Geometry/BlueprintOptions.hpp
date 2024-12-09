@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
+
 #include <memory>
 
 namespace Acts {
-
-class NavigationPolicyFactory;
 
 struct BlueprintOptions {
   std::shared_ptr<NavigationPolicyFactory> defaultNavigationPolicyFactory{
