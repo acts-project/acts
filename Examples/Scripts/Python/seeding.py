@@ -57,9 +57,10 @@ def runSeeding(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
 
     s = s or acts.examples.Sequencer(
@@ -86,11 +87,14 @@ def runSeeding(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
-        preSelectParticles=None,
-        postSelectParticles=ParticleSelectorConfig(
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
             pt=(1.0 * u.GeV, None),
             eta=(-2.5, 2.5),
-            hits=(9, None),
+            measurements=(9, None),
             removeNeutral=True,
         ),
     )

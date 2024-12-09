@@ -391,7 +391,7 @@ def full_chain(args):
                 "LongStripBarrelReadout",
                 "LongStripEndcapReadout",
             ],
-            outputParticlesGenerator="particles_input",
+            outputParticlesGenerator="particles_generated",
             outputParticlesInitial="particles_initial",
             outputParticlesFinal="particles_final",
             outputSimHits="simhits",
