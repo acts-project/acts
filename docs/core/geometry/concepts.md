@@ -45,6 +45,9 @@ Not complete yet
 :::{doxygenclass} Acts::PortalShellBase
 :::
 
+:::{doxygenclass} Acts::CylinderPortalShell
+:::
+
 :::{doxygenclass} Acts::SingleCylinderPortalShell
 :::
 
@@ -52,3 +55,6 @@ Not complete yet
 :::
 
 ### Navigation policy
+
+:::{doxygenclass} Acts::INavigationPolicy
+:::
