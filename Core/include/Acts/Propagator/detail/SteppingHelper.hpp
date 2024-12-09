@@ -48,7 +48,7 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
   if (sIntersection.status() == IntersectionStatus::onSurface) {
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
     stepper.updateStepSize(state, sIntersection.pathLength(),
-                           ConstrainedStep::actor);
+                           ConstrainedStep::navigator);
     return IntersectionStatus::onSurface;
   }
 
@@ -60,7 +60,7 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
                               logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.updateStepSize(state, sIntersection.pathLength(),
-                           ConstrainedStep::actor);
+                           ConstrainedStep::navigator);
     return IntersectionStatus::reachable;
   }
 
@@ -81,7 +81,7 @@ void updateSingleStepSize(typename stepper_t::State& state,
                           const object_intersection_t& oIntersection,
                           bool release = true) {
   double stepSize = oIntersection.pathLength();
-  state.stepSize.update(stepSize, ConstrainedStep::actor, release);
+  state.stepSize.update(stepSize, ConstrainedStep::navigator, release);
 }
 
 }  // namespace Acts::detail

@@ -42,10 +42,10 @@ namespace Acts {
 class ConstrainedStep {
  public:
   /// the types of constraints
-  /// from actor    - this would be a typical navigation step
-  /// from aborter  - this would be a target condition
-  /// from user     - this is user given for what reason ever
-  enum Type : int { actor = 0, aborter = 1, user = 2 };
+  /// from navigator - this would be a typical navigation step
+  /// from actor     - this would be a target condition
+  /// from user      - this is user given for what reason ever
+  enum Type : int { navigator = 0, actor = 1, user = 2 };
 
   constexpr ConstrainedStep() = default;
 
@@ -135,9 +135,9 @@ class ConstrainedStep {
     os << "(";
     streamValue(m_accuracy);
     os << ", ";
-    streamValue(value(actor));
+    streamValue(value(navigator));
     os << ", ";
-    streamValue(value(aborter));
+    streamValue(value(actor));
     os << ", ";
     streamValue(value(user));
     os << ")";

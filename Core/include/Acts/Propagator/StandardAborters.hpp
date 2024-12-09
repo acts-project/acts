@@ -55,7 +55,7 @@ struct PathLimitReached {
                                           << distance);
       return true;
     }
-    stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
+    stepper.updateStepSize(state.stepping, distance, ConstrainedStep::actor,
                            false);
     ACTS_VERBOSE("PathLimit aborter | "
                  << "Target stepSize (path limit) updated to "
@@ -134,7 +134,7 @@ struct SurfaceReached {
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
-                               ConstrainedStep::aborter, false);
+                               ConstrainedStep::actor, false);
         ACTS_VERBOSE(
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "

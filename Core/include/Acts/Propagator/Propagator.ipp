@@ -107,8 +107,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
                                    << state.direction.transpose());
 
     // release actor and aborter constrains after step was performed
+    m_stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
     m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-    m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
 
     // Post-stepping: check target status, call actors, check abort conditions
     state.stage = PropagatorStage::postStep;
@@ -152,7 +152,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
     if (!nextTarget.isValid()) {
       // navigator step constraint is not valid anymore
-      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
 
       nextTargetResult = getNextTarget();
       if (!nextTargetResult.ok()) {
