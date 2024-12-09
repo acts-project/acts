@@ -35,9 +35,10 @@ setup = makeSetup()
 
 
 with tempfile.TemporaryDirectory() as temp:
+    # Running with a single thread to avoid rance conditions with Pythia8, see https://github.com/acts-project/acts/issues/3963
     s = acts.examples.Sequencer(
         events=3,
-        numThreads=-1,
+        numThreads=1,  # run with single thread
         logLevel=acts.logging.INFO,
     )
 
@@ -71,7 +72,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
