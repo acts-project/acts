@@ -13,8 +13,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
 #include <array>
@@ -57,12 +58,23 @@ DigitizationAlgorithm::DigitizationAlgorithm(Config config,
       throw std::invalid_argument(
           "Missing hit-to-simulated-hits map output collection");
     }
+    if (m_cfg.outputParticleMeasurementsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing particle-to-measurements map output collection");
+    }
+    if (m_cfg.outputSimHitMeasurementsMap.empty()) {
+      throw std::invalid_argument(
+          "Missing particle-to-simulated-hits map output collection");
+    }
 
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
     m_outputClusters.initialize(m_cfg.outputClusters);
     m_outputMeasurementParticlesMap.initialize(
         m_cfg.outputMeasurementParticlesMap);
     m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+    m_outputParticleMeasurementsMap.initialize(
+        m_cfg.outputParticleMeasurementsMap);
+    m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
   }
 
   if (m_cfg.doOutputCells) {
@@ -137,7 +149,7 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
 
-  IndexMultimap<ActsFatras::Barcode> measurementParticlesMap;
+  IndexMultimap<SimBarcode> measurementParticlesMap;
   IndexMultimap<Index> measurementSimHitsMap;
   measurements.reserve(simHits.size());
   measurementParticlesMap.reserve(simHits.size());
@@ -297,6 +309,12 @@ ProcessCode DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   if (m_cfg.doClusterization) {
     m_outputMeasurements(ctx, std::move(measurements));
     m_outputClusters(ctx, std::move(clusters));
+
+    // invert them before they are moved
+    m_outputParticleMeasurementsMap(
+        ctx, invertIndexMultimap(measurementParticlesMap));
+    m_outputSimHitMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementSimHitsMap));
 
     m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
     m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));

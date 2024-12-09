@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -26,12 +26,8 @@
 
 class TFile;
 class TTree;
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootTrackStatesWriter
 ///
@@ -108,7 +104,7 @@ class RootTrackStatesWriter final : public WriterT<ConstTrackContainer> {
   ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
       this, "InputTrackParticleMatching"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
   /// Mutex used to protect multi-threaded writes

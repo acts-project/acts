@@ -285,7 +285,9 @@ def full_chain(args):
             args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetector()
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
         etaRange = (-3.0, 3.0)
@@ -301,10 +303,12 @@ def full_chain(args):
         if args.material_config is None:
             args.material_config = geo_dir / "data/odd-material-maps.root"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
+        detector = getOpenDataDetector(
             odd_dir=geo_dir,
             mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
         etaRange = (-4.0, 4.0)
@@ -370,7 +374,7 @@ def full_chain(args):
     postSelectParticles = ParticleSelectorConfig(
         pt=(ptMin, None),
         eta=etaRange if not args.generic_detector else (None, None),
-        measurements=(9, None),
+        hits=(9, None),
         removeNeutral=True,
     )
 
@@ -521,7 +525,7 @@ def full_chain(args):
 
     from acts.examples.reconstruction import (
         addSeeding,
-        ParticleSmearingSigmas,
+        TrackSmearingSigmas,
         addCKFTracks,
         CkfConfig,
         SeedingAlgorithm,
@@ -547,7 +551,7 @@ def full_chain(args):
         seedingAlgorithm=args.seeding_algorithm,
         **(
             dict(
-                particleSmearingSigmas=ParticleSmearingSigmas(ptRel=0.01),
+                trackSmearingSigmas=TrackSmearingSigmas(ptRel=0.01),
                 rnd=rnd,
             )
             if args.seeding_algorithm == SeedingAlgorithm.TruthSmeared

@@ -16,8 +16,6 @@
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 
-#include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <string>

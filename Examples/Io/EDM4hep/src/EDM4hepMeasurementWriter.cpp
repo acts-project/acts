@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -16,6 +17,8 @@
 
 #include <stdexcept>
 
+#include <edm4hep/TrackerHitPlane.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
 #include <podio/Frame.h>
 
 namespace ActsExamples {
@@ -44,7 +47,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
   podio::Frame frame;
 
   edm4hep::TrackerHitPlaneCollection hitsPlane;
-  edm4hep::TrackerHitCollection hits;
+  edm4hep::TrackerHit3DCollection hits;
 
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);

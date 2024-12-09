@@ -110,7 +110,7 @@ class IBoundToGridLocal {
 };
 
 template <typename global_to_grid_local_t>
-class Affine3Transformed final : public IGlobalToGridLocal {
+class Affine3Transformed : public IGlobalToGridLocal {
  public:
   using grid_local_t = typename global_to_grid_local_t::grid_local_t;
 
@@ -142,7 +142,7 @@ class Affine3Transformed final : public IGlobalToGridLocal {
 /// position
 /// @tparam ...Args
 template <BinningValue... Args>
-class GlobalSubspace final : public IGlobalToGridLocal {
+class GlobalSubspace : public IGlobalToGridLocal {
  public:
   using grid_local_t = std::array<double, sizeof...(Args)>;
 
@@ -179,7 +179,7 @@ class GlobalSubspace final : public IGlobalToGridLocal {
 // The bound to grid local transformation, if only access of a subspace
 // is requested
 template <std::size_t... Args>
-class LocalSubspace final : public IBoundToGridLocal {
+class LocalSubspace : public IBoundToGridLocal {
  public:
   using grid_local_t = std::array<double, sizeof...(Args)>;
 
@@ -212,7 +212,7 @@ class LocalSubspace final : public IBoundToGridLocal {
   }
 };
 
-class BoundCylinderToZPhi final : public IBoundToGridLocal {
+class BoundCylinderToZPhi : public IBoundToGridLocal {
  public:
   double radius = 1.;
   double shift = 0.;

@@ -365,7 +365,7 @@ class CombinatorialKalmanFilter {
 
         ACTS_VERBOSE("Create temp track state with mask: " << mask);
         // CAREFUL! This trackstate has a previous index that is not in this
-        // MultiTrajectory Visiting brackwards from this track state will
+        // MultiTrajectory Visiting backwards from this track state will
         // fail!
         auto ts = bufferTrajectory.makeTrackState(mask, prevTip);
 
