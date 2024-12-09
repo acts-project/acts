@@ -9,8 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
-#include "ActsExamples/Geant4/RegionCreator.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
 
@@ -19,13 +18,13 @@ class G4VPhysicalVolume;
 namespace ActsExamples {
 
 /// Construct the Geant4 detector from a GeoModel world volume
-class GeoModelDetectorConstruction final : public G4VUserDetectorConstruction {
+class GeoModelGeant4DetectorConstruction final
+    : public G4VUserDetectorConstruction {
  public:
   /// @param geoModelTree is the GeoModel tree containing the world volume
   /// @param regionCreators are the region creators
-  GeoModelDetectorConstruction(
-      const Acts::GeoModelTree& geoModelTree,
-      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
+  GeoModelGeant4DetectorConstruction(const Acts::GeoModelTree& geoModelTree,
+                                     const Geant4ConstructionOptions& options);
 
   /// Read the file and parse it to construct the Geant4 description
   ///
@@ -36,26 +35,10 @@ class GeoModelDetectorConstruction final : public G4VUserDetectorConstruction {
  private:
   /// The GeoModel tree
   Acts::GeoModelTree m_geoModelTree;
-  /// Region creators
-  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
+  /// Construction options
+  Geant4ConstructionOptions m_options;
   /// The world volume
   G4VPhysicalVolume* m_g4World = nullptr;
-};
-
-class GeoModelDetectorConstructionFactory final
-    : public Geant4::DetectorConstructionFactory {
- public:
-  GeoModelDetectorConstructionFactory(
-      const Acts::GeoModelTree& geoModelTree,
-      std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators = {});
-
-  std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
-
- private:
-  /// The GeoModel tree
-  Acts::GeoModelTree m_geoModelTree;
-  /// Region creators
-  std::vector<std::shared_ptr<Geant4::RegionCreator>> m_regionCreators;
 };
 
 }  // namespace ActsExamples
