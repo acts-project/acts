@@ -278,6 +278,7 @@ void addBlueprint(Context& ctx) {
                              py::overload_cast<>(&BlueprintNode::children))
       .def("clearChildren", &BlueprintNode::clearChildren)
       .def_property_readonly("name", &BlueprintNode::name)
+      .def_property_readonly("depth", &BlueprintNode::depth)
       .def("graphViz", [](BlueprintNode& self, const py::object& fh) {
         std::stringstream ss;
         self.graphViz(ss);

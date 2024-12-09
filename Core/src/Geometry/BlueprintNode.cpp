@@ -53,7 +53,7 @@ BlueprintNode& BlueprintNode::addChild(std::shared_ptr<BlueprintNode> child) {
     throw std::invalid_argument("Adding child would create a cycle");
   }
 
-  child->incrementDepth();
+  child->setDepth(m_depth + 1);
   m_children.push_back(std::move(child));
   return *this;
 }
@@ -70,20 +70,10 @@ std::size_t BlueprintNode::depth() const {
   return m_depth;
 }
 
-void BlueprintNode::incrementDepth() {
-  m_depth++;
+void BlueprintNode::setDepth(std::size_t depth) {
+  m_depth = depth;
   for (auto& child : m_children) {
-    child->incrementDepth();
-  }
-}
-
-void BlueprintNode::decrementDepth() {
-  if (m_depth == 0) {
-    return;
-  }
-
-  for (auto& child : m_children) {
-    child->decrementDepth();
+    child->setDepth(depth + 1);
   }
 }
 
@@ -158,7 +148,7 @@ LayerBlueprintNode& BlueprintNode::addLayer(
 
 void BlueprintNode::clearChildren() {
   for (auto& child : m_children) {
-    child->decrementDepth();
+    child->setDepth(0);
   }
   m_children.clear();
 }

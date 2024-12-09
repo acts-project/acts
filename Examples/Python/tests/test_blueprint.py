@@ -23,22 +23,31 @@ def test_zdirection_container_blueprint(tmp_path):
     base = acts.Transform3.Identity()
 
     root = acts.Blueprint(envelope=acts.ExtentEnvelope(r=[10 * mm, 10 * mm]))
+    assert root.depth == 0
 
     barrel = root.addCylinderContainer("Barrel", direction=bv.binR)
+
+    assert barrel.depth == 1
 
     r = 25 * mm
     for i in range(1, 3):
         r += 50 * mm
         bounds = acts.CylinderVolumeBounds(r, r + 20 * mm, 200 * mm)
-        barrel.addStaticVolume(base, bounds, name=f"Barrel_{i}")
+        vol = barrel.addStaticVolume(base, bounds, name=f"Barrel_{i}")
+        assert vol.depth == 2
 
     write(barrel, 1)
 
     root.clearChildren()
 
+    assert barrel.depth == 0
+
     det = root.addCylinderContainer("Detector", direction=bv.binZ)
 
+    assert det.depth == 1
+
     with det.CylinderContainer("nEC", direction=bv.binZ) as ec:
+        assert ec.depth == 2
         z = -200
         for i in range(1, 3):
             z -= 200 * mm
@@ -46,15 +55,18 @@ def test_zdirection_container_blueprint(tmp_path):
 
             trf = base * acts.Translation3(acts.Vector3(0, 0, z))
 
-            ec.addStaticVolume(trf, bounds, name=f"nEC_{i}")
+            vol = ec.addStaticVolume(trf, bounds, name=f"nEC_{i}")
+            assert vol.depth == 3
 
         write(ec, 2)
 
     det.addChild(barrel)
+    assert barrel.depth == 2
 
     write(det, 3)
 
     with det.CylinderContainer("pEC", direction=bv.binZ) as ec:
+        assert ec.depth == 2
         z = 200
         for i in range(1, 3):
             z += 200 * mm
@@ -62,6 +74,7 @@ def test_zdirection_container_blueprint(tmp_path):
 
             trf = base * acts.Translation3(acts.Vector3(0, 0, z))
 
-            ec.addStaticVolume(trf, bounds, name=f"pEC_{i}")
+            vol = ec.addStaticVolume(trf, bounds, name=f"pEC_{i}")
+            assert vol.depth == 3
 
     write(root, 4)

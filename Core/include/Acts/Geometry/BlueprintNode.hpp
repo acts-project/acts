@@ -278,11 +278,8 @@ class BlueprintNode {
   /// @note This method is called by the stream operator.
   virtual void toStream(std::ostream& os) const;
 
-  /// Increase the depth of this node and all descendents by one.
-  void incrementDepth();
-
-  /// Decrease the depth of this node and all descendents by one.
-  void decrementDepth();
+  /// Set the depth to @p depth and update children recursively
+  void setDepth(std::size_t depth);
 
   /// Printing helper returning a prefix including an indent depending on the
   /// depth.
