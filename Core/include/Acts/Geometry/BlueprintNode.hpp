@@ -281,6 +281,9 @@ class BlueprintNode {
   /// Increase the depth of this node and all descendents by one.
   void incrementDepth();
 
+  /// Decrease the depth of this node and all descendents by one.
+  void decrementDepth();
+
   /// Printing helper returning a prefix including an indent depending on the
   /// depth.
   /// @return The prefix string

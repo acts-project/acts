@@ -77,6 +77,13 @@ void BlueprintNode::incrementDepth() {
   }
 }
 
+void BlueprintNode::decrementDepth() {
+  m_depth--;
+  for (auto& child : m_children) {
+    child->decrementDepth();
+  }
+}
+
 std::string BlueprintNode::indent() const {
   return std::string(m_depth * 2, ' ');
 }
@@ -147,6 +154,9 @@ LayerBlueprintNode& BlueprintNode::addLayer(
 }
 
 void BlueprintNode::clearChildren() {
+  for (auto& child : m_children) {
+    child->decrementDepth();
+  }
   m_children.clear();
 }
 
