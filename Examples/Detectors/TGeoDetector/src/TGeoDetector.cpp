@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -26,7 +27,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <algorithm>
 #include <array>
@@ -34,6 +34,7 @@
 #include <limits>
 #include <list>
 #include <optional>
+#include <utility>
 
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
@@ -41,7 +42,6 @@
 #include "TGeoManager.h"
 
 namespace ActsExamples {
-using namespace Options;
 
 namespace {
 
@@ -159,7 +159,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
-    std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
     const Acts::Logger& logger) {
@@ -364,19 +364,14 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
   }
 }
 
-auto TGeoDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  Acts::GeometryContext tGeoContext;
-  auto logger = Acts::getDefaultLogger("TGeoDetector", Acts::Logging::INFO);
-  TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
-      cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
+TGeoDetector::TGeoDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_nominalGeometryContext = Acts::GeometryContext();
 
-  ContextDecorators tgeoContextDecorators = {};
-  // Return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators));
+  m_trackingGeometry =
+      buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,
+                        m_cfg.materialDecorator, logger());
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

@@ -32,6 +32,9 @@ struct AlgorithmContext;
 ///     event000000002-<stem>.obj
 ///     event000000002-<stem>_trajectory.obj
 ///
+///
+/// The trajectory can be smoothed using a spline interpolation, where
+/// nInterpolatedPoints points are added between each hit.
 class ObjSimHitWriter : public WriterT<SimHitContainer> {
  public:
   struct Config {
@@ -49,8 +52,11 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     double momentumThreshold = 0.05 * Acts::UnitConstants::GeV;
     /// Momentum threshold for trajectories
     double momentumThresholdTraj = 0.05 * Acts::UnitConstants::GeV;
-    /// Number of points to interpolate between hits
-    std::size_t nInterpolatedPoints = 10;
+    /// Number of points to interpolated between hits to smooth the
+    /// trajectory view in the obj file.
+    std::size_t nInterpolatedPoints = 4;
+    /// Keep the original hits in the trajectory file
+    bool keepOriginalHits = false;
   };
 
   /// Construct the particle writer.
