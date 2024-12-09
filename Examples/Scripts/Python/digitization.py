@@ -49,7 +49,7 @@ def runDigitization(
         evGen = acts.examples.RootParticleReader(
             level=s.config.logLevel,
             filePath=str(particlesInput),
-            outputParticles="particles_input",
+            outputParticles="particles_generated",
         )
         s.addReader(evGen)
 

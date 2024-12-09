@@ -167,7 +167,6 @@ def addParticleGun(
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
     s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
-    s.addWhiteboardAlias("particles_selected", evGen.config.outputParticles)
     s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
 
     if printParticles:
@@ -333,7 +332,6 @@ def addPythia8(
     s.addWhiteboardAlias("particles", evGen.config.outputParticles)
     s.addWhiteboardAlias("vertices_truth", evGen.config.outputVertices)
 
-    s.addWhiteboardAlias("particles_selected", evGen.config.outputParticles)
     s.addWhiteboardAlias("particles_generated_selected", evGen.config.outputParticles)
 
     if printParticles:
@@ -400,7 +398,7 @@ def addGenParticleSelection(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     selector = acts.examples.ParticleSelector(
-        **_getParticleSelectionKWargs(config),
+        **acts.examples.defaultKWArgs(**_getParticleSelectionKWargs(config)),
         level=customLogLevel(),
         inputParticles="particles_generated",
         outputParticles="tmp_particles_generated_selected",
@@ -477,7 +475,6 @@ def addFatras(
 
     s.addWhiteboardAlias("particles", outputParticles)
 
-    s.addWhiteboardAlias("particles_selected", outputParticles)
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
@@ -654,7 +651,6 @@ def addGeant4(
 
     s.addWhiteboardAlias("particles", outputParticles)
 
-    s.addWhiteboardAlias("particles_selected", outputParticles)
     s.addWhiteboardAlias("particles_simulated_selected", outputParticles)
 
     addSimWriters(
@@ -688,7 +684,7 @@ def addSimParticleSelection(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     selector = acts.examples.ParticleSelector(
-        **_getParticleSelectionKWargs(config),
+        **acts.examples.defaultKWArgs(**_getParticleSelectionKWargs(config)),
         level=customLogLevel(),
         inputParticles="particles_simulated",
         outputParticles="tmp_particles_simulated_selected",
@@ -809,7 +805,7 @@ def addDigiParticleSelection(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     selector = acts.examples.ParticleSelector(
-        **_getParticleSelectionKWargs(config),
+        **acts.examples.defaultKWArgs(**_getParticleSelectionKWargs(config)),
         level=customLogLevel(),
         inputParticles="particles_simulated_selected",
         outputParticles="tmp_particles_digitized_selected",

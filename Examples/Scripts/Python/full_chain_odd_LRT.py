@@ -186,7 +186,7 @@ if args.edm4hep:
             "LongStripBarrelReadout",
             "LongStripEndcapReadout",
         ],
-        outputParticlesGenerator="particles_input",
+        outputParticlesGenerator="particles_generated",
         outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
