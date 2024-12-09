@@ -6,8 +6,6 @@ coner
 dependees
 dthe
 exprot
-iself
-sortings
 gaus
 iself
 lastr
