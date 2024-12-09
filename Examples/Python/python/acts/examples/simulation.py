@@ -796,6 +796,7 @@ def addDigiParticleSelection(
         **acts.examples.defaultKWArgs(**_getParticleSelectionKWargs(config)),
         level=customLogLevel(),
         inputParticles="particles_simulated_selected",
+        inputParticleMeasurementsMap="particle_measurements_map",
         outputParticles="tmp_particles_digitized_selected",
     )
     s.addAlgorithm(selector)
