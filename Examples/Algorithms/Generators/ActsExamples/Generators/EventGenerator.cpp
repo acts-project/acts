@@ -8,19 +8,14 @@
 
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <limits>
 #include <memory>
-#include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <unordered_map>
 
 namespace ActsExamples {
 
