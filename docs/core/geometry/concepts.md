@@ -32,11 +32,23 @@ Not complete yet
 :::{doxygenclass} Acts::GridPortalLink
 :::
 
+:::{doxygenclass} Acts::GridPortalLinkT
+:::
+
 #### Composite portal link
 
 :::{doxygenclass} Acts::CompositePortalLink
 :::
 
 ### Portal shells
+
+:::{doxygenclass} Acts::PortalShellBase
+:::
+
+:::{doxygenclass} Acts::SingleCylinderPortalShell
+:::
+
+:::{doxygenclass} Acts::CylinderStackPortalShell
+:::
 
 ### Navigation policy

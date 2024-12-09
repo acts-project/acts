@@ -9,13 +9,28 @@ Not complete yet
 :::{doxygenclass} Acts::BlueprintNode
 :::
 
+:::{doxygenclass} Acts::Blueprint
+:::
+
 ### Container nodes
+
+:::{doxygenclass} Acts::CylinderContainerBlueprintNode
+:::
 
 ### Material nodes
 
+:::{doxygenclass} Acts::MaterialDesignatorBlueprintNode
+:::
+
 ### Geometry identification specification
 
-### *Layers*
+### *Layers* and other nodes
+
+:::{doxygenclass} Acts::StaticBlueprintNode
+:::
+
+:::{doxygenclass} Acts::LayerBlueprintNode
+:::
 
 ## API
 
