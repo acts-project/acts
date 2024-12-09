@@ -622,7 +622,7 @@ class CombinatorialKalmanFilter {
                 boundParams.referenceSurface().getSharedPtr());
           }
 
-          stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
         }
 
         // Record the active branch and remove it from the list
@@ -682,15 +682,21 @@ class CombinatorialKalmanFilter {
       navigationOptions.startSurface = &currentState.referenceSurface();
       navigationOptions.targetSurface = nullptr;
       state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(state, stepper);
+      navigator.initialize(state.navigation, stepper.position(state.stepping),
+                           stepper.direction(state.stepping),
+                           state.options.direction);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::PostUpdate);
 
+      // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
+
+      // Set path limit based on target surface
+      targetReached.checkAbort(state, stepper, navigator, logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:

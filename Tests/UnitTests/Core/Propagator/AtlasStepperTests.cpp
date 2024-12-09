@@ -561,11 +561,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
                                  particleHypothesis),
       stepSize, tolerance);
 
-  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state, ConstrainedStep::actor);
+  stepper.releaseStepSize(state, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
   stepper.updateSurfaceStatus(state, *target, 0, navDir,
                               BoundaryTolerance::Infinite());
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::navigator), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(

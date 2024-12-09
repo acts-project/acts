@@ -274,7 +274,7 @@ class StraightLineStepper {
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype = ConstrainedStep::actor,
+                      ConstrainedStep::Type stype = ConstrainedStep::navigator,
                       bool release = true) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
