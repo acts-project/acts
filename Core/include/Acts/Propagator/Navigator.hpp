@@ -207,6 +207,7 @@ class Navigator {
       currentLayer = nullptr;
       currentSurface = nullptr;
 
+      navigationBreak = false;
       navigationStage = Stage::noTarget;
     }
   };
@@ -273,6 +274,8 @@ class Navigator {
 
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
+    state.reset();
+
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
     // - geometry and volume tree search for the lowest volume
@@ -311,8 +314,6 @@ class Navigator {
         state.navigationBreak = true;
       }
     }
-
-    state.navigationStage = Stage::surfaceTarget;
 
     state.currentVolume = state.startVolume;
     state.currentLayer = state.startLayer;
@@ -362,6 +363,11 @@ class Navigator {
 
     auto tryEstimateNextTarget = [&]() -> NavigationTarget {
       // Try targeting the surfaces - then layers - then boundaries
+
+      if (state.navigationStage == Stage::noTarget) {
+        ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
+        state.navigationStage = Stage::surfaceTarget;
+      }
 
       if (state.navigationStage == Stage::surfaceTarget) {
         if (state.navSurfaceIndex == -1) {
@@ -471,11 +477,10 @@ class Navigator {
   /// @return True if the target is valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
-    (void)state;
     (void)position;
     (void)direction;
 
-    return true;
+    return state.navigationStage != Stage::noTarget;
   }
 
   /// @brief Handle the surface reached
@@ -543,7 +548,6 @@ class Navigator {
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "No more volume to progress to, stopping navigation.");
-        state.navigationStage = Stage::noTarget;
         state.navigationBreak = true;
       }
 

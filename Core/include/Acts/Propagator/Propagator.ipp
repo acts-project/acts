@@ -147,6 +147,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     if (nextTarget.isValid() &&
         !m_navigator.checkTargetValid(state.navigation, state.position,
                                       state.direction)) {
+      ACTS_VERBOSE("Target is not valid anymore.");
       nextTarget = NavigationTarget::invalid();
     }
 
