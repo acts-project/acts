@@ -78,7 +78,10 @@ void BlueprintNode::incrementDepth() {
 }
 
 void BlueprintNode::decrementDepth() {
-  m_depth--;
+  if (m_depth == 0) {
+    return;
+  }
+
   for (auto& child : m_children) {
     child->decrementDepth();
   }
