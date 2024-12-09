@@ -12,6 +12,7 @@ add_component_if(Onnx PluginOnnx ACTS_BUILD_PLUGIN_ONNX)
 add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
 add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
+add_component_if(Traccc PluginTraccc ACTS_BUILD_PLUGIN_TRACCC)
 add_component_if(Hashing PluginHashing ACTS_BUILD_PLUGIN_HASHING)
 
 # dependent plugins. depend either on a independent plugins or on one another

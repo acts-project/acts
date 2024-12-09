@@ -14,4 +14,10 @@ target_link_libraries(
         ActsPluginDetray
 )
 
+add_subdirectory(Common)
+target_link_libraries(ActsExamplesTraccc INTERFACE ActsExamplesTracccCommon)
+
+add_subdirectory(Host)
+target_link_libraries(ActsExamplesTraccc INTERFACE ActsExamplesTracccHost)
+
 install(TARGETS ActsExamplesTraccc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
