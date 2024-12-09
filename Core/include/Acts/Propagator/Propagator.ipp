@@ -151,6 +151,9 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     }
 
     if (!nextTarget.isValid()) {
+      // navigator step constraint is not valid anymore
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
+
       nextTargetResult = getNextTarget();
       if (!nextTargetResult.ok()) {
         return nextTargetResult.error();

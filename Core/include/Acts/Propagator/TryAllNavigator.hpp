@@ -557,7 +557,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     /// The vector of active intersection candidates to work through
     std::vector<detail::IntersectedNavigationObject> activeCandidates;
     /// The current active candidate index of the navigation state
-    std::size_t activeCandidateIndex = 0;
+    int activeCandidateIndex = -1;
 
     /// The position before the last step
     std::optional<Vector3> lastPosition;
@@ -565,6 +565,10 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     /// Provides easy access to the active intersection candidate
     const detail::IntersectedNavigationObject& activeCandidate() const {
       return activeCandidates.at(activeCandidateIndex);
+    }
+
+    bool endOfCandidates() const {
+      return activeCandidateIndex >= static_cast<int>(activeCandidates.size());
     }
   };
 
@@ -639,8 +643,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     state.currentSurface = nullptr;
 
     // We cannot do anything without a last position
-    if (!state.lastPosition.has_value() &&
-        state.activeCandidateIndex == state.activeCandidates.size()) {
+    if (!state.lastPosition.has_value() && state.endOfCandidates()) {
       ACTS_VERBOSE(
           volInfo(state)
           << "Initial position, nothing to do, blindly stepping forward.");
@@ -648,26 +651,24 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       return NavigationTarget::invalid();
     }
 
-    if (state.activeCandidateIndex == state.activeCandidates.size()) {
+    if (state.endOfCandidates()) {
       ACTS_VERBOSE(volInfo(state) << "evaluate blind step");
 
       Vector3 stepStart = state.lastPosition.value();
       Vector3 stepEnd = position;
       Vector3 step = stepEnd - stepStart;
       double stepDistance = step.norm();
-      Vector3 stepDirection = Vector3::Zero();
-      if (stepDistance > std::numeric_limits<double>::epsilon()) {
-        stepDirection = step.normalized();
-      } else {
-        ACTS_ERROR(volInfo(state) << "Step distance is zero.");
+      if (stepDistance < std::numeric_limits<double>::epsilon()) {
+        ACTS_ERROR(volInfo(state) << "Step distance is zero. " << stepDistance);
       }
+      Vector3 stepDirection = step.normalized();
 
       double nearLimit = -stepDistance + state.options.surfaceTolerance;
       double farLimit = 0;
 
       state.lastPosition.reset();
       state.activeCandidates.clear();
-      state.activeCandidateIndex = 0;
+      state.activeCandidateIndex = -1;
 
       // Find intersections with all candidates
       for (const auto& candidate : state.navigationCandidates) {
@@ -692,9 +693,16 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
       ACTS_VERBOSE(volInfo(state) << "Found " << state.activeCandidates.size()
                                   << " intersections");
+
+      for (const auto& candidate : state.activeCandidates) {
+        ACTS_VERBOSE("found candidate "
+                     << candidate.intersection.object()->geometryId());
+      }
     }
 
-    if (state.activeCandidateIndex == state.activeCandidates.size()) {
+    ++state.activeCandidateIndex;
+
+    if (state.endOfCandidates()) {
       ACTS_VERBOSE(volInfo(state)
                    << "No target found, blindly stepping forward.");
       state.lastPosition = position;
@@ -731,10 +739,11 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @return True if the target is still valid
   bool checkTargetValid(const State& state, const Vector3& position,
                         const Vector3& direction) const {
+    (void)state;
     (void)position;
     (void)direction;
 
-    return state.activeCandidateIndex != state.activeCandidates.size();
+    return true;
   }
 
   /// @brief Handle the surface reached
@@ -756,14 +765,14 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
     assert(state.currentSurface == nullptr && "Current surface must be reset.");
 
-    if (state.activeCandidateIndex == state.activeCandidates.size()) {
+    if (state.endOfCandidates()) {
       ACTS_VERBOSE(volInfo(state) << "No active candidate set.");
       return;
     }
 
     std::vector<detail::IntersectedNavigationObject> hitCandidates;
 
-    while (state.activeCandidateIndex != state.activeCandidates.size()) {
+    while (!state.endOfCandidates()) {
       const auto& candidate = state.activeCandidate();
       const auto& intersection = candidate.intersection;
       const Surface& surface = *intersection.object();
@@ -795,7 +804,11 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       }
 
       ++state.activeCandidateIndex;
+      ACTS_VERBOSE("skip candidate " << surface.geometryId());
     }
+
+    // we increased the candidate index one too many times
+    --state.activeCandidateIndex;
 
     ACTS_VERBOSE(volInfo(state)
                  << "Found " << hitCandidates.size()
@@ -851,7 +864,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   void reinitializeCandidates(State& state) const {
     state.navigationCandidates.clear();
     state.activeCandidates.clear();
-    state.activeCandidateIndex = 0;
+    state.activeCandidateIndex = -1;
 
     initializeVolumeCandidates(state);
   }

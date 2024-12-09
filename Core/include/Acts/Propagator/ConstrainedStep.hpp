@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cassert>
