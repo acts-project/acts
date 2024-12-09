@@ -171,7 +171,7 @@ void CylinderContainerBlueprintNode::finalize(const BlueprintOptions& options,
     parent.addVolume(std::move(gap));
     shell->applyToVolume();
     auto policy = policyFactory->build(gctx, *gapPtr, logger);
-    gapPtr->setNavigationPolicy(policyFactory->build(gctx, *gapPtr, logger));
+    gapPtr->setNavigationPolicy(std::move(policy));
   }
 
   ACTS_DEBUG(prefix() << "Finalizing " << children().size() << " children");
