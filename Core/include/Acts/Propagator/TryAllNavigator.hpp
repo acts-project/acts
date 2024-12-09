@@ -655,7 +655,12 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       Vector3 stepEnd = position;
       Vector3 step = stepEnd - stepStart;
       double stepDistance = step.norm();
-      Vector3 stepDirection = step.normalized();
+      Vector3 stepDirection = Vector3::Zero();
+      if (stepDistance > std::numeric_limits<double>::epsilon()) {
+        stepDirection = step.normalized();
+      } else {
+        ACTS_ERROR(volInfo(state) << "Step distance is zero.");
+      }
 
       double nearLimit = -stepDistance + state.options.surfaceTolerance;
       double farLimit = 0;

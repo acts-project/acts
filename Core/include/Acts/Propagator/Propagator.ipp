@@ -49,8 +49,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
   }
 
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
-    // TODO max iterations?
-    for (int i = 0; i < 100; ++i) {
+    for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
       NavigationTarget nextTarget = m_navigator.estimateNextTarget(
           state.navigation, state.position, state.direction);
       if (!nextTarget.isValid()) {
@@ -67,7 +66,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     }
 
     ACTS_ERROR("getNextTarget failed to find a valid target surface.");
-    return Result<NavigationTarget>::failure(PropagatorError::Failure);
+    return Result<NavigationTarget>::failure(
+        PropagatorError::NextTargetLimitReached);
   };
 
   // priming error condition

@@ -30,6 +30,9 @@ struct PurePropagatorPlainOptions {
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
+  /// Maximum number of next target calls for one step
+  unsigned int maxTargetSkipping = 100;
+
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
