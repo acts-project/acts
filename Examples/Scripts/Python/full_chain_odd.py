@@ -168,9 +168,9 @@ oddDigiConfig = (
 oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(
-    odd_dir=geoDir, mdecorator=oddMaterialDeco
-)
+detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+trackingGeometry = detector.trackingGeometry()
+decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -278,7 +278,7 @@ else:
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
                 eta=(-3.0, 3.0),
-                measurements=(9, None),
+                hits=(9, None),
                 removeNeutral=True,
             ),
             outputDirRoot=outputDir if args.output_root else None,
@@ -306,7 +306,7 @@ else:
             postSelectParticles=ParticleSelectorConfig(
                 pt=(1.0 * u.GeV, None),
                 eta=(-3.0, 3.0),
-                measurements=(9, None),
+                hits=(9, None),
                 removeNeutral=True,
             ),
             enableInteractions=True,

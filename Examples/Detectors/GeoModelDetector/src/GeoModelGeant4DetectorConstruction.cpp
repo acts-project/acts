@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GeoModelG4/GeoModelDetectorConstruction.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelGeant4DetectorConstruction.hpp"
 
-#include <utility>
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
+#include "ActsExamples/Geant4/RegionCreator.hpp"
 
 #include <G4LogicalVolume.hh>
 #include <G4PVPlacement.hh>
@@ -17,22 +18,22 @@
 #include <GeoModel2G4/ExtParameterisedVolumeBuilder.h>
 #include <GeoModelKernel/GeoFullPhysVol.h>
 
-using namespace ActsExamples;
+namespace ActsExamples {
 
-GeoModelDetectorConstruction::GeoModelDetectorConstruction(
+GeoModelGeant4DetectorConstruction::GeoModelGeant4DetectorConstruction(
     const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
+    const Geant4ConstructionOptions& options)
     : G4VUserDetectorConstruction(),
       m_geoModelTree(geoModelTree),
-      m_regionCreators(std::move(regionCreators)) {
+      m_options(options) {
   if (geoModelTree.worldVolume == nullptr) {
     throw std::invalid_argument(
-        "GeoModelDetectorConstruction: "
+        "GeoModelGeant4DetectorConstruction: "
         "GeoModel world volume is nullptr");
   }
 }
 
-G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
+G4VPhysicalVolume* GeoModelGeant4DetectorConstruction::Construct() {
   if (m_g4World == nullptr) {
     ExtParameterisedVolumeBuilder builder(m_geoModelTree.worldVolumeName);
     G4LogicalVolume* g4WorldLog = builder.Build(m_geoModelTree.worldVolume);
@@ -41,21 +42,11 @@ G4VPhysicalVolume* GeoModelDetectorConstruction::Construct() {
                           m_geoModelTree.worldVolumeName, nullptr, false, 0);
 
     // Create regions
-    for (const auto& regionCreator : m_regionCreators) {
-      regionCreator->construct();
+    for (const auto& regionCreator : m_options.regionCreators) {
+      regionCreator->buildRegion();
     }
   }
   return m_g4World;
 }
 
-GeoModelDetectorConstructionFactory::GeoModelDetectorConstructionFactory(
-    const Acts::GeoModelTree& geoModelTree,
-    std::vector<std::shared_ptr<Geant4::RegionCreator>> regionCreators)
-    : m_geoModelTree(geoModelTree),
-      m_regionCreators(std::move(regionCreators)) {}
-
-std::unique_ptr<G4VUserDetectorConstruction>
-GeoModelDetectorConstructionFactory::factorize() const {
-  return std::make_unique<GeoModelDetectorConstruction>(m_geoModelTree,
-                                                        m_regionCreators);
-}
+}  // namespace ActsExamples
