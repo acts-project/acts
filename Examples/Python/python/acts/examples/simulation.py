@@ -41,12 +41,13 @@ ParticleSelectorConfig = namedtuple(
         "absEta",  # (min,max)
         "pt",  # (min,max)
         "m",  # (min,max)
+        "hits",  # (min,max)
         "measurements",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 9 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 3,
 )
 
 
@@ -393,6 +394,8 @@ def addParticleSelection(
                 ptMax=config.pt[1],
                 mMin=config.m[0],
                 mMax=config.m[1],
+                hitsMin=config.hits[0],
+                hitsMax=config.hits[1],
                 measurementsMin=config.measurements[0],
                 measurementsMax=config.measurements[1],
                 removeCharged=config.removeCharged,
@@ -582,40 +585,6 @@ def addSimWriters(
         )
 
 
-def getG4DetectorConstructionFactory(
-    detector: Any,
-    regionList: List[Any] = [],
-) -> Any:
-    try:
-        from acts.examples import TelescopeDetector
-        from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
-
-        if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    try:
-        from acts.examples.dd4hep import DD4hepDetector
-        from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
-
-        if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    try:
-        from acts import geomodel as gm
-        from acts.examples.geant4.geomodel import GeoModelDetectorConstructionFactory
-
-        if type(detector) is gm.GeoModelTree:
-            return GeoModelDetectorConstructionFactory(detector, regionList)
-    except Exception as e:
-        print(e)
-
-    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
-
-
 # holds the Geant4Handle for potential reuse
 __geant4Handle = None
 
@@ -626,7 +595,6 @@ def addGeant4(
     trackingGeometry: Union[acts.TrackingGeometry, acts.Detector],
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = ["Silicon"],
     inputParticles: str = "particles_input",
@@ -694,13 +662,6 @@ def addGeant4(
 
     s.addWhiteboardAlias("particles_selected", particlesPreSelected)
 
-    if g4DetectorConstructionFactory is None:
-        if detector is None:
-            raise AttributeError("detector not given")
-        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(
-            detector, regionList
-        )
-
     global __geant4Handle
 
     smmConfig = SensitiveSurfaceMapper.Config()
@@ -714,7 +675,7 @@ def addGeant4(
     alg = Geant4Simulation(
         level=customLogLevel(),
         geant4Handle=__geant4Handle,
-        detectorConstructionFactory=g4DetectorConstructionFactory,
+        detector=detector,
         randomNumbers=rnd,
         inputParticles=particlesPreSelected,
         outputParticles=outputParticles,
