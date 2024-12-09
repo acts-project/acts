@@ -25,6 +25,7 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -36,6 +37,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -43,9 +45,11 @@
 
 #include <array>
 #include <memory>
+#include <numbers>
 #include <unordered_map>
 #include <vector>
 
+#include <boost/algorithm/string/join.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -106,7 +110,12 @@ void addGeometry(Context& ctx) {
         .def("approach", &Acts::GeometryIdentifier::approach)
         .def("sensitive", &Acts::GeometryIdentifier::sensitive)
         .def("extra", &Acts::GeometryIdentifier::extra)
-        .def("value", &Acts::GeometryIdentifier::value);
+        .def("value", &Acts::GeometryIdentifier::value)
+        .def("__str__", [](const Acts::GeometryIdentifier& self) {
+          std::stringstream ss;
+          ss << self;
+          return ss.str();
+        });
   }
 
   {
@@ -178,15 +187,31 @@ void addGeometry(Context& ctx) {
 
   {
     py::class_<Acts::VolumeBounds, std::shared_ptr<Acts::VolumeBounds>>(
-        m, "VolumeBounds");
+        m, "VolumeBounds")
+        .def("type", &Acts::VolumeBounds::type)
+        .def("__str__", [](const Acts::VolumeBounds& self) {
+          std::stringstream ss;
+          ss << self;
+          return ss.str();
+        });
 
-    py::class_<Acts::CylinderVolumeBounds,
-               std::shared_ptr<Acts::CylinderVolumeBounds>, Acts::VolumeBounds>(
-        m, "CylinderVolumeBounds")
-        .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar,
-                      ActsScalar, ActsScalar, ActsScalar>(),
-             "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI, "avgphi"_a = 0.,
-             "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+    auto cvb =
+        py::class_<Acts::CylinderVolumeBounds,
+                   std::shared_ptr<Acts::CylinderVolumeBounds>,
+                   Acts::VolumeBounds>(m, "CylinderVolumeBounds")
+            .def(py::init<double, double, double, double, double, double,
+                          double>(),
+                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
+                 "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
+
+    py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
+        .value("PositiveDisc", CylinderVolumeBounds::Face::PositiveDisc)
+        .value("NegativeDisc", CylinderVolumeBounds::Face::NegativeDisc)
+        .value("OuterCylinder", CylinderVolumeBounds::Face::OuterCylinder)
+        .value("InnerCylinder", CylinderVolumeBounds::Face::InnerCylinder)
+        .value("NegativePhiPlane", CylinderVolumeBounds::Face::NegativePhiPlane)
+        .value("PositivePhiPlane",
+               CylinderVolumeBounds::Face::PositivePhiPlane);
   }
 
   {
@@ -209,22 +234,72 @@ void addGeometry(Context& ctx) {
         }));
   }
 
+  py::class_<ExtentEnvelope>(m, "ExtentEnvelope")
+      .def(py::init<>())
+      .def(py::init<const Envelope&>())
+      .def(py::init([](Envelope x, Envelope y, Envelope z, Envelope r,
+                       Envelope phi, Envelope rPhi, Envelope h, Envelope eta,
+                       Envelope mag) {
+             return ExtentEnvelope({.x = x,
+                                    .y = y,
+                                    .z = z,
+                                    .r = r,
+                                    .phi = phi,
+                                    .rPhi = rPhi,
+                                    .h = h,
+                                    .eta = eta,
+                                    .mag = mag});
+           }),
+           py::arg("x") = zeroEnvelope, py::arg("y") = zeroEnvelope,
+           py::arg("z") = zeroEnvelope, py::arg("r") = zeroEnvelope,
+           py::arg("phi") = zeroEnvelope, py::arg("rPhi") = zeroEnvelope,
+           py::arg("h") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
+           py::arg("mag") = zeroEnvelope)
+      .def_static("Zero", &ExtentEnvelope::Zero)
+      .def("__getitem__", [](ExtentEnvelope& self,
+                             BinningValue bValue) { return self[bValue]; })
+      .def("__setitem__", [](ExtentEnvelope& self, BinningValue bValue,
+                             const Envelope& value) { self[bValue] = value; })
+      .def("__str__", [](const ExtentEnvelope& self) {
+        std::array<std::string, numBinningValues()> values;
+
+        std::stringstream ss;
+        for (BinningValue val : allBinningValues()) {
+          ss << val << "=(" << self[val][0] << ", " << self[val][1] << ")";
+          values.at(toUnderlying(val)) = ss.str();
+          ss.str("");
+        }
+
+        ss.str("");
+        ss << "ExtentEnvelope(";
+        ss << boost::algorithm::join(values, ", ");
+        ss << ")";
+        return ss.str();
+      });
+
+  py::class_<Extent>(m, "Extent")
+      .def(py::init<const ExtentEnvelope&>(),
+           py::arg("envelope") = ExtentEnvelope::Zero())
+      .def("range",
+           [](const Acts::Extent& self,
+              Acts::BinningValue bval) -> std::array<double, 2> {
+             return {self.min(bval), self.max(bval)};
+           })
+      .def("__str__", &Extent::toString);
+
   {
-    py::class_<Acts::Extent>(m, "Extent")
-        .def(py::init(
-            [](const std::vector<std::tuple<Acts::BinningValue,
-                                            std::array<Acts::ActsScalar, 2u>>>&
-                   franges) {
-              Acts::Extent extent;
-              for (const auto& [bval, frange] : franges) {
-                extent.set(bval, frange[0], frange[1]);
-              }
-              return extent;
-            }))
-        .def("range", [](const Acts::Extent& self, Acts::BinningValue bval) {
-          return std::array<Acts::ActsScalar, 2u>{self.min(bval),
-                                                  self.max(bval)};
-        });
+    auto cylStack = py::class_<CylinderVolumeStack>(m, "CylinderVolumeStack");
+
+    py::enum_<CylinderVolumeStack::AttachmentStrategy>(cylStack,
+                                                       "AttachmentStrategy")
+        .value("Gap", CylinderVolumeStack::AttachmentStrategy::Gap)
+        .value("First", CylinderVolumeStack::AttachmentStrategy::First)
+        .value("Second", CylinderVolumeStack::AttachmentStrategy::Second)
+        .value("Midpoint", CylinderVolumeStack::AttachmentStrategy::Midpoint);
+
+    py::enum_<CylinderVolumeStack::ResizeStrategy>(cylStack, "ResizeStrategy")
+        .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
+        .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
 }
 
@@ -307,10 +382,14 @@ void addExperimentalGeometry(Context& ctx) {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      const std::vector<Acts::ActsScalar>&, std::size_t>())
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      Acts::ActsScalar, Acts::ActsScalar, std::size_t,
-                      std::size_t>());
+                      const std::vector<double>&, std::size_t>(),
+             "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
+        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, double,
+                      double, std::size_t, std::size_t>(),
+             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
+        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
+                      std::size_t>(),
+             "bValue"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
   }
 
   {
@@ -356,13 +435,13 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim1 = Acts::RangeXD<1u, Acts::ActsScalar>;
+    using RangeXDDim1 = Acts::RangeXD<1u, double>;
     using KdtSurfacesDim1Bin100 = Acts::Experimental::KdtSurfaces<1u, 100u>;
     using KdtSurfacesProviderDim1Bin100 =
         Acts::Experimental::KdtSurfacesProvider<1u, 100u>;
 
     py::class_<RangeXDDim1>(m, "RangeXDDim1")
-        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& irange) {
+        .def(py::init([](const std::array<double, 2u>& irange) {
           RangeXDDim1 range;
           range[0].shrink(irange[0], irange[1]);
           return range;
@@ -384,14 +463,14 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim2 = Acts::RangeXD<2u, Acts::ActsScalar>;
+    using RangeXDDim2 = Acts::RangeXD<2u, double>;
     using KdtSurfacesDim2Bin100 = Acts::Experimental::KdtSurfaces<2u, 100u>;
     using KdtSurfacesProviderDim2Bin100 =
         Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
 
     py::class_<RangeXDDim2>(m, "RangeXDDim2")
-        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& range0,
-                         const std::array<Acts::ActsScalar, 2u>& range1) {
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1) {
           RangeXDDim2 range;
           range[0].shrink(range0[0], range0[1]);
           range[1].shrink(range1[0], range1[1]);
@@ -411,6 +490,21 @@ void addExperimentalGeometry(Context& ctx) {
                std::shared_ptr<KdtSurfacesProviderDim2Bin100>>(
         m, "KdtSurfacesProviderDim2Bin100")
         .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>, const Extent&>());
+  }
+
+  {
+    using RangeXDDim3 = Acts::RangeXD<3u, double>;
+
+    py::class_<RangeXDDim3>(m, "RangeXDDim3")
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1,
+                         const std::array<double, 2u>& range2) {
+          RangeXDDim3 range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          range[2].shrink(range2[0], range2[1]);
+          return range;
+        }));
   }
 
   {

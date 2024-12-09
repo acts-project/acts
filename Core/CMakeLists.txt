@@ -35,13 +35,6 @@ if(ACTS_SOURCELINK_SBO_SIZE)
     )
 endif()
 
-if(ACTS_CUSTOM_SCALARTYPE)
-    target_compile_definitions(
-        ActsCore
-        PUBLIC -DACTS_CUSTOM_SCALARTYPE=${ACTS_CUSTOM_SCALARTYPE}
-    )
-endif()
-
 if(ACTS_LOG_FAILURE_THRESHOLD)
     message(
         STATUS
@@ -110,6 +103,7 @@ add_subdirectory(src/MagneticField)
 add_subdirectory(src/Material)
 add_subdirectory(src/Navigation)
 add_subdirectory(src/Propagator)
+add_subdirectory(src/Seeding)
 add_subdirectory(src/Surfaces)
 add_subdirectory(src/TrackFinding)
 add_subdirectory(src/TrackFitting)

@@ -9,9 +9,9 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone https://github.com/acts-project/acts <source>
-$ cmake -B <build> -S <source>
-$ cmake --build <build>
+git clone https://github.com/acts-project/acts <source>
+cmake -B <build> -S <source>
+cmake --build <build>
 ```
 
 For a full list of dependencies, including specific versions, see the
@@ -23,27 +23,27 @@ section.
 
 The following dependencies are required to build the ACTS core library:
 
--   A C++17 compatible compiler (recent versions of either gcc and clang should work)
--   [CMake](https://cmake.org) >= 3.14
--   [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
--   [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
+- A C++17 compatible compiler (recent versions of either gcc and clang should work)
+- [CMake](https://cmake.org) >= 3.14
+- [Boost](https://www.boost.org) >= 1.71 with `filesystem`, `program_options`, and `unit_test_framework`
+- [Eigen](https://eigen.tuxfamily.org) >= 3.3.7
 
 The following dependencies are optional and are needed to build additional
 components:
 
--   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
--   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
--   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
--   [Geant4](https://geant4.org/) for some examples
--   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
--   [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
--   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
--   [Pythia8](https://pythia.org) for some examples
--   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
--   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
--   [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
--   [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
--   [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
+- [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
+- [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
+- [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
+- [Geant4](https://geant4.org/) for some examples
+- [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
+- [Intel Threading Building Blocks](https://github.com/oneapi-src/oneTBB) >= 2020.1 for the examples
+- [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
+- [Pythia8](https://pythia.org) for some examples
+- [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
+- [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
+- [cugraph](https://github.com/rapidsai/cugraph) for the Exa.TrkX plugin
+- [libtorch](https://pytorch.org/cppdocs/installing.html) for the Exa.TrkX plugin
+- [Pybind11](https://github.com/pybind/pybind11) for the Python bindings of the examples
 
 There are some additional dependencies that are automatically provided as part of
 the build system.
@@ -69,7 +69,7 @@ runs the configuration and searches for the dependencies. The `<build>`
 directory is automatically created.
 
 ```console
-$ cmake -B <build> -S <source>
+cmake -B <build> -S <source>
 ```
 
 The build can be configured via various options that are listed in detail in the
@@ -77,19 +77,19 @@ The build can be configured via various options that are listed in detail in the
 The previous command could be e.g. modified to
 
 ```console
-$ cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=on -DACTS_BUILD_FATRAS=on
+cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=on -DACTS_BUILD_FATRAS=on
 ```
 
 After the configuration succeeded, the software is build. This is also done with cmake via the following command
 
 ```console
-$ cmake --build <build>
+cmake --build <build>
 ```
 
 This automatically calls the configure build tool, e.g. Make or Ninja. To build only a specific target, the target names has to be separated from the CMake options by `--`, i.e.
 
 ```console
-$ cmake --build <build> -- ActsFatras # to build the Fatras library
+cmake --build <build> -- ActsFatras # to build the Fatras library
 ```
 
 The build commands are the same regardless of where you are building the
@@ -103,8 +103,8 @@ e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
 via a LCG releases available through CVMFS. A setup script is provided to activate a compatible releases that can be used as follows:
 
 ```console
-$ cd <source>
-$ source CI/setup_cvmfs_lcg.sh
+cd <source>
+source CI/setup_cvmfs_lcg.sh
 ```
 
 After sourcing the setup script, you can build ACTS as described above. The
@@ -112,10 +112,10 @@ following commands will build ACTS in the `<source>/build` directory with the
 Fatras component.
 
 ```console
-$ cd <source>
-$ source CI/setup_cvmfs_lcg.sh
-$ cmake -B build -S . -DACTS_BUILD_FATRAS=on
-$ cmake --build build
+cd <source>
+source CI/setup_cvmfs_lcg.sh
+cmake -B build -S . -DACTS_BUILD_FATRAS=on
+cmake --build build
 ```
 
 ### In a container
@@ -144,13 +144,13 @@ available tags, e.g. for the `ubuntu2004` image, you can use the following
 command:
 
 ```console
-$ docker search --list-tags ghcr.io/acts-project/ubuntu2404
+docker search --list-tags ghcr.io/acts-project/ubuntu2404
 ```
 
 The following command then downloads a stable tag of the `ubuntu2404` image:
 
 ```console
-$ docker pull ghcr.io/acts-project/ubuntu2404:51
+docker pull ghcr.io/acts-project/ubuntu2404:51
 ```
 
 This should print the image id as part of the output. You can also find out the
@@ -163,7 +163,7 @@ following command will make the source directory available as `/acts` in the
 container and start an interactive `bash` shell
 
 ```console
-$ docker run --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
+docker run --volume=<source>:/acts:ro --interactive --tty <image> /bin/bash
 ```
 
 where `<image>` is the image id that was previously mentioned. If you are using the Ubuntu-based image you are already good to go. For the images based on LCG releases, you can now activate the LCG release in the container shell by sourcing a setup script:
@@ -191,6 +191,7 @@ install ACTS' dependencies; see the [building with Spack](misc/spack) page for
 more information.
 
 (build_docs)=
+
 ## Building the documentation
 
 The documentation uses [Doxygen][doxygen] to extract the source code
@@ -201,8 +202,8 @@ need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
 package manager `pip`:
 
 ```console
-$ cd <source>
-$ pip install -r docs/requirements.txt
+cd <source>
+pip install -r docs/requirements.txt
 ```
 
 :::{tip}
@@ -211,8 +212,8 @@ environment](https://realpython.com/python-virtual-environments-a-primer/) for
 this purpose! For example, run
 
 ```console
-$ python -m venv docvenv
-$ source docvenv/bin/activate
+python -m venv docvenv
+source docvenv/bin/activate
 ```
 
 to create a local virtual environment, and then run the `pip` command above.
@@ -221,13 +222,13 @@ to create a local virtual environment, and then run the `pip` command above.
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
 ```console
-$ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
+cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
 Then the documentation can be build with this target
 
 ```console
-$ cmake --build <build> --target docs
+cmake --build <build> --target docs
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension,
@@ -239,8 +240,6 @@ of errors you will need to manually pull in symbols to be documented.
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
-[exhale]: https://exhale.readthedocs.io
-[rtd_acts]: https://acts.readthedocs.io
 
 ## Build options
 
@@ -248,7 +247,7 @@ CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
 
 ```console
-$ cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=ON
+cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=ON
 ```
 
 Multiple options can be given. `cmake` caches the options so that only changed
@@ -264,7 +263,6 @@ components.
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
 | ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_USE_SYSTEM_ACTSVG              | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
-| ACTS_USE_SYSTEM_GEOMODEL            | Use a system-provided GeoModel<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                            |
 | ACTS_USE_SYSTEM_COVFIE              | Use a system-provided covfie<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_USE_SYSTEM_DETRAY              | Use a system-provided detray<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_USE_SYSTEM_TRACCC              | Use a system-provided traccc<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
@@ -303,7 +301,6 @@ components.
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in<br>the examples<br> type: `bool`, default: `ON`                                                                                                                                           |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
@@ -350,7 +347,7 @@ documentation](https://cmake.org/documentation/).
 The build is also affected by some environment variables. They can be set by prepending them to the configuration call:
 
 ```console
-$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
+DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
 ```
 
 The following environment variables might be useful.
@@ -367,8 +364,8 @@ ACTS comes packaged with a detector modeled using DD4hep that can be used to tes
 It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.com/) need to be installed on your machine):
 
 ```console
-$ git submodule init
-$ git submodule update
+git submodule init
+git submodule update
 ```
 
 To use it, you will then need to build ACTS with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or
@@ -378,9 +375,10 @@ You can now use the ODD in the python binding by using:
 
 ```python
 oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
-detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
+detector = getOpenDataDetector(oddMaterialDeco)
+trackingGeometry = detector.trackingGeometry()
+decorators = detector.contextDecorators()
 ```
-
 
 ## Using ACTS
 

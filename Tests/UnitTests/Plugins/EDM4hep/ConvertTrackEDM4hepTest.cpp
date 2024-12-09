@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <numbers>
 #include <random>
 
 #include <edm4hep/TrackCollection.h>
@@ -40,14 +41,14 @@ BOOST_AUTO_TEST_SUITE(EDM4hepParameterConversion)
 
 BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
   BoundVector par;
-  par << 1_mm, 5_mm, 0.1, M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, 0.1, std::numbers::pi / 2. * 0.9, -1 / 1_GeV, 5_ns;
 
   BoundMatrix cov;
   cov.setIdentity();
 
   double Bz = 2_T;
 
-  double tanLambda = std::tan(M_PI_2 - par[Acts::eBoundTheta]);
+  double tanLambda = std::tan(std::numbers::pi / 2. - par[Acts::eBoundTheta]);
   double omega =
       par[Acts::eBoundQOverP] / std::sin(par[Acts::eBoundTheta]) * Bz;
 
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   auto refSurface = Surface::makeShared<PerigeeSurface>(Vector3{50, 30, 20});
 
   BoundVector par;
-  par << 1_mm, 5_mm, 0, M_PI_2, -1 / 1_GeV,
+  par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
   BoundMatrix cov;
@@ -112,7 +113,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
           .planeSurface();
 
   BoundVector par;
-  par << 1_mm, 5_mm, M_PI / 4., M_PI_2 * 0.9, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2. * 0.9,
+      -1 / 1_GeV, 5_ns;
 
   BoundMatrix cov;
   cov.setIdentity();
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   auto refSurface = Surface::makeShared<PerigeeSurface>(Vector3{50, 30, 20});
 
   BoundVector par;
-  par << 1_mm, 5_mm, 0, M_PI_2, -1 / 1_GeV,
+  par << 1_mm, 5_mm, 0, std::numbers::pi / 2., -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
@@ -211,7 +213,8 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
           .planeSurface();
 
   BoundVector par;
-  par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;
+  par << 1_mm, 5_mm, std::numbers::pi / 4., std::numbers::pi / 2., -1 / 1_GeV,
+      5_ns;
 
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
                                 ParticleHypothesis::pion()};
@@ -274,7 +277,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   std::uniform_real_distribution<double> r(0, 1);
   std::uniform_int_distribution<std::uint32_t> nTracks(2, 20);
   std::uniform_int_distribution<std::uint32_t> nTs(1, 20);
-  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                                 std::numbers::pi);
   std::uniform_real_distribution<double> etaDist(-4, 4);
   std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
   std::uniform_real_distribution<double> qDist(0., 1.);

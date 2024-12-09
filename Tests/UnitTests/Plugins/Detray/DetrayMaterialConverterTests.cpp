@@ -20,6 +20,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <numbers>
+
 #include <detray/definitions/grid_axis.hpp>
 #include <detray/io/frontend/payloads.hpp>
 
@@ -53,24 +55,24 @@ BOOST_AUTO_TEST_CASE(DetrayMaterialSlabConversion) {
               detray::io::material_slab_payload::mat_type::slab);
   // Thickness should be set to one
   CHECK_CLOSE_ABS(payload.thickness, 1.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   // Index in collection not set at this simple conversion
   BOOST_CHECK(!payload.index_in_coll.has_value());
   // Material parameters in detray are (x0, l0, ar, z, mass_density,
   // molar_density, solid/liquid/etc. flag ... ignored currently)
   CHECK_CLOSE_ABS(payload.mat.params[0u], 1.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.mat.params[1u], 2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.mat.params[2u], 3.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.mat.params[3u], 4.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   BOOST_CHECK_NE(payload.mat.params[4u], payload.mat.params[5u]);
   CHECK_CLOSE_ABS(payload.mat.params[5u], 5.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.mat.params[6u], 0.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(DetrayHomogeneousMaterialConversion) {
@@ -115,9 +117,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionX) {
   BOOST_CHECK(payload.axes[0u].label == detray::axis::label::e_x);
   BOOST_CHECK_EQUAL(payload.axes[0u].bins, 4u);
   CHECK_CLOSE_ABS(payload.axes[0u].edges[0u], -2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.axes[0u].edges[1u], 2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   BOOST_CHECK(payload.axes[0u].binning == detray::axis::binning::e_regular);
   BOOST_CHECK(payload.axes[0u].bounds == detray::axis::bounds::e_closed);
   // axis is dummy
@@ -178,9 +180,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionY) {
   BOOST_CHECK(payload.axes[1u].label == detray::axis::label::e_y);
   BOOST_CHECK_EQUAL(payload.axes[1u].bins, 4u);
   CHECK_CLOSE_ABS(payload.axes[1u].edges[0u], -2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.axes[1u].edges[1u], 2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   BOOST_CHECK(payload.axes[1u].binning == detray::axis::binning::e_regular);
   BOOST_CHECK(payload.axes[1u].bounds == detray::axis::bounds::e_closed);
 
@@ -292,9 +294,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionR) {
   BOOST_CHECK_EQUAL(payload.axes[0u].bins, 4u);
   BOOST_CHECK_EQUAL(payload.axes[0u].edges.size(), 5);
   CHECK_CLOSE_ABS(payload.axes[0u].edges.front(), 0.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.axes[0u].edges.back(), 20.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   BOOST_CHECK(payload.axes[0u].binning == detray::axis::binning::e_irregular);
   BOOST_CHECK(payload.axes[0u].bounds == detray::axis::bounds::e_closed);
   // 2nd-axis is dummy
@@ -307,8 +309,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionRPhi) {
   std::vector<float> binEdges = {0., 5., 20.};
   Acts::BinUtility binUtility(binEdges, Acts::BinningOption::open,
                               Acts::BinningValue::binR);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};
@@ -373,9 +376,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZ) {
   BOOST_CHECK_EQUAL(payload.axes[1u].bins, 4u);
   BOOST_CHECK_EQUAL(payload.axes[1u].edges.size(), 5);
   CHECK_CLOSE_ABS(payload.axes[1u].edges.front(), -20.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.axes[1u].edges.back(), 100.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   BOOST_CHECK(payload.axes[1u].binning == detray::axis::binning::e_irregular);
   BOOST_CHECK(payload.axes[1u].bounds == detray::axis::bounds::e_closed);
 }
@@ -384,8 +387,9 @@ BOOST_AUTO_TEST_CASE(DetrayBinnedMaterialConversionZPhi) {
   // Create a binned material in 2 x2  bins in x-y direction
   Acts::BinUtility binUtility(2u, -1., 1., Acts::BinningOption::open,
                               Acts::BinningValue::binZ);
-  binUtility += Acts::BinUtility(2u, -M_PI, M_PI, Acts::BinningOption::closed,
-                                 Acts::BinningValue::binPhi);
+  binUtility +=
+      Acts::BinUtility(2u, -std::numbers::pi, std::numbers::pi,
+                       Acts::BinningOption::closed, Acts::BinningValue::binPhi);
 
   std::vector<Acts::MaterialSlab> materialSlabs0 = {materialSlab12345,
                                                     materialSlab678910};

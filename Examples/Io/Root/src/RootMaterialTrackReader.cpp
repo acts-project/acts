@@ -34,7 +34,7 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
     throw std::invalid_argument{"No input files given"};
   }
 
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   // loop over the input files
   for (const auto& inputFile : m_cfg.fileList) {
@@ -83,12 +83,13 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
              << " events this corresponds to a batch size of: " << m_batchSize);
-  std::cout << "The full chain has " << nentries << " entries for " << m_events
-            << " events this corresponds to a batch size of: " << m_batchSize
-            << std::endl;
 
   // Sort the entry numbers of the events
   {
+    // necessary to guarantee that m_inputChain->GetV1() is valid for the
+    // entire range
+    m_inputChain->SetEstimate(nentries + 1);
+
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
     RootUtility::stableSort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
@@ -99,8 +100,6 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
 }
 
 RootMaterialTrackReader::~RootMaterialTrackReader() {
-  delete m_inputChain;
-
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;

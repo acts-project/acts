@@ -27,6 +27,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
 #include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 
 #include <string>
@@ -40,6 +41,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace Acts::Python {
+
 void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -58,6 +60,21 @@ void addGeoModel(Context& ctx) {
       .def("surface", [](Acts::GeoModelDetectorElement self) {
         return self.surface().getSharedPtr();
       });
+
+  {
+    auto f =
+        py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
+                   std::shared_ptr<ActsExamples::GeoModelDetector>>(
+            gm, "GeoModelDetector")
+            .def(py::init<const ActsExamples::GeoModelDetector::Config&>());
+
+    auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, ActsExamples::GeoModelDetector::Config);
+    ACTS_PYTHON_MEMBER(path);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_STRUCT_END();
+  }
 
   // Shape converters
   {
@@ -192,8 +209,9 @@ void addGeoModel(Context& ctx) {
         .def_readwrite(
             "topBoundsOverride",
             &Acts::GeoModelBlueprintCreater::Options::topBoundsOverride)
-        .def_readwrite("table",
-                       &Acts::GeoModelBlueprintCreater::Options::table);
+        .def_readwrite("table", &Acts::GeoModelBlueprintCreater::Options::table)
+        .def_readwrite("dotGraph",
+                       &Acts::GeoModelBlueprintCreater::Options::dotGraph);
   }
 
   gm.def(
@@ -247,4 +265,5 @@ void addGeoModel(Context& ctx) {
       });
   gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
+
 }  // namespace Acts::Python

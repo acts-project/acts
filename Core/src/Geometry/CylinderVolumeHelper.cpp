@@ -36,6 +36,7 @@
 #include <cstddef>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <utility>
 
@@ -637,7 +638,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
 
           // re-evalueate rGlueMin
-          ActsScalar rGlueR =
+          double rGlueR =
               0.5 * (tVol1->volumeBounds()
                          .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
                      tVol2->volumeBounds()
@@ -969,7 +970,8 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
 
   } else {  // break the phi symmetry
     // update the BinUtility: local position on Cylinder is rPhi, z
-    BinUtility layerBinUtilityPhiZ(binsPhi, -r * M_PI, +r * M_PI, closed,
+    BinUtility layerBinUtilityPhiZ(binsPhi, -r * std::numbers::pi,
+                                   r * std::numbers::pi, closed,
                                    BinningValue::binPhi);
     layerBinUtilityPhiZ += layerBinUtility;
     // ---------------------> create material for the layer surface
@@ -1002,8 +1004,8 @@ std::shared_ptr<const Acts::Layer> Acts::CylinderVolumeHelper::createDiscLayer(
   } else {
     // also binning in phi chosen
     materialBinUtility +=
-        BinUtility(binsPhi, -static_cast<float>(M_PI), static_cast<float>(M_PI),
-                   closed, BinningValue::binPhi);
+        BinUtility(binsPhi, -std::numbers::pi_v<float>,
+                   std::numbers::pi_v<float>, closed, BinningValue::binPhi);
     ACTS_VERBOSE(" -> Preparing the binned material with "
                  << binsPhi << " / " << binsR << " bins in phi / R. ");
   }

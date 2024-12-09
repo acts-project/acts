@@ -24,6 +24,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <tuple>
 
@@ -38,7 +39,7 @@
 #include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
 
-Acts::ActsScalar rho = 1.2345;
+double rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);
 
 BOOST_AUTO_TEST_SUITE(Geant4Plugin)
@@ -61,8 +62,9 @@ BOOST_AUTO_TEST_CASE(Geant4AlgebraConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
-  G4Tubs cylinder("Cylinder", 399., 401., 800., -M_PI * CLHEP::radian,
-                  2 * M_PI * CLHEP::radian);
+  G4Tubs cylinder("Cylinder", 399., 401., 800.,
+                  -std::numbers::pi * CLHEP::radian,
+                  2 * std::numbers::pi * CLHEP::radian);
   auto [bounds, thickness] =
       Acts::Geant4ShapeConverter{}.cylinderBounds(cylinder);
   CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eR), 400.,
@@ -70,30 +72,30 @@ BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
   CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eHalfLengthZ),
                   800., 10e-10);
   CHECK_CLOSE_ABS(
-      bounds->get(Acts::CylinderBounds::BoundValues::eHalfPhiSector), M_PI,
-      10e-10);
+      bounds->get(Acts::CylinderBounds::BoundValues::eHalfPhiSector),
+      std::numbers::pi, 10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eAveragePhi),
                   0., 10e-10);
   CHECK_CLOSE_ABS(thickness, 2., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
-  G4Tubs disc("disc", 40., 400., 2., -M_PI * CLHEP::radian,
-              2 * M_PI * CLHEP::radian);
+  G4Tubs disc("disc", 40., 400., 2., -std::numbers::pi * CLHEP::radian,
+              2 * std::numbers::pi * CLHEP::radian);
   auto [bounds, thickness] = Acts::Geant4ShapeConverter{}.radialBounds(disc);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMinR), 40.,
                   10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMaxR), 400.,
                   10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eHalfPhiSector),
-                  M_PI, 10e-10);
+                  std::numbers::pi, 10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eAveragePhi), 0.,
                   10e-10);
   CHECK_CLOSE_ABS(thickness, 4., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4LineConversion) {
-  G4Tubs line("line", 0., 20., 400., 0., 2 * M_PI);
+  G4Tubs line("line", 0., 20., 400., 0., 2 * std::numbers::pi);
   auto bounds = Acts::Geant4ShapeConverter{}.lineBounds(line);
   CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eR), 20., 10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eHalfLengthZ),
@@ -225,7 +227,7 @@ BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
-  Acts::ActsScalar thickness = 2.;
+  double thickness = 2.;
 
   G4Box* g4Box = new G4Box("Box", 23., 34., 0.5 * thickness);
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 1.2);
@@ -250,7 +252,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
                   materialSlab.thicknessInX0(), 0.1);
 
   // Convert with compression
-  Acts::ActsScalar compression = 4.;
+  double compression = 4.;
   planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Acts::Transform3::Identity(), true, thickness / compression);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
@@ -276,12 +278,13 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
-  Acts::ActsScalar radius = 45.;
-  Acts::ActsScalar thickness = 1.;
-  Acts::ActsScalar halfLengthZ = 200;
+  double radius = 45.;
+  double thickness = 1.;
+  double halfLengthZ = 200;
 
   G4Tubs* g4Tube = new G4Tubs("Tube", radius, radius + thickness, halfLengthZ,
-                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
+                              -std::numbers::pi * CLHEP::radian,
+                              2 * std::numbers::pi * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =
@@ -319,12 +322,13 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
-  Acts::ActsScalar innerRadius = 45.;
-  Acts::ActsScalar outerRadius = 75.;
-  Acts::ActsScalar thickness = 2.;
+  double innerRadius = 45.;
+  double outerRadius = 75.;
+  double thickness = 2.;
 
   G4Tubs* g4Tube = new G4Tubs("Disc", innerRadius, outerRadius, 0.5 * thickness,
-                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
+                              -std::numbers::pi * CLHEP::radian,
+                              2 * std::numbers::pi * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =
@@ -351,12 +355,13 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
-  Acts::ActsScalar innerRadius = 0.;
-  Acts::ActsScalar outerRadius = 20.;
-  Acts::ActsScalar thickness = 400.;
+  double innerRadius = 0.;
+  double outerRadius = 20.;
+  double thickness = 400.;
 
   G4Tubs* g4Tube = new G4Tubs("Line", innerRadius, outerRadius, 0.5 * thickness,
-                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
+                              -std::numbers::pi * CLHEP::radian,
+                              2 * std::numbers::pi * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =

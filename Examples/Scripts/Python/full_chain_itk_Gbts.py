@@ -5,6 +5,7 @@ from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addPythia8,
     addFatras,
     ParticleSelectorConfig,
@@ -13,7 +14,6 @@ from acts.examples.simulation import (
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
-    TruthSeedRanges,
     addCKFTracks,
     TrackSelectorConfig,
 )
@@ -62,10 +62,15 @@ addFatras(
             absZ=(0.0 * u.mm, 1.0 * u.m),
             eta=(-4.0, 4.0),
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
         )
         if ttbar_pu200
         else ParticleSelectorConfig()
+    ),
+    postSelectParticles=ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        eta=(-4.0, 4.0),
+        hits=(9, None),
+        removeNeutral=True,
     ),
     outputDirRoot=outputDir,
 )
@@ -84,11 +89,6 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    (
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
-        if ttbar_pu200
-        else TruthSeedRanges()
-    ),
     seedingAlgorithm=SeedingAlgorithm.Gbts,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints

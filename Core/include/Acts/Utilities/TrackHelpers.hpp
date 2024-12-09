@@ -8,11 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainerFrontendConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxyConcept.hpp"
+#include "Acts/EventData/TrackStateProxyConcept.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -205,7 +209,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*first, intersection.pathLength());
+      return std::pair(*first, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -225,7 +229,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*last, intersection.pathLength());
+      return std::pair(*last, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -252,13 +256,13 @@ findTrackStateForExtrapolation(
       if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
-        return std::make_pair(*first, intersectionFirst.pathLength());
+        return std::pair(*first, intersectionFirst.pathLength());
       }
 
       if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
-        return std::make_pair(*last, intersectionLast.pathLength());
+        return std::pair(*last, intersectionLast.pathLength());
       }
 
       ACTS_ERROR("no intersection found");
@@ -491,6 +495,228 @@ void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 {
   trimTrackFront(track, trimHoles, trimOutliers, trimMaterial);
   trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
+}
+
+/// Helper function to calculate the predicted residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculatePredictedResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  if (!trackState.hasPredicted()) {
+    throw std::invalid_argument("track state has no predicted parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  auto subspaceHelper =
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
+
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
+  MeasurementVector predicted =
+      subspaceHelper.projectVector(trackState.predicted());
+  MeasurementMatrix predictedCovariance =
+      subspaceHelper.projectMatrix(trackState.predictedCovariance());
+
+  MeasurementVector residual = measurement - predicted;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + predictedCovariance;
+
+  return {residual, residualCovariance};
+}
+
+/// Helper function to calculate the filtered residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculateFilteredResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  if (!trackState.hasFiltered()) {
+    throw std::invalid_argument("track state has no filtered parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  auto subspaceHelper =
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
+
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
+  MeasurementVector filtered =
+      subspaceHelper.projectVector(trackState.filtered());
+  MeasurementMatrix filteredCovariance =
+      subspaceHelper.projectMatrix(trackState.filteredCovariance());
+
+  MeasurementVector residual = measurement - filtered;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + filteredCovariance;
+
+  return {residual, residualCovariance};
+}
+
+/// Helper function to calculate the smoothed residual and its covariance
+/// @tparam nMeasurementDim the dimension of the measurement
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the residual from
+/// @return a pair of the residual and its covariance
+template <std::size_t nMeasurementDim,
+          TrackStateProxyConcept track_state_proxy_t>
+std::pair<ActsVector<nMeasurementDim>, ActsSquareMatrix<nMeasurementDim>>
+calculateSmoothedResidual(track_state_proxy_t trackState) {
+  using MeasurementVector = ActsVector<nMeasurementDim>;
+  using MeasurementMatrix = ActsSquareMatrix<nMeasurementDim>;
+
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  auto subspaceHelper =
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
+
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
+  MeasurementVector smoothed =
+      subspaceHelper.projectVector(trackState.smoothed());
+  MeasurementMatrix smoothedCovariance =
+      subspaceHelper.projectMatrix(trackState.smoothedCovariance());
+
+  MeasurementVector residual = measurement - smoothed;
+  MeasurementMatrix residualCovariance =
+      measurementCovariance + smoothedCovariance;
+
+  return {residual, residualCovariance};
+}
+
+/// Helper function to calculate the predicted chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculatePredictedChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasPredicted()) {
+    throw std::invalid_argument("track state has no predicted parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
+        auto [residual, residualCovariance] =
+            calculatePredictedResidual<measdim>(trackState);
+
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
+      });
+}
+
+/// Helper function to calculate the filtered chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculateFilteredChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasFiltered()) {
+    throw std::invalid_argument("track state has no filtered parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
+        auto [residual, residualCovariance] =
+            calculateFilteredResidual<measdim>(trackState);
+
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
+      });
+}
+
+/// Helper function to calculate the smoothed chi2
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the chi2 from
+/// @return the chi2
+template <TrackStateProxyConcept track_state_proxy_t>
+double calculateSmoothedChi2(track_state_proxy_t trackState) {
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
+        auto [residual, residualCovariance] =
+            calculateSmoothedResidual<measdim>(trackState);
+
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
+      });
+}
+
+/// Helper function to calculate the unbiased track parameters and their
+/// covariance (i.e. fitted track parameters with this measurement removed)
+/// using Eq.(12a)-Eq.(12c) of NIMA 262, 444 (1987)
+/// @tparam track_state_proxy_t the track state proxy type
+/// @param trackState the track state to calculate the unbiased parameters from
+/// @return a pair of the unbiased parameters and their covariance
+template <TrackStateProxyConcept track_state_proxy_t>
+std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
+    track_state_proxy_t trackState) {
+  if (!trackState.hasSmoothed()) {
+    throw std::invalid_argument("track state has no smoothed parameters");
+  }
+  if (!trackState.hasCalibrated()) {
+    throw std::invalid_argument("track state has no calibrated parameters");
+  }
+
+  return visit_measurement(
+      trackState.calibratedSize(),
+      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+        FixedBoundSubspaceHelper<measdim> subspaceHelper =
+            trackState.template projectorSubspaceHelper<measdim>();
+
+        // TODO use subspace helper for projection instead
+        auto H = subspaceHelper.projector();
+        auto s = trackState.smoothed();
+        auto C = trackState.smoothedCovariance();
+        auto m = trackState.template calibrated<measdim>();
+        auto V = trackState.template calibratedCovariance<measdim>();
+        auto K =
+            (C * H.transpose() * (H * C * H.transpose() - V).inverse()).eval();
+        BoundVector unbiasedParamsVec = s + K * (m - H * s);
+        BoundMatrix unbiasedParamsCov = C - K * H * C;
+        return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+      });
 }
 
 }  // namespace Acts

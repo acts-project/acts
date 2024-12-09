@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -18,7 +19,6 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
-#include <type_traits>
 
 namespace Acts {
 
@@ -36,7 +36,6 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericBoundTrackParameters {
  public:
-  using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
@@ -61,7 +60,10 @@ class GenericBoundTrackParameters {
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
         m_particleHypothesis(std::move(particleHypothesis)) {
-    assert(m_surface);
+    // TODO set `validateAngleRange` to `true` after fixing caller code
+    assert(isBoundVectorValid(m_params, false) &&
+           "Invalid bound parameters vector");
+    assert(m_surface != nullptr && "Reference surface must not be null");
     normalizePhiTheta();
   }
 
@@ -89,10 +91,10 @@ class GenericBoundTrackParameters {
   /// successfully be converted to on-surface parameters.
   static Result<GenericBoundTrackParameters> create(
       std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
-      const Vector4& pos4, const Vector3& dir, Scalar qOverP,
+      const Vector4& pos4, const Vector3& dir, double qOverP,
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis,
-      ActsScalar tolerance = s_onSurfaceTolerance) {
+      double tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound =
         transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
                                        qOverP, *surface, geoCtx, tolerance);
@@ -165,7 +167,7 @@ class GenericBoundTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <BoundIndices kIndex>
-  Scalar get() const {
+  double get() const {
     return m_params[kIndex];
   }
 
@@ -200,14 +202,14 @@ class GenericBoundTrackParameters {
     return m_surface->localToGlobal(geoCtx, localPosition(), direction());
   }
   /// Time coordinate.
-  Scalar time() const { return m_params[eBoundTime]; }
+  double time() const { return m_params[eBoundTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return m_params[eBoundPhi]; }
+  double phi() const { return m_params[eBoundPhi]; }
   /// Theta direction.
-  Scalar theta() const { return m_params[eBoundTheta]; }
+  double theta() const { return m_params[eBoundTheta]; }
   /// Charge over momentum.
-  Scalar qOverP() const { return m_params[eBoundQOverP]; }
+  double qOverP() const { return m_params[eBoundQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
@@ -216,18 +218,18 @@ class GenericBoundTrackParameters {
                                      m_params[eBoundTheta]);
   }
   /// Absolute momentum.
-  Scalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eBoundQOverP]);
   }
   /// Transverse momentum.
-  Scalar transverseMomentum() const {
+  double transverseMomentum() const {
     return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
   }
   /// Momentum three-vector.
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
-  Scalar charge() const {
+  double charge() const {
     return m_particleHypothesis.extractCharge(get<eBoundQOverP>());
   }
 
@@ -248,6 +250,17 @@ class GenericBoundTrackParameters {
   /// rotation matrix of the tangential plane at the track position.
   RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
+  }
+
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectBoundParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericBoundTrackParameters<ParticleHypothesis> reflect() const {
+    GenericBoundTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 
  private:

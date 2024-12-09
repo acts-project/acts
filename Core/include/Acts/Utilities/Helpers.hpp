@@ -15,8 +15,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <optional>
-#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -175,11 +173,11 @@ T clampValue(U value) {
 ///
 /// @return [ range, medium ] in an tuple
 template <typename T>
-std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
+std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
   auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
   typename T::value_type range = (*maxIt - *minIt);
-  ActsScalar medium = static_cast<ActsScalar>((*maxIt + *minIt) * 0.5);
-  return std::tie(range, medium);
+  double medium = static_cast<double>((*maxIt + *minIt) * 0.5);
+  return {range, medium};
 }
 
 template <typename enum_t>
@@ -203,5 +201,67 @@ template <typename R, typename T>
 bool rangeContainsValue(const R& range, const T& value) {
   return std::ranges::find(range, value) != std::ranges::end(range);
 }
+
+/// Helper struct that can turn a set of lambdas into a single entity with
+/// overloaded call operator. This can be useful for example in a std::visit
+/// call.
+/// ```cpp
+/// std::visit(overloaded{
+///  [](const int& i) { std::cout << "int: " << i << std::endl; },
+///  [](const std::string& s) { std::cout << "string: " << s << std::endl; },
+/// }, variant);
+/// ```
+template <class... Ts>
+struct overloaded : Ts... {
+  using Ts::operator()...;
+};
+
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+namespace detail {
+
+/// Computes the minimum, maximum, and bin count for a given vector of values.
+///
+/// This function processes a vector of doubles to compute:
+/// - The minimum value (@c xMin)
+/// - The maximum value (@c xMax), adjusted to include an additional bin
+/// - The bin count (@c xBinCount) based on the number of unique values
+///
+/// The computation is performed as follows:
+/// 1. Sorts the input vector using @c std::ranges::sort to prepare for uniqueness.
+/// 2. Determines the number of unique values using @c std::unique and calculates the bin count.
+/// 3. Calculates the minimum and maximum using @c std::ranges::minmax.
+/// 4. Adjusts the maximum to include an additional bin by adding the bin step
+/// size.
+///
+/// @param xPos A reference to a vector of doubles.
+/// @return A tuple containing:
+///         - The minimum value (double)
+///         - The adjusted maximum value (double)
+///         - The bin count (std::size_t)
+///
+/// @note The vector xPos will be modified during the call.
+inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
+  // sort the values for unique()
+  std::ranges::sort(xPos);
+
+  // get the number of bins over unique values
+  auto it = std::unique(xPos.begin(), xPos.end());
+  const std::size_t xBinCount = std::distance(xPos.begin(), it);
+
+  // get the minimum and maximum
+  auto [xMin, xMax] = std::ranges::minmax(xPos);
+
+  // calculate maxima (add one last bin, because bin value always corresponds to
+  // left boundary)
+  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
+  xMax += stepX;
+
+  // Return all values as a tuple
+  return std::make_tuple(xMin, xMax, xBinCount);
+}
+
+}  // namespace detail
 
 }  // namespace Acts

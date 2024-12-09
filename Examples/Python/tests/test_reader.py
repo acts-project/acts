@@ -206,7 +206,6 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             outputMeasurementParticlesMap="meas_ptcl_map",
             inputSimHits=simAlg.config.outputSimHits,
             inputDir=str(out),
@@ -215,7 +214,7 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks", "meas_ptcl_map")
+        for k in ("measurements", "simhitsmap", "meas_ptcl_map")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
@@ -291,14 +290,21 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
 
-    with multiprocessing.get_context("spawn").Pool() as pool:
-        pool.apply(generate_input_test_edm4hep_simhit_reader, (odd_xml_file, tmp_file))
+    # explicitly ask for "spawn" as CI failures were observed with "fork"
+    spawn_context = multiprocessing.get_context("spawn")
+    p = spawn_context.Process(
+        target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
+    )
+    p.start()
+    p.join()
 
     assert os.path.exists(tmp_file)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+
         s.addReader(
             EDM4hepReader(
                 level=acts.logging.INFO,
@@ -312,8 +318,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
                     "LongStripEndcapReadout",
                 ],
                 outputParticlesGenerator="particles_input",
-                outputParticlesInitial="particles_initial",
-                outputParticlesFinal="particles_final",
+                outputParticlesSimulation="particles_simulated",
                 outputSimHits="simhits",
                 dd4hepDetector=detector,
                 trackingGeometry=trackingGeometry,
@@ -363,14 +368,13 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            outputSourceLinks="sourcelinks",
             inputPath=str(out),
         )
     )
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks")
+        for k in ("measurements", "simhitsmap")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
@@ -386,7 +390,9 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
 def test_edm4hep_tracks_reader(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman

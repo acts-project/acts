@@ -19,7 +19,7 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   // type, range, bins or boundaries
   if (ia.isEquidistant()) {
     jAxis["type"] = AxisType::Equidistant;
-    jAxis["range"] = std::array<ActsScalar, 2u>({ia.getMin(), ia.getMax()});
+    jAxis["range"] = std::array<double, 2u>({ia.getMin(), ia.getMax()});
     jAxis["bins"] = ia.getNBins();
   } else {
     jAxis["type"] = AxisType::Variable;
@@ -35,8 +35,8 @@ nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
   jAxis["bins"] = ia.getNBins();
   if (ia.isEquidistant()) {
-    std::array<ActsScalar, 2u> range = {ia.getBinEdges().front(),
-                                        ia.getBinEdges().back()};
+    std::array<double, 2u> range = {ia.getBinEdges().front(),
+                                    ia.getBinEdges().back()};
     jAxis["edges"] = range;
 
   } else {
@@ -439,6 +439,11 @@ nlohmann::json Acts::GridAccessJsonConverter::toJson(
     jBoundToGridLocal["shift"] = boundCylinderToZPhi->shift;
   }
 
+  if (jBoundToGridLocal.empty()) {
+    throw std::invalid_argument(
+        "GridAccessJsonConverter: boundToGridLocal type not supported.");
+  }
+
   return jBoundToGridLocal;
 }
 
@@ -467,8 +472,8 @@ Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
           std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
-    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
+    double radius = jBoundToGridLocal.at("radius").get<double>();
+    double shift = jBoundToGridLocal.at("shift").get<double>();
     boundToGridLocal =
         std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
   }
@@ -532,8 +537,8 @@ Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
           std::move(boundToGridLocal));
     }
   } else if (type == "cylinder_to_zphi") {
-    ActsScalar radius = jBoundToGridLocal.at("radius").get<ActsScalar>();
-    ActsScalar shift = jBoundToGridLocal.at("shift").get<ActsScalar>();
+    double radius = jBoundToGridLocal.at("radius").get<double>();
+    double shift = jBoundToGridLocal.at("shift").get<double>();
     auto boundToGridLocal =
         std::make_unique<const Acts::GridAccess::BoundCylinderToZPhi>(radius,
                                                                       shift);
