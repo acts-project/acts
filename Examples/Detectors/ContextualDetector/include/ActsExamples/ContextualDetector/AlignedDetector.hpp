@@ -10,38 +10,23 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include <cstddef>
-#include <memory>
-#include <utility>
-#include <vector>
-
-namespace Acts {
-class TrackingGeometry;
-class IMaterialDecorator;
-}  // namespace Acts
-
 namespace ActsExamples {
-
-class IContextDecorator;
-class GenericDetectorElement;
 
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector {
+class AlignedDetector : public Detector {
  public:
-  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
-    std::size_t seed = 1324354657;
+    unsigned int seed = 1324354657;
     /// Size of a valid IOV.
-    std::size_t iovSize = 100;
+    unsigned int iovSize = 100;
     /// Span until garbage collection is active.
-    std::size_t flushSize = 200;
+    unsigned int flushSize = 200;
     /// Run the garbage collection?
     bool doGarbageCollection = true;
     /// Sigma of the in-plane misalignment
@@ -61,19 +46,10 @@ class AlignedDetector {
     Mode mode = Mode::Internal;
   };
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
-
-  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>&
-  detectorStore() {
-    return m_detectorStore;
-  }
+  explicit AlignedDetector(const Config& cfg);
 
  private:
-  /// The Store of the detector elements (lifetime: job)
-  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
-      m_detectorStore;
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples
