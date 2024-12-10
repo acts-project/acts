@@ -22,7 +22,6 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/GeometryJsonKeys.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -698,13 +697,13 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         bUtility = std::move(nbUtility);
         swapped = true;
       } else {
-        std::runtime_error("Unsupported binning for Detray");
+        throw std::runtime_error("Unsupported binning for Detray");
       }
     } else if (bUtility.dimensions() == 2u &&
                bUtility.binningData()[0u].binvalue == BinningValue::binZ &&
                bUtility.binningData()[1u].binvalue == BinningValue::binPhi) {
       BinUtility nbUtility(bUtility.binningData()[1u]);
-      nbUtility += bUtility.binningData()[0u];
+      nbUtility += BinUtility{bUtility.binningData()[0u]};
       bUtility = std::move(nbUtility);
       swapped = true;
     }
