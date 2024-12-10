@@ -16,6 +16,7 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
+#include <concepts>
 #include <ostream>
 
 namespace Acts {
@@ -27,13 +28,10 @@ bool hasDescendent(const BlueprintNode& descendent,
     return true;
   }
 
-  for (const auto& child : ancestor.children()) {
-    if (hasDescendent(descendent, child)) {
-      return true;
-    }
-  }
-
-  return false;
+  return std::ranges::any_of(ancestor.children(),
+                             [&](const auto& child) -> bool {
+                               return hasDescendent(descendent, child);
+                             });
 }
 }  // namespace
 
@@ -107,11 +105,11 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
 }
 
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
-    const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     const std::string& volumeName,
     const std::function<void(StaticBlueprintNode& cylinder)>& callback) {
   return addStaticVolume(std::make_unique<TrackingVolume>(
-                             transform, std::move(volbounds), volumeName),
+                             transform, std::move(volumeBounds), volumeName),
                          callback);
 }
 
@@ -158,7 +156,7 @@ void BlueprintNode::clearChildren() {
   m_children.clear();
 }
 
-void BlueprintNode::graphViz(std::ostream& os) const {
+void BlueprintNode::graphviz(std::ostream& os) const {
   os << "digraph BlueprintNode {" << std::endl;
   addToGraphviz(os);
   os << "}" << std::endl;

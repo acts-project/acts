@@ -48,9 +48,6 @@ class LayerBlueprintNode;
 /// carried out.
 class BlueprintNode {
  public:
-  /// Can be default constructed
-  BlueprintNode() = default;
-
   /// Virtual destructor to ensure correct cleanup
   virtual ~BlueprintNode() = default;
 
@@ -179,11 +176,11 @@ class BlueprintNode {
   /// overload will invoke the constructor of @ref Acts::TrackingVolume and use
   /// that volume to create the node.
   /// @param transform The transform of the volume
-  /// @param volbounds The bounds of the volume
+  /// @param volumeBounds The bounds of the volume
   /// @param volumeName The name of the volume
   /// @param callback An optional callback that receives the node as an argument
   StaticBlueprintNode& addStaticVolume(
-      const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
       const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
@@ -256,11 +253,11 @@ class BlueprintNode {
 
   /// Print the node tree starting from this node to graphviz format
   /// @param os The stream to print to
-  void graphViz(std::ostream& os) const;
+  void graphviz(std::ostream& os) const;
 
   /// Method that writes a representatiohn of **this node only** to graphviz.
   /// This should generally not be called on its own, but through the @ref
-  /// BlueprintNode::graphViz method.
+  /// BlueprintNode::graphviz method.
   /// @param os The stream to print to
   virtual void addToGraphviz(std::ostream& os) const;
 
@@ -294,4 +291,5 @@ class BlueprintNode {
   std::size_t m_depth{0};
   std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };
-};  // namespace Acts
+
+}  // namespace Acts

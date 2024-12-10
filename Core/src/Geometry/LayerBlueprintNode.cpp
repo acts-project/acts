@@ -146,20 +146,4 @@ void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-std::ostream& operator<<(std::ostream& os, LayerBlueprintNode::LayerType type) {
-  switch (type) {
-    using enum LayerBlueprintNode::LayerType;
-    case Cylinder:
-      os << "Cylinder";
-      break;
-    case Disc:
-      os << "Disc";
-      break;
-    case Plane:
-      os << "Plane";
-      break;
-  }
-  return os;
-}
-
 }  // namespace Acts

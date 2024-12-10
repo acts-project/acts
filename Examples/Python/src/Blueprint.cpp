@@ -271,9 +271,9 @@ void addBlueprint(Context& ctx) {
       .def("clearChildren", &BlueprintNode::clearChildren)
       .def_property_readonly("name", &BlueprintNode::name)
       .def_property_readonly("depth", &BlueprintNode::depth)
-      .def("graphViz", [](BlueprintNode& self, const py::object& fh) {
+      .def("graphviz", [](BlueprintNode& self, const py::object& fh) {
         std::stringstream ss;
-        self.graphViz(ss);
+        self.graphviz(ss);
         fh.attr("write")(ss.str());
       });
 

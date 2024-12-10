@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   });
 
   std::ofstream dot{"api_test_container.dot"};
-  root->graphViz(dot);
+  root->graphviz(dot);
 
   auto trackingGeometry = root->construct({}, gctx, *logger);
 

@@ -28,7 +28,7 @@ namespace Acts {
 ///       if this is not the case.
 class CylinderContainerBlueprintNode final : public BlueprintNode {
  public:
-  /// Main constructor for t he cylinder container node.
+  /// Main constructor for the cylinder container node.
   /// @param name The name of the node (for debug only)
   /// @param direction The stacking direction
   /// @param attachmentStrategy The attachment strategy for the stack
@@ -136,11 +136,13 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   std::string m_name;
 
-  BinningValue m_direction;
+  BinningValue m_direction = BinningValue::binZ;
 
-  CylinderVolumeStack::AttachmentStrategy m_attachmentStrategy;
+  CylinderVolumeStack::AttachmentStrategy m_attachmentStrategy{
+      CylinderVolumeStack::AttachmentStrategy::Midpoint};
 
-  CylinderVolumeStack::ResizeStrategy m_resizeStrategy;
+  CylinderVolumeStack::ResizeStrategy m_resizeStrategy{
+      CylinderVolumeStack::ResizeStrategy::Expand};
 
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;

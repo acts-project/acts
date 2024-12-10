@@ -46,9 +46,10 @@ class GeometryContext;
 ///
 /// The construction phases are documented in @c BlueprintNode, which is the
 /// base class for all nodes in the tree.
-/// @note This class inherits from @c BlueprintNode privately, because it is
-///       only ever intended to be the top-level node, and not anywhere else in
-///       the tree.
+/// @note This class inherits from @c BlueprintNode, but hides the main
+///       blueprint construction phase overloads. The @c Blueprint class is
+///       only ever intended to be the top-level node, and not anywhere else
+///       in the tree.
 class Blueprint : public BlueprintNode {
  public:
   struct Config {

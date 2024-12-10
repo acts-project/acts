@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 
-#include <iosfwd>
+#include <ostream>
 
 namespace Acts {
 
@@ -100,6 +100,26 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @return The layer type
   const LayerType& layerType() const;
 
+  /// Output operator for the layer type enum.
+  /// @param os The output stream
+  /// @param type The layer type
+  friend std::ostream& operator<<(std::ostream& os,
+                                  LayerBlueprintNode::LayerType type) {
+    switch (type) {
+      using enum LayerBlueprintNode::LayerType;
+      case Cylinder:
+        os << "Cylinder";
+        break;
+      case Disc:
+        os << "Disc";
+        break;
+      case Plane:
+        os << "Plane";
+        break;
+    }
+    return os;
+  }
+
  private:
   /// @copydoc Acts::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -117,10 +137,5 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   LayerType m_layerType = LayerType::Cylinder;
 };
-
-/// Output operator for the layer type enum.
-/// @param os The output stream
-/// @param type The layer type
-std::ostream& operator<<(std::ostream& os, LayerBlueprintNode::LayerType type);
 
 }  // namespace Acts

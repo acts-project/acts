@@ -26,6 +26,4 @@ BlueprintOptions::makeDefaultNavigationPolicyFactory() {
       .asUniquePtr();
 }
 
-BlueprintOptions::~BlueprintOptions() = default;
-
 }  // namespace Acts

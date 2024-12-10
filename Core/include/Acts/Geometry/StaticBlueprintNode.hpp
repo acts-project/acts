@@ -37,7 +37,6 @@ class StaticBlueprintNode : public BlueprintNode {
   /// Build-phase of the blueprint construction. Returns the wrapped volume for
   /// sizing.
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
-
                 const Logger& logger = Acts::getDummyLogger()) override;
 
   /// @copydoc BlueprintNode::connect

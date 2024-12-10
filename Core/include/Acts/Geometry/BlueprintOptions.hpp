@@ -20,8 +20,6 @@ struct BlueprintOptions {
 
   void validate() const;
 
-  ~BlueprintOptions();
-
  private:
   static std::unique_ptr<NavigationPolicyFactory>
   makeDefaultNavigationPolicyFactory();

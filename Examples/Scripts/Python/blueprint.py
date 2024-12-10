@@ -84,7 +84,7 @@ if True:
 
 
 with open("blueprint.dot", "w") as fh:
-    root.graphViz(fh)
+    root.graphviz(fh)
 
 
 gctx = acts.GeometryContext()

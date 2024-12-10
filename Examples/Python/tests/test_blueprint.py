@@ -18,7 +18,7 @@ def test_zdirection_container_blueprint(tmp_path):
         gz = tmp_path / f"blueprint_{stage}.dot"
         print(gz)
         with gz.open("w") as fh:
-            root.graphViz(fh)
+            root.graphviz(fh)
 
     base = acts.Transform3.Identity()
 
