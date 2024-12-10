@@ -6,12 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// For whatever reason, this compilation unit does not compile
+// with those assertions.
 #ifdef _GLIBCXX_ASSERTIONS
 #undef _GLIBCXX_ASSERTIONS
-#endif
-
-#ifdef _LIBCPP_DEBUG
-#undef _LIBCPP_DEBUG
 #endif
 
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
