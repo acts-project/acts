@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
       ParticleHypothesis::pion()};
   {
     PropagatorOptions options(tgContext, {});
-    options.direction = Acts::Direction::Backward;
+    options.direction = Acts::Direction::Backward();
     options.pathLimit = pathLimit;
 
     auto result = propagator.propagate(initialParams, options);
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
                                      std::nullopt, ParticleHypothesis::pion()};
   {
     PropagatorOptions options(tgContext, {});
-    options.direction = Acts::Direction::Forward;
+    options.direction = Acts::Direction::Forward();
     options.stepping.maxStepSize = 1_mm;
 
     auto result = propagator.propagate(displacedParameters, *surface, options);

@@ -226,7 +226,7 @@ struct PropagatorState {
 
   /// emulate the options template
   struct Options {
-    Direction direction = Direction::Forward;
+    Direction direction = Direction::Forward();
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
