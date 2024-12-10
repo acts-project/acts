@@ -62,11 +62,14 @@ Not complete yet
 :::{doxygenclass} Acts::MultiNavigationPolicyBase
 :::
 
+:::{doxygenclass} Acts::MultiNavigationPolicy
+:::
+
 :::{doxygenclass} Acts::SurfaceArrayNavigationPolicy
 :::
 
 :::{doxygenclass} Acts::TryAllNavigationPolicy
 :::
 
-:::{doxygenclass} Acts::ProtoLayer
+:::{doxygenstruct} Acts::ProtoLayer
 :::
