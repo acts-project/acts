@@ -27,14 +27,18 @@ class Direction final {
   };
 
  public:
-  static constexpr auto Negative = Value::Negative;
-  static constexpr auto Positive = Value::Positive;
+  static constexpr Direction Negative() { return Direction{Value::Negative}; }
+  static constexpr Direction Positive() { return Direction{Value::Positive}; }
 
-  static constexpr auto Backward = Value::Negative;
-  static constexpr auto Forward = Value::Positive;
+  static constexpr Direction Backward() { return Direction{Value::Negative}; }
+  static constexpr Direction Forward() { return Direction{Value::Positive}; }
 
-  static constexpr auto OppositeNormal = Value::Negative;
-  static constexpr auto AlongNormal = Value::Positive;
+  static constexpr Direction OppositeNormal() {
+    return Direction{Value::Negative};
+  }
+  static constexpr Direction AlongNormal() {
+    return Direction{Value::Positive};
+  }
 
   /// This turns a signed value into a direction. Will assert on zero.
   ///
@@ -43,7 +47,7 @@ class Direction final {
   /// @return a direction enum
   static constexpr Direction fromScalar(double scalar) {
     assert(scalar != 0);
-    return scalar >= 0 ? Value::Positive : Value::Negative;
+    return Direction{scalar >= 0 ? Value::Positive : Value::Negative};
   }
 
   /// This turns a signed value into a direction and 0 will be handled as a
@@ -54,7 +58,7 @@ class Direction final {
   ///
   /// @return a direction enum
   static constexpr Direction fromScalarZeroAsPositive(double scalar) {
-    return scalar >= 0 ? Value::Positive : Value::Negative;
+    return Direction{scalar >= 0 ? Value::Positive : Value::Negative};
   }
 
   /// Convert and index [0,1] to a direction e.g. for sorting in
@@ -63,9 +67,9 @@ class Direction final {
   /// @param index is the direction at input
   static constexpr Direction fromIndex(std::size_t index) {
     if (index == 0u) {
-      return Value::Negative;
+      return Direction{Value::Negative};
     }
-    return Value::Positive;
+    return Direction{Value::Positive};
   }
 
   /// Convert dir to index [0,1] which allows to store direction dependent
@@ -88,16 +92,17 @@ class Direction final {
   ///
   /// @return an opposite direction
   constexpr Direction invert() const {
-    return (m_value == Value::Positive) ? Value::Negative : Value::Positive;
+    return Direction{m_value == Value::Positive ? Value::Negative
+                                                : Value::Positive};
   }
 
   std::string toString() const;
 
   constexpr Direction() = default;
-  constexpr Direction(Value value) : m_value(value) {}
+  explicit constexpr Direction(Value value) : m_value(value) {}
 
-  constexpr bool operator==(Direction other) const {
-    return m_value == other.m_value;
+  friend constexpr bool operator==(Direction lhs, Direction rhs) {
+    return lhs.m_value == rhs.m_value;
   }
 
  private:
