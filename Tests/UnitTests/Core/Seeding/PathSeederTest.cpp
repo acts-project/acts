@@ -78,7 +78,8 @@ class NoFieldIntersectionFinder {
       // Get the intersection
       auto sMultiIntersection = surface->intersect(
           geoCtx, position, direction,
-          BoundaryTolerance::AbsoluteCartesian(m_tol, m_tol));
+          BoundaryTolerance{
+              BoundaryTolerance::AbsoluteCartesian(m_tol, m_tol)});
 
       // Take the closest
       auto closestForward = sMultiIntersection.closestForward();

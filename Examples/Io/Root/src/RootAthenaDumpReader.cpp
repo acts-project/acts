@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -396,11 +397,11 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      bool inside =
-          surface->isOnSurface(gctx, cluster.globalPosition, {},
-                               Acts::BoundaryTolerance::AbsoluteEuclidean{
-                                   m_cfg.absBoundaryTolerance},
-                               std::numeric_limits<double>::max());
+      bool inside = surface->isOnSurface(
+          gctx, cluster.globalPosition, {},
+          Acts::BoundaryTolerance{Acts::BoundaryTolerance::AbsoluteEuclidean{
+              m_cfg.absBoundaryTolerance}},
+          std::numeric_limits<double>::max());
 
       if (!inside) {
         const Acts::Vector3 v =
