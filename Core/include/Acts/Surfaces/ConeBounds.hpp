@@ -85,7 +85,7 @@ class ConeBounds : public SurfaceBounds {
   /// @return is a boolean indicating if the position is inside
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+                  BoundaryTolerance::none()) const final;
 
   /// Output Method for std::ostream
   ///

@@ -51,7 +51,7 @@ class TryAllNavigatorBase {
 
     /// Which boundary checks to perform for surface approach
     BoundaryTolerance boundaryToleranceSurfaceApproach =
-        BoundaryTolerance::None();
+        BoundaryTolerance::none();
   };
 
   /// @brief Options for this Navigator

@@ -75,7 +75,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param boundaryTolerance is the boundary check directive
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+                  BoundaryTolerance::none()) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

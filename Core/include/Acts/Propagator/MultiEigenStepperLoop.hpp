@@ -588,7 +588,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
           component.state.options.geoContext,
           SingleStepper::position(component.state),
           direction * SingleStepper::direction(component.state),
-          BoundaryTolerance::None())[oIntersection.index()];
+          BoundaryTolerance::none())[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
                                     stype);

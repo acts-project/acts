@@ -337,14 +337,14 @@ Reference1StraightLinePropagator refslpropagator1(
 Reference1EigenPropagator refepropagator1(
     estepper,
     TryAllNavigator({tGeometry, true, true, false,
-                     BoundaryTolerance::Infinite()},
+                     BoundaryTolerance::infinite()},
                     getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
     TryAllOverstepNavigator({tGeometry, true, true, false,
-                             BoundaryTolerance::Infinite()},
+                             BoundaryTolerance::infinite()},
                             getDefaultLogger("ref2_e_nav", Logging::INFO)),
     getDefaultLogger("ref2_e_prop", Logging::INFO));
 Reference2StraightLinePropagator refslpropagator2(

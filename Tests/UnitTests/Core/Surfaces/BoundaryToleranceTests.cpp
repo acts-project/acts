@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::None();
+  auto tolerance = BoundaryTolerance::none();
   BOOST_CHECK(
       detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   em.execute([]() {
     Vector2 ll(-1, -1);
     Vector2 ur(1, 1);
-    auto tolerance = BoundaryTolerance::AbsoluteBound(
+    auto tolerance = BoundaryTolerance::absoluteBound(
         1.5, std::numeric_limits<double>::infinity());
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
   cov << 1, 0.5, 0.5, 2;
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 3.);
+  auto tolerance = BoundaryTolerance::chi2Bound(cov.inverse(), 3.);
   BOOST_CHECK(
       detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
 // Triangle w/ simple check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
-  auto tolerance = BoundaryTolerance::None();
+  auto tolerance = BoundaryTolerance::none();
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 1}, std::nullopt));
   BOOST_CHECK(
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
   SquareMatrix2 cov;
   cov << 0.5, 0, 0, 0.5;
-  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 4.1);
+  auto tolerance = BoundaryTolerance::chi2Bound(cov.inverse(), 4.1);
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 1}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 2}, std::nullopt));
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   Vector2 ur(1, 1);
 
   {
-    auto tolerance = BoundaryTolerance::None();
+    auto tolerance = BoundaryTolerance::none();
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::Infinite();
+    auto tolerance = BoundaryTolerance::infinite();
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::AbsoluteBound(0.5, 0.5);
+    auto tolerance = BoundaryTolerance::absoluteBound(0.5, 0.5);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::AbsoluteCartesian(0.5, 0.5);
+    auto tolerance = BoundaryTolerance::absoluteCartesian(0.5, 0.5);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1.1);
+    auto tolerance = BoundaryTolerance::absoluteEuclidean(1.1);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
 
   {
     auto tolerance =
-        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.);
+        BoundaryTolerance::chi2Bound(SquareMatrix2::Identity(), 1.);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(

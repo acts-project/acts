@@ -156,19 +156,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(
-      tgContext, globalPosition, momentum, BoundaryTolerance::None()));
+      tgContext, globalPosition, momentum, BoundaryTolerance::none()));
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              BoundaryTolerance::None()));
+                                              BoundaryTolerance::none()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
-                                               BoundaryTolerance::None()));
+                                               BoundaryTolerance::none()));
   BOOST_CHECK(!planeSurfaceObject->isOnSurface(tgContext, offSurface,
-                                               BoundaryTolerance::None()));
+                                               BoundaryTolerance::none()));
 
   /// Test intersection
   Vector3 direction{0., 0., 1.};
   auto sfIntersection = planeSurfaceObject
                             ->intersect(tgContext, offSurface, direction,
-                                        BoundaryTolerance::None())
+                                        BoundaryTolerance::none())
                             .closest();
   Intersection3D expectedIntersect{Vector3{0, 1, 2}, 4.,
                                    IntersectionStatus::reachable};
@@ -299,16 +299,16 @@ BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
   std::shared_ptr<TrapezoidBounds> bounds =
       std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY);
 
-  BOOST_CHECK(bounds->inside(edgePoint, BoundaryTolerance::None()));
+  BOOST_CHECK(bounds->inside(edgePoint, BoundaryTolerance::none()));
   BOOST_CHECK(!bounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
-                              BoundaryTolerance::None()));
+                              BoundaryTolerance::none()));
 
   std::shared_ptr<TrapezoidBounds> rotatedBounds =
       std::make_shared<TrapezoidBounds>(shortHalfX, longHalfX, halfY, rotAngle);
 
-  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryTolerance::None()));
+  BOOST_CHECK(!rotatedBounds->inside(edgePoint, BoundaryTolerance::none()));
   BOOST_CHECK(rotatedBounds->inside(Eigen::Rotation2D(-rotAngle) * edgePoint,
-                                    BoundaryTolerance::None()));
+                                    BoundaryTolerance::none()));
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives

@@ -143,14 +143,14 @@ void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
   m_candidates.emplace_back(Candidate{
       .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
       .gen2Portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+      .bTolerance = BoundaryTolerance::none()});
 }
 
 void NavigationStream::addPortalCandidate(const Portal& portal) {
   m_candidates.emplace_back(Candidate{
       .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
       .portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+      .bTolerance = BoundaryTolerance::none()});
 }
 
 void NavigationStream::addPortalCandidates(
@@ -160,7 +160,7 @@ void NavigationStream::addPortalCandidates(
         .intersection =
             ObjectIntersection<Surface>::invalid(&(portal->surface())),
         .gen2Portal = portal,
-        .bTolerance = BoundaryTolerance::None()});
+        .bTolerance = BoundaryTolerance::none()});
   });
 }
 

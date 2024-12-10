@@ -774,7 +774,7 @@ ProcessCode VertexNTupleWriter::writeT(
           perigeeSurface
               ->intersect(ctx.geoContext, params.position(ctx.geoContext),
                           params.direction(),
-                          Acts::BoundaryTolerance::Infinite())
+                          Acts::BoundaryTolerance::infinite())
               .closest();
 
       // Setting the geometry/magnetic field context for the event

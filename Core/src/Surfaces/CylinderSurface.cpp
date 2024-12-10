@@ -289,7 +289,7 @@ SurfaceMultiIntersection CylinderSurface::intersect(
 AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();

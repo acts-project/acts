@@ -62,7 +62,7 @@ bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
 AlignmentToBoundMatrix Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const FreeVector& pathDerivative) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
@@ -85,7 +85,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   (void)direction;
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();
@@ -125,7 +125,7 @@ AlignmentToBoundMatrix Surface::alignmentToBoundDerivativeWithoutCorrection(
 AlignmentToPathMatrix Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The vector between position and center
   const auto pcRowVec = (position - center(gctx)).transpose().eval();

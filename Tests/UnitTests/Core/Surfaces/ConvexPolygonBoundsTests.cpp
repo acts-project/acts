@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
 
   BOOST_CHECK(triangle.inside({0.2, 0.2}, tolerance));
   BOOST_CHECK(!triangle.inside({0.4, 0.9}, tolerance));
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
   BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
 
   BOOST_CHECK(triangle.inside({0.2, 0.2}, tolerance));
   BOOST_CHECK(!triangle.inside({0.4, 0.9}, tolerance));

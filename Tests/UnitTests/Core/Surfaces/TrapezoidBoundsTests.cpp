@@ -123,12 +123,12 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
   /// Test inside
   BOOST_CHECK(
-      trapezoidBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
+      trapezoidBoundsObject.inside(inRectangle, BoundaryTolerance::none()));
   BOOST_CHECK(
-      !trapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
+      !trapezoidBoundsObject.inside(outside, BoundaryTolerance::none()));
 
   const auto vertices = trapezoidBoundsObject.vertices();
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
 
   std::vector<Vector2> testPoints = {
       // inside
@@ -186,10 +186,10 @@ BOOST_DATA_TEST_CASE(
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();
 
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
 
   if (tol != 0.) {
-    tolerance = BoundaryTolerance::AbsoluteBound{tol, tol};
+    tolerance = BoundaryTolerance::absoluteBound(tol, tol);
   }
 
   BOOST_CHECK_EQUAL(

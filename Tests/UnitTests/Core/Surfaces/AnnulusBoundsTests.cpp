@@ -97,15 +97,15 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   };
 
   BOOST_CHECK(
-      aBounds.inside(toStripFrame(inSurfaceXY), BoundaryTolerance::None()));
+      aBounds.inside(toStripFrame(inSurfaceXY), BoundaryTolerance::none()));
   BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY1), BoundaryTolerance::None()));
+      !aBounds.inside(toStripFrame(outsideXY1), BoundaryTolerance::none()));
   BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY2), BoundaryTolerance::None()));
+      !aBounds.inside(toStripFrame(outsideXY2), BoundaryTolerance::none()));
   BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY3), BoundaryTolerance::None()));
+      !aBounds.inside(toStripFrame(outsideXY3), BoundaryTolerance::none()));
   BOOST_CHECK(
-      !aBounds.inside(toStripFrame(outsideXY4), BoundaryTolerance::None()));
+      !aBounds.inside(toStripFrame(outsideXY4), BoundaryTolerance::none()));
 
   // Check radial inside
   BOOST_CHECK(!aBounds.insideRadialBounds(0.5));

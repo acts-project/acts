@@ -153,7 +153,7 @@ bool TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   }
   Vector2 locp(pos.x(), pos.y());
   bool inside(m_faceXYTrapezoidBounds->inside(
-      locp, BoundaryTolerance::AbsoluteBound{tol, tol}));
+      locp, BoundaryTolerance::absoluteBound(tol, tol)));
   return inside;
 }
 
