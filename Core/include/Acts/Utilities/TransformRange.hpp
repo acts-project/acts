@@ -169,6 +169,8 @@ struct TransformRangeIterator {
   /// Construct an iterator from an underlying iterator
   explicit TransformRangeIterator(iterator_t iterator) : m_iterator(iterator) {}
 
+  TransformRangeIterator() = default;
+
   /// Return a reference to the value that is transformed by the callable
   /// @return Reference to the transformed value
   reference operator*() { return Callable::apply(*m_iterator); }
@@ -182,6 +184,14 @@ struct TransformRangeIterator {
   TransformRangeIterator& operator++() {
     ++m_iterator;
     return *this;
+  }
+
+  /// Advance the iterator
+  /// @return Reference to the iterator
+  TransformRangeIterator operator++(int) {
+    auto tmp = *this;
+    ++m_iterator;
+    return tmp;
   }
 
   /// Compare two iterators for equality
@@ -219,3 +229,7 @@ struct DotGet {
 };
 
 }  // namespace Acts::detail
+
+template <typename Callable, typename container_t>
+constexpr bool std::ranges::enable_borrowed_range<
+    Acts::detail::TransformRange<Callable, container_t>> = true;
