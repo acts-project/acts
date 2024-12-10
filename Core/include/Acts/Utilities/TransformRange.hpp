@@ -230,6 +230,8 @@ struct DotGet {
 
 }  // namespace Acts::detail
 
+/// @cond
 template <typename Callable, typename container_t>
 constexpr bool std::ranges::enable_borrowed_range<
     Acts::detail::TransformRange<Callable, container_t>> = true;
+/// @endcond
