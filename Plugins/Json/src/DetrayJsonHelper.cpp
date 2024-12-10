@@ -7,7 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // For whatever reason, this compilation unit does not compile
-// with those assertions.
+// with those assertions and GCC 13. For now just disable the
+// flags here.
 #ifdef _GLIBCXX_ASSERTIONS
 #undef _GLIBCXX_ASSERTIONS
 #endif
