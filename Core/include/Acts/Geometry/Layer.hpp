@@ -132,7 +132,7 @@ class Layer : public virtual GeometryObject {
   /// @return boolean that indicates success of the operation
   virtual bool isOnLayer(const GeometryContext& gctx, const Vector3& position,
                          const BoundaryTolerance& boundaryTolerance =
-                             BoundaryTolerance::None()) const;
+                             BoundaryTolerance::none()) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor* approachDescriptor() const;

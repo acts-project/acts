@@ -111,7 +111,7 @@ class RegularSurface : public Surface {
   /// @return boolean indication if operation was successful
   bool isOnSurface(
       const GeometryContext& gctx, const Vector3& position,
-      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
+      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::none(),
       double tolerance = s_onSurfaceTolerance) const;
 
   using Surface::isOnSurface;

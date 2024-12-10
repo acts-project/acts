@@ -69,7 +69,7 @@ struct PortalsFiller {
     std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
           ObjectIntersection<Surface>::invalid(), nullptr, p,
-          BoundaryTolerance::None()});
+          BoundaryTolerance::none()});
     });
   }
 };

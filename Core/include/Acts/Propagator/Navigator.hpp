@@ -35,7 +35,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The boundary check directive
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
 
   // How to resolve the geometry
   /// Always look for sensitive
@@ -367,7 +367,7 @@ class Navigator {
       assert(state.navigation.currentSurface->isOnSurface(
                  state.geoContext, stepper.position(state.stepping),
                  stepper.direction(state.stepping),
-                 BoundaryTolerance::Infinite(),
+                 BoundaryTolerance::infinite(),
                  state.options.surfaceTolerance) &&
              "Stepper not on surface");
     }
@@ -596,7 +596,7 @@ class Navigator {
       assert(state.navigation.currentSurface->isOnSurface(
                  state.geoContext, stepper.position(state.stepping),
                  stepper.direction(state.stepping),
-                 BoundaryTolerance::Infinite(),
+                 BoundaryTolerance::infinite(),
                  state.options.surfaceTolerance) &&
              "Stepper not on surface");
     }
@@ -648,7 +648,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
-        BoundaryTolerance::None(), state.options.surfaceTolerance, logger());
+        BoundaryTolerance::none(), state.options.surfaceTolerance, logger());
     if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -713,11 +713,11 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
       // Estimate the surface status
-      BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+      BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
       for (auto it = externalSurfaceRange.first;
            it != externalSurfaceRange.second; it++) {
         if (surface->geometryId() == it->second) {
-          boundaryTolerance = BoundaryTolerance::Infinite();
+          boundaryTolerance = BoundaryTolerance::infinite();
           break;
         }
       }
@@ -813,7 +813,7 @@ class Navigator {
       // Try to step towards it
       auto layerStatus = stepper.updateSurfaceStatus(
           state.stepping, *layerSurface, intersection.index(),
-          state.options.direction, BoundaryTolerance::None(),
+          state.options.direction, BoundaryTolerance::none(),
           state.options.surfaceTolerance, logger());
       if (layerStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
@@ -935,7 +935,7 @@ class Navigator {
       // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, intersection.index(),
-          state.options.direction, BoundaryTolerance::None(),
+          state.options.direction, BoundaryTolerance::none(),
           state.options.surfaceTolerance, logger());
       if (boundaryStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
@@ -1157,7 +1157,7 @@ class Navigator {
       // TODO we do not know the intersection index - passing 0
       auto targetStatus = stepper.updateSurfaceStatus(
           state.stepping, *state.navigation.targetSurface, 0,
-          state.options.direction, BoundaryTolerance::None(),
+          state.options.direction, BoundaryTolerance::none(),
           state.options.surfaceTolerance, logger());
       // the only advance could have been to the target
       if (targetStatus == IntersectionStatus::onSurface) {

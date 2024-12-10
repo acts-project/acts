@@ -46,7 +46,7 @@ struct NavigationState {
     const Portal* portal = nullptr;
     /// The boundary check used for the candidate, boundary checks
     /// can differ for sensitive surfaces and portals
-    BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+    BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
   };
 
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
@@ -85,7 +85,7 @@ struct NavigationState {
   std::size_t surfaceCandidateIndex = 0;
 
   /// Boundary directives for surfaces
-  BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();
+  BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::none();
 
   /// An overstep tolerance
   double overstepTolerance = -100 * UnitConstants::um;

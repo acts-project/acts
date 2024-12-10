@@ -293,7 +293,7 @@ class DiscSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+          BoundaryTolerance::infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue

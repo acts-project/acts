@@ -254,7 +254,7 @@ class Surface : public virtual GeometryObject,
   bool isOnSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
+      const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::none(),
       double tolerance = s_onSurfaceTolerance) const;
 
   /// The insideBounds method for local positions
@@ -264,7 +264,7 @@ class Surface : public virtual GeometryObject,
   /// @return boolean indication if operation was successful
   virtual bool insideBounds(const Vector2& lposition,
                             const BoundaryTolerance& boundaryTolerance =
-                                BoundaryTolerance::None()) const;
+                                BoundaryTolerance::none()) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -398,7 +398,7 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::Infinite(),
+          BoundaryTolerance::infinite(),
       double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Helper method for printing: the returned object captures the
