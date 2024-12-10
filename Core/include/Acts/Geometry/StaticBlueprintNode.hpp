@@ -61,7 +61,7 @@ class StaticBlueprintNode : public BlueprintNode {
 
   std::unique_ptr<PortalShellBase> m_shell;
 
-  std::shared_ptr<NavigationPolicyFactory> m_navigationPolicyFactory = nullptr;
+  std::shared_ptr<NavigationPolicyFactory> m_navigationPolicyFactory;
 };
 
 }  // namespace Acts
