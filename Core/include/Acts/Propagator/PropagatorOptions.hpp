@@ -30,6 +30,9 @@ struct PurePropagatorPlainOptions {
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
+  /// Maximum number of next target calls for one step
+  unsigned int maxTargetSkipping = 100;
+
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
 
@@ -58,7 +61,7 @@ struct PropagatorPlainOptions : public detail::PurePropagatorPlainOptions {
   /// PropagatorPlainOptions with context
   PropagatorPlainOptions(const GeometryContext& gctx,
                          const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+      : geoContext(gctx), magFieldContext(mctx), navigation(gctx) {}
 
   /// The context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -88,12 +91,13 @@ struct PropagatorOptions : public detail::PurePropagatorPlainOptions {
   /// PropagatorOptions with context
   PropagatorOptions(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+      : geoContext(gctx), magFieldContext(mctx), navigation(gctx) {}
 
   /// PropagatorOptions with context and plain options
   PropagatorOptions(const PropagatorPlainOptions& pOptions)
       : geoContext(pOptions.geoContext),
-        magFieldContext(pOptions.magFieldContext) {
+        magFieldContext(pOptions.magFieldContext),
+        navigation(pOptions.geoContext) {
     setPlainOptions(pOptions);
   }
 

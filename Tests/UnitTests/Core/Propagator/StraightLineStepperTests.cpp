@@ -154,11 +154,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.updateStepSize(slsState, -1337., ConstrainedStep::actor);
+  sls.updateStepSize(slsState, -1337., ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
-  sls.releaseStepSize(slsState, ConstrainedStep::actor);
+  sls.releaseStepSize(slsState, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
                           BoundaryTolerance::Infinite());
-  CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
-                  1e-6);
+  CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::navigator),
+                  navDir * 2., 1e-6);
 
   // Test the step size modification in the context of a surface
   sls.updateStepSize(

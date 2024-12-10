@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -47,21 +46,21 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
 
   // The intersection is on surface already
   if (sIntersection.status() == IntersectionStatus::onSurface) {
-    // Release navigation step size
-    state.stepSize.release(ConstrainedStep::actor);
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
+    stepper.updateStepSize(state, sIntersection.pathLength(),
+                           ConstrainedStep::navigator);
     return IntersectionStatus::onSurface;
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = state.stepSize.value(ConstrainedStep::aborter);
+  const double farLimit = std::numeric_limits<double>::max();
 
   if (sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
                               logger)) {
     ACTS_VERBOSE("Surface is reachable");
     stepper.updateStepSize(state, sIntersection.pathLength(),
-                           ConstrainedStep::actor);
+                           ConstrainedStep::navigator);
     return IntersectionStatus::reachable;
   }
 
@@ -82,7 +81,7 @@ void updateSingleStepSize(typename stepper_t::State& state,
                           const object_intersection_t& oIntersection,
                           bool release = true) {
   double stepSize = oIntersection.pathLength();
-  state.stepSize.update(stepSize, ConstrainedStep::actor, release);
+  state.stepSize.update(stepSize, ConstrainedStep::navigator, release);
 }
 
 }  // namespace Acts::detail

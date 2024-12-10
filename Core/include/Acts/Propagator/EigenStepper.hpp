@@ -24,6 +24,7 @@
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -83,7 +84,7 @@ class EigenStepper {
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
                    const BoundTrackParameters& par,
-                   double ssize = std::numeric_limits<double>::max())
+                   double ssize = 10 * Acts::UnitConstants::m)
         : particleHypothesis(par.particleHypothesis()),
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
@@ -181,7 +182,7 @@ class EigenStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const BoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max()) const;
+                  double ssize = 10 * Acts::UnitConstants::m) const;
 
   /// @brief Resets the state
   ///
