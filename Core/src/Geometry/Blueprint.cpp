@@ -17,7 +17,7 @@
 #include "Acts/Utilities/GraphViz.hpp"
 
 namespace {
-inline static const std::string s_rootName = "Root";
+const std::string s_rootName = "Root";
 }
 
 namespace Acts {
