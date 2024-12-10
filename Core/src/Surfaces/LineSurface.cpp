@@ -195,7 +195,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
@@ -232,7 +232,7 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
@@ -261,7 +261,7 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);

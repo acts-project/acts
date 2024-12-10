@@ -209,7 +209,7 @@ Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
@@ -245,7 +245,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
 
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
 
   // The measurement frame of the surface
   RotationMatrix3 rframeT =

@@ -59,7 +59,7 @@ class NavigationStream {
     const Acts::Experimental::Portal* gen2Portal = nullptr;
     const Portal* portal = nullptr;
     /// The boundary tolerance
-    BoundaryTolerance bTolerance = BoundaryTolerance::None();
+    BoundaryTolerance bTolerance = BoundaryTolerance::none();
     /// Convenience access to surface
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length

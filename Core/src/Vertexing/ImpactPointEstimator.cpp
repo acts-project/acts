@@ -364,7 +364,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   auto intersection =
       planeSurface
           ->intersect(gctx, trkParams.position(gctx), trkParams.direction(),
-                      BoundaryTolerance::Infinite())
+                      BoundaryTolerance::infinite())
           .closest();
 
   // Create propagator options
@@ -428,7 +428,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
   auto intersection =
       perigeeSurface
           ->intersect(gctx, track.position(gctx), track.direction(),
-                      BoundaryTolerance::Infinite())
+                      BoundaryTolerance::infinite())
           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());

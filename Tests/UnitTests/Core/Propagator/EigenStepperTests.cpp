@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
-                         BoundaryTolerance::Infinite());
+                         BoundaryTolerance::infinite());
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     targetSurface
                         ->intersect(esState.geoContext, es.position(esState),
                                     navDir * es.direction(esState),
-                                    BoundaryTolerance::Infinite())
+                                    BoundaryTolerance::infinite())
                         .closest(),
                     navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     targetSurface
                         ->intersect(esState.geoContext, es.position(esState),
                                     navDir * es.direction(esState),
-                                    BoundaryTolerance::Infinite())
+                                    BoundaryTolerance::infinite())
                         .closest(),
                     navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);

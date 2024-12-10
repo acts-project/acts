@@ -47,7 +47,7 @@ class TryAllNavigatorBase {
 
     /// Which boundary checks to perform for surface approach
     BoundaryTolerance boundaryToleranceSurfaceApproach =
-        BoundaryTolerance::None();
+        BoundaryTolerance::none();
   };
 
   struct Options : public NavigatorPlainOptions {
@@ -436,7 +436,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryTolerance::Infinite(),
+          state.options.direction, BoundaryTolerance::infinite(),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -465,7 +465,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
       IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
-          state.options.direction, BoundaryTolerance::None(),
+          state.options.direction, BoundaryTolerance::none(),
           state.options.surfaceTolerance, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -790,7 +790,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryTolerance::Infinite(),
+            state.options.direction, BoundaryTolerance::infinite(),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -817,7 +817,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
         IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
-            state.options.direction, BoundaryTolerance::None(),
+            state.options.direction, BoundaryTolerance::none(),
             state.options.surfaceTolerance, logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {
