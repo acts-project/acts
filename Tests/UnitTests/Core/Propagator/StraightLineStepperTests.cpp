@@ -54,7 +54,7 @@ struct PropState {
   StraightLineStepper::State stepping;
   /// Propagator options which only carry the particle's mass
   struct {
-    Direction direction = Direction::Forward;
+    Direction direction = Direction::Forward();
   } options;
 };
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Set up some variables for the state
   GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
-  Direction navDir = Direction::Backward;
+  Direction navDir = Direction::Backward();
   double stepSize = 123.;
   double tolerance = 234.;
 
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
-  navDir = Direction::Forward;
+  navDir = Direction::Forward();
   double stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters

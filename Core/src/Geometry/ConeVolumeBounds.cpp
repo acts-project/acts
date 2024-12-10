@@ -103,13 +103,13 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(innerCone), Direction::AlongNormal});
+        OrientedSurface{std::move(innerCone), Direction::AlongNormal()});
   } else if (m_innerCylinderBounds != nullptr) {
     // Or alternatively the inner Cylinder
     auto innerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(innerCylinder), Direction::AlongNormal});
+        OrientedSurface{std::move(innerCylinder), Direction::AlongNormal()});
   }
 
   // Create an outer Cone
@@ -118,13 +118,13 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(outerCone), Direction::OppositeNormal});
+        OrientedSurface{std::move(outerCone), Direction::OppositeNormal()});
   } else if (m_outerCylinderBounds != nullptr) {
     // or alternatively an outer Cylinder
     auto outerCylinder =
         Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(outerCylinder), Direction::OppositeNormal});
+        OrientedSurface{std::move(outerCylinder), Direction::OppositeNormal()});
   }
 
   // Set a disc at Zmin
@@ -134,7 +134,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(negativeDisc), Direction::AlongNormal});
+        OrientedSurface{std::move(negativeDisc), Direction::AlongNormal()});
   }
 
   // Set a disc at Zmax
@@ -142,7 +142,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(positiveDisc), Direction::OppositeNormal});
+      OrientedSurface{std::move(positiveDisc), Direction::OppositeNormal()});
 
   if (m_sectorBounds) {
     RotationMatrix3 sectorRotation;
@@ -157,7 +157,7 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(negSectorPlane), Direction::AlongNormal});
+        OrientedSurface{std::move(negSectorPlane), Direction::AlongNormal()});
 
     Transform3 posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
@@ -166,8 +166,8 @@ std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
 
-    oSurfaces.push_back(
-        OrientedSurface{std::move(posSectorPlane), Direction::OppositeNormal});
+    oSurfaces.push_back(OrientedSurface{std::move(posSectorPlane),
+                                        Direction::OppositeNormal()});
   }
   return oSurfaces;
 }
