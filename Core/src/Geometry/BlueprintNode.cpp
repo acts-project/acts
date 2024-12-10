@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/BlueprintNode.hpp"
 
+#include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -43,6 +44,10 @@ void BlueprintNode::toStream(std::ostream& os) const {
 BlueprintNode& BlueprintNode::addChild(std::shared_ptr<BlueprintNode> child) {
   if (!child) {
     throw std::invalid_argument("Child is nullptr");
+  }
+
+  if (dynamic_cast<Blueprint*>(child.get()) != nullptr) {
+    throw std::invalid_argument("Cannot add a Blueprint as a child");
   }
 
   if (child->depth() != 0) {

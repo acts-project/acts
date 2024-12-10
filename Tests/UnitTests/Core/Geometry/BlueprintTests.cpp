@@ -119,6 +119,14 @@ class DummyNode : public BlueprintNode {
   std::string m_name;
 };
 
+BOOST_AUTO_TEST_CASE(RootCannotBeChild) {
+  auto node = std::make_shared<DummyNode>("node");
+  Blueprint::Config cfg;
+  auto root = std::make_shared<Blueprint>(cfg);
+
+  BOOST_CHECK_THROW(node->addChild(root), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(AddChildInvalid) {
   auto node = std::make_shared<DummyNode>("node");
 
