@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(InvalidRoot) {
 
 class DummyNode : public BlueprintNode {
  public:
-  DummyNode(const std::string& name) : m_name(name) {}
+  explicit DummyNode(const std::string& name) : m_name(name) {}
 
   const std::string& name() const override { return m_name; }
 

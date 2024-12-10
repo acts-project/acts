@@ -67,23 +67,11 @@ Volume& CylinderContainerBlueprintNode::build(const BlueprintOptions& options,
   return *m_stack;
 }
 
-CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
+std::vector<CylinderPortalShell*>
+CylinderContainerBlueprintNode::collectChildShells(
     const BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
-  ACTS_DEBUG(prefix() << "Cylinder container connect");
-  if (m_stack == nullptr) {
-    ACTS_ERROR(prefix() << "Volume is not built");
-    throw std::runtime_error("Volume is not built");
-  }
-
   std::vector<CylinderPortalShell*> shells;
-  ACTS_DEBUG(prefix() << "Collecting child shells from " << children().size()
-                      << " children");
-
-  // We have child volumes and gaps as bare Volumes in `m_childVolumes` after
-  // `build()` has completed. For the stack shell, we need TrackingVolumes in
-  // the right order.
-
   ACTS_DEBUG(prefix() << "Have " << m_childVolumes.size() << " child volumes");
   for (Volume* volume : m_childVolumes) {
     if (isGapVolume(*volume)) {
@@ -109,7 +97,7 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       ACTS_DEBUG(prefix() << " ~> Child (" << child.name()
                           << ") volume: " << volume->volumeBounds());
 
-      CylinderPortalShell* shell = dynamic_cast<CylinderPortalShell*>(
+      auto* shell = dynamic_cast<CylinderPortalShell*>(
           &child.connect(options, gctx, logger));
       if (shell == nullptr) {
         ACTS_ERROR(prefix()
@@ -122,6 +110,27 @@ CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
       shells.push_back(shell);
     }
   }
+  return shells;
+}
+
+CylinderStackPortalShell& CylinderContainerBlueprintNode::connect(
+    const BlueprintOptions& options, const GeometryContext& gctx,
+    const Logger& logger) {
+  ACTS_DEBUG(prefix() << "Cylinder container connect");
+  if (m_stack == nullptr) {
+    ACTS_ERROR(prefix() << "Volume is not built");
+    throw std::runtime_error("Volume is not built");
+  }
+
+  ACTS_DEBUG(prefix() << "Collecting child shells from " << children().size()
+                      << " children");
+
+  // We have child volumes and gaps as bare Volumes in `m_childVolumes` after
+  // `build()` has completed. For the stack shell, we need TrackingVolumes in
+  // the right order.
+
+  std::vector<CylinderPortalShell*> shells =
+      collectChildShells(options, gctx, logger);
 
   // Sanity checks
   throw_assert(shells.size() == m_childVolumes.size(),

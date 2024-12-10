@@ -130,6 +130,10 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   /// @return True if the volume is a gap volume, false otherwise
   bool isGapVolume(const Volume& volume) const;
 
+  std::vector<CylinderPortalShell*> collectChildShells(
+      const BlueprintOptions& options, const GeometryContext& gctx,
+      const Logger& logger);
+
   std::string m_name;
 
   BinningValue m_direction;

@@ -32,7 +32,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
 
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
-  MaterialDesignatorBlueprintNode(const std::string& name) : m_name(name) {}
+  explicit MaterialDesignatorBlueprintNode(const std::string& name)
+      : m_name(name) {}
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -84,6 +85,13 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
+
+  void handleCylinderBinning(
+      CylinderPortalShell& cylShell,
+      const std::vector<
+          std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+                     Experimental::ProtoBinning>>& binning,
+      const Logger& logger);
 
   std::string m_name{};
 

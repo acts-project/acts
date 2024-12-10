@@ -16,13 +16,16 @@
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
+namespace {
+inline static const std::string s_rootName = "Root";
+}
+
 namespace Acts {
 
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
 const std::string &Blueprint::name() const {
-  static const std::string root = "Root";
-  return root;
+  return s_rootName;
 }
 
 Volume &Blueprint::build(const BlueprintOptions & /*options*/,
@@ -137,9 +140,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
   child.finalize(options, gctx, *world, logger);
 
-  std::set<std::string> names;
+  std::set<std::string, std::less<>> names;
 
-  world->visitVolumes([&](const auto *volume) {
+  world->visitVolumes([&names, &logger, this](const auto *volume) {
     if (names.contains(volume->volumeName())) {
       ACTS_ERROR(prefix() << "Duplicate volume name: " << volume->volumeName());
       throw std::logic_error("Duplicate volume name");

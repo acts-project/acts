@@ -64,7 +64,7 @@ class Blueprint : public BlueprintNode {
 
   /// Constructor from a config object
   /// @param config The configuration object
-  Blueprint(const Config& config);
+  explicit Blueprint(const Config& config);
 
   /// Construct the tracking geometry from the blueprint tree
   /// @param options The construction options, see @c BlueprintOptions

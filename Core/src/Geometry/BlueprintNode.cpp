@@ -72,8 +72,8 @@ std::size_t BlueprintNode::depth() const {
 
 void BlueprintNode::setDepth(std::size_t depth) {
   m_depth = depth;
-  for (auto& child : m_children) {
-    child->setDepth(depth + 1);
+  for (auto& child : children()) {
+    child.setDepth(depth + 1);
   }
 }
 
@@ -147,8 +147,8 @@ LayerBlueprintNode& BlueprintNode::addLayer(
 }
 
 void BlueprintNode::clearChildren() {
-  for (auto& child : m_children) {
-    child->setDepth(0);
+  for (auto& child : children()) {
+    child.setDepth(0);
   }
   m_children.clear();
 }

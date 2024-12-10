@@ -26,7 +26,7 @@ class StaticBlueprintNode : public BlueprintNode {
  public:
   /// Construct the static node from an existing volume
   /// @param volume The volume to wrap
-  StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);
+  explicit StaticBlueprintNode(std::unique_ptr<TrackingVolume> volume);
 
   /// Get the name of this node. It is automatically taken from the wrapped
   /// volume

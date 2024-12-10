@@ -134,15 +134,6 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
         ACTS_VERBOSE(
             "Already on surface at initialization, skipping candidate");
 
-        // auto id = main.currentCandidate().surface().geometryId();
-        // csv << run << "," << position[0] << "," << position[1] << ","
-        //     << position[2];
-        // csv << "," << id.volume();
-        // csv << "," << id.boundary();
-        // csv << "," << id.sensitive();
-
-        // csv << std::endl;
-
         writeIntersection(position, main.currentCandidate().surface());
 
         if (!main.switchToNextCandidate()) {
@@ -168,7 +159,6 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
             std::max(1l, std::lround(delta.norm() / 10_cm * substepsPerCm));
 
         for (std::size_t j = 0; j < substeps; j++) {
-          // position += delta / (substeps + 1);
           Vector3 subpos = position + subStepDist(rng) * delta;
           csv << run << "," << subpos[0] << "," << subpos[1] << ","
               << subpos[2];
@@ -257,7 +247,9 @@ void addBlueprint(Context& ctx) {
     cls.def("__enter__", [](type& self) -> type& { return self; })
         .def("__exit__", [](type& /*self*/, const py::object& /*exc_type*/,
                             const py::object& /*exc_value*/,
-                            const py::object& /*traceback*/) {});
+                            const py::object& /*traceback*/) {
+          // No action needed on exit
+        });
   };
 
   auto addNodeMethods = [&blueprintNode](const std::string& name,

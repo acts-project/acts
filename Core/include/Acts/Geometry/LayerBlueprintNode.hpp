@@ -44,7 +44,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
 
   /// Constructor for a layer node.
   /// @param name The name of the layer
-  LayerBlueprintNode(const std::string& name)
+  explicit LayerBlueprintNode(const std::string& name)
       : StaticBlueprintNode{nullptr}, m_name(name) {}
 
   /// @copydoc BlueprintNode::name
