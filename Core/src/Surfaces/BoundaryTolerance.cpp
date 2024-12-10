@@ -15,11 +15,10 @@
 
 namespace Acts {
 
-BoundaryTolerance::BoundaryTolerance(const InfiniteTolerance& infinite)
+BoundaryTolerance::BoundaryTolerance(const Infinite& infinite)
     : m_variant{infinite} {}
 
-BoundaryTolerance::BoundaryTolerance(const NoneTolerance& none)
-    : m_variant{none} {}
+BoundaryTolerance::BoundaryTolerance(const None& none) : m_variant{none} {}
 
 BoundaryTolerance::BoundaryTolerance(const AbsoluteBound& absoluteBound)
     : m_variant{absoluteBound} {}
@@ -37,15 +36,15 @@ BoundaryTolerance::BoundaryTolerance(Variant variant)
     : m_variant{std::move(variant)} {}
 
 bool BoundaryTolerance::isInfinite() const {
-  return holdsVariant<InfiniteTolerance>();
+  return holdsVariant<Infinite>();
 }
 
 bool BoundaryTolerance::isNone() const {
-  return holdsVariant<NoneTolerance>();
+  return holdsVariant<None>();
 }
 
 bool BoundaryTolerance::hasAbsoluteBound(bool isCartesian) const {
-  return holdsVariant<NoneTolerance>() || holdsVariant<AbsoluteBound>() ||
+  return holdsVariant<None>() || holdsVariant<AbsoluteBound>() ||
          (isCartesian && holdsVariant<AbsoluteCartesian>());
 }
 

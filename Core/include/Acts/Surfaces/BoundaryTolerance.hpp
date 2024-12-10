@@ -55,16 +55,10 @@ namespace Acts {
 class BoundaryTolerance {
  public:
   /// Infinite tolerance i.e. no boundary check
-  struct InfiniteTolerance {};
-
-  static BoundaryTolerance Infinite() {
-    return BoundaryTolerance{InfiniteTolerance{}};
-  }
+  struct Infinite {};
 
   /// No tolerance i.e. exact boundary check
-  struct NoneTolerance {};
-
-  static BoundaryTolerance None() { return BoundaryTolerance{NoneTolerance{}}; }
+  struct None {};
 
   /// Absolute tolerance in bound coordinates
   struct AbsoluteBound {
@@ -125,24 +119,24 @@ class BoundaryTolerance {
   };
 
   /// Underlying variant type
-  using Variant = std::variant<InfiniteTolerance, NoneTolerance, AbsoluteBound,
-                               AbsoluteCartesian, AbsoluteEuclidean, Chi2Bound>;
+  using Variant = std::variant<Infinite, None, AbsoluteBound, AbsoluteCartesian,
+                               AbsoluteEuclidean, Chi2Bound>;
 
   /// Construct with infinite tolerance.
-  explicit BoundaryTolerance(const InfiniteTolerance& infinite);
+  BoundaryTolerance(const Infinite& infinite);
   /// Construct with no tolerance.
-  explicit BoundaryTolerance(const NoneTolerance& none);
+  BoundaryTolerance(const None& none);
   /// Construct with absolute tolerance in bound coordinates.
-  explicit BoundaryTolerance(const AbsoluteBound& AbsoluteBound);
+  BoundaryTolerance(const AbsoluteBound& AbsoluteBound);
   /// Construct with absolute tolerance in Cartesian coordinates.
-  explicit BoundaryTolerance(const AbsoluteCartesian& absoluteCartesian);
+  BoundaryTolerance(const AbsoluteCartesian& absoluteCartesian);
   /// Construct with absolute tolerance in Euclidean distance.
-  explicit BoundaryTolerance(const AbsoluteEuclidean& absoluteEuclidean);
+  BoundaryTolerance(const AbsoluteEuclidean& absoluteEuclidean);
   /// Construct with chi2 tolerance in bound coordinates.
-  explicit BoundaryTolerance(const Chi2Bound& Chi2Bound);
+  BoundaryTolerance(const Chi2Bound& Chi2Bound);
 
   /// Construct from variant
-  explicit BoundaryTolerance(Variant variant);
+  BoundaryTolerance(Variant variant);
 
   /// Check if the tolerance is infinite.
   bool isInfinite() const;
