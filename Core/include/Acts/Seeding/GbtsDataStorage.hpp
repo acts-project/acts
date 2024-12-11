@@ -31,17 +31,22 @@ struct GbtsSP {
   int combined_ID;
   bool m_isPixel;
   float m_phi;
-  float m_r; 
-  float m_ClusterWidth ; 
-  GbtsSP(const space_point_t *sp, int id, int combined_id, bool isPixel, float ClusterWidth)
-      : SP(sp), gbtsID(id), combined_ID{combined_id}, m_isPixel(isPixel), m_ClusterWidth(ClusterWidth) {
+  float m_r;
+  float m_ClusterWidth;
+  GbtsSP(const space_point_t *sp, int id, int combined_id, bool isPixel,
+         float ClusterWidth)
+      : SP(sp),
+        gbtsID(id),
+        combined_ID{combined_id},
+        m_isPixel(isPixel),
+        m_ClusterWidth(ClusterWidth) {
     m_phi = std::atan2(SP->y(), SP->x());
-    m_r = std::sqrt((SP->x()*SP->x())+ (SP->y()*SP->y())) ;   
+    m_r = std::sqrt((SP->x() * SP->x()) + (SP->y() * SP->y()));
   };
   bool isPixel() const { return m_isPixel; }
   bool isSCT() const { return !m_isPixel; }
   float phi() const { return m_phi; }
-  float r() const {return m_r;}
+  float r() const { return m_r; }
   float ClusterWidth() const { return m_ClusterWidth; }
 };
 
@@ -165,7 +170,7 @@ class GbtsDataStorage {
       float max_tau = 100.0;
       // can't do this bit yet as dont have cluster width
       if (useClusterWidth) {
-        float cluster_width = sp.ClusterWidth(); 
+        float cluster_width = sp.ClusterWidth();
         min_tau = 6.7 * (cluster_width - 0.2);
         max_tau =
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
@@ -176,7 +181,7 @@ class GbtsDataStorage {
               sp, min_tau, max_tau));  // adding ftf member to nodes
     } else {
       if (useClusterWidth) {
-        float cluster_width = sp.ClusterWidth();  
+        float cluster_width = sp.ClusterWidth();
         if (cluster_width > 0.2) {
           return -3;
         }

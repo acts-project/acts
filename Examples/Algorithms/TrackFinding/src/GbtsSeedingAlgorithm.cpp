@@ -86,15 +86,15 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   for (auto sp : GbtsSpacePoints) {
-    ACTS_DEBUG("Gbts space points: " << " Gbts_id: " << sp.gbtsID << " z: "
-                                     << sp.SP->z() << " r: " << sp.r()
-                                     << " ACTS volume:  "
-                                     << sp.SP->sourceLinks()
-                                            .front()
-                                            .get<IndexSourceLink>()
-                                            .geometryId()
-                                            .volume()
-                                     << "\n");
+    ACTS_DEBUG("Gbts space points: "
+               << " Gbts_id: " << sp.gbtsID << " z: " << sp.SP->z()
+               << " r: " << sp.r() << " ACTS volume:  "
+               << sp.SP->sourceLinks()
+                      .front()
+                      .get<IndexSourceLink>()
+                      .geometryId()
+                      .volume()
+               << "\n");
   }
 
   // this is now calling on a core algorithm
@@ -219,18 +219,21 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
       // access IDs from map
       int eta_mod = Find->second.second;
       int combined_id = Gbts_id * 1000 + eta_mod;
-      
-      //check if SP is pixel, dependent of type of SP so must be done in examples 
-      bool isPixel = false ;
+
+      // check if SP is pixel, dependent of type of SP so must be done in
+      // examples
+      bool isPixel = false;
       if (sourceLink.size() == 1) {  // pixels have 1 SL
         isPixel = true;
       } else {
         isPixel = false;
       }
 
-      float ClusterWidth = 0 ; //false input as this is not available in examples 
+      float ClusterWidth =
+          0;  // false input as this is not available in examples
       // fill Gbts vector with current sapce point and ID
-      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id, isPixel, ClusterWidth); //make new GbtsSP here ! 
+      gbtsSpacePoints.emplace_back(&spacePoint, Gbts_id, combined_id, isPixel,
+                                   ClusterWidth);  // make new GbtsSP here !
     }
   }
   ACTS_VERBOSE("Space points successfully assigned Gbts ID");
