@@ -7,11 +7,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 // STL include(s)
-#include <cassert>
 #include <ctime>
-#include <exception>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -482,7 +480,9 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    std::strftime(buffer, sizeof(buffer), m_format.c_str(), localtime(&t));
+    struct tm tbuf {};
+    std::strftime(buffer, sizeof(buffer), m_format.c_str(),
+                  localtime_r(&t, &tbuf));
     return buffer;
   }
 

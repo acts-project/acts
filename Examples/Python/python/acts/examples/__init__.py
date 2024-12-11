@@ -7,7 +7,7 @@ import re
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
 import acts
-from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstructor
+from acts._adapter import _patch_config, _patchKwargsConstructor
 
 _propagators = []
 _concrete_propagators = []
@@ -33,8 +33,6 @@ def ConcretePropagator(propagator):
 
 
 _patch_config(ActsPythonBindings._examples)
-
-_patch_detectors(ActsPythonBindings._examples)
 
 # Manually patch ExaTrkX constructors
 # Need to do it this way, since they are not always present

@@ -18,14 +18,12 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <cstddef>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Event generator based on separate particles and vertex generators.
 ///
@@ -93,8 +91,9 @@ class EventGenerator final : public ActsExamples::IReader {
   struct Config {
     /// Name of the output particles collection.
     std::string outputParticles;
-    /// Name of the vertex collection.
+    /// Name of the output vertex collection.
     std::string outputVertices;
+
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
     /// The random number service.

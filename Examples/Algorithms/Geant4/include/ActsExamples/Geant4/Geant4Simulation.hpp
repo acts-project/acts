@@ -10,12 +10,15 @@
 
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Geant4/Geant4ConstructionOptions.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <cstddef>
@@ -39,14 +42,13 @@ class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
 
-class G4VUserDetectorConstruction;
-
 namespace ActsExamples {
+struct Geant4Handle;
 
-class DetectorConstructionFactory;
+namespace Geant4 {
 class SensitiveSurfaceMapper;
 struct EventStore;
-struct Geant4Handle;
+}  // namespace Geant4
 
 /// Abstracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {
@@ -59,9 +61,11 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
 
-    /// Detector construction object.
-    /// G4RunManager will take care of deletion
-    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
+    /// Geant4 construction options.
+    Geant4ConstructionOptions constructionOptions;
+
+    /// Detector instance to access Geant4 geometry construction.
+    std::shared_ptr<Detector> detector;
 
     /// Optional Geant4 instance overwrite.
     std::shared_ptr<Geant4Handle> geant4Handle;
@@ -78,8 +82,7 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const override;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
@@ -91,11 +94,11 @@ class Geant4SimulationBase : public IAlgorithm {
 
   G4RunManager& runManager() const;
 
-  EventStore& eventStore() const;
+  Geant4::EventStore& eventStore() const;
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::shared_ptr<EventStore> m_eventStore;
+  std::shared_ptr<Geant4::EventStore> m_eventStore;
 
   int m_geant4Level{};
 
@@ -121,9 +124,12 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// Name of the output collection : simulated particles
     std::string outputParticles = "particles_simulated";
 
+    /// Name of the output collection : propagation records (debugging)
+    std::string outputPropagationSummaries = "propagation_summaries";
+
     /// The ACTS sensitive surfaces in a mapper, used for hit creation
-    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
-        nullptr;
+    std::shared_ptr<const Geant4::SensitiveSurfaceMapper>
+        sensitiveSurfaceMapper = nullptr;
 
     /// The ACTS Magnetic field provider
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField = nullptr;
@@ -135,11 +141,17 @@ class Geant4Simulation final : public Geant4SimulationBase {
     double killAfterTime = std::numeric_limits<double>::infinity();
     bool killSecondaries = false;
 
+    bool recordHitsOfCharged = true;
+
     bool recordHitsOfNeutrals = false;
+
+    bool recordHitsOfPrimaries = true;
 
     bool recordHitsOfSecondaries = true;
 
     bool keepParticlesWithoutHits = true;
+
+    bool recordPropagationSummaries = false;
   };
 
   /// Simulation constructor
@@ -154,8 +166,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }
@@ -170,6 +181,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHIts"};
+
+  WriteDataHandle<PropagationSummaries> m_outputPropagationSummaries{
+      this, "OutputPropagationSummaries"};
 };
 
 class Geant4MaterialRecording final : public Geant4SimulationBase {
@@ -194,8 +208,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
 
   /// Readonly access to the configuration
   const Config& config() const final { return m_cfg; }

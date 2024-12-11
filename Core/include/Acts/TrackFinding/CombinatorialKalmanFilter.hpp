@@ -365,7 +365,7 @@ class CombinatorialKalmanFilter {
 
         ACTS_VERBOSE("Create temp track state with mask: " << mask);
         // CAREFUL! This trackstate has a previous index that is not in this
-        // MultiTrajectory Visiting brackwards from this track state will
+        // MultiTrajectory Visiting backwards from this track state will
         // fail!
         auto ts = bufferTrajectory.makeTrackState(mask, prevTip);
 
@@ -464,7 +464,6 @@ class CombinatorialKalmanFilter {
         }
 
         // either copy ALL or everything except for predicted and jacobian
-        trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
         auto typeFlags = trackState.typeFlags();
@@ -739,7 +738,7 @@ class CombinatorialKalmanFilter {
         slRange = m_sourceLinkAccessor(*surface);
         hasMeasurements = slRange->first != slRange->second;
       }
-      bool isHole = isSensitive && !hasMeasurements;
+      bool isHole = isSensitive && expectMeasurements && !hasMeasurements;
 
       if (isHole) {
         ACTS_VERBOSE("Detected hole before measurement selection on surface "
@@ -747,7 +746,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Transport the covariance to the surface
-      if (isHole || isMaterialOnly) {
+      if (isMaterialOnly) {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       } else {
         stepper.transportCovarianceToBound(state.stepping, *surface);

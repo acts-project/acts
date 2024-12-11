@@ -20,25 +20,25 @@
 // this is a global access to the x coordinate
 class GlobalAccessX final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  std::array<Acts::ActsScalar, 1u> g2X(const Acts::Vector3& global) const {
+  std::array<double, 1u> g2X(const Acts::Vector3& global) const {
     return {global.x()};
   }
 };
 
 class LocalAccessX final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  std::array<Acts::ActsScalar, 1u> l2X(const Acts::Vector2& local) const {
+  std::array<double, 1u> l2X(const Acts::Vector2& local) const {
     return {local.x()};
   }
 };
 
 class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  Acts::ActsScalar zShift = 0.;
+  double zShift = 0.;
 
-  GlobalToZPhi(Acts::ActsScalar shift) : zShift(shift) {}
+  GlobalToZPhi(double shift) : zShift(shift) {}
 
-  std::array<Acts::ActsScalar, 2u> g2ZPhi(const Acts::Vector3& global) const {
+  std::array<double, 2u> g2ZPhi(const Acts::Vector3& global) const {
     return {global.z() + zShift, Acts::VectorHelpers::phi(global)};
   }
 };
@@ -46,11 +46,11 @@ class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
 // Local on cylinder surface is rPhi, z
 class LocalToZPhi final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  Acts::ActsScalar radius = 1.;
+  double radius = 1.;
 
-  LocalToZPhi(Acts::ActsScalar r) : radius(r) {}
+  LocalToZPhi(double r) : radius(r) {}
 
-  std::array<Acts::ActsScalar, 2u> l2ZPhi(const Acts::Vector2& local) const {
+  std::array<double, 2u> l2ZPhi(const Acts::Vector2& local) const {
     return {local[1u], local[0u] / radius};
   }
 };
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   BOOST_CHECK_EQUAL(ml4.material().X0(), 21.);
 
   // Now scale it - and access again
-  ism *= 2.;
+  ism.scale(2.);
   const Acts::MaterialSlab& sml0 = ism.materialSlab(l0);
   const Acts::MaterialSlab& sml1 = ism.materialSlab(l1);
   const Acts::MaterialSlab& sml2 = ism.materialSlab(l2);
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   BOOST_CHECK_EQUAL(ml0g1.material().X0(), 31.);
 
   // Scale
-  ism1 *= 2.;
+  ism1.scale(2.);
   const Acts::MaterialSlab& sml0g1 = ism1.materialSlab(l0g1);
   BOOST_CHECK_EQUAL(sml0g1.thickness(), 8.);
 
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   BOOST_CHECK_EQUAL(ml0g1.material().X0(), 1.);
 
   // scaling shared material should throw a std::invalid_argument
-  BOOST_CHECK_THROW(ism1 *= 2., std::invalid_argument);
+  BOOST_CHECK_THROW(ism1.scale(2.), std::invalid_argument);
 }
 
 // This test covers the grid material (non-indexed accessor)
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   BOOST_CHECK_EQUAL(ml4.thickness(), 4.);
 
   // Now scale it - and access again
-  gsm *= 2.;
+  gsm.scale(2.);
 
   const Acts::MaterialSlab& sml0 = gsm.materialSlab(l0);
   const Acts::MaterialSlab& sml1 = gsm.materialSlab(l1);

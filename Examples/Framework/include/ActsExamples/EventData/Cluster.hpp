@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <numeric>
-#include <optional>
 #include <vector>
 
 namespace ActsExamples {

@@ -6,32 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/DigitizationConfigurator.hpp"
 #include "ActsExamples/Digitization/DigitizationCoordinatesConverter.hpp"
-#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include <array>
 #include <memory>
 #include <tuple>
 #include <utility>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class GeometryIdentifier;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -47,19 +36,18 @@ void addDigitization(Context& ctx) {
   mex.def("writeDigiConfigToJson", ActsExamples::writeDigiConfigToJson);
 
   {
-    using Config = ActsExamples::DigitizationConfig;
+    using Config = ActsExamples::DigitizationAlgorithm::Config;
 
-    py::class_<ActsExamples::DigitizationAlgorithm, ActsExamples::IAlgorithm,
-               std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
-        mex, "DigitizationAlgorithm")
-        .def(py::init<Config&, Acts::Logging::Level>(), py::arg("config"),
-             py::arg("level"))
-        .def_property_readonly("config",
-                               &ActsExamples::DigitizationAlgorithm::config);
+    auto a = py::class_<ActsExamples::DigitizationAlgorithm,
+                        ActsExamples::IAlgorithm,
+                        std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
+                 mex, "DigitizationAlgorithm")
+                 .def(py::init<Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly(
+                     "config", &ActsExamples::DigitizationAlgorithm::config);
 
-    auto c = py::class_<Config>(mex, "DigitizationConfig")
-                 .def(py::init<Acts::GeometryHierarchyMap<
-                          ActsExamples::DigiComponentsConfig>>());
+    auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputSimHits);
@@ -67,6 +55,8 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputClusters);
     ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
+    ACTS_PYTHON_MEMBER(outputParticleMeasurementsMap);
+    ACTS_PYTHON_MEMBER(outputSimHitMeasurementsMap);
     ACTS_PYTHON_MEMBER(surfaceByIdentifier);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(doOutputCells);
@@ -81,10 +71,15 @@ void addDigitization(Context& ctx) {
 
     patchKwargsConstructor(c);
 
-    py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig");
+    auto cc = py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig")
+                  .def(py::init<>());
 
-    py::class_<Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>>(
-        mex, "GeometryHierarchyMap_DigiComponentsConfig")
+    ACTS_PYTHON_STRUCT_BEGIN(cc, DigiComponentsConfig);
+    ACTS_PYTHON_MEMBER(geometricDigiConfig);
+    ACTS_PYTHON_MEMBER(smearingDigiConfig);
+    ACTS_PYTHON_STRUCT_END();
+
+    py::class_<DigiConfigContainer>(mex, "DigiConfigContainer")
         .def(py::init<std::vector<
                  std::pair<GeometryIdentifier, DigiComponentsConfig>>>());
   }
@@ -107,7 +102,8 @@ void addDigitization(Context& ctx) {
     py::class_<ActsExamples::DigitizationCoordinatesConverter,
                std::shared_ptr<ActsExamples::DigitizationCoordinatesConverter>>(
         mex, "DigitizationCoordinatesConverter")
-        .def(py::init<ActsExamples::DigitizationConfig&>(), py::arg("config"))
+        .def(py::init<ActsExamples::DigitizationAlgorithm::Config&>(),
+             py::arg("config"))
         .def_property_readonly(
             "config", &ActsExamples::DigitizationCoordinatesConverter::config)
         .def("globalToLocal",

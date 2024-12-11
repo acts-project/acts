@@ -64,7 +64,7 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
   // Digital
   auto digital = f.target<const Digitization::Digital>();
   if (digital != nullptr) {
-    j["type"] = "Digitial";
+    j["type"] = "Digital";
     j["bindata"] = nlohmann::json(digital->binningData);
     return;
   }
@@ -87,18 +87,18 @@ void from_json(
   if (sType == "Gauss") {
     f = Digitization::Gauss(j["stddev"]);
   } else if (sType == "GaussTrunc") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussTrunc(sigma, range);
   } else if (sType == "GaussClipped") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussClipped(sigma, range);
   } else if (sType == "Uniform") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
     f = Digitization::Uniform(bd);
-  } else if (sType == "Digitial") {
+  } else if (sType == "Digital") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
     f = Digitization::Digital(bd);
@@ -159,7 +159,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
     for (const auto& jvar : jvariances) {
       auto idx =
           static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
-      auto vars = jvar["rms"].get<std::vector<Acts::ActsScalar>>();
+      auto vars = jvar["rms"].get<std::vector<double>>();
       gdc.varianceMap[idx] = vars;
     }
   }

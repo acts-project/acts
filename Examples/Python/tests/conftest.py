@@ -209,19 +209,12 @@ def basic_prop_seq(rng):
             rnd=rng,
         )
 
-        # Run particle smearing
-        trackParametersGenerator = acts.examples.ParticleSmearing(
-            level=acts.logging.INFO,
+        trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
+            level=acts.logging.WARNING,
             inputParticles="particles_input",
-            outputTrackParameters="start_parameters",
-            randomNumbers=rng,
-            sigmaD0=0.0,
-            sigmaZ0=0.0,
-            sigmaPhi=0.0,
-            sigmaTheta=0.0,
-            sigmaPtRel=0.0,
+            outputTrackParameters="params_particles_input",
         )
-        s.addAlgorithm(trackParametersGenerator)
+        s.addAlgorithm(trkParamExtractor)
 
         nav = acts.Navigator(trackingGeometry=geo)
         stepper = acts.StraightLineStepper()
@@ -232,11 +225,11 @@ def basic_prop_seq(rng):
             level=acts.logging.WARNING,
             propagatorImpl=prop,
             sterileLogger=False,
-            inputTrackParameters="start_parameters",
+            inputTrackParameters="params_particles_input",
             outputSummaryCollection="propagation_summary",
         )
-
         s.addAlgorithm(alg)
+
         return s, alg
 
     return _basic_prop_seq_factory
@@ -244,14 +237,17 @@ def basic_prop_seq(rng):
 
 @pytest.fixture
 def trk_geo():
-    detector, geo, contextDecorators = acts.examples.GenericDetector.create()
-    yield geo
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    yield trackingGeometry
 
 
 DetectorConfig = namedtuple(
     "DetectorConfig",
     [
-        "detectorTuple",
+        "detector",
+        "trackingGeometry",
+        "decorators",
         "geometrySelection",
         "digiConfigFile",
         "name",
@@ -264,9 +260,13 @@ def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     if request.param == "generic":
-        detectorTuple = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetector()
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
         return DetectorConfig(
-            detectorTuple,
+            detector,
+            trackingGeometry,
+            decorators,
             geometrySelection=(
                 srcdir
                 / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
@@ -285,9 +285,13 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detectorTuple = getOpenDataDetector(matDeco)
+        detector = getOpenDataDetector(matDeco)
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
         return DetectorConfig(
-            detectorTuple,
+            detector,
+            trackingGeometry,
+            decorators,
             digiConfigFile=(
                 srcdir
                 / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
@@ -357,8 +361,8 @@ def fatras(ptcl_gun, trk_geo, rng):
         s.addAlgorithm(simAlg)
 
         # Digitization
-        digiCfg = acts.examples.DigitizationConfig(
-            acts.examples.readDigiConfigFromJson(
+        digiCfg = acts.examples.DigitizationAlgorithm.Config(
+            digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
                     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
@@ -382,14 +386,8 @@ def _do_material_recording(d: Path):
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
 
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
-        detectorConstructionFactory = (
-            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-        )
-
-        runMaterialRecording(
-            detectorConstructionFactory, str(d), tracksPerEvent=100, s=s
-        )
+    with getOpenDataDetector() as detector:
+        runMaterialRecording(detector, str(d), tracksPerEvent=100, s=s)
 
         s.run()
 
@@ -403,7 +401,9 @@ def material_recording_session():
         pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
-        p = multiprocessing.Process(target=_do_material_recording, args=(d,))
+        # explicitly ask for "spawn" as CI failures were observed with "fork"
+        spawn_context = multiprocessing.get_context("spawn")
+        p = spawn_context.Process(target=_do_material_recording, args=(d,))
         p.start()
         p.join()
         if p.exitcode != 0:

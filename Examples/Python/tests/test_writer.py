@@ -165,7 +165,6 @@ def test_root_meas_writer(tmp_path, fatras, trk_geo, assert_root_hash):
         filePath=str(out),
         surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),
     )
-    config.addBoundIndicesFromDigiConfig(digiAlg.config)
     s.addWriter(RootMeasurementWriter(level=acts.logging.INFO, config=config))
     s.run()
 
@@ -196,6 +195,44 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     assert out.exists()
     assert out.stat().st_size > 2e4
     assert_root_hash(out.name, out)
+
+
+@pytest.mark.root
+def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    s = Sequencer(numThreads=1, events=10)
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    # This also runs the RootTrackSummaryWriter with truth information
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    # Run the RootTrackSummaryWriter without the truth information
+    s.addWriter(
+        conf_const(
+            RootTrackSummaryWriter,
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            filePath=str(tmp_path / "track_summary_kf_no_truth.root"),
+        )
+    )
+
+    s.run()
+    assert (tmp_path / "tracksummary_kf.root").exists()
+    assert (tmp_path / "track_summary_kf_no_truth.root").exists()
 
 
 @pytest.mark.csv
@@ -325,9 +362,10 @@ def test_csv_writer_interface(writer, conf_const, tmp_path, trk_geo):
 def test_root_material_writer(tmp_path, assert_root_hash):
     from acts.examples.dd4hep import DD4hepDetector
 
-    detector, trackingGeometry, _ = DD4hepDetector.create(
+    detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
+    trackingGeometry = detector.trackingGeometry()
 
     out = tmp_path / "material.root"
 
@@ -349,9 +387,10 @@ def test_root_material_writer(tmp_path, assert_root_hash):
 def test_json_material_writer(tmp_path, fmt):
     from acts.examples.dd4hep import DD4hepDetector
 
-    detector, trackingGeometry, _ = DD4hepDetector.create(
+    detector = DD4hepDetector(
         xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
     )
+    trackingGeometry = detector.trackingGeometry()
 
     out = (tmp_path / "material").with_suffix("." + fmt.name.lower())
 
@@ -368,7 +407,8 @@ def test_json_material_writer(tmp_path, fmt):
 
 @pytest.mark.csv
 def test_csv_multitrajectory_writer(tmp_path):
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -566,7 +606,8 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 def test_edm4hep_multitrajectory_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman
@@ -615,7 +656,8 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 def test_edm4hep_tracks_writer(tmp_path):
     from acts.examples.edm4hep import EDM4hepTrackWriter
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     from truth_tracking_kalman import runTruthTrackingKalman

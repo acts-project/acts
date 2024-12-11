@@ -109,9 +109,9 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
     for (auto [iv, value] : enumerate(valuesEntry)) {
       // Get the binning value
       BinningValue bValue = bvCyl.at(iv);
-      ActsScalar val = std::numeric_limits<ActsScalar>::max();
+      double val = std::numeric_limits<double>::max();
       bool isMin = (iv % 2 == 0);
-      // Case "e" : exxternal extent
+      // Case "e" : external extent
       if (value == "e") {
         // External parameters do not constrain it
         if (!externalExtent.constrains(bValue)) {
@@ -121,7 +121,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         val = isMin ? externalExtent.min(bValue) : externalExtent.max(bValue);
       } else if (value == "i" || value[0u] == 'i') {
         // Add the envelope
-        ActsScalar envelope = 0.;
+        double envelope = 0.;
         if (value.size() > 2u) {
           std::vector<std::string> valEntry;
           boost::split(valEntry, value, boost::is_any_of("+"));
@@ -157,5 +157,5 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
     }
   }
 
-  return std::make_tuple(boundsType, extent);
+  return {boundsType, extent};
 }

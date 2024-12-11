@@ -59,12 +59,12 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
                   averageOnSurfaceTolerance)
               .closest();
 
-      if (sIntersection.status() == Intersection3D::Status::onSurface) {
+      if (sIntersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(
             "MultiStepperSurfaceReached aborter | "
             "Reached target in average mode");
         for (auto cmp : stepper.componentIterable(state.stepping)) {
-          cmp.status() = Intersection3D::Status::onSurface;
+          cmp.status() = IntersectionStatus::onSurface;
         }
 
         return true;
@@ -84,10 +84,10 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
 
       if (!SurfaceReached::checkAbort(singleState, singleStepper, navigator,
                                       logger)) {
-        cmp.status() = Acts::Intersection3D::Status::reachable;
+        cmp.status() = Acts::IntersectionStatus::reachable;
         reached = false;
       } else {
-        cmp.status() = Acts::Intersection3D::Status::onSurface;
+        cmp.status() = Acts::IntersectionStatus::onSurface;
       }
     }
 

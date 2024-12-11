@@ -399,7 +399,7 @@ class Surface : public virtual GeometryObject,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
+      double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Helper method for printing: the returned object captures the
   /// surface and the geometry context and will print the surface

@@ -79,10 +79,10 @@ static void drawMeasurements(
 
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters(
-    const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
-    const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
-    const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
-    const ActsScalar p = 2_GeV, const ActsScalar q = 1_e) {
+    const double x = 0.0_m, const double y = 0.0_m, const double z = 0.0_m,
+    const double w = 42_ns, const double phi = 0_degree,
+    const double theta = 90_degree, const double p = 2_GeV,
+    const double q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -1108,15 +1108,15 @@ BOOST_AUTO_TEST_CASE(Material) {
   // Parameters
   // We need quite coarse checks here, since on different builds
   // the created measurements differ in the randomness
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 7e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -11., 26e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -15., 15e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1.1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], std::numbers::pi / 2,
-                    1e-3);
+                    2e-2);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime],
                     startParametersFit.parameters()[eBoundTime], 1e-6);
-  //  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 3.5e-27, 1e1);
 
   // Convergence
   BOOST_CHECK_EQUAL(

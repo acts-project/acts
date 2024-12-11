@@ -99,13 +99,13 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       borders.push_back(static_cast<float>(fVolume.extent.min(binValue)));
       for (unsigned int iv = 1; iv < cts.constituentVolumes.size(); ++iv) {
         auto& lv = cts.constituentVolumes[iv - 1u];
-        ActsScalar zero = lv.extent.min(binValue);
-        ActsScalar low = lv.extent.max(binValue);
+        double zero = lv.extent.min(binValue);
+        double low = lv.extent.max(binValue);
 
         auto& hv = cts.constituentVolumes[iv];
-        ActsScalar high = hv.extent.min(binValue);
-        ActsScalar mid = 0.5 * (low + high);
-        ActsScalar max = hv.extent.max(binValue);
+        double high = hv.extent.min(binValue);
+        double mid = 0.5 * (low + high);
+        double max = hv.extent.max(binValue);
         lv.extent.set(binValue, zero, mid);
         hv.extent.set(binValue, mid, max);
         borders.push_back(mid);
@@ -118,7 +118,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       std::vector<float> boundaries = {};
       // New container vector
       std::vector<ProtoVolume> updatedConstituents;
-      ActsScalar containerMin = extent.min(binValue);
+      double containerMin = extent.min(binValue);
       if (fVolume.extent.min(binValue) > containerMin) {
         ProtoVolume gap;
         gap.name = name + "-gap-" + std::to_string(gaps++);
@@ -133,9 +133,9 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         updatedConstituents.push_back(lv);
         borders.push_back(static_cast<float>(lv.extent.min(binValue)));
         // check if a gap to the next is needed
-        ActsScalar low = lv.extent.max(binValue);
+        double low = lv.extent.max(binValue);
         auto& hv = cts.constituentVolumes[iv];
-        ActsScalar high = hv.extent.min(binValue);
+        double high = hv.extent.min(binValue);
         if (high > low) {
           ProtoVolume gap;
           gap.name = name + "-gap-" + std::to_string(gaps++);
@@ -144,11 +144,11 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
           borders.push_back(static_cast<float>(low));
         }
       }
-      ActsScalar constituentsMax = lVolume.extent.max(binValue);
+      double constituentsMax = lVolume.extent.max(binValue);
       updatedConstituents.push_back(lVolume);
       borders.push_back(static_cast<float>(constituentsMax));
       // Check the container min/max setting
-      ActsScalar containerMax = extent.max(binValue);
+      double containerMax = extent.max(binValue);
       if (constituentsMax < containerMax) {
         ProtoVolume gap;
         gap.name = name + "-gap-" + std::to_string(gaps++);
