@@ -3,7 +3,9 @@
 set -u
 set -e
 
-source detect_os.sh
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source ${SCRIPT_DIR}/detect_os.sh
 
 packages_file=${GITHUB_WORKSPACE}/spack/etc/spack/packages.yaml
 
