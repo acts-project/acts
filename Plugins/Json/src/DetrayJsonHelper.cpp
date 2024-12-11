@@ -8,8 +8,8 @@
 
 // For whatever reason, this compilation unit does not compile
 // with those assertions and GCC 13. For now just disable the
-// flags here.
-#ifdef _GLIBCXX_ASSERTIONS
+// flags in this case.
+#if defined(_GLIBCXX_ASSERTIONS) && __GNUC__ == 13
 #undef _GLIBCXX_ASSERTIONS
 #endif
 
