@@ -233,7 +233,6 @@ else:
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
             
-            outputDirRoot=pathlib.Path("/Users/delitez/atlas/acts/output"),
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
                 rMean=2,
                 rStdDev=0.0125 * u.mm,
