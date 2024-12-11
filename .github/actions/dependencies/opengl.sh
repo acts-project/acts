@@ -9,9 +9,17 @@ source ${SCRIPT_DIR}/detect_os.sh
 
 packages_file=${GITHUB_WORKSPACE}/spack/etc/spack/packages.yaml
 
+if ! command -v sudo &> /dev/null
+then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
+
 if [ "$os" == "ubuntu" ]; then
-  sudo apt-get update
-  sudo apt-get install -y libgl1-mesa-dev
+  ${SUDO} apt-get update
+  ${SUDO} apt-get install -y libgl1-mesa-dev
 cat <<EOF > "$packages_file"
 packages:
   opengl:
@@ -22,7 +30,7 @@ packages:
 EOF
 cat "$packages_file"
 elif [ "$os" == "almalinux" ]; then
-  dnf install -y mesa-libGLU
+  ${SUDO} dnf install -y mesa-libGLU
 cat <<EOF > "$packages_file"
 packages:
   opengl:
