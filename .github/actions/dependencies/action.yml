@@ -5,9 +5,10 @@ inputs:
     description: "Which Xcode version to use (only for macOS)"
     required: true
     default: ""
-# outputs:
-#   example_output:
-#     description: "An example output"
+  dependency-tag:
+    description: "Which dependency tag to use"
+    required: true
+    default: "v6-test"
 runs:
   using: "composite"
   steps:
@@ -38,8 +39,17 @@ runs:
         echo "Lock file: ${lock_file}"
         echo "SPACK_LOCK_FILE=${lock_file}" >> $GITHUB_ENV
 
-    # - name: Setup Xcode version
-    #   if: startsWith(inputs.os, 'macos')
-    #   uses: maxim-lobanov/setup-xcode@v1
-    #   with:
-    #     xcode-version: "${{ inputs.xcode }}"
+    - name: Setup Xcode version
+      if: startsWith(runner.os, 'macos')
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: "${{ inputs.xcode-version }}"
+
+    - name: Get spack lock file from tag
+      shell: bash
+      run: |
+        url="https://github.com/acts-project/ci-dependencies/releases/download/${{ inputs.dependency-tag }}/${SPACK_LOCK_FILE}"
+        echo "URL: ${url}"
+        curl -L -o spack.lock $url
+
+        ls -al
