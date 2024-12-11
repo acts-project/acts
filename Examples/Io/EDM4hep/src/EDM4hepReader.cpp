@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -24,6 +24,7 @@
 #include <map>
 #include <stdexcept>
 
+#include <DD4hep/Detector.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/SimTrackerHitCollection.h>
@@ -306,8 +307,9 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
       auto simHit = EDM4hepUtil::readSimHit(
           hit,
           [&](const auto& inParticle) {
-            ACTS_VERBOSE("SimHit has source particle: "
-                         << hit.getMCParticle().getObjectID().index);
+            ACTS_VERBOSE(
+                "SimHit has source particle: "
+                << Acts::EDM4hepUtil::getParticle(hit).getObjectID().index);
             auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
             if (it == edm4hepParticleMap.end()) {
               ACTS_ERROR(
@@ -322,8 +324,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
           [&](std::uint64_t cellId) {
             ACTS_VERBOSE("CellID: " << cellId);
 
-            const auto& vm = m_cfg.dd4hepDetector->geometryService->detector()
-                                 .volumeManager();
+            const auto& vm =
+                m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
             const auto detElement = vm.lookupDetElement(cellId);
 
@@ -371,8 +373,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
     for (auto it = hitsByParticle.begin(), end = hitsByParticle.end();
          it != end; it = hitsByParticle.upper_bound(it->first)) {
-      std::cout << "Particle " << it->first << " has "
-                << hitsByParticle.count(it->first) << " hits" << std::endl;
+      ACTS_DEBUG("Particle " << it->first << " has "
+                             << hitsByParticle.count(it->first) << " hits");
 
       std::vector<std::size_t> hitIndices;
       hitIndices.reserve(hitsByParticle.count(it->first));

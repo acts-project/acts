@@ -11,7 +11,9 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
+namespace ActsExamples {
+
+TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
@@ -27,7 +29,7 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
   mutableSurface->assignSurfaceMaterial(std::move(material));
 }
 
-ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
+TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
@@ -40,3 +42,5 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
+
+}  // namespace ActsExamples

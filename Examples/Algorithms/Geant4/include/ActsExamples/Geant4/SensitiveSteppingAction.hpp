@@ -23,7 +23,7 @@ namespace Acts {
 class Surface;
 }
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// The G4SteppingAction that is called for every step in
 /// the simulation process.
@@ -41,6 +41,9 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     bool primary = true;
     bool secondary = true;
+
+    /// step logging mode
+    bool stepLogging = false;
   };
 
   /// Construct the stepping action
@@ -83,4 +86,4 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
       m_surfaceMapping;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

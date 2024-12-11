@@ -8,15 +8,16 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TruthTracking/HitSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ParticleTrackParamExtractor.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
-#include "ActsExamples/Utilities/HitSelector.hpp"
 
 #include <memory>
 
@@ -39,14 +40,18 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
-      inputMeasurementParticlesMap, outputProtoTracks);
+      inputParticleMeasurementsMap, outputProtoTracks);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
+                                "ParticleTrackParamExtractor", inputParticles,
+                                outputTrackParameters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::ParticleSmearing, mex, "ParticleSmearing", inputParticles,
-      outputTrackParameters, sigmaD0, sigmaD0PtA, sigmaD0PtB, sigmaZ0,
-      sigmaZ0PtA, sigmaZ0PtB, sigmaT0, sigmaPhi, sigmaTheta, sigmaPtRel,
-      initialSigmas, initialSigmaPtRel, initialVarInflation, particleHypothesis,
-      randomNumbers);
+      ActsExamples::TrackParameterSmearing, mex, "TrackParameterSmearing",
+      inputTrackParameters, outputTrackParameters, sigmaLoc0, sigmaLoc0PtA,
+      sigmaLoc0PtB, sigmaLoc1, sigmaLoc1PtA, sigmaLoc1PtB, sigmaTime, sigmaPhi,
+      sigmaTheta, sigmaPtRel, initialSigmas, initialSigmaPtRel,
+      initialVarInflation, particleHypothesis, randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
@@ -79,12 +84,16 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(hitsMin);
+    ACTS_PYTHON_MEMBER(hitsMax);
     ACTS_PYTHON_MEMBER(measurementsMin);
     ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
     ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_MEMBER(excludeAbsPdgs);
+    ACTS_PYTHON_MEMBER(minPrimaryVertexId);
+    ACTS_PYTHON_MEMBER(maxPrimaryVertexId);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
@@ -97,6 +106,8 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     pythonRangeProperty(c, "measurements", &Config::measurementsMin,
                         &Config::measurementsMax);
+    pythonRangeProperty(c, "primaryVertexId", &Config::minPrimaryVertexId,
+                        &Config::maxPrimaryVertexId);
   }
 
   {
@@ -150,11 +161,14 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
-      inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
+      inputParticles, inputParticleMeasurementsMap, inputSpacePoints,
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",
-                                inputHits, outputHits, maxTime);
+                                inputHits, inputParticlesSelected, outputHits,
+                                minX, maxX, minY, maxY, minZ, maxZ, minR, maxR,
+                                minTime, maxTime, minEnergyLoss, maxEnergyLoss,
+                                minPrimaryVertexId, maxPrimaryVertexId);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackTruthMatcher, mex, "TrackTruthMatcher", inputTracks,

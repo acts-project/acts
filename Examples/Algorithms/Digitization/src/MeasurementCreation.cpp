@@ -9,14 +9,11 @@
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <stdexcept>
 #include <string>
-#include <utility>
 
 ActsExamples::VariableBoundMeasurementProxy ActsExamples::createMeasurement(
     MeasurementContainer& container, Acts::GeometryIdentifier geometryId,

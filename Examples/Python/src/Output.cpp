@@ -6,13 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
@@ -20,11 +17,14 @@
 #include "ActsExamples/Io/Csv/CsvProtoTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacePointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointsBucketWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
+#include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -46,8 +46,8 @@
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/VertexNTupleWriter.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
-#include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
-#include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupReader.hpp"
+#include "ActsExamples/TrackFinding/ITrackParamsLookupWriter.hpp"
 
 #include <memory>
 #include <string>
@@ -108,6 +108,12 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjPropagationStepsWriter, mex,
                              "ObjPropagationStepsWriter", collection, outputDir,
                              outputScalor, outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::ObjSimHitWriter, mex,
+                             "ObjSimHitWriter", inputSimHits, outputDir,
+                             outputStem, outputPrecision, drawConnections,
+                             momentumThreshold, momentumThresholdTraj,
+                             nInterpolatedPoints, keepOriginalHits);
 
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
@@ -199,7 +205,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::TrackFinderNTupleWriter, mex,
                              "TrackFinderNTupleWriter", inputTracks,
-                             inputParticles, inputMeasurementParticlesMap,
+                             inputParticles, inputParticleMeasurementsMap,
                              inputTrackParticleMatching, filePath, fileMode,
                              treeNameTracks, treeNameParticles);
 
@@ -278,6 +284,14 @@ void addOutput(Context& ctx) {
 
   py::class_<IMaterialWriter, std::shared_ptr<IMaterialWriter>>(
       mex, "IMaterialWriter");
+
+  py::class_<ActsExamples::ITrackParamsLookupWriter,
+             std::shared_ptr<ActsExamples::ITrackParamsLookupWriter>>(
+      mex, "ITrackParamsLookupWriter");
+
+  py::class_<ActsExamples::ITrackParamsLookupReader,
+             std::shared_ptr<ActsExamples::ITrackParamsLookupReader>>(
+      mex, "ITrackParamsLookupReader");
 
   {
     using Writer = ActsExamples::RootMaterialWriter;
@@ -361,8 +375,8 @@ void addOutput(Context& ctx) {
                              "CsvSimHitWriter", inputSimHits, outputDir,
                              outputStem, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex,
-                             "CsvSpacepointWriter", inputSpacepoints, outputDir,
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacePointWriter, mex,
+                             "CsvSpacePointWriter", inputSpacepoints, outputDir,
                              outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacePointsBucketWriter, mex,

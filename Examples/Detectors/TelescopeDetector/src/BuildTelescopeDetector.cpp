@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
@@ -28,22 +29,21 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
-ActsExamples::Telescope::buildDetector(
-    const typename ActsExamples::Telescope::TelescopeDetectorElement::
-        ContextType& gctx,
-    std::vector<
-        std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
+ActsExamples::buildTelescopeDetector(
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
+    double thickness, TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
   using namespace Acts::UnitLiterals;
 

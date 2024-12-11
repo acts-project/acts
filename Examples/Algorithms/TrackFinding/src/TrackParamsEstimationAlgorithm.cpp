@@ -13,20 +13,18 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 
-#include <cmath>
 #include <cstddef>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
-#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -119,16 +117,14 @@ ProcessCode TrackParamsEstimationAlgorithm::execute(
     }
 
     // Estimate the track parameters from seed
-    auto optParams = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        logger());
-    if (!optParams.has_value()) {
-      ACTS_WARNING("Estimation of track parameters for seed " << iseed
-                                                              << " failed.");
+    const auto paramsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), *surface, field);
+    if (!paramsResult.ok()) {
+      ACTS_WARNING("Skip track because param estimation failed "
+                   << paramsResult.error());
       continue;
     }
-
-    const auto& params = optParams.value();
+    const auto& params = *paramsResult;
 
     Acts::EstimateTrackParamCovarianceConfig config{
         .initialSigmas =

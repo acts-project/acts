@@ -38,7 +38,6 @@ namespace ActsFatras {
 /// interaction. Either the initial particle survives (soft) or it gets
 /// destroyed (hard) by this process.
 struct NuclearInteraction {
-  using Scalar = Particle::Scalar;
   /// The storage of the parameterisation
   detail::MultiParticleNuclearInteractionParametrisation
       multiParticleParameterisation;
@@ -55,12 +54,12 @@ struct NuclearInteraction {
   ///
   /// @return valid X0 limit and no limit on L0
   template <typename generator_t>
-  std::pair<Scalar, Scalar> generatePathLimits(generator_t& generator,
+  std::pair<double, double> generatePathLimits(generator_t& generator,
                                                const Particle& particle) const {
     // Fast exit: No parameterisation provided
     if (multiParticleParameterisation.empty()) {
-      return std::make_pair(std::numeric_limits<Scalar>::infinity(),
-                            std::numeric_limits<Scalar>::infinity());
+      return {std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity()};
     }
     // Find the parametrisation that corresponds to the particle type
     for (const auto& particleParametrisation : multiParticleParameterisation) {
@@ -78,15 +77,13 @@ struct NuclearInteraction {
         // Set the L0 limit if not done already
         const auto& distribution =
             parametrisation.nuclearInteractionProbability;
-        auto limits =
-            std::make_pair(std::numeric_limits<Scalar>::infinity(),
-                           sampleContinuousValues(
-                               uniformDistribution(generator), distribution));
-        return limits;
+        return {std::numeric_limits<double>::infinity(),
+                sampleContinuousValues(uniformDistribution(generator),
+                                       distribution)};
       }
     }
-    return std::make_pair(std::numeric_limits<Scalar>::infinity(),
-                          std::numeric_limits<Scalar>::infinity());
+    return {std::numeric_limits<double>::infinity(),
+            std::numeric_limits<double>::infinity()};
   }
 
   /// This method performs a nuclear interaction.
@@ -292,10 +289,8 @@ struct NuclearInteraction {
   ///
   /// @return Azimuthal and polar angle of the second particle in the global
   /// coordinate system
-  std::pair<ActsFatras::Particle::Scalar, ActsFatras::Particle::Scalar>
-  globalAngle(ActsFatras::Particle::Scalar phi1,
-              ActsFatras::Particle::Scalar theta1, float phi2,
-              float theta2) const;
+  std::pair<double, double> globalAngle(double phi1, double theta1, float phi2,
+                                        float theta2) const;
 
   /// Converter from sampled numbers to a vector of particles
   ///
@@ -337,7 +332,7 @@ struct NuclearInteraction {
   /// neighbouring bins should be performed instead of a bin lookup
   ///
   /// @return The sampled value
-  Scalar sampleContinuousValues(
+  double sampleContinuousValues(
       double rnd,
       const detail::NuclearInteractionParameters::CumulativeDistribution&
           distribution,
@@ -416,8 +411,8 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesInvariantMass[i];
-    std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanInvariantMass[i], std::sqrt(variance)};
+    std::normal_distribution<double> dist{parametrisation.meanInvariantMass[i],
+                                          std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
   // Transform to multivariate normal distribution
@@ -446,8 +441,8 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
     float variance = parametrisation.eigenvaluesMomentum[i];
-    std::normal_distribution<Acts::ActsScalar> dist{
-        parametrisation.meanMomentum[i], std::sqrt(variance)};
+    std::normal_distribution<double> dist{parametrisation.meanMomentum[i],
+                                          std::sqrt(variance)};
     parameters[i] = dist(generator);
   }
 
@@ -486,14 +481,14 @@ NuclearInteraction::sampleKinematics(
     if (trials == nMatchingTrialsTotal) {
       return std::nullopt;
     }
-    // Re-sampole invariant masses if no fitting momenta were found
+    // Re-sample invariant masses if no fitting momenta were found
     if (trials++ % nMatchingTrials == 0) {
       invariantMasses = sampleInvariantMasses(generator, parameters);
     } else {
       momenta = sampleMomenta(generator, parameters, momentum);
     }
   }
-  return std::make_pair(momenta, invariantMasses);
+  return std::pair(momenta, invariantMasses);
 }
 
 template <typename generator_t>

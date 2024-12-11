@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/SubspaceHelpers.hpp"
@@ -17,11 +16,11 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cstddef>
+#include <ranges>
 #include <span>
 
 #include <Eigen/Core>
@@ -82,17 +81,15 @@ template <std::size_t Size, bool ReadOnlyMaps = true>
 struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
   // single items
-  using Coefficients = Eigen::Matrix<Scalar, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
+  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
+  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 
-  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using DynamicCovariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using DynamicCoefficientsMap =
       Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
   using DynamicCovarianceMap =
@@ -105,11 +102,9 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Scalar = ActsScalar;
-
-  using Coefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
   using Covariance =
-      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
@@ -119,8 +114,6 @@ struct DynamicSizeTypes {
 // This is public
 template <std::size_t M, bool ReadOnly = true>
 struct TrackStateTraits {
-  using Scalar = ActsScalar;
-
   using Parameters =
       typename detail_lt::FixedSizeTypes<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
@@ -133,11 +126,6 @@ struct TrackStateTraits {
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CoefficientsMap;
   using EffectiveCalibratedCovariance =
       typename detail_lt::DynamicSizeTypes<ReadOnly>::CovarianceMap;
-
-  constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector = Eigen::Matrix<Scalar, M, eBoundSize, ProjectorFlags>;
-  using EffectiveProjector = Eigen::Matrix<Scalar, Eigen::Dynamic, eBoundSize,
-                                           ProjectorFlags, M, eBoundSize>;
 };
 
 /// Proxy object to access a single point on the trajectory.
@@ -212,17 +200,6 @@ class TrackStateProxy {
 
   /// Sentinel value that indicates an invalid index
   static constexpr IndexType kInvalid = kTrackIndexInvalid;
-
-  /// Matrix representing the projector (measurement mapping function) for a
-  /// measurement.  This is not a map type, but an actual matrix. This matrix
-  /// is always \f$M \times M\f$, even if the local measurement dimension is lower.
-  /// The actual \f$N\times M\f$ projector is given by the top \f$N\f$ rows.
-  using Projector = typename TrackStateTraits<M, ReadOnly>::Projector;
-
-  /// Dynamic variant of the projector matrix
-  /// @warning Using this type is discouraged, as it has a runtime overhead
-  using EffectiveProjector =
-      typename TrackStateTraits<M, ReadOnly>::EffectiveProjector;
 
   /// The track state container backend given as a template parameter
   using Trajectory = trajectory_t;
@@ -621,145 +598,61 @@ class TrackStateProxy {
   ///
   /// @{
 
-  /// Returns the projector (measurement mapping function) for this track
-  /// state. It is derived from the uncalibrated measurement
-  /// @note This function returns the overallocated projector. This means it
-  /// is of dimension MxM, where M is the maximum number of measurement
-  /// dimensions. The NxM submatrix, where N is the actual dimension of the
-  /// measurement, is located in the top left corner, everything else is zero.
-  /// @return The overallocated projector
-  Projector projector() const;
+  /// Set the projector subspace indices
+  /// @param subspaceIndices The projector subspace indices to set
+  template <std::ranges::sized_range index_range_t>
+  void setProjectorSubspaceIndices(const index_range_t& subspaceIndices)
+    requires(!ReadOnly &&
+             std::convertible_to<std::ranges::range_value_t<index_range_t>,
+                                 std::uint8_t>)
+  {
+    assert(has<hashString("projector")>());
+    assert(subspaceIndices.size() <= eBoundSize);
+    BoundSubspaceIndices boundSubspace{};
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   boundSubspace.begin(),
+                   [](auto i) { return static_cast<std::uint8_t>(i); });
+    component<SerializedSubspaceIndices, hashString("projector")>() =
+        serializeSubspaceIndices(boundSubspace);
+  }
 
   /// Returns whether a projector is set
   /// @return Whether it is set
   bool hasProjector() const { return has<hashString("projector")>(); }
 
-  /// Returns the projector (measurement mapping function) for this track
-  /// state. It is derived from the uncalibrated measurement
-  /// @warning This function returns the effective projector. This means it
-  /// is of dimension \f$N\times M\f$, where \f$N\f$ is the actual dimension of the
-  /// measurement.
-  /// @return The effective projector
-  EffectiveProjector effectiveProjector() const {
-    return projector().topLeftCorner(calibratedSize(), M);
-  }
-
-  /// Set the projector on this track state
-  /// This will convert the projector to a more compact bitset representation
-  /// and store it.
-  /// @param projector The projector in the form of a dense matrix
-  /// @note @p projector is assumed to only have 0s or 1s as components.
-  template <typename Derived>
-  [[deprecated("use setProjector(span) instead")]] void setProjector(
-      const Eigen::MatrixBase<Derived>& projector)
-    requires(!ReadOnly)
-  {
-    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-    constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
-
-    static_assert(rows != -1 && cols != -1,
-                  "Assignment of dynamic matrices is currently not supported.");
-
-    assert(has<hashString("projector")>());
-
-    static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= eBoundSize, "Given projector has too many columns");
-
-    // set up full size projector with only zeros
-    typename TrackStateProxy::Projector fullProjector =
-        decltype(fullProjector)::Zero();
-
-    // assign (potentially) smaller actual projector to matrix, preserving
-    // zeroes outside of smaller matrix block.
-    fullProjector.template topLeftCorner<rows, cols>() = projector;
-
-    // convert to bitset before storing
-    ProjectorBitset projectorBitset = matrixToBitset(fullProjector).to_ulong();
-    setProjectorBitset(projectorBitset);
-  }
-
-  /// Directly get the projector bitset, a compressed form of a projection
-  /// matrix
-  /// @note This is mainly to copy explicitly a projector from one state
-  ///       to another. Use the `projector` or `effectiveProjector` method if
-  ///       you want to access the matrix.
-  /// @return The projector bitset
-  [[deprecated("use projector() instead")]] ProjectorBitset projectorBitset()
-      const {
-    return variableBoundSubspaceHelper().projectorBitset();
-  }
-
-  /// Set the projector bitset, a compressed form of a projection matrix
-  /// @param proj The projector bitset
-  ///
-  /// @note This is mainly to copy explicitly a projector from one state
-  ///       to another. If you have a projection matrix, set it with
-  ///       `setProjector`.
-  [[deprecated("use setProjector(span) instead")]] void setProjectorBitset(
-      ProjectorBitset proj)
-    requires(!ReadOnly)
-  {
-    BoundMatrix projMatrix = bitsetToMatrix<BoundMatrix>(proj);
-    BoundSubspaceIndices boundSubspace =
-        projectorToSubspaceIndices<eBoundSize>(projMatrix);
-    setBoundSubspaceIndices(boundSubspace);
-  }
-
-  BoundSubspaceIndices boundSubspaceIndices() const {
+  /// Returns the projector subspace indices
+  /// @return The projector subspace indices
+  BoundSubspaceIndices projectorSubspaceIndices() const {
     assert(has<hashString("projector")>());
     return deserializeSubspaceIndices<eBoundSize>(
         component<SerializedSubspaceIndices, hashString("projector")>());
   }
 
+  /// Returns the projector subspace indices
+  /// @return The projector subspace indices
   template <std::size_t measdim>
-  SubspaceIndices<measdim> subspaceIndices() const {
-    BoundSubspaceIndices boundSubspace = BoundSubspaceIndices();
+  SubspaceIndices<measdim> projectorSubspaceIndices() const {
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
     SubspaceIndices<measdim> subspace;
     std::copy(boundSubspace.begin(), boundSubspace.begin() + measdim,
               subspace.begin());
     return subspace;
   }
 
-  void setBoundSubspaceIndices(BoundSubspaceIndices boundSubspace)
-    requires(!ReadOnly)
-  {
-    assert(has<hashString("projector")>());
-    component<SerializedSubspaceIndices, hashString("projector")>() =
-        serializeSubspaceIndices(boundSubspace);
-  }
-
-  template <std::size_t measdim>
-  void setSubspaceIndices(SubspaceIndices<measdim> subspace)
-    requires(!ReadOnly && measdim <= eBoundSize)
-  {
-    assert(has<hashString("projector")>());
-    BoundSubspaceIndices boundSubspace{};
-    std::copy(subspace.begin(), subspace.end(), boundSubspace.begin());
-    setBoundSubspaceIndices(boundSubspace);
-  }
-
-  template <std::size_t measdim, typename index_t>
-  void setSubspaceIndices(std::array<index_t, measdim> subspaceIndices)
-    requires(!ReadOnly && measdim <= eBoundSize)
-  {
-    assert(has<hashString("projector")>());
-    BoundSubspaceIndices boundSubspace{};
-    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
-                   boundSubspace.begin(),
-                   [](index_t i) { return static_cast<std::uint8_t>(i); });
-    setBoundSubspaceIndices(boundSubspace);
-  }
-
-  VariableBoundSubspaceHelper variableBoundSubspaceHelper() const {
-    BoundSubspaceIndices boundSubspace = boundSubspaceIndices();
+  /// Creates a variable size subspace helper
+  /// @return The subspace helper
+  VariableBoundSubspaceHelper projectorSubspaceHelper() const {
+    BoundSubspaceIndices boundSubspace = projectorSubspaceIndices();
     std::span<std::uint8_t> validSubspaceIndices(
         boundSubspace.begin(), boundSubspace.begin() + calibratedSize());
     return VariableBoundSubspaceHelper(validSubspaceIndices);
   }
 
+  /// Creates a fixed size subspace helper
+  /// @return The subspace helper
   template <std::size_t measdim>
-  FixedBoundSubspaceHelper<measdim> fixedBoundSubspaceHelper() const {
-    SubspaceIndices<measdim> subspace = subspaceIndices<measdim>();
+  FixedBoundSubspaceHelper<measdim> projectorSubspaceHelper() const {
+    SubspaceIndices<measdim> subspace = projectorSubspaceIndices<measdim>();
     return FixedBoundSubspaceHelper<measdim>(subspace);
   }
 
@@ -871,8 +764,33 @@ class TrackStateProxy {
 
   /// Allocate storage to be able to store a measurement of size @p measdim.
   /// This must be called **before** setting the measurement content.
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This will zero-initialize the allocated storage
+  /// @note This is an error if an existing allocation has different size
   void allocateCalibrated(std::size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
+  }
+
+  /// Allocate storage and assign the given vector and covariance to it.
+  /// The dimension is inferred from the given vector and matrix.
+  /// @tparam val_t Type of the vector
+  /// @tparam cov_t Type of the covariance matrix
+  /// @param val The measurement vector
+  /// @param cov The covariance matrix
+  /// @note This does not allocate if an allocation of the same size already exists
+  /// @note This throws an exception if an existing allocation has different size
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov)
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    m_traj->template allocateCalibrated<
+        Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);
   }
 
   /// @}
@@ -999,20 +917,17 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
-        setBoundSubspaceIndices(other.boundSubspaceIndices());
+        setProjectorSubspaceIndices(other.projectorSubspaceIndices());
       }
     } else {
       if (ACTS_CHECK_BIT(mask, PM::Predicted) &&
@@ -1047,20 +962,17 @@ class TrackStateProxy {
       // may be not yet allocated
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           other.template has<hashString("calibrated")>()) {
-        allocateCalibrated(other.calibratedSize());
-
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
         visit_measurement(other.calibratedSize(), [&](auto N) {
           constexpr int measdim = decltype(N)::value;
-          self->template calibrated<measdim>() =
-              other.template calibrated<measdim>();
-          self->template calibratedCovariance<measdim>() =
-              other.template calibratedCovariance<measdim>();
+          self->allocateCalibrated(
+              other.template calibrated<measdim>().eval(),
+              other.template calibratedCovariance<measdim>().eval());
         });
 
-        setBoundSubspaceIndices(other.boundSubspaceIndices());
+        setProjectorSubspaceIndices(other.projectorSubspaceIndices());
       }
     }
 

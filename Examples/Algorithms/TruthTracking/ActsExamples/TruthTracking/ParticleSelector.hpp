@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -26,6 +27,9 @@ class ParticleSelector final : public IAlgorithm {
   struct Config {
     /// The input particles collection.
     std::string inputParticles;
+    /// (Optionally) The input particle measurements map. Only required for
+    /// measurement-based cuts.
+    std::string inputParticleMeasurementsMap;
     /// The output particles collection.
     std::string outputParticles;
 
@@ -51,7 +55,10 @@ class ParticleSelector final : public IAlgorithm {
     // Rest mass cuts
     double mMin = 0;
     double mMax = std::numeric_limits<double>::infinity();
-    /// Measurement number cuts
+    // Hit count cuts
+    std::size_t hitsMin = 0;
+    std::size_t hitsMax = std::numeric_limits<std::size_t>::max();
+    // Measurement number cuts
     std::size_t measurementsMin = 0;
     std::size_t measurementsMax = std::numeric_limits<std::size_t>::max();
     /// Remove charged particles.
@@ -62,6 +69,12 @@ class ParticleSelector final : public IAlgorithm {
     bool removeSecondaries = false;
     /// Exclude particles depending on absolute pdg value
     std::vector<int> excludeAbsPdgs;
+
+    /// Min primary vertex ID cut
+    std::uint64_t minPrimaryVertexId = 0;
+    /// Max primary vertex ID cut
+    std::uint64_t maxPrimaryVertexId =
+        std::numeric_limits<std::uint64_t>::max();
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
@@ -75,6 +88,8 @@ class ParticleSelector final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+      this, "InputParticleMeasurementsMap"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
