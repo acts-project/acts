@@ -1,0 +1,33 @@
+name: "Dependencies action"
+description: "Reusable action that sets up dependencies for the ACTS CI build"
+# inputs:
+#   example_input:
+#     description: "An example input"
+#     required: true
+#     default: "Hello, World!"
+# outputs:
+#   example_output:
+#     description: "An example output"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Spack
+      uses: spack/setup-spack@v2
+
+    - name: Apply spack patch
+      shell: bash
+      working-directory: spack
+      run: |
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+        curl https://patch-diff.githubusercontent.com/raw/spack/spack/pull/47370.patch | git am
+
+    - name: Locate OpenGL
+      shell: bash
+      run: ./opengl.sh
+
+    # - name: Setup Xcode version
+    #   if: startsWith(inputs.os, 'macos')
+    #   uses: maxim-lobanov/setup-xcode@v1
+    #   with:
+    #     xcode-version: "${{ inputs.xcode }}"
