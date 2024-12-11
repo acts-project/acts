@@ -228,7 +228,7 @@ struct SurfaceArrayCreatorFixture {
       }
     }
 
-    return std::make_pair(res, pairs);
+    return {res, pairs};
   }
 };
 

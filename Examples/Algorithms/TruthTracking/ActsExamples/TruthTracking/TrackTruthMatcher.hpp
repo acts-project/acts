@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
@@ -20,8 +20,6 @@
 #include <string>
 
 namespace ActsExamples {
-
-struct AlgorithmContext;
 
 /// Matches tracks to truth particles and vice versa
 class TrackTruthMatcher final : public IAlgorithm {
@@ -56,7 +54,7 @@ class TrackTruthMatcher final : public IAlgorithm {
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
   WriteDataHandle<TrackParticleMatching> m_outputTrackParticleMatching{
       this, "OutputTrackParticleMatching"};

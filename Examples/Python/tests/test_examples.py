@@ -149,7 +149,7 @@ def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector():
         pass
 
     csv = tmp_path / "csv"
@@ -427,7 +427,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.9 * u.GeV, None),
             eta=(-4, 4),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
@@ -579,9 +579,8 @@ def test_event_recording(tmp_path):
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
-@pytest.mark.parametrize("directNavigation", [False, True])
 def test_truth_tracking_kalman(
-    tmp_path, assert_root_hash, revFiltMomThresh, directNavigation, detector_config
+    tmp_path, assert_root_hash, revFiltMomThresh, detector_config
 ):
     root_files = [
         ("trackstates_kf.root", "trackstates", 19),
@@ -593,8 +592,7 @@ def test_truth_tracking_kalman(
         fp = tmp_path / fn
         assert not fp.exists()
 
-    print("with")
-    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
+    with detector_config.detector:
         from truth_tracking_kalman import runTruthTrackingKalman
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
@@ -602,17 +600,15 @@ def test_truth_tracking_kalman(
         seq = Sequencer(events=10, numThreads=1)
 
         runTruthTrackingKalman(
-            trackingGeometry=trackingGeometry,
+            trackingGeometry=detector_config.trackingGeometry,
             field=field,
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
             reverseFilteringMomThreshold=revFiltMomThresh,
-            directNavigation=directNavigation,
             s=seq,
         )
 
         seq.run()
-    print("done")
 
     for fn, tn, ee in root_files:
         fp = tmp_path / fn
@@ -659,10 +655,10 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         fp = tmp_path / fn
         assert not fp.exists()
 
-    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
+    with detector_config.detector:
         runTruthTrackingGsf(
-            trackingGeometry=trackingGeometry,
-            decorators=decorators,
+            trackingGeometry=detector_config.trackingGeometry,
+            decorators=detector_config.decorators,
             field=field,
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
@@ -691,11 +687,11 @@ def test_refitting(tmp_path, detector_config, assert_root_hash):
         numThreads=1,
     )
 
-    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
+    with detector_config.detector:
         # Only check if it runs without errors right known
         # Changes in fitter behaviour should be caught by other tests
         runRefittingGsf(
-            trackingGeometry=trackingGeometry,
+            trackingGeometry=detector_config.trackingGeometry,
             field=field,
             digiConfigFile=detector_config.digiConfigFile,
             outputDir=tmp_path,
@@ -759,7 +755,10 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator) as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector(mdecorator) as detector:
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
+
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -792,11 +791,12 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
+
         runMaterialValidation(
             10, 1000, trackingGeometry, decorators, field, outputDir=str(tmp_path), s=s
         )
@@ -826,11 +826,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(geo_map)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
+
         runMaterialMapping(
             trackingGeometry,
             decorators,
@@ -864,11 +865,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     s = Sequencer(events=10, numThreads=1)
 
-    with getOpenDataDetector(mdecorator=acts.IMaterialDecorator.fromFile(mat_file)) as (
-        detector,
-        trackingGeometry,
-        decorators,
-    ):
+    with getOpenDataDetector(
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    ) as detector:
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
+
         runMaterialValidation(
             10,
             1000,
@@ -888,11 +890,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
 
 @pytest.mark.parametrize(
-    "geoFactory,nobj",
+    "detectorFactory,aligned,nobj",
     [
-        (GenericDetector.create, 450),
+        (GenericDetector, True, 450),
         pytest.param(
             getOpenDataDetector,
+            True,
             540,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
@@ -900,12 +903,14 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
                 pytest.mark.odd,
             ],
         ),
-        (functools.partial(AlignedDetector.create, iovSize=1), 450),
+        (functools.partial(AlignedDetector, iovSize=1), False, 450),
     ],
 )
 @pytest.mark.slow
-def test_geometry_example(geoFactory, nobj, tmp_path):
-    detector, trackingGeometry, decorators = geoFactory()
+def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
+    detector = detectorFactory()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     from geometry import runGeometry
 
@@ -942,12 +947,12 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
     contents = [f.read_text() for f in detector_files]
     ref = contents[0]
     for c in contents[1:]:
-        if isinstance(detector, AlignedDetector):
-            assert c != ref, "Detector writeout is expected to be different"
-        else:
+        if aligned:
             assert c == ref, "Detector writeout is expected to be identical"
+        else:
+            assert c != ref, "Detector writeout is expected to be different"
 
-    if not isinstance(detector, AlignedDetector):
+    if aligned:
         for f in [json_dir / f"event{i:>09}-detector.json" for i in range(events)]:
             assert detector_file.exists()
             with f.open() as fh:
@@ -1165,10 +1170,10 @@ def test_ckf_tracks_example(
 
     from ckf_tracks import runCKFTracks
 
-    with detector_config.detectorTuple as (detector, trackingGeometry, decorators):
+    with detector_config.detector:
         runCKFTracks(
-            trackingGeometry,
-            decorators,
+            detector_config.trackingGeometry,
+            detector_config.decorators,
             field=field,
             outputCsv=True,
             outputDir=tmp_path,
@@ -1201,7 +1206,7 @@ def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector():
         pass
 
     script = (
@@ -1234,7 +1239,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector():
         pass
 
     script = (
@@ -1288,7 +1293,7 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     assert not (tmp_path / root_file).exists()
 
     # just to make sure it can build the odd
-    with getOpenDataDetector() as (detector, trackingGeometry, decorators):
+    with getOpenDataDetector():
         pass
 
     script = (

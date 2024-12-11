@@ -13,7 +13,6 @@
 #include "Acts/Utilities/AngleHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <limits>
 #include <utility>
