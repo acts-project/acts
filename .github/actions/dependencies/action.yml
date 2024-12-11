@@ -52,4 +52,9 @@ runs:
         echo "URL: ${url}"
         curl -L -o spack.lock $url
 
-        ls -al
+    - name: Create spack environment
+      shell: bash
+      run: |
+        spack env create -d spack_env spack.lock
+        spack env activate -d spack-env
+        spack install --use-buildcache only
