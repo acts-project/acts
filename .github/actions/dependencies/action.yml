@@ -4,7 +4,7 @@ inputs:
   xcode-version:
     description: "Which Xcode version to use (only for macOS)"
     required: true
-    default: ""
+    default: "16.0.0"
   dependency-tag:
     description: "Which dependency tag to use"
     required: true
