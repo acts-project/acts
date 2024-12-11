@@ -38,7 +38,7 @@ runs:
       run: |
         arch=$(spack arch --family)
         if [[ $arch == darwin* ]]; then
-          lock_file="spack-${arch}-${{ inputs.xcode-version }}.lock"
+          lock_file="spack-${arch}-xcode${{ inputs.xcode-version }}.lock"
         else
           lock_file="spack-${arch}.lock"
         fi
