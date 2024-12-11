@@ -241,10 +241,10 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << unorderedParticlesInitial.size() << " particles");
 
-  // @TODO: Order simhits by time
-
-  SimParticleContainer particlesGenerator;
-  SimParticleContainer particlesSimulated;
+  std::vector<SimParticle> particlesGeneratorUnordered;
+  particlesGeneratorUnordered.reserve(mcParticleCollection.size());
+  std::vector<SimParticle> particlesSimulatedUnordered;
+  particlesSimulatedUnordered.reserve(mcParticleCollection.size());
 
   for (const auto& inParticle : mcParticleCollection) {
     auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
@@ -256,7 +256,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     const std::size_t index = particleIt->second;
     const auto& particleInitial = unorderedParticlesInitial.at(index);
     if (!inParticle.isCreatedInSimulation()) {
-      particlesGenerator.insert(particleInitial);
+      particlesGeneratorUnordered.push_back(particleInitial);
     }
     SimParticle particleSimulated = particleInitial;
 
@@ -286,8 +286,16 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                  << particleInitial.fourMomentum().transpose() << " -> "
                  << particleSimulated.final().fourMomentum().transpose());
 
-    particlesSimulated.insert(particleSimulated);
+    particlesSimulatedUnordered.push_back(particleSimulated);
   }
+
+  std::ranges::sort(particlesGeneratorUnordered, detail ::CompareParticleId{});
+  std::ranges::sort(particlesSimulatedUnordered, detail ::CompareParticleId{});
+
+  SimParticleContainer particlesGenerator{particlesGeneratorUnordered.begin(),
+                                          particlesGeneratorUnordered.end()};
+  SimParticleContainer particlesSimulated{particlesSimulatedUnordered.begin(),
+                                          particlesSimulatedUnordered.end()};
 
   if (!m_cfg.graphvizOutput.empty()) {
     std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
