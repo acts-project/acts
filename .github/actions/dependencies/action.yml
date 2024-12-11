@@ -24,7 +24,7 @@ runs:
 
     - name: Locate OpenGL
       shell: bash
-      run: ./opengl.sh
+      run: "${GITHUB_ACTION_PATH}/opengl.sh"
 
     # - name: Setup Xcode version
     #   if: startsWith(inputs.os, 'macos')
