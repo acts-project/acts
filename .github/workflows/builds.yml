@@ -39,12 +39,6 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
 
-      # - name: Set dependencies URL
-      #   run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-      #
-      # - name: Install dependencies
-      #   run: CI/dependencies.sh
-      #
       # - name: Restore ccache
       #   uses: actions/cache/restore@v4
       #   id: ccache-restore
@@ -244,31 +238,28 @@ jobs:
   #         git commit -m"update metrics"
   #         git push
   #
-  # linux_ubuntu_extra:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       include:
-  #         - image: ubuntu2204
-  #           std: 20
-  #         - image: ubuntu2204_clang
-  #           std: 20
-  #   container: ghcr.io/acts-project/${{ matrix.image }}:63
-  #   env:
-  #     INSTALL_DIR: ${{ github.workspace }}/install
-  #     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #         lfs: true
-  #
-  #     - name: Set dependencies URL
-  #       run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-  #
-  #     - name: Install dependencies
-  #       run: CI/dependencies.sh
+  linux_ubuntu_extra:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: ubuntu2204
+            std: 20
+          - image: ubuntu2204_clang
+            std: 20
+    container: ghcr.io/acts-project/${{ matrix.image }}:63
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
   #
   #     - name: Restore ccache
   #       uses: actions/cache/restore@v4
@@ -329,28 +320,25 @@ jobs:
   #     - name: Downstream run
   #       run: ./build-downstream/bin/ShowActsVersion
   #
-  # macos:
-  #   runs-on: macos-14
-  #   env:
-  #     INSTALL_DIR: ${{ github.workspace }}/install_acts
-  #     ACTS_LOG_FAILURE_THRESHOLD: WARNING
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: true
-  #         lfs: true
-  #
-  #     - name: Print architecture
-  #       run: uname -p
-  #
-  #     - name: Set dependencies URL
-  #       run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/macos-14/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-  #
-  #     - name: Install dependencies
-  #       run: >
-  #         brew install cmake ninja ccache xerces-c
-  #         && CI/dependencies.sh
+  macos:
+    runs-on: macos-14
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install_acts
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
+
+      # - name: Install dependencies
+      #   run: >
+      #     brew install cmake ninja ccache xerces-c
+      #     && CI/dependencies.sh
+
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
   #
   #     - name: Restore ccache
   #       uses: actions/cache/restore@v4
