@@ -36,7 +36,8 @@ jobs:
           submodules: true
           lfs: true
 
-      - uses: ./.github/actions/dependencies
+      - name: Install dependencies
+        uses: ./.github/actions/dependencies
 
       # - name: Set dependencies URL
       #   run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV

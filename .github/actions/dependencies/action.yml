@@ -1,10 +1,10 @@
 name: "Dependencies action"
 description: "Reusable action that sets up dependencies for the ACTS CI build"
-# inputs:
-#   example_input:
-#     description: "An example input"
-#     required: true
-#     default: "Hello, World!"
+inputs:
+  xcode-version:
+    description: "Which Xcode version to use (only for macOS)"
+    required: true
+    default: ""
 # outputs:
 #   example_output:
 #     description: "An example output"
@@ -25,6 +25,18 @@ runs:
     - name: Locate OpenGL
       shell: bash
       run: "${GITHUB_ACTION_PATH}/opengl.sh"
+
+    - name: Get spack lock file name
+      shell: bash
+      run: |
+        arch=$(spack arch --family)
+        if [[ $arch == darwin* ]]; then
+          lock_file="spack-${arch}-${{ inputs.xcode }}.lock"
+        else
+          lock_file="spack-${arch}.lock"
+        fi
+        echo "Lock file: ${lock_file}"
+        echo "SPACK_LOCK_FILE=${lock_file}" >> $GITHUB_ENV
 
     # - name: Setup Xcode version
     #   if: startsWith(inputs.os, 'macos')
