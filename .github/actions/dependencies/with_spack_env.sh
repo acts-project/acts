@@ -2,7 +2,7 @@
 set -e
 set -u
 
-source "${SPACK_ROOT}/share/spack/setup-env.sh"
+source "$(spack location -r)/share/spack/setup-env.sh"
 
 env=$1
 shift
