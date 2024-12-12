@@ -40,7 +40,10 @@ jobs:
         uses: ./.github/actions/dependencies
 
       - run: |
-          env | grep G4
+          env
+          ls -al
+          source geant4_data.sh
+          env
 
       # - name: Restore ccache
       #   uses: actions/cache/restore@v4

@@ -43,7 +43,7 @@ runs:
           lock_file="spack-${arch}.lock"
         fi
         echo "Lock file: ${lock_file}"
-        echo "SPACK_LOCK_FILE=${lock_file}" >> $GITHUB_ENV
+        echo "SPACK_LOCK_FILE=${lock_file}" >> "$GITHUB_ENV"
 
     - name: Setup Xcode version
       if: startsWith(runner.os, 'macos')
@@ -71,5 +71,4 @@ runs:
       shell: bash
       run: |
         spack -e ci install --add geant4-data
-        "${GITHUB_ACTION_PATH}/with_spack_env.sh" ci env | grep G4 | awk '{print "export " $0}' > geant4_data.sh
-        source geant4_data.sh
+        "${GITHUB_ACTION_PATH}/with_spack_env.sh" ci env | grep G4 >> "$GITHUB_ENV"
