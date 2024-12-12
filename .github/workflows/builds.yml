@@ -53,74 +53,74 @@ jobs:
           which python3
           python3 -m pip install jinja2 pyyaml
 
-      # - name: Restore ccache
-        #   id: ccache-restore
-      #   uses: actions/cache/restore@v4
-      #   with:
-      #     path: ${{ env.CCACHE_DIR }}
-      #     key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-      #     restore-keys: |
-      #       ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-      #
-      # - name: Configure
-      #   # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-      #   # dd4hep CMake configuration that gets triggered on recent CMake
-      #   # versions
-      #   # Need to set git user & email for patching to work (GeoModel plugin)
-      #   run: >
-      #     git config --global user.name 'CI' &&
-      #     git config --global user.email '<>' &&
-      #     ccache -z &&
-      #     cmake -B build -S .
-      #     --preset=github-ci
-      #     -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      #     -DPython_EXECUTABLE=$(which python3)
-      #     -DACTS_BUILD_PLUGIN_ONNX=ON
-      #
-      # - name: Build
-      #   run: cmake --build build
-      #
-      # - name: ccache stats
-      #   run: ccache -s
-      #
-      # - name: Save ccache
-      #   uses: actions/cache/save@v4
-      #   if: always()
-      #   with:
-      #     path: ${{ github.workspace }}/ccache
-      #     key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-      #
-      # - name: Unit tests
-      #   run: ctest --test-dir build -j$(nproc)
-      #
-      # - name: Integration tests
-      #   run: cmake --build build --target integrationtests
-      #
-      # - name: Install
-      #   run: cmake --build build --target install
-      #
-      # - name: Package build
-      #   run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
-      #
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     name: acts-linux-ubuntu
-      #     path: build.tar.gz
-      #
-      # - name: Downstream configure
-      #   run: >
-      #     cmake -B build-downstream -S Tests/DownstreamProject
-      #     -GNinja
-      #     -DCMAKE_BUILD_TYPE=Release
-      #     -DCMAKE_CXX_FLAGS=-Werror
-      #     -DCMAKE_CXX_STANDARD=20
-      #     -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-      #
-      # - name: Downstream build
-      #   run: cmake --build build-downstream
-      #
-      # - name: Downstream run
-      #   run: ./build-downstream/bin/ShowActsVersion
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions
+        # Need to set git user & email for patching to work (GeoModel plugin)
+        run: >
+          git config --global user.name 'CI' &&
+          git config --global user.email '<>' &&
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DPython_EXECUTABLE=$(which python3)
+          -DACTS_BUILD_PLUGIN_ONNX=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: ctest --test-dir build -j$(nproc)
+
+      - name: Integration tests
+        run: cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - name: Package build
+        run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acts-linux-ubuntu
+          path: build.tar.gz
+
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream
+
+      - name: Downstream run
+        run: ./build-downstream/bin/ShowActsVersion
 
   # linux_examples_test:
   #   runs-on: ubuntu-latest
