@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -18,7 +17,6 @@
 
 #include <array>
 #include <cmath>
-#include <exception>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>
@@ -74,12 +72,15 @@ class AnnulusBounds : public DiscBounds {
 
   AnnulusBounds(const AnnulusBounds& source) = default;
 
-  SurfaceBounds::BoundsType type() const final;
+  BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  double distance(const Vector2& lposition,
+                  const SquareMatrix2& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -202,13 +203,6 @@ class AnnulusBounds : public DiscBounds {
   /// @param vStripXY the position in the cartesian strip system
   /// @return the position in the module polar coordinate system
   Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
-
-  /// Private helper method
-  Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
-                           const SquareMatrix2& weight) const;
-
-  /// Private helper method
-  double squaredNorm(const Vector2& v, const SquareMatrix2& weight) const;
 };
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {

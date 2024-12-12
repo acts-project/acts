@@ -8,11 +8,11 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,8 +21,30 @@
 #include <limits>
 #include <stdexcept>
 
-Acts::AnnulusBounds::AnnulusBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+namespace Acts {
+
+namespace {
+
+double squaredNorm(const Vector2& v, const SquareMatrix2& metric) {
+  return (v.transpose() * metric * v).value();
+}
+
+Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
+                         const SquareMatrix2& metric) {
+  // connecting vector
+  auto n = b - a;
+  // squared norm of line
+  auto f = (n.transpose() * metric * n).value();
+  // weighted scalar product of line to point and segment line
+  auto u = ((p - a).transpose() * metric * n).value() / f;
+  // clamp to [0, 1], convert to point
+  return std::min(std::max(u, 0.), 1.) * n + a;
+}
+
+}  // namespace
+
+AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
+    false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
   m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
@@ -95,14 +117,14 @@ Acts::AnnulusBounds::AnnulusBounds(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
+std::vector<Vector2> AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
+std::vector<Vector2> AnnulusBounds::vertices(
     unsigned int quarterSegments) const {
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
@@ -114,7 +136,7 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
-    std::vector<Acts::Vector2> rvertices =
+    std::vector<Vector2> rvertices =
         detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
             {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
             quarterSegments);
@@ -128,77 +150,15 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
     std::for_each(rvertices.begin(), rvertices.end(),
-                  [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
+                  [&](Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
   }
   return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
           m_outLeftStripXY};
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                                 double tolPhi) const {
-  // locpo is PC in STRIP SYSTEM
-  // need to perform internal rotation induced by average phi
-  Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[eBoundLoc1];
-  double rLoc = locpo_rotated[eBoundLoc0];
-
-  if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
-      phiLoc > (get(eMaxPhiRel) + tolPhi)) {
-    return false;
-  }
-
-  // calculate R in MODULE SYSTEM to evaluate R-bounds
-  if (tolR == 0.) {
-    // don't need R, can use R^2
-    double r_mod2 =
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
-
-    if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
-      return false;
-    }
-  } else {
-    // use R
-    double r_mod = sqrt(
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
-
-    if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool Acts::AnnulusBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
-  if (boundaryTolerance.isInfinite()) {
-    return true;
-  }
-
-  if (boundaryTolerance.isNone()) {
-    return inside(lposition, 0., 0.);
-  }
-
-  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-      absoluteBound.has_value()) {
-    return inside(lposition, absoluteBound->tolerance0,
-                  absoluteBound->tolerance1);
-  }
-
-  // first check if inside. We don't need to look into the covariance if inside
-  if (inside(lposition, 0., 0.)) {
-    return true;
-  }
-
-  if (!boundaryTolerance.hasChi2Bound()) {
-    throw std::logic_error("not implemented");
-  }
-
-  const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
-
+double AnnulusBounds::distance(const Vector2& lposition,
+                               const SquareMatrix2& metric) const {
   // locpo is PC in STRIP SYSTEM
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
@@ -285,9 +245,9 @@ bool Acts::AnnulusBounds::inside(
   jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
   jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
 
-  // Mahalanobis distance uses inverse covariance as weights
-  const auto& weightStripPC = boundaryToleranceChi2.weight;
-  auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
+  // Mahalanobis distance uses the coordinate weights (usually inverse
+  // covariance) as a metric
+  auto metricModulePC = jacobianStripPCToModulePC.transpose() * metric *
                         jacobianStripPCToModulePC;
 
   double minDist = std::numeric_limits<double>::max();
@@ -299,13 +259,13 @@ bool Acts::AnnulusBounds::inside(
 
   // first: STRIP system. locpo is in STRIP PC already
   currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
+                                    locpo_rotated, metricModulePC);
+  currentDist = squaredNorm(locpo_rotated - currentClosest, metricModulePC);
   minDist = currentDist;
 
   currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
+                                    locpo_rotated, metricModulePC);
+  currentDist = squaredNorm(locpo_rotated - currentClosest, metricModulePC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
@@ -320,58 +280,103 @@ bool Acts::AnnulusBounds::inside(
   // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
   // distances are of same unit if covariance is correctly transformed
   currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+                                    locpoModulePC, metricModulePC);
+  currentDist = squaredNorm(locpoModulePC - currentClosest, metricModulePC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
 
   currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+                                    locpoModulePC, metricModulePC);
+  currentDist = squaredNorm(locpoModulePC - currentClosest, metricModulePC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
 
-  // compare resulting Mahalanobis distance to configured "number of sigmas" we
-  // square it b/c we never took the square root of the distance
-  return minDist <
-         boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
+  return std::sqrt(minDist);
 }
 
-Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
-    const Vector2& vStripXY) const {
+bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
+                           double tolPhi) const {
+  // locpo is PC in STRIP SYSTEM
+  // need to perform internal rotation induced by average phi
+  Vector2 locpo_rotated = m_rotationStripPC * lposition;
+  double phiLoc = locpo_rotated[eBoundLoc1];
+  double rLoc = locpo_rotated[eBoundLoc0];
+
+  if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
+      phiLoc > (get(eMaxPhiRel) + tolPhi)) {
+    return false;
+  }
+
+  // calculate R in MODULE SYSTEM to evaluate R-bounds
+  if (tolR == 0.) {
+    // don't need R, can use R^2
+    double r_mod2 =
+        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
+        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
+
+    if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
+      return false;
+    }
+  } else {
+    // use R
+    double r_mod = sqrt(
+        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
+        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
+
+    if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool AnnulusBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
+  if (boundaryTolerance.isInfinite()) {
+    return true;
+  }
+
+  if (boundaryTolerance.isNone()) {
+    return inside(lposition, 0., 0.);
+  }
+
+  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
+      absoluteBound.has_value()) {
+    return inside(lposition, absoluteBound->tolerance0,
+                  absoluteBound->tolerance1);
+  }
+
+  // first check if inside. We don't need to look into the covariance if inside
+  if (inside(lposition, 0., 0.)) {
+    return true;
+  }
+
+  if (boundaryTolerance.hasChi2Bound()) {
+    const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
+
+    // compare resulting Mahalanobis distance to configured "number of sigmas"
+    return distance(lposition, boundaryToleranceChi2.weight) <
+           boundaryToleranceChi2.maxChi2;
+  }
+
+  throw std::logic_error("AnnulusBounds: unknown boundary tolerance type");
+}
+
+Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
   Vector2 vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
 }
 
-Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
-    const Vector2& a, const Vector2& b, const Vector2& p,
-    const SquareMatrix2& weight) const {
-  // connecting vector
-  auto n = b - a;
-  // squared norm of line
-  auto f = (n.transpose() * weight * n).value();
-  // weighted scalar product of line to point and segment line
-  auto u = ((p - a).transpose() * weight * n).value() / f;
-  // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.), 1.) * n + a;
-}
-
-double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SquareMatrix2& weight) const {
-  return (v.transpose() * weight * v).value();
-}
-
-Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
+Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
-// Ostream operator overload
-std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
+std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
+  sl << "AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
@@ -379,3 +384,5 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

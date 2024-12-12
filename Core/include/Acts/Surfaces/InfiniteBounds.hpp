@@ -30,6 +30,11 @@ class InfiniteBounds : public SurfaceBounds {
 
   std::vector<double> values() const final { return {}; }
 
+  double distance(const Vector2& /*lposition*/,
+                  const SquareMatrix2& /*metric*/) const final {
+    return 0;
+  }
+
   /// Method inside() returns true for any case
   ///
   /// ignores input parameters

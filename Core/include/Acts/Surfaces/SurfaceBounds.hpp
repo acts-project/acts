@@ -58,6 +58,9 @@ class SurfaceBounds {
   /// @return of the stored values for this SurfaceBounds object
   virtual std::vector<double> values() const = 0;
 
+  virtual double distance(const Vector2& lposition,
+                          const SquareMatrix2& metric) const = 0;
+
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
   /// the bounds  Inside can be called without/with tolerances.

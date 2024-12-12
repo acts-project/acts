@@ -13,6 +13,11 @@
 #include <iomanip>
 #include <iostream>
 
+double Acts::RectangleBounds::distance(const Acts::Vector2& lposition,
+                                       const SquareMatrix2& metric) const {
+  return 0;  // TODO: Implement this function
+}
+
 bool Acts::RectangleBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
