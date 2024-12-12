@@ -78,5 +78,5 @@ runs:
         ls -al
         venv_dir="$PWD/dependencies/venv"
         "$PWD/dependencies/bin/python3" -m venv "$venv_dir"
-        echo "PATH=$PWD/dependencies/venv/bin/:$PWD/dependencies/bin:$PATH" >> "$GITHUB_ENV"
+        echo "PATH=${venv_dir}/bin/:$PWD/dependencies/bin:$PATH" >> "$GITHUB_ENV"
         ls -al "${venv_dir}/bin"

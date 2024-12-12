@@ -40,7 +40,12 @@ jobs:
         uses: ./.github/actions/dependencies
 
       - run: env
+      - run: |
+          pwd
+          ls -al
+          ls -al /__w/acts/acts/dependencies/venv/bin/
       - run:  |
+          echo $PATH
           ls -al
           ls -al dependencies/
           ls -al dependencies/venv
@@ -49,8 +54,8 @@ jobs:
           python3 -m pip install jinja2 pyyaml
 
       # - name: Restore ccache
+        #   id: ccache-restore
       #   uses: actions/cache/restore@v4
-      #   id: ccache-restore
       #   with:
       #     path: ${{ env.CCACHE_DIR }}
       #     key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
