@@ -65,6 +65,7 @@ runs:
         spack -e ci spec
         spack -e ci find
         spack -e ci install --use-buildcache only
+        echo "$PWD/dependencies/bin" >> "$GITHUB_PATH"
 
     - name: Install Geant4 data
       shell: bash
@@ -77,6 +78,6 @@ runs:
       run: |
         ls -al
         venv_dir="$PWD/dependencies/venv"
-        "$PWD/dependencies/bin/python3" -m venv "$venv_dir"
-        echo "PATH=${venv_dir}/bin/:$PWD/dependencies/bin:$PATH" >> "$GITHUB_ENV"
+        python3 -m venv "$venv_dir"
+        echo "${venv_dir}/bin/" >> "$GITHUB_PATH"
         ls -al "${venv_dir}/bin"
