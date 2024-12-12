@@ -53,6 +53,10 @@ def runDigitization(
         )
         s.addReader(evGen)
 
+        s.addWhiteboardAlias(
+            "particles_generated_selected", evGen.config.outputParticles
+        )
+
     outputDir = Path(outputDir)
     addFatras(
         s,
