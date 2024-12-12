@@ -80,10 +80,9 @@ void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
   const auto t_pT = truthParticle.transverseMomentum();
   const auto t_z0 = truthParticle.position().z();
   const auto t_deltaR = deltaR;
-  const auto t_prodR = std::sqrt(truthParticle.position().x() *
-                                     truthParticle.position().x() +
-                                 truthParticle.position().y() *
-                                     truthParticle.position().y());
+  const auto t_prodR =
+      std::sqrt(truthParticle.position().x() * truthParticle.position().x() +
+                truthParticle.position().y() * truthParticle.position().y());
 
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, status);
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, status);

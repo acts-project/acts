@@ -394,7 +394,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_t_d0.push_back(t_d0);
     m_t_z0.push_back(t_z0);
     m_t_prodR.push_back(t_prodR);
-    
 
     // Initialize the fitted track parameters info
     std::array<float, Acts::eBoundSize> param = {NaNfloat, NaNfloat, NaNfloat,

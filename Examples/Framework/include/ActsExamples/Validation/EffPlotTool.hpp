@@ -48,7 +48,8 @@ class EffPlotTool {
     TEfficiency* trackEff_vs_DeltaR{
         nullptr};  ///< Tracking efficiency vs distance to the closest truth
                    ///< particle
-    TEfficiency* trackEff_vs_prodR{nullptr};  ///< Tracking efficiency vs production radius
+    TEfficiency* trackEff_vs_prodR{
+        nullptr};  ///< Tracking efficiency vs production radius
   };
 
   /// Constructor
