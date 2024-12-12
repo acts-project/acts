@@ -42,7 +42,7 @@ jobs:
       - run: env
       - run:  |
           ls -al
-          ls -al dependencies
+          ls -al dependencies/
           ls -al dependencies/venv
           ls -al dependencies/venv/bin
           which python3
