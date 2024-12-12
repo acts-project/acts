@@ -67,6 +67,12 @@ runs:
         spack -e ci install --use-buildcache only
         echo "$PWD/dependencies/bin" >> "$GITHUB_PATH"
         echo "CMAKE_PREFIX_PATH=$PWD/dependencies" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=${destination}/lib" >> "$GITHUB_ENV"
+        echo "ROOT_INCLUDE_PATH=${destination}/include" >> "$GITHUB_ENV"
+        # # Geant4 puts CLHEP in a subdirectory
+        # set_env ROOT_INCLUDE_PATH "${destination}/include/Geant4"
+        # Pythia8 looks for settings in this directory
+        echo "PYTHIA8DATA=${destination}/share/Pythia8/xmldoc" >> "$GITHUB_ENV"
 
     - name: Install Geant4 data
       shell: bash
