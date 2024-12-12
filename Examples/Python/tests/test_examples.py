@@ -437,6 +437,16 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        seq,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            eta=(-4, 4),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     from acts.examples.reconstruction import (
         addSeeding,
     )
@@ -451,16 +461,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         outputDirRoot=str(tmp_path),
-    )
-
-    addDigiParticleSelection(
-        seq,
-        ParticleSelectorConfig(
-            pt=(0.9 * u.GeV, None),
-            eta=(-4, 4),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     seq.run()
