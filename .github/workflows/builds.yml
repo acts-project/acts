@@ -39,11 +39,8 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
 
-      - run: |
-          env
-          ls -al
-          source geant4_data.sh
-          env
+      - run: env
+      - run: python3 -m pip install jinja2 pyyaml
 
       # - name: Restore ccache
       #   uses: actions/cache/restore@v4

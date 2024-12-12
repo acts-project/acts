@@ -66,6 +66,7 @@ runs:
         spack -e ci find
         spack -e ci install --use-buildcache only
         ls -al
+        echo "PATH=$PWD/dependencies/bin:$PATH" >> "$GITHUB_ENV"
 
     - name: Install Geant4 data
       shell: bash
