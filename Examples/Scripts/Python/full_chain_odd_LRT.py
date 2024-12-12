@@ -232,7 +232,6 @@ else:
             ParticleConfig(
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
-            
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
                 rMean=2,
                 rStdDev=0.0125 * u.mm,
