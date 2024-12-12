@@ -62,4 +62,11 @@ runs:
       shell: bash
       run: |
         spack env create ci spack.lock
+        spack -e ci spec
+        spack -e ci find
         spack -e ci install --use-buildcache only
+        pwd
+        spack -e view enable dependencies
+        ls -al
+
+      # - name: Install Geant4 data
