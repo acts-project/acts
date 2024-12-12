@@ -67,4 +67,9 @@ runs:
         spack -e ci install --use-buildcache only
         ls -al
 
-      # - name: Install Geant4 data
+    - name: Install Geant4 data
+      shell: bash
+      run: |
+        spack -e ci install --add geant4-data
+        "${GITHUB_ACTION_PATH}/with_spack_env.sh" ci env | grep G4 | awk '{print "export " $0}' > geant4_data.sh
+        source geant4_data.sh

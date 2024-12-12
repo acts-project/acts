@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/dependencies
 
+      - run: |
+          env | grep G4
+
       # - name: Restore ccache
       #   uses: actions/cache/restore@v4
       #   id: ccache-restore
