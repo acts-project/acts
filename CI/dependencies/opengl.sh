@@ -3,11 +3,7 @@
 set -u
 set -e
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-source ${SCRIPT_DIR}/detect_os.sh
-
-packages_file=${GITHUB_WORKSPACE}/spack/etc/spack/packages.yaml
+packages_file=$(spack location -r)/spack/etc/spack/packages.yaml
 
 if ! command -v sudo &> /dev/null
 then
@@ -16,8 +12,9 @@ else
     SUDO="sudo"
 fi
 
+os=$(spack arch --platform)
 
-if [ "$os" == "ubuntu" ]; then
+if [ "$os" == ubuntu* ]; then
   ${SUDO} apt-get update
   ${SUDO} apt-get install -y libgl1-mesa-dev
 cat <<EOF > "$packages_file"
@@ -29,7 +26,7 @@ packages:
       spec: opengl@4.5
 EOF
 cat "$packages_file"
-elif [ "$os" == "almalinux" ]; then
+elif [ "$os" == almalinux* ]; then
   ${SUDO} dnf install -y mesa-libGLU
 cat <<EOF > "$packages_file"
 packages:
