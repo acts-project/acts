@@ -6,13 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/unit_test.hpp>
+
 #include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
+
+#include <filesystem>
 
 #include <torch/torch.h>
 
 using namespace Acts;
+using namespace std::string_literals;
 
-int main(int argc, char** argv) {
+BOOST_AUTO_TEST_CASE(test_graph_creator_wrapper) {
   std::vector<std::uint64_t> moduleIds = {
       1152288185909248,   1154487209164800,   1156686232420352,
       19465753858146304,  19467952881401856,  19470151904657408,
@@ -48,13 +53,17 @@ int main(int argc, char** argv) {
     features.push_back(etas[i]);
   }
 
-  std::vector<std::string> args(argv, argv + argc);
+  auto &mts = boost::unit_test::framework::master_test_suite();
+  BOOST_REQUIRE(mts.argc == 2);
+  auto moduleMapPath = mts.argv[1];
+  BOOST_REQUIRE(std::filesystem::exists(mts.argv[1] + ".doublets.root"s));
+  BOOST_REQUIRE(std::filesystem::exists(mts.argv[1] + ".triplets.root"s));
 
-  Acts::detail::GraphCreatorWrapperCuda wrapper(args.at(1), 0, 512);
+  Acts::detail::GraphCreatorWrapperCuda wrapper(moduleMapPath, 0, 512);
 
   auto logger = Acts::getDefaultLogger("test", Acts::Logging::INFO);
   auto [a, b] = wrapper.build(features, moduleIds, *logger);
 
-  std::cout << a << std::endl;
-  std::cout << b << std::endl;
+  std::cout << "Edges:\n" << a << std::endl;
+  std::cout << "Edge features:\n" << b << std::endl;
 }

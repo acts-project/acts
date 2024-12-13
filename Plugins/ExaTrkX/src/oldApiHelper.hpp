@@ -17,17 +17,13 @@
 
 #include <torch/torch.h>
 
-template <typename Builder>
-std::pair<at::Tensor, at::Tensor> oldApiBuild(
+inline TTree_hits<float> makeTTreeHits(
     const std::vector<float> &inputValues,
-    const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger,
-    const Builder &builder, float rScale, float phiScale, float zScale) {
-  using namespace torch::indexing;
-
+    const std::vector<std::uint64_t> &moduleIds, float rScale, float phiScale,
+    float zScale, const Acts::Logger &logger = Acts::getDummyLogger()) {
   const auto numNodes = moduleIds.size();
   const auto numFeatures = inputValues.size() / numNodes;
 
-  const auto t0 = std::chrono::high_resolution_clock::now();
   hits<float> hitsCollection(false, false);
 
   ACTS_DEBUG("Start collecting hits...");
@@ -60,6 +56,22 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
   }
 
   TTree_hits<float> hitsTree = hitsCollection;
+  return hitsTree;
+}
+
+template <typename Builder>
+std::pair<at::Tensor, at::Tensor> oldApiBuild(
+    const std::vector<float> &inputValues,
+    const std::vector<std::uint64_t> &moduleIds, const Acts::Logger &logger,
+    const Builder &builder, float rScale, float phiScale, float zScale) {
+  using namespace torch::indexing;
+
+  const auto numNodes = moduleIds.size();
+  const auto numFeatures = inputValues.size() / numNodes;
+
+  const auto t0 = std::chrono::high_resolution_clock::now();
+  auto hitsTree =
+      makeTTreeHits(inputValues, moduleIds, rScale, phiScale, zScale, logger);
 
   ACTS_DEBUG("Hits tree has " << hitsTree.size()
                               << " hits, now build graph...");
@@ -77,7 +89,7 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
   edgeFeatureVector.reserve(numEdgeFeatures * numEdges);
 
   // TODO I think this is already somewhere in the codebase
-  const float pi = static_cast<float>(M_PI);
+  const float pi = static_cast<float>(3.141592654);
   auto resetAngle = [pi](float angle) {
     if (angle > pi) {
       return angle - 2.f * pi;
@@ -87,6 +99,9 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
     }
     return angle;
   };
+
+  std::ofstream of("old_api_edges.csv");
+  of << "src,tgt\n";
 
   auto [begin, end] = boost::edges(graph.graph_impl());
   for (auto it = begin; it != end; ++it) {
@@ -101,6 +116,7 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
 
     edgeIndexVector.push_back(src.hit_id());
     edgeIndexVector.push_back(dst.hit_id());
+    of << src.hit_id() << "," << dst.hit_id() << "\n";
 
     // Edge features
     // See
@@ -153,6 +169,9 @@ std::pair<at::Tensor, at::Tensor> oldApiBuild(
                                               edgeIndexVector.begin() + 10}));
   ACTS_VERBOSE("Edge index slice:\n"
                << edgeIndex.index({Slice(0, 2), Slice(0, 9)}));
+
+  ACTS_VERBOSE("Edge features slice:\n"
+               << edgeFeatures.index({Slice(0, 9), Slice()}));
 
   const auto t4 = std::chrono::high_resolution_clock::now();
   auto count_ms = [](auto ta, auto tb) {

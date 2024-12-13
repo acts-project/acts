@@ -18,8 +18,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <TTree_hits>
-#include <graph>
 #include <memory>
 #include <string>
 
