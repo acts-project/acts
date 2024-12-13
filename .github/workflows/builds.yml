@@ -39,17 +39,6 @@ jobs:
       - name: Install dependencies
         run: CI/dependencies/setup.sh
 
-      - run: env
-      - run:  |
-          echo $PATH
-          ls -al
-          ls -al dependencies/
-          ls -al dependencies/view
-          ls -al dependencies/view/venv
-          ls -al dependencies/view/venv/bin
-          which python3
-          python3 -m pip install jinja2 pyyaml
-
       - name: Restore ccache
         id: ccache-restore
         uses: actions/cache/restore@v4
@@ -271,66 +260,66 @@ jobs:
 
       - name: Install dependencies
         run: CI/dependencies/setup.sh
-  #
-  #     - name: Restore ccache
-  #       uses: actions/cache/restore@v4
-  #       id: ccache-restore
-  #       with:
-  #         path: ${{ env.CCACHE_DIR }}
-  #         key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-  #         restore-keys: |
-  #           ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-  #
-  #
-  #     - name: Configure
-  #       # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-  #       # dd4hep CMake configuration that gets triggered on recent CMake
-  #       # versions
-  #       run: >
-  #         ccache -z &&
-  #         cmake -B build -S .
-  #         --preset=github-ci
-  #         -DCMAKE_CXX_STANDARD=${{ matrix.std }}
-  #         -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-  #         -DPython_EXECUTABLE=$(which python3)
-  #
-  #     - name: Build
-  #       run: cmake --build build
-  #
-  #     - name: ccache stats
-  #       run: ccache -s
-  #
-  #     - name: Save ccache
-  #       uses: actions/cache/save@v4
-  #       if: always()
-  #       with:
-  #         path: ${{ github.workspace }}/ccache
-  #         key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-  #
-  #     - name: Unit tests
-  #       run: cmake --build build --target test
-  #
-  #     - name: Integration tests
-  #       run: cmake --build build --target integrationtests
-  #
-  #     - name: Install
-  #       run: cmake --build build --target install
-  #
-  #     - name: Downstream configure
-  #       run: >
-  #         cmake -B build-downstream -S Tests/DownstreamProject
-  #         -GNinja
-  #         -DCMAKE_BUILD_TYPE=Release
-  #         -DCMAKE_CXX_FLAGS=-Werror
-  #         -DCMAKE_CXX_STANDARD=${{ matrix.std }}
-  #         -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-  #
-  #     - name: Downstream build
-  #       run: cmake --build build-downstream
-  #
-  #     - name: Downstream run
-  #       run: ./build-downstream/bin/ShowActsVersion
-  #
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        id: ccache-restore
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+
+      - name: Configure
+        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions
+        run: >
+          ccache -z &&
+          cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DPython_EXECUTABLE=$(which python3)
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: cmake --build build --target test
+
+      - name: Integration tests
+        run: cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream
+
+      - name: Downstream run
+        run: ./build-downstream/bin/ShowActsVersion
+
   macos:
     runs-on: macos-14
     env:
@@ -343,72 +332,68 @@ jobs:
           submodules: true
           lfs: true
 
-      # - name: Install dependencies
-      #   run: >
-      #     brew install cmake ninja ccache xerces-c
-      #     && CI/dependencies.sh
-
       - name: Install dependencies
-        run: CI/dependencies/setup.sh
-  #
-  #     - name: Restore ccache
-  #       uses: actions/cache/restore@v4
-  #       id: ccache-restore
-  #       with:
-  #         path: ${{ env.CCACHE_DIR }}
-  #         key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
-  #         restore-keys: |
-  #           ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
-  #
-  #     - name: Configure
-  #       run: >
-  #         ccache -z
-  #         && cmake -B build -S .
-  #         --preset=github-ci
-  #         -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
-  #         -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-  #         -DPython_EXECUTABLE=$(which python3)
-  #
-  #     - name: Build
-  #       run: cmake --build build
-  #
-  #     - name: ccache stats
-  #       run: ccache -s
-  #
-  #     - name: Save ccache
-  #       uses: actions/cache/save@v4
-  #       if: always()
-  #       with:
-  #         path: ${{ github.workspace }}/ccache
-  #         key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
-  #
-  #     - name: Unit tests
-  #       run: cmake --build build --target test
-  #
-  #     - name: Integration tests
-  #       run: cmake --build build --target integrationtests
-  #
-  #     - name: Install
-  #       run: cmake --build build --target install
-  #
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: acts-macos
-  #         path: ${{ env.INSTALL_DIR }}
-  #
-  #     - name: Downstream configure
-  #       run: >
-  #         cmake -B build-downstream -S Tests/DownstreamProject
-  #         -GNinja
-  #         -DCMAKE_BUILD_TYPE=Release
-  #         -DCMAKE_CXX_FLAGS=-Werror
-  #         -DCMAKE_CXX_STANDARD=20
-  #         -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
-  #
-  #     - name: Downstream build
-  #       run: cmake --build build-downstream
-  #
-  #     - name: Downstream run
-  #       run: >
-  #         PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
-  #         && ./build-downstream/bin/ShowActsVersion
+        run: >
+          brew install ninja ccache
+          && CI/dependencies/setup.sh
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        id: ccache-restore
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+
+      - name: Configure
+        run: >
+          ccache -z
+          && cmake -B build -S .
+          --preset=github-ci
+          -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
+          -DPython_EXECUTABLE=$(which python3)
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
+      - name: Unit tests
+        run: cmake --build build --target test
+
+      - name: Integration tests
+        run: cmake --build build --target integrationtests
+
+      - name: Install
+        run: cmake --build build --target install
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acts-macos
+          path: ${{ env.INSTALL_DIR }}
+
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream
+
+      - name: Downstream run
+        run: >
+          PATH="${{ env.DEPENDENCY_DIR }}/bin:$PATH"
+          && ./build-downstream/bin/ShowActsVersion
