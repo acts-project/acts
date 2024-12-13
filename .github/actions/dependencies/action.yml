@@ -61,11 +61,12 @@ runs:
     - name: Create spack environment
       shell: bash
       run: |
-        if [[ $(spack arch --platform) == darwin ]]; then
-          NCPUS=$(sysctl -n hw.ncpu)
-        else
-          NCPUS=$(nproc)
-        fi
+        # if [[ $(spack arch --platform) == darwin ]]; then
+        #   NCPUS=$(sysctl -n hw.ncpu)
+        # else
+        #   NCPUS=$(nproc)
+        # fi
+        NCPUS=16 # we're only downloading
 
         time spack env create ci spack.lock --with-view $PWD/dependencies
         time spack -e ci spec
