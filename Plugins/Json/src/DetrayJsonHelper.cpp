@@ -6,6 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// For whatever reason, this compilation unit does not compile
+// with those assertions and GCC 13. For now just disable the
+// flags in this case.
+#if defined(_GLIBCXX_ASSERTIONS) && __GNUC__ == 13
+#undef _GLIBCXX_ASSERTIONS
+#endif
+
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 
 namespace Acts::DetrayJsonHelper {

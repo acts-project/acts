@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <numbers>
 
