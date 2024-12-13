@@ -273,7 +273,7 @@ jobs:
           lfs: true
 
       - name: Install dependencies
-        uses: CI/dependencies/setup.sh
+        run: CI/dependencies/setup.sh
   #
   #     - name: Restore ccache
   #       uses: actions/cache/restore@v4
@@ -352,7 +352,7 @@ jobs:
       #     && CI/dependencies.sh
 
       - name: Install dependencies
-        uses: CI/dependencies/setup.sh
+        run: CI/dependencies/setup.sh
   #
   #     - name: Restore ccache
   #       uses: actions/cache/restore@v4
