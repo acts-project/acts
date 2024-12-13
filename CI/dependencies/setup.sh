@@ -123,7 +123,7 @@ end_section
 start_section "Prepare python environment"
 ls -al
 venv_dir="${view_dir}/venv"
-python3 -m venv "$venv_dir"
+${view_dir}/bin/python3 -m venv "$venv_dir"
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
