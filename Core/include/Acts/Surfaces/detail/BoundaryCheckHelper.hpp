@@ -8,11 +8,37 @@
 
 #pragma once
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <span>
 
 namespace Acts::detail {
+
+inline Vector2 computeClosestPointOnAlignedBox(
+    const Vector2& lowerLeft, const Vector2& upperRight, const Vector2& point,
+    const std::optional<SquareMatrix2>& metricOpt) {
+  Vector2 closestPoint;
+
+  if (!metricOpt.has_value()) {
+    closestPoint =
+        detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
+            point, lowerLeft, upperRight);
+  } else {
+    // TODO there might be a more optimal way to compute the closest point to a
+    // box with metric
+
+    std::array<Vector2, 4> vertices = {{lowerLeft,
+                                        {upperRight[0], lowerLeft[1]},
+                                        upperRight,
+                                        {lowerLeft[0], upperRight[1]}}};
+
+    closestPoint = detail::VerticesHelper::computeClosestPointOnPolygon(
+        point, vertices, *metricOpt);
+  }
+
+  return closestPoint;
+}
 
 /// Check if a point is inside a box.
 ///
@@ -40,26 +66,13 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
     return false;
   }
 
-  Vector2 closestPoint;
+  std::optional<SquareMatrix2> metricOpt =
+      tolerance.hasMetric(jacobianOpt.has_value())
+          ? std::optional<SquareMatrix2>(tolerance.getMetric(jacobianOpt))
+          : std::nullopt;
 
-  if (!tolerance.hasMetric(jacobianOpt.has_value())) {
-    closestPoint =
-        detail::VerticesHelper::computeEuclideanClosestPointOnRectangle(
-            point, lowerLeft, upperRight);
-  } else {
-    // TODO there might be a more optimal way to compute the closest point to a
-    // box with metric
-
-    std::array<Vector2, 4> vertices = {{lowerLeft,
-                                        {upperRight[0], lowerLeft[1]},
-                                        upperRight,
-                                        {lowerLeft[0], upperRight[1]}}};
-
-    SquareMatrix2 metric = tolerance.getMetric(jacobianOpt);
-
-    closestPoint = detail::VerticesHelper::computeClosestPointOnPolygon(
-        point, vertices, metric);
-  }
+  Vector2 closestPoint =
+      computeClosestPointOnAlignedBox(lowerLeft, upperRight, point, metricOpt);
 
   Vector2 distance = closestPoint - point;
 

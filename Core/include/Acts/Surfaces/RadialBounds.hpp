@@ -9,14 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>
@@ -70,6 +68,9 @@ class RadialBounds : public DiscBounds {
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///

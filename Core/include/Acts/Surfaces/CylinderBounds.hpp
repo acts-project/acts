@@ -12,14 +12,11 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <iostream>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -96,6 +93,9 @@ class CylinderBounds : public SurfaceBounds {
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

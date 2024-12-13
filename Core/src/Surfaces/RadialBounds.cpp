@@ -30,6 +30,14 @@ Acts::Vector2 Acts::RadialBounds::shifted(
   return tmp;
 }
 
+Acts::Vector2 Acts::RadialBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  return detail::computeClosestPointOnAlignedBox(
+      Vector2(get(eMinR), -get(eHalfPhiSector)),
+      Vector2(get(eMaxR), get(eHalfPhiSector)), shifted(lposition),
+      std::nullopt);
+}
+
 bool Acts::RadialBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {

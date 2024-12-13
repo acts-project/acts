@@ -79,8 +79,8 @@ class AnnulusBounds : public DiscBounds {
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  double distance(const Vector2& lposition,
-                  const SquareMatrix2& metric) const final;
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

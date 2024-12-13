@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <stdexcept>
+#include <optional>
 
 namespace Acts {
 
@@ -157,8 +157,8 @@ std::vector<Vector2> AnnulusBounds::vertices(
           m_outLeftStripXY};
 }
 
-double AnnulusBounds::distance(const Vector2& lposition,
-                               const SquareMatrix2& metric) const {
+Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
+                                    const SquareMatrix2& metric) const {
   // locpo is PC in STRIP SYSTEM
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
@@ -293,7 +293,7 @@ double AnnulusBounds::distance(const Vector2& lposition,
     minDist = currentDist;
   }
 
-  return std::sqrt(minDist);
+  return currentClosest;
 }
 
 bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
@@ -329,6 +329,7 @@ bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
       return false;
     }
   }
+
   return true;
 }
 
@@ -338,30 +339,17 @@ bool AnnulusBounds::inside(const Vector2& lposition,
     return true;
   }
 
-  if (boundaryTolerance.isNone()) {
-    return inside(lposition, 0., 0.);
-  }
-
   if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
       absoluteBound.has_value()) {
     return inside(lposition, absoluteBound->tolerance0,
                   absoluteBound->tolerance1);
   }
 
-  // first check if inside. We don't need to look into the covariance if inside
-  if (inside(lposition, 0., 0.)) {
-    return true;
-  }
+  // TODO jacobian
+  Vector2 closestPoint =
+      this->closestPoint(lposition, boundaryTolerance.getMetric(std::nullopt));
 
-  if (boundaryTolerance.hasChi2Bound()) {
-    const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
-
-    // compare resulting Mahalanobis distance to configured "number of sigmas"
-    return distance(lposition, boundaryToleranceChi2.weight) <
-           boundaryToleranceChi2.maxChi2;
-  }
-
-  throw std::logic_error("AnnulusBounds: unknown boundary tolerance type");
+  return boundaryTolerance.isTolerated(lposition - closestPoint, std::nullopt);
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {

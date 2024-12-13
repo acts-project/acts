@@ -13,9 +13,13 @@
 #include <iomanip>
 #include <iostream>
 
-double Acts::RectangleBounds::distance(const Acts::Vector2& lposition,
-                                       const SquareMatrix2& metric) const {
-  return 0;  // TODO: Implement this function
+Acts::Vector2 Acts::RectangleBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  std::array<Vector2, 4> vertices = {
+      {m_min, {m_max[0], m_min[1]}, m_max, {m_min[0], m_max[1]}}};
+
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 bool Acts::RectangleBounds::inside(
