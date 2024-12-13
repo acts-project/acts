@@ -13,9 +13,6 @@
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <array>
-#include <memory>
-
 namespace Acts {
 
 /// @defgroup MagneticField Magnetic field
