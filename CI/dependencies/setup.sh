@@ -101,7 +101,9 @@ end_section
 
 start_section "Install spack packages"
 NCPUS=32
-time ${SCRIPT_DIR}/parallel.sh $NCPUS spack -e ${env_dir} install --use-buildcache only | tee install.log
+time ${SCRIPT_DIR}/parallel.sh $NCPUS spack -e ${env_dir} install --use-buildcache only \
+  | tee install.log \
+  | grep -v "^Waiting\|^\[+\]"
 end_section
 
 start_section "Patch up Geant4 data directory"
