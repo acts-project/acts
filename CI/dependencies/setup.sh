@@ -95,7 +95,7 @@ end_section
 
 start_section "Create spack environment"
 time spack env create -d "${env_dir}" "${lock_file_path}" --with-view "$view_dir"
-time spack -e "${env_dir}" spec
+time spack -e "${env_dir}" spec -l
 time spack -e "${env_dir}" find
 end_section
 
