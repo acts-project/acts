@@ -82,6 +82,10 @@ runs:
         time spack -e ci find
 
         time ${GITHUB_ACTION_PATH}/parallel.sh $NCPUS spack -e ci install --use-buildcache only
+
+        time spack -e ci-g4 spec
+        time spack -e ci-g4 find
+
         time ${GITHUB_ACTION_PATH}/parallel.sh $NCPUS spack -e ci-g4 install
 
         "${GITHUB_ACTION_PATH}/with_spack_env.sh" ci-g4 env | grep G4 >> "$GITHUB_ENV"
