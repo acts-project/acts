@@ -121,9 +121,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                          stepper.direction(state.stepping),
                          state.options.direction);
 
-    navigator.estimateNextTarget(state.navigation,
-                                 stepper.position(state.stepping),
-                                 stepper.direction(state.stepping));
+    navigator.nextTarget(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping));
     auto preStepState = state.navigation;
     BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);

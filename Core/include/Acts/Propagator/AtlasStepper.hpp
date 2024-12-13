@@ -28,12 +28,12 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
-#include <functional>
 
-// This is based original stepper code from the ATLAS RungeKuttaPropagator
 namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
+///
+/// This is based original stepper code from the ATLAS RungeKuttaPropagator
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
@@ -47,6 +47,10 @@ class AtlasStepper {
   };
 
   struct Options : public StepperPlainOptions {
+    explicit Options(const GeometryContext& gctx,
+                     const MagneticFieldContext& mctx)
+        : StepperPlainOptions(gctx, mctx) {}
+
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -54,34 +58,25 @@ class AtlasStepper {
 
   /// @brief Nested State struct for the local caching
   struct State {
-    /// Default constructor - deleted
-    State() = delete;
-
     /// Constructor
     ///
     /// @tparam Type of TrackParameters
     ///
-    /// @param [in] gctx The geometry context tof this call
+    /// @param [in] optionsIn The stepper options
     /// @param [in] fieldCacheIn The magnetic field cache for this call
     /// @param [in] pars Input parameters
-    /// @param [in] ssize the steps size limitation
-    /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
-    State(const GeometryContext& gctx,
-          MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          double ssize = std::numeric_limits<double>::max(),
-          double stolerance = s_onSurfaceTolerance)
-        : particleHypothesis(pars.particleHypothesis()),
+    State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn,
+          const Parameters& pars)
+        : options(optionsIn),
+          particleHypothesis(pars.particleHypothesis()),
           field(0., 0., 0.),
-          stepSize(ssize),
-          tolerance(stolerance),
-          fieldCache(std::move(fieldCacheIn)),
-          geoContext(gctx) {
+          fieldCache(std::move(fieldCacheIn)) {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
       // functions
 
-      const auto pos = pars.position(gctx);
+      const auto pos = pars.position(options.geoContext);
       const auto Vp = pars.parameters();
 
       double Sf = std::sin(Vp[eBoundPhi]);
@@ -111,7 +106,7 @@ class AtlasStepper {
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.direction());
+            options.geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -240,6 +235,8 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    Options options;
+
     ParticleHypothesis particleHypothesis;
 
     // optimisation that init is not called twice
@@ -289,15 +286,9 @@ class AtlasStepper {
     // Previous step size for overstep estimation
     double previousStepSize = 0.;
 
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
-
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
-
-    /// Cache the geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -316,12 +307,11 @@ class AtlasStepper {
 
   explicit AtlasStepper(const Config& config) : m_bField(config.bField) {}
 
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const BoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, m_bField->makeCache(mctx), par, ssize, stolerance};
+  State makeState(const Options& options,
+                  const BoundTrackParameters& par) const {
+    State state{options, m_bField->makeCache(options.magFieldContext), par};
+    state.stepSize = ConstrainedStep(options.maxStepSize);
+    return state;
   }
 
   /// @brief Resets the state
@@ -336,10 +326,10 @@ class AtlasStepper {
       const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
-    update(
-        state,
-        transformBoundToFreeParameters(surface, state.geoContext, boundParams),
-        boundParams, cov, surface);
+    update(state,
+           transformBoundToFreeParameters(surface, state.options.geoContext,
+                                          boundParams),
+           boundParams, cov, surface);
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
 
@@ -418,15 +408,17 @@ class AtlasStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
+  /// @param [in] release Do we release the step size?
   /// @param [in] logger Logger instance to use
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype, bool release,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        surfaceTolerance, stype, release, logger);
   }
 
   /// Update step size
@@ -439,8 +431,10 @@ class AtlasStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
+                      Direction /*direction*/, ConstrainedStep::Type stype,
+                      bool release) const {
+    double stepSize = oIntersection.pathLength();
+    updateStepSize(state, stepSize, stype, release);
   }
 
   /// Update step size - explicitly with a double
@@ -450,7 +444,7 @@ class AtlasStepper {
   /// @param [in] stype The step size type to be set
   /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release = true) const {
+                      ConstrainedStep::Type stype, bool release) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
@@ -519,7 +513,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     auto parameters = BoundTrackParameters::create(
-        surface.getSharedPtr(), state.geoContext, pos4, dir, qOverP,
+        surface.getSharedPtr(), state.options.geoContext, pos4, dir, qOverP,
         std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
@@ -626,7 +620,8 @@ class AtlasStepper {
     double Se = std::sin(boundParams[eBoundTheta]);
     double Ce = std::cos(boundParams[eBoundTheta]);
 
-    const auto transform = surface.referenceFrame(state.geoContext, pos, mom);
+    const auto transform =
+        surface.referenceFrame(state.options.geoContext, pos, mom);
 
     state.pVector[8] = transform(0, eBoundLoc0);
     state.pVector[16] = transform(0, eBoundLoc1);
@@ -956,7 +951,8 @@ class AtlasStepper {
     P[45] *= p;
     P[46] *= p;
 
-    const auto fFrame = surface.referenceFrame(state.geoContext, gp, mom);
+    const auto fFrame =
+        surface.referenceFrame(state.options.geoContext, gp, mom);
 
     double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
     double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
@@ -985,9 +981,9 @@ class AtlasStepper {
     if (surface.type() == Surface::Straw ||
         surface.type() == Surface::Perigee) {
       // vector from position to center
-      double x = P[0] - surface.center(state.geoContext).x();
-      double y = P[1] - surface.center(state.geoContext).y();
-      double z = P[2] - surface.center(state.geoContext).z();
+      double x = P[0] - surface.center(state.options.geoContext).x();
+      double y = P[1] - surface.center(state.options.geoContext).y();
+      double z = P[2] - surface.center(state.options.geoContext).z();
 
       // this is the projection of the direction onto the local y axis
       double d = P[4] * Ay[0] + P[5] * Ay[1] + P[6] * Ay[2];
@@ -1085,7 +1081,7 @@ class AtlasStepper {
     // Jacobian production of transport and to_local
     if (surface.type() == Surface::Disc) {
       // the vector from the disc surface to the p
-      const auto& sfc = surface.center(state.geoContext);
+      const auto& sfc = surface.center(state.options.geoContext);
       double d[3] = {P[0] - sfc(0), P[1] - sfc(1), P[2] - sfc(2)};
       // this needs the transformation to polar coordinates
       double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];

@@ -81,6 +81,8 @@ class DirectNavigator {
     Direction direction = Direction::Forward;
 
     /// Index of the next surface to try
+    /// @note -1 means before the first surface in the sequence and size()
+    ///       means after the last surface in the sequence
     int surfaceIndex = -1;
 
     /// Navigation state - external interface: the current surface
@@ -105,8 +107,10 @@ class DirectNavigator {
     }
 
     bool endOfSurfaces() const {
-      return surfaceIndex < 0 ||
-             surfaceIndex >= static_cast<int>(options.surfaces.size());
+      if (direction == Direction::Forward) {
+        return surfaceIndex >= static_cast<int>(options.surfaces.size());
+      }
+      return surfaceIndex < 0;
     }
 
     int remainingSurfaces() const {
@@ -213,9 +217,9 @@ class DirectNavigator {
     state.navigationBreak = false;
   }
 
-  /// @brief Estimate the next target surface
+  /// @brief Get the next target surface
   ///
-  /// This function estimates the next target surface for the propagation. For
+  /// This function gets the next target surface for the propagation. For
   /// the direct navigator this is always the next surface in the sequence.
   ///
   /// @param state The navigation state
@@ -223,13 +227,13 @@ class DirectNavigator {
   /// @param direction The current direction
   ///
   /// @return The next target surface
-  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& direction) const {
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
     if (state.navigationBreak) {
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
-    ACTS_VERBOSE("DirectNavigator::estimateNextTarget");
+    ACTS_VERBOSE("DirectNavigator::nextTarget");
 
     // Navigator target always resets the current surface
     state.currentSurface = nullptr;
@@ -246,7 +250,7 @@ class DirectNavigator {
     } else {
       ACTS_VERBOSE("End of surfaces reached, navigation break.");
       state.navigationBreak = true;
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     // Establish & update the surface status

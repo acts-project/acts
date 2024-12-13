@@ -378,7 +378,7 @@ CurvilinearTrackParameters createStartParameters(double pT, double phi,
 BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,
                      eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);
@@ -394,7 +394,7 @@ BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,
 BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
                      eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);
@@ -410,7 +410,7 @@ BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRef1StraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);
@@ -426,7 +426,7 @@ BOOST_DATA_TEST_CASE(NavigatorRef1StraightLineConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRef1EigenConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);
@@ -442,7 +442,7 @@ BOOST_DATA_TEST_CASE(NavigatorRef1EigenConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRef2StraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);
@@ -458,7 +458,7 @@ BOOST_DATA_TEST_CASE(NavigatorRef2StraightLineConsistency,
 BOOST_DATA_TEST_CASE(NavigatorRef2EigenConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
   CurvilinearTrackParameters start =
       createStartParameters(pT, phi, theta, charge);

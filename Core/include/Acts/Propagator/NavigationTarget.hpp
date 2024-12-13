@@ -16,12 +16,19 @@ namespace Acts {
 
 class Surface;
 
+/// @brief The navigation target
+///
+/// This struct represents a navigation target which is communicated from the
+/// navigator to the stepper through the propagator.
+///
+/// @note This incorporates `std::optional` semantics as the next target might
+///       not exist.
 struct NavigationTarget {
   const Surface* surface = nullptr;
   std::uint8_t surfaceIntersectionIndex = 0;
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
 
-  static NavigationTarget invalid() { return NavigationTarget(); }
+  static NavigationTarget None() { return NavigationTarget(); }
 
   NavigationTarget(const Surface& surface_,
                    std::uint8_t surfaceIntersectionIndex_,
@@ -30,7 +37,7 @@ struct NavigationTarget {
         surfaceIntersectionIndex(surfaceIntersectionIndex_),
         boundaryTolerance(std::move(boundaryTolerance_)) {}
 
-  bool isValid() const { return surface != nullptr; }
+  bool isNone() const { return surface != nullptr; }
 
  private:
   NavigationTarget() = default;

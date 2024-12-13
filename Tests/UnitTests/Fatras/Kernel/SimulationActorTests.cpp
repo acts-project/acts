@@ -117,7 +117,8 @@ struct MockStepper {
     state.p = 1 / qop;
   }
   void updateStepSize(State & /*state*/, double /*stepSize*/,
-                      Acts::ConstrainedStep::Type /*stype*/) const {}
+                      Acts::ConstrainedStep::Type /*stype*/,
+                      bool /*release*/) const {}
 };
 
 struct MockNavigatorState {

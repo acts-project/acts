@@ -10,11 +10,25 @@
 
 #include "Acts/Definitions/Units.hpp"
 
-#include <limits>
+#include <functional>
 
 namespace Acts {
 
+class GeometryContext;
+class MagneticFieldContext;
+
 struct StepperPlainOptions {
+  /// StepperPlainOptions with context
+  explicit StepperPlainOptions(const GeometryContext& gctx,
+                               const MagneticFieldContext& mctx)
+      : geoContext(gctx), magFieldContext(mctx) {}
+
+  /// Context object for the geometry
+  std::reference_wrapper<const GeometryContext> geoContext;
+
+  /// Context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+
   /// Tolerance for the error of the integration
   double stepTolerance = 1e-4;
 

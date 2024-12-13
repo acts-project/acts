@@ -68,10 +68,9 @@ class VoidNavigator {
     return;
   }
 
-  NavigationTarget estimateNextTarget(State& /*state*/,
-                                      const Vector3& /*position*/,
-                                      const Vector3& /*direction*/) const {
-    return NavigationTarget::invalid();
+  NavigationTarget nextTarget(State& /*state*/, const Vector3& /*position*/,
+                              const Vector3& /*direction*/) const {
+    return NavigationTarget::None();
   }
 
   bool checkTargetValid(const State& /*state*/, const Vector3& /*position*/,

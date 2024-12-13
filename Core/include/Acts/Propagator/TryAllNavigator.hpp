@@ -294,10 +294,10 @@ class TryAllNavigator : public TryAllNavigatorBase {
     reinitializeCandidates(state);
   }
 
-  /// @brief Estimate the next target surface
+  /// @brief Get the next target surface
   ///
-  /// This method estimates the next target surface based on the current
-  /// position and direction. It returns an invalid target if no target can be
+  /// This method gets the next target surface based on the current
+  /// position and direction. It returns a none target if no target can be
   /// found.
   ///
   /// @param state The navigation state
@@ -305,14 +305,14 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param direction The current direction
   ///
   /// @return The next target surface
-  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& direction) const {
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
     // Check if the navigator is inactive
     if (state.navigationBreak) {
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
-    ACTS_VERBOSE(volInfo(state) << "estimateNextTarget");
+    ACTS_VERBOSE(volInfo(state) << "nextTarget");
 
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
@@ -370,7 +370,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     ACTS_VERBOSE(volInfo(state) << "found " << intersectionCandidates.size()
                                 << " intersections");
 
-    NavigationTarget nextTarget = NavigationTarget::invalid();
+    NavigationTarget nextTarget = NavigationTarget::None();
     state.currentCandidates.clear();
 
     for (const auto& candidate : intersectionCandidates) {
@@ -395,7 +395,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
     state.currentCandidates = std::move(intersectionCandidates);
 
-    if (!nextTarget.isValid()) {
+    if (nextTarget.isNone()) {
       ACTS_VERBOSE(volInfo(state) << "no target found");
     } else {
       ACTS_VERBOSE(volInfo(state)
@@ -619,9 +619,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
     state.lastPosition.reset();
   }
 
-  /// @brief Estimate the next target surface
+  /// @brief Get the next target surface
   ///
-  /// This method estimates the next target surface based on the current
+  /// This method gets the next target surface based on the current
   /// position and direction. It returns an invalid target if no target can be
   /// found.
   ///
@@ -630,15 +630,15 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param direction The current direction
   ///
   /// @return The next target surface
-  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& direction) const {
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
     (void)direction;
 
     if (state.navigationBreak) {
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
-    ACTS_VERBOSE(volInfo(state) << "estimateNextTarget");
+    ACTS_VERBOSE(volInfo(state) << "nextTarget");
 
     state.currentSurface = nullptr;
 
@@ -648,7 +648,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
           volInfo(state)
           << "Initial position, nothing to do, blindly stepping forward.");
       state.lastPosition = position;
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     if (state.endOfCandidates()) {
@@ -706,7 +706,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       ACTS_VERBOSE(volInfo(state)
                    << "No target found, blindly stepping forward.");
       state.lastPosition = position;
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "handle active candidates");

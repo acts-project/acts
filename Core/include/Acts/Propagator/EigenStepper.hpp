@@ -12,7 +12,6 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -28,7 +27,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <functional>
 #include <limits>
 #include <type_traits>
 
@@ -61,6 +59,10 @@ class EigenStepper {
   };
 
   struct Options : public StepperPlainOptions {
+    explicit Options(const GeometryContext& gctx,
+                     const MagneticFieldContext& mctx)
+        : StepperPlainOptions(gctx, mctx) {}
+
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -71,25 +73,19 @@ class EigenStepper {
   /// It contains the stepping information and is provided thread local
   /// by the propagator
   struct State {
-    State() = delete;
-
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] optionsIn is the options object for the stepper
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    explicit State(const GeometryContext& gctx,
-                   MagneticFieldProvider::Cache fieldCacheIn,
-                   const BoundTrackParameters& par,
-                   double ssize = 10 * Acts::UnitConstants::m)
-        : particleHypothesis(par.particleHypothesis()),
-          stepSize(ssize),
-          fieldCache(std::move(fieldCacheIn)),
-          geoContext(gctx) {
-      Vector3 position = par.position(gctx);
+    State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn,
+          const BoundTrackParameters& par)
+        : options(optionsIn),
+          particleHypothesis(par.particleHypothesis()),
+          fieldCache(std::move(fieldCacheIn)) {
+      Vector3 position = par.position(options.geoContext);
       Vector3 direction = par.direction();
       pars.template segment<3>(eFreePos0) = position;
       pars.template segment<3>(eFreeDir0) = direction;
@@ -103,9 +99,12 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
+        jacToGlobal = surface.boundToFreeJacobian(options.geoContext, position,
+                                                  direction);
       }
     }
+
+    Options options;
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
@@ -150,9 +149,6 @@ class EigenStepper {
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    /// The geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
-
     /// Algorithmic extension
     extension_t extension;
 
@@ -179,10 +175,8 @@ class EigenStepper {
   /// @param [in] config The configuration of the stepper
   explicit EigenStepper(const Config& config) : m_bField(config.bField) {}
 
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const BoundTrackParameters& par,
-                  double ssize = 10 * Acts::UnitConstants::m) const;
+  State makeState(const Options& options,
+                  const BoundTrackParameters& par) const;
 
   /// @brief Resets the state
   ///
@@ -274,11 +268,11 @@ class EigenStepper {
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype, bool release,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        surfaceTolerance, stype, release, logger);
   }
 
   /// Update step size
@@ -293,8 +287,10 @@ class EigenStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
+                      Direction /*direction*/, ConstrainedStep::Type stype,
+                      bool release) const {
+    double stepSize = oIntersection.pathLength();
+    updateStepSize(state, stepSize, stype, release);
   }
 
   /// Update step size - explicitly with a double
@@ -304,7 +300,7 @@ class EigenStepper {
   /// @param stype [in] The step size type to be set
   /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release = true) const {
+                      ConstrainedStep::Type stype, bool release) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }

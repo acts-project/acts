@@ -142,15 +142,15 @@ class DetectorNavigator {
     updateCandidateSurfaces(state, position);
   }
 
-  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& direction) const {
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, position) << "Entering navigator::preStep.");
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "navigator inactive");
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     fillNavigationState(position, direction, state);
@@ -163,7 +163,7 @@ class DetectorNavigator {
     if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     // Screen output how much is left to try

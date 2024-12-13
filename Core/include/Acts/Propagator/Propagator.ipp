@@ -22,7 +22,7 @@ namespace Acts::detail {
 template <typename Stepper, typename StateType, typename N>
 concept propagator_stepper_compatible_with =
     requires(const Stepper& s, StateType& st, const N& n) {
-      { s.step(st, n) } -> std::same_as<Acts::Result<double>>;
+      { s.step(st, n) } -> std::same_as<Result<double>>;
     };
 }  // namespace Acts::detail
 
@@ -50,22 +50,24 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
 
   auto getNextTarget = [&]() -> Result<NavigationTarget> {
     for (unsigned int i = 0; i < state.options.maxTargetSkipping; ++i) {
-      NavigationTarget nextTarget = m_navigator.estimateNextTarget(
+      NavigationTarget nextTarget = m_navigator.nextTarget(
           state.navigation, state.position, state.direction);
-      if (!nextTarget.isValid()) {
-        return NavigationTarget::invalid();
+      if (nextTarget.isNone()) {
+        return NavigationTarget::None();
       }
       IntersectionStatus preStepSurfaceStatus = m_stepper.updateSurfaceStatus(
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          logger());
-      if (preStepSurfaceStatus >= Acts::IntersectionStatus::reachable) {
+          ConstrainedStep::navigator, true, logger());
+      if (preStepSurfaceStatus == IntersectionStatus::reachable ||
+          preStepSurfaceStatus == IntersectionStatus::onSurface) {
         return nextTarget;
       }
     }
 
-    ACTS_ERROR("getNextTarget failed to find a valid target surface.");
+    ACTS_ERROR("getNextTarget failed to find a valid target surface after "
+               << state.options.maxTargetSkipping << " attempts.");
     return Result<NavigationTarget>::failure(
         PropagatorError::NextTargetLimitReached);
   };
@@ -113,18 +115,18 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     // Post-stepping: check target status, call actors, check abort conditions
     state.stage = PropagatorStage::postStep;
 
-    if (nextTarget.isValid()) {
+    if (!nextTarget.isNone()) {
       IntersectionStatus postStepSurfaceStatus = m_stepper.updateSurfaceStatus(
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          logger());
+          ConstrainedStep::navigator, true, logger());
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
         m_navigator.handleSurfaceReached(state.navigation, state.position,
                                          state.direction, *nextTarget.surface);
       }
       if (postStepSurfaceStatus != IntersectionStatus::reachable) {
-        nextTarget = NavigationTarget::invalid();
+        nextTarget = NavigationTarget::None();
       }
     }
 
@@ -144,14 +146,14 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
     // Pre-Stepping: target setting
     state.stage = PropagatorStage::preStep;
 
-    if (nextTarget.isValid() &&
+    if (!nextTarget.isNone() &&
         !m_navigator.checkTargetValid(state.navigation, state.position,
                                       state.direction)) {
       ACTS_VERBOSE("Target is not valid anymore.");
-      nextTarget = NavigationTarget::invalid();
+      nextTarget = NavigationTarget::None();
     }
 
-    if (!nextTarget.isValid()) {
+    if (nextTarget.isNone()) {
       // navigator step constraint is not valid anymore
       m_stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
 
@@ -161,7 +163,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
       }
       nextTarget = *nextTargetResult;
     }
-  }
+  }  // end of stepping loop
 
   // check if we didn't terminate normally via aborters
   if (!terminatedNormally) {
@@ -252,11 +254,8 @@ auto Acts::Propagator<S, N>::makeState(
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
   // Initialize the internal propagator state
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(eOptions.navigation)};
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+                  m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       detail::propagator_stepper_compatible_with<S, StateType, N>,
@@ -294,11 +293,8 @@ auto Acts::Propagator<S, N>::makeState(
   using StateType =
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(eOptions.navigation)};
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+                  m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       detail::propagator_stepper_compatible_with<S, StateType, N>,

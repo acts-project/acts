@@ -22,6 +22,7 @@
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -91,10 +92,10 @@ class Navigator {
 
   /// The navigation stage
   enum struct Stage : int {
+    initial = 0,
     surfaceTarget = 1,
     layerTarget = 2,
     boundaryTarget = 3,
-    noTarget = 4,
   };
 
   /// The navigator configuration
@@ -150,36 +151,28 @@ class Navigator {
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
     /// the current surface index of the navigation state
-    int navSurfaceIndex = -1;
+    std::optional<std::size_t> navSurfaceIndex;
 
     // Navigation on layer level
     /// the vector of navigation layers to work through
     NavigationLayers navLayers = {};
     /// the current layer index of the navigation state
-    int navLayerIndex = -1;
+    std::optional<std::size_t> navLayerIndex;
 
     // Navigation on volume level
     /// the vector of boundary surfaces to work through
     NavigationBoundaries navBoundaries = {};
     /// the current boundary index of the navigation state
-    int navBoundaryIndex = -1;
+    std::optional<std::size_t> navBoundaryIndex;
 
     SurfaceIntersection& navSurface() {
-      return navSurfaces.at(navSurfaceIndex);
+      return navSurfaces.at(navSurfaceIndex.value());
     }
-    LayerIntersection& navLayer() { return navLayers.at(navLayerIndex); }
+    LayerIntersection& navLayer() {
+      return navLayers.at(navLayerIndex.value());
+    }
     BoundaryIntersection& navBoundary() {
-      return navBoundaries.at(navBoundaryIndex);
-    }
-
-    bool endOfSurfaces() const {
-      return navSurfaceIndex >= static_cast<int>(navSurfaces.size());
-    }
-    bool endOfLayers() const {
-      return navLayerIndex >= static_cast<int>(navLayers.size());
-    }
-    bool endOfBoundaries() const {
-      return navBoundaryIndex >= static_cast<int>(navBoundaries.size());
+      return navBoundaries.at(navBoundaryIndex.value());
     }
 
     const TrackingVolume* startVolume = nullptr;
@@ -191,24 +184,29 @@ class Navigator {
     const Surface* targetSurface = nullptr;
 
     bool navigationBreak = false;
-    Stage navigationStage = Stage::noTarget;
+    Stage navigationStage = Stage::initial;
 
     NavigatorStatistics statistics;
 
-    void reset() {
+    void resetAfterVolumeSwitch() {
       navSurfaces.clear();
-      navSurfaceIndex = -1;
+      navSurfaceIndex.reset();
       navLayers.clear();
-      navLayerIndex = -1;
+      navLayerIndex.reset();
       navBoundaries.clear();
-      navBoundaryIndex = -1;
+      navBoundaryIndex.reset();
+
+      currentLayer = nullptr;
+    }
+
+    void reset() {
+      resetAfterVolumeSwitch();
 
       currentVolume = nullptr;
-      currentLayer = nullptr;
       currentSurface = nullptr;
 
       navigationBreak = false;
-      navigationStage = Stage::noTarget;
+      navigationStage = Stage::initial;
     }
   };
 
@@ -309,8 +307,8 @@ class Navigator {
         state.startLayer = state.startVolume->associatedLayer(
             state.options.geoContext, position);
       } else {
-        ACTS_VERBOSE(volInfo(state)
-                     << "No start volume resolved. Nothing left to do.");
+        ACTS_ERROR(volInfo(state)
+                   << "No start volume resolved. Nothing left to do.");
         state.navigationBreak = true;
       }
     }
@@ -341,41 +339,43 @@ class Navigator {
     }
   }
 
-  /// @brief Estimate the next target surface
+  /// @brief Get the next target surface
   ///
-  /// This function estimates the next target surface for the propagation.
+  /// This function gets the next target surface for the propagation.
   ///
   /// @param state The navigation state
   /// @param position The current position
   /// @param direction The current direction
   ///
   /// @return The next target surface
-  NavigationTarget estimateNextTarget(State& state, const Vector3& position,
-                                      const Vector3& direction) const {
+  NavigationTarget nextTarget(State& state, const Vector3& position,
+                              const Vector3& direction) const {
     if (inactive(state)) {
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
-    ACTS_VERBOSE(volInfo(state) << "Entering Navigator::estimateNextTarget.");
+    ACTS_VERBOSE(volInfo(state) << "Entering Navigator::nextTarget.");
 
     // Reset the current surface
     state.currentSurface = nullptr;
 
-    auto tryEstimateNextTarget = [&]() -> NavigationTarget {
+    auto tryGetNextTarget = [&]() -> NavigationTarget {
       // Try targeting the surfaces - then layers - then boundaries
 
-      if (state.navigationStage == Stage::noTarget) {
+      if (state.navigationStage == Stage::initial) {
         ACTS_VERBOSE(volInfo(state) << "Target surfaces.");
         state.navigationStage = Stage::surfaceTarget;
       }
 
       if (state.navigationStage == Stage::surfaceTarget) {
-        if (state.navSurfaceIndex == -1) {
+        if (!state.navSurfaceIndex.has_value()) {
           // First time, resolve the surfaces
           resolveSurfaces(state, position, direction);
+          state.navSurfaceIndex = 0;
+        } else {
+          ++state.navSurfaceIndex.value();
         }
-        ++state.navSurfaceIndex;
-        if (!state.endOfSurfaces()) {
+        if (state.navSurfaceIndex.value() < state.navSurfaces.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next surface.");
           return NavigationTarget(*state.navSurface().object(),
                                   state.navSurface().index(),
@@ -388,12 +388,14 @@ class Navigator {
       }
 
       if (state.navigationStage == Stage::layerTarget) {
-        if (state.navLayerIndex == -1) {
+        if (!state.navLayerIndex.has_value()) {
           // First time, resolve the layers
           resolveLayers(state, position, direction);
+          state.navLayerIndex = 0;
+        } else {
+          ++state.navLayerIndex.value();
         }
-        ++state.navLayerIndex;
-        if (!state.endOfLayers()) {
+        if (state.navLayerIndex.value() < state.navLayers.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next layer.");
           return NavigationTarget(*state.navLayer().first.object(),
                                   state.navLayer().first.index(),
@@ -406,12 +408,14 @@ class Navigator {
       }
 
       if (state.navigationStage == Stage::boundaryTarget) {
-        if (state.navBoundaryIndex == -1) {
+        if (!state.navBoundaryIndex.has_value()) {
           // First time, resolve the boundaries
           resolveBoundaries(state, position, direction);
+          state.navBoundaryIndex = 0;
+        } else {
+          ++state.navBoundaryIndex.value();
         }
-        ++state.navBoundaryIndex;
-        if (!state.endOfBoundaries()) {
+        if (state.navBoundaryIndex.value() < state.navBoundaries.size()) {
           ACTS_VERBOSE(volInfo(state) << "Target set to next boundary.");
           return NavigationTarget(*state.navBoundary().first.object(),
                                   state.navBoundary().first.index(),
@@ -426,11 +430,11 @@ class Navigator {
 
       ACTS_VERBOSE(volInfo(state)
                    << "Unknown state. No target found. Renavigate.");
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     };
 
-    NavigationTarget nextTarget = tryEstimateNextTarget();
-    if (nextTarget.isValid()) {
+    NavigationTarget nextTarget = tryGetNextTarget();
+    if (!nextTarget.isNone()) {
       return nextTarget;
     }
 
@@ -445,7 +449,7 @@ class Navigator {
     if (state.currentVolume == nullptr) {
       ACTS_VERBOSE(volInfo(state) << "No volume found, stop navigation.");
       state.navigationBreak = true;
-      return NavigationTarget::invalid();
+      return NavigationTarget::None();
     }
 
     state.currentLayer = state.currentVolume->associatedLayer(
@@ -454,8 +458,8 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Resolved volume and layer.");
 
     // Rerun the targeting
-    nextTarget = tryEstimateNextTarget();
-    if (nextTarget.isValid()) {
+    nextTarget = tryGetNextTarget();
+    if (!nextTarget.isNone()) {
       return nextTarget;
     }
 
@@ -463,7 +467,7 @@ class Navigator {
         volInfo(state)
         << "No targets found again, we got really lost! Stop navigation.");
     state.navigationBreak = true;
-    return NavigationTarget::invalid();
+    return NavigationTarget::None();
   }
 
   /// @brief Check if the current target is still valid
@@ -480,7 +484,7 @@ class Navigator {
     (void)position;
     (void)direction;
 
-    return state.navigationStage != Stage::noTarget;
+    return state.navigationStage != Stage::initial;
   }
 
   /// @brief Handle the surface reached
@@ -533,14 +537,7 @@ class Navigator {
       state.currentVolume = boundary->attachedVolume(state.options.geoContext,
                                                      position, direction);
 
-      // partial reset
-      state.navSurfaces.clear();
-      state.navSurfaceIndex = -1;
-      state.navLayers.clear();
-      state.navLayerIndex = -1;
-      state.navBoundaries.clear();
-      state.navBoundaryIndex = -1;
-      state.currentLayer = nullptr;
+      state.resetAfterVolumeSwitch();
 
       if (state.currentVolume != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "Volume updated.");

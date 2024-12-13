@@ -23,18 +23,18 @@ SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
 SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
 SympyStepper::State SympyStepper::makeState(
-    std::reference_wrapper<const GeometryContext> gctx,
-    std::reference_wrapper<const MagneticFieldContext> mctx,
-    const BoundTrackParameters& par, double ssize) const {
-  return State{gctx, m_bField->makeCache(mctx), par, ssize};
+    const Options& options, const BoundTrackParameters& par) const {
+  State state{options, m_bField->makeCache(options.magFieldContext), par};
+  state.stepSize = ConstrainedStep(options.maxStepSize);
+  return state;
 }
 
 void SympyStepper::resetState(State& state, const BoundVector& boundParams,
                               const BoundSquareMatrix& cov,
                               const Surface& surface,
                               const double stepSize) const {
-  FreeVector freeParams =
-      transformBoundToFreeParameters(surface, state.geoContext, boundParams);
+  FreeVector freeParams = transformBoundToFreeParameters(
+      surface, state.options.geoContext, boundParams);
 
   // Update the stepping state
   state.pars = freeParams;
@@ -44,7 +44,7 @@ void SympyStepper::resetState(State& state, const BoundVector& boundParams,
 
   // Reinitialize the stepping jacobian
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      state.options.geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
@@ -56,10 +56,10 @@ SympyStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   return detail::sympy::boundState(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
-      state.covTransport && transportCov, state.pathAccumulated,
-      freeToBoundCorrection);
+      state.options.geoContext, surface, state.cov, state.jacobian,
+      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
+      state.particleHypothesis, state.covTransport && transportCov,
+      state.pathAccumulated, freeToBoundCorrection);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
@@ -77,7 +77,7 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
   state.pars = freeParams;
   state.cov = covariance;
   state.jacToGlobal = surface.boundToFreeJacobian(
-      state.geoContext, freeParams.template segment<3>(eFreePos0),
+      state.options.geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
 }
 
@@ -100,8 +100,9 @@ void SympyStepper::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::sympy::transportCovarianceToBound(
-      state.geoContext, surface, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, freeToBoundCorrection);
+      state.options.geoContext, surface, state.cov, state.jacobian,
+      state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
+      freeToBoundCorrection);
 }
 
 Result<double> SympyStepper::stepImpl(

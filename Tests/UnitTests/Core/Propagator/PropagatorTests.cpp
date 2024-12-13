@@ -10,7 +10,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
@@ -24,10 +23,8 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -35,11 +32,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -47,13 +41,8 @@
 #include <numbers>
 #include <optional>
 #include <random>
-#include <tuple>
 #include <type_traits>
 #include <utility>
-
-namespace Acts {
-class Logger;
-}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -408,9 +397,10 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
   GeometryContext gctx;
   MagneticFieldContext mctx;
-  EigenPropagatorType::Options<> options{gctx, mctx};
 
   {
+    EigenPropagatorType::Options<> options{gctx, mctx};
+
     Propagator propagator{eigenStepper, navigator};
     static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
                   "Propagator does not inherit from BasePropagator");
@@ -442,6 +432,8 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
 
   StraightLineStepper slStepper{};
   {
+    Propagator<StraightLineStepper>::Options<> options{gctx, mctx};
+
     Propagator propagator{slStepper, navigator};
     static_assert(std::is_base_of_v<BasePropagator, decltype(propagator)>,
                   "Propagator does not inherit from BasePropagator");
