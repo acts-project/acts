@@ -40,10 +40,6 @@ jobs:
         run: CI/dependencies/setup.sh
 
       - run: env
-      - run: |
-          pwd
-          ls -al
-          ls -al /__w/acts/acts/dependencies/venv/bin/
       - run:  |
           echo $PATH
           ls -al
