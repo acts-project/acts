@@ -94,9 +94,9 @@ end_section
 
 
 start_section "Create spack environment"
-time spack env create -d ${env_dir} ${lock_file_path} --with-view $view_dir
-time spack -e ${env_dir} spec
-time spack -e ${env_dir} find
+time spack env create -d "${env_dir}" "${lock_file_path}" --with-view "$view_dir"
+time spack -e "${env_dir}" spec
+time spack -e "${env_dir}" find
 end_section
 
 start_section "Install spack packages"
@@ -105,17 +105,17 @@ if [ "$(uname)" = "Darwin" ]; then
 else
   NCPUS=$(nproc)
 fi
-time ${SCRIPT_DIR}/parallel.sh $NCPUS spack -e ${env_dir} install --use-buildcache only \
+time "${SCRIPT_DIR}"/parallel.sh "$NCPUS" spack -e "${env_dir}" install --use-buildcache only \
   | tee install.log \
   | grep -v "^Waiting\|^\[+\]"
 end_section
 
 start_section "Patch up Geant4 data directory"
 # ${SCRIPT_DIR}/with_spack_env.sh ${env_dir} geant4-config --install-datasets
-geant4_dir=$(spack -e ${env_dir} location -i geant4)
+geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p ${geant4_dir}/share/Geant4
-ln -s ${geant4_dir}/share/Geant4/data ${view_dir}/share/Geant4/data
+mkdir -p "${geant4_dir}"/share/Geant4
+ln -s "${geant4_dir}"/share/Geant4/data ${view_dir}/share/Geant4/data
 end_section
 
 start_section "Set environment variables"
@@ -129,7 +129,7 @@ end_section
 start_section "Prepare python environment"
 ls -al
 venv_dir="${view_dir}/venv"
-${view_dir}/bin/python3 -m venv "$venv_dir"
+"${view_dir}"/bin/python3 -m venv "$venv_dir"
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
