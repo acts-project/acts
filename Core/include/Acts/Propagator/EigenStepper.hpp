@@ -77,7 +77,6 @@ class EigenStepper {
     ///
     /// @param [in] optionsIn is the options object for the stepper
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
-    /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)

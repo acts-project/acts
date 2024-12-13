@@ -68,7 +68,6 @@ class StraightLineStepper {
     /// Constructor from the initial bound track parameters
     ///
     /// @param [in] optionsIn The stepper options
-    /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     State(const Options& optionsIn) : options(optionsIn) {}

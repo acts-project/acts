@@ -64,7 +64,6 @@ class AtlasStepper {
     ///
     /// @param [in] optionsIn The stepper options
     /// @param [in] fieldCacheIn The magnetic field cache for this call
-    /// @param [in] pars Input parameters
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
         : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
