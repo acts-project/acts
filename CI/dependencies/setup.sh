@@ -100,7 +100,11 @@ time spack -e ${env_dir} find
 end_section
 
 start_section "Install spack packages"
-NCPUS=32
+if [ "$(uname)" = "Darwin" ]; then
+  NCPUS=$(sysctl -n hw.ncpu)
+else
+  NCPUS=$(nproc)
+fi
 time ${SCRIPT_DIR}/parallel.sh $NCPUS spack -e ${env_dir} install --use-buildcache only \
   | tee install.log \
   | grep -v "^Waiting\|^\[+\]"
