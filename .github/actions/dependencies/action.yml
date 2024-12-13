@@ -85,6 +85,7 @@ runs:
       shell: bash
       run: |
         time spack -e ci add geant4-data
+        time spack -e ci concretize
         time ${GITHUB_ACTION_PATH}/parallel.sh 10 spack -e ci install
         "${GITHUB_ACTION_PATH}/with_spack_env.sh" ci env | grep G4 >> "$GITHUB_ENV"
 
