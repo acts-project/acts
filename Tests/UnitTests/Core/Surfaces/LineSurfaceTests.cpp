@@ -22,7 +22,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
@@ -30,23 +29,17 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <ostream>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <vector>
-
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
 
 namespace Acts::Test {
 

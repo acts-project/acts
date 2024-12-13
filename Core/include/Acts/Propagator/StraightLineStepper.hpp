@@ -32,7 +32,6 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <limits>

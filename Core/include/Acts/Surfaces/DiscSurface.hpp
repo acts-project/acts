@@ -15,15 +15,12 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <memory>
 #include <numbers>
 #include <string>
@@ -109,9 +106,6 @@ class DiscSurface : public RegularSurface {
               const Transform3& shift);
 
  public:
-  ~DiscSurface() override = default;
-  DiscSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other The source sourface for the assignment

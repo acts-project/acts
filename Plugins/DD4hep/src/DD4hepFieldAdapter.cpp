@@ -51,7 +51,7 @@ Result<Vector3> DD4hepFieldAdapter::getField(
 }
 
 Result<Vector3> DD4hepFieldAdapter::getFieldGradient(
-    const Vector3& /*position*/, ActsMatrix<3, 3>& /*derivative*/,
+    const Vector3& /*position*/, SquareMatrix3& /*derivative*/,
     MagneticFieldProvider::Cache& /*cache*/) const {
   return Result<Vector3>::failure(MagneticFieldError::NotImplemented);
 }

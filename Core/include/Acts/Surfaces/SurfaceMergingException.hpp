@@ -32,4 +32,5 @@ class SurfaceMergingException : public std::exception {
   std::weak_ptr<const Surface> m_surfaceB;
   std::string m_message;
 };
+
 }  // namespace Acts

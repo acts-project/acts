@@ -9,6 +9,7 @@
 /// This file implements the tools for a hough transform.
 
 #pragma once
+
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"

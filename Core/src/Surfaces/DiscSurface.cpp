@@ -26,90 +26,90 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::DiscSurface::DiscSurface(const DiscSurface& other)
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+DiscSurface::DiscSurface(const DiscSurface& other)
     : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
-Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
-                               const DiscSurface& other,
-                               const Transform3& shift)
+DiscSurface::DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
+                         const Transform3& shift)
     : GeometryObject(),
       RegularSurface(gctx, other, shift),
       m_bounds(other.m_bounds) {}
 
-Acts::DiscSurface::DiscSurface(const Transform3& transform, double rmin,
-                               double rmax, double hphisec)
+DiscSurface::DiscSurface(const Transform3& transform, double rmin, double rmax,
+                         double hphisec)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
-Acts::DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
-                               double maxhalfx, double minR, double maxR,
-                               double avephi, double stereo)
+DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
+                         double maxhalfx, double minR, double maxR,
+                         double avephi, double stereo)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
           minhalfx, maxhalfx, minR, maxR, avephi, stereo)) {}
 
-Acts::DiscSurface::DiscSurface(const Transform3& transform,
-                               std::shared_ptr<const DiscBounds> dbounds)
+DiscSurface::DiscSurface(const Transform3& transform,
+                         std::shared_ptr<const DiscBounds> dbounds)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::move(dbounds)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                               const DetectorElementBase& detelement)
+DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
+                         const DetectorElementBase& detelement)
     : GeometryObject(),
       RegularSurface(detelement),
       m_bounds(std::move(dbounds)) {
   throw_assert(m_bounds, "nullptr as DiscBounds");
 }
 
-Acts::DiscSurface& Acts::DiscSurface::operator=(const DiscSurface& other) {
+DiscSurface& DiscSurface::operator=(const DiscSurface& other) {
   if (this != &other) {
-    Acts::Surface::operator=(other);
+    Surface::operator=(other);
     m_bounds = other.m_bounds;
   }
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
+Surface::SurfaceType DiscSurface::type() const {
   return Surface::Disc;
 }
 
-Acts::Vector3 Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                               const Vector2& lposition) const {
+Vector3 DiscSurface::localToGlobal(const GeometryContext& gctx,
+                                   const Vector2& lposition) const {
   // create the position in the local 3d frame
-  Vector3 loc3Dframe(
-      lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
-      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]), 0.);
+  Vector3 loc3Dframe(lposition[0] * cos(lposition[1]),
+                     lposition[0] * sin(lposition[1]), 0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
 }
 
-Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
-    const GeometryContext& gctx, const Vector3& position,
-    double tolerance) const {
+Result<Vector2> DiscSurface::globalToLocal(const GeometryContext& gctx,
+                                           const Vector3& position,
+                                           double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
-  return Result<Acts::Vector2>::success({perp(loc3Dframe), phi(loc3Dframe)});
+  return Result<Vector2>::success({perp(loc3Dframe), phi(loc3Dframe)});
 }
 
-Acts::Vector2 Acts::DiscSurface::localPolarToLocalCartesian(
-    const Vector2& locpol) const {
+Vector2 DiscSurface::localPolarToLocalCartesian(const Vector2& locpol) const {
   const DiscTrapezoidBounds* dtbo =
-      dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
+      dynamic_cast<const DiscTrapezoidBounds*>(&(bounds()));
   if (dtbo != nullptr) {
     double rMedium = dtbo->rCenter();
     double phi = dtbo->get(DiscTrapezoidBounds::eAveragePhi);
@@ -117,43 +117,40 @@ Acts::Vector2 Acts::DiscSurface::localPolarToLocalCartesian(
     Vector2 polarCenter(rMedium, phi);
     Vector2 cartCenter = localPolarToCartesian(polarCenter);
     Vector2 cartPos = localPolarToCartesian(locpol);
-    Vector2 Pos = cartPos - cartCenter;
+    Vector2 pos = cartPos - cartCenter;
 
-    Acts::Vector2 locPos(
-        Pos[Acts::eBoundLoc0] * sin(phi) - Pos[Acts::eBoundLoc1] * cos(phi),
-        Pos[Acts::eBoundLoc1] * sin(phi) + Pos[Acts::eBoundLoc0] * cos(phi));
-    return Vector2(locPos[Acts::eBoundLoc0], locPos[Acts::eBoundLoc1]);
+    Vector2 locPos(pos[0] * sin(phi) - pos[1] * cos(phi),
+                   pos[1] * sin(phi) + pos[0] * cos(phi));
+    return Vector2(locPos[0], locPos[1]);
   }
-  return Vector2(locpol[Acts::eBoundLoc0] * cos(locpol[Acts::eBoundLoc1]),
-                 locpol[Acts::eBoundLoc0] * sin(locpol[Acts::eBoundLoc1]));
+  return Vector2(locpol[0] * cos(locpol[1]), locpol[0] * sin(locpol[1]));
 }
 
-Acts::Vector3 Acts::DiscSurface::localCartesianToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition) const {
-  Vector3 loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
-                     0.);
+Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
+                                            const Vector2& lposition) const {
+  Vector3 loc3Dframe(lposition[0], lposition[1], 0.);
   return transform(gctx) * loc3Dframe;
 }
 
-Acts::Vector2 Acts::DiscSurface::globalToLocalCartesian(
-    const GeometryContext& gctx, const Vector3& position,
-    double /*direction*/) const {
+Vector2 DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
+                                            const Vector3& position,
+                                            double /*direction*/) const {
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
 
-std::string Acts::DiscSurface::name() const {
+std::string DiscSurface::name() const {
   return "Acts::DiscSurface";
 }
 
-const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
+const SurfaceBounds& DiscSurface::bounds() const {
   if (m_bounds) {
     return (*(m_bounds.get()));
   }
   return s_noBounds;
 }
 
-Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
+Polyhedron DiscSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
@@ -194,19 +191,15 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   throw std::domain_error("Polyhedron repr of boundless surface not possible.");
 }
 
-Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
-    const Vector2& lpolar) const {
-  return Vector2(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
-                 lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
+Vector2 DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
+  return Vector2(lpolar[0] * cos(lpolar[1]), lpolar[0] * sin(lpolar[1]));
 }
 
-Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
-    const Vector2& lcart) const {
-  return Vector2(lcart.norm(),
-                 std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+Vector2 DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
+  return Vector2(lcart.norm(), std::atan2(lcart[1], lcart[0]));
 }
 
-Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
+BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
@@ -239,7 +232,7 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   return jacToGlobal;
 }
 
-Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
+FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
   using VectorHelpers::perp;
@@ -275,7 +268,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
+SurfaceMultiIntersection DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -310,7 +303,7 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
           this};
 }
 
-Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
+ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -328,24 +321,24 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
-                                        const Vector2& /*lposition*/) const {
+Vector3 DiscSurface::normal(const GeometryContext& gctx,
+                            const Vector2& /*lposition*/) const {
   return normal(gctx);
 }
 
-Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
-                                        const Vector3& /*position*/) const {
+Vector3 DiscSurface::normal(const GeometryContext& gctx,
+                            const Vector3& /*position*/) const {
   return normal(gctx);
 }
 
-Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
+Vector3 DiscSurface::normal(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
-                                                 BinningValue bValue) const {
+Vector3 DiscSurface::binningPosition(const GeometryContext& gctx,
+                                     BinningValue bValue) const {
   if (bValue == BinningValue::binR || bValue == BinningValue::binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
@@ -354,8 +347,8 @@ Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
   return center(gctx);
 }
 
-double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
-                                               BinningValue bValue) const {
+double DiscSurface::binningPositionValue(const GeometryContext& gctx,
+                                         BinningValue bValue) const {
   if (bValue == BinningValue::binR) {
     return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
@@ -366,18 +359,17 @@ double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
   return GeometryObject::binningPositionValue(gctx, bValue);
 }
 
-double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                         const Vector3& /*position*/,
-                                         const Vector3& direction) const {
-  /// we can ignore the global position here
+double DiscSurface::pathCorrection(const GeometryContext& gctx,
+                                   const Vector3& /*position*/,
+                                   const Vector3& direction) const {
+  // we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-std::pair<std::shared_ptr<Acts::DiscSurface>, bool>
-Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
-                              bool externalRotation,
-                              const Logger& logger) const {
-  using namespace Acts::UnitLiterals;
+std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
+    const DiscSurface& other, BinningValue direction, bool externalRotation,
+    const Logger& logger) const {
+  using namespace UnitLiterals;
 
   ACTS_VERBOSE("Merging disc surfaces in " << direction << " direction");
 
@@ -451,7 +443,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
                                 << otherAvgPhi / 1_degree << " +- "
                                 << otherHlPhi / 1_degree);
 
-  if (direction == Acts::BinningValue::binR) {
+  if (direction == BinningValue::binR) {
     if (std::abs(otherLocal.linear().col(eY)[eX]) >= tolerance &&
         (!bounds->coversFullAzimuth() || !otherBounds->coversFullAzimuth())) {
       throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
@@ -491,7 +483,7 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
     return {Surface::makeShared<DiscSurface>(*m_transform, newBounds),
             minR > otherMinR};
 
-  } else if (direction == Acts::BinningValue::binPhi) {
+  } else if (direction == BinningValue::binPhi) {
     if (std::abs(maxR - otherMaxR) > tolerance ||
         std::abs(minR - otherMinR) > tolerance) {
       ACTS_ERROR("DiscSurface::merge: surfaces don't have same r bounds");
@@ -548,3 +540,5 @@ Acts::DiscSurface::mergedWith(const DiscSurface& other, BinningValue direction,
         "DiscSurface::merge: invalid direction " + binningValueName(direction));
   }
 }
+
+}  // namespace Acts

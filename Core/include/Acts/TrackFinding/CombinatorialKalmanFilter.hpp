@@ -689,8 +689,12 @@ class CombinatorialKalmanFilter {
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::PostUpdate);
 
+      // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
+
+      // Set path limit based on target surface
+      targetReached.checkAbort(state, stepper, navigator, logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:

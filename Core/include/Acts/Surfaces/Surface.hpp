@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -19,20 +18,14 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
-#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <utility>
 
 namespace Acts {

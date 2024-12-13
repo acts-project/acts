@@ -305,7 +305,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                              geoContext, rParams, vtxPos, state)
                           .value();
 
-    ActsVector<4> distVec = distAndMom.first;
+    Vector4 distVec = distAndMom.first;
     Vector3 momDir = distAndMom.second;
 
     // Check quantities:

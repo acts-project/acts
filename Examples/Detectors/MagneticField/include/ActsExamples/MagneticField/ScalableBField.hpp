@@ -72,7 +72,7 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Acts::Result<Acts::Vector3> getFieldGradient(
-      const Acts::Vector3& /*position*/, Acts::ActsMatrix<3, 3>& /*derivative*/,
+      const Acts::Vector3& /*position*/, Acts::SquareMatrix3& /*derivative*/,
       MagneticFieldProvider::Cache& gCache) const override {
     Cache& cache = gCache.as<Cache>();
     return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);

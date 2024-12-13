@@ -29,7 +29,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <tuple>
-#include <utility>
 #include <vector>
 
 using namespace Acts::UnitLiterals;

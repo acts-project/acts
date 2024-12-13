@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 

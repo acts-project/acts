@@ -22,8 +22,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>

@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -28,28 +27,30 @@
 #include <utility>
 #include <vector>
 
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
+namespace Acts {
+
+PlaneSurface::PlaneSurface(const PlaneSurface& other)
     : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
-Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
-                                 const PlaneSurface& other,
-                                 const Transform3& transform)
+PlaneSurface::PlaneSurface(const GeometryContext& gctx,
+                           const PlaneSurface& other,
+                           const Transform3& transform)
     : GeometryObject(),
       RegularSurface(gctx, other, transform),
       m_bounds(other.m_bounds) {}
 
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                                 const Acts::DetectorElementBase& detelement)
+PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
+                           const DetectorElementBase& detelement)
     : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
-  /// surfaces representing a detector element must have bounds
+  // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
 
-Acts::PlaneSurface::PlaneSurface(const Transform3& transform,
-                                 std::shared_ptr<const PlanarBounds> pbounds)
+PlaneSurface::PlaneSurface(const Transform3& transform,
+                           std::shared_ptr<const PlanarBounds> pbounds)
     : RegularSurface(transform), m_bounds(std::move(pbounds)) {}
 
-Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
+PlaneSurface& PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
     Surface::operator=(other);
     m_bounds = other.m_bounds;
@@ -57,19 +58,18 @@ Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
+Surface::SurfaceType PlaneSurface::type() const {
   return Surface::Plane;
 }
 
-Acts::Vector3 Acts::PlaneSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition) const {
-  return transform(gctx) *
-         Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
+Vector3 PlaneSurface::localToGlobal(const GeometryContext& gctx,
+                                    const Vector2& lposition) const {
+  return transform(gctx) * Vector3(lposition[0], lposition[1], 0.);
 }
 
-Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
-    const GeometryContext& gctx, const Vector3& position,
-    double tolerance) const {
+Result<Vector2> PlaneSurface::globalToLocal(const GeometryContext& gctx,
+                                            const Vector3& position,
+                                            double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -77,18 +77,18 @@ Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
   return Result<Vector2>::success({loc3Dframe.x(), loc3Dframe.y()});
 }
 
-std::string Acts::PlaneSurface::name() const {
+std::string PlaneSurface::name() const {
   return "Acts::PlaneSurface";
 }
 
-const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
+const SurfaceBounds& PlaneSurface::bounds() const {
   if (m_bounds) {
     return (*m_bounds.get());
   }
   return s_noBounds;
 }
 
-Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
+Polyhedron PlaneSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
@@ -131,33 +131,33 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
       "Polyhedron representation of boundless surface not possible.");
 }
 
-Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
-                                         const Vector2& /*lpos*/) const {
+Vector3 PlaneSurface::normal(const GeometryContext& gctx,
+                             const Vector2& /*lpos*/) const {
   return normal(gctx);
 }
 
-Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
-                                         const Vector3& /*pos*/) const {
+Vector3 PlaneSurface::normal(const GeometryContext& gctx,
+                             const Vector3& /*pos*/) const {
   return normal(gctx);
 }
 
-Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx) const {
+Vector3 PlaneSurface::normal(const GeometryContext& gctx) const {
   return transform(gctx).linear().col(2);
 }
 
-Acts::Vector3 Acts::PlaneSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+Vector3 PlaneSurface::binningPosition(const GeometryContext& gctx,
+                                      BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3& /*position*/,
-                                          const Vector3& direction) const {
+double PlaneSurface::pathCorrection(const GeometryContext& gctx,
+                                    const Vector3& /*position*/,
+                                    const Vector3& direction) const {
   // We can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 
-Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
+SurfaceMultiIntersection PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
     double tolerance) const {
@@ -184,8 +184,10 @@ Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
           this};
 }
 
-Acts::ActsMatrix<2, 3> Acts::PlaneSurface::localCartesianToBoundLocalDerivative(
+ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
   const ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Identity();
   return loc3DToLocBound;
 }
+
+}  // namespace Acts

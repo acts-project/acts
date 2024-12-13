@@ -23,11 +23,30 @@
 
 #include <memory>
 #include <ostream>
-#include <type_traits>
+#include <stdexcept>
 #include <utility>
 
-bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
-                                              double tol) const {
+namespace Acts {
+
+std::vector<double> CutoutCylinderVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMedR) <= 0. || get(eMaxR) <= 0. ||
+      get(eMinR) >= get(eMedR) || get(eMinR) >= get(eMaxR) ||
+      get(eMedR) >= get(eMaxR)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid radial input.");
+  }
+  if (get(eHalfLengthZ) <= 0 || get(eHalfLengthZcutout) <= 0. ||
+      get(eHalfLengthZcutout) > get(eHalfLengthZ)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid longitudinal input.");
+  }
+}
+
+bool CutoutCylinderVolumeBounds::inside(const Vector3& gpos, double tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -48,8 +67,7 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
   return !insideRInner || !insideZInner;  // we are not, inside bounds
 }
 
-std::vector<Acts::OrientedSurface>
-Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
 
@@ -122,9 +140,9 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Acts::Vector3& envelope,
-    const Acts::Volume* entity) const {
+Volume::BoundingBox CutoutCylinderVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
+    const Volume* entity) const {
   Vector3 vmin, vmax;
 
   // no phi sector is possible, so this is just the outer size of
@@ -133,21 +151,20 @@ Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
   vmax = {get(eMaxR), get(eMaxR), get(eHalfLengthZ)};
   vmin = {-get(eMaxR), -get(eMaxR), -get(eHalfLengthZ)};
 
-  Acts::Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
+  Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   // transform at the very end, if required
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
-    std::ostream& sl) const {
-  sl << "Acts::CutoutCylinderVolumeBounds(\n";
+std::ostream& CutoutCylinderVolumeBounds::toStream(std::ostream& sl) const {
+  sl << "CutoutCylinderVolumeBounds(\n";
   sl << "rmin = " << get(eMinR) << " rmed = " << get(eMedR)
      << " rmax = " << get(eMaxR) << "\n";
   sl << "dz1 = " << get(eHalfLengthZ) << " dz2 = " << get(eHalfLengthZcutout);
   return sl;
 }
 
-void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
+void CutoutCylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
     m_innerCylinderBounds =
@@ -164,3 +181,5 @@ void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
 
   m_outerDiscBounds = std::make_shared<RadialBounds>(get(eMinR), get(eMaxR));
 }
+
+}  // namespace Acts

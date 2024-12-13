@@ -12,7 +12,6 @@
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include <cmath>
-#include <cstdint>
 
 #include "codegen/sympy_stepper_math.hpp"
 

@@ -27,13 +27,12 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <string>
-#include <utility>
 
 using namespace Acts::UnitLiterals;
 

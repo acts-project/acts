@@ -54,6 +54,10 @@ TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex, double haley,
   buildSurfaceBounds();
 }
 
+std::vector<double> TrapezoidVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
 std::vector<OrientedSurface> TrapezoidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
@@ -196,12 +200,6 @@ Volume::BoundingBox TrapezoidVolumeBounds::boundingBox(
   }
 
   return {entity, vmin - envelope, vmax + envelope};
-}
-
-std::vector<double> TrapezoidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void TrapezoidVolumeBounds::checkConsistency() noexcept(false) {

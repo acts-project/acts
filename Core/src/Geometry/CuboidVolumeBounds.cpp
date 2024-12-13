@@ -30,6 +30,10 @@ CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
   buildSurfaceBounds();
 }
 
+std::vector<double> CuboidVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
 std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
@@ -117,12 +121,6 @@ bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
-}
-
-std::vector<double> CuboidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void CuboidVolumeBounds::checkConsistency() noexcept(false) {

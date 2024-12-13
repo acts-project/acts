@@ -8,6 +8,9 @@
 
 #include "Acts/Surfaces/detail/MergeHelper.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+
 #include <numbers>
 
 namespace Acts::detail {
@@ -16,7 +19,7 @@ std::tuple<double, double, bool> mergedPhiSector(double hlPhi1, double avgPhi1,
                                                  double hlPhi2, double avgPhi2,
                                                  const Logger& logger,
                                                  double tolerance) {
-  using namespace Acts::UnitLiterals;
+  using namespace UnitLiterals;
 
   if (std::abs(hlPhi1 - std::numbers::pi / 2.) < tolerance &&
       std::abs(hlPhi2 - std::numbers::pi / 2.) < tolerance) {

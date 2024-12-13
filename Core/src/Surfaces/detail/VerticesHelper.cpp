@@ -13,7 +13,9 @@
 #include <cstddef>
 #include <numbers>
 
-std::vector<double> Acts::detail::VerticesHelper::phiSegments(
+namespace Acts {
+
+std::vector<double> detail::VerticesHelper::phiSegments(
     double phiMin, double phiMax, const std::vector<double>& phiRefs,
     unsigned int quarterSegments) {
   // Check that the phi range is valid
@@ -67,7 +69,7 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
   return phiSegments;
 }
 
-std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
+std::vector<Vector2> detail::VerticesHelper::ellipsoidVertices(
     double innerRx, double innerRy, double outerRx, double outerRy,
     double avgPhi, double halfPhi, unsigned int quarterSegments) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
@@ -111,15 +113,15 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   return rvertices;
 }
 
-std::vector<Acts::Vector2> Acts::detail::VerticesHelper::circularVertices(
+std::vector<Vector2> detail::VerticesHelper::circularVertices(
     double innerR, double outerR, double avgPhi, double halfPhi,
     unsigned int quarterSegments) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            quarterSegments);
 }
 
-bool Acts::detail::VerticesHelper::onHyperPlane(
-    const std::vector<Acts::Vector3>& vertices, double tolerance) {
+bool detail::VerticesHelper::onHyperPlane(const std::vector<Vector3>& vertices,
+                                          double tolerance) {
   // Obvious always on one surface
   if (vertices.size() < 4) {
     return true;
@@ -134,3 +136,5 @@ bool Acts::detail::VerticesHelper::onHyperPlane(
   }
   return true;
 }
+
+}  // namespace Acts

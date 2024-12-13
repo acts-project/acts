@@ -26,10 +26,10 @@
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
+
 ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
                                    double outerAlpha, double outerOffsetZ,
                                    double halflengthZ, double averagePhi,
@@ -90,6 +90,10 @@ ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
   }
   buildSurfaceBounds();
   checkConsistency();
+}
+
+std::vector<double> ConeVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
 std::vector<Acts::OrientedSurface> Acts::ConeVolumeBounds::orientedSurfaces(
@@ -332,12 +336,6 @@ double ConeVolumeBounds::outerRmax() const {
 
 double ConeVolumeBounds::outerTanAlpha() const {
   return m_outerTanAlpha;
-}
-
-std::vector<double> ConeVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 }  // namespace Acts

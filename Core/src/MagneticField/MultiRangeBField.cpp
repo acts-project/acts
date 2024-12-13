@@ -71,7 +71,7 @@ Result<Vector3> MultiRangeBField::getField(
 }
 
 Result<Vector3> MultiRangeBField::getFieldGradient(
-    const Vector3& position, ActsMatrix<3, 3>& /*unused*/,
+    const Vector3& position, SquareMatrix3& /*unused*/,
     MagneticFieldProvider::Cache& cache) const {
   return getField(position, cache);
 }
