@@ -57,6 +57,7 @@ if ! command -v spack &> /dev/null; then
     git config user.email 41898282+github-actions[bot]@users.noreply.github.com
     # Apply patch for spack improvements
     curl https://patch-diff.githubusercontent.com/raw/spack/spack/pull/47370.patch | git am
+    source "$(pwd)/share/spack/setup-env.sh"
     popd > /dev/null
 fi
 end_section
