@@ -11,22 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
 #include "Acts/Utilities/AxisFwd.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <array>
 #include <cstddef>
-#include <functional>
 #include <optional>
-#include <tuple>
 #include <utility>
-#include <vector>
 
 using Acts::VectorHelpers::perp;
 
