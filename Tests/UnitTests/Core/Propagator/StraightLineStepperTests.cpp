@@ -73,15 +73,15 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double absMom = 8.;
   double charge = -1.;
 
-  StraightLineStepper::Options options(tgContext, mfContext);
-  options.maxStepSize = stepSize;
+  StraightLineStepper::Options slsOptions(tgContext, mfContext);
+  slsOptions.maxStepSize = stepSize;
 
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 std::nullopt, ParticleHypothesis::pion());
-  StraightLineStepper::State slsState(options, cp);
 
   StraightLineStepper sls;
+  StraightLineStepper::State slsState = sls.makeState(slsOptions, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -101,15 +101,13 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   // Test without charge and covariance matrix
   CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
                                  std::nullopt, ParticleHypothesis::pion0());
-  slsState = StraightLineStepper::State(
-      StraightLineStepper::Options(tgContext, mfContext), ncp);
+  slsState = sls.makeState(slsOptions, ncp);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
                                    ParticleHypothesis::pion0());
-  slsState = StraightLineStepper::State(
-      StraightLineStepper::Options(tgContext, mfContext), ncp);
+  slsState = sls.makeState(slsOptions, ncp);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(slsState.covTransport);
   BOOST_CHECK_EQUAL(slsState.cov, cov);

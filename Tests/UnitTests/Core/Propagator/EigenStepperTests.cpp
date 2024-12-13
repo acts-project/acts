@@ -188,13 +188,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   double absMom = 8.;
   double charge = -1.;
 
+  EigenStepper<>::Options esOptions(tgContext, mfContext);
+
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 std::nullopt, ParticleHypothesis::pion());
-  EigenStepper<>::State esState(EigenStepper<>::Options(tgContext, mfContext),
-                                bField->makeCache(mfContext), cp);
-
   EigenStepper<> es(bField);
+  EigenStepper<>::State esState = es.makeState(esOptions, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -208,16 +208,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test without charge and covariance matrix
   CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
                                  std::nullopt, ParticleHypothesis::pion0());
-  esState = EigenStepper<>::State(EigenStepper<>::Options(tgContext, mfContext),
-                                  bField->makeCache(mfContext), ncp);
+  esOptions = EigenStepper<>::Options(tgContext, mfContext);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
                                    ParticleHypothesis::pion0());
-  esState = EigenStepper<>::State(EigenStepper<>::Options(tgContext, mfContext),
-                                  bField->makeCache(mfContext), ncp);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -242,12 +241,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 cov, ParticleHypothesis::pion());
 
-  EigenStepper<>::Options options(tgContext, mfContext);
-  options.maxStepSize = stepSize;
+  EigenStepper<>::Options esOptions(tgContext, mfContext);
+  esOptions.maxStepSize = stepSize;
 
-  // Build the state and the stepper
-  EigenStepper<>::State esState(options, bField->makeCache(mfContext), cp);
+  // Build the stepper and the state
   EigenStepper<> es(bField);
+  EigenStepper<>::State esState = es.makeState(esOptions, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   };
 
   // Reset all possible parameters
-  EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
+  EigenStepper<>::State esStateCopy = copyState(*bField, ps.stepping);
   BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), stepSize2);
@@ -446,8 +445,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  esState = EigenStepper<>::State(EigenStepper<>::Options(tgContext, mfContext),
-                                  bField->makeCache(mfContext), cp);
+  esState = es.makeState(esOptions, bp);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
@@ -519,8 +517,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Produce some errors
   auto nBfield = std::make_shared<NullBField>();
   EigenStepper<> nes(nBfield);
-  EigenStepper<>::State nesState(EigenStepper<>::Options(tgContext, mfContext),
-                                 nBfield->makeCache(mfContext), cp);
+  EigenStepper<>::Options nesOptions(tgContext, mfContext);
+  EigenStepper<>::State nesState = nes.makeState(nesOptions, cp);
   PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.stepping.stepTolerance = 1e-21;

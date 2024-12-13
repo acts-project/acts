@@ -98,16 +98,19 @@ static const Covariance cov = Covariance::Identity();
 static const GeometryContext geoCtx;
 static const MagneticFieldContext magCtx;
 
-static const Stepper::Options options(geoCtx, magCtx);
-
 BOOST_AUTO_TEST_SUITE(AtlasStepper)
 
 // test state construction from parameters w/o covariance
 BOOST_AUTO_TEST_CASE(ConstructState) {
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, std::nullopt,
-                                 particleHypothesis));
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, std::nullopt,
+                                particleHypothesis);
+
+  Stepper stepper(magneticField);
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   BOOST_CHECK(!state.covTransport);
   BOOST_CHECK_EQUAL(state.covariance, nullptr);
@@ -126,10 +129,15 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 
 // test state construction from parameters w/ covariance
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
+  Stepper stepper(magneticField);
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   BOOST_CHECK(state.covTransport);
   BOOST_CHECK_EQUAL(*state.covariance, cov);
@@ -148,11 +156,15 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
 
 // test stepper getters for particle state
 BOOST_AUTO_TEST_CASE(Getters) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), time, eps);
@@ -163,11 +175,15 @@ BOOST_AUTO_TEST_CASE(Getters) {
 
 // test stepper update methods with bound state as input
 BOOST_AUTO_TEST_CASE(UpdateFromBound) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   auto newPos4 = (pos4 + Vector4(1_mm, 2_mm, 3_mm, 20_ns)).eval();
   auto newPos = newPos4.segment<3>(ePos0);
@@ -206,11 +222,15 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
 // test stepper update methods with individual components as input
 BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   auto newPos = (pos + Vector3(1_mm, 2_mm, 3_mm)).eval();
   auto newTime = time + 20_ns;
@@ -227,11 +247,16 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
 
 // test building a bound state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildBound) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
+
   // example surface at the current state position
   auto plane = CurvilinearSurface(pos, unitDir).planeSurface();
 
@@ -251,11 +276,15 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
 
 // test building a curvilinear state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
   // check parameters
@@ -273,11 +302,15 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 
 // test step method without covariance transport
 BOOST_AUTO_TEST_CASE(Step) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  MockPropagatorState state(
-      Stepper::State(options, magneticField->makeCache(magCtx),
-                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
-                                                cov, particleHypothesis)));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  MockPropagatorState state(stepper.makeState(options, cp));
   state.stepping.covTransport = false;
 
   // ensure step does not result in an error
@@ -306,11 +339,15 @@ BOOST_AUTO_TEST_CASE(Step) {
 
 // test step method with covariance transport
 BOOST_AUTO_TEST_CASE(StepWithCovariance) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  MockPropagatorState state(
-      Stepper::State(options, magneticField->makeCache(magCtx),
-                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
-                                                cov, particleHypothesis)));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  MockPropagatorState state(stepper.makeState(options, cp));
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
@@ -342,11 +379,15 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
 // test state reset method
 BOOST_AUTO_TEST_CASE(Reset) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  MockPropagatorState state(
-      Stepper::State(options, magneticField->makeCache(magCtx),
-                     CurvilinearTrackParameters(pos4, unitDir, charge / absMom,
-                                                cov, particleHypothesis)));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  MockPropagatorState state(stepper.makeState(options, cp));
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
@@ -358,9 +399,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
   double newTime = 7.5;
   double newCharge = 1.;
   BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
-                                newCharge / newAbsMom, newCov,
-                                particleHypothesis);
+  cp = CurvilinearTrackParameters(makeVector4(newPos, newTime), unitDir,
+                                  newCharge / newAbsMom, newCov,
+                                  particleHypothesis);
   FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   Direction navDir = Direction::Forward;
@@ -402,7 +443,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   };
 
   // Reset all possible parameters
-  Stepper::State stateCopy(copyState(*magneticField, state.stepping));
+  Stepper::State stateCopy = copyState(*magneticField, state.stepping);
   BOOST_CHECK(cp.covariance().has_value());
   stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), stepSize);
@@ -534,11 +575,15 @@ BOOST_AUTO_TEST_CASE(Reset) {
 }
 
 BOOST_AUTO_TEST_CASE(StepSize) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   stepper.updateStepSize(state, -5_cm, ConstrainedStep::navigator, true);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
@@ -550,11 +595,15 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 
 // test step size modification with target surfaces
 BOOST_AUTO_TEST_CASE(StepSizeSurface) {
+  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
+                                particleHypothesis);
+
   Stepper stepper(magneticField);
-  Stepper::State state(
-      options, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
-                                 particleHypothesis));
+
+  Stepper::Options options(geoCtx, magCtx);
+  options.maxStepSize = stepSize;
+
+  Stepper::State state = stepper.makeState(options, cp);
 
   auto distance = 10_mm;
   auto target = CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)

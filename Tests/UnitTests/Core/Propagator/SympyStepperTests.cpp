@@ -216,10 +216,12 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 cov, ParticleHypothesis::pion());
 
-  // Build the state and the stepper
-  SympyStepper::State esState(SympyStepper::Options(tgContext, mfContext),
-                              bField->makeCache(mfContext), cp);
+  SympyStepper::Options esOptions(tgContext, mfContext);
+  esOptions.maxStepSize = stepSize;
+
+  // Build the stepper and the state
   SympyStepper es(bField);
+  SympyStepper::State esState = es.makeState(esOptions, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
@@ -338,7 +340,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   };
 
   // Reset all possible parameters
-  SympyStepper::State esStateCopy(copyState(*bField, ps.stepping));
+  SympyStepper::State esStateCopy = copyState(*bField, ps.stepping);
   BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), stepSize2);
@@ -415,8 +417,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  esState = SympyStepper::State(SympyStepper::Options(tgContext, mfContext),
-                                bField->makeCache(mfContext), cp);
+  esOptions = SympyStepper::Options(tgContext, mfContext);
+  esState = es.makeState(esOptions, bp);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
