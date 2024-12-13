@@ -261,6 +261,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // Estimate the next target
   NavigationTarget target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navLayers.size(), 1u);
   // The index should points to the begin
@@ -296,6 +297,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // Estimate the next target
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
 
   // Do the step towards the boundary
   step(position, direction, target);
@@ -308,6 +310,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // Estimate the next target
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
   // Intersect the target
   targetIntersection = target.surface->intersect(tgContext, position, direction)
                            .closestForward();
@@ -323,6 +326,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
 
   // Estimate the next target
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
 
   // Step through the surfaces on first layer
   for (std::size_t isf = 0; isf < 5; ++isf) {
@@ -332,6 +336,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     navigator.handleSurfaceReached(state, position, direction, *target.surface);
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
+    BOOST_CHECK(!target.isNone());
 
     ACTS_INFO("<<< Test 1e-1i >>> step within 1st layer at  "
               << toString(position));
@@ -344,6 +349,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.handleSurfaceReached(state, position, direction, *target.surface);
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
 
   ACTS_INFO("<<< Test 1j >>> step to 2nd layer at  " << toString(position));
 
@@ -355,6 +361,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     navigator.handleSurfaceReached(state, position, direction, *target.surface);
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
+    BOOST_CHECK(!target.isNone());
 
     ACTS_INFO("<<< Test 1k-1o >>> step within 2nd layer at  "
               << toString(position));
@@ -367,6 +374,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.handleSurfaceReached(state, position, direction, *target.surface);
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
 
   ACTS_INFO("<<< Test 1p >>> step to 3rd layer at  " << toString(position));
 
@@ -378,6 +386,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     navigator.handleSurfaceReached(state, position, direction, *target.surface);
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
+    BOOST_CHECK(!target.isNone());
 
     ACTS_INFO("<<< Test 1q-1s >>> step within 3rd layer at  "
               << toString(position));
@@ -390,6 +399,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.handleSurfaceReached(state, position, direction, *target.surface);
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(!target.isNone());
 
   ACTS_INFO("<<< Test 1t >>> step to 4th layer at  " << toString(position));
 
@@ -401,6 +411,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
     navigator.handleSurfaceReached(state, position, direction, *target.surface);
     // ACTORS - ABORTERS - PRE STEP
     target = navigator.nextTarget(state, position, direction);
+    BOOST_CHECK(!target.isNone());
 
     ACTS_INFO("<<< Test 1t-1v >>> step within 4th layer at  "
               << toString(position));
@@ -413,6 +424,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.handleSurfaceReached(state, position, direction, *target.surface);
   // ACTORS - ABORTERS - PRE STEP
   target = navigator.nextTarget(state, position, direction);
+  BOOST_CHECK(target.isNone());
 
   ACTS_INFO("<<< Test 1w >>> step to boundary at  " << toString(position));
 }

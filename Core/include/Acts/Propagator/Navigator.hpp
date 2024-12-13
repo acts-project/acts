@@ -188,6 +188,11 @@ class Navigator {
 
     NavigatorStatistics statistics;
 
+    void resetAfterLayerSwitch() {
+      navSurfaces.clear();
+      navSurfaceIndex.reset();
+    }
+
     void resetAfterVolumeSwitch() {
       navSurfaces.clear();
       navSurfaceIndex.reset();
@@ -522,8 +527,7 @@ class Navigator {
       state.navigationStage = Stage::surfaceTarget;
 
       // partial reset
-      state.navSurfaces.clear();
-      state.navSurfaceIndex = -1;
+      state.resetAfterLayerSwitch();
 
       return;
     }
@@ -537,6 +541,7 @@ class Navigator {
       state.currentVolume = boundary->attachedVolume(state.options.geoContext,
                                                      position, direction);
 
+      // partial reset
       state.resetAfterVolumeSwitch();
 
       if (state.currentVolume != nullptr) {
