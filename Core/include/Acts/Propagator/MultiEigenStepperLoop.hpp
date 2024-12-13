@@ -241,6 +241,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Construct and initialize a state
   State makeState(const Options& options,
                   const MultiComponentBoundTrackParameters& par) const {
+    if (par.components().empty()) {
+      throw std::invalid_argument(
+          "Cannot construct MultiEigenStepperLoop::State with empty "
+          "multi-component parameters");
+    }
+
     State state(options);
 
     state.particleHypothesis = par.particleHypothesis();

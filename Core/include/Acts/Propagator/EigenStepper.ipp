@@ -24,6 +24,8 @@ auto Acts::EigenStepper<E>::makeState(
     const Options& options, const BoundTrackParameters& par) const -> State {
   State state{options, m_bField->makeCache(options.magFieldContext)};
 
+  state.particleHypothesis = par.particleHypothesis();
+
   Vector3 position = par.position(options.geoContext);
   Vector3 direction = par.direction();
   state.pars.template segment<3>(eFreePos0) = position;
