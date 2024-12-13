@@ -24,8 +24,30 @@ SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
 SympyStepper::State SympyStepper::makeState(
     const Options& options, const BoundTrackParameters& par) const {
-  State state{options, m_bField->makeCache(options.magFieldContext), par};
+  State state{options, m_bField->makeCache(options.magFieldContext)};
+
+  state.particleHypothesis = par.particleHypothesis();
+
+  Vector3 position = par.position(options.geoContext);
+  Vector3 direction = par.direction();
+  state.pars.template segment<3>(eFreePos0) = position;
+  state.pars.template segment<3>(eFreeDir0) = direction;
+  state.pars[eFreeTime] = par.time();
+  state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
+  // Init the jacobian matrix if needed
+  if (par.covariance()) {
+    // Get the reference surface for navigation
+    const auto& surface = par.referenceSurface();
+    // set the covariance transport flag to true and copy
+    state.covTransport = true;
+    state.cov = BoundSquareMatrix(*par.covariance());
+    state.jacToGlobal =
+        surface.boundToFreeJacobian(options.geoContext, position, direction);
+  }
+
   state.stepSize = ConstrainedStep(options.maxStepSize);
+
   return state;
 }
 

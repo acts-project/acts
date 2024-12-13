@@ -162,13 +162,14 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   double absMom = 8.;
   double charge = -1.;
 
+  SympyStepper::Options esOptions(tgContext, mfContext);
+
+  SympyStepper es(bField);
+
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 std::nullopt, ParticleHypothesis::pion());
-  SympyStepper::State esState(SympyStepper::Options(tgContext, mfContext),
-                              bField->makeCache(mfContext), cp);
-
-  SympyStepper es(bField);
+  SympyStepper::State esState = es.makeState(esOptions, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -182,16 +183,14 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   // Test without charge and covariance matrix
   CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
                                  std::nullopt, ParticleHypothesis::pion0());
-  esState = SympyStepper::State(SympyStepper::Options(tgContext, mfContext),
-                                bField->makeCache(mfContext), ncp);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
                                    ParticleHypothesis::pion0());
-  esState = SympyStepper::State(SympyStepper::Options(tgContext, mfContext),
-                                bField->makeCache(mfContext), ncp);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -318,9 +317,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(state)> copy(
-        SympyStepper::Options(tgContext, mfContext), field.makeCache(mfContext),
-        cp);
+    std::decay_t<decltype(state)> copy = es.makeState(esOptions, cp);
     copy.pars = state.pars;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;

@@ -224,31 +224,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// @param [in] multipars The track multi-component track-parameters at start
     ///
     /// @note the covariance matrix is copied when needed
-    State(const Options& optionsIn,
-          const std::shared_ptr<const MagneticFieldProvider>& bfield,
-          const MultiComponentBoundTrackParameters& multipars)
-        : options(optionsIn),
-          particleHypothesis(multipars.particleHypothesis()) {
-      if (multipars.components().empty()) {
-        throw std::invalid_argument(
-            "Cannot construct MultiEigenStepperLoop::State with empty "
-            "multi-component parameters");
-      }
-
-      const auto surface = multipars.referenceSurface().getSharedPtr();
-
-      for (auto i = 0ul; i < multipars.components().size(); ++i) {
-        const auto& [weight, singlePars] = multipars[i];
-        components.push_back(
-            {SingleState(options, bfield->makeCache(options.magFieldContext),
-                         singlePars),
-             weight, IntersectionStatus::onSurface});
-      }
-
-      if (std::get<2>(multipars.components().front())) {
-        covTransport = true;
-      }
-    }
+    explicit State(const Options& optionsIn) : options(optionsIn) {}
   };
 
   /// Constructor from a magnetic field and a optionally provided Logger
@@ -267,7 +243,23 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Construct and initialize a state
   State makeState(const Options& options,
                   const MultiComponentBoundTrackParameters& par) const {
-    return State(options, SingleStepper::m_bField, par);
+    State state(options);
+
+    state.particleHypothesis = par.particleHypothesis();
+
+    const auto surface = par.referenceSurface().getSharedPtr();
+
+    for (auto i = 0ul; i < par.components().size(); ++i) {
+      const auto& [weight, singlePars] = par[i];
+      state.components.push_back({SingleStepper::makeState(options, singlePars),
+                                  weight, IntersectionStatus::onSurface});
+    }
+
+    if (std::get<2>(par.components().front())) {
+      state.covTransport = true;
+    }
+
+    return state;
   }
 
   /// @brief Resets the state
@@ -422,10 +414,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   Result<ComponentProxy> addComponent(State& state,
                                       const BoundTrackParameters& pars,
                                       double weight) const {
-    state.components.push_back({SingleState(state.options,
-                                            SingleStepper::m_bField->makeCache(
-                                                state.options.magFieldContext),
-                                            pars),
+    state.components.push_back({SingleStepper::makeState(state.options, pars),
                                 weight, IntersectionStatus::onSurface});
 
     return ComponentProxy{state.components.back(), state};

@@ -80,29 +80,8 @@ class EigenStepper {
     /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
-    State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn,
-          const BoundTrackParameters& par)
-        : options(optionsIn),
-          particleHypothesis(par.particleHypothesis()),
-          fieldCache(std::move(fieldCacheIn)) {
-      Vector3 position = par.position(options.geoContext);
-      Vector3 direction = par.direction();
-      pars.template segment<3>(eFreePos0) = position;
-      pars.template segment<3>(eFreeDir0) = direction;
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
-
-      // Init the jacobian matrix if needed
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(options.geoContext, position,
-                                                  direction);
-      }
-    }
+    State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
+        : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
     Options options;
 

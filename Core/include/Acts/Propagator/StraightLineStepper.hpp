@@ -71,24 +71,7 @@ class StraightLineStepper {
     /// @param [in] par The track parameters at start
     ///
     /// @note the covariance matrix is copied when needed
-    State(const Options& optionsIn, const BoundTrackParameters& par)
-        : options(optionsIn), particleHypothesis(par.particleHypothesis()) {
-      Vector3 position = par.position(options.geoContext);
-      Vector3 direction = par.direction();
-      pars.template segment<3>(eFreePos0) = position;
-      pars.template segment<3>(eFreeDir0) = direction;
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(options.geoContext, position,
-                                                  direction);
-      }
-    }
+    State(const Options& optionsIn) : options(optionsIn) {}
 
     Options options;
 
@@ -137,8 +120,28 @@ class StraightLineStepper {
 
   State makeState(const Options& options,
                   const BoundTrackParameters& par) const {
-    State state{options, par};
+    State state{options};
+
+    state.particleHypothesis = par.particleHypothesis();
+
+    Vector3 position = par.position(options.geoContext);
+    Vector3 direction = par.direction();
+    state.pars.template segment<3>(eFreePos0) = position;
+    state.pars.template segment<3>(eFreeDir0) = direction;
+    state.pars[eFreeTime] = par.time();
+    state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+    if (par.covariance()) {
+      // Get the reference surface for navigation
+      const auto& surface = par.referenceSurface();
+      // set the covariance transport flag to true and copy
+      state.covTransport = true;
+      state.cov = BoundSquareMatrix(*par.covariance());
+      state.jacToGlobal =
+          surface.boundToFreeJacobian(options.geoContext, position, direction);
+    }
+
     state.stepSize = ConstrainedStep(options.maxStepSize);
+
     return state;
   }
 

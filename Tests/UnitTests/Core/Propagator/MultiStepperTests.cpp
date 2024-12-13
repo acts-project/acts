@@ -168,10 +168,12 @@ BOOST_AUTO_TEST_CASE(test_max_weight_reducer) {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  SingleStepper singleStepper(defaultBField);
+  MultiStepperLoop multiStepper(defaultBField);
+
   constexpr std::size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(false, N);
-  MultiState state(options, defaultBField, multi_pars);
-  SingleStepper singleStepper(defaultBField);
+  MultiState state = multiStepper.makeState(options, multi_pars);
 
   double w = 0.1;
   double wSum = 0.0;
@@ -199,10 +201,12 @@ BOOST_AUTO_TEST_CASE(test_max_momentum_reducer) {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  SingleStepper singleStepper(defaultBField);
+  MultiStepperLoop multiStepper(defaultBField);
+
   constexpr std::size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(false, N);
-  MultiState state(options, defaultBField, multi_pars);
-  SingleStepper singleStepper(defaultBField);
+  MultiState state = multiStepper.makeState(options, multi_pars);
 
   double p = 1.0;
   double q = 1.0;
@@ -231,17 +235,18 @@ void test_multi_stepper_state() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  SingleStepper singleStepper(defaultBField);
+  MultiStepper multiStepper(defaultBField);
+
   constexpr std::size_t N = 4;
   const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
-  MultiState state(options, defaultBField, multi_pars);
+  MultiState state = multiStepper.makeState(options, multi_pars);
 
-  MultiStepper ms(defaultBField);
-
-  BOOST_CHECK_EQUAL(N, ms.numberComponents(state));
+  BOOST_CHECK_EQUAL(N, multiStepper.numberComponents(state));
 
   // Test the result & compare with the input/test for reasonable members
-  auto const_iterable = ms.constComponentIterable(state);
+  auto const_iterable = multiStepper.constComponentIterable(state);
   for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.jacTransport(), FreeMatrix::Identity());
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
@@ -274,15 +279,16 @@ BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
 template <typename multi_stepper_t>
 void test_multi_stepper_state_invalid() {
   using MultiOptions = typename multi_stepper_t::Options;
-  using MultiState = typename multi_stepper_t::State;
 
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepperLoop multi_stepper(defaultBField);
+
   // Empty component vector
   const auto multi_pars = makeDefaultBoundPars(false, 0);
 
-  BOOST_CHECK_THROW(MultiState(options, defaultBField, multi_pars),
+  BOOST_CHECK_THROW(multi_stepper.makeState(options, multi_pars),
                     std::invalid_argument);
 }
 
@@ -302,6 +308,9 @@ void test_multi_stepper_vs_eigen_stepper() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultBField);
+  SingleStepper single_stepper(defaultBField);
+
   const BoundVector pars = BoundVector::Ones();
   const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
@@ -316,12 +325,9 @@ void test_multi_stepper_vs_eigen_stepper() {
                                                 particleHypothesis);
   BoundTrackParameters single_pars(surface, pars, cov, particleHypothesis);
 
-  MultiState multi_state(options, defaultBField, multi_pars);
-  SingleStepper::State single_state(options, defaultBField->makeCache(magCtx),
-                                    single_pars);
-
-  MultiStepper multi_stepper(defaultBField);
-  SingleStepper single_stepper(defaultBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
+  SingleStepper::State single_state =
+      single_stepper.makeState(options, single_pars);
 
   for (auto cmp : multi_stepper.componentIterable(multi_state)) {
     cmp.status() = Acts::IntersectionStatus::reachable;
@@ -381,10 +387,11 @@ void test_components_modifying_accessors() {
 
   const auto multi_pars = makeDefaultBoundPars();
 
-  MultiState mutable_multi_state(options, defaultBField, multi_pars);
-  const MultiState const_multi_state(options, defaultBField, multi_pars);
-
   MultiStepper multi_stepper(defaultBField);
+
+  MultiState mutable_multi_state = multi_stepper.makeState(options, multi_pars);
+  const MultiState const_multi_state =
+      multi_stepper.makeState(options, multi_pars);
 
   auto modify = [&](const auto &projector) {
     // Here test the mutable overloads of the mutable iterable
@@ -464,6 +471,9 @@ void test_multi_stepper_surface_status_update() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultNullBField);
+  SingleStepper single_stepper(defaultNullBField);
+
   auto start_surface =
       Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
           .planeSurface();
@@ -490,13 +500,9 @@ void test_multi_stepper_surface_status_update() {
                     .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(options, defaultNullBField, multi_pars);
-  SingleStepper::State single_state(options,
-                                    defaultNullBField->makeCache(magCtx),
-                                    std::get<1>(multi_pars[0]));
-
-  MultiStepper multi_stepper(defaultNullBField);
-  SingleStepper single_stepper(defaultNullBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
+  SingleStepper::State single_state =
+      single_stepper.makeState(options, std::get<1>(multi_pars[0]));
 
   // Update surface status and check
   {
@@ -582,6 +588,9 @@ void test_component_bound_state() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultNullBField);
+  SingleStepper single_stepper(defaultNullBField);
+
   auto start_surface =
       Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
           .planeSurface();
@@ -608,13 +617,9 @@ void test_component_bound_state() {
                     .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(options, defaultNullBField, multi_pars);
-  SingleStepper::State single_state(options,
-                                    defaultNullBField->makeCache(magCtx),
-                                    std::get<1>(multi_pars[0]));
-
-  MultiStepper multi_stepper(defaultNullBField);
-  SingleStepper single_stepper(defaultNullBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
+  SingleStepper::State single_state =
+      single_stepper.makeState(options, std::get<1>(multi_pars[0]));
 
   // Step forward now
   {
@@ -668,6 +673,8 @@ void test_combined_bound_state_function() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultBField);
+
   auto surface =
       Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
           .planeSurface();
@@ -685,8 +692,7 @@ void test_combined_bound_state_function() {
 
   MultiComponentBoundTrackParameters multi_pars(surface, cmps,
                                                 particleHypothesis);
-  MultiState multi_state(options, defaultBField, multi_pars);
-  MultiStepper multi_stepper(defaultBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
 
   auto res = multi_stepper.boundState(multi_state, *surface, true,
                                       FreeToBoundCorrection(false));
@@ -717,6 +723,8 @@ void test_combined_curvilinear_state_function() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultBField);
+
   auto surface =
       Acts::CurvilinearSurface(Vector3::Zero(), Vector3{1.0, 0.0, 0.0})
           .planeSurface();
@@ -735,8 +743,7 @@ void test_combined_curvilinear_state_function() {
 
   MultiComponentBoundTrackParameters multi_pars(surface, cmps,
                                                 particleHypothesis);
-  MultiState multi_state(options, defaultBField, multi_pars);
-  MultiStepper multi_stepper(defaultBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
 
   const auto [curv_pars, jac, pathLength] =
       multi_stepper.curvilinearState(multi_state);
@@ -766,11 +773,11 @@ void test_single_component_interface_function() {
   MultiOptions options(geoCtx, magCtx);
   options.maxStepSize = defaultStepSize;
 
+  MultiStepper multi_stepper(defaultBField);
+
   MultiComponentBoundTrackParameters multi_pars = makeDefaultBoundPars(true, 4);
 
-  MultiState multi_state(options, defaultBField, multi_pars);
-
-  MultiStepper multi_stepper(defaultBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
 
   DummyPropState multi_prop_state(defaultNDir, multi_state);
 
@@ -813,11 +820,11 @@ void remove_add_components_function() {
 
   MultiOptions options(geoCtx, magCtx);
 
+  MultiStepper multi_stepper(defaultBField);
+
   const auto multi_pars = makeDefaultBoundPars(4);
 
-  MultiState multi_state(options, defaultBField, multi_pars);
-
-  MultiStepper multi_stepper(defaultBField);
+  MultiState multi_state = multi_stepper.makeState(options, multi_pars);
 
   {
     BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),

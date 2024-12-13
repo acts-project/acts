@@ -135,9 +135,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   StraightLineStepper::Options options(tgContext, mfContext);
   options.maxStepSize = stepSize;
 
-  // Build the state and the stepper
-  StraightLineStepper::State slsState(options, cp);
+  // Build the stepper and the state
   StraightLineStepper sls;
+  StraightLineStepper::State slsState = sls.makeState(options, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(sls.position(slsState), pos, 1e-6);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters
-  StraightLineStepper::State slsStateCopy(ps.stepping);
+  StraightLineStepper::State slsStateCopy = ps.stepping;
   sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface(), stepSize2);
   // Test all components
@@ -317,8 +317,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  slsState = StraightLineStepper::State(
-      StraightLineStepper::Options(tgContext, mfContext), cp);
+  slsState = sls.makeState(options, bp);
 
   // Test the intersection in the context of a surface
   auto targetSurface =

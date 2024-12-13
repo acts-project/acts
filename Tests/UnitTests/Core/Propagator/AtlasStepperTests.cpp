@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   auto copyState = [&](auto& field, const auto& other) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(other)> copy(options, field.makeCache(magCtx), cp);
+    std::decay_t<decltype(other)> copy = stepper.makeState(options, cp);
 
     copy.state_ready = other.state_ready;
     copy.useJacobian = other.useJacobian;

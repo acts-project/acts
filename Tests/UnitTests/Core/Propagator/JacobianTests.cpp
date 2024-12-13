@@ -132,13 +132,13 @@ template <typename Parameters>
 void testJacobianToGlobal(const Parameters& pars) {
   // Jacobian creation for Propagator/Steppers
   // a) ATLAS stepper
-  AtlasStepperType::State astepState(
-      AtlasStepperType::Options(tgContext, mfContext),
-      bField->makeCache(mfContext), pars);
+  AtlasStepperType astep(bField);
+  AtlasStepperType::State astepState =
+      astep.makeState(AtlasStepperType::Options(tgContext, mfContext), pars);
   // b) Eigen stepper
-  EigenStepperType::State estepState(
-      EigenStepperType::Options(tgContext, mfContext),
-      bField->makeCache(mfContext), pars);
+  EigenStepperType estep(bField);
+  EigenStepperType::State estepState =
+      estep.makeState(EigenStepperType::Options(tgContext, mfContext), pars);
 
   // create the matrices
   auto asMatrix = convertToMatrix(astepState.pVector);
