@@ -9,7 +9,6 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
@@ -60,8 +59,9 @@ class MultiRangeBField final : public MagneticFieldProvider {
   /// @brief Get the field gradient at a given position.
   ///
   /// @warning This is not currently implemented.
-  Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& /*unused*/,
+  Result<std::pair<Vector3, SquareMatrix3>> getFieldGradient(
+      const Vector3& position,
       MagneticFieldProvider::Cache& cache) const override;
 };
+
 }  // namespace Acts
