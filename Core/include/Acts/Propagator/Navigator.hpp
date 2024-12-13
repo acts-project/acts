@@ -194,8 +194,8 @@ class Navigator {
     }
 
     void resetAfterVolumeSwitch() {
-      navSurfaces.clear();
-      navSurfaceIndex.reset();
+      resetAfterLayerSwitch();
+
       navLayers.clear();
       navLayerIndex.reset();
       navBoundaries.clear();
