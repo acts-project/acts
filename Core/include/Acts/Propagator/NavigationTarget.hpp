@@ -37,7 +37,7 @@ struct NavigationTarget {
         surfaceIntersectionIndex(surfaceIntersectionIndex_),
         boundaryTolerance(std::move(boundaryTolerance_)) {}
 
-  bool isNone() const { return surface != nullptr; }
+  bool isNone() const { return surface == nullptr; }
 
  private:
   NavigationTarget() = default;

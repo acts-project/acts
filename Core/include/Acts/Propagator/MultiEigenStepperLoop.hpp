@@ -222,7 +222,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// @param [in] optionsIn is the options object for the stepper
     /// @param [in] bfield the shared magnetic filed provider
     /// @param [in] multipars The track multi-component track-parameters at start
-    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     State(const Options& optionsIn,
@@ -505,6 +504,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
+  /// @param [in] release Do we release the step size?
   /// @param [in] logger A @c Logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
@@ -581,7 +582,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param direction [in] The propagation direction
+  /// @param direction [in] The direction of the propagation
+  /// @param stype [in] The step size type to be set
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,

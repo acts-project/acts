@@ -54,10 +54,9 @@ class SympyStepper {
   struct State {
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] optionsIn is the configuration of the stepper
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn,
@@ -230,6 +229,8 @@ class SympyStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
+  /// @param [in] release Do we release the step size?
   /// @param [in] logger A @c Logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
@@ -250,11 +251,14 @@ class SympyStepper {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param direction [in] The direction of the propagation
+  /// @param stype [in] The step size type to be set
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction /*direction*/, ConstrainedStep::Type stype,
+                      Direction direction, ConstrainedStep::Type stype,
                       bool release) const {
+    (void)direction;
     double stepSize = oIntersection.pathLength();
     updateStepSize(state, stepSize, stype, release);
   }

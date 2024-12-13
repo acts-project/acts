@@ -140,7 +140,7 @@ void Acts::EigenStepper<E>::transportCovarianceToBound(
     State& state, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
-      state.options.geoContext.get(), surface, state.cov, state.jacobian,
+      state.options.geoContext, surface, state.cov, state.jacobian,
       state.jacTransport, state.derivative, state.jacToGlobal, state.pars,
       freeToBoundCorrection);
 }
