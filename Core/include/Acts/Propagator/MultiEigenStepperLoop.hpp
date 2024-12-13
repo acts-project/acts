@@ -220,8 +220,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// Constructor from the initial bound track parameters
     ///
     /// @param [in] optionsIn is the options object for the stepper
-    /// @param [in] bfield the shared magnetic filed provider
-    /// @param [in] multipars The track multi-component track-parameters at start
     ///
     /// @note the covariance matrix is copied when needed
     explicit State(const Options& optionsIn) : options(optionsIn) {}
