@@ -106,7 +106,6 @@ class ConstrainedStep {
   ///
   /// @param value is the new value to be updated
   /// @param type is the constraint type
-  /// @param releaseStep Allow step size to increase again
   constexpr void update(double value, Type type) {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
