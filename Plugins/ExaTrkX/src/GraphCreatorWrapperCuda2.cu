@@ -201,6 +201,8 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   const dim3 blockDim = 512;
   const dim3 gridDimHits = (nHits + blockDim.x - 1) / blockDim.x;
 
+  assert(std::is_sorted(moduleIds.begin(), moduleIds.end()));
+
   // TODO understand this algorithm
   std::vector<int> hit_indice;
   {
@@ -310,12 +312,15 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   CUDA_CHECK(cudaMemcpy(cuda_hit_indice, hit_indice.data(),
                         hit_indice.size() * sizeof(int),
                         cudaMemcpyHostToDevice));
+
 #else
+  // Ref hit_indice
   auto hitsTree =
       makeTTreeHits(features, moduleIds, 1000.f, 3.141592654f, 1000.f);
 
   CUDA_TTree_hits<float> input_hits(
       hitsTree, m_graphCreator->get_module_map_doublet().module_map());
+
   // std::string event = "0";
   // input_hits.add_event(event, hitsTree,
   //                      m_graphCreator->get_module_map_doublet().module_map());
@@ -343,28 +348,27 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   auto &inputData = input_hit_data;
   int *cuda_hit_indice = input_hits.cuda_hit_indice();
 #endif
-
   /*
-    std::vector<int> data_cpu(
+    std::vector<int> ref_hit_indice(
         m_graphCreator->get_module_map_doublet().module_map().size() + 1);
     CUDA_CHECK(
-        cudaMemcpy(data_cpu.data(), cuda_hit_indice,
+        cudaMemcpy(ref_hit_indice.data(), cuda_hit_indice,
                    (m_graphCreator->get_module_map_doublet().module_map().size()
-    + 1) * sizeof(int), cudaMemcpyDeviceToHost)); assert(data_cpu.size() ==
-    hit_indice.size()); std::cout << "MMG prefix sum: ";
-    printPrefixSum(data_cpu);
-    std::cout << std::endl;  assert(data_cpu == hit_indice);
+    + 1) * sizeof(int), cudaMemcpyDeviceToHost));
 
-    copyFromDeviceAndPrint(inputData.cuda_x, nHits, "cuda_x");
-    copyFromDeviceAndPrint(inputData.cuda_y, nHits, "cuda_y");
-    copyFromDeviceAndPrint(inputData.cuda_z, nHits, "cuda_z");
-    copyFromDeviceAndPrint(inputData.cuda_R, nHits, "cuda_R");
-    copyFromDeviceAndPrint(inputData.cuda_phi, nHits, "cuda_phi");
-    copyFromDeviceAndPrint(inputData.cuda_eta, nHits, "cuda_eta");
-  */
+  if( hit_indice == ref_hit_indice ) {
+    std::cout << "hit_indice equal on cpu!!!" << std::endl;
+  } else {
+  assert(hit_indice.size() == ref_hit_indice.size());
+  for(auto i=0ul; i< hit_indice.size(); ++i) {
+    if(hit_indice.at(i) != ref_hit_indice.at(i)) {
+        std::cout << "i: " << hit_indice.at(i) << " != ref " <<
+  ref_hit_indice.at(i) << std::endl;
+    }
+  }
+  }*/
 
   cudaDeviceSynchronize();
-  // auto edgeData = m_graphCreator->build(inputData, cuda_hit_indice);
   CUDA_graph_creator<float>::graph_building_stats stats;
   const auto [edgeData, hitData] =
       m_graphCreator->build_impl2(inputData, cuda_hit_indice, stats, true);
@@ -531,8 +535,10 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
 
   // std::cout << "dR (0->1): " << hostR.at(1) - hostR.at(0) << std::endl;
   // std::cout << "dR (0->2): " << hostR.at(2) - hostR.at(0) << std::endl;
-
+#if 1
   {
+    cudaGetLastError();
+    std::cout << "Run old API for reference:\n";
     auto builder = [&](auto &hits, bool print) {
       CUDA_graph_creator<float>::graph_building_stats stats;
       return m_graphCreator->build_impl(hits, stats, print);
@@ -545,7 +551,7 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
               << oldApiEdges.index({Slice(), Slice(None, 10)}) << std::endl;
     // return {oldApiEdges, oldApiEdgeFeatures};
   }
-
+#endif
   return {edgeIndex.clone(), edgeFeaturesNew};
 }
 

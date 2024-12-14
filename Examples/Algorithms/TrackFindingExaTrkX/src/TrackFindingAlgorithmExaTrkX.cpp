@@ -133,7 +133,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   // Read input data
-  auto spacepoints = m_inputSpacePoints(ctx);
+  const auto& spacepoints = m_inputSpacePoints(ctx);
 
   std::optional<ClusterContainer> clusters;
   if (m_inputClusters.isInitialized()) {
@@ -147,10 +147,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
   ACTS_DEBUG("Construct " << numFeatures << " node features");
 
-  std::vector<int> spacepointIDs;
   std::vector<std::uint64_t> moduleIds;
-
-  spacepointIDs.reserve(spacepoints.size());
   moduleIds.reserve(spacepoints.size());
 
   for (auto isp = 0ul; isp < numSpacepoints; ++isp) {
@@ -162,10 +159,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     // sp?
     const auto& sl1 = sp.sourceLinks()[0].template get<IndexSourceLink>();
 
-    // TODO this makes it a bit useless, refactor so we do not need to pass this
-    // to the pipeline
-    spacepointIDs.push_back(isp);
-
     if (m_cfg.geometryIdMap != nullptr) {
       moduleIds.push_back(m_cfg.geometryIdMap->right.at(sl1.geometryId()));
     } else {
@@ -173,8 +166,20 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     }
   }
 
-  auto features = createFeatures(spacepoints, clusters, m_cfg.nodeFeatures,
-                                 m_cfg.featureScales);
+  // Sort the spacepoints by module ide. Required by module map
+  std::vector<int> idxs(numSpacepoints);
+  std::iota(idxs.begin(), idxs.end(), 0);
+  std::ranges::sort(idxs, {}, [&](auto i) { return moduleIds[i]; });
+
+  std::ranges::sort(moduleIds);
+
+  SimSpacePointContainer sortedSpacepoints;
+  sortedSpacepoints.reserve(spacepoints.size());
+  std::ranges::transform(idxs, std::back_inserter(sortedSpacepoints),
+                         [&](auto i) { return spacepoints[i]; });
+
+  auto features = createFeatures(sortedSpacepoints, clusters,
+                                 m_cfg.nodeFeatures, m_cfg.featureScales);
 
   auto t1 = Clock::now();
 
@@ -183,8 +188,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     std::lock_guard<std::mutex> lock(m_mutex);
 
     Acts::ExaTrkXTiming timing;
-    auto res =
-        m_pipeline.run(features, moduleIds, spacepointIDs, hook, &timing);
+    auto res = m_pipeline.run(features, moduleIds, idxs, hook, &timing);
 
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
@@ -217,7 +221,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     onetrack.reserve(candidate.size());
 
     for (auto i : candidate) {
-      for (const auto& sl : spacepoints[i].sourceLinks()) {
+      for (const auto& sl : spacepoints.at(i).sourceLinks()) {
         onetrack.push_back(sl.template get<IndexSourceLink>().index());
       }
     }
@@ -237,9 +241,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   if (m_outputGraph.isInitialized()) {
     auto graph = graphStoreHook->storedGraph();
-    std::transform(
-        graph.first.begin(), graph.first.end(), graph.first.begin(),
-        [&](const auto& a) -> std::int64_t { return spacepointIDs.at(a); });
+    std::transform(graph.first.begin(), graph.first.end(), graph.first.begin(),
+                   [&](const auto& a) -> std::int64_t { return idxs.at(a); });
     m_outputGraph(ctx, {graph.first, graph.second});
   }
 
