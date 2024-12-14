@@ -67,8 +67,8 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
         return res.error();
       }
       // release actor and aborter constrains after step was performed
+      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
       m_stepper.releaseStepSize(state.stepping, ConstrainedStep::actor);
-      m_stepper.releaseStepSize(state.stepping, ConstrainedStep::aborter);
       // Post-stepping:
       // navigator post step call - actor list act - actor list check
       state.stage = PropagatorStage::postStep;

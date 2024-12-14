@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -20,6 +20,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDefaultExtension.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
@@ -28,14 +29,12 @@
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <numbers>
@@ -481,7 +480,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite());
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
@@ -510,7 +510,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite());
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::onSurface);
 
@@ -526,7 +527,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *start_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite());
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
@@ -591,16 +593,18 @@ void test_component_bound_state() {
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, 0,
-                                      Direction::Forward,
-                                      BoundaryTolerance::Infinite());
+    multi_stepper.updateSurfaceStatus(
+        multi_state, *right_surface, 0, Direction::Forward,
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    single_stepper.updateSurfaceStatus(single_state, *right_surface, 0,
-                                       Direction::Forward,
-                                       BoundaryTolerance::Infinite());
+    single_stepper.updateSurfaceStatus(
+        single_state, *right_surface, 0, Direction::Forward,
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }

@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -26,15 +26,12 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 
 using Acts::VectorHelpers::makeVector4;
@@ -154,11 +151,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.updateStepSize(slsState, -1337., ConstrainedStep::actor);
+  sls.updateStepSize(slsState, -1337., ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
-  sls.releaseStepSize(slsState, ConstrainedStep::actor);
+  sls.releaseStepSize(slsState, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
@@ -332,9 +329,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   auto targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   sls.updateSurfaceStatus(slsState, *targetSurface, 0, navDir,
-                          BoundaryTolerance::Infinite());
-  CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
-                  1e-6);
+                          BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+                          ConstrainedStep::navigator);
+  CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::navigator),
+                  navDir * 2., 1e-6);
 
   // Test the step size modification in the context of a surface
   sls.updateStepSize(
@@ -344,9 +342,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                       navDir * sls.direction(slsState),
                       BoundaryTolerance::Infinite())
           .closest(),
-      navDir, false);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
   slsState.stepSize.setUser(navDir * stepSize);
+  sls.releaseStepSize(slsState, ConstrainedStep::navigator);
   sls.updateStepSize(
       slsState,
       targetSurface
@@ -354,7 +353,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                       navDir * sls.direction(slsState),
                       BoundaryTolerance::Infinite())
           .closest(),
-      navDir, true);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction
