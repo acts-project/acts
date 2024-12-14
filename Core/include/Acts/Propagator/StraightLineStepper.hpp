@@ -18,7 +18,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
@@ -33,7 +32,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
-#include <functional>
 #include <limits>
 #include <string>
 #include <tuple>
@@ -57,6 +55,9 @@ class StraightLineStepper {
   struct Config {};
 
   struct Options : public StepperPlainOptions {
+    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
+        : StepperPlainOptions(gctx, mctx) {}
+
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -65,40 +66,14 @@ class StraightLineStepper {
   /// State for track parameter propagation
   ///
   struct State {
-    State() = delete;
-
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
-    /// @param [in] par The track parameters at start
-    /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
+    /// @param [in] optionsIn The options for the stepper
     ///
     /// @note the covariance matrix is copied when needed
-    explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& /*mctx*/,
-                   const BoundTrackParameters& par,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
-        : particleHypothesis(par.particleHypothesis()),
-          stepSize(ssize),
-          tolerance(stolerance),
-          geoContext(gctx) {
-      Vector3 position = par.position(gctx);
-      Vector3 direction = par.direction();
-      pars.template segment<3>(eFreePos0) = position;
-      pars.template segment<3>(eFreeDir0) = direction;
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
-      }
-    }
+    explicit State(const Options& optionsIn) : options(optionsIn) {}
+
+    Options options;
 
     /// Jacobian from local to the global frame
     BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
@@ -140,21 +115,35 @@ class StraightLineStepper {
     /// The tolerance for the stepping
     double tolerance = s_onSurfaceTolerance;
 
-    // Cache the geometry context of this propagation
-    std::reference_wrapper<const GeometryContext> geoContext;
-
     /// Statistics of the stepper
     StepperStatistics statistics;
   };
 
   StraightLineStepper() = default;
 
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const BoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, mctx, par, ssize, stolerance};
+  State makeState(const Options& options,
+                  const BoundTrackParameters& par) const {
+    State state{options};
+
+    state.particleHypothesis = par.particleHypothesis();
+
+    Vector3 position = par.position(options.geoContext);
+    Vector3 direction = par.direction();
+    state.pars.template segment<3>(eFreePos0) = position;
+    state.pars.template segment<3>(eFreeDir0) = direction;
+    state.pars[eFreeTime] = par.time();
+    state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+    if (par.covariance()) {
+      // Get the reference surface for navigation
+      const auto& surface = par.referenceSurface();
+      // set the covariance transport flag to true and copy
+      state.covTransport = true;
+      state.cov = BoundSquareMatrix(*par.covariance());
+      state.jacToGlobal =
+          surface.boundToFreeJacobian(options.geoContext, position, direction);
+    }
+
+    return state;
   }
 
   /// @brief Resets the state
