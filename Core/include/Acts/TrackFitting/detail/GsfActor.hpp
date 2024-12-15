@@ -372,12 +372,12 @@ struct GsfActor {
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
-        old_bound.position(state.options.geoContext), state.options.direction,
+        old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
     const auto pathCorrection = surface.pathCorrection(
-        state.options.geoContext, old_bound.position(state.options.geoContext),
-        old_bound.direction());
+        state.stepping.geoContext,
+        old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     const double pathXOverX0 = slab.thicknessInX0();
@@ -532,7 +532,7 @@ struct GsfActor {
       auto& cmp = *res;
       auto freeParams = cmp.pars();
       cmp.jacToGlobal() = surface.boundToFreeJacobian(
-          state.options.geoContext, freeParams.template segment<3>(eFreePos0),
+          state.stepping.geoContext, freeParams.template segment<3>(eFreePos0),
           freeParams.template segment<3>(eFreeDir0));
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
       cmp.jacobian() = BoundMatrix::Identity();
