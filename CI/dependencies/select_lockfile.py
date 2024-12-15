@@ -36,17 +36,6 @@ def main():
 
     print("Fetching lockfiles for tag:", args.tag)
     print("Architecture:", args.arch)
-    if args.compiler_binary is not None:
-        compiler = determine_compiler_version(args.compiler_binary)
-        print("Compiler:", args.compiler_binary, f"{compiler}")
-    elif args.compiler is not None:
-        if not re.match(r"^([\w-]+)@(\d+\.\d+\.\d+)$", args.compiler):
-            print(f"Invalid compiler format: {args.compiler}")
-            exit(1)
-        compiler = args.compiler
-        print("Compiler:", f"{compiler}")
-    else:
-        compiler = None
 
     base_url = f"https://api.github.com/repos/acts-project/ci-dependencies/releases/tags/{args.tag}"
 
@@ -63,6 +52,18 @@ def main():
     if args.arch not in lockfiles:
         print(f"No lockfile found for architecture {args.arch}")
         exit(1)
+
+    if args.compiler_binary is not None:
+        compiler = determine_compiler_version(args.compiler_binary)
+        print("Compiler:", args.compiler_binary, f"{compiler}")
+    elif args.compiler is not None:
+        if not re.match(r"^([\w-]+)@(\d+\.\d+\.\d+)$", args.compiler):
+            print(f"Invalid compiler format: {args.compiler}")
+            exit(1)
+        compiler = args.compiler
+        print("Compiler:", f"{compiler}")
+    else:
+        compiler = None
 
     lockfile = select_lockfile(lockfiles, args.arch, compiler)
 
@@ -138,7 +139,7 @@ def determine_compiler_version(binary: str):
             compiler = "clang"
             if "Apple" in line:
                 compiler = "apple-clang"
-        elif "gcc" in line or "GCC" in line:
+        elif "gcc" in line or "GCC" in line or "g++" in line:
             compiler = "gcc"
         else:
             print(f"Unknown compiler: {binary}")
