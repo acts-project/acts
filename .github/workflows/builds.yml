@@ -286,6 +286,7 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DPython_EXECUTABLE=$(which python3)
 
