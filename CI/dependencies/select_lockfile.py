@@ -7,7 +7,7 @@ import urllib.request
 import urllib.error
 import re
 import subprocess
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
 
 
 def main():
@@ -46,8 +46,7 @@ def main():
         compiler = args.compiler
         print("Compiler:", f"{compiler}")
     else:
-        print("No compiler specified")
-        exit(1)
+        compiler = None
 
     base_url = f"https://api.github.com/repos/acts-project/ci-dependencies/releases/tags/{args.tag}"
 
@@ -96,10 +95,13 @@ def parse_assets(data: Dict) -> Dict[str, Dict[str, Tuple[str, str]]]:
 
 
 def select_lockfile(
-    lockfiles: Dict[str, Dict[str, Tuple[str, str]]], arch: str, compiler: str
+    lockfiles: Dict[str, Dict[str, Tuple[str, str]]], arch: str, compiler: Optional[str]
 ):
     # Default to the default lockfile
     _, lockfile = lockfiles[arch]["default"]
+
+    if compiler is None:
+        return lockfile
 
     # Extract compiler family and version
     compiler_family = compiler.split("@")[0]

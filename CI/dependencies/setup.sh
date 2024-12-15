@@ -88,11 +88,7 @@ done
 
 # Set defaults if not specified
 if [ -z "${compiler:-}" ]; then
-  compiler="${CXX:-}"
-  if [ -z "${compiler:-}" ]; then
-    echo "No compiler specified via -c or CXX environment variable"
-    exit 1
-  fi
+  compiler="${CXX:-default}"
 fi
 
 if [ -z "${tag:-}" ]; then
@@ -155,11 +151,19 @@ view_dir="${destination}/view"
 mkdir -p ${env_dir}
 
 lock_file_path="${destination}/spack.lock"
-"${SCRIPT_DIR}/select_lockfile.py" \
-  --tag "${tag}" \
-  --arch "${arch}"\
-  --output "${lock_file_path}" \
-  --compiler-binary "${compiler}"
+cmd=(
+    "${SCRIPT_DIR}/select_lockfile.py"
+    "--tag" "${tag}"
+    "--arch" "${arch}"
+    "--output" "${lock_file_path}"
+)
+
+if [ "${compiler}" != "default" ]; then
+    cmd+=("--compiler-binary" "${compiler}")
+fi
+
+"${cmd[@]}"
+
 end_section
 
 
