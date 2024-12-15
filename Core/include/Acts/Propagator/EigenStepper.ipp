@@ -44,6 +44,8 @@ auto Acts::EigenStepper<E>::makeState(
         surface.boundToFreeJacobian(options.geoContext, position, direction);
   }
 
+  state.stepSize = ConstrainedStep(options.maxStepSize);
+
   return state;
 }
 

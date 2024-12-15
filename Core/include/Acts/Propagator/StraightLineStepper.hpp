@@ -133,6 +133,8 @@ class StraightLineStepper {
     state.pars.template segment<3>(eFreeDir0) = direction;
     state.pars[eFreeTime] = par.time();
     state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
+    // Init the jacobian matrix if needed
     if (par.covariance()) {
       // Get the reference surface for navigation
       const auto& surface = par.referenceSurface();
@@ -142,6 +144,8 @@ class StraightLineStepper {
       state.jacToGlobal =
           surface.boundToFreeJacobian(options.geoContext, position, direction);
     }
+
+    state.stepSize = ConstrainedStep(options.maxStepSize);
 
     return state;
   }

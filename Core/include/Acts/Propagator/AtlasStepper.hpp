@@ -304,6 +304,9 @@ class AtlasStepper {
         pVector[34] = Bz3 * Vp[0];  // dZ/
       }
     }
+
+    state.stepSize = ConstrainedStep(options.maxStepSize);
+
     // now declare the state as ready
     state.state_ready = true;
 

@@ -46,6 +46,8 @@ SympyStepper::State SympyStepper::makeState(
         surface.boundToFreeJacobian(options.geoContext, position, direction);
   }
 
+  state.stepSize = ConstrainedStep(options.maxStepSize);
+
   return state;
 }
 
