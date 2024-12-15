@@ -34,14 +34,87 @@ function end_section() {
     fi
 }
 
-tag=${1:-${DEPENDENCY_TAG}}
-if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    destination="${GITHUB_WORKSPACE}/dependencies"
-elif [ -n "${GITLAB_CI:-}" ];then
-    destination="${CI_PROJECT_DIR}/dependencies"
-else
-    destination=${2}
+# if [ -n "${1:-${DEPENDENCY_TAG:-}}" ]; then
+#     tag=${1:-${DEPENDENCY_TAG}}
+# else
+#     echo "Usage: $0 <tag> <destination>"
+#     exit 1
+# fi
+
+# if [ -n "${GITHUB_ACTIONS:-}" ]; then
+#     destination="${GITHUB_WORKSPACE}/dependencies"
+# elif [ -n "${GITLAB_CI:-}" ];then
+#     destination="${CI_PROJECT_DIR}/dependencies"
+# else
+#     if [ -n "${2:-}" ]; then
+#         destination=${2}
+#     else
+#         echo "Usage: $0 <tag> <destination>"
+#         exit 1
+#     fi
+# fi
+
+# Parse command line arguments
+while getopts "c:t:d:h" opt; do
+  case ${opt} in
+    c )
+      compiler=$OPTARG
+      ;;
+    t )
+      tag=$OPTARG
+      ;;
+    d )
+      destination=$OPTARG
+      ;;
+    h )
+      echo "Usage: $0 [-c compiler] [-t tag] [-d destination]"
+      echo "Options:"
+      echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
+      echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
+      echo "  -d <destination> Specify install destination (defaults based on CI environment)"
+      echo "  -h              Show this help message"
+      exit 0
+      ;;
+    \? )
+      echo "Invalid option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+    : )
+      echo "Option -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
+  esac
+done
+
+# Set defaults if not specified
+if [ -z "${compiler:-}" ]; then
+  compiler="${CXX:-}"
+  if [ -z "${compiler:-}" ]; then
+    echo "No compiler specified via -c or CXX environment variable"
+    exit 1
+  fi
 fi
+
+if [ -z "${tag:-}" ]; then
+  tag="${DEPENDENCY_TAG:-}"
+  if [ -z "${tag:-}" ]; then
+    echo "No tag specified via -t or DEPENDENCY_TAG environment variable"
+    exit 1
+  fi
+fi
+
+if [ -z "${destination:-}" ]; then
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    destination="${GITHUB_WORKSPACE}/dependencies"
+  elif [ -n "${GITLAB_CI:-}" ]; then
+    destination="${CI_PROJECT_DIR}/dependencies"
+  else
+    echo "No destination specified via -d and not running in CI"
+    exit 1
+  fi
+fi
+
+
 
 echo "Install tag: $tag"
 echo "Install destination: $destination"
@@ -74,21 +147,19 @@ start_section "Locate OpenGL"
 end_section
 fi
 
-start_section "Get spack lock file name"
+start_section "Get spack lock file"
 arch=$(spack arch --family)
-lock_file="spack-${arch}.lock"
-end_section
-
-
-url="https://github.com/acts-project/ci-dependencies/releases/download/${tag}/${lock_file}"
-echo "URL: $url"
 
 env_dir="${destination}/env"
 view_dir="${destination}/view"
 mkdir -p ${env_dir}
+
 lock_file_path="${destination}/spack.lock"
-start_section "Get spack lock files from tag"
-curl -fL -o $lock_file_path $url
+"${SCRIPT_DIR}/select_lockfile.py" \
+  --tag "${tag}" \
+  --arch "${arch}"\
+  --output "${lock_file_path}" \
+  --compiler-binary "${compiler}"
 end_section
 
 

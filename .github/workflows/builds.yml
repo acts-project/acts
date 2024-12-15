@@ -20,7 +20,7 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v7_b1
+  DEPENDENCY_TAG: v7_b4
 
 jobs:
   linux_ubuntu:
@@ -37,6 +37,8 @@ jobs:
           lfs: true
 
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: CI/dependencies/setup.sh
 
       - name: Restore ccache
@@ -245,9 +247,11 @@ jobs:
         include:
           - image: ubuntu2204
             std: 20
-          - image: ubuntu2204_clang
+            compiler: g++
+          - image: ubuntu2204
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:63
+            compiler: clang++
+    container: ghcr.io/acts-project/${{ matrix.image }}:71
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -259,7 +263,9 @@ jobs:
           lfs: true
 
       - name: Install dependencies
-        run: CI/dependencies/setup.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: CI/dependencies/setup.sh -c ${{ matrix.compiler }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -333,6 +339,8 @@ jobs:
           lfs: true
 
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           brew install ninja ccache
           && CI/dependencies/setup.sh
