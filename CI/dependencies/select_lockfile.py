@@ -159,8 +159,9 @@ def determine_compiler_version(binary: str):
 
 def fetch_github(base_url):
     headers = {}
-    if "GITHUB_TOKEN" in os.environ:
-        headers["Authorization"] = f"token {os.environ['GITHUB_TOKEN']}"
+    token = os.environ.get("GITHUB_TOKEN")
+    if token is not None and token != "":
+        headers["Authorization"] = f"token {token}"
 
     try:
         req = urllib.request.Request(base_url, headers=headers)

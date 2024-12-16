@@ -38,6 +38,8 @@ jobs:
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
         id: ccache-restore
@@ -264,6 +266,7 @@ jobs:
         uses: ./.github/actions/dependencies
         with:
           compiler: ${{ matrix.compiler }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -339,6 +342,8 @@ jobs:
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4

@@ -6,6 +6,10 @@ inputs:
     description: 'Compiler to use'
     required: false
     default: ''
+  GITHUB_TOKEN:
+    description: 'Secrets to pass to the action'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -19,7 +23,7 @@ runs:
     - name: Install dependencies
       shell: run
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then
           CI/dependencies/setup.sh -c "${{ inputs.compiler }}"
