@@ -110,6 +110,7 @@ class Portal {
   /// precision). The resulting portal will have one portal along the shared
   /// surface's normal vector, and one opposite that vector.
   ///
+  /// ```
   ///    portal1   portal2
   ///      +---+   +---+
   ///      |   |   |   |
@@ -118,6 +119,7 @@ class Portal {
   ///      |   |   |   |
   ///      |   |   |   |
   ///      +---+   +---+
+  /// ```
   ///
   /// @note The input portals need to have compatible link loadaout, e.g. one
   ///       portal needs to have the *along normal* slot filled, and the
@@ -140,6 +142,7 @@ class Portal {
   /// relative to one another (e.g. one along one opposite), the function will
   /// throw an exception.
   ///
+  /// ```
   ///         ^                     ^
   ///         |                     |
   ///  portal1|              portal2|
@@ -149,6 +152,7 @@ class Portal {
   ///         |                     |
   ///         |                     |
   ///         v                     v
+  /// ```
   ///
   /// @note This is a destructive operation on both portals, their
   ///       links will be moved to produce merged links, which can fail

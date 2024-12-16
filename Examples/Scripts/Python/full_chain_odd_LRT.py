@@ -3,6 +3,7 @@
 import os
 import argparse
 import pathlib
+import math
 
 import acts
 import acts.examples
@@ -12,6 +13,7 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addPythia8,
     addFatras,
     addGeant4,
@@ -134,6 +136,12 @@ parser.add_argument(
     default=True,
     action=argparse.BooleanOptionalAction,
 )
+parser.add_argument(
+    "--output-obj",
+    help="Switch obj output on/off",
+    default=True,
+    action=argparse.BooleanOptionalAction,
+)
 
 args = parser.parse_args()
 
@@ -224,7 +232,6 @@ else:
             ParticleConfig(
                 args.gun_particles, acts.PdgParticle.eMuon, randomizeCharge=True
             ),
-            outputDirRoot=pathlib.Path("/home/aicha/Atlas/NewVertices"),
             vtxGen=acts.examples.GaussianDisplacedVertexPositionGenerator(
                 rMean=2,
                 rStdDev=0.0125 * u.mm,
@@ -278,6 +285,7 @@ else:
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
@@ -306,6 +314,7 @@ else:
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
         )
 
@@ -324,6 +333,16 @@ if args.reco:
         s,
         trackingGeometry,
         field,
+        initialSigmas=[
+            1 * u.mm,
+            1 * u.mm,
+            1 * u.degree,
+            1 * u.degree,
+            0.1 * u.e / u.GeV,
+            1 * u.ns,
+        ],
+        initialSigmaPtRel=0.1,
+        initialVarInflation=[1.0] * 6,
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
@@ -354,12 +373,32 @@ if args.reco:
             maxOutliers=2,
         ),
         CkfConfig(
+            chi2CutOffMeasurement=15.0,
+            chi2CutOffOutlier=25.0,
+            numMeasurementsCutOff=10,
             seedDeduplication=True,
             stayOnSeed=True,
-            pixelVolumes={16, 17, 18},
-            stripVolumes={23, 24, 25},
+            pixelVolumes=[16, 17, 18],
+            stripVolumes=[23, 24, 25],
             maxPixelHoles=1,
             maxStripHoles=2,
+            constrainToVolumes=[
+                2,  # beam pipe
+                32,
+                4,  # beam pip gap
+                16,
+                17,
+                18,  # pixel
+                20,  # PST
+                23,
+                24,
+                25,  # short strip
+                26,
+                8,  # long strip gap
+                28,
+                29,
+                30,  # long strip
+            ],
         ),
         outputDirRoot=outputDir if args.output_root else None,
         outputDirCsv=outputDir if args.output_csv else None,
@@ -388,8 +427,8 @@ if args.reco:
                 maxSharedTracksPerMeasurement=2,
                 pTMax=1400,
                 pTMin=0.5,
-                phiMax=3.14,
-                phiMin=-3.14,
+                phiMax=math.pi,
+                phiMin=-math.pi,
                 etaMax=4,
                 etaMin=-4,
                 useAmbiguityFunction=False,
@@ -413,7 +452,7 @@ if args.reco:
     addVertexFitting(
         s,
         field,
-        vertexFinder=VertexFinder.Iterative,
+        vertexFinder=VertexFinder.AMVF,
         outputDirRoot=outputDir if args.output_root else None,
     )
 
