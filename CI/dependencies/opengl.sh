@@ -12,7 +12,7 @@ else
     SUDO="sudo"
 fi
 
-os=$(spack arch --platform)
+os=$(spack arch --family)
 
 if [[ "$os" == *ubuntu* ]]; then
   ${SUDO} apt-get update
