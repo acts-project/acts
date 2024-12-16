@@ -82,7 +82,7 @@ def runCKFTracks(
         rnd=rnd,
         postSelectParticles=ParticleSelectorConfig(
             pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
@@ -179,7 +179,9 @@ def runCKFTracks(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
