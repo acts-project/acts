@@ -25,8 +25,11 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: |
+        pwd
         if [ -n "${{ inputs.compiler }}" ]; then
+          echo "With compiler"
           CI/dependencies/setup.sh -c "${{ inputs.compiler }}"
         else
+          echo "Without compiler"
           CI/dependencies/setup.sh
         fi
