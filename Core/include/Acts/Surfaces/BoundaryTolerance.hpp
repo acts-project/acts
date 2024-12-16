@@ -98,6 +98,12 @@ class BoundaryTolerance {
         : maxChi2(maxChi2_), weight(weight_) {}
   };
 
+  enum class ToleranceMode {
+    Extend,  // Extend the boundary
+    None,    // No tolerance
+    Shrink   // Shrink the boundary
+  };
+
   /// Underlying variant type
   using Variant = std::variant<Infinite, None, AbsoluteBound, AbsoluteCartesian,
                                AbsoluteEuclidean, Chi2Bound>;
@@ -132,7 +138,7 @@ class BoundaryTolerance {
   bool hasChi2Bound() const;
 
   /// Check if any tolerance is set.
-  bool hasTolerance() const;
+  ToleranceMode toleranceMode() const;
 
   /// Get the tolerance as absolute bound.
   AbsoluteBound asAbsoluteBound(bool isCartesian = false) const;

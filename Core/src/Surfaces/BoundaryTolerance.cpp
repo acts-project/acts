@@ -60,38 +60,83 @@ bool BoundaryTolerance::hasChi2Bound() const {
   return holdsVariant<Chi2Bound>();
 }
 
-bool BoundaryTolerance::hasTolerance() const {
+BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
+  using enum ToleranceMode;
   if (isInfinite()) {
-    return true;
+    return Extend;
   }
 
   if (isNone()) {
-    return false;
+    return None;
   }
 
   if (const auto* absoluteBound = getVariantPtr<AbsoluteBound>();
       absoluteBound != nullptr) {
-    return absoluteBound->tolerance0 != 0. || absoluteBound->tolerance1 != 0.;
+    if (absoluteBound->tolerance0 == 0. && absoluteBound->tolerance1 == 0.) {
+      return None;
+    }
+
+    // std::cout << absoluteBound->tolerance0 << " "
+    //           << std::copysign(1., absoluteBound->tolerance0) << std::endl;
+    // std::cout << absoluteBound->tolerance1 << " "
+    //           << std::copysign(1., absoluteBound->tolerance1) << std::endl;
+
+    if (std::copysign(1., absoluteBound->tolerance0) !=
+        std::copysign(1., absoluteBound->tolerance1)) {
+      throw std::logic_error("Inconsistent tolerance signs are not supported");
+    }
+
+    if (absoluteBound->tolerance0 > 0. || absoluteBound->tolerance1 > 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   if (const auto* absoluteCartesian = getVariantPtr<AbsoluteCartesian>();
       absoluteCartesian != nullptr) {
-    return absoluteCartesian->tolerance0 != 0. ||
-           absoluteCartesian->tolerance1 != 0.;
+    if (absoluteCartesian->tolerance0 == 0. &&
+        absoluteCartesian->tolerance1 == 0.) {
+      return None;
+    }
+
+    if (std::copysign(1., absoluteCartesian->tolerance0) !=
+        std::copysign(1., absoluteCartesian->tolerance1)) {
+      throw std::logic_error("Inconsistent tolerance signs are not supported");
+    }
+
+    if (absoluteCartesian->tolerance0 > 0. ||
+        absoluteCartesian->tolerance1 > 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();
       absoluteEuclidean != nullptr) {
-    return absoluteEuclidean->tolerance != 0.;
+    if (absoluteEuclidean->tolerance == 0.) {
+      return None;
+    } else if (absoluteEuclidean->tolerance > 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   if (const auto* chi2Bound = getVariantPtr<Chi2Bound>();
       chi2Bound != nullptr) {
-    return chi2Bound->maxChi2 != 0.;
+    if (chi2Bound->maxChi2 == 0.) {
+      return None;
+    } else if (chi2Bound->maxChi2 > 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   assert(false && "Unsupported tolerance type");
-  return false;
+  return None;
 }
 
 BoundaryTolerance::AbsoluteBound BoundaryTolerance::asAbsoluteBound(
@@ -142,8 +187,21 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* absoluteBound = getVariantPtr<AbsoluteBound>();
       absoluteBound != nullptr) {
-    return std::abs(distance[0]) <= absoluteBound->tolerance0 &&
-           std::abs(distance[1]) <= absoluteBound->tolerance1;
+    bool tol0 = false;
+    if (absoluteBound->tolerance0 < 0) {
+      tol0 = std::abs(distance[0]) > std::abs(absoluteBound->tolerance0);
+    } else {
+      tol0 = std::abs(distance[0]) <= absoluteBound->tolerance0;
+    }
+
+    bool tol1 = false;
+    if (absoluteBound->tolerance1 < 0) {
+      tol1 = std::abs(distance[1]) > std::abs(absoluteBound->tolerance1);
+    } else {
+      tol1 = std::abs(distance[1]) <= absoluteBound->tolerance1;
+    }
+
+    return tol0 && tol1;
   }
 
   if (const auto* chi2Bound = getVariantPtr<Chi2Bound>();
@@ -164,13 +222,31 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* absoluteCartesian = getVariantPtr<AbsoluteCartesian>();
       absoluteCartesian != nullptr) {
-    return std::abs(cartesianDistance[0]) <= absoluteCartesian->tolerance0 &&
-           std::abs(cartesianDistance[1]) <= absoluteCartesian->tolerance1;
+    bool tol0 = false;
+
+    if (absoluteCartesian->tolerance0 < 0) {
+      tol0 = cartesianDistance[0] > std::abs(absoluteCartesian->tolerance0);
+    } else {
+      tol0 = std::abs(cartesianDistance[0]) <= absoluteCartesian->tolerance0;
+    }
+
+    bool tol1 = false;
+    if (absoluteCartesian->tolerance1 < 0) {
+      tol1 = cartesianDistance[1] > std::abs(absoluteCartesian->tolerance1);
+    } else {
+      tol1 = std::abs(cartesianDistance[1]) <= absoluteCartesian->tolerance1;
+    }
+
+    return tol0 && tol1;
   }
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();
       absoluteEuclidean != nullptr) {
-    return cartesianDistance.norm() <= absoluteEuclidean->tolerance;
+    if (absoluteEuclidean->tolerance < 0) {
+      return cartesianDistance.norm() > std::abs(absoluteEuclidean->tolerance);
+    } else {
+      return cartesianDistance.norm() <= absoluteEuclidean->tolerance;
+    }
   }
 
   throw std::logic_error("Unsupported tolerance type");

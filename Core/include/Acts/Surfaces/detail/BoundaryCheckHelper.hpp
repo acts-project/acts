@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
+#include <iostream>
 #include <span>
 
 namespace Acts::detail {
@@ -29,16 +30,22 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
                              const BoundaryTolerance& tolerance,
                              const Vector2& point,
                              const std::optional<SquareMatrix2>& jacobianOpt) {
+  using enum BoundaryTolerance::ToleranceMode;
+
   if (tolerance.isInfinite()) {
     return true;
   }
 
-  if (detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight)) {
-    return true;
+  BoundaryTolerance::ToleranceMode mode = tolerance.toleranceMode();
+  bool insideRectangle =
+      detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight);
+
+  if (mode == None) {
+    return insideRectangle;
   }
 
-  if (!tolerance.hasTolerance()) {
-    return false;
+  if (mode == Extend && insideRectangle) {
+    return true;
   }
 
   Vector2 closestPoint;
@@ -62,9 +69,16 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
         point, vertices, metric);
   }
 
+  std::cout << "closestPoint: " << closestPoint.transpose() << std::endl;
+  std::cout << "point: " << point.transpose() << std::endl;
   Vector2 distance = closestPoint - point;
+  std::cout << "distance: " << distance.transpose() << std::endl;
 
-  return tolerance.isTolerated(distance, jacobianOpt);
+  if (mode == Extend) {
+    return tolerance.isTolerated(distance, jacobianOpt);
+  } else {
+    return tolerance.isTolerated(-distance, jacobianOpt) && insideRectangle;
+  }
 }
 
 /// Check if a point is inside a polygon.
@@ -89,7 +103,7 @@ inline bool insidePolygon(std::span<const Vector2> vertices,
     return true;
   }
 
-  if (!tolerance.hasTolerance()) {
+  if (tolerance.toleranceMode() == BoundaryTolerance::ToleranceMode::None) {
     // Outside of the polygon, since we've eliminated the case of an absence of
     // check above, we know we'll always fail if the tolerance is zero.
     //
