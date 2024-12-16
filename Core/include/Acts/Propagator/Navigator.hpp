@@ -17,6 +17,7 @@
 #include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
@@ -1008,12 +1009,37 @@ class Navigator {
     navOpts.farLimit =
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
 
-    // get the surfaces
+    // Get the surfaces
     state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), navOpts);
-    std::ranges::sort(state.navigation.navSurfaces,
-                      SurfaceIntersection::pathLengthOrder);
+    // Sort the surfaces by path length.
+    // Special care is taken for the external surfaces which should always come
+    // first, so they are preferred to be targeted and hit first.
+    std::ranges::sort(
+        state.navigation.navSurfaces,
+        [&state, &externalSurfaces](const SurfaceIntersection& a,
+                                    SurfaceIntersection& b) {
+          // Prefer to sort by path length. We assume surfaces are at the same
+          // distance if the difference is smaller than the tolerance.
+          if (std::abs(a.pathLength() - b.pathLength()) >
+              state.options.surfaceTolerance) {
+            return SurfaceIntersection::pathLengthOrder(a, b);
+          }
+          // If the path length is practically the same, sort by geometry. First
+          // we check if one of the surfaces is external.
+          bool aIsExternal =
+              rangeContainsValue(externalSurfaces, a.object()->geometryId());
+          bool bIsExternal =
+              rangeContainsValue(externalSurfaces, b.object()->geometryId());
+          if (aIsExternal == bIsExternal) {
+            // If both are external or both are not external, sort by geometry
+            // identifier
+            return a.object()->geometryId() < b.object()->geometryId();
+          }
+          // If only one is external, it should come first
+          return aIsExternal;
+        });
 
     // Print surface information
     if (logger().doPrint(Logging::VERBOSE)) {
