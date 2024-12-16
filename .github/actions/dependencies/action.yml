@@ -21,7 +21,7 @@ runs:
         brew install ninja ccache
 
     - name: Install dependencies
-      shell: run
+      shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       run: |
