@@ -1019,7 +1019,7 @@ class Navigator {
     std::ranges::sort(
         state.navigation.navSurfaces,
         [&state, &externalSurfaces](const SurfaceIntersection& a,
-                                    SurfaceIntersection& b) {
+                                    const SurfaceIntersection& b) {
           // Prefer to sort by path length. We assume surfaces are at the same
           // distance if the difference is smaller than the tolerance.
           if (std::abs(a.pathLength() - b.pathLength()) >
