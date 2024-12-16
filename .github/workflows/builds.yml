@@ -37,9 +37,7 @@ jobs:
           lfs: true
 
       - name: Install dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: CI/dependencies/setup.sh
+        uses: ./.github/actions/dependencies
 
       - name: Restore ccache
         id: ccache-restore
@@ -263,9 +261,9 @@ jobs:
           lfs: true
 
       - name: Install dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: CI/dependencies/setup.sh -c ${{ matrix.compiler }}
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: ${{ matrix.compiler }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -340,11 +338,7 @@ jobs:
           lfs: true
 
       - name: Install dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >
-          brew install ninja ccache
-          && CI/dependencies/setup.sh
+        uses: ./.github/actions/dependencies
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
