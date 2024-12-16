@@ -9,7 +9,7 @@ add_library(
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
     option(ACTS_EXATRKX_OLD_MMG_API OFF)
 
-    target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCpp.cpp)
+    #target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCpp.cpp)
 
     if(ACTS_EXATRKX_OLD_MMG_API)
         target_compile_definitions(
@@ -21,17 +21,19 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
     target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
-        if(ACTS_EXATRKX_OLD_MMG_API)
-            target_sources(
-                ActsPluginExaTrkX
-                PRIVATE src/GraphCreatorWrapperCuda.cu
-            )
-        else()
-            target_sources(
-                ActsPluginExaTrkX
-                PRIVATE src/GraphCreatorWrapperCuda2.cu
-            )
-        endif()
+        target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
+
+        #if(ACTS_EXATRKX_OLD_MMG_API)
+        #    target_sources(
+        #        ActsPluginExaTrkX
+        #        PRIVATE src/GraphCreatorWrapperCuda.cu
+        #    )
+        #else()
+        #    target_sources(
+        #        ActsPluginExaTrkX
+        #        PRIVATE src/GraphCreatorWrapperCuda2.cu
+        #    )
+        #endif()
     endif()
 endif()
 

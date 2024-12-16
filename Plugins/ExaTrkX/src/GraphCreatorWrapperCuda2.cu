@@ -17,11 +17,12 @@
 #include "Acts/Plugins/ExaTrkX/detail/GraphCreatorWrapper.hpp"
 
 // #include <CUDA_graph_creator_new>
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+
 #include <CUDA_graph_creator>
 #include <TTree_hits>
 #include <algorithm>
 #include <graph>
-#include <ranges>
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -31,137 +32,9 @@
 
 namespace {
 
-inline void cudaAssert(cudaError_t code, const char *file, int line) {
-  if (code != cudaSuccess) {
-    std::stringstream ss;
-    ss << "CUDA error: " << cudaGetErrorString(code) << ", " << file << ":"
-       << line;
-    // throw std::runtime_error(ss.str());
-    std::cout << ss.str() << std::endl;
-  }
-  cudaDeviceSynchronize();
-}
-
-#define CUDA_CHECK(ans) \
-  { cudaAssert((ans), __FILE__, __LINE__); }
-
 template <typename T>
 cudaError_t cudaMallocT(T **ptr, std::size_t size) {
   return cudaMalloc((void **)ptr, size);
-}
-
-template <class T>
-__global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
-                             const T *cuda_R, const T *cuda_phi) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nbHits) {
-    return;
-  }
-
-  double r = cuda_R[i];
-  double phi = cuda_phi[i];
-
-  cuda_x[i] = r * std::cos(phi);
-  cuda_y[i] = r * std::sin(phi);
-}
-
-template <class T>
-__global__ void rescaleFeature(std::size_t nbHits, T *data, T scale) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nbHits) {
-    return;
-  }
-
-  data[i] *= scale;
-}
-
-constexpr float g_pi = 3.141592654f;
-
-template <typename T>
-__device__ T resetAngle(T angle) {
-  if (angle > g_pi) {
-    return angle - 2.f * g_pi;
-  }
-  if (angle < -g_pi) {
-    return angle + 2.f * g_pi;
-  }
-  return angle;
-};
-
-template <typename T>
-__global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
-                                 const int *tgtEdges, std::size_t nNodeFeatures,
-                                 const T *nodeFeatures, T *edgeFeatures) {
-  enum NodeFeatures { r = 0, phi, z, eta };
-  constexpr static int nEdgeFeatures = 6;
-
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-
-  if (i >= nEdges) {
-    return;
-  }
-
-  const int src = srcEdges[i];
-  const int tgt = tgtEdges[i];
-
-  const T *srcNodeFeatures = nodeFeatures + src * nNodeFeatures;
-  const T *tgtNodeFeatures = nodeFeatures + tgt * nNodeFeatures;
-
-  T dr = tgtNodeFeatures[r] - srcNodeFeatures[r];
-  T dphi =
-      resetAngle(g_pi * (tgtNodeFeatures[phi] - srcNodeFeatures[phi])) / g_pi;
-  T dz = tgtNodeFeatures[z] - srcNodeFeatures[z];
-  T deta = tgtNodeFeatures[eta] - srcNodeFeatures[eta];
-  T phislope = 0.0;
-  T rphislope = 0.0;
-
-  if (dr != 0.0) {
-    phislope = std::clamp(dphi / dr, -100.f, 100.f);
-    T avgR = T{0.5} * (tgtNodeFeatures[r] + srcNodeFeatures[r]);
-    rphislope = avgR * phislope;
-  }
-
-  T *efPtr = edgeFeatures + i * nEdgeFeatures;
-  efPtr[0] = dr;
-  efPtr[1] = dphi;
-  efPtr[2] = dz;
-  efPtr[3] = deta;
-  efPtr[4] = phislope;
-  efPtr[5] = rphislope;
-}
-
-__global__ void setHitId(std::size_t nHits, std::uint64_t *hit_ids) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nHits) {
-    return;
-  }
-  hit_ids[i] = i;
-}
-
-__global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
-                           const std::uint64_t *hit_ids, std::size_t nAllNodes,
-                           std::size_t nCompressedNodes) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nEdges) {
-    return;
-  }
-
-  srcNodes[i] = hit_ids[srcNodes[i]];
-  tgtNodes[i] = hit_ids[tgtNodes[i]];
-}
-
-template <typename T>
-void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
-  std::vector<T> data_cpu(size);
-  CUDA_CHECK(cudaMemcpy(data_cpu.data(), data, size * sizeof(T),
-                        cudaMemcpyDeviceToHost));
-  std::cout << name << "[" << size << "]: ";
-  for (int i = 0; i < size; ++i) {
-    std::cout << data_cpu.at(i) << "  ";
-  }
-  std::cout << std::endl;
 }
 
 }  // namespace
@@ -238,7 +111,7 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
                         features.size() * sizeof(float),
                         cudaMemcpyHostToDevice));
 
-#if 0
+#if 1
   CUDA_hit_data<float> inputData;
   inputData.m_size = nHits;
 
@@ -287,23 +160,26 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   //                         height, cudaMemcpyHostToDevice));
 
   CUDA_CHECK(cudaDeviceSynchronize());
-  std::cout << "gridDimHits: " << gridDimHits.x << ", blockDim: " << blockDim.x << std::endl;
+  std::cout << "gridDimHits: " << gridDimHits.x << ", blockDim: " << blockDim.x
+            << std::endl;
   rescaleFeature<<<gridDimHits, blockDim>>>(nHits, inputData.m_cuda_z, 1000.f);
   CUDA_CHECK(cudaGetLastError());
   rescaleFeature<<<gridDimHits, blockDim>>>(nHits, inputData.m_cuda_R, 1000.f);
   CUDA_CHECK(cudaGetLastError());
   rescaleFeature<<<gridDimHits, blockDim>>>(nHits, inputData.m_cuda_phi,
-                                        3.14159f);
+                                            3.14159f);
   CUDA_CHECK(cudaGetLastError());
 
   CUDA_CHECK(cudaMallocT(&inputData.m_cuda_x, nHits * sizeof(float)));
   CUDA_CHECK(cudaMallocT(&inputData.m_cuda_y, nHits * sizeof(float)));
 
-  computeXandY<<<gridDimHits, blockDim>>>(nHits, inputData.m_cuda_x, inputData.m_cuda_y,
-                                      inputData.m_cuda_R, inputData.m_cuda_phi);
+  computeXandY<<<gridDimHits, blockDim>>>(
+      nHits, inputData.m_cuda_x, inputData.m_cuda_y, inputData.m_cuda_R,
+      inputData.m_cuda_phi);
   CUDA_CHECK(cudaGetLastError());
 
-  CUDA_CHECK(cudaMallocT(&inputData.m_cuda_hit_id, nHits*sizeof(std::uint64_t)));
+  CUDA_CHECK(
+      cudaMallocT(&inputData.m_cuda_hit_id, nHits * sizeof(std::uint64_t)));
   setHitId<<<gridDimHits, blockDim>>>(nHits, inputData.m_cuda_hit_id);
   CUDA_CHECK(cudaGetLastError());
 
@@ -371,7 +247,7 @@ std::pair<at::Tensor, at::Tensor> GraphCreatorWrapperCuda::build(
   cudaDeviceSynchronize();
   CUDA_graph_creator<float>::graph_building_stats stats;
   const auto [edgeData, hitData] =
-      m_graphCreator->build_impl2(inputData, cuda_hit_indice, stats, true);
+      m_graphCreator->build_impl2(inputData, cuda_hit_indice, stats);
   CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaDeviceSynchronize());
   copyFromDeviceAndPrint(edgeData.cuda_graph_M1_hits, 10,

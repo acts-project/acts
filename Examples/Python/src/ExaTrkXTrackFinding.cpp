@@ -10,6 +10,7 @@
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
+#include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
@@ -263,7 +264,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  {
+  /*{
     using Alg = Acts::ModuleMapCpp;
     using Config = Alg::Config;
 
@@ -286,6 +287,31 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(useGpu);
     ACTS_PYTHON_MEMBER(gpuDevice);
     ACTS_PYTHON_MEMBER(gpuBlocks);
+    ACTS_PYTHON_STRUCT_END();
+  }*/
+  {
+    using Alg = Acts::ModuleMapCuda;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
+            mex, "ModuleMapCuda")
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("ModuleMap", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(moduleMapPath);
+    ACTS_PYTHON_MEMBER(rScale);
+    ACTS_PYTHON_MEMBER(phiScale);
+    ACTS_PYTHON_MEMBER(zScale);
+    ACTS_PYTHON_MEMBER(gpuDevice);
+    ACTS_PYTHON_MEMBER(gpuBlocks);
+    ACTS_PYTHON_MEMBER(maxEdgesAllocate);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif
