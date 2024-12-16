@@ -15,7 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: Prerequisites
-      if: startsWith(inputs.os, 'macos')
+      if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
         brew install ninja ccache
