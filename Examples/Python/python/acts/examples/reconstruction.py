@@ -1288,7 +1288,6 @@ def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    directNavigation: bool = False,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
@@ -1298,17 +1297,6 @@ def addKalmanTracks(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    if directNavigation:
-        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-            level=customLogLevel(),
-            inputProtoTracks=inputProtoTracks,
-            inputSimHits="simhits",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            outputProtoTracks="sorted_truth_particle_tracks",
-        )
-        s.addAlgorithm(srfSortAlg)
-        inputProtoTracks = srfSortAlg.config.outputProtoTracks
 
     kalmanOptions = {
         "multipleScattering": multipleScattering,
@@ -1786,13 +1774,12 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
-        metricLearningConfig["numFeatures"] = 3
+        metricLearningConfig["selectedFeatures"] = [0, 1, 2]
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
-        filterConfig["nChunks"] = 10
-        filterConfig["numFeatures"] = 3
+        filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
-        gnnConfig["numFeatures"] = 3
+        gnnConfig["selectedFeatures"] = [0, 1, 2]
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
@@ -1824,11 +1811,18 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    # TODO convert prototracks to tracks
+    s.addAlgorithm(
+        acts.examples.PrototracksToTracks(
+            level=customLogLevel(),
+            inputProtoTracks="prototracks",
+            inputMeasurements="measurements",
+            outputTracks="tracks",
+        )
+    )
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputProtoTracks=findingAlg.config.outputProtoTracks,
+        inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="exatrkx_track_particle_matching",
@@ -1843,14 +1837,12 @@ def addExaTrkX(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
-    # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
-                inputProtoTracks=findingAlg.config.outputProtoTracks,
-                # the original selected particles after digitization
-                inputParticles="particles_initial",
+                inputTracks="tracks",
+                inputParticles="particles",
                 inputParticleMeasurementsMap="particle_measurements_map",
                 inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
