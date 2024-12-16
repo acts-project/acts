@@ -102,19 +102,24 @@ template <typename generator_t>
 inline std::pair<double, double> generateBoundDirection(
     generator_t& rng, const GenerateBoundDirectionOptions& options) {
   using UniformReal = std::uniform_real_distribution<double>;
+  assert(options.thetaMin >= 0.f);
+  assert(options.thetaMax <= std::numbers::pi);
+  assert(options.thetaMin <= options.thetaMax);
 
   // since we want to draw the direction uniform on the unit sphere, we must
   // draw from cos(theta) instead of theta. see e.g.
   // https://mathworld.wolfram.com/SpherePointPicking.html
-  double cosThetaMin = std::cos(options.thetaMin);
+  // Get cosThetaMin from thetaMax and vice versa, because cos is
+  // monothonical decreasing between [0, pi]
+  double cosThetaMin = std::cos(options.thetaMax);
   // ensure upper bound is included. see e.g.
   // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-  double cosThetaMax = std::nextafter(std::cos(options.thetaMax),
+  double cosThetaMax = std::nextafter(std::cos(options.thetaMin),
                                       std::numeric_limits<double>::max());
 
   // in case we force uniform eta generation
-  double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
-  double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
+  double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
+  double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
 
   UniformReal phiDist(options.phiMin, options.phiMax);
   UniformReal cosThetaDist(cosThetaMin, cosThetaMax);
@@ -143,6 +148,9 @@ struct GenerateQoverPOptions {
   /// Indicate if the momentum referse to transverse momentum
   bool pTransverse = true;
 
+  /// Indicate if the momentum should be uniformly distributed in log space.
+  bool pLogUniform = false;
+
   /// Charge of the parameters.
   double charge = 1;
 
@@ -157,6 +165,19 @@ inline double generateQoverP(generator_t& rng,
   using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
   using UniformReal = std::uniform_real_distribution<double>;
 
+  auto drawP = [&options](generator_t& rng_, double theta_) -> double {
+    const double pTransverseScaling =
+        options.pTransverse ? 1. / std::sin(theta_) : 1.;
+
+    if (options.pLogUniform) {
+      UniformReal pLogDist(std::log(options.pMin), std::log(options.pMax));
+      return std::exp(pLogDist(rng_)) * pTransverseScaling;
+    }
+
+    UniformReal pDist(options.pMin, options.pMax);
+    return pDist(rng_) * pTransverseScaling;
+  };
+
   // choose between particle/anti-particle if requested
   // the upper limit of the distribution is inclusive
   UniformIndex particleTypeChoice(0u, options.randomizeCharge ? 1u : 0u);
@@ -165,14 +186,12 @@ inline double generateQoverP(generator_t& rng,
       options.charge,
       -options.charge,
   };
-  UniformReal pDist(options.pMin, options.pMax);
 
   // draw parameters
   const std::uint8_t type = particleTypeChoice(rng);
   const double q = qChoices[type];
 
-  const double p =
-      pDist(rng) * (options.pTransverse ? 1. / std::sin(theta) : 1.);
+  const double p = drawP(rng, theta);
   const double qOverP = (q != 0) ? q / p : 1 / p;
 
   return qOverP;
@@ -222,7 +241,7 @@ template <typename generator_t>
 inline std::pair<BoundVector, BoundMatrix> generateBoundParametersCovariance(
     generator_t& rng, const GenerateBoundParametersOptions& options) {
   auto params = generateBoundParameters(rng, options);
-  auto cov = generateCovariance<ActsScalar, eBoundSize>(rng);
+  auto cov = generateCovariance<double, eBoundSize>(rng);
   return {params, cov};
 }
 
@@ -279,7 +298,7 @@ template <typename generator_t>
 inline std::pair<FreeVector, FreeMatrix> generateFreeParametersCovariance(
     generator_t& rng, const GenerateFreeParametersOptions& options) {
   auto params = generateFreeParameters(rng, options);
-  auto cov = generateCovariance<ActsScalar, eFreeSize>(rng);
+  auto cov = generateCovariance<double, eFreeSize>(rng);
   return {params, cov};
 }
 

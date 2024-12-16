@@ -12,7 +12,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <cstddef>
 #include <iosfwd>
 
 namespace Acts {
@@ -62,13 +61,8 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// Scale operator
   /// - it is effectively a thickness scaling
   ///
-  /// @param scale is the scale factor
-  HomogeneousSurfaceMaterial& operator*=(double scale) final;
-
-  /// Equality operator
-  ///
-  /// @param hsm is the source material
-  bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
+  /// @param factor is the scale factor
+  HomogeneousSurfaceMaterial& scale(double factor) final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///
@@ -94,22 +88,21 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
 
  private:
   /// The five different MaterialSlab
-  MaterialSlab m_fullMaterial = MaterialSlab();
+  MaterialSlab m_fullMaterial;
+
+  /// @brief Check if two materials are exactly equal.
+  ///
+  /// This is a strict equality check, i.e. the materials must have identical
+  /// properties.
+  ///
+  /// @param lhs is the left hand side material
+  /// @param rhs is the right hand side material
+  ///
+  /// @return true if the materials are equal
+  friend constexpr bool operator==(const HomogeneousSurfaceMaterial& lhs,
+                                   const HomogeneousSurfaceMaterial& rhs) {
+    return lhs.m_fullMaterial == rhs.m_fullMaterial;
+  }
 };
-
-inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector2& /*lp*/) const {
-  return (m_fullMaterial);
-}
-
-inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
-    const Vector3& /*gp*/) const {
-  return (m_fullMaterial);
-}
-
-inline bool HomogeneousSurfaceMaterial::operator==(
-    const HomogeneousSurfaceMaterial& hsm) const {
-  return (m_fullMaterial == hsm.m_fullMaterial);
-}
 
 }  // namespace Acts

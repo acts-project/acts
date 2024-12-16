@@ -31,7 +31,7 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
              << dd4hepElement.name() << "'.");
 
   // Create the root node
-  std::vector<ActsScalar> bValues = {0., 150., 1000.};
+  std::vector<double> bValues = {0., 150., 1000.};
   std::vector<BinningValue> binning = {Acts::BinningValue::binR};
   auto root = std::make_unique<Acts::Experimental::Blueprint::Node>(
       dd4hepElement.name(), Acts::Transform3::Identity(),
@@ -150,8 +150,7 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 }
 
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<Acts::ActsScalar>, std::vector<Acts::BinningValue>,
-           std::string>
+           std::vector<double>, std::vector<Acts::BinningValue>, std::string>
 Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
@@ -166,7 +165,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
       getParamOr<int>(baseName + "_type", dd4hepElement,
                       static_cast<int>(VolumeBounds::BoundsType::eOther));
   auto bValueType = static_cast<VolumeBounds::BoundsType>(bValueInt);
-  std::vector<ActsScalar> bValues = {};
+  std::vector<double> bValues = {};
 
   // Get the bound values from parsed internals if possible
   if (extOpt.has_value() && bValueType == VolumeBounds::BoundsType::eCylinder) {
@@ -178,12 +177,12 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
       bValues[1u] = std::ceil(parsedExtent.max(BinningValue::binR));
     }
     if (parsedExtent.constrains(BinningValue::binZ)) {
-      ActsScalar minZ = parsedExtent.min(BinningValue::binZ) > 0.
-                            ? std::floor(parsedExtent.min(BinningValue::binZ))
-                            : std::ceil(parsedExtent.min(BinningValue::binZ));
-      ActsScalar maxZ = parsedExtent.max(BinningValue::binZ) > 0.
-                            ? std::floor(parsedExtent.max(BinningValue::binZ))
-                            : std::ceil(parsedExtent.max(BinningValue::binZ));
+      double minZ = parsedExtent.min(BinningValue::binZ) > 0.
+                        ? std::floor(parsedExtent.min(BinningValue::binZ))
+                        : std::ceil(parsedExtent.min(BinningValue::binZ));
+      double maxZ = parsedExtent.max(BinningValue::binZ) > 0.
+                        ? std::floor(parsedExtent.max(BinningValue::binZ))
+                        : std::ceil(parsedExtent.max(BinningValue::binZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -193,8 +192,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
 
   // Get the bounds values from the series if not found before
   if (bValues.empty()) {
-    bValues = extractSeries<ActsScalar>(dd4hepElement, baseName + "_bvalues",
-                                        unitLength);
+    bValues =
+        extractSeries<double>(dd4hepElement, baseName + "_bvalues", unitLength);
     ACTS_VERBOSE(" - cylindrical determined from variant parameters as "
                  << toString(bValues));
   }
@@ -208,7 +207,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     aux += "vol. binning : " + binningString;
   }
   // Return the tuple
-  return std::make_tuple(transform, bValueType, bValues, bBinning, aux);
+  return {transform, bValueType, bValues, bBinning, aux};
 }
 
 std::tuple<std::shared_ptr<const Acts::Experimental::IInternalStructureBuilder>,
@@ -252,8 +251,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
           baseName + "_internals_measure", dd4hepElement, "");
       auto internalsClearance =
           unitLength *
-          Acts::getParamOr<ActsScalar>(baseName + "_internals_clearance",
-                                       dd4hepElement, 0.);
+          Acts::getParamOr<double>(baseName + "_internals_clearance",
+                                   dd4hepElement, 0.);
       auto internalBinningValues = stringToBinningValues(interenalsMeasure);
       if (!internalBinningValues.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");
@@ -310,6 +309,5 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
         std::make_shared<Acts::Experimental::GeometryIdGenerator>(geoIdCfg);
   }
 
-  return std::make_tuple(internalsBuilder, rootsFinderBuilder, geoIdGenerator,
-                         aux, ext);
+  return {internalsBuilder, rootsFinderBuilder, geoIdGenerator, aux, ext};
 }

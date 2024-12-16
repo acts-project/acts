@@ -110,7 +110,7 @@ std::pair<std::size_t, std::size_t> ActsExamples::determineEventFilesRange(
 
   // should only occur if no files matched and the initial values persisted.
   if (eventMax < eventMin) {
-    return std::make_pair(0u, 0u);
+    return {0u, 0u};
   }
-  return std::make_pair(eventMin, eventMax + 1);
+  return {eventMin, eventMax + 1};
 }

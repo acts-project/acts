@@ -149,7 +149,7 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
 Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    ActsScalar tolerance) const {
+    double tolerance) const {
   // The nomenclature is following the header file and doxygen documentation
 
   const Vector3& ma = position;
@@ -174,9 +174,9 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
   // Check if we are on the surface already
-  Intersection3D::Status status = std::abs(u) > std::abs(tolerance)
-                                      ? Intersection3D::Status::reachable
-                                      : Intersection3D::Status::onSurface;
+  IntersectionStatus status = std::abs(u) > std::abs(tolerance)
+                                  ? IntersectionStatus::reachable
+                                  : IntersectionStatus::onSurface;
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
@@ -185,7 +185,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     double cZ = vecLocal.dot(eb);
     double cR = (vecLocal - cZ * eb).norm();
     if (!m_bounds->inside({cR, cZ}, boundaryTolerance)) {
-      status = Intersection3D::Status::missed;
+      status = IntersectionStatus::unreachable;
     }
   }
 

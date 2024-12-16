@@ -16,8 +16,6 @@
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 
-#include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -176,6 +174,7 @@ void addGenerators(Context& ctx) {
         .def_readwrite("pMin", &Config::pMin)
         .def_readwrite("pMax", &Config::pMax)
         .def_readwrite("pTransverse", &Config::pTransverse)
+        .def_readwrite("pLogUniform", &Config::pLogUniform)
         .def_readwrite("pdg", &Config::pdg)
         .def_readwrite("randomizeCharge", &Config::randomizeCharge)
         .def_readwrite("numParticles", &Config::numParticles)

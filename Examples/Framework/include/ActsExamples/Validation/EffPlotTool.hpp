@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <map>
 #include <memory>
@@ -66,9 +66,8 @@ class EffPlotTool {
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
-  void fill(EffPlotCache& effPlotCache,
-            const ActsFatras::Particle& truthParticle, double deltaR,
-            bool status) const;
+  void fill(EffPlotCache& effPlotCache, const SimParticleState& truthParticle,
+            double deltaR, bool status) const;
 
   /// @brief write the efficiency plots to file
   ///

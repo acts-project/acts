@@ -8,25 +8,28 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "Acts/Geometry/ILayerBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
-auto GenericDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  DetectorElement::ContextType nominalContext;
-  /// Return the generic detector
-  TrackingGeometryPtr gGeometry =
-      ActsExamples::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
-          cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
-          cfg.volumeLogLevel);
-  ContextDecorators gContextDecorators = {};
-  // return the pair of geometry and empty decorators
-  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
-      std::move(gGeometry), std::move(gContextDecorators));
+namespace ActsExamples {
+
+GenericDetector::GenericDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("GenericDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_nominalGeometryContext = Acts::GeometryContext();
+
+  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
+      specificDetectorStore;
+  m_trackingGeometry = Generic::buildDetector<GenericDetectorElement>(
+      m_nominalGeometryContext, specificDetectorStore, m_cfg.buildLevel,
+      m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+      m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+
+  for (const auto& something : specificDetectorStore) {
+    for (const auto& element : something) {
+      m_detectorStore.push_back(element);
+    }
+  }
 }
+
+}  // namespace ActsExamples

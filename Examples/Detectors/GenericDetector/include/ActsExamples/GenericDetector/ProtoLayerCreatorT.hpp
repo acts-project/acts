@@ -16,11 +16,8 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
@@ -218,8 +215,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
       double moduleHalfY = m_cfg.centralModuleHalfY.at(icl);
       double moduleThickness = m_cfg.centralModuleThickness.at(icl);
       // create the shared module
-      std::shared_ptr<const Acts::PlanarBounds> moduleBounds(
-          new Acts::RectangleBounds(moduleHalfX, moduleHalfY));
+      auto moduleBounds =
+          std::make_shared<Acts::RectangleBounds>(moduleHalfX, moduleHalfY);
       std::size_t nCentralModules =
           m_cfg.centralModuleBinningSchema.at(icl).first *
           m_cfg.centralModuleBinningSchema.at(icl).second;
@@ -414,15 +411,14 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
         double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
         // (1) module bounds
         // create the bounds
-        Acts::PlanarBounds* pBounds = nullptr;
+        std::shared_ptr<const Acts::PlanarBounds> moduleBounds;
         if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX) {
-          pBounds = new Acts::TrapezoidBounds(moduleMinHalfX, moduleMaxHalfX,
-                                              moduleHalfY);
+          moduleBounds = std::make_shared<Acts::TrapezoidBounds>(
+              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
         } else {
-          pBounds = new Acts::RectangleBounds(moduleMinHalfX, moduleHalfY);
+          moduleBounds = std::make_shared<Acts::RectangleBounds>(moduleMinHalfX,
+                                                                 moduleHalfY);
         }
-        // now create the shared bounds from it
-        std::shared_ptr<const Acts::PlanarBounds> moduleBounds(pBounds);
         // (2)) module material
         // create the Module material from input
         std::shared_ptr<const Acts::ISurfaceMaterial> moduleMaterialPtr =

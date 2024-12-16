@@ -10,20 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Seed.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridBinFinder.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
 #include <csignal>
 #include <cstddef>
-#include <iterator>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
@@ -45,9 +40,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
-
+      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig, logger().cloneWithSuffix("SeedFilter"));
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
@@ -195,13 +189,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_topBinFinder = std::make_unique<const Acts::GridBinFinder<3ul>>(
       m_cfg.numPhiNeighbors, m_cfg.zBinNeighborsTop, 0);
 
-  m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SpacePointProxy_type>>(
-          m_cfg.seedFilterConfig);
   m_seedFinder =
       Acts::SeedFinder<SpacePointProxy_type,
                        Acts::CylindricalSpacePointGrid<SpacePointProxy_type>>(
-          m_cfg.seedFinderConfig);
+          m_cfg.seedFinderConfig, logger().cloneWithSuffix("SeedFinder"));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -244,10 +235,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   Acts::CylindricalSpacePointGrid<value_type> grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<value_type>(
-          m_cfg.gridConfig, m_cfg.gridOptions);
+          m_cfg.gridConfig, m_cfg.gridOptions, logger());
 
   Acts::CylindricalSpacePointGridCreator::fillGrid<value_type>(
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer);
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions, grid, spContainer,
+      logger());
 
   // Compute radius Range
   // we rely on the fact the grid is storing the proxies

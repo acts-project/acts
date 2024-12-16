@@ -37,8 +37,6 @@ clang_tidy:
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DPython_EXECUTABLE=$(which python3)
-        -DACTS_RUN_CLANG_TIDY=ON
-        -DACTS_BUILD_ODD=OFF
 
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
@@ -144,33 +142,49 @@ build_exatrkx:
     - cmake --build build -- -j6
     - ccache -s
 
-# test_exatrkx_unittests:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - ctest --test-dir build -R ExaTrkX
-#
-# test_exatrkx_python:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - apt-get update -y
-#     - apt-get install -y python3 libxxhash0
-#     - source build/this_acts_withdeps.sh
-#     - git clone $CLONE_URL src
-#     - cd src
-#     - git checkout $HEAD_SHA
-#     - pip3 install -r Examples/Python/tests/requirements_ubuntu2004.txt
-#     - nvidia-smi
-#     - pytest -rFsv -k test_exatrkx
+test_exatrkx_unittests:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - source CI/dependencies.sh
+    - cd ..
+    - ctest --test-dir build -R ExaTrkX
+
+test_exatrkx_python:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - nvidia-smi
+    - source CI/dependencies.sh
+    - source ../build/this_acts_withdeps.sh
+    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - echo $PYTHONPATH
+    - which python3
+    - python3 --version
+    - python3 -c "import acts"
+    - pytest -rFsv -k torch --collect-only
+    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
 
 build_linux_ubuntu:
   stage: build
@@ -384,11 +398,7 @@ linux_ubuntu_2204_clang:
     # Figure out LCG platform name based on version number and OS
     - >
       if [ "$OS" = "alma9"  ]; then
-        if [ "$LCG_VERSION" -ge "104" ]; then
-          export LCG_PLATFORM="el9"
-        else
-          export LCG_PLATFORM="centos9"
-        fi
+        export LCG_PLATFORM="el9"
       else
         export LCG_PLATFORM="$OS"
       fi
@@ -432,4 +442,18 @@ lcg_105:
       - OS: [alma9]
         COMPILER:
           - gcc13
+          - clang16
+
+lcg_106a:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "106a"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
           - clang16

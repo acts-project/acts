@@ -8,23 +8,19 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/NavigatorStatistics.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-#include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -68,6 +64,9 @@ class DetectorNavigator {
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
+
+    /// Navigation statistics
+    NavigatorStatistics statistics;
   };
 
   /// Constructor with configuration object
@@ -219,7 +218,7 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "surface status is " << surfaceStatus);
 
-      if (surfaceStatus == Intersection3D::Status::reachable) {
+      if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper) << "surface "
                      << surface.center(state.geoContext).transpose()
@@ -288,7 +287,7 @@ class DetectorNavigator {
         state.options.surfaceTolerance, logger());
 
     // Check if we are at a surface
-    if (surfaceStatus == Intersection3D::Status::onSurface) {
+    if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper) << "landed on surface");
 

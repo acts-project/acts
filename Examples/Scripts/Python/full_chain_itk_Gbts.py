@@ -62,7 +62,6 @@ addFatras(
             absZ=(0.0 * u.mm, 1.0 * u.m),
             eta=(-4.0, 4.0),
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
         )
         if ttbar_pu200
         else ParticleSelectorConfig()
@@ -70,7 +69,7 @@ addFatras(
     postSelectParticles=ParticleSelectorConfig(
         pt=(1.0 * u.GeV, None),
         eta=(-4.0, 4.0),
-        measurements=(9, None),
+        hits=(9, None),
         removeNeutral=True,
     ),
     outputDirRoot=outputDir,

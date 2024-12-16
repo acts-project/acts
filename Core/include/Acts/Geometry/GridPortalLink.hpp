@@ -111,6 +111,7 @@ class GridPortalLink : public PortalLinkBase {
   ///
   /// 1D merge scenarios:
   ///
+  /// ```
   /// +----------------------------------------------------------+
   /// |Colinear                                                  |
   /// |                                                          |
@@ -126,9 +127,11 @@ class GridPortalLink : public PortalLinkBase {
   /// |       +-------+-------+-------+-------+-------+-------+  |
   /// |                                                          |
   /// +----------------------------------------------------------+
+  /// ```
   ///
   /// Two grid along a shared direction are merged along their shared direction
   ///
+  /// ```
   /// +-------------------------------------------------+
   /// |Parallel                                         |
   /// |                                                 |
@@ -147,10 +150,12 @@ class GridPortalLink : public PortalLinkBase {
   /// | +-------+      +-------+     +-------+-------+  |
   /// |                                                 |
   /// +-------------------------------------------------+
+  /// ```
   ///
   /// Two grids along a shared direction a merged in the direction that is
   /// orthogonal to their shared direction.
   ///
+  /// ```
   /// +-------------------------------------------+
   /// |Perpendicular                              |
   /// |                                           |
@@ -180,6 +185,7 @@ class GridPortalLink : public PortalLinkBase {
   /// |                +-------+-------+-------+  |
   /// |                                           |
   /// +-------------------------------------------+
+  /// ```
   ///
   /// Two grids whose directions are not shared are merged (ordering does not
   /// matter here). The routine will expand one of the grids to match the
@@ -192,6 +198,7 @@ class GridPortalLink : public PortalLinkBase {
   /// side. The 1D grid is expanded to match the binning in the as-of-yet
   /// unbinned direction with the binning taken from the 2D grid.
   ///
+  /// ```
   /// +-----------------------------------------+
   /// |2D + 1D                                  |
   /// |                                         |
@@ -215,7 +222,9 @@ class GridPortalLink : public PortalLinkBase {
   /// | |       |       |                       |
   /// | +-------+-------+                       |
   /// +-----------------------------------------+
+  /// ```
   ///
+  /// ```
   /// +--------------------------------------------------------------+
   /// |2D + 1D                                                       |
   /// |                                                              |
@@ -234,6 +243,7 @@ class GridPortalLink : public PortalLinkBase {
   /// | +-------+-------+    +-------+     +-------+-------+-------+ |
   /// |                                                              |
   /// +--------------------------------------------------------------+
+  /// ```
   ///
   /// 2D merges
   /// The grids need to already share a common axis. If that is not the case,
@@ -241,6 +251,7 @@ class GridPortalLink : public PortalLinkBase {
   /// merging as a fallback if needed.
   /// Ordering and direction does not matter here.
   ///
+  /// ```
   /// +-----------------------------------------+
   /// |2D + 2D                                  |
   /// |                                         |
@@ -273,6 +284,7 @@ class GridPortalLink : public PortalLinkBase {
   /// |       +-------+-------+-------+-------+ |
   /// |                                         |
   /// +-----------------------------------------+
+  /// ```
   ///
   /// @param a The first grid portal link
   /// @param b The second grid portal link
@@ -396,7 +408,7 @@ class GridPortalLink : public PortalLinkBase {
 /// @tparam Axes The axis types of the grid
 template <typename... Axes>
   requires(sizeof...(Axes) <= 2)
-class GridPortalLinkT final : public GridPortalLink {
+class GridPortalLinkT : public GridPortalLink {
  public:
   /// The internal grid type
   using GridType = Grid<const TrackingVolume*, Axes...>;

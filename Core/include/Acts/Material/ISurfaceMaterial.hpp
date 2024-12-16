@@ -11,12 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <memory>
 #include <sstream>
-#include <vector>
 
 namespace Acts {
 
@@ -50,10 +47,10 @@ class ISurfaceMaterial {
   /// Destructor
   virtual ~ISurfaceMaterial() = default;
 
-  /// Scale operator
+  /// Scale material
   ///
-  /// @param scale is the scale factor applied
-  virtual ISurfaceMaterial& operator*=(double scale) = 0;
+  /// @param factor is the scale factor applied
+  virtual ISurfaceMaterial& scale(double factor) = 0;
 
   /// Return method for full material description of the Surface
   /// - from local coordinate on the surface
@@ -128,9 +125,11 @@ class ISurfaceMaterial {
   }
 
  protected:
-  double m_splitFactor{1.};  //!< the split factor in favour of oppositePre
-  MappingType m_mappingType{
-      Acts::MappingType::Default};  //!< Use the default mapping type by default
+  /// the split factor in favour of oppositePre
+  double m_splitFactor{1.};
+
+  /// Use the default mapping type by default
+  MappingType m_mappingType{Acts::MappingType::Default};
 };
 
 inline double ISurfaceMaterial::factor(Direction pDir,

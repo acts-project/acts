@@ -20,6 +20,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <numbers>
 #include <random>
 #include <type_traits>
 
@@ -100,10 +101,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<double>(0,
                                                                   R * 1.5))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 3,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(ntests),
     z, r, phi, index) {
   if (index % 1000 == 0) {

@@ -47,6 +47,33 @@ using MultiTrajectoryTraits::IndexType;
 constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
 constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
 
+template <typename T>
+struct NonInitializingAllocator {
+  using value_type = T;
+
+  NonInitializingAllocator() noexcept = default;
+
+  template <class U>
+  explicit NonInitializingAllocator(
+      const NonInitializingAllocator<U>& /*other*/) noexcept {}
+
+  template <class U>
+  bool operator==(const NonInitializingAllocator<U>& /*other*/) const noexcept {
+    return true;
+  }
+
+  T* allocate(std::size_t n) const { return std::allocator<T>{}.allocate(n); }
+
+  void deallocate(T* const p, std::size_t n) const noexcept {
+    std::allocator<T>{}.deallocate(p, n);
+  }
+
+  void construct(T* /*p*/) const {
+    // This construct function intentionally does not initialize the object!
+    // Be very careful when using this allocator.
+  }
+};
+
 class VectorMultiTrajectoryBase {
  public:
   struct Statistics {
@@ -320,9 +347,9 @@ class VectorMultiTrajectoryBase {
       m_params;
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
 
-  std::vector<double> m_meas;
+  std::vector<double, NonInitializingAllocator<double>> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
-  std::vector<double> m_measCov;
+  std::vector<double, NonInitializingAllocator<double>> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
@@ -456,7 +483,7 @@ class VectorMultiTrajectory final
 
   template <typename T>
   void addColumn_impl(std::string_view key) {
-    HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
@@ -464,23 +491,44 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::hasColumn_impl(*this, key);
   }
 
-  void allocateCalibrated_impl(IndexType istate, std::size_t measdim) {
-    throw_assert(measdim > 0 && measdim <= eBoundSize,
-                 "Invalid measurement dimension detected");
+  template <typename val_t, typename cov_t>
+  void allocateCalibrated_impl(IndexType istate,
+                               const Eigen::DenseBase<val_t>& val,
+                               const Eigen::DenseBase<cov_t>& cov)
 
-    if (m_measOffset[istate] != kInvalid &&
-        m_measCovOffset[istate] != kInvalid &&
-        m_index[istate].measdim == measdim) {
-      return;
+    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
+             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
+                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+  {
+    constexpr std::size_t measdim = val_t::RowsAtCompileTime;
+
+    if (m_index[istate].measdim != kInvalid &&
+        m_index[istate].measdim != measdim) {
+      throw std::invalid_argument{
+          "Measurement dimension does not match the allocated dimension"};
+    }
+
+    if (m_measOffset[istate] == kInvalid ||
+        m_measCovOffset[istate] == kInvalid) {
+      m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
+      m_meas.resize(m_meas.size() + measdim);
+
+      m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
+      m_measCov.resize(m_measCov.size() + measdim * measdim);
     }
 
     m_index[istate].measdim = measdim;
 
-    m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
-    m_meas.resize(m_meas.size() + measdim);
+    double* measPtr = &m_meas[m_measOffset[istate]];
+    Eigen::Map<ActsVector<measdim>> valMap(measPtr);
+    valMap = val;
 
-    m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
-    m_measCov.resize(m_measCov.size() + measdim * measdim);
+    double* covPtr = &m_measCov[m_measCovOffset[istate]];
+    Eigen::Map<ActsSquareMatrix<measdim>> covMap(covPtr);
+    covMap = cov;
   }
 
   void setUncalibratedSourceLink_impl(IndexType istate,

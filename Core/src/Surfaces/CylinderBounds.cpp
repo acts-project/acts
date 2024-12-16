@@ -18,6 +18,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <utility>
 
 using Acts::VectorHelpers::perp;
@@ -111,9 +112,9 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
   double avgPhi = get(eAveragePhi);
   double halfPhi = get(eHalfPhiSector);
 
-  std::vector<ActsScalar> phiRef = {};
+  std::vector<double> phiRef = {};
   if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
-    phiRef = {static_cast<ActsScalar>(avgPhi)};
+    phiRef = {avgPhi};
   }
 
   // Write the two bows/circles on either side
@@ -126,13 +127,13 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
     vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
-  ActsScalar bevelMinZ = get(eBevelMinZ);
-  ActsScalar bevelMaxZ = get(eBevelMaxZ);
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
 
   // Modify the vertices position if bevel is defined
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
-    ActsScalar mult{1};
+    double mult{1};
     auto invTransform = transform.inverse();
     auto func = [&mult, &transform, &invTransform](Vector3& v) {
       v = invTransform * v;
@@ -160,11 +161,11 @@ void Acts::CylinderBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument(
         "CylinderBounds: invalid length setup: half length is negative");
   }
-  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
-      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+      std::abs(std::abs(get(eAveragePhi)) - std::numbers::pi) > s_epsilon) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
   }
   if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {

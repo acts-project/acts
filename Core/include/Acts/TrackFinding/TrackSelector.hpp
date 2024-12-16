@@ -80,6 +80,10 @@ class TrackSelector {
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
     double maxChi2 = inf;
 
+    /// Whether a reference surface is required for the track
+    /// If false, the parameter cuts are not evaluated
+    bool requireReferenceSurface = true;
+
     // Defaults to: no cut
     MeasurementCounter measurementCounter;
 
@@ -304,24 +308,32 @@ inline TrackSelector::Config& TrackSelector::Config::pt(double min,
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const TrackSelector::Config& cuts) {
-  auto print = [&](const char* name, const auto& min, const auto& max) {
+  // for printing cuts set up with `within`
+  auto printMinMax = [&](const char* name, const auto& min, const auto& max) {
     os << " - " << min << " <= " << name << " < " << max << "\n";
   };
+  // for printing cuts set up with `checkMin`
+  auto printMin = [&](const char* name, const auto& min) {
+    os << " - " << min << " <= " << name << "\n";
+  };
+  // for printing cuts set up with `checkMax`
+  auto printMax = [&](const char* name, const auto& max) {
+    os << " - " << name << " <= " << max << "\n";
+  };
 
-  print("loc0", cuts.loc0Min, cuts.loc0Max);
-  print("loc1", cuts.loc1Min, cuts.loc1Max);
-  print("time", cuts.timeMin, cuts.timeMax);
-  print("phi", cuts.phiMin, cuts.phiMax);
-  print("eta", cuts.etaMin, cuts.etaMax);
-  print("absEta", cuts.absEtaMin, cuts.absEtaMax);
-  print("pt", cuts.ptMin, cuts.ptMax);
-  print("nHoles", 0, cuts.maxHoles);
-  print("nOutliers", 0, cuts.maxOutliers);
-  print("nHoles + nOutliers", 0, cuts.maxHolesAndOutliers);
-  print("nSharedHits", 0, cuts.maxSharedHits);
-  print("chi2", 0.0, cuts.maxChi2);
-  os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
-
+  printMinMax("loc0", cuts.loc0Min, cuts.loc0Max);
+  printMinMax("loc1", cuts.loc1Min, cuts.loc1Max);
+  printMinMax("time", cuts.timeMin, cuts.timeMax);
+  printMinMax("phi", cuts.phiMin, cuts.phiMax);
+  printMinMax("eta", cuts.etaMin, cuts.etaMax);
+  printMinMax("absEta", cuts.absEtaMin, cuts.absEtaMax);
+  printMinMax("pt", cuts.ptMin, cuts.ptMax);
+  printMax("nHoles", cuts.maxHoles);
+  printMax("nOutliers", cuts.maxOutliers);
+  printMax("nHoles + nOutliers", cuts.maxHolesAndOutliers);
+  printMax("nSharedHits", cuts.maxSharedHits);
+  printMax("chi2", cuts.maxChi2);
+  printMin("nMeasurements", cuts.minMeasurements);
   return os;
 }
 
@@ -427,8 +439,9 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config* cutsPtr{nullptr};
   if (!m_isUnbinned) {
-    if (absEta() < m_cfg.absEtaEdges.front() ||
-        _absEta >= m_cfg.absEtaEdges.back()) {
+    // return false if |eta| is outside its range, or nan.
+    if (!(absEta() >= m_cfg.absEtaEdges.front() &&
+          _absEta < m_cfg.absEtaEdges.back())) {
       return false;
     }
     cutsPtr = &m_cfg.getCuts(_eta);
@@ -438,22 +451,33 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
 
   const Config& cuts = *cutsPtr;
 
-  return track.hasReferenceSurface() &&
-         within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
-         (!m_isUnbinned || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
-                            within(_eta, cuts.etaMin, cuts.etaMax))) &&
-         within(track.phi(), cuts.phiMin, cuts.phiMax) &&
-         within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
-         within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
-         within(track.time(), cuts.timeMin, cuts.timeMax) &&
-         checkMin(track.nMeasurements(), cuts.minMeasurements) &&
-         checkMax(track.nHoles(), cuts.maxHoles) &&
-         checkMax(track.nOutliers(), cuts.maxOutliers) &&
-         checkMax(track.nHoles() + track.nOutliers(),
-                  cuts.maxHolesAndOutliers) &&
-         checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
-         checkMax(track.chi2(), cuts.maxChi2) &&
-         cuts.measurementCounter.isValidTrack(track);
+  auto parameterCuts = [&]() {
+    return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) &&
+           (!m_isUnbinned ||
+            (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) &&
+             within(_eta, cuts.etaMin, cuts.etaMax))) &&
+           within(track.phi(), cuts.phiMin, cuts.phiMax) &&
+           within(track.loc0(), cuts.loc0Min, cuts.loc0Max) &&
+           within(track.loc1(), cuts.loc1Min, cuts.loc1Max) &&
+           within(track.time(), cuts.timeMin, cuts.timeMax);
+  };
+
+  auto trackCuts = [&]() {
+    return checkMin(track.nMeasurements(), cuts.minMeasurements) &&
+           checkMax(track.nHoles(), cuts.maxHoles) &&
+           checkMax(track.nOutliers(), cuts.maxOutliers) &&
+           checkMax(track.nHoles() + track.nOutliers(),
+                    cuts.maxHolesAndOutliers) &&
+           checkMax(track.nSharedHits(), cuts.maxSharedHits) &&
+           checkMax(track.chi2(), cuts.maxChi2) &&
+           cuts.measurementCounter.isValidTrack(track);
+  };
+
+  if (cuts.requireReferenceSurface) {
+    return track.hasReferenceSurface() && parameterCuts() && trackCuts();
+  } else {
+    return trackCuts();
+  }
 }
 
 inline TrackSelector::TrackSelector(

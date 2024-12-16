@@ -23,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -129,7 +130,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
 /// with a 2D grid
 BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   BinUtility bu(2, -2., 2., open, BinningValue::binZ);
-  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
+                   BinningValue::binPhi);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -309,7 +311,8 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
 /// @brief Various test for the Material in the case of a Cylindrical volume
 BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BinUtility bu(4, 1., 4., open, BinningValue::binR);
-  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
+                   BinningValue::binPhi);
   bu += BinUtility(2, -2., 2., open, BinningValue::binZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;

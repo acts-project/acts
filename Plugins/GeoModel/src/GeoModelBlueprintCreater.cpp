@@ -320,7 +320,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
     const std::vector<BinningValue>& internalConstraints) const {
   // Check if the internals entry is empty
   if (entry.internals.empty()) {
-    return std::make_tuple(nullptr, Extent());
+    return {nullptr, Extent()};
   }
 
   // Build a layer structure
@@ -345,8 +345,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
                                                        externalExtent);
 
       ACTS_VERBOSE("Requested range: " << rangeExtent.toString());
-      std::array<ActsScalar, 3u> mins = {};
-      std::array<ActsScalar, 3u> maxs = {};
+      std::array<double, 3u> mins = {};
+      std::array<double, 3u> maxs = {};
 
       // Fill what we have - follow the convention to fill up with the last
       for (std::size_t ibv = 0; ibv < 3u; ++ibv) {
@@ -360,7 +360,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
         maxs[ibv] = rangeExtent.max(m_cfg.kdtBinning.back());
       }
       // Create the search range
-      RangeXD<3u, ActsScalar> searchRange{mins, maxs};
+      RangeXD<3u, double> searchRange{mins, maxs};
       auto surfaces = cache.kdtSurfaces->surfaces(searchRange);
       // Loop over surfaces and create an internal extent
       for (auto& sf : surfaces) {
@@ -393,10 +393,10 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
         lsbCfg.nMinimalSurfaces = surfaces.size() + 1u;
       }
 
-      return std::make_tuple(
+      return {
           std::make_shared<Experimental::LayerStructureBuilder>(
               lsbCfg, m_logger->clone(entry.name + "_LayerStructureBuilder")),
-          internalExtent);
+          internalExtent};
 
     } else {
       throw std::invalid_argument(
@@ -404,11 +404,11 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           entry.internals[1u] + "' / or now kdt surfaces provided.");
     }
   }
-  return std::make_tuple(nullptr, Extent());
+  return {nullptr, Extent()};
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
-           std::vector<Acts::ActsScalar>, Acts::Vector3>
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
+           Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
@@ -417,7 +417,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
 
   // Create the return values
   Vector3 translation{0., 0., 0.};
-  std::vector<ActsScalar> boundValues = {};
+  std::vector<double> boundValues = {};
   auto [boundsType, extent] = detail::GeoModelExentHelper::extentFromTable(
       boundsEntrySplit, externalExtent, internalExtent);
 
@@ -434,5 +434,5 @@ Acts::GeoModelBlueprintCreater::parseBounds(
         "supported for the moment.");
   }
 
-  return std::make_tuple(boundsType, extent, boundValues, translation);
+  return {boundsType, extent, boundValues, translation};
 }

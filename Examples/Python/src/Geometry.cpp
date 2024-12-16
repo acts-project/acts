@@ -30,6 +30,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -45,6 +46,7 @@
 
 #include <array>
 #include <memory>
+#include <numbers>
 #include <unordered_map>
 #include <vector>
 
@@ -90,6 +92,9 @@ struct IdentifierSurfacesCollector {
 }  // namespace
 
 namespace Acts::Python {
+
+void addBlueprint(Context& ctx);
+
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -198,9 +203,9 @@ void addGeometry(Context& ctx) {
         py::class_<Acts::CylinderVolumeBounds,
                    std::shared_ptr<Acts::CylinderVolumeBounds>,
                    Acts::VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<ActsScalar, ActsScalar, ActsScalar, ActsScalar,
-                          ActsScalar, ActsScalar, ActsScalar>(),
-                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = M_PI,
+            .def(py::init<double, double, double, double, double, double,
+                          double>(),
+                 "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
                  "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
 
     py::enum_<CylinderVolumeBounds::Face>(cvb, "Face")
@@ -281,7 +286,7 @@ void addGeometry(Context& ctx) {
            py::arg("envelope") = ExtentEnvelope::Zero())
       .def("range",
            [](const Acts::Extent& self,
-              Acts::BinningValue bval) -> std::array<ActsScalar, 2> {
+              Acts::BinningValue bval) -> std::array<double, 2> {
              return {self.min(bval), self.max(bval)};
            })
       .def("__str__", &Extent::toString);
@@ -300,6 +305,8 @@ void addGeometry(Context& ctx) {
         .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
         .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
+
+  addBlueprint(ctx);
 }
 
 void addExperimentalGeometry(Context& ctx) {
@@ -381,11 +388,10 @@ void addExperimentalGeometry(Context& ctx) {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      const std::vector<Acts::ActsScalar>&, std::size_t>(),
+                      const std::vector<double>&, std::size_t>(),
              "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
-                      Acts::ActsScalar, Acts::ActsScalar, std::size_t,
-                      std::size_t>(),
+        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, double,
+                      double, std::size_t, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
         .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
                       std::size_t>(),
@@ -435,13 +441,13 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim1 = Acts::RangeXD<1u, Acts::ActsScalar>;
+    using RangeXDDim1 = Acts::RangeXD<1u, double>;
     using KdtSurfacesDim1Bin100 = Acts::Experimental::KdtSurfaces<1u, 100u>;
     using KdtSurfacesProviderDim1Bin100 =
         Acts::Experimental::KdtSurfacesProvider<1u, 100u>;
 
     py::class_<RangeXDDim1>(m, "RangeXDDim1")
-        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& irange) {
+        .def(py::init([](const std::array<double, 2u>& irange) {
           RangeXDDim1 range;
           range[0].shrink(irange[0], irange[1]);
           return range;
@@ -463,14 +469,14 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim2 = Acts::RangeXD<2u, Acts::ActsScalar>;
+    using RangeXDDim2 = Acts::RangeXD<2u, double>;
     using KdtSurfacesDim2Bin100 = Acts::Experimental::KdtSurfaces<2u, 100u>;
     using KdtSurfacesProviderDim2Bin100 =
         Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
 
     py::class_<RangeXDDim2>(m, "RangeXDDim2")
-        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& range0,
-                         const std::array<Acts::ActsScalar, 2u>& range1) {
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1) {
           RangeXDDim2 range;
           range[0].shrink(range0[0], range0[1]);
           range[1].shrink(range1[0], range1[1]);
@@ -490,6 +496,21 @@ void addExperimentalGeometry(Context& ctx) {
                std::shared_ptr<KdtSurfacesProviderDim2Bin100>>(
         m, "KdtSurfacesProviderDim2Bin100")
         .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>, const Extent&>());
+  }
+
+  {
+    using RangeXDDim3 = Acts::RangeXD<3u, double>;
+
+    py::class_<RangeXDDim3>(m, "RangeXDDim3")
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1,
+                         const std::array<double, 2u>& range2) {
+          RangeXDDim3 range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          range[2].shrink(range2[0], range2[1]);
+          return range;
+        }));
   }
 
   {
@@ -687,6 +708,15 @@ void addExperimentalGeometry(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,
                                 "VolumeAssociationTest", name, ntests,
                                 randomNumbers, randomRange, detector);
+
+  py::class_<ProtoLayer>(m, "ProtoLayer")
+      .def(py::init<const GeometryContext&,
+                    const std::vector<std::shared_ptr<Surface>>&,
+                    const Transform3&>(),
+           "gctx"_a, "surfaces"_a, "transform"_a = Transform3::Identity())
+      .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
+      .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
+      .def_property_readonly("surfaces", &ProtoLayer::surfaces);
 }
 
 }  // namespace Acts::Python

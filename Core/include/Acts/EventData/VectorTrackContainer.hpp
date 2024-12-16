@@ -225,7 +225,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(const std::string_view& key) {
-    HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
@@ -253,6 +253,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   void reserve(IndexType size);
   void clear();
+  std::size_t size() const;
 
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {

@@ -103,7 +103,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   std::vector<Acts::SourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack)) {
+    if (m_cfg.pickTrack > -1 &&
+        static_cast<std::size_t>(m_cfg.pickTrack) != itrack) {
       continue;
     }
 

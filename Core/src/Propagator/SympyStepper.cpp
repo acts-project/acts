@@ -12,7 +12,6 @@
 #include "Acts/Propagator/detail/SympyJacobianEngine.hpp"
 
 #include <cmath>
-#include <cstdint>
 
 #include "codegen/sympy_stepper_math.hpp"
 
@@ -144,7 +143,8 @@ Result<double> SympyStepper::stepImpl(
   double errorEstimate = 0.;
 
   while (true) {
-    nStepTrials++;
+    ++nStepTrials;
+    ++state.statistics.nAttemptedSteps;
 
     // For details about the factor 4 see ATL-SOFT-PUB-2009-001
     Result<bool> res =
@@ -163,6 +163,8 @@ Result<double> SympyStepper::stepImpl(
     if (*res) {
       break;
     }
+
+    ++state.statistics.nRejectedSteps;
 
     const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
@@ -185,6 +187,13 @@ Result<double> SympyStepper::stepImpl(
   state.pathAccumulated += h;
   ++state.nSteps;
   state.nStepTrials += nStepTrials;
+
+  ++state.statistics.nSuccessfulSteps;
+  if (stepDirection != Direction::fromScalarZeroAsPositive(initialH)) {
+    ++state.statistics.nReverseSteps;
+  }
+  state.statistics.pathLength += h;
+  state.statistics.absolutePathLength += std::abs(h);
 
   const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
   const double nextAccuracy = std::abs(h * stepSizeScaling);
