@@ -12,14 +12,11 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <iostream>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -60,8 +57,6 @@ class CylinderBounds : public SurfaceBounds {
     eSize = 6
   };
 
-  CylinderBounds() = delete;
-
   /// Constructor - full cylinder
   ///
   /// @param r The radius of the cylinder
@@ -87,8 +82,6 @@ class CylinderBounds : public SurfaceBounds {
                  s_epsilon) {
     checkConsistency();
   }
-
-  ~CylinderBounds() override = default;
 
   BoundsType type() const final;
 

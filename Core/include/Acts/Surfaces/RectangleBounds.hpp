@@ -39,8 +39,6 @@ class RectangleBounds : public PlanarBounds {
     eSize = 4
   };
 
-  RectangleBounds() = delete;
-
   /// Constructor with halflength in x and y - symmetric
   ///
   /// @param halfX halflength in X
@@ -67,8 +65,6 @@ class RectangleBounds : public PlanarBounds {
       : m_min(min), m_max(max) {
     checkConsistency();
   }
-
-  ~RectangleBounds() override = default;
 
   BoundsType type() const final;
 

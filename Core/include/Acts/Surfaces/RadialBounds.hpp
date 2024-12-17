@@ -9,14 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>
@@ -40,8 +38,6 @@ class RadialBounds : public DiscBounds {
     eSize = 4
   };
 
-  RadialBounds() = delete;
-
   /// Constructor for full disc of symmetric disc around phi=0
   ///
   /// @param minR The inner radius (0 for full disc)
@@ -61,8 +57,6 @@ class RadialBounds : public DiscBounds {
       : m_values(values) {
     checkConsistency();
   }
-
-  ~RadialBounds() override = default;
 
   SurfaceBounds::BoundsType type() const final;
 

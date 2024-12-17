@@ -26,8 +26,6 @@ class LineBounds : public SurfaceBounds {
  public:
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
 
-  LineBounds() = delete;
-
   /// Constructor
   ///
   /// @param r is the radius of the cylinder, default = 0.
@@ -43,8 +41,6 @@ class LineBounds : public SurfaceBounds {
       : m_values(values) {
     checkConsistency();
   }
-
-  ~LineBounds() override = default;
 
   BoundsType type() const final;
 

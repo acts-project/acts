@@ -12,9 +12,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -80,9 +78,6 @@ class LineSurface : public Surface {
               const Transform3& shift);
 
  public:
-  ~LineSurface() override = default;
-  LineSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source surface dor copying

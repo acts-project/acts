@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
 
-#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -75,9 +74,6 @@ class StrawSurface : public LineSurface {
                const Transform3& shift);
 
  public:
-  ~StrawSurface() override = default;
-  StrawSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source surface for copying

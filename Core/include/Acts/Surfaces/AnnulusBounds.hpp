@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -18,7 +17,6 @@
 
 #include <array>
 #include <cmath>
-#include <exception>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>
@@ -48,8 +46,6 @@ class AnnulusBounds : public DiscBounds {
     eOriginY = 6,
     eSize = 7
   };
-
-  AnnulusBounds() = delete;
 
   /// @brief Default constructor from parameters
   /// @param minR inner radius, in module system

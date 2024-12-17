@@ -8,7 +8,6 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -29,7 +28,7 @@ namespace Acts {
 /// Class to describe the bounds for a planar DiscSurface.
 /// By providing an argument for hphisec, the bounds can
 /// be restricted to a phi-range around the center position.
-
+///
 class DiscTrapezoidBounds : public DiscBounds {
  public:
   enum BoundValues : int {
@@ -41,8 +40,6 @@ class DiscTrapezoidBounds : public DiscBounds {
     eStereo = 5,
     eSize = 6
   };
-
-  DiscTrapezoidBounds() = delete;
 
   /// Constructor for a symmetric Trapezoid giving min X length, max X length,
   /// Rmin and R max
@@ -63,8 +60,6 @@ class DiscTrapezoidBounds : public DiscBounds {
       : m_values(values) {
     checkConsistency();
   }
-
-  ~DiscTrapezoidBounds() override = default;
 
   SurfaceBounds::BoundsType type() const final;
 

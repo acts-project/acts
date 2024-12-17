@@ -16,9 +16,6 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <cstdlib>
-#include <exception>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>
@@ -47,8 +44,6 @@ class EllipseBounds : public PlanarBounds {
     eSize = 6
   };
 
-  EllipseBounds() = delete;
-
   /// Constructor for full of an ellipsoid ring
   ///
   /// @param innerRx The inner ellipse radius in x
@@ -72,8 +67,6 @@ class EllipseBounds : public PlanarBounds {
       : m_values(values), m_boundingBox(values[eInnerRy], values[eOuterRy]) {
     checkConsistency();
   }
-
-  ~EllipseBounds() override = default;
 
   BoundsType type() const final;
 

@@ -15,10 +15,7 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
-#include <cmath>
-#include <concepts>
 #include <cstddef>
-#include <exception>
 #include <iosfwd>
 #include <vector>
 
@@ -82,8 +79,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
-  ConvexPolygonBounds() = delete;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
@@ -99,8 +94,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// This will throw if the vertices do not form a convex polygon.
   /// @param values The values to build up the vertices
   ConvexPolygonBounds(const value_array& values) noexcept(false);
-
-  ~ConvexPolygonBounds() override = default;
 
   BoundsType type() const final;
 
@@ -145,12 +138,6 @@ template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
   constexpr static int eSize = -1;
-
-  /// Default constructor, deleted
-  ConvexPolygonBounds() = delete;
-
-  /// Defaulted destructor
-  ~ConvexPolygonBounds() override = default;
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.

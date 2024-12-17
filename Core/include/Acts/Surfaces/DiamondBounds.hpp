@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -17,7 +16,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <iosfwd>
 #include <stdexcept>
 #include <vector>
@@ -38,8 +36,6 @@ class DiamondBounds : public PlanarBounds {
     eHalfLengthYpos = 4,
     eSize = 5
   };
-
-  DiamondBounds() = delete;
 
   /// Constructor for convex hexagon symmetric about the y axis
   ///
@@ -70,8 +66,6 @@ class DiamondBounds : public PlanarBounds {
                     -values[eHalfLengthYneg]},
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
-
-  ~DiamondBounds() override = default;
 
   BoundsType type() const final;
 

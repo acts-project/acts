@@ -44,8 +44,6 @@ Acts::TrapezoidBounds::TrapezoidBounds(
   checkConsistency();
 }
 
-Acts::TrapezoidBounds::~TrapezoidBounds() = default;
-
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }

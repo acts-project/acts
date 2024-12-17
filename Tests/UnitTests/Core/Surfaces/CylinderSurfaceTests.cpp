@@ -24,26 +24,18 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <initializer_list>
 #include <memory>
 #include <numbers>
-#include <ostream>
 #include <string>
-#include <utility>
 
 using namespace Acts::UnitLiterals;
-
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
 
 namespace Acts::Test {
 
