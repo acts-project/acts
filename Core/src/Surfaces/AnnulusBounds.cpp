@@ -12,7 +12,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,8 +20,10 @@
 #include <limits>
 #include <stdexcept>
 
-Acts::AnnulusBounds::AnnulusBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+namespace Acts {
+
+AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
+    false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
   m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
@@ -95,14 +96,14 @@ Acts::AnnulusBounds::AnnulusBounds(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
+std::vector<Vector2> AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
+std::vector<Vector2> AnnulusBounds::vertices(
     unsigned int quarterSegments) const {
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
@@ -114,7 +115,7 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
-    std::vector<Acts::Vector2> rvertices =
+    std::vector<Vector2> rvertices =
         detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
             {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
             quarterSegments);
@@ -128,15 +129,15 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
     std::for_each(rvertices.begin(), rvertices.end(),
-                  [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
+                  [&](Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
   }
   return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
           m_outLeftStripXY};
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                                 double tolPhi) const {
+bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
+                           double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by average phi
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
@@ -171,9 +172,8 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool AnnulusBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
@@ -339,15 +339,14 @@ bool Acts::AnnulusBounds::inside(
          boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
 }
 
-Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
-    const Vector2& vStripXY) const {
+Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
   Vector2 vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
 }
 
-Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
-    const Vector2& a, const Vector2& b, const Vector2& p,
-    const SquareMatrix2& weight) const {
+Vector2 AnnulusBounds::closestOnSegment(const Vector2& a, const Vector2& b,
+                                        const Vector2& p,
+                                        const SquareMatrix2& weight) const {
   // connecting vector
   auto n = b - a;
   // squared norm of line
@@ -358,17 +357,17 @@ Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
   return std::min(std::max(u, 0.), 1.) * n + a;
 }
 
-double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SquareMatrix2& weight) const {
+double AnnulusBounds::squaredNorm(const Vector2& v,
+                                  const SquareMatrix2& weight) const {
   return (v.transpose() * weight * v).value();
 }
 
-Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
+Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 // Ostream operator overload
-std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
+std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
@@ -379,3 +378,5 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

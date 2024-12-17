@@ -14,13 +14,14 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
+namespace Acts {
+
+SurfaceBounds::BoundsType LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-bool Acts::LineBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool LineBounds::inside(const Vector2& lposition,
+                        const BoundaryTolerance& boundaryTolerance) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
@@ -29,7 +30,7 @@ bool Acts::LineBounds::inside(
 }
 
 // ostream operator overload
-std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
+std::ostream& LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
@@ -38,3 +39,5 @@ std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

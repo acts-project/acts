@@ -22,21 +22,22 @@
 #include <numbers>
 #include <utility>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+SurfaceBounds::BoundsType CylinderBounds::type() const {
   return SurfaceBounds::eCylinder;
 }
 
-Acts::Vector2 Acts::CylinderBounds::shifted(
-    const Acts::Vector2& lposition) const {
-  return {Acts::detail::radian_sym((lposition[Acts::eBoundLoc0] / get(eR)) -
-                                   get(eAveragePhi)),
-          lposition[Acts::eBoundLoc1]};
+Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
+  return {
+      detail::radian_sym((lposition[eBoundLoc0] / get(eR)) - get(eAveragePhi)),
+      lposition[eBoundLoc1]};
 }
 
-Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
+ActsMatrix<2, 2> CylinderBounds::jacobian() const {
   ActsMatrix<2, 2> j;
   j(0, eBoundLoc0) = 1 / get(eR);
   j(0, eBoundLoc1) = 0;
@@ -45,9 +46,8 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool CylinderBounds::inside(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -94,7 +94,7 @@ bool Acts::CylinderBounds::inside(
                                jacobian());
 }
 
-std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
+std::ostream& CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
@@ -106,7 +106,7 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
+std::vector<Vector3> CylinderBounds::circleVertices(
     const Transform3 transform, unsigned int quarterSegments) const {
   std::vector<Vector3> vertices;
 
@@ -153,7 +153,7 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
   return vertices;
 }
 
-void Acts::CylinderBounds::checkConsistency() noexcept(false) {
+void CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
     throw std::invalid_argument(
         "CylinderBounds: invalid radial setup: radius is negative");
@@ -176,3 +176,5 @@ void Acts::CylinderBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
+
+}  // namespace Acts

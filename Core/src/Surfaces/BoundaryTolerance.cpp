@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 

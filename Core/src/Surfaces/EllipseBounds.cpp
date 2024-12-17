@@ -16,12 +16,13 @@
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
-#include <variant>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+SurfaceBounds::BoundsType EllipseBounds::type() const {
   return SurfaceBounds::eEllipse;
 }
 
@@ -30,9 +31,8 @@ static inline double square(double x) {
 }
 
 /// @warning This **only** works for tolerance-based checks
-bool Acts::EllipseBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool EllipseBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
@@ -49,30 +49,30 @@ bool Acts::EllipseBounds::inside(
     bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
     bool insideInner =
         (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-        (1 < (square(lposition[Acts::eBoundLoc0] / (get(eInnerRx) - tol0)) +
-              square(lposition[Acts::eBoundLoc1] / (get(eOuterRx) - tol0))));
+        (1 < (square(lposition[eBoundLoc0] / (get(eInnerRx) - tol0)) +
+              square(lposition[eBoundLoc1] / (get(eOuterRx) - tol0))));
     bool insideOuter =
-        (square(lposition[Acts::eBoundLoc0] / (get(eInnerRy) + tol0)) +
-         square(lposition[Acts::eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
+        (square(lposition[eBoundLoc0] / (get(eInnerRy) + tol0)) +
+         square(lposition[eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
     return insidePhi && insideInner && insideOuter;
   }
 
   throw std::logic_error("Unsupported boundary check type");
 }
 
-std::vector<Acts::Vector2> Acts::EllipseBounds::vertices(
+std::vector<Vector2> EllipseBounds::vertices(
     unsigned int quarterSegments) const {
   return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
       get(eAveragePhi), get(eHalfPhiSector), quarterSegments);
 }
 
-const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
+const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
 }
 
 // ostream operator overload
-std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
+std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
@@ -83,3 +83,5 @@ std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

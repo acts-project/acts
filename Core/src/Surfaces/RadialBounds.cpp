@@ -17,12 +17,13 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
+namespace Acts {
+
+SurfaceBounds::BoundsType RadialBounds::type() const {
   return SurfaceBounds::eDisc;
 }
 
-Acts::Vector2 Acts::RadialBounds::shifted(
-    const Acts::Vector2& lposition) const {
+Vector2 RadialBounds::shifted(const Vector2& lposition) const {
   Vector2 tmp;
   tmp[eBoundLoc0] = lposition[eBoundLoc0];
   tmp[eBoundLoc1] =
@@ -30,22 +31,20 @@ Acts::Vector2 Acts::RadialBounds::shifted(
   return tmp;
 }
 
-bool Acts::RadialBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool RadialBounds::inside(const Vector2& lposition,
+                          const BoundaryTolerance& boundaryTolerance) const {
   return detail::insideAlignedBox(Vector2(get(eMinR), -get(eHalfPhiSector)),
                                   Vector2(get(eMaxR), get(eHalfPhiSector)),
                                   boundaryTolerance, shifted(lposition),
                                   std::nullopt);
 }
 
-std::vector<Acts::Vector2> Acts::RadialBounds::vertices(
-    unsigned int lseg) const {
+std::vector<Vector2> RadialBounds::vertices(unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
 
-std::ostream& Acts::RadialBounds::toStream(std::ostream& sl) const {
+std::ostream& RadialBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, "
@@ -55,3 +54,5 @@ std::ostream& Acts::RadialBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

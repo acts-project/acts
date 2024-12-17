@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iomanip>
 #include <ios>

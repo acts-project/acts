@@ -15,32 +15,32 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <utility>
 
-Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
-                                               double halfXmaxR, double minR,
-                                               double maxR, double avgPhi,
-                                               double stereo) noexcept(false)
+namespace Acts {
+
+DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
+                                         double minR, double maxR,
+                                         double avgPhi,
+                                         double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
   m_ymax = std::sqrt(get(eMaxR) * get(eMaxR) -
                      get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
-Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
+SurfaceBounds::BoundsType DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }
 
-Acts::Vector2 Acts::DiscTrapezoidBounds::toLocalCartesian(
-    const Acts::Vector2& lposition) const {
+Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
   return {lposition[eBoundLoc0] *
               std::sin(lposition[eBoundLoc1] - get(eAveragePhi)),
           lposition[eBoundLoc0] *
               std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
 }
 
-Acts::ActsMatrix<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
-    const Acts::Vector2& lposition) const {
+ActsMatrix<2, 2> DiscTrapezoidBounds::jacobianToLocalCartesian(
+    const Vector2& lposition) const {
   ActsMatrix<2, 2> jacobian;
   jacobian(0, eBoundLoc0) = std::sin(lposition[eBoundLoc1] - get(eAveragePhi));
   jacobian(1, eBoundLoc0) = std::cos(lposition[eBoundLoc1] - get(eAveragePhi));
@@ -51,9 +51,9 @@ Acts::ActsMatrix<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
   return jacobian;
 }
 
-bool Acts::DiscTrapezoidBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool DiscTrapezoidBounds::inside(
+    const Vector2& lposition,
+    const BoundaryTolerance& boundaryTolerance) const {
   Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
                         {get(eHalfLengthXmaxR), m_ymax},
                         {-get(eHalfLengthXmaxR), m_ymax},
@@ -63,7 +63,7 @@ bool Acts::DiscTrapezoidBounds::inside(
                                toLocalCartesian(lposition), jacobian);
 }
 
-std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(
+std::vector<Vector2> DiscTrapezoidBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
   Vector2 cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
   Vector2 nAxis(cAxis.y(), -cAxis.x());
@@ -77,7 +77,7 @@ std::vector<Acts::Vector2> Acts::DiscTrapezoidBounds::vertices(
 }
 
 // ostream operator overload
-std::ostream& Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
+std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, "
@@ -91,3 +91,5 @@ std::ostream& Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

@@ -16,13 +16,14 @@
 #include <iostream>
 #include <optional>
 
-Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
+namespace Acts {
+
+SurfaceBounds::BoundsType DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-bool Acts::DiamondBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool DiamondBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);
@@ -37,7 +38,7 @@ bool Acts::DiamondBounds::inside(
                                std::nullopt);
 }
 
-std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
+std::vector<Vector2> DiamondBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
@@ -50,11 +51,11 @@ std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
   return {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}};
 }
 
-const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
+const RectangleBounds& DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
+std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "
@@ -67,3 +68,5 @@ std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts
