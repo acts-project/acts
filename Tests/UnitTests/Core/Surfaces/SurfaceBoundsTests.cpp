@@ -40,8 +40,16 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #endif
 
   ~SurfaceBoundsStub() override = default;
+
   BoundsType type() const final { return SurfaceBounds::eOther; }
+
   std::vector<double> values() const override { return m_values; }
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& /*metric*/) const final {
+    return lposition;
+  }
+
   bool inside(const Vector2& /*lpos*/,
               const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;

@@ -11,11 +11,11 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <utility>
 
 Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
                                                double halfXmaxR, double minR,
@@ -49,6 +49,16 @@ Acts::ActsMatrix<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
   jacobian(1, eBoundLoc1) =
       lposition[eBoundLoc0] * -std::sin(lposition[eBoundLoc1]);
   return jacobian;
+}
+
+Acts::Vector2 Acts::DiscTrapezoidBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
+                        {get(eHalfLengthXmaxR), m_ymax},
+                        {-get(eHalfLengthXmaxR), m_ymax},
+                        {-get(eHalfLengthXminR), get(eMinR)}};
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      toLocalCartesian(lposition), vertices, metric);
 }
 
 bool Acts::DiscTrapezoidBounds::inside(

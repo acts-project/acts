@@ -44,14 +44,15 @@ class LineBounds : public SurfaceBounds {
     checkConsistency();
   }
 
-  ~LineBounds() override = default;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

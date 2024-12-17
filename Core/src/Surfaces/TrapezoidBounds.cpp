@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
@@ -44,10 +43,21 @@ Acts::TrapezoidBounds::TrapezoidBounds(
   checkConsistency();
 }
 
-Acts::TrapezoidBounds::~TrapezoidBounds() = default;
-
 Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
+}
+
+Acts::Vector2 Acts::TrapezoidBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const double hlY = get(TrapezoidBounds::eHalfLengthY);
+
+  Vector2 vertices[] = {
+      {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
+
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 bool Acts::TrapezoidBounds::inside(

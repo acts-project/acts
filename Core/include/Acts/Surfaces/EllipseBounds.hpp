@@ -47,8 +47,6 @@ class EllipseBounds : public PlanarBounds {
     eSize = 6
   };
 
-  EllipseBounds() = delete;
-
   /// Constructor for full of an ellipsoid ring
   ///
   /// @param innerRx The inner ellipse radius in x
@@ -73,14 +71,15 @@ class EllipseBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  ~EllipseBounds() override = default;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is

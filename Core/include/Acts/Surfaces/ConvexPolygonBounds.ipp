@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <concepts>
@@ -99,6 +100,13 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
 template <int N>
 Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
   return SurfaceBounds::eConvexPolygon;
+}
+
+template <int N>
+Acts::Vector2 Acts::ConvexPolygonBounds<N>::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      lposition, m_vertices, metric);
 }
 
 template <int N>

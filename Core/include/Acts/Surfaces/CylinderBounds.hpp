@@ -85,8 +85,6 @@ class CylinderBounds : public SurfaceBounds {
     checkConsistency();
   }
 
-  ~CylinderBounds() override = default;
-
   BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector

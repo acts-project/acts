@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -42,6 +43,26 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
   j(1, eBoundLoc0) = 0;
   j(1, eBoundLoc1) = 1;
   return j;
+}
+
+Acts::Vector2 Acts::CylinderBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  double bevelMinZ = get(eBevelMinZ);
+  double bevelMaxZ = get(eBevelMaxZ);
+  double halfLengthZ = get(eHalfLengthZ);
+  double radius = get(eR);
+
+  Vector2 lowerLeft = {-radius, -halfLengthZ};
+  Vector2 middleLeft = {0., -(halfLengthZ + radius * std::tan(bevelMinZ))};
+  Vector2 upperLeft = {radius, -halfLengthZ};
+  Vector2 upperRight = {radius, halfLengthZ};
+  Vector2 middleRight = {0., (halfLengthZ + radius * std::tan(bevelMaxZ))};
+  Vector2 lowerRight = {-radius, halfLengthZ};
+  Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
+                        upperRight, middleRight, lowerRight};
+
+  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
+                                                              vertices, metric);
 }
 
 bool Acts::CylinderBounds::inside(

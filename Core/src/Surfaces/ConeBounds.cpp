@@ -57,6 +57,14 @@ Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
   return shifted;
 }
 
+Acts::Vector2 Acts::ConeBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  return detail::computeClosestPointOnAlignedBox(Vector2(-rphiHalf, get(eMinZ)),
+                                                 Vector2(rphiHalf, get(eMaxZ)),
+                                                 shifted(lposition), metric);
+}
+
 bool Acts::ConeBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {

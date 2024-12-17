@@ -12,7 +12,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
-#include <algorithm>
 #include <optional>
 #include <ostream>
 
@@ -47,6 +46,13 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
 Acts::SurfaceBounds::BoundsType
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
   return SurfaceBounds::eConvexPolygon;
+}
+
+Acts::Vector2 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      lposition, std::span<const Vector2>(m_vertices.data(), m_vertices.size()),
+      metric);
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(

@@ -8,7 +8,6 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -64,14 +63,15 @@ class DiscTrapezoidBounds : public DiscBounds {
     checkConsistency();
   }
 
-  ~DiscTrapezoidBounds() override = default;
-
   SurfaceBounds::BoundsType type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
+
+  Vector2 closestPoint(const Vector2& lposition,
+                       const SquareMatrix2& metric) const final;
 
   ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]

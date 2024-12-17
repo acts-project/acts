@@ -11,12 +11,12 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
-#include <variant>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -25,8 +25,10 @@ Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
   return SurfaceBounds::eEllipse;
 }
 
-static inline double square(double x) {
-  return x * x;
+Acts::Vector2 Acts::EllipseBounds::closestPoint(
+    const Acts::Vector2& /*lposition*/,
+    const Acts::SquareMatrix2& /*metric*/) const {
+  throw std::logic_error("Not implemented");
 }
 
 /// @warning This **only** works for tolerance-based checks

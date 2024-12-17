@@ -18,6 +18,14 @@ Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
+Acts::Vector2 Acts::LineBounds::closestPoint(
+    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+  double r = get(LineBounds::eR);
+  double halfLengthZ = get(LineBounds::eHalfLengthZ);
+  return detail::computeClosestPointOnAlignedBox(
+      Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ), lposition, metric);
+}
+
 bool Acts::LineBounds::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {
