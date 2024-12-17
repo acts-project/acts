@@ -54,18 +54,32 @@ class SurfaceBounds {
   /// @return is a BoundsType enum
   virtual BoundsType type() const = 0;
 
+  virtual bool isCartesian() const = 0;
+
+  virtual SquareMatrix2 boundToCartesianJacobian(
+      const Vector2& lposition) const = 0;
+
+  virtual SquareMatrix2 cartesianToBoundJacobian(
+      const Vector2& lposition) const = 0;
+
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
   ///
   /// @return of the stored values for this SurfaceBounds object
   virtual std::vector<double> values() const = 0;
 
-  virtual Vector2 closestPoint(const Vector2& lposition,
-                               const SquareMatrix2& metric) const = 0;
+  virtual bool inside(const Vector2& lposition) const = 0;
+
+  virtual Vector2 closestPoint(
+      const Vector2& lposition,
+      const std::optional<SquareMatrix2>& metric) const = 0;
 
   virtual double distance(const Vector2& lposition,
-                          const SquareMatrix2& metric) const {
-    return std::sqrt(lposition.transpose() * metric * lposition);
+                          const std::optional<SquareMatrix2>& metric) const {
+    Vector2 closest = closestPoint(lposition, metric);
+    Vector2 diff = closest - lposition;
+    return std::sqrt((diff.transpose() *
+                      metric.value_or(SquareMatrix2::Identity()) * diff)(0, 0));
   }
 
   /// Inside check for the bounds object driven by the boundary check directive
@@ -76,7 +90,10 @@ class SurfaceBounds {
   /// @param boundaryTolerance boundary check directive
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
-                      const BoundaryTolerance& boundaryTolerance) const = 0;
+                      const BoundaryTolerance& boundaryTolerance) const {
+    // TODO
+    return inside(lposition);
+  }
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
