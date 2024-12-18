@@ -14,7 +14,6 @@
 
 #include <array>
 #include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {

@@ -13,13 +13,11 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <iosfwd>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {

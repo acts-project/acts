@@ -13,12 +13,10 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <iosfwd>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
