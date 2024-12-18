@@ -44,7 +44,7 @@ class ConstantBField final : public MagneticFieldProvider {
     return Result<Vector3>::success(m_BField);
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
+  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,SquareMatrix3&,MagneticFieldProvider::Cache&) const
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
