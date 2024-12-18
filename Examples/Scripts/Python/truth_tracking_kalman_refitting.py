@@ -18,6 +18,7 @@ def runRefittingKf(
     multipleScattering: bool = True,
     energyLoss: bool = True,
     reverseFilteringMomThreshold=0 * u.GeV,
+    reverseFilteringCovarianceScaling=1.0,
     s: acts.examples.Sequencer = None,
 ):
     s = runTruthTrackingKalman(
@@ -32,6 +33,7 @@ def runRefittingKf(
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
+        "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
     }
