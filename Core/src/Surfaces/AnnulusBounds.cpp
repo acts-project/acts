@@ -160,14 +160,22 @@ std::vector<Vector2> AnnulusBounds::vertices(
 
 SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
-  (void)lposition;
-  return SquareMatrix2::Identity();  // TODO
+  SquareMatrix2 j;
+  j(0, 0) = std::cos(lposition[0]);
+  j(0, 1) = -lposition[1] * std::sin(lposition[0]);
+  j(1, 0) = std::sin(lposition[0]);
+  j(1, 1) = lposition[1] * std::cos(lposition[0]);
+  return j;
 }
 
 SquareMatrix2 AnnulusBounds::cartesianToBoundJacobian(
     const Vector2& lposition) const {
-  (void)lposition;
-  return SquareMatrix2::Identity();  // TODO
+  SquareMatrix2 j;
+  j(0, 0) = std::cos(lposition[0]);
+  j(0, 1) = std::sin(lposition[0]);
+  j(1, 0) = -std::sin(lposition[0]) / lposition[1];
+  j(1, 1) = std::cos(lposition[0]) / lposition[1];
+  return j;
 }
 
 bool AnnulusBounds::inside(const Vector2& lposition) const {

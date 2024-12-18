@@ -41,23 +41,6 @@ ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
   checkConsistency();
 }
 
-SurfaceBounds::BoundsType ConeBounds::type() const {
-  return SurfaceBounds::eCone;
-}
-
-SquareMatrix2 ConeBounds::boundToCartesianJacobian(
-    const Vector2& lposition) const {
-  (void)lposition;
-  return SquareMatrix2::Identity();  // TODO
-}
-
-SquareMatrix2 ConeBounds::cartesianToBoundJacobian(
-    const Vector2& lposition) const {
-  (void)lposition;
-  return SquareMatrix2::Identity();  // TODO
-}
-
-/// Shift r-phi coordinate to be centered around the average phi.
 Vector2 ConeBounds::shifted(const Vector2& lposition) const {
   using detail::radian_sym;
 

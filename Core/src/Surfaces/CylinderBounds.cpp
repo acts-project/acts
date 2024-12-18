@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
@@ -28,30 +27,9 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
-SquareMatrix2 CylinderBounds::boundToCartesianJacobian(
-    const Vector2& /*lposition*/) const {
-  SquareMatrix2 j;
-  j(0, eBoundLoc0) = get(eR);
-  j(0, eBoundLoc1) = 0;
-  j(1, eBoundLoc0) = 0;
-  j(1, eBoundLoc1) = 1;
-  return j;
-}
-
-SquareMatrix2 CylinderBounds::cartesianToBoundJacobian(
-    const Vector2& /*lposition*/) const {
-  SquareMatrix2 j;
-  j(0, eBoundLoc0) = 1 / get(eR);
-  j(0, eBoundLoc1) = 0;
-  j(1, eBoundLoc0) = 0;
-  j(1, eBoundLoc1) = 1;
-  return j;
-}
-
 Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
-  return {
-      detail::radian_sym((lposition[eBoundLoc0] / get(eR)) - get(eAveragePhi)),
-      lposition[eBoundLoc1]};
+  return {detail::radian_sym((lposition[0] / get(eR)) - get(eAveragePhi)),
+          lposition[1]};
 }
 
 bool CylinderBounds::inside(const Vector2& lposition) const {

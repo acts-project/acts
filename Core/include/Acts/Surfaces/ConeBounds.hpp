@@ -74,13 +74,19 @@ class ConeBounds : public SurfaceBounds {
   /// @param values The parameter array
   ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
-  BoundsType type() const final;
+  BoundsType type() const final { return eCone; }
 
-  bool isCartesian() const final { return false; }
+  bool isCartesian() const final { return true; }
 
-  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
 
-  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -128,6 +134,8 @@ class ConeBounds : public SurfaceBounds {
   void checkConsistency() noexcept(false);
 
   /// Private helper function to shift a local 2D position
+  ///
+  /// Shift r-phi coordinate to be centered around the average phi.
   ///
   /// @param lposition The original local position
   Vector2 shifted(const Vector2& lposition) const;
