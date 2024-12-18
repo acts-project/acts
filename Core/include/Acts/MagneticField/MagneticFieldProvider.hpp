@@ -50,7 +50,7 @@ class MagneticFieldProvider {
   /// @param [in,out] cache Field provider specific cache object
   /// @return magnetic field vector
   virtual Result<Vector3> getFieldGradient(const Vector3& position,
-                                           ActsMatrix<3, 3>& derivative,
+                                           SquareMatrix3& derivative,
                                            Cache& cache) const = 0;
 
   virtual ~MagneticFieldProvider();
