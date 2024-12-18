@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>

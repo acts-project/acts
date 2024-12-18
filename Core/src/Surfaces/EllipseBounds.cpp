@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <iomanip>
 #include <iostream>
