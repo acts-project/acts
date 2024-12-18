@@ -62,7 +62,7 @@ class MultiRangeBField final : public MagneticFieldProvider {
   ///
   /// @warning This is not currently implemented.
   Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& /*unused*/,
+      const Vector3& position, SquareMatrix3& /*unused*/,
       MagneticFieldProvider::Cache& cache) const override;
 };
 }  // namespace Acts
