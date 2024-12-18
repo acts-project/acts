@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -17,7 +16,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <iosfwd>
 #include <stdexcept>
 #include <vector>
@@ -38,8 +36,6 @@ class DiamondBounds : public PlanarBounds {
     eHalfLengthYpos = 4,
     eSize = 5
   };
-
-  DiamondBounds() = delete;
 
   /// Constructor for convex hexagon symmetric about the y axis
   ///
@@ -71,15 +67,17 @@ class DiamondBounds : public PlanarBounds {
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
 
-  BoundsType type() const final;
+  BoundsType type() const final { return eDiamond; }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

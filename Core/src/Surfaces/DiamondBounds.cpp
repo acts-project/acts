@@ -17,12 +17,9 @@
 #include <iostream>
 #include <optional>
 
-Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
-  return SurfaceBounds::eDiamond;
-}
+namespace Acts {
 
-Acts::Vector2 Acts::DiamondBounds::closestPoint(
-    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+bool DiamondBounds::inside(const Vector2& lposition) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);
@@ -33,13 +30,29 @@ Acts::Vector2 Acts::DiamondBounds::closestPoint(
   double y3 = get(DiamondBounds::eHalfLengthYpos);
   Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
                         {x3, y3},   {-x3, y3}, {-x2, y2}};
-  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
-                                                              vertices, metric);
+  return detail::insidePolygon(vertices, BoundaryTolerance::None(), lposition,
+                               std::nullopt);
 }
 
-bool Acts::DiamondBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+Vector2 DiamondBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
+  // Vertices starting at lower left (min rel. phi)
+  // counter-clockwise
+  double x1 = get(DiamondBounds::eHalfLengthXnegY);
+  double y1 = get(DiamondBounds::eHalfLengthYneg);
+  double x2 = get(DiamondBounds::eHalfLengthXzeroY);
+  double y2 = 0.;
+  double x3 = get(DiamondBounds::eHalfLengthXposY);
+  double y3 = get(DiamondBounds::eHalfLengthYpos);
+  Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
+                        {x3, y3},   {-x3, y3}, {-x2, y2}};
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
+}
+
+bool DiamondBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);
@@ -54,7 +67,7 @@ bool Acts::DiamondBounds::inside(
                                std::nullopt);
 }
 
-std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
+std::vector<Vector2> DiamondBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
@@ -67,11 +80,11 @@ std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
   return {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}};
 }
 
-const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
+const RectangleBounds& DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
+std::ostream& DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "
@@ -84,3 +97,5 @@ std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

@@ -58,15 +58,25 @@ class RadialBounds : public DiscBounds {
     checkConsistency();
   }
 
-  SurfaceBounds::BoundsType type() const final;
+  SurfaceBounds::BoundsType type() const final { return SurfaceBounds::eDisc; }
+
+  bool isCartesian() const final { return false; }
+
+  SquareMatrix2 boundToCartesianJacobian(
+      const Vector2& /*lposition*/) const final;
+
+  SquareMatrix2 cartesianToBoundJacobian(
+      const Vector2& /*lposition*/) const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///

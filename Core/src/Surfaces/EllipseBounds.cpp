@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
@@ -18,23 +19,26 @@
 #include <iostream>
 #include <stdexcept>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
-  return SurfaceBounds::eEllipse;
+bool EllipseBounds::inside(const Vector2& lposition) const {
+  double phi =
+      detail::radian_sym(VectorHelpers::phi(lposition) - get(eAveragePhi));
+  return (-get(eHalfPhiSector) <= phi) && (phi < get(eHalfPhiSector)) &&
+         (square(lposition[eBoundLoc0] / get(eInnerRx)) +
+          square(lposition[eBoundLoc1] / get(eInnerRy))) >= 1 &&
+         (square(lposition[eBoundLoc0] / get(eOuterRx)) +
+          square(lposition[eBoundLoc1] / get(eOuterRy))) < 1;
 }
 
-Acts::Vector2 Acts::EllipseBounds::closestPoint(
-    const Acts::Vector2& /*lposition*/,
-    const Acts::SquareMatrix2& /*metric*/) const {
+Vector2 EllipseBounds::closestPoint(
+    const Vector2& /*lposition*/,
+    const std::optional<SquareMatrix2>& /*metric*/) const {
   throw std::logic_error("Not implemented");
 }
 
-/// @warning This **only** works for tolerance-based checks
-bool Acts::EllipseBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool EllipseBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
@@ -51,33 +55,32 @@ bool Acts::EllipseBounds::inside(
     bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
     bool insideInner =
         (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-        (1 < (square(lposition[Acts::eBoundLoc0] / (get(eInnerRx) - tol0)) +
-              square(lposition[Acts::eBoundLoc1] / (get(eOuterRx) - tol0))));
+        (1 < (square(lposition[eBoundLoc0] / (get(eInnerRx) - tol0)) +
+              square(lposition[eBoundLoc1] / (get(eOuterRx) - tol0))));
     bool insideOuter =
-        (square(lposition[Acts::eBoundLoc0] / (get(eInnerRy) + tol0)) +
-         square(lposition[Acts::eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
+        (square(lposition[eBoundLoc0] / (get(eInnerRy) + tol0)) +
+         square(lposition[eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
     return insidePhi && insideInner && insideOuter;
   }
 
   throw std::logic_error("Unsupported boundary check type");
 }
 
-std::vector<Acts::Vector2> Acts::EllipseBounds::vertices(
+std::vector<Vector2> EllipseBounds::vertices(
     unsigned int quarterSegments) const {
   return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
       get(eAveragePhi), get(eHalfPhiSector), quarterSegments);
 }
 
-const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
+const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-// ostream operator overload
-std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
+std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
+  sl << "EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
         "outerRadius1, hPhiSector, averagePhi) = ";
   sl << "(" << get(eInnerRx) << ", " << get(eInnerRy) << ", " << get(eOuterRx)
      << ", " << get(eOuterRy) << ", " << get(eAveragePhi) << ", "
@@ -85,3 +88,5 @@ std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

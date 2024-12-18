@@ -36,8 +36,6 @@ class TrapezoidBounds : public PlanarBounds {
     eSize = 4
   };
 
-  TrapezoidBounds() = delete;
-
   /// Constructor for symmetric Trapezoid
   ///
   /// @param halfXnegY minimal half length X, definition at negative Y
@@ -56,8 +54,10 @@ class TrapezoidBounds : public PlanarBounds {
 
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid

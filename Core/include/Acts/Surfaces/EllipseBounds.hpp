@@ -71,19 +71,23 @@ class EllipseBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final;
+  BoundsType type() const final { return eEllipse; }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
   /// tol1 is given
+  ///
+  /// @warning This **only** works for tolerance-based checks
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param boundaryTolerance boundary check directive

@@ -14,21 +14,31 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
+namespace Acts {
+
+SurfaceBounds::BoundsType LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-Acts::Vector2 Acts::LineBounds::closestPoint(
-    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+bool LineBounds::inside(const Vector2& lposition) const {
+  double r = get(LineBounds::eR);
+  double halfLengthZ = get(LineBounds::eHalfLengthZ);
+  return detail::insideAlignedBox(
+      Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ),
+      BoundaryTolerance::None(), lposition, std::nullopt);
+}
+
+Vector2 LineBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::computeClosestPointOnAlignedBox(
       Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ), lposition, metric);
 }
 
-bool Acts::LineBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool LineBounds::inside(const Vector2& lposition,
+                        const BoundaryTolerance& boundaryTolerance) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
@@ -36,13 +46,14 @@ bool Acts::LineBounds::inside(
                                   lposition, std::nullopt);
 }
 
-// ostream operator overload
-std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
+std::ostream& LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
+  sl << "LineBounds: (radius, halflengthInZ) = ";
   sl << "(" << get(LineBounds::eR) << ", " << get(LineBounds::eHalfLengthZ)
      << ")";
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

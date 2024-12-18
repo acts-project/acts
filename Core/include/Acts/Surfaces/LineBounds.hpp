@@ -26,8 +26,6 @@ class LineBounds : public SurfaceBounds {
  public:
   enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
 
-  LineBounds() = delete;
-
   /// Constructor
   ///
   /// @param r is the radius of the cylinder, default = 0.
@@ -46,13 +44,27 @@ class LineBounds : public SurfaceBounds {
 
   BoundsType type() const final;
 
+  bool isCartesian() const final { return true; }
+
+  SquareMatrix2 boundToCartesianJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 cartesianToBoundJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

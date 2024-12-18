@@ -79,8 +79,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
-  ConvexPolygonBounds() = delete;
-
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
@@ -145,12 +143,6 @@ template <>
 class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
  public:
   constexpr static int eSize = -1;
-
-  /// Default constructor, deleted
-  ConvexPolygonBounds() = delete;
-
-  /// Defaulted destructor
-  ~ConvexPolygonBounds() override = default;
 
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.

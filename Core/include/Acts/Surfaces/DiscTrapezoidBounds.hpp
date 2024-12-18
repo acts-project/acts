@@ -63,15 +63,23 @@ class DiscTrapezoidBounds : public DiscBounds {
     checkConsistency();
   }
 
-  SurfaceBounds::BoundsType type() const final;
+  BoundsType type() const final { return eDiscTrapezoid; }
+
+  bool isCartesian() const final { return false; }
+
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
+
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
@@ -80,8 +88,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// coordinates)
   /// @param boundaryTolerance is the boundary check directive
   bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance =
-                  BoundaryTolerance::None()) const final;
+              const BoundaryTolerance& boundaryTolerance) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
@@ -145,12 +152,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   ///
   /// @param lposition The local position in polar coordinates
   Vector2 toLocalCartesian(const Vector2& lposition) const;
-
-  /// Jacobian
-  /// into its Cartesian representation
-  ///
-  /// @param lposition The local position in polar coordinates
-  ActsMatrix<2, 2> jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 inline double DiscTrapezoidBounds::rMin() const {
