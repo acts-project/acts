@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -91,17 +90,13 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
   m_outLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMaxPhiRel));
   m_inLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMaxPhiRel));
   m_outRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMinPhiRel));
   m_inRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -161,20 +156,20 @@ std::vector<Vector2> AnnulusBounds::vertices(
 SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
   SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[0]);
-  j(0, 1) = -lposition[1] * std::sin(lposition[0]);
-  j(1, 0) = std::sin(lposition[0]);
-  j(1, 1) = lposition[1] * std::cos(lposition[0]);
+  j(0, 0) = std::cos(lposition[1]);
+  j(0, 1) = -lposition[0] * std::sin(lposition[1]);
+  j(1, 0) = std::sin(lposition[1]);
+  j(1, 1) = lposition[0] * std::cos(lposition[1]);
   return j;
 }
 
 SquareMatrix2 AnnulusBounds::cartesianToBoundJacobian(
     const Vector2& lposition) const {
   SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[0]);
-  j(0, 1) = std::sin(lposition[0]);
-  j(1, 0) = -std::sin(lposition[0]) / lposition[1];
-  j(1, 1) = std::cos(lposition[0]) / lposition[1];
+  j(0, 0) = std::cos(lposition[1]);
+  j(0, 1) = std::sin(lposition[1]);
+  j(1, 0) = -std::sin(lposition[1]) / lposition[0];
+  j(1, 1) = std::cos(lposition[1]) / lposition[0];
   return j;
 }
 
@@ -193,10 +188,10 @@ Vector2 AnnulusBounds::closestPoint(
   // to the MODULE SYSTEM in PC via jacobian. The following transforms into
   // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
   double dphi = get(eAveragePhi);
-  double phi_strip = locpo_rotated[eBoundLoc1];
-  double r_strip = locpo_rotated[eBoundLoc0];
-  double O_x = m_shiftXY[eBoundLoc0];
-  double O_y = m_shiftXY[eBoundLoc1];
+  double phi_strip = locpo_rotated[1];
+  double r_strip = locpo_rotated[0];
+  double O_x = m_shiftXY[0];
+  double O_y = m_shiftXY[1];
 
   // For a transformation from cartesian into polar coordinates
   //
@@ -299,9 +294,8 @@ Vector2 AnnulusBounds::closestPoint(
 
   // now: MODULE system. Need to transform locpo to MODULE PC
   //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
-  Vector2 locpoStripXY(
-      locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
-      locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
+  Vector2 locpoStripXY(locpo_rotated[0] * std::cos(locpo_rotated[1]),
+                       locpo_rotated[0] * std::sin(locpo_rotated[1]));
   Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
 
   // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
@@ -328,8 +322,8 @@ bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by average phi
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[eBoundLoc1];
-  double rLoc = locpo_rotated[eBoundLoc0];
+  double phiLoc = locpo_rotated[1];
+  double rLoc = locpo_rotated[0];
 
   if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
       phiLoc > (get(eMaxPhiRel) + tolPhi)) {
@@ -339,18 +333,16 @@ bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   if (tolR == 0.) {
     // don't need R, can use R^2
-    double r_mod2 =
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
+    double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                    2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
 
     if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
     // use R
-    double r_mod = sqrt(
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
+    double r_mod = sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                        2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
