@@ -415,7 +415,7 @@ void calculateTrackQuantities(track_proxy_t track)
 /// @param trimOther whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                    bool trimMaterial, bool trimOther = false)
+                    bool trimMaterial, bool trimOther)
   requires(!track_proxy_t::ReadOnly)
 {
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
@@ -457,7 +457,7 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimOther whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                   bool trimMaterial, bool trimOther = false)
+                   bool trimMaterial, bool trimOther)
   requires(!track_proxy_t::ReadOnly)
 {
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
@@ -499,7 +499,7 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimOther whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-               bool trimMaterial, bool trimOther = false)
+               bool trimMaterial, bool trimOther)
   requires(!track_proxy_t::ReadOnly)
 {
   trimTrackFront(track, trimHoles, trimOutliers, trimMaterial, trimOther);
