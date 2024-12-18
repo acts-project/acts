@@ -56,7 +56,7 @@ class RadialBounds : public DiscBounds {
     checkConsistency();
   }
 
-  SurfaceBounds::BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eDisc; }
 
   /// Return the bound values as dynamically sized vector
   ///

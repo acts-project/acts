@@ -61,7 +61,7 @@ Polyhedron StrawSurface::polyhedronRepresentation(
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
-      /// Helper method to create the segment
+      // Helper method to create the segment
       auto svertices = detail::VerticesHelper::segmentVertices(
           {r, r}, -std::numbers::pi, std::numbers::pi, {}, quarterSegments,
           Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),

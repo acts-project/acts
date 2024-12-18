@@ -93,11 +93,6 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
 }
 
 template <int N>
-Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
-  return SurfaceBounds::eConvexPolygon;
-}
-
-template <int N>
 bool Acts::ConvexPolygonBounds<N>::inside(
     const Acts::Vector2& lposition,
     const Acts::BoundaryTolerance& boundaryTolerance) const {

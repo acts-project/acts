@@ -83,7 +83,7 @@ class CylinderBounds : public SurfaceBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eCylinder; }
 
   /// Return the bound values as dynamically sized vector
   ///

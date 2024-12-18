@@ -20,14 +20,8 @@
 
 namespace Acts {
 
-SurfaceBounds::BoundsType RadialBounds::type() const {
-  return SurfaceBounds::eDisc;
-}
-
 std::vector<double> RadialBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void RadialBounds::checkConsistency() noexcept(false) {

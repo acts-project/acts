@@ -20,9 +20,7 @@ namespace Acts {
 ///
 class InfiniteBounds : public SurfaceBounds {
  public:
-  SurfaceBounds::BoundsType type() const final {
-    return SurfaceBounds::eBoundless;
-  }
+  BoundsType type() const final { return SurfaceBounds::eBoundless; }
 
   std::vector<double> values() const final { return {}; }
 

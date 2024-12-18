@@ -43,7 +43,7 @@ PlaneSurface::PlaneSurface(const GeometryContext& gctx,
 PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
                            const DetectorElementBase& detelement)
     : RegularSurface(detelement), m_bounds(std::move(pbounds)) {
-  /// surfaces representing a detector element must have bounds
+  // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
 

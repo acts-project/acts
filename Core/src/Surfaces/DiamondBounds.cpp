@@ -19,14 +19,8 @@
 
 namespace Acts {
 
-SurfaceBounds::BoundsType DiamondBounds::type() const {
-  return SurfaceBounds::eDiamond;
-}
-
 std::vector<double> DiamondBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void DiamondBounds::checkConsistency() noexcept(false) {

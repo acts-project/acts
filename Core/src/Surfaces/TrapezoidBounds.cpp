@@ -17,12 +17,6 @@
 
 namespace Acts {
 
-/// Constructor for symmetric Trapezoid
-///
-/// @param halfXnegY minimal half length X, definition at negative Y
-/// @param halfXposY maximal half length X, definition at positive Y
-/// @param halfY half length Y - defined at x=0
-/// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
 TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
                                  double halfY, double rotAngle) noexcept(false)
     : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
@@ -31,9 +25,6 @@ TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
   checkConsistency();
 }
 
-/// Constructor for symmetric Trapezoid - from fixed size array
-///
-/// @param values the values to be stream in
 TrapezoidBounds::TrapezoidBounds(
     const std::array<double, eSize>& values) noexcept(false)
     : m_values(values),
@@ -44,8 +35,8 @@ TrapezoidBounds::TrapezoidBounds(
   checkConsistency();
 }
 
-SurfaceBounds::BoundsType TrapezoidBounds::type() const {
-  return SurfaceBounds::eTrapezoid;
+std::vector<double> TrapezoidBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
 bool TrapezoidBounds::inside(const Vector2& lposition,
@@ -119,12 +110,6 @@ std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
      << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-std::vector<double> TrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void TrapezoidBounds::rotateBoundingBox() noexcept(false) {

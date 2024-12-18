@@ -42,9 +42,7 @@ ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
 }
 
 std::vector<double> ConeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void ConeBounds::checkConsistency() noexcept(false) {
@@ -63,7 +61,6 @@ void ConeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-/// Shift r-phi coordinate to be centered around the average phi.
 Vector2 ConeBounds::shifted(const Vector2& lposition) const {
   using detail::radian_sym;
 

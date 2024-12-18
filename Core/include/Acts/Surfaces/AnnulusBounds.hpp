@@ -70,9 +70,7 @@ class AnnulusBounds : public DiscBounds {
 
   AnnulusBounds(const AnnulusBounds& source) = default;
 
-  SurfaceBounds::BoundsType type() const final {
-    return SurfaceBounds::eAnnulus;
-  }
+  BoundsType type() const final { return SurfaceBounds::eAnnulus; }
 
   /// Return the bound values as dynamically sized vector
   ///

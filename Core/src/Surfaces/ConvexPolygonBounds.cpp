@@ -45,10 +45,6 @@ ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
     : m_vertices(vertices.begin(), vertices.end()),
       m_boundingBox(makeBoundingBox(vertices)) {}
 
-SurfaceBounds::BoundsType ConvexPolygonBounds<PolygonDynamic>::type() const {
-  return SurfaceBounds::eConvexPolygon;
-}
-
 bool ConvexPolygonBounds<PolygonDynamic>::inside(
     const Vector2& lposition,
     const BoundaryTolerance& boundaryTolerance) const {

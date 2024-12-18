@@ -68,7 +68,7 @@ class EllipseBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eEllipse; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -78,6 +78,8 @@ class EllipseBounds : public PlanarBounds {
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
   /// tol1 is given
+  ///
+  /// @warning This **only** works for tolerance-based checks
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param boundaryTolerance boundary check directive

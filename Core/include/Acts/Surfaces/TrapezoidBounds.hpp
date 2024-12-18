@@ -51,7 +51,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param values the values to be stream in
   TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eTrapezoid; }
 
   std::vector<double> values() const final;
 

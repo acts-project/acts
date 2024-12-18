@@ -24,10 +24,10 @@ bool CurvilinearSurface::isStandardRepresentation() const {
 }
 
 RotationMatrix3 CurvilinearSurface::referenceFrame() const {
-  /// the right-handed coordinate system is defined as
-  /// T = normal
-  /// U = Z x T if T not parallel to Z otherwise U = X x T
-  /// V = T x U
+  // the right-handed coordinate system is defined as
+  // T = normal
+  // U = Z x T if T not parallel to Z otherwise U = X x T
+  // V = T x U
   Vector3 T = m_direction.normalized();
   Vector3 U = (isStandardRepresentation() ? Vector3::UnitZ() : Vector3::UnitX())
                   .cross(T)

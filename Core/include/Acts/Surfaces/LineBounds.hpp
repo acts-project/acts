@@ -42,7 +42,7 @@ class LineBounds : public SurfaceBounds {
     checkConsistency();
   }
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eLine; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -76,20 +76,5 @@ class LineBounds : public SurfaceBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> LineBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void LineBounds::checkConsistency() noexcept(false) {
-  if (get(eR) < 0.) {
-    throw std::invalid_argument("LineBounds: zero radius.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("LineBounds: zero/negative length.");
-  }
-}
 
 }  // namespace Acts

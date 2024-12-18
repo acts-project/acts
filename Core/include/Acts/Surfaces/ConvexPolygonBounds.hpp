@@ -95,7 +95,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param values The values to build up the vertices
   ConvexPolygonBounds(const value_array& values) noexcept(false);
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
@@ -146,7 +146,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eConvexPolygon; }
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.

@@ -23,14 +23,8 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
-SurfaceBounds::BoundsType EllipseBounds::type() const {
-  return SurfaceBounds::eEllipse;
-}
-
 std::vector<double> EllipseBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void EllipseBounds::checkConsistency() noexcept(false) {
@@ -50,7 +44,6 @@ void EllipseBounds::checkConsistency() noexcept(false) {
   }
 }
 
-/// @warning This **only** works for tolerance-based checks
 bool EllipseBounds::inside(const Vector2& lposition,
                            const BoundaryTolerance& boundaryTolerance) const {
   if (boundaryTolerance.isInfinite()) {

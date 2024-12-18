@@ -66,7 +66,7 @@ class DiamondBounds : public PlanarBounds {
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eDiamond; }
 
   /// Return the bound values as dynamically sized vector
   ///

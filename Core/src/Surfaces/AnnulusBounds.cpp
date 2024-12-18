@@ -97,9 +97,7 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
 }
 
 std::vector<double> AnnulusBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void AnnulusBounds::checkConsistency() noexcept(false) {

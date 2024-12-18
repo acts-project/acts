@@ -116,6 +116,8 @@ class ConeBounds : public SurfaceBounds {
 
   /// Private helper function to shift a local 2D position
   ///
+  /// Shift r-phi coordinate to be centered around the average phi.
+  ///
   /// @param lposition The original local position
   Vector2 shifted(const Vector2& lposition) const;
 };

@@ -30,14 +30,8 @@ DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
                      get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
-SurfaceBounds::BoundsType DiscTrapezoidBounds::type() const {
-  return SurfaceBounds::eDiscTrapezoid;
-}
-
 std::vector<double> DiscTrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void DiscTrapezoidBounds::checkConsistency() noexcept(false) {

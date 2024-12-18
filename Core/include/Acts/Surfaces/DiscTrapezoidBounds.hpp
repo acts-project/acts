@@ -59,7 +59,7 @@ class DiscTrapezoidBounds : public DiscBounds {
     checkConsistency();
   }
 
-  SurfaceBounds::BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eDiscTrapezoid; }
 
   /// Return the bound values as dynamically sized vector
   ///

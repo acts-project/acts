@@ -365,7 +365,7 @@ double DiscSurface::binningPositionValue(const GeometryContext& gctx,
 double DiscSurface::pathCorrection(const GeometryContext& gctx,
                                    const Vector3& /*position*/,
                                    const Vector3& direction) const {
-  /// we can ignore the global position here
+  // we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
 }
 

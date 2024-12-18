@@ -252,9 +252,7 @@ double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
 }
 
 std::vector<double> CylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void CylinderVolumeBounds::checkConsistency() {
