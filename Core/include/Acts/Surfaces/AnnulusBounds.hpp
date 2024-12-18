@@ -45,8 +45,6 @@ class AnnulusBounds : public DiscBounds {
     eSize = 7
   };
 
-  AnnulusBounds() = delete;
-
   /// @brief Default constructor from parameters
   /// @param minR inner radius, in module system
   /// @param maxR outer radius, in module system
@@ -86,6 +84,8 @@ class AnnulusBounds : public DiscBounds {
     valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
     return valvector;
   }
+
+  bool inside(const Vector2& lposition) const final;
 
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;

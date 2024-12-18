@@ -34,7 +34,6 @@ namespace Acts {
 ///
 ///  @image html ConeBounds.gif
 ///
-
 class ConeBounds : public SurfaceBounds {
  public:
   enum BoundValues : int {
@@ -45,8 +44,6 @@ class ConeBounds : public SurfaceBounds {
     eAveragePhi = 4,
     eSize = 5
   };
-
-  ConeBounds() = delete;
 
   /// Constructor - open cone with alpha, by default a full cone
   /// but optionally can make a conical section

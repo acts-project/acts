@@ -158,6 +158,20 @@ std::vector<Vector2> AnnulusBounds::vertices(
           m_outLeftStripXY};
 }
 
+SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
+    const Vector2& lposition) const {
+  return SquareMatrix2::Identity();  // TODO
+}
+
+SquareMatrix2 AnnulusBounds::cartesianToBoundJacobian(
+    const Vector2& lposition) const {
+  return SquareMatrix2::Identity();  // TODO
+}
+
+bool AnnulusBounds::inside(const Vector2& lposition) const {
+  return inside(lposition, 0., 0.);
+}
+
 Vector2 AnnulusBounds::closestPoint(
     const Vector2& lposition,
     const std::optional<SquareMatrix2>& metric) const {
