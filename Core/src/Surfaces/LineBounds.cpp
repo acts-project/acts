@@ -38,7 +38,6 @@ bool LineBounds::inside(const Vector2& lposition,
                                   lposition, std::nullopt);
 }
 
-// ostream operator overload
 std::ostream& LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

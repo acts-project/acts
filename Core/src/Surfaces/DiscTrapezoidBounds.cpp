@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -48,21 +47,17 @@ void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
 }
 
 Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
-  return {lposition[eBoundLoc0] *
-              std::sin(lposition[eBoundLoc1] - get(eAveragePhi)),
-          lposition[eBoundLoc0] *
-              std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
+  return {lposition[0] * std::sin(lposition[1] - get(eAveragePhi)),
+          lposition[0] * std::cos(lposition[1] - get(eAveragePhi))};
 }
 
 ActsMatrix<2, 2> DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Vector2& lposition) const {
   ActsMatrix<2, 2> jacobian;
-  jacobian(0, eBoundLoc0) = std::sin(lposition[eBoundLoc1] - get(eAveragePhi));
-  jacobian(1, eBoundLoc0) = std::cos(lposition[eBoundLoc1] - get(eAveragePhi));
-  jacobian(0, eBoundLoc1) =
-      lposition[eBoundLoc0] * std::cos(lposition[eBoundLoc1]);
-  jacobian(1, eBoundLoc1) =
-      lposition[eBoundLoc0] * -std::sin(lposition[eBoundLoc1]);
+  jacobian(0, 0) = std::sin(lposition[1] - get(eAveragePhi));
+  jacobian(1, 0) = std::cos(lposition[1] - get(eAveragePhi));
+  jacobian(0, 1) = lposition[0] * std::cos(lposition[1]);
+  jacobian(1, 1) = lposition[0] * -std::sin(lposition[1]);
   return jacobian;
 }
 
@@ -91,7 +86,6 @@ std::vector<Vector2> DiscTrapezoidBounds::vertices(
           halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
-// ostream operator overload
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

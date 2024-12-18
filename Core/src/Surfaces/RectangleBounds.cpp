@@ -56,7 +56,6 @@ const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
 }
 
-// ostream operator overload
 std::ostream& RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

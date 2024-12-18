@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
@@ -61,13 +60,11 @@ bool EllipseBounds::inside(const Vector2& lposition,
     double phiHalf = get(eHalfPhiSector) + tol1;
 
     bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
-    bool insideInner =
-        (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-        (1 < (square(lposition[eBoundLoc0] / (get(eInnerRx) - tol0)) +
-              square(lposition[eBoundLoc1] / (get(eOuterRx) - tol0))));
-    bool insideOuter =
-        (square(lposition[eBoundLoc0] / (get(eInnerRy) + tol0)) +
-         square(lposition[eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
+    bool insideInner = (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
+                       (1 < (square(lposition[0] / (get(eInnerRx) - tol0)) +
+                             square(lposition[1] / (get(eOuterRx) - tol0))));
+    bool insideOuter = (square(lposition[0] / (get(eInnerRy) + tol0)) +
+                        square(lposition[1] / (get(eOuterRy) + tol0))) < 1;
     return insidePhi && insideInner && insideOuter;
   }
 
@@ -85,7 +82,6 @@ const RectangleBounds& EllipseBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-// ostream operator overload
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
@@ -32,17 +31,16 @@ std::vector<double> CylinderBounds::values() const {
 }
 
 Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
-  return {
-      detail::radian_sym((lposition[eBoundLoc0] / get(eR)) - get(eAveragePhi)),
-      lposition[eBoundLoc1]};
+  return {detail::radian_sym((lposition[0] / get(eR)) - get(eAveragePhi)),
+          lposition[1]};
 }
 
 SquareMatrix2 CylinderBounds::jacobian() const {
   SquareMatrix2 j;
-  j(0, eBoundLoc0) = 1 / get(eR);
-  j(0, eBoundLoc1) = 0;
-  j(1, eBoundLoc0) = 0;
-  j(1, eBoundLoc1) = 1;
+  j(0, 0) = 1 / get(eR);
+  j(0, 1) = 0;
+  j(1, 0) = 0;
+  j(1, 1) = 1;
   return j;
 }
 

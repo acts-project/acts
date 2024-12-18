@@ -90,7 +90,15 @@ class DiscTrapezoidBounds : public DiscBounds {
   double rMax() const final { return get(eMaxR); }
 
   /// This method returns the center radius
-  double rCenter() const { return 0.5 * (get(eMinR) + get(eMaxR)); }
+  double rCenter() const {
+    double rmin = get(eMinR);
+    double rmax = get(eMaxR);
+    double hxmin = get(eHalfLengthXminR);
+    double hxmax = get(eHalfLengthXmaxR);
+    auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
+    auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
+    return 0.5 * (hmin + hmax);
+  }
 
   /// This method returns the stereo angle
   double stereo() const { return get(eStereo); }

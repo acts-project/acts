@@ -117,9 +117,9 @@ RotationMatrix3 ConeSurface::referenceFrame(
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
                                    const Vector2& lposition) const {
   // create the position in the local 3d frame
-  double r = lposition[eBoundLoc1] * bounds().tanAlpha();
-  double phi = lposition[eBoundLoc0] / r;
-  Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[eBoundLoc1]);
+  double r = lposition[1] * bounds().tanAlpha();
+  double phi = lposition[0] / r;
+  Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[1]);
   return transform(gctx) * loc3Dframe;
 }
 
@@ -158,8 +158,8 @@ std::string ConeSurface::name() const {
 Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector2& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  double phi = lposition[eBoundLoc0] / (bounds().r(lposition[eBoundLoc1])),
-         sgn = lposition[eBoundLoc1] > 0 ? -1. : +1.;
+  double phi = lposition[0] / (bounds().r(lposition[1])),
+         sgn = lposition[1] > 0 ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);

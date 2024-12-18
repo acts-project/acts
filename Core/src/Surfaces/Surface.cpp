@@ -203,7 +203,6 @@ bool Surface::operator==(const Surface& other) const {
   return true;
 }
 
-// overload dump for stream operator
 std::ostream& Surface::toStreamImpl(const GeometryContext& gctx,
                                     std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);

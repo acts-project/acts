@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -65,8 +64,7 @@ Surface::SurfaceType PlaneSurface::type() const {
 
 Vector3 PlaneSurface::localToGlobal(const GeometryContext& gctx,
                                     const Vector2& lposition) const {
-  return transform(gctx) *
-         Vector3(lposition[eBoundLoc0], lposition[eBoundLoc1], 0.);
+  return transform(gctx) * Vector3(lposition[0], lposition[1], 0.);
 }
 
 Result<Vector2> PlaneSurface::globalToLocal(const GeometryContext& gctx,

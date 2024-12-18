@@ -62,11 +62,9 @@ Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
 
   // get the vector perpendicular to the momentum direction and the straw axis
   Vector3 radiusAxisGlobal = unitZ0.cross(direction);
-  Vector3 locZinGlobal =
-      transform(gctx) * Vector3(0., 0., lposition[eBoundLoc1]);
-  // add eBoundLoc0 * radiusAxis
-  return Vector3(locZinGlobal +
-                 lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
+  Vector3 locZinGlobal = transform(gctx) * Vector3(0., 0., lposition[1]);
+  // add loc0 * radiusAxis
+  return Vector3(locZinGlobal + lposition[0] * radiusAxisGlobal.normalized());
 }
 
 Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,

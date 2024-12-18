@@ -90,8 +90,8 @@ Surface::SurfaceType DiscSurface::type() const {
 Vector3 DiscSurface::localToGlobal(const GeometryContext& gctx,
                                    const Vector2& lposition) const {
   // create the position in the local 3d frame
-  Vector3 loc3Dframe(lposition[eBoundLoc0] * cos(lposition[eBoundLoc1]),
-                     lposition[eBoundLoc0] * sin(lposition[eBoundLoc1]), 0.);
+  Vector3 loc3Dframe(lposition[0] * cos(lposition[1]),
+                     lposition[0] * sin(lposition[1]), 0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
 }
@@ -117,19 +117,18 @@ Vector2 DiscSurface::localPolarToLocalCartesian(const Vector2& locpol) const {
     Vector2 polarCenter(rMedium, phi);
     Vector2 cartCenter = localPolarToCartesian(polarCenter);
     Vector2 cartPos = localPolarToCartesian(locpol);
-    Vector2 Pos = cartPos - cartCenter;
+    Vector2 pos = cartPos - cartCenter;
 
-    Vector2 locPos(Pos[eBoundLoc0] * sin(phi) - Pos[eBoundLoc1] * cos(phi),
-                   Pos[eBoundLoc1] * sin(phi) + Pos[eBoundLoc0] * cos(phi));
-    return Vector2(locPos[eBoundLoc0], locPos[eBoundLoc1]);
+    Vector2 locPos(pos[0] * sin(phi) - pos[1] * cos(phi),
+                   pos[1] * sin(phi) + pos[0] * cos(phi));
+    return Vector2(locPos[0], locPos[1]);
   }
-  return Vector2(locpol[eBoundLoc0] * cos(locpol[eBoundLoc1]),
-                 locpol[eBoundLoc0] * sin(locpol[eBoundLoc1]));
+  return Vector2(locpol[0] * cos(locpol[1]), locpol[0] * sin(locpol[1]));
 }
 
 Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
                                             const Vector2& lposition) const {
-  Vector3 loc3Dframe(lposition[eBoundLoc0], lposition[eBoundLoc1], 0.);
+  Vector3 loc3Dframe(lposition[0], lposition[1], 0.);
   return transform(gctx) * loc3Dframe;
 }
 
@@ -193,13 +192,11 @@ Polyhedron DiscSurface::polyhedronRepresentation(
 }
 
 Vector2 DiscSurface::localPolarToCartesian(const Vector2& lpolar) const {
-  return Vector2(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
-                 lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
+  return Vector2(lpolar[0] * cos(lpolar[1]), lpolar[0] * sin(lpolar[1]));
 }
 
 Vector2 DiscSurface::localCartesianToPolar(const Vector2& lcart) const {
-  return Vector2(lcart.norm(),
-                 std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+  return Vector2(lcart.norm(), std::atan2(lcart[1], lcart[0]));
 }
 
 BoundToFreeMatrix DiscSurface::boundToFreeJacobian(

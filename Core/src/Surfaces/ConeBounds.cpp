@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -64,19 +63,18 @@ void ConeBounds::checkConsistency() noexcept(false) {
 Vector2 ConeBounds::shifted(const Vector2& lposition) const {
   using detail::radian_sym;
 
-  auto x = r(lposition[eBoundLoc1]);  // cone radius at the local position
+  auto x = r(lposition[1]);  // cone radius at the local position
   Vector2 shifted;
-  shifted[eBoundLoc1] = lposition[eBoundLoc1];
-  shifted[eBoundLoc0] =
-      std::isnormal(x)
-          ? (x * radian_sym((lposition[eBoundLoc0] / x) - get(eAveragePhi)))
-          : lposition[eBoundLoc0];
+  shifted[1] = lposition[1];
+  shifted[0] = std::isnormal(x)
+                   ? (x * radian_sym((lposition[0] / x) - get(eAveragePhi)))
+                   : lposition[0];
   return shifted;
 }
 
 bool ConeBounds::inside(const Vector2& lposition,
                         const BoundaryTolerance& boundaryTolerance) const {
-  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
   return detail::insideAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
       boundaryTolerance, shifted(lposition), std::nullopt);
