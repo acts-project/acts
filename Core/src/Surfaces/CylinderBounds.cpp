@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
@@ -22,22 +23,24 @@
 #include <numbers>
 #include <utility>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
-  return SurfaceBounds::eCylinder;
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+SquareMatrix2 CylinderBounds::boundToCartesianJacobian(
+    const Vector2& /*lposition*/) const {
+  SquareMatrix2 j;
+  j(0, eBoundLoc0) = get(eR);
+  j(0, eBoundLoc1) = 0;
+  j(1, eBoundLoc0) = 0;
+  j(1, eBoundLoc1) = 1;
+  return j;
 }
 
-Acts::Vector2 Acts::CylinderBounds::shifted(
-    const Acts::Vector2& lposition) const {
-  return {Acts::detail::radian_sym((lposition[Acts::eBoundLoc0] / get(eR)) -
-                                   get(eAveragePhi)),
-          lposition[Acts::eBoundLoc1]};
-}
-
-Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
-  ActsMatrix<2, 2> j;
+SquareMatrix2 CylinderBounds::cartesianToBoundJacobian(
+    const Vector2& /*lposition*/) const {
+  SquareMatrix2 j;
   j(0, eBoundLoc0) = 1 / get(eR);
   j(0, eBoundLoc1) = 0;
   j(1, eBoundLoc0) = 0;
@@ -45,8 +48,19 @@ Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-Acts::Vector2 Acts::CylinderBounds::closestPoint(
-    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
+  return {
+      detail::radian_sym((lposition[eBoundLoc0] / get(eR)) - get(eAveragePhi)),
+      lposition[eBoundLoc1]};
+}
+
+bool CylinderBounds::inside(const Vector2& lposition) const {
+  return false;  // TODO
+}
+
+Vector2 CylinderBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
   double halfLengthZ = get(eHalfLengthZ);
@@ -61,13 +75,12 @@ Acts::Vector2 Acts::CylinderBounds::closestPoint(
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
 
-  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
-                                                              vertices, metric);
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
 }
 
-bool Acts::CylinderBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool CylinderBounds::inside(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -75,9 +88,10 @@ bool Acts::CylinderBounds::inside(
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return detail::insideAlignedBox(
-        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
-        boundaryTolerance, shifted(lposition), jacobian());
+    return detail::insideAlignedBox(Vector2(-halfPhi, -halfLengthZ),
+                                    Vector2(halfPhi, halfLengthZ),
+                                    boundaryTolerance, shifted(lposition),
+                                    boundToCartesianJacobian(lposition));
   }
 
   double radius = get(eR);
@@ -111,13 +125,13 @@ bool Acts::CylinderBounds::inside(
                         upperRight, middleRight, lowerRight};
 
   return detail::insidePolygon(vertices, boundaryTolerance, lposition,
-                               jacobian());
+                               boundToCartesianJacobian(lposition));
 }
 
-std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
+std::ostream& CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
+  sl << "CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
         "averagePhi, bevelMinZ, bevelMaxZ) = ";
   sl << "(" << get(eR) << ", " << get(eHalfLengthZ) << ", ";
   sl << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ", ";
@@ -126,7 +140,7 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
+std::vector<Vector3> CylinderBounds::circleVertices(
     const Transform3 transform, unsigned int quarterSegments) const {
   std::vector<Vector3> vertices;
 
@@ -173,7 +187,7 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::circleVertices(
   return vertices;
 }
 
-void Acts::CylinderBounds::checkConsistency() noexcept(false) {
+void CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
     throw std::invalid_argument(
         "CylinderBounds: invalid radial setup: radius is negative");
@@ -196,3 +210,5 @@ void Acts::CylinderBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
+
+}  // namespace Acts

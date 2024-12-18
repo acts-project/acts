@@ -39,8 +39,6 @@ class RectangleBounds : public PlanarBounds {
     eSize = 4
   };
 
-  RectangleBounds() = delete;
-
   /// Constructor with halflength in x and y - symmetric
   ///
   /// @param halfX halflength in X
@@ -68,14 +66,14 @@ class RectangleBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  ~RectangleBounds() override = default;
-
   BoundsType type() const final;
 
   std::vector<double> values() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

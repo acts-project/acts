@@ -36,6 +36,18 @@ class PlanarBounds : public SurfaceBounds {
   virtual std::vector<Vector2> vertices(
       unsigned int quarterSegments = 2u) const = 0;
 
+  bool isCartesian() const final { return true; }
+
+  SquareMatrix2 boundToCartesianJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 cartesianToBoundJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
   /// Bounding box parameters
   ///
   /// @return rectangle bounds for a bounding box

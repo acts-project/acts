@@ -99,8 +99,10 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   BoundsType type() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
@@ -159,8 +161,10 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @return The bounds type
   BoundsType type() const final;
 
+  bool inside(const Vector2& lposition) const final;
+
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.

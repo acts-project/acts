@@ -20,18 +20,29 @@ namespace Acts {
 
 class InfiniteBounds : public SurfaceBounds {
  public:
-  InfiniteBounds() = default;
-
-  ~InfiniteBounds() override = default;
-
   SurfaceBounds::BoundsType type() const final {
     return SurfaceBounds::eBoundless;
   }
 
+  bool isCartesian() const final { return true; }
+
+  SquareMatrix2 boundToCartesianJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 cartesianToBoundJacobian(
+      const Vector2& /*lposition*/) const final {
+    return SquareMatrix2::Identity();
+  }
+
   std::vector<double> values() const final { return {}; }
 
-  Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& /*metric*/) const final {
+  bool inside(const Vector2& /*lposition*/) const final { return true; }
+
+  Vector2 closestPoint(
+      const Vector2& lposition,
+      const std::optional<SquareMatrix2>& /*metric*/) const final {
     return lposition;
   }
 

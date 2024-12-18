@@ -103,6 +103,13 @@ Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
 }
 
 template <int N>
+bool Acts::ConvexPolygonBounds<N>::inside(
+    const Acts::Vector2& lposition) const {
+  return detail::insidePolygon(m_vertices, BoundaryTolerance::None(), lposition,
+                               std::nullopt);
+}
+
+template <int N>
 Acts::Vector2 Acts::ConvexPolygonBounds<N>::closestPoint(
     const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
   return detail::VerticesHelper::computeClosestPointOnPolygon(

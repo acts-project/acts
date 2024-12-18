@@ -38,8 +38,6 @@ class RadialBounds : public DiscBounds {
     eSize = 4
   };
 
-  RadialBounds() = delete;
-
   /// Constructor for full disc of symmetric disc around phi=0
   ///
   /// @param minR The inner radius (0 for full disc)
@@ -59,8 +57,6 @@ class RadialBounds : public DiscBounds {
       : m_values(values) {
     checkConsistency();
   }
-
-  ~RadialBounds() override = default;
 
   SurfaceBounds::BoundsType type() const final;
 

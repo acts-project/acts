@@ -8,39 +8,46 @@
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
 
-Acts::Vector2 Acts::RectangleBounds::closestPoint(
-    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+namespace Acts {
+
+bool RectangleBounds::inside(const Vector2& lposition) const {
+  return detail::insideAlignedBox(m_min, m_max, BoundaryTolerance::None(),
+                                  lposition, std::nullopt);
+}
+
+Vector2 RectangleBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
   std::array<Vector2, 4> vertices = {
       {m_min, {m_max[0], m_min[1]}, m_max, {m_min[0], m_max[1]}}};
 
-  return detail::VerticesHelper::computeClosestPointOnPolygon(lposition,
-                                                              vertices, metric);
+  return detail::VerticesHelper::computeClosestPointOnPolygon(
+      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
 }
 
-bool Acts::RectangleBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool RectangleBounds::inside(const Vector2& lposition,
+                             const BoundaryTolerance& boundaryTolerance) const {
   return detail::insideAlignedBox(m_min, m_max, boundaryTolerance, lposition,
                                   std::nullopt);
 }
 
-std::vector<Acts::Vector2> Acts::RectangleBounds::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Vector2> RectangleBounds::vertices(unsigned int /*lseg*/) const {
   // counter-clockwise starting from bottom-left corner
   return {m_min, {m_max.x(), m_min.y()}, m_max, {m_min.x(), m_max.y()}};
 }
 
-const Acts::RectangleBounds& Acts::RectangleBounds::boundingBox() const {
+const RectangleBounds& RectangleBounds::boundingBox() const {
   return (*this);
 }
 
-// ostream operator overload
-std::ostream& Acts::RectangleBounds::toStream(std::ostream& sl) const {
+std::ostream& RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RectangleBounds:  (hlX, hlY) = "
@@ -51,3 +58,5 @@ std::ostream& Acts::RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts
