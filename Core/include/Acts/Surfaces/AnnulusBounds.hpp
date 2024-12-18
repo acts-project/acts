@@ -203,13 +203,6 @@ class AnnulusBounds : public DiscBounds {
   /// @param vStripXY the position in the cartesian strip system
   /// @return the position in the module polar coordinate system
   Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
-
-  /// Private helper method
-  Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
-                           const SquareMatrix2& weight) const;
-
-  /// Private helper method
-  double squaredNorm(const Vector2& v, const SquareMatrix2& weight) const;
 };
 
 }  // namespace Acts

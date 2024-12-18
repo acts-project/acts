@@ -22,6 +22,26 @@
 
 namespace Acts {
 
+namespace {
+
+Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
+                         const SquareMatrix2& weight) {
+  // connecting vector
+  auto n = b - a;
+  // squared norm of line
+  auto f = (n.transpose() * weight * n).value();
+  // weighted scalar product of line to point and segment line
+  auto u = ((p - a).transpose() * weight * n).value() / f;
+  // clamp to [0, 1], convert to point
+  return std::clamp(u, 0., 1.) * n + a;
+}
+
+double squaredNorm(const Vector2& v, const SquareMatrix2& weight) {
+  return (v.transpose() * weight * v).value();
+}
+
+}  // namespace
+
 AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
     false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
@@ -361,24 +381,6 @@ bool AnnulusBounds::inside(const Vector2& lposition,
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
   Vector2 vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
-}
-
-Vector2 AnnulusBounds::closestOnSegment(const Vector2& a, const Vector2& b,
-                                        const Vector2& p,
-                                        const SquareMatrix2& weight) const {
-  // connecting vector
-  auto n = b - a;
-  // squared norm of line
-  auto f = (n.transpose() * weight * n).value();
-  // weighted scalar product of line to point and segment line
-  auto u = ((p - a).transpose() * weight * n).value() / f;
-  // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.), 1.) * n + a;
-}
-
-double AnnulusBounds::squaredNorm(const Vector2& v,
-                                  const SquareMatrix2& weight) const {
-  return (v.transpose() * weight * v).value();
 }
 
 Vector2 AnnulusBounds::moduleOrigin() const {
