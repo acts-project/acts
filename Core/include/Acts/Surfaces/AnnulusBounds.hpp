@@ -74,13 +74,9 @@ class AnnulusBounds : public DiscBounds {
 
   bool isCartesian() const final { return false; }
 
-  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
-    return cartesianToBoundJacobian(lposition).inverse();
-  }
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
 
-  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
-    return m_rotationStripPC * m_translation.jacobian(lposition);
-  }
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -92,7 +88,7 @@ class AnnulusBounds : public DiscBounds {
   }
 
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& metric) const final;
+                       const std::optional<SquareMatrix2>& metric) const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside

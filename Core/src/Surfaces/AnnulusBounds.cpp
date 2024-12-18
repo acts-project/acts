@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -38,7 +39,7 @@ Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
   // weighted scalar product of line to point and segment line
   auto u = ((p - a).transpose() * metric * n).value() / f;
   // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.), 1.) * n + a;
+  return std::clamp(u, 0., 1.) * n + a;
 }
 
 }  // namespace
@@ -157,8 +158,9 @@ std::vector<Vector2> AnnulusBounds::vertices(
           m_outLeftStripXY};
 }
 
-Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
-                                    const SquareMatrix2& metric) const {
+Vector2 AnnulusBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
   // locpo is PC in STRIP SYSTEM
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
@@ -238,7 +240,7 @@ Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
 
   double B = cosDPhiPhiStrip;
   double C = -sinDPhiPhiStrip;
-  ActsMatrix<2, 2> jacobianStripPCToModulePC;
+  SquareMatrix2 jacobianStripPCToModulePC;
   jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
   jacobianStripPCToModulePC(0, 1) =
       r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
@@ -247,7 +249,8 @@ Vector2 AnnulusBounds::closestPoint(const Vector2& lposition,
 
   // Mahalanobis distance uses the coordinate weights (usually inverse
   // covariance) as a metric
-  auto metricModulePC = jacobianStripPCToModulePC.transpose() * metric *
+  auto metricModulePC = jacobianStripPCToModulePC.transpose() *
+                        metric.value_or(SquareMatrix2::Identity()) *
                         jacobianStripPCToModulePC;
 
   double minDist = std::numeric_limits<double>::max();
