@@ -13,13 +13,11 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <iosfwd>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -72,12 +70,26 @@ class AnnulusBounds : public DiscBounds {
 
   AnnulusBounds(const AnnulusBounds& source) = default;
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eAnnulus; }
+
+  bool isCartesian() const final { return false; }
+
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
+    return cartesianToBoundJacobian(lposition).inverse();
+  }
+
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
+    return m_rotationStripPC * m_translation.jacobian(lposition);
+  }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double> values() const final {
+    std::vector<double> valvector;
+    valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+    return valvector;
+  }
 
   Vector2 closestPoint(const Vector2& lposition,
                        const SquareMatrix2& metric) const final;
@@ -103,24 +115,29 @@ class AnnulusBounds : public DiscBounds {
 
   /// @brief Returns the right angular edge of the module
   /// @return The right side angle
-  double phiMin() const;
+  double phiMin() const { return get(eMinPhiRel) + get(eAveragePhi); }
 
   /// @brief Returns the left angular edge of the module
   /// @return The left side angle
-  double phiMax() const;
+  double phiMax() const { return get(eMaxPhiRel) + get(eAveragePhi); }
 
   /// Returns true for full phi coverage
-  bool coversFullAzimuth() const final;
+  bool coversFullAzimuth() const final {
+    return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - std::numbers::pi) <
+            s_onSurfaceTolerance);
+  }
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final;
+  bool insideRadialBounds(double R, double tolerance = 0.) const final {
+    return ((R + tolerance) > get(eMinR) && (R - tolerance) < get(eMaxR));
+  }
 
   /// Return a reference radius for binning
-  double binningValueR() const final;
+  double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
 
   /// Return a reference radius for binning
-  double binningValuePhi() const final;
+  double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// @brief Returns moduleOrigin, but rotated out, so @c averagePhi is already
   /// considered. The module origin needs to consider the rotation introduced by
@@ -151,10 +168,10 @@ class AnnulusBounds : public DiscBounds {
       unsigned int quarterSegments = 2u) const override;
 
   /// This method returns inner radius
-  double rMin() const final;
+  double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
-  double rMax() const final;
+  double rMax() const final { return get(eMaxR); }
 
  private:
   std::array<double, eSize> m_values;
@@ -204,64 +221,5 @@ class AnnulusBounds : public DiscBounds {
   /// @return the position in the module polar coordinate system
   Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
 };
-
-inline SurfaceBounds::BoundsType AnnulusBounds::type() const {
-  return SurfaceBounds::eAnnulus;
-}
-
-inline double AnnulusBounds::rMin() const {
-  return get(eMinR);
-}
-
-inline double AnnulusBounds::rMax() const {
-  return get(eMaxR);
-}
-
-inline double AnnulusBounds::phiMin() const {
-  return get(eMinPhiRel) + get(eAveragePhi);
-}
-
-inline double AnnulusBounds::phiMax() const {
-  return get(eMaxPhiRel) + get(eAveragePhi);
-}
-
-inline bool AnnulusBounds::coversFullAzimuth() const {
-  return (std::abs((get(eMinPhiRel) - get(eMaxPhiRel)) - std::numbers::pi) <
-          s_onSurfaceTolerance);
-}
-
-inline bool AnnulusBounds::insideRadialBounds(double R,
-                                              double tolerance) const {
-  return ((R + tolerance) > get(eMinR) && (R - tolerance) < get(eMaxR));
-}
-
-inline double AnnulusBounds::binningValueR() const {
-  return 0.5 * (get(eMinR) + get(eMaxR));
-}
-
-inline double AnnulusBounds::binningValuePhi() const {
-  return get(eAveragePhi);
-}
-
-inline std::vector<double> AnnulusBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void AnnulusBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
-      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
-    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
-  }
-  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
-      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
-      get(eMinPhiRel) > get(eMaxPhiRel)) {
-    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
-  }
-}
 
 }  // namespace Acts
