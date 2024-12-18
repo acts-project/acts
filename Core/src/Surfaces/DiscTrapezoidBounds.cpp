@@ -39,9 +39,9 @@ Acts::Vector2 Acts::DiscTrapezoidBounds::toLocalCartesian(
               std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
 }
 
-Acts::ActsMatrix<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
+Acts::SquareMatrix2 Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Acts::Vector2& lposition) const {
-  ActsMatrix<2, 2> jacobian;
+  SquareMatrix2 jacobian;
   jacobian(0, eBoundLoc0) = std::sin(lposition[eBoundLoc1] - get(eAveragePhi));
   jacobian(1, eBoundLoc0) = std::cos(lposition[eBoundLoc1] - get(eAveragePhi));
   jacobian(0, eBoundLoc1) =

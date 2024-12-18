@@ -150,7 +150,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  ActsMatrix<2, 2> jacobianToLocalCartesian(const Vector2& lposition) const;
+  SquareMatrix2 jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 inline double DiscTrapezoidBounds::rMin() const {

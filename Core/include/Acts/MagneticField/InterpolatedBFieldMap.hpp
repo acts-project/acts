@@ -314,7 +314,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @note Cache is not used currently
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      const Vector3& position, SquareMatrix3& derivative,
       MagneticFieldProvider::Cache& cache) const final {
     (void)derivative;
     return getField(position, cache);

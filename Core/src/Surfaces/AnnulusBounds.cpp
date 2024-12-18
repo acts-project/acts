@@ -278,7 +278,7 @@ bool Acts::AnnulusBounds::inside(
 
   double B = cosDPhiPhiStrip;
   double C = -sinDPhiPhiStrip;
-  ActsMatrix<2, 2> jacobianStripPCToModulePC;
+  SquareMatrix2 jacobianStripPCToModulePC;
   jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
   jacobianStripPCToModulePC(0, 1) =
       r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;

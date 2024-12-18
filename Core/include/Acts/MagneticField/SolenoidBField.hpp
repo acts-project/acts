@@ -116,7 +116,7 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
+      const Vector3& position, SquareMatrix3& derivative,
       MagneticFieldProvider::Cache& cache) const override;
 
  private:
