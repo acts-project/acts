@@ -53,7 +53,7 @@ void ConeBounds::checkConsistency() noexcept(false) {
       std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
     throw std::invalid_argument("ConeBounds: invalid z range setup.");
   }
-  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > std::numbers::pi) {
+  if (get(eHalfPhiSector) < 0. || std::abs(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
