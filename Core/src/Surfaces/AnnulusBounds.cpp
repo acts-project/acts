@@ -160,11 +160,13 @@ std::vector<Vector2> AnnulusBounds::vertices(
 
 SquareMatrix2 AnnulusBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 
 SquareMatrix2 AnnulusBounds::cartesianToBoundJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 

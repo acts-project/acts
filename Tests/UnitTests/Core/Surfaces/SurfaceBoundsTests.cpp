@@ -27,31 +27,37 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
-#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
-    !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
-#pragma GCC diagnostic ignored "-Wstringop-overflow"
-#endif
-  SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
-#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
-    !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-  ~SurfaceBoundsStub() override = default;
-
   BoundsType type() const final { return SurfaceBounds::eOther; }
 
-  std::vector<double> values() const override { return m_values; }
+  bool isCartesian() const final { return true; }
+
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  std::vector<double> values() const final { return m_values; }
+
+  bool inside(const Vector2& lposition) const final {
+    (void)lposition;
+    return true;
+  }
 
   Vector2 closestPoint(const Vector2& lposition,
-                       const SquareMatrix2& /*metric*/) const final {
+                       const std::optional<SquareMatrix2>& metric) const final {
+    (void)metric;
     return lposition;
   }
 
-  bool inside(const Vector2& /*lpos*/,
-              const BoundaryTolerance& /*boundaryTolerance*/) const final {
+  bool inside(const Vector2& lposition,
+              const BoundaryTolerance& boundaryTolerance) const final {
+    (void)lposition;
+    (void)boundaryTolerance;
     return true;
   }
 

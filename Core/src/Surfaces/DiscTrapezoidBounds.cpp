@@ -40,11 +40,13 @@ Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
 
 SquareMatrix2 DiscTrapezoidBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 
 SquareMatrix2 DiscTrapezoidBounds::cartesianToBoundJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 

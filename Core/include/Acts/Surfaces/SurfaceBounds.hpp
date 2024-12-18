@@ -91,7 +91,8 @@ class SurfaceBounds {
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const {
-    // TODO
+    (void)boundaryTolerance;
+
     return inside(lposition);
   }
 

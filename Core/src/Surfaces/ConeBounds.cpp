@@ -47,11 +47,13 @@ SurfaceBounds::BoundsType ConeBounds::type() const {
 
 SquareMatrix2 ConeBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 
 SquareMatrix2 ConeBounds::cartesianToBoundJacobian(
     const Vector2& lposition) const {
+  (void)lposition;
   return SquareMatrix2::Identity();  // TODO
 }
 

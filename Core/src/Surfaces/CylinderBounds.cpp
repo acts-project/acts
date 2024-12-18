@@ -55,6 +55,7 @@ Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
 }
 
 bool CylinderBounds::inside(const Vector2& lposition) const {
+  (void)lposition;
   return false;  // TODO
 }
 
