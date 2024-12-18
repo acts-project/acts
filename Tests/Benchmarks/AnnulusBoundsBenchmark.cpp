@@ -55,11 +55,11 @@ int main(int /*argc*/, char** /*argv[]*/) {
   SquareMatrix2 cov;
   cov << 1.0, 0, 0, 0.05;
 
-  BoundaryTolerance bcAbs = BoundaryTolerance::None();
-  BoundaryTolerance bcTol0 = BoundaryTolerance::AbsoluteBound{1.0, 0};
-  BoundaryTolerance bcTol1 = BoundaryTolerance::AbsoluteBound{0, 0.2};
-  BoundaryTolerance bcTol01 = BoundaryTolerance::AbsoluteBound{1.0, 0.2};
-  BoundaryTolerance bcCov = BoundaryTolerance::Chi2Bound{cov, 1};
+  BoundaryTolerance bcAbs = BoundaryTolerance::none();
+  BoundaryTolerance bcTol0 = BoundaryTolerance::absoluteBound(1.0, 0.0);
+  BoundaryTolerance bcTol1 = BoundaryTolerance::absoluteBound(0.0, 0.2);
+  BoundaryTolerance bcTol01 = BoundaryTolerance::absoluteBound(1.0, 0.2);
+  BoundaryTolerance bcCov = BoundaryTolerance::chi2Bound(cov, 1.0);
 
   // visualization to make sense of things
   for (std::size_t i = 0; i < 10000; i++) {

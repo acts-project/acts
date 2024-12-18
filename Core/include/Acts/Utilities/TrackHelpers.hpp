@@ -187,7 +187,7 @@ findTrackStateForExtrapolation(
     return referenceSurface
         .intersect(geoContext, freeVector.template segment<3>(eFreePos0),
                    freeVector.template segment<3>(eFreeDir0),
-                   BoundaryTolerance::None(), s_onSurfaceTolerance)
+                   BoundaryTolerance::none(), s_onSurfaceTolerance)
         .closest();
   };
 

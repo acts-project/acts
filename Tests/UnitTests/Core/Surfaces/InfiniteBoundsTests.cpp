@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
 
   /// Test for inside()
   const Vector2 anyVector{0., 1.};
-  const BoundaryTolerance anyTolerance = BoundaryTolerance::None();
+  const BoundaryTolerance anyTolerance = BoundaryTolerance::none();
   BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyTolerance));
 
   /// Test for dump

@@ -24,7 +24,7 @@ struct NavigationArguments {
   Vector3 position;
   Vector3 direction;
 
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
 };
 
 /// Central alias for the navigation delegate. This type is owning to support

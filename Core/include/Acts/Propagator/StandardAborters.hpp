@@ -68,7 +68,7 @@ struct PathLimitReached {
 /// propagation abort
 struct SurfaceReached {
   const Surface* surface = nullptr;
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
 
   // TODO https://github.com/acts-project/acts/issues/2738
   /// Distance limit to discard intersections "behind us"

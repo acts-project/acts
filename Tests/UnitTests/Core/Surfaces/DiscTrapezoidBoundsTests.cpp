@@ -126,9 +126,9 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
 
   /// Test inside
   BOOST_CHECK(
-      DiscTrapezoidBoundsObject.inside(inSurface, BoundaryTolerance::None()));
+      DiscTrapezoidBoundsObject.inside(inSurface, BoundaryTolerance::none()));
   BOOST_CHECK(
-      !DiscTrapezoidBoundsObject.inside(outside, BoundaryTolerance::None()));
+      !DiscTrapezoidBoundsObject.inside(outside, BoundaryTolerance::none()));
 
   /// Test rMin
   CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.rMin(), rMin, 1e-6);

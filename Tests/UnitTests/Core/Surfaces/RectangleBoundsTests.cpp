@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
                                 rectVertices.cbegin(), rectVertices.cend());
   const Vector2 pointA{1., 1.};
   // distance is signed, from boundary to point. (doesn't seem right, given
-  BoundaryTolerance tolerance = BoundaryTolerance::None();
+  BoundaryTolerance tolerance = BoundaryTolerance::none();
   BOOST_CHECK(rect.inside(pointA, tolerance));
 }
 BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {

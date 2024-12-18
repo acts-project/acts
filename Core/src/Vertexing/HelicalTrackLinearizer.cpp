@@ -32,7 +32,7 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
   auto intersection =
       perigeeSurface
           .intersect(gctx, params.position(gctx), params.direction(),
-                     BoundaryTolerance::Infinite())
+                     BoundaryTolerance::infinite())
           .closest();
 
   // Setting the propagation direction using the intersection length from

@@ -159,7 +159,7 @@ Acts::Layer::compatibleSurfaces(
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
     if (rangeContainsValue(options.externalSurfaces, sf.geometryId())) {
-      boundaryTolerance = BoundaryTolerance::Infinite();
+      boundaryTolerance = BoundaryTolerance::infinite();
     }
     // the surface intersection
     SurfaceIntersection sfi =
