@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -165,7 +166,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  ActsMatrix<2, 2> jacobianToLocalCartesian(const Vector2& lposition) const;
+  SquareMatrix2 jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 }  // namespace Acts

@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -51,9 +52,9 @@ Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
           lposition[0] * std::cos(lposition[1] - get(eAveragePhi))};
 }
 
-ActsMatrix<2, 2> DiscTrapezoidBounds::jacobianToLocalCartesian(
+SquareMatrix2 DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Vector2& lposition) const {
-  ActsMatrix<2, 2> jacobian;
+  SquareMatrix2 jacobian;
   jacobian(0, 0) = std::sin(lposition[1] - get(eAveragePhi));
   jacobian(1, 0) = std::cos(lposition[1] - get(eAveragePhi));
   jacobian(0, 1) = lposition[0] * std::cos(lposition[1]);
