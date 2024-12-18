@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
@@ -18,34 +19,45 @@
 #include <limits>
 #include <optional>
 
-Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
-                             double avphi) noexcept(false)
+namespace Acts {
+
+ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
+                       double avphi) noexcept(false)
     : m_values({alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
                 std::numeric_limits<double>::infinity(), halfphi, avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
 }
 
-Acts::ConeBounds::ConeBounds(double alpha, double minz, double maxz,
-                             double halfphi, double avphi) noexcept(false)
+ConeBounds::ConeBounds(double alpha, double minz, double maxz, double halfphi,
+                       double avphi) noexcept(false)
     : m_values({alpha, minz, maxz, halfphi, avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
 }
 
-Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(
-    false)
+ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
     : m_values(values), m_tanAlpha(std::tan(values[eAlpha])) {
   checkConsistency();
 }
 
-Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
+SurfaceBounds::BoundsType ConeBounds::type() const {
   return SurfaceBounds::eCone;
 }
 
+SquareMatrix2 ConeBounds::boundToCartesianJacobian(
+    const Vector2& lposition) const {
+  return SquareMatrix2::Identity();  // TODO
+}
+
+SquareMatrix2 ConeBounds::cartesianToBoundJacobian(
+    const Vector2& lposition) const {
+  return SquareMatrix2::Identity();  // TODO
+}
+
 /// Shift r-phi coordinate to be centered around the average phi.
-Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
-  using Acts::detail::radian_sym;
+Vector2 ConeBounds::shifted(const Vector2& lposition) const {
+  using detail::radian_sym;
 
   auto x = r(lposition[eBoundLoc1]);  // cone radius at the local position
   Vector2 shifted;
@@ -57,30 +69,39 @@ Acts::Vector2 Acts::ConeBounds::shifted(const Acts::Vector2& lposition) const {
   return shifted;
 }
 
-Acts::Vector2 Acts::ConeBounds::closestPoint(
-    const Acts::Vector2& lposition, const Acts::SquareMatrix2& metric) const {
+bool ConeBounds::inside(const Vector2& lposition) const {
+  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  return detail::insideAlignedBox(
+      Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
+      BoundaryTolerance::None(), shifted(lposition), std::nullopt);
+}
+
+Vector2 ConeBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
   return detail::computeClosestPointOnAlignedBox(Vector2(-rphiHalf, get(eMinZ)),
                                                  Vector2(rphiHalf, get(eMaxZ)),
                                                  shifted(lposition), metric);
 }
 
-bool Acts::ConeBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+bool ConeBounds::inside(const Vector2& lposition,
+                        const BoundaryTolerance& boundaryTolerance) const {
   auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
   return detail::insideAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
       boundaryTolerance, shifted(lposition), std::nullopt);
 }
 
-std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
+std::ostream& ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
+  sl << "ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
         "= ";
   sl << "(" << m_tanAlpha << ", " << get(eMinZ) << ", " << get(eMaxZ) << ", "
      << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts
