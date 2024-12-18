@@ -80,10 +80,10 @@ class StrawSurface : public LineSurface {
   StrawSurface& operator=(const StrawSurface& other);
 
   /// Return the surface type
-  SurfaceType type() const final;
+  SurfaceType type() const final { return Surface::Straw; }
 
   /// Return properly formatted class name for screen output */
-  std::string name() const final;
+  std::string name() const final { return "Acts::StrawSurface"; }
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -96,14 +96,6 @@ class StrawSurface : public LineSurface {
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       unsigned int quarterSegments) const final;
 };
-
-inline Surface::SurfaceType StrawSurface::type() const {
-  return Surface::Straw;
-}
-
-inline std::string Acts::StrawSurface::name() const {
-  return "Acts::StrawSurface";
-}
 
 static_assert(SurfaceConcept<StrawSurface>,
               "StrawSurface does not fulfill SurfaceConcept");

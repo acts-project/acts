@@ -31,14 +31,20 @@ SurfaceBounds::BoundsType CylinderBounds::type() const {
   return SurfaceBounds::eCylinder;
 }
 
+std::vector<double> CylinderBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
 Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
   return {
       detail::radian_sym((lposition[eBoundLoc0] / get(eR)) - get(eAveragePhi)),
       lposition[eBoundLoc1]};
 }
 
-ActsMatrix<2, 2> CylinderBounds::jacobian() const {
-  ActsMatrix<2, 2> j;
+SquareMatrix2 CylinderBounds::jacobian() const {
+  SquareMatrix2 j;
   j(0, eBoundLoc0) = 1 / get(eR);
   j(0, eBoundLoc1) = 0;
   j(1, eBoundLoc0) = 0;

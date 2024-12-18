@@ -114,27 +114,4 @@ class EllipseBounds : public PlanarBounds {
   void checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> EllipseBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
-      get(eOuterRx) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along x axis");
-  }
-  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
-      get(eOuterRy) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along y axis.");
-  }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
-    throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("EllipseBounds: invalid phi positioning.");
-  }
-}
-
 }  // namespace Acts

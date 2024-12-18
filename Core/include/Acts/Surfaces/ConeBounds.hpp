@@ -9,17 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iosfwd>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -74,7 +71,7 @@ class ConeBounds : public SurfaceBounds {
   /// @param values The parameter array
   ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eCone; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -100,10 +97,10 @@ class ConeBounds : public SurfaceBounds {
   ///
   /// @param z is the z value for which r is requested
   /// @return is the r value associated with z
-  double r(double z) const;
+  double r(double z) const { return std::abs(z * m_tanAlpha); }
 
   /// Return tangent of alpha (pre-computed)
-  double tanAlpha() const;
+  double tanAlpha() const { return m_tanAlpha; }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
@@ -122,35 +119,5 @@ class ConeBounds : public SurfaceBounds {
   /// @param lposition The original local position
   Vector2 shifted(const Vector2& lposition) const;
 };
-
-inline double ConeBounds::r(double z) const {
-  return std::abs(z * m_tanAlpha);
-}
-
-inline double ConeBounds::tanAlpha() const {
-  return m_tanAlpha;
-}
-
-inline std::vector<double> ConeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void ConeBounds::checkConsistency() noexcept(false) {
-  if (get(eAlpha) < 0. || get(eAlpha) >= std::numbers::pi) {
-    throw std::invalid_argument("ConeBounds: invalid open angle.");
-  }
-  if (get(eMinZ) > get(eMaxZ) ||
-      std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
-    throw std::invalid_argument("ConeBounds: invalid z range setup.");
-  }
-  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > std::numbers::pi) {
-    throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("ConeBounds: invalid phi positioning.");
-  }
-}
 
 }  // namespace Acts

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -40,8 +41,26 @@ ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
   checkConsistency();
 }
 
-SurfaceBounds::BoundsType ConeBounds::type() const {
-  return SurfaceBounds::eCone;
+std::vector<double> ConeBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void ConeBounds::checkConsistency() noexcept(false) {
+  if (get(eAlpha) < 0. || get(eAlpha) >= std::numbers::pi) {
+    throw std::invalid_argument("ConeBounds: invalid open angle.");
+  }
+  if (get(eMinZ) > get(eMaxZ) ||
+      std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
+    throw std::invalid_argument("ConeBounds: invalid z range setup.");
+  }
+  if (get(eHalfPhiSector) < 0. || abs(eHalfPhiSector) > std::numbers::pi) {
+    throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("ConeBounds: invalid phi positioning.");
+  }
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.

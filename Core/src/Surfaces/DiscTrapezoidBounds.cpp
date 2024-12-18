@@ -11,10 +11,12 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -30,6 +32,25 @@ DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
 
 SurfaceBounds::BoundsType DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
+}
+
+std::vector<double> DiscTrapezoidBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthXminR) < 0. || get(eHalfLengthXmaxR) <= 0.) {
+    throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument(
+        "DiscTrapezoidBounds: invalid phi positioning.");
+  }
 }
 
 Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {

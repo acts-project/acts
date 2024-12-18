@@ -15,11 +15,28 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 
 namespace Acts {
 
 SurfaceBounds::BoundsType DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
+}
+
+std::vector<double> DiamondBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void DiamondBounds::checkConsistency() noexcept(false) {
+  if (std::ranges::any_of(m_values, [](auto v) { return v <= 0.; })) {
+    throw std::invalid_argument("DiamondBounds: negative half length.");
+  }
+  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) ||
+      get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {
+    throw std::invalid_argument("DiamondBounds: not a diamond shape.");
+  }
 }
 
 bool DiamondBounds::inside(const Vector2& lposition,

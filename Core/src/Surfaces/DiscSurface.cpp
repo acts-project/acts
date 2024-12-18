@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <stdexcept>

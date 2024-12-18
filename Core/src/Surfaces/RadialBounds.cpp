@@ -16,11 +16,30 @@
 
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 
 namespace Acts {
 
 SurfaceBounds::BoundsType RadialBounds::type() const {
   return SurfaceBounds::eDisc;
+}
+
+std::vector<double> RadialBounds::values() const {
+  std::vector<double> valvector;
+  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
+  return valvector;
+}
+
+void RadialBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("RadialBounds: invalid radial setup");
+  }
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
+    throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("RadialBounds: invalid phi positioning.");
+  }
 }
 
 Vector2 RadialBounds::shifted(const Vector2& lposition) const {
