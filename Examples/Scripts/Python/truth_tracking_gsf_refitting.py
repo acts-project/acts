@@ -22,6 +22,8 @@ def runRefittingGsf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        reverseFilteringMomThreshold=0.0,
+        reverseFilteringCovarianceScaling=1.0,
         s=s,
     )
 

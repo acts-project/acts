@@ -26,6 +26,8 @@ def runRefittingKf(
         field,
         digiConfigFile=digiConfigFile,
         outputDir=outputDir,
+        reverseFilteringMomThreshold=reverseFilteringMomThreshold,
+        reverseFilteringCovarianceScaling=reverseFilteringCovarianceScaling,
         s=s,
     )
 
