@@ -354,6 +354,7 @@ jobs:
           && cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
+          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
