@@ -75,12 +75,17 @@ Vector2 TrapezoidBounds::closestPoint(
   const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
   const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
   const double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+
+  const Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
 
   Vector2 vertices[] = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
 
-  return detail::VerticesHelper::computeClosestPointOnPolygon(
-      lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
+  Vector2 extClosest = detail::VerticesHelper::computeClosestPointOnPolygon(
+      extPosition, vertices, metric.value_or(SquareMatrix2::Identity()));
+
+  return Eigen::Rotation2Dd(-rotAngle) * extClosest;
 }
 
 std::vector<Vector2> TrapezoidBounds::vertices(

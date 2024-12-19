@@ -72,6 +72,10 @@ class BoundaryTolerance {
         throw std::invalid_argument(
             "AbsoluteBound: Tolerance must be non-negative");
       }
+      if ((tolerance0 == 0) != (tolerance1 == 0)) {
+        throw std::invalid_argument(
+            "AbsoluteBound: Both tolerances must be zero or non-zero");
+      }
     }
   };
 
