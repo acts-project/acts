@@ -191,18 +191,21 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index);
   m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index);
   m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap);
-  m_inputchain->SetBranchAddress("SPradius", SPradius);
-  m_inputchain->SetBranchAddress("SPcovr", SPcovr);
-  m_inputchain->SetBranchAddress("SPcovz", SPcovz);
-  m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
-  m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-  m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
-  m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                 &SPbottomStripDirection);
-  m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                 &SPstripCenterDistance);
-  m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                 &SPtopStripCenterPosition);
+
+  if (m_haveStripFeatures) {
+    m_inputchain->SetBranchAddress("SPradius", SPradius);
+    m_inputchain->SetBranchAddress("SPcovr", SPcovr);
+    m_inputchain->SetBranchAddress("SPcovz", SPcovz);
+    m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
+    m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
+    m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
+    m_inputchain->SetBranchAddress("SPbottomStripDirection",
+                                   &SPbottomStripDirection);
+    m_inputchain->SetBranchAddress("SPstripCenterDistance",
+                                   &SPstripCenterDistance);
+    m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
+                                   &SPtopStripCenterPosition);
+  }
 
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
