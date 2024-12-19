@@ -62,7 +62,6 @@ jobs:
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
@@ -101,7 +100,6 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
@@ -286,7 +284,6 @@ jobs:
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
@@ -357,7 +354,6 @@ jobs:
           && cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
