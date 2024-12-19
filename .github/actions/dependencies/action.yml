@@ -42,7 +42,7 @@ runs:
       shell: bash
       run: |
         tar cf spack.tar spack/
-        zstd -T0 -10 spack.tar -o spack.tar.zst
+        zstd -T0 -19 spack.tar -o spack.tar.zst
 
     - uses: actions/cache/save@v4
       with:
