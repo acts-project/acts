@@ -87,9 +87,6 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
-  ~CylinderSurface() override = default;
-  CylinderSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy

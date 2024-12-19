@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
@@ -36,8 +35,8 @@ TrapezoidBounds::TrapezoidBounds(
   checkConsistency();
 }
 
-SurfaceBounds::BoundsType TrapezoidBounds::type() const {
-  return SurfaceBounds::eTrapezoid;
+std::vector<double> TrapezoidBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
 bool TrapezoidBounds::inside(const Vector2& lposition) const {
@@ -158,12 +157,6 @@ std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
      << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-std::vector<double> TrapezoidBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void TrapezoidBounds::rotateBoundingBox() noexcept(false) {

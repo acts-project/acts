@@ -34,6 +34,10 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param sl is the ostream to be written into
   std::ostream& toStream(std::ostream& sl) const final;
 
+  /// Return the bounds type of this bounds object.
+  /// @return The bounds type
+  BoundsType type() const final { return eConvexPolygon; }
+
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
@@ -95,8 +99,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param values The values to build up the vertices
   ConvexPolygonBounds(const value_array& values) noexcept(false);
 
-  BoundsType type() const final;
-
   bool inside(const Vector2& lposition) const final;
 
   Vector2 closestPoint(const Vector2& lposition,
@@ -148,10 +150,6 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
   ConvexPolygonBounds(const std::vector<Vector2>& vertices);
-
-  /// Return the bounds type of this bounds object.
-  /// @return The bounds type
-  BoundsType type() const final;
 
   bool inside(const Vector2& lposition) const final;
 

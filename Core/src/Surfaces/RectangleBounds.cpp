@@ -14,8 +14,38 @@
 
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 
 namespace Acts {
+
+double RectangleBounds::get(BoundValues bValue) const {
+  switch (bValue) {
+    case eMinX:
+      return m_min.x();
+    case eMinY:
+      return m_min.y();
+    case eMaxX:
+      return m_max.x();
+    case eMaxY:
+      return m_max.y();
+    default:
+      assert(false && "Invalid BoundValue enum value");
+      return std::numeric_limits<double>::quiet_NaN();
+  }
+}
+
+std::vector<double> RectangleBounds::values() const {
+  return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
+}
+
+void RectangleBounds::checkConsistency() noexcept(false) {
+  if (get(eMinX) > get(eMaxX)) {
+    throw std::invalid_argument("RectangleBounds: invalid local x setup");
+  }
+  if (get(eMinY) > get(eMaxY)) {
+    throw std::invalid_argument("RectangleBounds: invalid local y setup");
+  }
+}
 
 bool RectangleBounds::inside(const Vector2& lposition) const {
   return detail::insideAlignedBox(m_min, m_max, BoundaryTolerance::None(),

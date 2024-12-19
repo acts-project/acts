@@ -95,11 +95,6 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(const value_array& values) noexcept(
 }
 
 template <int N>
-SurfaceBounds::BoundsType ConvexPolygonBounds<N>::type() const {
-  return SurfaceBounds::eConvexPolygon;
-}
-
-template <int N>
 bool ConvexPolygonBounds<N>::inside(const Vector2& lposition) const {
   return detail::insidePolygon(m_vertices, BoundaryTolerance::None(), lposition,
                                std::nullopt);

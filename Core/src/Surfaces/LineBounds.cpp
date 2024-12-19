@@ -16,6 +16,19 @@
 
 namespace Acts {
 
+std::vector<double> LineBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void LineBounds::checkConsistency() noexcept(false) {
+  if (get(eR) < 0.) {
+    throw std::invalid_argument("LineBounds: zero radius.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("LineBounds: zero/negative length.");
+  }
+}
+
 bool LineBounds::inside(const Vector2& lposition) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);

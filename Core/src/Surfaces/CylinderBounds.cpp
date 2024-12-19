@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
@@ -26,6 +25,10 @@ namespace Acts {
 
 using VectorHelpers::perp;
 using VectorHelpers::phi;
+
+std::vector<double> CylinderBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
 
 Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
   return {detail::radian_sym((lposition[0] / get(eR)) - get(eAveragePhi)),
@@ -134,7 +137,7 @@ std::vector<Vector3> CylinderBounds::circleVertices(
   // Write the two bows/circles on either side
   std::vector<int> sides = {-1, 1};
   for (auto& side : sides) {
-    /// Helper method to create the segment
+    // Helper method to create the segment
     auto svertices = detail::VerticesHelper::segmentVertices(
         {get(eR), get(eR)}, avgPhi - halfPhi, avgPhi + halfPhi, phiRef,
         quarterSegments, Vector3(0., 0., side * get(eHalfLengthZ)), transform);

@@ -81,11 +81,7 @@ class AnnulusBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final {
-    std::vector<double> valvector;
-    valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-    return valvector;
-  }
+  std::vector<double> values() const final;
 
   bool inside(const Vector2& lposition) const final;
 

@@ -8,18 +8,41 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 
 namespace Acts {
+
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+std::vector<double> EllipseBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void EllipseBounds::checkConsistency() noexcept(false) {
+  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
+      get(eOuterRx) <= 0.) {
+    throw std::invalid_argument("EllipseBounds: invalid along x axis");
+  }
+  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
+      get(eOuterRy) <= 0.) {
+    throw std::invalid_argument("EllipseBounds: invalid along y axis.");
+  }
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
+    throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("EllipseBounds: invalid phi positioning.");
+  }
+}
 
 bool EllipseBounds::inside(const Vector2& lposition) const {
   double phi =
@@ -53,13 +76,11 @@ bool EllipseBounds::inside(const Vector2& lposition,
     double phiHalf = get(eHalfPhiSector) + tol1;
 
     bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
-    bool insideInner =
-        (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-        (1 < (square(lposition[eBoundLoc0] / (get(eInnerRx) - tol0)) +
-              square(lposition[eBoundLoc1] / (get(eOuterRx) - tol0))));
-    bool insideOuter =
-        (square(lposition[eBoundLoc0] / (get(eInnerRy) + tol0)) +
-         square(lposition[eBoundLoc1] / (get(eOuterRy) + tol0))) < 1;
+    bool insideInner = (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
+                       (1 < (square(lposition[0] / (get(eInnerRx) - tol0)) +
+                             square(lposition[1] / (get(eOuterRx) - tol0))));
+    bool insideOuter = (square(lposition[0] / (get(eInnerRy) + tol0)) +
+                        square(lposition[1] / (get(eOuterRy) + tol0))) < 1;
     return insidePhi && insideInner && insideOuter;
   }
 

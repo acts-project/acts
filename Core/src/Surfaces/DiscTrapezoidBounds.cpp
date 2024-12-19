@@ -9,15 +9,14 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <optional>
+#include <stdexcept>
 
 namespace Acts {
 
@@ -31,11 +30,26 @@ DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
                      get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
+std::vector<double> DiscTrapezoidBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
+  }
+  if (get(eHalfLengthXminR) < 0. || get(eHalfLengthXmaxR) <= 0.) {
+    throw std::invalid_argument("DiscTrapezoidBounds: negative length given.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument(
+        "DiscTrapezoidBounds: invalid phi positioning.");
+  }
+}
+
 Vector2 DiscTrapezoidBounds::toLocalCartesian(const Vector2& lposition) const {
-  return {lposition[eBoundLoc0] *
-              std::sin(lposition[eBoundLoc1] - get(eAveragePhi)),
-          lposition[eBoundLoc0] *
-              std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
+  return {lposition[0] * std::sin(lposition[1] - get(eAveragePhi)),
+          lposition[0] * std::cos(lposition[1] - get(eAveragePhi))};
 }
 
 SquareMatrix2 DiscTrapezoidBounds::boundToCartesianJacobian(
@@ -114,7 +128,6 @@ std::vector<Vector2> DiscTrapezoidBounds::vertices(
           halfY * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
-// ostream operator overload
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

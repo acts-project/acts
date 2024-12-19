@@ -8,10 +8,9 @@
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -41,21 +40,40 @@ ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
   checkConsistency();
 }
 
+std::vector<double> ConeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void ConeBounds::checkConsistency() noexcept(false) {
+  if (get(eAlpha) < 0. || get(eAlpha) >= std::numbers::pi) {
+    throw std::invalid_argument("ConeBounds: invalid open angle.");
+  }
+  if (get(eMinZ) > get(eMaxZ) ||
+      std::abs(get(eMinZ) - get(eMaxZ)) < s_epsilon) {
+    throw std::invalid_argument("ConeBounds: invalid z range setup.");
+  }
+  if (get(eHalfPhiSector) < 0. || std::abs(eHalfPhiSector) > std::numbers::pi) {
+    throw std::invalid_argument("ConeBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("ConeBounds: invalid phi positioning.");
+  }
+}
+
 Vector2 ConeBounds::shifted(const Vector2& lposition) const {
   using detail::radian_sym;
 
-  auto x = r(lposition[eBoundLoc1]);  // cone radius at the local position
+  auto x = r(lposition[1]);  // cone radius at the local position
   Vector2 shifted;
-  shifted[eBoundLoc1] = lposition[eBoundLoc1];
-  shifted[eBoundLoc0] =
-      std::isnormal(x)
-          ? (x * radian_sym((lposition[eBoundLoc0] / x) - get(eAveragePhi)))
-          : lposition[eBoundLoc0];
+  shifted[1] = lposition[1];
+  shifted[0] = std::isnormal(x)
+                   ? (x * radian_sym((lposition[0] / x) - get(eAveragePhi)))
+                   : lposition[0];
   return shifted;
 }
 
 bool ConeBounds::inside(const Vector2& lposition) const {
-  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
   return detail::insideAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
       BoundaryTolerance::None(), shifted(lposition), std::nullopt);
@@ -64,7 +82,7 @@ bool ConeBounds::inside(const Vector2& lposition) const {
 Vector2 ConeBounds::closestPoint(
     const Vector2& lposition,
     const std::optional<SquareMatrix2>& metric) const {
-  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
   return detail::computeClosestPointOnAlignedBox(Vector2(-rphiHalf, get(eMinZ)),
                                                  Vector2(rphiHalf, get(eMaxZ)),
                                                  shifted(lposition), metric);
@@ -72,7 +90,7 @@ Vector2 ConeBounds::closestPoint(
 
 bool ConeBounds::inside(const Vector2& lposition,
                         const BoundaryTolerance& boundaryTolerance) const {
-  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
+  auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
   return detail::insideAlignedBox(
       Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
       boundaryTolerance, shifted(lposition), std::nullopt);

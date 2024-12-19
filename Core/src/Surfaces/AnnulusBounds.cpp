@@ -113,6 +113,25 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
+std::vector<double> AnnulusBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void AnnulusBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
+      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
+    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
+  }
+  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
+      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
+      get(eMinPhiRel) > get(eMaxPhiRel)) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
+  }
+}
+
 std::vector<Vector2> AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
@@ -400,21 +419,6 @@ std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
   sl << std::setprecision(-1);
   return sl;
-}
-
-void AnnulusBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
-      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
-    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
-  }
-  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
-      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
-      get(eMinPhiRel) > get(eMaxPhiRel)) {
-    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
-  }
 }
 
 }  // namespace Acts

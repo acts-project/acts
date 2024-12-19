@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/RadialBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
@@ -16,8 +15,25 @@
 
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 
 namespace Acts {
+
+std::vector<double> RadialBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void RadialBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
+    throw std::invalid_argument("RadialBounds: invalid radial setup");
+  }
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
+    throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("RadialBounds: invalid phi positioning.");
+  }
+}
 
 SquareMatrix2 RadialBounds::boundToCartesianJacobian(
     const Vector2& lposition) const {
@@ -51,9 +67,8 @@ SquareMatrix2 RadialBounds::boundToCartesianMetric(
 
 Vector2 RadialBounds::shifted(const Vector2& lposition) const {
   Vector2 tmp;
-  tmp[eBoundLoc0] = lposition[eBoundLoc0];
-  tmp[eBoundLoc1] =
-      detail::radian_sym(lposition[eBoundLoc1] - get(eAveragePhi));
+  tmp[0] = lposition[0];
+  tmp[1] = detail::radian_sym(lposition[1] - get(eAveragePhi));
   return tmp;
 }
 

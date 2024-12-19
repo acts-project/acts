@@ -34,6 +34,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
   SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
+  SurfaceBoundsStub& operator=(const SurfaceBoundsStub& other) = default;
 #if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
     !defined(__clang__)
 #pragma GCC diagnostic pop

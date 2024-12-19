@@ -128,7 +128,7 @@ class CylinderBounds : public SurfaceBounds {
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
-  bool coversFullAzimuth() const;
+  bool coversFullAzimuth() const { return m_closed; }
 
   /// Create the bow/circle vertices on either side of the cylinder
   ///
@@ -160,15 +160,5 @@ class CylinderBounds : public SurfaceBounds {
   /// @param lposition the polar coordinates in the global frame
   Vector2 shifted(const Vector2& lposition) const;
 };
-
-inline std::vector<double> CylinderBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline bool CylinderBounds::coversFullAzimuth() const {
-  return m_closed;
-}
 
 }  // namespace Acts

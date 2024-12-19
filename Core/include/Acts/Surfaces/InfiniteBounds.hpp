@@ -17,7 +17,7 @@ namespace Acts {
 ///
 /// templated boundless extension to forward the interface
 /// Returns all inside checks to true and can templated for all bounds
-
+///
 class InfiniteBounds : public SurfaceBounds {
  public:
   SurfaceBounds::BoundsType type() const final { return eBoundless; }

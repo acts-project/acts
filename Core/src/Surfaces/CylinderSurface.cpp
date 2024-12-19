@@ -57,7 +57,7 @@ CylinderSurface::CylinderSurface(const Transform3& transform, double radius,
 CylinderSurface::CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
                                  const DetectorElementBase& detelement)
     : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
-  /// surfaces representing a detector element must have bounds
+  // surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");
 }
 
@@ -147,12 +147,12 @@ Result<Vector2> CylinderSurface::globalToLocal(const GeometryContext& gctx,
 }
 
 std::string CylinderSurface::name() const {
-  return "CylinderSurface";
+  return "Acts::CylinderSurface";
 }
 
 Vector3 CylinderSurface::normal(const GeometryContext& gctx,
                                 const Vector2& lposition) const {
-  double phi = lposition[eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
+  double phi = lposition[0] / m_bounds->get(CylinderBounds::eR);
   Vector3 localNormal(cos(phi), sin(phi), 0.);
   return transform(gctx).linear() * localNormal;
 }
