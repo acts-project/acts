@@ -310,35 +310,37 @@ Vector2 AnnulusBounds::closestPoint(
   SquareMatrix2 jacobianStripPCToModulePC =
       stripPCToModulePCJacobian(lpositionRotated);
 
-  // Mahalanobis distance uses inverse covariance as weights
-  SquareMatrix2 weightStripPC = metric.value_or(SquareMatrix2::Identity());
-  SquareMatrix2 weightModulePC = jacobianStripPCToModulePC.transpose() *
-                                 weightStripPC * jacobianStripPCToModulePC;
+  // calculate the metrics for STRIP PC and MODULE PC
+  SquareMatrix2 metricStripPC = metric.value_or(SquareMatrix2::Identity());
+  SquareMatrix2 metricModulePC = jacobianStripPCToModulePC.transpose() *
+                                 metricStripPC * jacobianStripPCToModulePC;
 
-  Vector2 minClosest = Vector2::Zero();
+  // minimum distance and associated point
   double minDist = std::numeric_limits<double>::max();
+  Vector2 minClosest = Vector2::Zero();
 
-  // current closest point and distance.
-  // note that `currentClosest` is in STRIP PC and MODULE PC while `currentDist`
-  // is in metric units
-  Vector2 currentClosest;
-  double currentDist = 0;
+  // first: STRIP system. lpositionRotated is in STRIP PC already
 
-  // do projection in STRIP PC
+  {
+    Vector2 currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
+                                              lpositionRotated, metricStripPC);
+    double currentDist =
+        squaredNorm(lpositionRotated - currentClosest, metricStripPC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      minClosest = m_rotationStripPC.inverse() * currentClosest;
+    }
+  }
 
-  // first: STRIP system. locpo is in STRIP PC already
-  currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                    lpositionRotated, weightStripPC);
-  currentDist = squaredNorm(lpositionRotated - currentClosest, weightStripPC);
-  minClosest = currentClosest;
-  minDist = currentDist;
-
-  currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                    lpositionRotated, weightStripPC);
-  currentDist = squaredNorm(lpositionRotated - currentClosest, weightStripPC);
-  if (currentDist < minDist) {
-    minClosest = currentClosest;
-    minDist = currentDist;
+  {
+    Vector2 currentClosest = closestOnSegment(
+        m_inRightStripPC, m_outRightStripPC, lpositionRotated, metricStripPC);
+    double currentDist =
+        squaredNorm(lpositionRotated - currentClosest, metricStripPC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      minClosest = m_rotationStripPC.inverse() * currentClosest;
+    }
   }
 
   // now: MODULE system. Need to transform locpo to MODULE PC
@@ -346,23 +348,33 @@ Vector2 AnnulusBounds::closestPoint(
   Vector2 lpositionModulePC = stripPCToModulePC(lpositionRotated);
 
   // now check edges in MODULE PC (inner and outer circle)
-  currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                    lpositionModulePC, weightModulePC);
-  currentDist = squaredNorm(lpositionModulePC - currentClosest, weightModulePC);
-  if (currentDist < minDist) {
-    minClosest = modulePCToStripPC(currentClosest);
-    minDist = currentDist;
+
+  {
+    Vector2 currentClosest = closestOnSegment(
+        m_inLeftModulePC, m_inRightModulePC, lpositionModulePC, metricModulePC);
+    double currentDist =
+        squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      minClosest =
+          m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
+    }
   }
 
-  currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                    lpositionModulePC, weightModulePC);
-  currentDist = squaredNorm(lpositionModulePC - currentClosest, weightModulePC);
-  if (currentDist < minDist) {
-    minClosest = modulePCToStripPC(currentClosest);
-    minDist = currentDist;
+  {
+    Vector2 currentClosest =
+        closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
+                         lpositionModulePC, metricModulePC);
+    double currentDist =
+        squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      minClosest =
+          m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
+    }
   }
 
-  return currentClosest;
+  return minClosest;
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
