@@ -33,12 +33,6 @@ class InfiniteBounds : public SurfaceBounds {
     return SquareMatrix2::Identity();
   }
 
-  /// @copydoc SurfaceBounds::cartesianToBoundJacobian
-  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
-    (void)lposition;
-    return SquareMatrix2::Identity();
-  }
-
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;

@@ -61,16 +61,6 @@ SquareMatrix2 DiscTrapezoidBounds::boundToCartesianJacobian(
   return j;
 }
 
-SquareMatrix2 DiscTrapezoidBounds::cartesianToBoundJacobian(
-    const Vector2& lposition) const {
-  SquareMatrix2 j;
-  j(0, 0) = std::cos(lposition[1]);
-  j(0, 1) = std::sin(lposition[1]);
-  j(1, 0) = -std::sin(lposition[1]) / lposition[0];
-  j(1, 1) = std::cos(lposition[1]) / lposition[0];
-  return j;
-}
-
 SquareMatrix2 DiscTrapezoidBounds::boundToCartesianMetric(
     const Vector2& lposition) const {
   SquareMatrix2 m;

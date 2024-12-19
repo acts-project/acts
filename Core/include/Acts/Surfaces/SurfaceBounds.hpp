@@ -64,12 +64,6 @@ class SurfaceBounds {
   virtual SquareMatrix2 boundToCartesianJacobian(
       const Vector2& lposition) const = 0;
 
-  /// Computes the cartesian to bound jacobian at a given local position
-  /// @param lposition is the local position at which the jacobian is computed
-  /// @return the cartesian to bound jacobian
-  virtual SquareMatrix2 cartesianToBoundJacobian(
-      const Vector2& lposition) const = 0;
-
   /// Computes the bound to cartesian metric at a given local position
   /// @param lposition is the local position at which the metric is computed
   /// @return the bound to cartesian metric

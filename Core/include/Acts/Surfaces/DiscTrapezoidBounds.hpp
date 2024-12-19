@@ -68,9 +68,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
 
-  /// @copydoc SurfaceBounds::cartesianToBoundJacobian
-  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
-
   /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
 
