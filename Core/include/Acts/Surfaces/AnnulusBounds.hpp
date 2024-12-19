@@ -193,6 +193,13 @@ class AnnulusBounds : public DiscBounds {
   /// @param vStripXY the position in the cartesian strip system
   /// @return the position in the module polar coordinate system
   Vector2 stripXYToModulePC(const Vector2& vStripXY) const;
+
+  Vector2 stripPCToModulePC(const Vector2& vStripPC) const;
+
+  Vector2 modulePCToStripPC(const Vector2& vModulePC) const;
+
+  SquareMatrix2 stripPCToModulePCJacobian(
+      const Vector2& lpositionRotated) const;
 };
 
 }  // namespace Acts

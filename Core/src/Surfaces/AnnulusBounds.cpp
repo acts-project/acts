@@ -214,19 +214,14 @@ bool AnnulusBounds::inside(const Vector2& lposition) const {
   return true;
 }
 
-Vector2 AnnulusBounds::closestPoint(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
-  // locpo is PC in STRIP SYSTEM
-  // we need to rotate the locpo
-  Vector2 locpo_rotated = m_rotationStripPC * lposition;
-
+SquareMatrix2 AnnulusBounds::stripPCToModulePCJacobian(
+    const Vector2& lpositionRotated) const {
   // covariance is given in STRIP SYSTEM in PC we need to convert the covariance
   // to the MODULE SYSTEM in PC via jacobian. The following transforms into
   // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
   double dphi = get(eAveragePhi);
-  double phi_strip = locpo_rotated[1];
-  double r_strip = locpo_rotated[0];
+  double phi_strip = lpositionRotated[1];
+  double r_strip = lpositionRotated[0];
   double O_x = m_shiftXY[0];
   double O_y = m_shiftXY[1];
 
@@ -296,20 +291,36 @@ Vector2 AnnulusBounds::closestPoint(
 
   double B = cosDPhiPhiStrip;
   double C = -sinDPhiPhiStrip;
-  SquareMatrix2 jacobianStripPCToModulePC;
-  jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
-  jacobianStripPCToModulePC(0, 1) =
-      r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
-  jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
-  jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
+
+  SquareMatrix2 j;
+  j(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
+  j(0, 1) = r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
+  j(1, 0) = -(B * O_y - C * O_x) / A;
+  j(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
+  return j;
+}
+
+Vector2 AnnulusBounds::closestPoint(
+    const Vector2& lposition,
+    const std::optional<SquareMatrix2>& metric) const {
+  // locpo is PC in STRIP SYSTEM
+  // we need to rotate the local position
+  Vector2 lpositionRotated = m_rotationStripPC * lposition;
+
+  SquareMatrix2 jacobianStripPCToModulePC =
+      stripPCToModulePCJacobian(lpositionRotated);
 
   // Mahalanobis distance uses inverse covariance as weights
-  const auto& weightStripPC = metric.value_or(SquareMatrix2::Identity());
-  auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
-                        jacobianStripPCToModulePC;
+  SquareMatrix2 weightStripPC = metric.value_or(SquareMatrix2::Identity());
+  SquareMatrix2 weightModulePC = jacobianStripPCToModulePC.transpose() *
+                                 weightStripPC * jacobianStripPCToModulePC;
 
+  Vector2 minClosest = Vector2::Zero();
   double minDist = std::numeric_limits<double>::max();
 
+  // current closest point and distance.
+  // note that `currentClosest` is in STRIP PC and MODULE PC while `currentDist`
+  // is in metric units
   Vector2 currentClosest;
   double currentDist = 0;
 
@@ -317,37 +328,37 @@ Vector2 AnnulusBounds::closestPoint(
 
   // first: STRIP system. locpo is in STRIP PC already
   currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
+                                    lpositionRotated, weightStripPC);
+  currentDist = squaredNorm(lpositionRotated - currentClosest, weightStripPC);
+  minClosest = currentClosest;
   minDist = currentDist;
 
   currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
+                                    lpositionRotated, weightStripPC);
+  currentDist = squaredNorm(lpositionRotated - currentClosest, weightStripPC);
   if (currentDist < minDist) {
+    minClosest = currentClosest;
     minDist = currentDist;
   }
 
   // now: MODULE system. Need to transform locpo to MODULE PC
   //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
-  Vector2 locpoStripXY(
-      locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
-      locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
-  Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
+  Vector2 lpositionModulePC = stripPCToModulePC(lpositionRotated);
 
-  // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
-  // distances are of same unit if covariance is correctly transformed
+  // now check edges in MODULE PC (inner and outer circle)
   currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+                                    lpositionModulePC, weightModulePC);
+  currentDist = squaredNorm(lpositionModulePC - currentClosest, weightModulePC);
   if (currentDist < minDist) {
+    minClosest = modulePCToStripPC(currentClosest);
     minDist = currentDist;
   }
 
   currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+                                    lpositionModulePC, weightModulePC);
+  currentDist = squaredNorm(lpositionModulePC - currentClosest, weightModulePC);
   if (currentDist < minDist) {
+    minClosest = modulePCToStripPC(currentClosest);
     minDist = currentDist;
   }
 
@@ -355,8 +366,20 @@ Vector2 AnnulusBounds::closestPoint(
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
-  Vector2 vecModuleXY = vStripXY + m_shiftXY;
-  return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
+  Vector2 vModuleXY = vStripXY + m_shiftXY;
+  return {vModuleXY.norm(), VectorHelpers::phi(vModuleXY)};
+}
+
+Vector2 AnnulusBounds::stripPCToModulePC(const Vector2& vStripPC) const {
+  return stripXYToModulePC({vStripPC[0] * std::cos(vStripPC[1]),
+                            vStripPC[0] * std::sin(vStripPC[1])});
+}
+
+Vector2 AnnulusBounds::modulePCToStripPC(const Vector2& vModulePC) const {
+  Vector2 vModuleXY = {vModulePC[0] * std::cos(vModulePC[1]),
+                       vModulePC[0] * std::sin(vModulePC[1])};
+  Vector2 vStripXY = vModuleXY - m_shiftXY;
+  return {vStripXY.norm(), VectorHelpers::phi(vStripXY)};
 }
 
 Vector2 AnnulusBounds::moduleOrigin() const {
