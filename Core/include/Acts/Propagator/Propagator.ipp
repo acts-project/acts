@@ -175,11 +175,8 @@ auto Acts::Propagator<S, N>::makeState(
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
   // Initialize the internal propagator state
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(eOptions.navigation)};
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+                  m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       detail::propagator_stepper_compatible_with<S, StateType, N>,
@@ -217,11 +214,8 @@ auto Acts::Propagator<S, N>::makeState(
   using StateType =
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
-  StateType state{
-      eOptions,
-      m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.stepping.maxStepSize),
-      m_navigator.makeState(eOptions.navigation)};
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+                  m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
       detail::propagator_stepper_compatible_with<S, StateType, N>,
