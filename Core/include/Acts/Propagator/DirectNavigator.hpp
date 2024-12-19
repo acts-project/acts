@@ -82,7 +82,7 @@ class DirectNavigator {
     }
 
     void nextSurface(Direction direction) {
-      if (direction == Direction::Forward) {
+      if (direction == Direction::Forward()) {
         ++surfaceIndex;
       } else {
         --surfaceIndex;
@@ -95,7 +95,7 @@ class DirectNavigator {
     }
 
     int remainingSurfaces(Direction direction) const {
-      if (direction == Direction::Forward) {
+      if (direction == Direction::Forward()) {
         return options.surfaces.size() - surfaceIndex;
       }
       return surfaceIndex + 1;
@@ -103,7 +103,7 @@ class DirectNavigator {
 
     void resetSurfaceIndex(Direction direction) {
       surfaceIndex =
-          direction == Direction::Forward ? 0 : options.surfaces.size() - 1;
+          direction == Direction::Forward() ? 0 : options.surfaces.size() - 1;
     }
   };
 
