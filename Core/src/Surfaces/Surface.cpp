@@ -252,10 +252,8 @@ Vector2 Surface::closestPointOnBounds(
   return bounds().closestPoint(lposition, metric);
 }
 
-double Surface::distanceToBounds(
-    const Vector2& lposition,
-    const std::optional<SquareMatrix2>& metric) const {
-  return bounds().distance(lposition, metric);
+double Surface::distanceToBounds(const Vector2& lposition) const {
+  return bounds().distance(lposition);
 }
 
 bool Surface::insideBounds(const Vector2& lposition,
