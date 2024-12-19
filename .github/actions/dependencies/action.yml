@@ -58,7 +58,7 @@ runs:
         tar cf spack.tar spack/
         zstd -T0 -10 spack.tar -o spack.tar.zst
 
-      uses: actions/cache/save@v4
+    - uses: actions/cache/save@v4
       with:
         path: spack.tar.zst
         key: ${{ env.CACHE_KEY }}-spack
