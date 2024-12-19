@@ -86,7 +86,8 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     // Inflate covariance
     for (auto i = 0ul; i < m_cfg.initialVarInflation.size(); ++i) {
-      initialParams.covariance().value() *= m_cfg.initialVarInflation.at(i);
+      initialParams.covariance().value()(i, i) *=
+          m_cfg.initialVarInflation.at(i);
     }
 
     trackSourceLinks.clear();
