@@ -15,18 +15,17 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 
 #include <limits>
-#include <vector>
 
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
-  using enum BoundaryTolerance::ToleranceMode;
+  using enum BoundaryTolerance::Mode;
   {
     // Test None constructor
     BoundaryTolerance tolerance = BoundaryTolerance::None();
-    BOOST_CHECK(tolerance.toleranceMode() == None);
+    BOOST_CHECK(tolerance.mode() == None);
   }
 
   // Test AbsoluteBound constructor
@@ -35,9 +34,10 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     auto tolerance = BoundaryTolerance::AbsoluteBound(1.0, 2.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance0, 1.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance1, 2.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::AbsoluteBound(0.0, 0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Extend);
+    BOOST_CHECK(
+        BoundaryTolerance{BoundaryTolerance::AbsoluteBound(0.0, 0.0)}.mode() ==
+        None);
 
     // Negative tolerances should throw
     BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteBound(-1.0, 2.0),
@@ -51,14 +51,15 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     // Valid positive tolerance
     auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance, 1.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::AbsoluteEuclidean(0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Extend);
+    BOOST_CHECK(
+        BoundaryTolerance{BoundaryTolerance::AbsoluteEuclidean(0.0)}.mode() ==
+        None);
 
     // Valid negative tolerance
     tolerance = BoundaryTolerance::AbsoluteEuclidean(-1.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance, -1.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Shrink);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Shrink);
   }
 
   // Test AbsoluteCartesian constructor
@@ -67,10 +68,10 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     auto tolerance = BoundaryTolerance::AbsoluteCartesian(1.0, 2.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance0, 1.0);
     BOOST_CHECK_EQUAL(tolerance.tolerance1, 2.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Extend);
     BOOST_CHECK(
         BoundaryTolerance{BoundaryTolerance::AbsoluteCartesian(0.0, 0.0)}
-            .toleranceMode() == None);
+            .mode() == None);
 
     // Negative tolerances should throw
     BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteCartesian(-1.0, 2.0),
@@ -87,14 +88,15 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
     // Valid positive chi2 bound
     auto tolerance = BoundaryTolerance::Chi2Bound(cov, 3.0);
     BOOST_CHECK_EQUAL(tolerance.maxChi2, 3.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::Chi2Bound(cov, 0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Extend);
+    BOOST_CHECK(
+        BoundaryTolerance{BoundaryTolerance::Chi2Bound(cov, 0.0)}.mode() ==
+        None);
 
     // Valid negative chi2 bound
     tolerance = BoundaryTolerance::Chi2Bound(cov, -3.0);
     BOOST_CHECK_EQUAL(tolerance.maxChi2, -3.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Shrink);
+    BOOST_CHECK(BoundaryTolerance{tolerance}.mode() == Shrink);
   }
 
   // Test None constructor
