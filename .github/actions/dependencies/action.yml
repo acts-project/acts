@@ -31,11 +31,14 @@ runs:
       if: steps.cache-spack-restore.outputs.cache-hit == 'true'
       shell: bash
       run: |
-        echo "Cache hit, extracting spack..."
         zstd -d spack.tar.zst -o spack.tar
         tar xf spack.tar
         rm spack.tar
-        git -C spack pull --rebase
+
+    - name: Install spack if not found
+      shell: bash
+      run: |
+        CI/dependencies/setup_spack.sh
 
     - name: Compress spack directory for caching
       shell: bash
