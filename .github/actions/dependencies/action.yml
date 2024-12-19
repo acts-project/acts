@@ -14,11 +14,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Prerequisites
-      if: startsWith(runner.os, 'macos')
-      shell: bash
-      run: |
-        brew install ninja ccache
 
     - name: Restore spack cache
       id: cache-spack-restore
@@ -50,6 +45,12 @@ runs:
       with:
         path: spack.tar.zst
         key: spack-clone
+
+    - name: Prerequisites
+      if: startsWith(runner.os, 'macos')
+      shell: bash
+      run: |
+        brew install ninja ccache
 
     - name: Install dependencies
       shell: bash
