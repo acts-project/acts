@@ -187,17 +187,6 @@ class AnnulusBounds : public DiscBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 
-  /// Inside check for the bounds object driven by the boundary check directive
-  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
-  /// the bounds  Inside can be called without/with tolerances.
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param tolR tolerance on the radius
-  /// @param tolPhi tolerance on the polar angle phi
-  /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2& lposition, double tolR,
-                      double tolPhi) const final;
-
   /// Transform the strip cartesian
   /// into the module polar system
   ///

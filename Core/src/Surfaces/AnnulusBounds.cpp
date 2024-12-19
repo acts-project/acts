@@ -192,7 +192,26 @@ SquareMatrix2 AnnulusBounds::boundToCartesianMetric(
 }
 
 bool AnnulusBounds::inside(const Vector2& lposition) const {
-  return inside(lposition, 0., 0.);
+  // locpo is PC in STRIP SYSTEM
+  // need to perform internal rotation induced by average phi
+  Vector2 locpo_rotated = m_rotationStripPC * lposition;
+  double phiLoc = locpo_rotated[1];
+  double rLoc = locpo_rotated[0];
+
+  if (phiLoc < get(eMinPhiRel) || phiLoc > get(eMaxPhiRel)) {
+    return false;
+  }
+
+  // calculate R in MODULE SYSTEM to evaluate R-bounds
+  // don't need R, can use R^2
+  double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                  2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
+
+  if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
+    return false;
+  }
+
+  return true;
 }
 
 Vector2 AnnulusBounds::closestPoint(
@@ -333,41 +352,6 @@ Vector2 AnnulusBounds::closestPoint(
   }
 
   return currentClosest;
-}
-
-bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                           double tolPhi) const {
-  // locpo is PC in STRIP SYSTEM
-  // need to perform internal rotation induced by average phi
-  Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[1];
-  double rLoc = locpo_rotated[0];
-
-  if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
-      phiLoc > (get(eMaxPhiRel) + tolPhi)) {
-    return false;
-  }
-
-  // calculate R in MODULE SYSTEM to evaluate R-bounds
-  if (tolR == 0.) {
-    // don't need R, can use R^2
-    double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                    2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
-
-    if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
-      return false;
-    }
-  } else {
-    // use R
-    double r_mod = sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                        2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
-
-    if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {

@@ -94,7 +94,7 @@ class ConeBounds : public SurfaceBounds {
   /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
-  /// @copydoc SurfaceBounds::inside
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
