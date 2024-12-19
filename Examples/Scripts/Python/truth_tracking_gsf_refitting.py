@@ -88,7 +88,7 @@ def runRefittingGsf(
             level=acts.logging.INFO,
             inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
-            inputTrackParticleMatching="track_particle_matching",
+            inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "performance_gsf_refit.root"),
         )
     )
