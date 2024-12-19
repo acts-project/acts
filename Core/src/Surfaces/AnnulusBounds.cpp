@@ -216,9 +216,6 @@ bool AnnulusBounds::inside(const Vector2& lposition) const {
 
 SquareMatrix2 AnnulusBounds::stripPCToModulePCJacobian(
     const Vector2& lpositionRotated) const {
-  // covariance is given in STRIP SYSTEM in PC we need to convert the covariance
-  // to the MODULE SYSTEM in PC via jacobian. The following transforms into
-  // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
   double dphi = get(eAveragePhi);
   double phi_strip = lpositionRotated[1];
   double r_strip = lpositionRotated[0];
@@ -303,7 +300,7 @@ SquareMatrix2 AnnulusBounds::stripPCToModulePCJacobian(
 Vector2 AnnulusBounds::closestPoint(
     const Vector2& lposition,
     const std::optional<SquareMatrix2>& metric) const {
-  // locpo is PC in STRIP SYSTEM
+  // lposition is PC in STRIP SYSTEM
   // we need to rotate the local position
   Vector2 lpositionRotated = m_rotationStripPC * lposition;
 
@@ -317,7 +314,7 @@ Vector2 AnnulusBounds::closestPoint(
 
   // minimum distance and associated point
   double minDist = std::numeric_limits<double>::max();
-  Vector2 minClosest = Vector2::Zero();
+  Vector2 closest = Vector2::Zero();
 
   // first: STRIP system. lpositionRotated is in STRIP PC already
 
@@ -328,7 +325,7 @@ Vector2 AnnulusBounds::closestPoint(
         squaredNorm(lpositionRotated - currentClosest, metricStripPC);
     if (currentDist < minDist) {
       minDist = currentDist;
-      minClosest = m_rotationStripPC.inverse() * currentClosest;
+      closest = m_rotationStripPC.inverse() * currentClosest;
     }
   }
 
@@ -339,11 +336,11 @@ Vector2 AnnulusBounds::closestPoint(
         squaredNorm(lpositionRotated - currentClosest, metricStripPC);
     if (currentDist < minDist) {
       minDist = currentDist;
-      minClosest = m_rotationStripPC.inverse() * currentClosest;
+      closest = m_rotationStripPC.inverse() * currentClosest;
     }
   }
 
-  // now: MODULE system. Need to transform locpo to MODULE PC
+  // now: MODULE system. Need to transform lposition to MODULE PC
   //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
   Vector2 lpositionModulePC = stripPCToModulePC(lpositionRotated);
 
@@ -356,8 +353,7 @@ Vector2 AnnulusBounds::closestPoint(
         squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
     if (currentDist < minDist) {
       minDist = currentDist;
-      minClosest =
-          m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
+      closest = m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
     }
   }
 
@@ -369,12 +365,11 @@ Vector2 AnnulusBounds::closestPoint(
         squaredNorm(lpositionModulePC - currentClosest, metricModulePC);
     if (currentDist < minDist) {
       minDist = currentDist;
-      minClosest =
-          m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
+      closest = m_rotationStripPC.inverse() * modulePCToStripPC(currentClosest);
     }
   }
 
-  return minClosest;
+  return closest;
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
