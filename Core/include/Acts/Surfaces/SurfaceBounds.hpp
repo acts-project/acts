@@ -96,14 +96,13 @@ class SurfaceBounds {
 
   /// Calculates the distance to the bounds from a given local position
   /// @param lposition is the local position
-  /// @param metric is the metric to be used for the distance calculation
   /// @return the distance to the bounds
-  virtual double distance(const Vector2& lposition,
-                          const std::optional<SquareMatrix2>& metric) const {
+  virtual double distance(const Vector2& lposition) const {
+    SquareMatrix2 metric = boundToCartesianMetric(lposition);
+
     Vector2 closest = closestPoint(lposition, metric);
     Vector2 diff = closest - lposition;
-    return std::sqrt((diff.transpose() *
-                      metric.value_or(SquareMatrix2::Identity()) * diff)(0, 0));
+    return std::sqrt((diff.transpose() * metric * diff)(0, 0));
   }
 
   /// Inside check for the bounds object given a boundary tolerance.
