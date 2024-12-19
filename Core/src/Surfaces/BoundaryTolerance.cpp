@@ -76,21 +76,7 @@ BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
       return None;
     }
 
-    // std::cout << absoluteBound->tolerance0 << " "
-    //           << std::copysign(1., absoluteBound->tolerance0) << std::endl;
-    // std::cout << absoluteBound->tolerance1 << " "
-    //           << std::copysign(1., absoluteBound->tolerance1) << std::endl;
-
-    if (std::copysign(1., absoluteBound->tolerance0) !=
-        std::copysign(1., absoluteBound->tolerance1)) {
-      throw std::logic_error("Inconsistent tolerance signs are not supported");
-    }
-
-    if (absoluteBound->tolerance0 > 0. || absoluteBound->tolerance1 > 0.) {
-      return Extend;
-    } else {
-      return Shrink;
-    }
+    return Extend;
   }
 
   if (const auto* absoluteCartesian = getVariantPtr<AbsoluteCartesian>();
@@ -100,17 +86,7 @@ BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
       return None;
     }
 
-    if (std::copysign(1., absoluteCartesian->tolerance0) !=
-        std::copysign(1., absoluteCartesian->tolerance1)) {
-      throw std::logic_error("Inconsistent tolerance signs are not supported");
-    }
-
-    if (absoluteCartesian->tolerance0 > 0. ||
-        absoluteCartesian->tolerance1 > 0.) {
-      return Extend;
-    } else {
-      return Shrink;
-    }
+    return Extend;
   }
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();

@@ -11,7 +11,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <iostream>
 #include <span>
 
 namespace Acts::detail {

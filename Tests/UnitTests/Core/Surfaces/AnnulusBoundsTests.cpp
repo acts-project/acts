@@ -142,15 +142,11 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsVertices) {
 }
 
 BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
-  using namespace Acts::UnitLiterals;
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
   double phiAverage = (minPhi + maxPhi) / 2;
 
   auto check = [&](const BoundaryTolerance& tolerance, const Vector2& point) {
     Vector2 pointAverage(point[0], phiAverage + point[1]);
-
-    std::cout << "[" << pointAverage[0] << ", " << pointAverage[1] << "],"
-              << std::endl;
     return aBounds.inside(pointAverage, tolerance);
   };
 
@@ -243,26 +239,6 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
     BOOST_CHECK(check(tolerance, {midRadius, hlPhi * 0.8}));
     BOOST_CHECK(check(tolerance, {midRadius, hlPhi * 1.1}));
     BOOST_CHECK(!check(tolerance, {midRadius, hlPhi * 1.5}));
-    // mc(tolerance);
-    // mc(BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 0.1));
-
-    // Test points near radial boundaries
-    // BOOST_CHECK(!check(tolerance, {minRadius - 0.2, 0}));
-    // BOOST_CHECK(!check(tolerance, {minRadius + 0.2, 0}));
-    // BOOST_CHECK(check(tolerance, {minRadius + 0.4, 0}));
-    // BOOST_CHECK(!check(tolerance, {maxRadius - 0.2, 0}));
-    // BOOST_CHECK(!check(tolerance, {maxRadius + 0.2, 0}));
-    // BOOST_CHECK(check(tolerance, {maxRadius - 0.4, 0}));
-
-    // // Test points near angular boundaries
-    // BOOST_CHECK(!check(tolerance, {(minRadius + maxRadius) / 2, minPhi -
-    // 0.2})); BOOST_CHECK(!check(tolerance, {(minRadius + maxRadius) / 2,
-    // minPhi + 0.2})); BOOST_CHECK(check(tolerance, {(minRadius + maxRadius) /
-    // 2, minPhi + 0.4})); BOOST_CHECK(!check(tolerance, {(minRadius +
-    // maxRadius) / 2, maxPhi - 0.2})); BOOST_CHECK(!check(tolerance,
-    // {(minRadius + maxRadius) / 2, maxPhi + 0.2}));
-    // BOOST_CHECK(check(tolerance, {(minRadius + maxRadius) / 2, maxPhi -
-    // 0.4}));
   }
 
   {
