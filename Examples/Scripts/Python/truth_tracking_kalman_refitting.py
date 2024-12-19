@@ -45,6 +45,7 @@ def runRefittingKf(
             level=acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="kf_refit_tracks",
+            initialVarInflation=6 * [100.0],
             fit=acts.examples.makeKalmanFitterFunction(
                 trackingGeometry, field, **kalmanOptions
             ),

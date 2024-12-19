@@ -47,6 +47,7 @@ def runRefittingGsf(
             acts.logging.INFO,
             inputTracks="kf_tracks",
             outputTracks="gsf_refit_tracks",
+            initialVarInflation=6 * [100.0],
             fit=acts.examples.makeGsfFitterFunction(
                 trackingGeometry, field, **gsfOptions
             ),
