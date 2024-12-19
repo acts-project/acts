@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
@@ -41,21 +42,21 @@ class InfiniteBounds : public SurfaceBounds {
 
   std::vector<double> values() const final { return {}; }
 
-  bool inside(const Vector2& /*lposition*/) const final { return true; }
+  bool inside(const Vector2& lposition) const final {
+    (void)lposition;
+    return true;
+  }
 
-  Vector2 closestPoint(
-      const Vector2& lposition,
-      const std::optional<SquareMatrix2>& /*metric*/) const final {
+  Vector2 closestPoint(const Vector2& lposition,
+                       const std::optional<SquareMatrix2>& metric) const final {
+    (void)metric;
     return lposition;
   }
 
-  /// Method inside() returns true for any case
-  ///
-  /// ignores input parameters
-  ///
-  /// @return always true
-  bool inside(const Vector2& /*lposition*/,
-              const BoundaryTolerance& /*boundaryTolerance*/) const final {
+  bool inside(const Vector2& lposition,
+              const BoundaryTolerance& boundaryTolerance) const final {
+    (void)lposition;
+    (void)boundaryTolerance;
     return true;
   }
 

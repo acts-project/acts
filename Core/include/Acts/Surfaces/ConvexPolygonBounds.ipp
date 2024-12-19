@@ -109,14 +109,6 @@ Vector2 ConvexPolygonBounds<N>::closestPoint(
 }
 
 template <int N>
-bool ConvexPolygonBounds<N>::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
-  return detail::insidePolygon(m_vertices, boundaryTolerance, lposition,
-                               std::nullopt);
-}
-
-template <int N>
 std::vector<Vector2> ConvexPolygonBounds<N>::vertices(
     unsigned int /*ignoredSegments*/) const {
   return {m_vertices.begin(), m_vertices.end()};

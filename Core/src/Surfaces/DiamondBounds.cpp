@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
@@ -64,22 +63,6 @@ Vector2 DiamondBounds::closestPoint(
                         {x3, y3},   {-x3, y3}, {-x2, y2}};
   return detail::VerticesHelper::computeClosestPointOnPolygon(
       lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
-}
-
-bool DiamondBounds::inside(const Vector2& lposition,
-                           const BoundaryTolerance& boundaryTolerance) const {
-  // Vertices starting at lower left (min rel. phi)
-  // counter-clockwise
-  double x1 = get(DiamondBounds::eHalfLengthXnegY);
-  double y1 = get(DiamondBounds::eHalfLengthYneg);
-  double x2 = get(DiamondBounds::eHalfLengthXzeroY);
-  double y2 = 0.;
-  double x3 = get(DiamondBounds::eHalfLengthXposY);
-  double y3 = get(DiamondBounds::eHalfLengthYpos);
-  Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
-                        {x3, y3},   {-x3, y3}, {-x2, y2}};
-  return detail::insidePolygon(vertices, boundaryTolerance, lposition,
-                               std::nullopt);
 }
 
 std::vector<Vector2> DiamondBounds::vertices(

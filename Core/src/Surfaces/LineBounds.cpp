@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/LineBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
@@ -44,15 +43,6 @@ Vector2 LineBounds::closestPoint(
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::computeClosestPointOnAlignedBox(
       Vector2(-r, -halfLengthZ), Vector2(r, halfLengthZ), lposition, metric);
-}
-
-bool LineBounds::inside(const Vector2& lposition,
-                        const BoundaryTolerance& boundaryTolerance) const {
-  double r = get(LineBounds::eR);
-  double halfLengthZ = get(LineBounds::eHalfLengthZ);
-  return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
-                                  Vector2(r, halfLengthZ), boundaryTolerance,
-                                  lposition, std::nullopt);
 }
 
 std::ostream& LineBounds::toStream(std::ostream& sl) const {

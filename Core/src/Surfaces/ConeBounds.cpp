@@ -88,14 +88,6 @@ Vector2 ConeBounds::closestPoint(
                                                  shifted(lposition), metric);
 }
 
-bool ConeBounds::inside(const Vector2& lposition,
-                        const BoundaryTolerance& boundaryTolerance) const {
-  auto rphiHalf = r(lposition[1]) * get(eHalfPhiSector);
-  return detail::insideAlignedBox(
-      Vector2(-rphiHalf, get(eMinZ)), Vector2(rphiHalf, get(eMaxZ)),
-      boundaryTolerance, shifted(lposition), std::nullopt);
-}
-
 std::ostream& ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

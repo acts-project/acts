@@ -59,14 +59,6 @@ Vector2 ConvexPolygonBounds<PolygonDynamic>::closestPoint(
       metric.value_or(SquareMatrix2::Identity()));
 }
 
-bool ConvexPolygonBounds<PolygonDynamic>::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
-  return detail::insidePolygon(
-      std::span<const Vector2>(m_vertices.data(), m_vertices.size()),
-      boundaryTolerance, lposition, std::nullopt);
-}
-
 std::vector<Vector2> ConvexPolygonBounds<PolygonDynamic>::vertices(
     unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};

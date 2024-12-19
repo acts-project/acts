@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -101,18 +100,6 @@ Vector2 DiscTrapezoidBounds::closestPoint(
   return detail::VerticesHelper::computeClosestPointOnPolygon(
       toLocalCartesian(lposition), vertices,
       metric.value_or(SquareMatrix2::Identity()));
-}
-
-bool DiscTrapezoidBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
-  Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                        {get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXmaxR), m_ymax},
-                        {-get(eHalfLengthXminR), get(eMinR)}};
-  return detail::insidePolygon(vertices, boundaryTolerance,
-                               toLocalCartesian(lposition),
-                               boundToCartesianJacobian(lposition));
 }
 
 std::vector<Vector2> DiscTrapezoidBounds::vertices(

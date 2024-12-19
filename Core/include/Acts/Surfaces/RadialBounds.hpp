@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -76,14 +75,7 @@ class RadialBounds : public DiscBounds {
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
-  /// For disc surfaces the local position in (r,phi) is checked
-  ///
-  /// @param lposition local position to be checked
-  /// @param boundaryTolerance boundary check directive
-  ///
-  /// @return is a boolean indicating the operation success
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  using SurfaceBounds::inside;
 
   /// Outstream operator
   ///

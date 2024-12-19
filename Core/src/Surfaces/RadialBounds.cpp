@@ -87,14 +87,6 @@ Vector2 RadialBounds::closestPoint(
       Vector2(get(eMaxR), get(eHalfPhiSector)), shifted(lposition), metric);
 }
 
-bool RadialBounds::inside(const Vector2& lposition,
-                          const BoundaryTolerance& boundaryTolerance) const {
-  return detail::insideAlignedBox(Vector2(get(eMinR), -get(eHalfPhiSector)),
-                                  Vector2(get(eMaxR), get(eHalfPhiSector)),
-                                  boundaryTolerance, shifted(lposition),
-                                  std::nullopt);
-}
-
 std::vector<Vector2> RadialBounds::vertices(unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);

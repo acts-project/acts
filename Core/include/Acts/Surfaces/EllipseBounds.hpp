@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -78,17 +77,7 @@ class EllipseBounds : public PlanarBounds {
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
-  /// This method checks if the point given in the local coordinates is between
-  /// two ellipsoids if only tol0 is given and additional in the phi sector is
-  /// tol1 is given
-  ///
-  /// @warning This **only** works for tolerance-based checks
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///

@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -379,25 +378,6 @@ bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
   }
 
   return true;
-}
-
-bool AnnulusBounds::inside(const Vector2& lposition,
-                           const BoundaryTolerance& boundaryTolerance) const {
-  if (boundaryTolerance.isInfinite()) {
-    return true;
-  }
-
-  if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
-      absoluteBound.has_value()) {
-    return inside(lposition, absoluteBound->tolerance0,
-                  absoluteBound->tolerance1);
-  }
-
-  // TODO jacobian
-  Vector2 closestPoint =
-      this->closestPoint(lposition, boundaryTolerance.getMetric(std::nullopt));
-
-  return boundaryTolerance.isTolerated(lposition - closestPoint, std::nullopt);
 }
 
 Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {

@@ -62,12 +62,6 @@ Vector2 RectangleBounds::closestPoint(
       lposition, vertices, metric.value_or(SquareMatrix2::Identity()));
 }
 
-bool RectangleBounds::inside(const Vector2& lposition,
-                             const BoundaryTolerance& boundaryTolerance) const {
-  return detail::insideAlignedBox(m_min, m_max, boundaryTolerance, lposition,
-                                  std::nullopt);
-}
-
 std::vector<Vector2> RectangleBounds::vertices(unsigned int /*lseg*/) const {
   // counter-clockwise starting from bottom-left corner
   return {m_min, {m_max.x(), m_min.y()}, m_max, {m_min.x(), m_max.y()}};

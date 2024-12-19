@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -104,13 +103,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
-  /// Return whether a local 2D point lies inside of the bounds defined by this
-  /// object.
-  /// @param lposition The local position to check
-  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
-  /// @return Whether the points is inside
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///
@@ -156,13 +149,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
-  /// Return whether a local 2D point lies inside of the bounds defined by this
-  /// object.
-  /// @param lposition The local position to check
-  /// @param boundaryTolerance The `BoundaryTolerance` object handling tolerances.
-  /// @return Whether the points is inside
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  using SurfaceBounds::inside;
 
   /// Return the vertices
   ///

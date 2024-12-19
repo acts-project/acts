@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
@@ -80,14 +79,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
-  ///  This method checks if the radius given in the LocalPosition is inside
-  ///  [rMin,rMax]
-  /// if only tol0 is given and additional in the phi sector is tol1 is given
-  /// @param lposition is the local position to be checked (in polar
-  /// coordinates)
-  /// @param boundaryTolerance is the boundary check directive
-  bool inside(const Vector2& lposition,
-              const BoundaryTolerance& boundaryTolerance) const final;
+  using SurfaceBounds::inside;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
