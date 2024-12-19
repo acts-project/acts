@@ -48,7 +48,7 @@ class InfiniteBounds : public SurfaceBounds {
   /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final { return {}; }
 
-  /// @copydoc SurfaceBounds::inside(const Vector2&)
+  /// @copydoc SurfaceBounds::inside(const Vector2&) const
   bool inside(const Vector2& lposition) const final {
     (void)lposition;
     return true;
@@ -61,7 +61,7 @@ class InfiniteBounds : public SurfaceBounds {
     return lposition;
   }
 
-  /// @copydoc SurfaceBounds::inside(const Vector2&, const BoundaryTolerance&)
+  /// @copydoc SurfaceBounds::inside(const Vector2&, const BoundaryTolerance&) const
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final {
     (void)lposition;

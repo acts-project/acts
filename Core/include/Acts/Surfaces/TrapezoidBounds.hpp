@@ -94,10 +94,6 @@ class TrapezoidBounds : public PlanarBounds {
   /// <br>
   /// and   @f$  \delta_{I} = \delta_{II} = - \frac{1}{2}\kappa_{I}(x_{max} +
   /// x_{min}) @f$
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  ///
-  /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition) const final;
 
   /// @copydoc SurfaceBounds::closestPoint

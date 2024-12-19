@@ -76,19 +76,19 @@ class ConeBounds : public SurfaceBounds {
   /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }
 
-  /// @copydoc SurfaceBounds::isCylindrical
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
-  /// @copydoc SurfaceBounds::isCylindrical
+  /// @copydoc SurfaceBounds::cartesianToBoundJacobian
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
-  /// @copydoc SurfaceBounds::isCylindrical
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
