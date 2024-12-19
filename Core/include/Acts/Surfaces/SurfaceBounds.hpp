@@ -112,14 +112,13 @@ class SurfaceBounds {
   /// @return true if the local position is inside the bounds and tolerance
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const {
-    using enum BoundaryTolerance::ToleranceMode;
+    using enum BoundaryTolerance::Mode;
 
     if (boundaryTolerance.isInfinite()) {
       return true;
     }
 
-    BoundaryTolerance::ToleranceMode toleranceMode =
-        boundaryTolerance.toleranceMode();
+    BoundaryTolerance::Mode toleranceMode = boundaryTolerance.mode();
     bool strictlyInside = inside(lposition);
 
     if (toleranceMode == None) {

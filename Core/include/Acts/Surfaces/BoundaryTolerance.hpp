@@ -108,10 +108,10 @@ class BoundaryTolerance {
         : maxChi2(maxChi2_), weight(weight_) {}
   };
 
-  enum class ToleranceMode {
-    Extend,  // Extend the boundary
-    None,    // No tolerance
-    Shrink   // Shrink the boundary
+  enum class Mode {
+    Extend,  //< Extend the boundary
+    None,    //< No tolerance
+    Shrink   //< Shrink the boundary
   };
 
   /// Underlying variant type
@@ -147,8 +147,8 @@ class BoundaryTolerance {
   /// Check if the tolerance is chi2 with bound coordinates.
   bool hasChi2Bound() const;
 
-  /// Check if any tolerance is set.
-  ToleranceMode toleranceMode() const;
+  /// Get the tolerance mode.
+  Mode mode() const;
 
   /// Get the tolerance as absolute bound.
   AbsoluteBound asAbsoluteBound(bool isCartesian = false) const;

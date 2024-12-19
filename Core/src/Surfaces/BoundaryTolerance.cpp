@@ -60,8 +60,9 @@ bool BoundaryTolerance::hasChi2Bound() const {
   return holdsVariant<Chi2Bound>();
 }
 
-BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
-  using enum ToleranceMode;
+BoundaryTolerance::Mode BoundaryTolerance::mode() const {
+  using enum Mode;
+
   if (isInfinite()) {
     return Extend;
   }
