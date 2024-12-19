@@ -98,6 +98,11 @@ class CylinderBounds : public SurfaceBounds {
     return SquareMatrix2::Identity();
   }
 
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values

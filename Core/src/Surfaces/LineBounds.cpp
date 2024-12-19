@@ -16,10 +16,6 @@
 
 namespace Acts {
 
-SurfaceBounds::BoundsType LineBounds::type() const {
-  return SurfaceBounds::eLine;
-}
-
 bool LineBounds::inside(const Vector2& lposition) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);

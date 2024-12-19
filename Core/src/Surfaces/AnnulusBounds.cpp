@@ -173,6 +173,16 @@ SquareMatrix2 AnnulusBounds::cartesianToBoundJacobian(
   return j;
 }
 
+SquareMatrix2 AnnulusBounds::boundToCartesianMetric(
+    const Vector2& lposition) const {
+  SquareMatrix2 m;
+  m(0, 0) = 1;
+  m(0, 1) = 0;
+  m(1, 0) = 0;
+  m(1, 1) = lposition[0] * lposition[0];
+  return m;
+}
+
 bool AnnulusBounds::inside(const Vector2& lposition) const {
   return inside(lposition, 0., 0.);
 }

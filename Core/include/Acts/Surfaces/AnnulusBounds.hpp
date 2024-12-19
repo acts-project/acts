@@ -76,6 +76,8 @@ class AnnulusBounds : public DiscBounds {
 
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
 
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
+
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values

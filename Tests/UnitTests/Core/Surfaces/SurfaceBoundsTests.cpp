@@ -27,7 +27,15 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
-  BoundsType type() const final { return SurfaceBounds::eOther; }
+  SurfaceBoundsStub(const SurfaceBoundsStub& other)
+      : m_values(other.m_values) {}
+
+  SurfaceBoundsStub& operator=(const SurfaceBoundsStub& other) {
+    m_values = other.m_values;
+    return *this;
+  }
+
+  BoundsType type() const final { return eOther; }
 
   bool isCartesian() const final { return true; }
 
@@ -37,6 +45,11 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }

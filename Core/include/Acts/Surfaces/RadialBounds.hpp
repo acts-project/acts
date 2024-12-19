@@ -62,11 +62,11 @@ class RadialBounds : public DiscBounds {
 
   bool isCartesian() const final { return false; }
 
-  SquareMatrix2 boundToCartesianJacobian(
-      const Vector2& /*lposition*/) const final;
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final;
 
-  SquareMatrix2 cartesianToBoundJacobian(
-      const Vector2& /*lposition*/) const final;
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final;
+
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final;
 
   /// Return the bound values as dynamically sized vector
   ///

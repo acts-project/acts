@@ -39,6 +39,16 @@ SquareMatrix2 RadialBounds::cartesianToBoundJacobian(
   return j;
 }
 
+SquareMatrix2 RadialBounds::boundToCartesianMetric(
+    const Vector2& lposition) const {
+  SquareMatrix2 m;
+  m(0, 0) = 1;
+  m(0, 1) = 0;
+  m(1, 0) = 0;
+  m(1, 1) = lposition[0] * lposition[0];
+  return m;
+}
+
 Vector2 RadialBounds::shifted(const Vector2& lposition) const {
   Vector2 tmp;
   tmp[eBoundLoc0] = lposition[eBoundLoc0];

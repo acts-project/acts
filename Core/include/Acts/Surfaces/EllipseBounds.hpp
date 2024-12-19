@@ -16,9 +16,6 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <cstdlib>
-#include <exception>
 #include <iosfwd>
 #include <numbers>
 #include <stdexcept>

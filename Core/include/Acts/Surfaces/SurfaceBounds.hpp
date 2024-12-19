@@ -62,6 +62,11 @@ class SurfaceBounds {
   virtual SquareMatrix2 cartesianToBoundJacobian(
       const Vector2& lposition) const = 0;
 
+  virtual SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const {
+    SquareMatrix2 j = boundToCartesianJacobian(lposition);
+    return j.transpose() * j;
+  }
+
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
   ///

@@ -58,6 +58,16 @@ SquareMatrix2 DiscTrapezoidBounds::cartesianToBoundJacobian(
   return j;
 }
 
+SquareMatrix2 DiscTrapezoidBounds::boundToCartesianMetric(
+    const Vector2& lposition) const {
+  SquareMatrix2 m;
+  m(0, 0) = 1;
+  m(0, 1) = 0;
+  m(1, 0) = 0;
+  m(1, 1) = lposition[0] * lposition[0];
+  return m;
+}
+
 bool DiscTrapezoidBounds::inside(const Vector2& lposition) const {
   Vector2 vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
                         {get(eHalfLengthXmaxR), m_ymax},
