@@ -22,11 +22,20 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
     std::stringstream ss;
     ss << "CUDA error: " << cudaGetErrorString(code) << ", " << file << ":"
        << line;
-    // throw std::runtime_error(ss.str());
-    std::cout << ss.str() << std::endl;
+    throw std::runtime_error(ss.str());
+    // std::cout << ss.str() << std::endl;
   }
   cudaDeviceSynchronize();
 }
+
+}  // namespace Acts::detail
+
+#define CUDA_CHECK(ans)                                  \
+  do {                                                   \
+    Acts::detail::cudaAssert((ans), __FILE__, __LINE__); \
+  } while (0)
+
+namespace Acts::detail {
 
 inline __global__ void cudaPrintArray(bool *vector, int size) {
   for (int i = 0; i < size; i++)
@@ -134,8 +143,7 @@ __global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
 template <typename T>
 void copyFromDeviceAndPrint(T *data, std::size_t size, std::string_view name) {
   std::vector<T> data_cpu(size);
-  CUDA_CHECK(cudaMemcpy(data_cpu.data(), data, size * sizeof(T),
-                        cudaMemcpyDeviceToHost));
+  cudaMemcpy(data_cpu.data(), data, size * sizeof(T), cudaMemcpyDeviceToHost);
   std::cout << name << "[" << size << "]: ";
   for (int i = 0; i < size; ++i) {
     std::cout << data_cpu.at(i) << "  ";
@@ -159,18 +167,43 @@ __global__ void computeXandY(std::size_t nbHits, T *cuda_x, T *cuda_y,
   cuda_y[i] = r * std::sin(phi);
 }
 
+void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule, std::size_t nHits,
+                                     const std::uint64_t *moduleIds,
+                                     std::size_t moduleMapSize,
+                                     const std::uint64_t *moduleMapKey,
+                                     const int *moduleMapVal) {
+  auto i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i >= nHits) {
+    return;
+  }
+
+  auto mId = moduleIds[i];
+
+  // bisect moduleMapKey to find mId
+  int left = 0;
+  int right = moduleMapSize - 1;
+  while (left <= right) {
+    int mid = left + (right - left) / 2;
+    if (moduleMapKey[mid] == mId) {
+      // atomic add 1 to hitIndice[moduleMapVal[mid]]
+      atomicAdd(&nbHitsOnModule[moduleMapVal[mid]], 1);
+      return;
+    }
+    if (moduleMapKey[mid] < mId) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+}
+
 }  // namespace Acts::detail
 
-#define CUDA_CHECK(ans)                                  \
-  do {                                                   \
-    Acts::detail::cudaAssert((ans), __FILE__, __LINE__); \
-  } while (0)
-
-#define CUDA_PRINTV(ptr, size)             \
-  if (logger().level() == Acts::VERBOSE) { \
-    std::cout << #ptr << ": ";             \
-    cudaDeviceSynchronize();               \
-    cudaPrintArray<<<1, 1>>>(ptr, size);   \
-    cudaDeviceSynchronize();               \
-    std::cout << std::endl;                \
-  }
+#define CUDA_PRINTV(ptr, size)         \
+  std::cout << #ptr << ": ";           \
+  CUDA_CHECK(cudaDeviceSynchronize()); \
+  cudaPrintArray<<<1, 1>>>(ptr, size); \
+  CUDA_CHECK(cudaGetLastError());      \
+  CUDA_CHECK(cudaDeviceSynchronize()); \
+  std::cout << std::endl;\

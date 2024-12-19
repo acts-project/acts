@@ -17,6 +17,8 @@
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 
+namespace Acts::detail {
+
 template <typename T>
 __device__ void swap(T &a, T &b) {
   T tmp = a;
@@ -104,3 +106,5 @@ __global__ void makeLabelMask(const int *labels, int *labelMask) {
 
   labelMask[labels[i]] = 1;
 }
+
+}  // namespace Acts::detail

@@ -110,9 +110,14 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     set_target_properties(
         ActsPluginExaTrkX
         PROPERTIES
-            CUDA_STANDARD 17
+            CUDA_STANDARD 20
             CUDA_STANDARD_REQUIRED ON
             CUDA_SEPARABLE_COMPILATION ON
+    )
+    #target_compile_options(ActsPluginExaTrkX PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g -G --cudart shared>)
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
     )
     target_compile_definitions(
         ActsPluginExaTrkX

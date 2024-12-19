@@ -25,6 +25,9 @@
 template <typename T>
 class CUDA_module_map_doublet;
 
+struct CUstream_st;
+typedef CUstream_st *cudaStream_t;
+
 template <typename T>
 class CUDA_module_map_triplet;
 
@@ -56,17 +59,8 @@ struct CUDA_hit_data {
 
 template <typename T>
 struct CUDA_edge_data {
-  std::size_t size;
-
-  int *cuda_graph_M1_hits;
-  int *cuda_graph_M2_hits;
-
-  T *cuda_graph_dR;
-  T *cuda_graph_dz;
-  T *cuda_graph_deta;
-  T *cuda_graph_dphi;
-  T *cuda_graph_phi_slope;
-  T *cuda_graph_r_phi_slope;
+  std::size_t nEdges;
+  int *cudaEdgePtr;
 };
 
 }  // namespace detail
@@ -87,16 +81,20 @@ class ModuleMapCuda : public GraphConstructionBase {
   };
 
  private:
-  std::pair<Acts::detail::CUDA_edge_data<float>,
-            Acts::detail::CUDA_hit_data<float>>
-  makeEdges(Acts::detail::CUDA_hit_data<float> cuda_TThits,
-            int *cuda_hit_indice) const;
+  detail::CUDA_edge_data<float> makeEdges(
+      detail::CUDA_hit_data<float> cuda_TThits, int *cuda_hit_indice,
+      cudaStream_t &stream) const;
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unique_ptr<CUDA_module_map_doublet<float>> m_cudaModuleMapDoublet;
   std::unique_ptr<CUDA_module_map_triplet<float>> m_cudaModuleMapTriplet;
+
+  // TODO make this a managed storage soon
+  std::uint64_t *m_cudaModuleMapKeys{};
+  int *m_cudaModuleMapVals{};
+  std::size_t m_cudaModuleMapSize{};
 
   const auto &logger() const { return *m_logger; }
 
