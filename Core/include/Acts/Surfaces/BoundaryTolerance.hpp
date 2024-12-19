@@ -10,11 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <cmath>
-#include <iterator>
 #include <optional>
 #include <variant>
-#include <vector>
 
 namespace Acts {
 

@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -21,8 +20,30 @@
 #include <limits>
 #include <stdexcept>
 
-Acts::AnnulusBounds::AnnulusBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+namespace Acts {
+
+namespace {
+
+Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
+                         const SquareMatrix2& weight) {
+  // connecting vector
+  auto n = b - a;
+  // squared norm of line
+  auto f = (n.transpose() * weight * n).value();
+  // weighted scalar product of line to point and segment line
+  auto u = ((p - a).transpose() * weight * n).value() / f;
+  // clamp to [0, 1], convert to point
+  return std::clamp(u, 0., 1.) * n + a;
+}
+
+double squaredNorm(const Vector2& v, const SquareMatrix2& weight) {
+  return (v.transpose() * weight * v).value();
+}
+
+}  // namespace
+
+AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
+    false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
   m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
@@ -68,17 +89,13 @@ Acts::AnnulusBounds::AnnulusBounds(
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
   m_outLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMaxPhiRel));
   m_inLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMaxPhiRel));
   m_outRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMinPhiRel));
   m_inRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -95,14 +112,33 @@ Acts::AnnulusBounds::AnnulusBounds(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
+std::vector<double> AnnulusBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void AnnulusBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
+      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
+    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
+  }
+  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
+      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
+      get(eMinPhiRel) > get(eMaxPhiRel)) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
+  }
+}
+
+std::vector<Vector2> AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
+std::vector<Vector2> AnnulusBounds::vertices(
     unsigned int quarterSegments) const {
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
@@ -114,7 +150,7 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
-    std::vector<Acts::Vector2> rvertices =
+    std::vector<Vector2> rvertices =
         detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
             {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
             quarterSegments);
@@ -128,20 +164,20 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
     std::for_each(rvertices.begin(), rvertices.end(),
-                  [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
+                  [&](Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
   }
   return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
           m_outLeftStripXY};
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                                 double tolPhi) const {
+bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
+                           double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by average phi
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[eBoundLoc1];
-  double rLoc = locpo_rotated[eBoundLoc0];
+  double phiLoc = locpo_rotated[1];
+  double rLoc = locpo_rotated[0];
 
   if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
       phiLoc > (get(eMaxPhiRel) + tolPhi)) {
@@ -151,18 +187,16 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   if (tolR == 0.) {
     // don't need R, can use R^2
-    double r_mod2 =
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
+    double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                    2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
 
     if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
     // use R
-    double r_mod = sqrt(
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
+    double r_mod = sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                        2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
@@ -171,9 +205,8 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool AnnulusBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
@@ -207,10 +240,10 @@ bool Acts::AnnulusBounds::inside(
   // to the MODULE SYSTEM in PC via jacobian. The following transforms into
   // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
   double dphi = get(eAveragePhi);
-  double phi_strip = locpo_rotated[eBoundLoc1];
-  double r_strip = locpo_rotated[eBoundLoc0];
-  double O_x = m_shiftXY[eBoundLoc0];
-  double O_y = m_shiftXY[eBoundLoc1];
+  double phi_strip = locpo_rotated[1];
+  double r_strip = locpo_rotated[0];
+  double O_x = m_shiftXY[0];
+  double O_y = m_shiftXY[1];
 
   // For a transformation from cartesian into polar coordinates
   //
@@ -312,9 +345,8 @@ bool Acts::AnnulusBounds::inside(
 
   // now: MODULE system. Need to transform locpo to MODULE PC
   //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
-  Vector2 locpoStripXY(
-      locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
-      locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
+  Vector2 locpoStripXY(locpo_rotated[0] * std::cos(locpo_rotated[1]),
+                       locpo_rotated[0] * std::sin(locpo_rotated[1]));
   Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
 
   // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
@@ -339,36 +371,16 @@ bool Acts::AnnulusBounds::inside(
          boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
 }
 
-Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
-    const Vector2& vStripXY) const {
+Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
   Vector2 vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
 }
 
-Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
-    const Vector2& a, const Vector2& b, const Vector2& p,
-    const SquareMatrix2& weight) const {
-  // connecting vector
-  auto n = b - a;
-  // squared norm of line
-  auto f = (n.transpose() * weight * n).value();
-  // weighted scalar product of line to point and segment line
-  auto u = ((p - a).transpose() * weight * n).value() / f;
-  // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.), 1.) * n + a;
-}
-
-double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SquareMatrix2& weight) const {
-  return (v.transpose() * weight * v).value();
-}
-
-Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
+Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
-// Ostream operator overload
-std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
+std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
@@ -379,3 +391,5 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts
