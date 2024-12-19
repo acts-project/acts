@@ -67,7 +67,12 @@ class BoundaryTolerance {
 
     AbsoluteBound() = default;
     AbsoluteBound(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {}
+        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
+      if (tolerance0 < 0 || tolerance1 < 0) {
+        throw std::invalid_argument(
+            "AbsoluteBound: Tolerance must be non-negative");
+      }
+    }
   };
 
   /// Absolute tolerance in Cartesian coordinates
@@ -77,7 +82,12 @@ class BoundaryTolerance {
 
     AbsoluteCartesian() = default;
     AbsoluteCartesian(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {}
+        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
+      if (tolerance0 < 0 || tolerance1 < 0) {
+        throw std::invalid_argument(
+            "AbsoluteCartesian: Tolerance must be non-negative");
+      }
+    }
   };
 
   /// Absolute tolerance in Euclidean distance

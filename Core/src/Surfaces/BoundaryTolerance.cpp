@@ -128,7 +128,7 @@ BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
       chi2Bound != nullptr) {
     if (chi2Bound->maxChi2 == 0.) {
       return None;
-    } else if (chi2Bound->maxChi2 > 0.) {
+    } else if (chi2Bound->maxChi2 >= 0.) {
       return Extend;
     } else {
       return Shrink;
@@ -187,28 +187,19 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* absoluteBound = getVariantPtr<AbsoluteBound>();
       absoluteBound != nullptr) {
-    bool tol0 = false;
-    if (absoluteBound->tolerance0 < 0) {
-      tol0 = std::abs(distance[0]) > std::abs(absoluteBound->tolerance0);
-    } else {
-      tol0 = std::abs(distance[0]) <= absoluteBound->tolerance0;
-    }
-
-    bool tol1 = false;
-    if (absoluteBound->tolerance1 < 0) {
-      tol1 = std::abs(distance[1]) > std::abs(absoluteBound->tolerance1);
-    } else {
-      tol1 = std::abs(distance[1]) <= absoluteBound->tolerance1;
-    }
-
-    return tol0 && tol1;
+    return std::abs(distance[0]) <= absoluteBound->tolerance0 &&
+           std::abs(distance[1]) <= absoluteBound->tolerance1;
   }
 
   if (const auto* chi2Bound = getVariantPtr<Chi2Bound>();
       chi2Bound != nullptr) {
-    double chi2 = distance.transpose() * chi2Bound->weight * distance;
     // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
-    return chi2 <= 2 * chi2Bound->maxChi2;
+    double chi2 = distance.transpose() * chi2Bound->weight * distance;
+    if (chi2Bound->maxChi2 < 0) {
+      return chi2 > 2 * std::abs(chi2Bound->maxChi2);
+    } else {
+      return chi2 <= 2 * chi2Bound->maxChi2;
+    }
   }
 
   bool isCartesian = !jacobianOpt.has_value();
@@ -222,22 +213,8 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* absoluteCartesian = getVariantPtr<AbsoluteCartesian>();
       absoluteCartesian != nullptr) {
-    bool tol0 = false;
-
-    if (absoluteCartesian->tolerance0 < 0) {
-      tol0 = cartesianDistance[0] > std::abs(absoluteCartesian->tolerance0);
-    } else {
-      tol0 = std::abs(cartesianDistance[0]) <= absoluteCartesian->tolerance0;
-    }
-
-    bool tol1 = false;
-    if (absoluteCartesian->tolerance1 < 0) {
-      tol1 = cartesianDistance[1] > std::abs(absoluteCartesian->tolerance1);
-    } else {
-      tol1 = std::abs(cartesianDistance[1]) <= absoluteCartesian->tolerance1;
-    }
-
-    return tol0 && tol1;
+    return std::abs(cartesianDistance[0]) <= absoluteCartesian->tolerance0 &&
+           std::abs(cartesianDistance[1]) <= absoluteCartesian->tolerance1;
   }
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();

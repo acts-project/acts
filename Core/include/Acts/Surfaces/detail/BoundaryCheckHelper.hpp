@@ -69,15 +69,12 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
         point, vertices, metric);
   }
 
-  std::cout << "closestPoint: " << closestPoint.transpose() << std::endl;
-  std::cout << "point: " << point.transpose() << std::endl;
   Vector2 distance = closestPoint - point;
-  std::cout << "distance: " << distance.transpose() << std::endl;
 
   if (mode == Extend) {
     return tolerance.isTolerated(distance, jacobianOpt);
   } else {
-    return tolerance.isTolerated(-distance, jacobianOpt) && insideRectangle;
+    return tolerance.isTolerated(distance, jacobianOpt) && insideRectangle;
   }
 }
 
@@ -93,23 +90,27 @@ inline bool insidePolygon(std::span<const Vector2> vertices,
                           const BoundaryTolerance& tolerance,
                           const Vector2& point,
                           const std::optional<SquareMatrix2>& jacobianOpt) {
+  using enum BoundaryTolerance::ToleranceMode;
   if (tolerance.isInfinite()) {
     // The null boundary check always succeeds
     return true;
   }
 
-  if (detail::VerticesHelper::isInsidePolygon(point, vertices)) {
-    // If the point falls inside the polygon, the check always succeeds
-    return true;
-  }
+  BoundaryTolerance::ToleranceMode mode = tolerance.toleranceMode();
+  bool insidePolygon = detail::VerticesHelper::isInsidePolygon(point, vertices);
 
-  if (tolerance.toleranceMode() == BoundaryTolerance::ToleranceMode::None) {
+  if (mode == None) {
+    // If the point falls inside the polygon, the check always succeeds
     // Outside of the polygon, since we've eliminated the case of an absence of
     // check above, we know we'll always fail if the tolerance is zero.
     //
     // This allows us to avoid the expensive computeClosestPointOnPolygon
     // computation in this simple case.
-    return false;
+    return insidePolygon;
+  }
+
+  if (mode == Extend && insidePolygon) {
+    return true;
   }
 
   // TODO: When tolerance is not 0, we could also avoid this computation in
@@ -126,7 +127,12 @@ inline bool insidePolygon(std::span<const Vector2> vertices,
 
   Vector2 distance = closestPoint - point;
 
-  return tolerance.isTolerated(distance, jacobianOpt);
+  if (mode == Extend) {
+    return tolerance.isTolerated(distance, jacobianOpt);
+  } else {
+    // @TODO: Check sign
+    return tolerance.isTolerated(-distance, jacobianOpt) && insidePolygon;
+  }
 }
 
 }  // namespace Acts::detail
