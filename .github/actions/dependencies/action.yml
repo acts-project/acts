@@ -14,27 +14,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-
-    - name: Restore spack cache
-      id: cache-spack-restore
-      uses: actions/cache/restore@v4
-      with:
-        path: spack.tar.zst
-        key: spack-clone
-
-    - name: Extract spack cache if found
-      if: steps.cache-spack-restore.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        zstd -d spack.tar.zst -o spack.tar
-        tar xf spack.tar
-        rm spack.tar
-
-    - name: Install spack if not found
-      shell: bash
-      run: |
-        CI/dependencies/setup_spack.sh
-
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash
@@ -54,18 +33,3 @@ runs:
           echo "Without compiler"
           CI/dependencies/setup.sh
         fi
-
-    - name: Compress spack directory for caching
-      shell: bash
-      run: |
-        tar \
-          --exclude='opt' \
-          --exclude='var/spack/cache' \
-          --exclude='var/spack/environments' \
-          cf spack.tar spack/
-        zstd -T0 -19 spack.tar -o spack.tar.zst
-
-    - uses: actions/cache/save@v4
-      with:
-        path: spack.tar.zst
-        key: spack-clone
