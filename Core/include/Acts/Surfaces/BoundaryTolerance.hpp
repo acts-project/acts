@@ -167,12 +167,6 @@ class BoundaryTolerance {
   bool isTolerated(const Vector2& distance,
                    const std::optional<SquareMatrix2>& jacobianOpt) const;
 
-  /// Check if there is a metric assigned with this tolerance.
-  bool hasMetric(bool hasJacobian) const;
-
-  /// Get the metric for the tolerance.
-  SquareMatrix2 getMetric(const std::optional<SquareMatrix2>& jacobian) const;
-
  private:
   Variant m_variant;
 

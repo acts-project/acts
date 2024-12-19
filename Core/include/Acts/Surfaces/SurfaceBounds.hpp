@@ -51,33 +51,53 @@ class SurfaceBounds {
   virtual ~SurfaceBounds() = default;
 
   /// Return the bounds type - for persistency optimization
-  ///
-  /// @return is a BoundsType enum
+  /// @return the bounds type
   virtual BoundsType type() const = 0;
 
+  /// Check if the bound coordinates are cartesian
+  /// @return true if the bound coordinates are cartesian
   virtual bool isCartesian() const = 0;
 
+  /// Computes the bound to cartesian jacobian at a given local position
+  /// @param lposition is the local position at which the jacobian is computed
+  /// @return the bound to cartesian jacobian
   virtual SquareMatrix2 boundToCartesianJacobian(
       const Vector2& lposition) const = 0;
 
+  /// Computes the cartesian to bound jacobian at a given local position
+  /// @param lposition is the local position at which the jacobian is computed
+  /// @return the cartesian to bound jacobian
   virtual SquareMatrix2 cartesianToBoundJacobian(
       const Vector2& lposition) const = 0;
 
+  /// Computes the bound to cartesian metric at a given local position
+  /// @param lposition is the local position at which the metric is computed
+  /// @return the bound to cartesian metric
   virtual SquareMatrix2 boundToCartesianMetric(
       const Vector2& lposition) const = 0;
 
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
-  ///
   /// @return of the stored values for this SurfaceBounds object
   virtual std::vector<double> values() const = 0;
 
+  /// Inside check for the bounds object
+  /// @param lposition is the local position
+  /// @return true if the local position is inside the bounds
   virtual bool inside(const Vector2& lposition) const = 0;
 
+  /// Calculates the closest point on the bounds to a given local position
+  /// @param lposition is the local position
+  /// @param metric is the metric to be used for the distance calculation
+  /// @return the closest point on the bounds
   virtual Vector2 closestPoint(
       const Vector2& lposition,
       const std::optional<SquareMatrix2>& metric) const = 0;
 
+  /// Calculates the distance to the bounds from a given local position
+  /// @param lposition is the local position
+  /// @param metric is the metric to be used for the distance calculation
+  /// @return the distance to the bounds
   virtual double distance(const Vector2& lposition,
                           const std::optional<SquareMatrix2>& metric) const {
     Vector2 closest = closestPoint(lposition, metric);
@@ -86,13 +106,10 @@ class SurfaceBounds {
                       metric.value_or(SquareMatrix2::Identity()) * diff)(0, 0));
   }
 
-  /// Inside check for the bounds object driven by the boundary check directive
-  /// Each Bounds has a method inside, which checks if a LocalPosition is inside
-  /// the bounds  Inside can be called without/with tolerances.
-  ///
-  /// @param lposition Local position (assumed to be in right surface frame)
-  /// @param boundaryTolerance boundary check directive
-  /// @return boolean indicator for the success of this operation
+  /// Inside check for the bounds object given a boundary tolerance.
+  /// @param lposition is the local position
+  /// @param boundaryTolerance is the boundary tolerance object
+  /// @return true if the local position is inside the bounds and tolerance
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const {
     using enum BoundaryTolerance::ToleranceMode;
@@ -101,14 +118,15 @@ class SurfaceBounds {
       return true;
     }
 
-    BoundaryTolerance::ToleranceMode mode = boundaryTolerance.toleranceMode();
+    BoundaryTolerance::ToleranceMode toleranceMode =
+        boundaryTolerance.toleranceMode();
     bool strictlyInside = inside(lposition);
 
-    if (mode == None) {
+    if (toleranceMode == None) {
       return strictlyInside;
     }
 
-    if (mode == Extend && strictlyInside) {
+    if (toleranceMode == Extend && strictlyInside) {
       return true;
     }
 
@@ -126,7 +144,7 @@ class SurfaceBounds {
     Vector2 closest = closestPoint(lposition, metric);
     Vector2 distance = closest - lposition;
 
-    if (mode == Shrink) {
+    if (toleranceMode == Shrink) {
       return boundaryTolerance.isTolerated(distance, jacobian) &&
              strictlyInside;
     }
@@ -134,7 +152,6 @@ class SurfaceBounds {
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  ///
   /// @param os is the outstream in which the string dump is done
   virtual std::ostream& toStream(std::ostream& os) const = 0;
 

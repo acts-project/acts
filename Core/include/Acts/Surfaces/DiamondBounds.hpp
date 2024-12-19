@@ -65,6 +65,7 @@ class DiamondBounds : public PlanarBounds {
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
 
+  /// @copydoc SurfaceBounds::type
   BoundsType type() const final { return eDiamond; }
 
   /// Return the bound values as dynamically sized vector
@@ -72,8 +73,10 @@ class DiamondBounds : public PlanarBounds {
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 

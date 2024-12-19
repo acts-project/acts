@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <span>
 #include <utility>
 #include <vector>

@@ -40,32 +40,38 @@ class LineBounds : public SurfaceBounds {
     checkConsistency();
   }
 
+  /// @copydoc SurfaceBounds::type
   BoundsType type() const final { return eLine; }
 
+  /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }
 
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::cartesianToBoundJacobian
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 

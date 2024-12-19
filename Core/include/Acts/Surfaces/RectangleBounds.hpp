@@ -62,12 +62,16 @@ class RectangleBounds : public PlanarBounds {
     checkConsistency();
   }
 
+  /// @copydoc SurfaceBounds::type
   BoundsType type() const final { return eRectangle; }
 
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 

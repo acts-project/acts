@@ -50,10 +50,14 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param values the values to be stream in
   TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
 
+  /// @copydoc SurfaceBounds::type
   BoundsType type() const final { return eTrapezoid; }
 
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
+  ///
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
   /// intersects
@@ -96,6 +100,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 

@@ -21,38 +21,47 @@ namespace Acts {
 ///
 class InfiniteBounds : public SurfaceBounds {
  public:
+  /// @copydoc SurfaceBounds::type
   SurfaceBounds::BoundsType type() const final { return eBoundless; }
 
+  /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }
 
+  /// @copydoc SurfaceBounds::boundToCartesianJacobian
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::cartesianToBoundJacobian
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::boundToCartesianMetric
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final { return {}; }
 
+  /// @copydoc SurfaceBounds::inside(const Vector2&)
   bool inside(const Vector2& lposition) const final {
     (void)lposition;
     return true;
   }
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final {
     (void)metric;
     return lposition;
   }
 
+  /// @copydoc SurfaceBounds::inside(const Vector2&, const BoundaryTolerance&)
   bool inside(const Vector2& lposition,
               const BoundaryTolerance& boundaryTolerance) const final {
     (void)lposition;

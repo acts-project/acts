@@ -70,39 +70,43 @@ class ConeBounds : public SurfaceBounds {
   /// @param values The parameter array
   ConeBounds(const std::array<double, eSize>& values) noexcept(false);
 
+  /// @copydoc SurfaceBounds::type
   BoundsType type() const final { return eCone; }
 
+  /// @copydoc SurfaceBounds::isCartesian
   bool isCartesian() const final { return true; }
 
+  /// @copydoc SurfaceBounds::isCylindrical
   SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::isCylindrical
   SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
+  /// @copydoc SurfaceBounds::isCylindrical
   SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
     (void)lposition;
     return SquareMatrix2::Identity();
   }
 
-  /// Return the bound values as dynamically sized vector
-  ///
-  /// @return this returns a copy of the internal values
+  /// @copydoc SurfaceBounds::values
   std::vector<double> values() const final;
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::inside
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
   using SurfaceBounds::inside;
 
   /// Output Method for std::ostream
-  ///
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input object
   std::ostream& toStream(std::ostream& sl) const final;

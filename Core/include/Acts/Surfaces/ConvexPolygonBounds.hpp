@@ -38,7 +38,6 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   BoundsType type() const final { return eConvexPolygon; }
 
   /// Return the bound values as dynamically sized vector
-  ///
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
@@ -98,8 +97,10 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param values The values to build up the vertices
   ConvexPolygonBounds(const value_array& values) noexcept(false);
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
@@ -144,8 +145,10 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @param vertices The list of vertices.
   ConvexPolygonBounds(const std::vector<Vector2>& vertices);
 
+  /// @copydoc SurfaceBounds::inside
   bool inside(const Vector2& lposition) const final;
 
+  /// @copydoc SurfaceBounds::closestPoint
   Vector2 closestPoint(const Vector2& lposition,
                        const std::optional<SquareMatrix2>& metric) const final;
 
