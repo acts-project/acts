@@ -67,7 +67,12 @@ class BoundaryTolerance {
 
     AbsoluteBound() = default;
     AbsoluteBound(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {}
+        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
+      if (tolerance0 < 0 || tolerance1 < 0) {
+        throw std::invalid_argument(
+            "AbsoluteBound: Tolerance must be non-negative");
+      }
+    }
   };
 
   /// Absolute tolerance in Cartesian coordinates
@@ -77,7 +82,12 @@ class BoundaryTolerance {
 
     AbsoluteCartesian() = default;
     AbsoluteCartesian(double tolerance0_, double tolerance1_)
-        : tolerance0(tolerance0_), tolerance1(tolerance1_) {}
+        : tolerance0(tolerance0_), tolerance1(tolerance1_) {
+      if (tolerance0 < 0 || tolerance1 < 0) {
+        throw std::invalid_argument(
+            "AbsoluteCartesian: Tolerance must be non-negative");
+      }
+    }
   };
 
   /// Absolute tolerance in Euclidean distance
@@ -96,6 +106,12 @@ class BoundaryTolerance {
     Chi2Bound() = default;
     Chi2Bound(const SquareMatrix2& weight_, double maxChi2_)
         : maxChi2(maxChi2_), weight(weight_) {}
+  };
+
+  enum class ToleranceMode {
+    Extend,  // Extend the boundary
+    None,    // No tolerance
+    Shrink   // Shrink the boundary
   };
 
   /// Underlying variant type
@@ -132,7 +148,7 @@ class BoundaryTolerance {
   bool hasChi2Bound() const;
 
   /// Check if any tolerance is set.
-  bool hasTolerance() const;
+  ToleranceMode toleranceMode() const;
 
   /// Get the tolerance as absolute bound.
   AbsoluteBound asAbsoluteBound(bool isCartesian = false) const;

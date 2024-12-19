@@ -95,16 +95,21 @@ class SurfaceBounds {
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const {
+    using enum BoundaryTolerance::ToleranceMode;
+
     if (boundaryTolerance.isInfinite()) {
       return true;
     }
 
-    if (inside(lposition)) {
-      return true;
+    BoundaryTolerance::ToleranceMode mode = boundaryTolerance.toleranceMode();
+    bool strictlyInside = inside(lposition);
+
+    if (mode == None) {
+      return strictlyInside;
     }
 
-    if (!boundaryTolerance.hasTolerance()) {
-      return false;
+    if (mode == Extend && strictlyInside) {
+      return true;
     }
 
     std::optional<SquareMatrix2> jacobian;
@@ -120,6 +125,11 @@ class SurfaceBounds {
 
     Vector2 closest = closestPoint(lposition, metric);
     Vector2 distance = closest - lposition;
+
+    if (mode == Shrink) {
+      return boundaryTolerance.isTolerated(distance, jacobian) &&
+             strictlyInside;
+    }
     return boundaryTolerance.isTolerated(distance, jacobian);
   }
 

@@ -294,10 +294,9 @@ Vector2 AnnulusBounds::closestPoint(
   jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
   jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
 
-  // Mahalanobis distance uses the coordinate weights (usually inverse
-  // covariance) as a metric
-  auto metricModulePC = jacobianStripPCToModulePC.transpose() *
-                        metric.value_or(SquareMatrix2::Identity()) *
+  // Mahalanobis distance uses inverse covariance as weights
+  const auto& weightStripPC = metric.value_or(SquareMatrix2::Identity());
+  auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
                         jacobianStripPCToModulePC;
 
   double minDist = std::numeric_limits<double>::max();
@@ -309,35 +308,36 @@ Vector2 AnnulusBounds::closestPoint(
 
   // first: STRIP system. locpo is in STRIP PC already
   currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                    locpo_rotated, metricModulePC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, metricModulePC);
+                                    locpo_rotated, weightStripPC);
+  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
   minDist = currentDist;
 
   currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                    locpo_rotated, metricModulePC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, metricModulePC);
+                                    locpo_rotated, weightStripPC);
+  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
 
   // now: MODULE system. Need to transform locpo to MODULE PC
   //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
-  Vector2 locpoStripXY(locpo_rotated[0] * std::cos(locpo_rotated[1]),
-                       locpo_rotated[0] * std::sin(locpo_rotated[1]));
+  Vector2 locpoStripXY(
+      locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
+      locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
   Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
 
   // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
   // distances are of same unit if covariance is correctly transformed
   currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                    locpoModulePC, metricModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, metricModulePC);
+                                    locpoModulePC, weightModulePC);
+  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
 
   currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                    locpoModulePC, metricModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, metricModulePC);
+                                    locpoModulePC, weightModulePC);
+  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
   if (currentDist < minDist) {
     minDist = currentDist;
   }
