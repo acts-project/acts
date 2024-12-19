@@ -8,9 +8,7 @@
 
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -68,8 +66,7 @@ bool TrapezoidBounds::inside(const Vector2& lposition) const {
   // run slow-ish polygon check
   Vector2 vertices[] = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
-  return detail::insidePolygon(vertices, BoundaryTolerance::None(), extPosition,
-                               std::nullopt);
+  return detail::VerticesHelper::isInsidePolygon(extPosition, vertices);
 }
 
 Vector2 TrapezoidBounds::closestPoint(

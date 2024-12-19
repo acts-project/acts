@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
@@ -96,8 +96,7 @@ ConvexPolygonBounds<N>::ConvexPolygonBounds(const value_array& values) noexcept(
 
 template <int N>
 bool ConvexPolygonBounds<N>::inside(const Vector2& lposition) const {
-  return detail::insidePolygon(m_vertices, BoundaryTolerance::None(), lposition,
-                               std::nullopt);
+  return detail::VerticesHelper::isInsidePolygon(lposition, m_vertices);
 }
 
 template <int N>

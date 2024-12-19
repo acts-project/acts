@@ -8,8 +8,6 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -43,10 +41,9 @@ bool CylinderBounds::inside(const Vector2& lposition) const {
   double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
-    return detail::insideAlignedBox(
-        Vector2(-halfPhi, -halfLengthZ), Vector2(halfPhi, halfLengthZ),
-        BoundaryTolerance::None(), shifted(lposition),
-        boundToCartesianJacobian(lposition));
+    return detail::VerticesHelper::isInsideRectangle(
+        shifted(lposition), Vector2(-halfPhi, -halfLengthZ),
+        Vector2(halfPhi, halfLengthZ));
   }
 
   double radius = get(eR);
@@ -79,8 +76,7 @@ bool CylinderBounds::inside(const Vector2& lposition) const {
   Vector2 vertices[] = {lowerLeft,  middleLeft,  upperLeft,
                         upperRight, middleRight, lowerRight};
 
-  return detail::insidePolygon(vertices, BoundaryTolerance::None(), lposition,
-                               boundToCartesianJacobian(lposition));
+  return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }
 
 Vector2 CylinderBounds::closestPoint(

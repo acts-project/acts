@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/DiamondBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>
@@ -44,8 +43,7 @@ bool DiamondBounds::inside(const Vector2& lposition) const {
   double y3 = get(DiamondBounds::eHalfLengthYpos);
   Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
                         {x3, y3},   {-x3, y3}, {-x2, y2}};
-  return detail::insidePolygon(vertices, BoundaryTolerance::None(), lposition,
-                               std::nullopt);
+  return detail::VerticesHelper::isInsidePolygon(lposition, vertices);
 }
 
 Vector2 DiamondBounds::closestPoint(

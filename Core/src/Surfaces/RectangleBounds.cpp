@@ -9,8 +9,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -48,8 +47,7 @@ void RectangleBounds::checkConsistency() noexcept(false) {
 }
 
 bool RectangleBounds::inside(const Vector2& lposition) const {
-  return detail::insideAlignedBox(m_min, m_max, BoundaryTolerance::None(),
-                                  lposition, std::nullopt);
+  return detail::VerticesHelper::isInsideRectangle(lposition, m_min, m_max);
 }
 
 Vector2 RectangleBounds::closestPoint(

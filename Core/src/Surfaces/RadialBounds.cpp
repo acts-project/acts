@@ -8,8 +8,6 @@
 
 #include "Acts/Surfaces/RadialBounds.hpp"
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -73,16 +71,15 @@ Vector2 RadialBounds::shifted(const Vector2& lposition) const {
 }
 
 bool RadialBounds::inside(const Vector2& lposition) const {
-  return detail::insideAlignedBox(Vector2(get(eMinR), -get(eHalfPhiSector)),
-                                  Vector2(get(eMaxR), get(eHalfPhiSector)),
-                                  BoundaryTolerance::None(), shifted(lposition),
-                                  std::nullopt);
+  return detail::VerticesHelper::isInsideRectangle(
+      shifted(lposition), Vector2(get(eMinR), -get(eHalfPhiSector)),
+      Vector2(get(eMaxR), get(eHalfPhiSector)));
 }
 
 Vector2 RadialBounds::closestPoint(
     const Vector2& lposition,
     const std::optional<SquareMatrix2>& metric) const {
-  return detail::computeClosestPointOnAlignedBox(
+  return detail::VerticesHelper::computeClosestPointOnAlignedBox(
       Vector2(get(eMinR), -get(eHalfPhiSector)),
       Vector2(get(eMaxR), get(eHalfPhiSector)), shifted(lposition), metric);
 }

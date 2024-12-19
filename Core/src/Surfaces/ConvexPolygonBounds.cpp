@@ -9,8 +9,7 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <optional>
 #include <ostream>
@@ -47,8 +46,7 @@ ConvexPolygonBounds<PolygonDynamic>::ConvexPolygonBounds(
 
 bool ConvexPolygonBounds<PolygonDynamic>::inside(
     const Vector2& lposition) const {
-  return detail::insidePolygon(m_vertices, BoundaryTolerance::None(), lposition,
-                               std::nullopt);
+  return detail::VerticesHelper::isInsidePolygon(lposition, m_vertices);
 }
 
 Vector2 ConvexPolygonBounds<PolygonDynamic>::closestPoint(
