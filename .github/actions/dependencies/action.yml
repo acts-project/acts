@@ -58,7 +58,11 @@ runs:
     - name: Compress spack directory for caching
       shell: bash
       run: |
-        tar --exclude='opt' cf spack.tar spack/
+        tar \
+          --exclude='opt' \
+          --exclude='var/spack/cache' \
+          --exclude='var/spack/environments' \
+          cf spack.tar spack/
         zstd -T0 -19 spack.tar -o spack.tar.zst
 
     - uses: actions/cache/save@v4
