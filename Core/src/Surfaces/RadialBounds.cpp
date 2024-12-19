@@ -88,7 +88,7 @@ std::vector<Vector2> RadialBounds::vertices(unsigned int lseg) const {
 std::ostream& RadialBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "RadialBounds:  (innerRadius, outerRadius, hPhiSector, "
+  sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, "
         "averagePhi) = ";
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << get(eHalfPhiSector)
      << ", " << get(eAveragePhi) << ")";

@@ -118,7 +118,7 @@ std::vector<Vector2> DiscTrapezoidBounds::vertices(
 std::ostream& DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "DiscTrapezoidBounds: (innerRadius, outerRadius, "
+  sl << "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, "
         "halfLengthXminR, "
         "halfLengthXmaxR, halfLengthY, halfPhiSector, averagePhi, rCenter, "
         "stereo) = ";

@@ -45,7 +45,7 @@ bool LineBounds::inside(const Vector2& lposition,
 std::ostream& LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "LineBounds: (radius, halflengthInZ) = ";
+  sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
   sl << "(" << get(LineBounds::eR) << ", " << get(LineBounds::eHalfLengthZ)
      << ")";
   sl << std::setprecision(-1);

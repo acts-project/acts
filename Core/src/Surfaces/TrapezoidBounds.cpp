@@ -153,7 +153,7 @@ const RectangleBounds& TrapezoidBounds::boundingBox() const {
 std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
+  sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
      << "(" << get(eHalfLengthXnegY) << ", " << get(eHalfLengthXposY) << ", "
      << get(eHalfLengthY) << ", " << get(eRotationAngle) << ")";
   sl << std::setprecision(-1);

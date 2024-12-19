@@ -80,7 +80,7 @@ const RectangleBounds& EllipseBounds::boundingBox() const {
 std::ostream& EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
+  sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "
         "outerRadius1, hPhiSector, averagePhi) = ";
   sl << "(" << get(eInnerRx) << ", " << get(eInnerRy) << ", " << get(eOuterRx)
      << ", " << get(eOuterRy) << ", " << get(eAveragePhi) << ", "

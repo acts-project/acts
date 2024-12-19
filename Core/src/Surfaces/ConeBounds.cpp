@@ -81,7 +81,7 @@ bool ConeBounds::inside(const Vector2& lposition,
 std::ostream& ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
+  sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "
         "= ";
   sl << "(" << m_tanAlpha << ", " << get(eMinZ) << ", " << get(eMaxZ) << ", "
      << get(eHalfPhiSector) << ", " << get(eAveragePhi) << ")";
