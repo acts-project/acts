@@ -24,10 +24,6 @@ namespace Acts {
 
 namespace {
 
-double squaredNorm(const Vector2& v, const SquareMatrix2& metric) {
-  return (v.transpose() * metric * v).value();
-}
-
 Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
                          const SquareMatrix2& metric) {
   // connecting vector
@@ -38,6 +34,10 @@ Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
   auto u = ((p - a).transpose() * metric * n).value() / f;
   // clamp to [0, 1], convert to point
   return std::clamp(u, 0., 1.) * n + a;
+}
+
+double squaredNorm(const Vector2& v, const SquareMatrix2& metric) {
+  return (v.transpose() * metric * v).value();
 }
 
 }  // namespace
