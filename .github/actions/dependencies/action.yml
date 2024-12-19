@@ -20,6 +20,22 @@ runs:
       run: |
         brew install ninja ccache
 
+    - name: Restore spack cache
+      id: cache-spack-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: spack.tar.zst
+        key: ${{ env.CACHE_KEY }}-spack
+
+    - name: Extract spack cache if found
+      if: steps.cache-spack-restore.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        echo "Cache hit, extracting spack..."
+        zstd -d spack.tar.zst -o spack.tar
+        tar xf spack.tar
+        rm spack.tar
+
     - name: Install dependencies
       shell: bash
       env:
@@ -33,3 +49,16 @@ runs:
           echo "Without compiler"
           CI/dependencies/setup.sh
         fi
+
+    - name: Compress spack directory for caching
+      shell: bash
+      run: |
+        # Compress spack directory for caching
+        echo "Compressing spack directory..."
+        tar cf spack.tar spack/
+        zstd -T0 -10 spack.tar -o spack.tar.zst
+
+      uses: actions/cache/save@v4
+      with:
+        path: spack.tar.zst
+        key: ${{ env.CACHE_KEY }}-spack
