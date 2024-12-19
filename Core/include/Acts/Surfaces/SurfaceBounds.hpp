@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 
 #include <cmath>
+#include <optional>
 #include <ostream>
 
 namespace Acts {
@@ -62,10 +63,8 @@ class SurfaceBounds {
   virtual SquareMatrix2 cartesianToBoundJacobian(
       const Vector2& lposition) const = 0;
 
-  virtual SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const {
-    SquareMatrix2 j = boundToCartesianJacobian(lposition);
-    return j.transpose() * j;
-  }
+  virtual SquareMatrix2 boundToCartesianMetric(
+      const Vector2& lposition) const = 0;
 
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
@@ -96,9 +95,32 @@ class SurfaceBounds {
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2& lposition,
                       const BoundaryTolerance& boundaryTolerance) const {
-    (void)boundaryTolerance;
+    if (boundaryTolerance.isInfinite()) {
+      return true;
+    }
 
-    return inside(lposition);
+    if (inside(lposition)) {
+      return true;
+    }
+
+    if (!boundaryTolerance.hasTolerance()) {
+      return false;
+    }
+
+    std::optional<SquareMatrix2> jacobian;
+    std::optional<SquareMatrix2> metric;
+    if (boundaryTolerance.hasChi2Bound()) {
+      SquareMatrix2 j = boundToCartesianJacobian(lposition);
+      jacobian = j;
+      metric = j.transpose() * boundaryTolerance.asChi2Bound().weight * j;
+    } else if (!isCartesian()) {
+      jacobian = boundToCartesianJacobian(lposition);
+      metric = boundToCartesianMetric(lposition);
+    }
+
+    Vector2 closest = closestPoint(lposition, metric);
+    Vector2 distance = closest - lposition;
+    return boundaryTolerance.isTolerated(distance, jacobian);
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes

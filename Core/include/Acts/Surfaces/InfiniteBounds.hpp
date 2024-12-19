@@ -20,19 +20,22 @@ namespace Acts {
 
 class InfiniteBounds : public SurfaceBounds {
  public:
-  SurfaceBounds::BoundsType type() const final {
-    return SurfaceBounds::eBoundless;
-  }
+  SurfaceBounds::BoundsType type() const final { return eBoundless; }
 
   bool isCartesian() const final { return true; }
 
-  SquareMatrix2 boundToCartesianJacobian(
-      const Vector2& /*lposition*/) const final {
+  SquareMatrix2 boundToCartesianJacobian(const Vector2& lposition) const final {
+    (void)lposition;
     return SquareMatrix2::Identity();
   }
 
-  SquareMatrix2 cartesianToBoundJacobian(
-      const Vector2& /*lposition*/) const final {
+  SquareMatrix2 cartesianToBoundJacobian(const Vector2& lposition) const final {
+    (void)lposition;
+    return SquareMatrix2::Identity();
+  }
+
+  SquareMatrix2 boundToCartesianMetric(const Vector2& lposition) const final {
+    (void)lposition;
     return SquareMatrix2::Identity();
   }
 
