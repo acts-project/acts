@@ -35,6 +35,19 @@ runs:
         zstd -d spack.tar.zst -o spack.tar
         tar xf spack.tar
         rm spack.tar
+        git -C spack pull --rebase
+
+    - name: Compress spack directory for caching if we cloned
+      if: steps.cache-spack-restore.outputs.cache-hit == 'false'
+      shell: bash
+      run: |
+        tar cf spack.tar spack/
+        zstd -T0 -10 spack.tar -o spack.tar.zst
+
+    - uses: actions/cache/save@v4
+      with:
+        path: spack.tar.zst
+        key: ${{ env.CACHE_KEY }}-spack
 
     - name: Install dependencies
       shell: bash
@@ -49,16 +62,3 @@ runs:
           echo "Without compiler"
           CI/dependencies/setup.sh
         fi
-
-    - name: Compress spack directory for caching
-      shell: bash
-      run: |
-        # Compress spack directory for caching
-        echo "Compressing spack directory..."
-        tar cf spack.tar spack/
-        zstd -T0 -10 spack.tar -o spack.tar.zst
-
-    - uses: actions/cache/save@v4
-      with:
-        path: spack.tar.zst
-        key: ${{ env.CACHE_KEY }}-spack
