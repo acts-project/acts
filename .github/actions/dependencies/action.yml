@@ -35,17 +35,6 @@ runs:
       run: |
         CI/dependencies/setup_spack.sh
 
-    - name: Compress spack directory for caching
-      shell: bash
-      run: |
-        tar cf spack.tar spack/
-        zstd -T0 -19 spack.tar -o spack.tar.zst
-
-    - uses: actions/cache/save@v4
-      with:
-        path: spack.tar.zst
-        key: spack-clone
-
     - name: Prerequisites
       if: startsWith(runner.os, 'macos')
       shell: bash
@@ -65,3 +54,14 @@ runs:
           echo "Without compiler"
           CI/dependencies/setup.sh
         fi
+
+    - name: Compress spack directory for caching
+      shell: bash
+      run: |
+        tar --exclude='opt' cf spack.tar spack/
+        zstd -T0 -19 spack.tar -o spack.tar.zst
+
+    - uses: actions/cache/save@v4
+      with:
+        path: spack.tar.zst
+        key: spack-clone
