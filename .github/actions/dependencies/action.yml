@@ -25,7 +25,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: spack.tar.zst
-        key: ${{ env.CACHE_KEY }}-spack
+        key: spack-clone
 
     - name: Extract spack cache if found
       if: steps.cache-spack-restore.outputs.cache-hit == 'true'
@@ -37,8 +37,7 @@ runs:
         rm spack.tar
         git -C spack pull --rebase
 
-    - name: Compress spack directory for caching if we cloned
-      if: steps.cache-spack-restore.outputs.cache-hit == 'false'
+    - name: Compress spack directory for caching
       shell: bash
       run: |
         tar cf spack.tar spack/
@@ -47,7 +46,7 @@ runs:
     - uses: actions/cache/save@v4
       with:
         path: spack.tar.zst
-        key: ${{ env.CACHE_KEY }}-spack
+        key: spack-clone
 
     - name: Install dependencies
       shell: bash
