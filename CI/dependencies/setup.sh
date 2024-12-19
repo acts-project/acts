@@ -207,8 +207,8 @@ venv_dir="${view_dir}/venv"
 "${view_dir}"/bin/python3 -m venv "$venv_dir"
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  echo "${venv_dir}/bin" >> "$GITHUB_PATH"
   echo "${view_dir}/bin" >> "$GITHUB_PATH"
+  echo "${venv_dir}/bin" >> "$GITHUB_PATH"
 fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 end_section
