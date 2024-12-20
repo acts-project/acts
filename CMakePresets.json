@@ -48,7 +48,6 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
                 "Python_FIND_FRAMEWORK": "LAST",
-                "Python_FIND_STRATEGY": "LOCATION",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
