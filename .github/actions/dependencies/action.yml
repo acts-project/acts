@@ -10,6 +10,10 @@ inputs:
     description: 'Secrets to pass to the action'
     required: false
     default: ''
+  spack_version:
+    description: 'Version of Spack to use'
+    required: false
+    default: '2024-11-13'
 
 runs:
   using: 'composite'
@@ -18,7 +22,39 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache
+        brew install ninja ccache zstd
+
+    - name: Restore cache
+      id: cache-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: spack.tar.zst
+        key: spack-${{ runner.os }}-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+
+    - name: Extract cached Spack
+      if: steps.cache-restore.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        zstd -d spack.tar.zst -f
+        tar xf spack.tar
+        rm spack.tar
+
+    - name: Setup Spack from scratch
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        SPACK_VERSION: ${{ inputs.spack_version }}
+      run: |
+        CI/dependencies/setup_spack.sh
+        tar cf spack.tar spack/
+        zstd -19 --rm spack.tar
+
+    - name: Save cache
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: spack.tar.zst
+        key: spack-${{ runner.os }}-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Install dependencies
       shell: bash
