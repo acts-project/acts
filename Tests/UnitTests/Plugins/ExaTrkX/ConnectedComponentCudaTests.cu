@@ -10,9 +10,16 @@
 
 #include <Acts/Plugins/ExaTrkX/detail/connectedComponents.cuh>
 
-std::vector<int> cudaConnectedComponents(const std::vector<int> &src,
-                                         const std::vector<int> &tgt,
-                                         int numNodes) {
+using namespace Acts::detail;
+
+using BoostGraph =
+    boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>;
+
+void checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
+  std::size_t numNodes = std::max(*std::max_element(src.begin(), src.end()),
+                                  *std::max_element(tgt.begin(), tgt.end())) +
+                         1;
+
   int *cudaSrc, *cudaTgt;
   cudaMalloc(&cudaSrc, src.size() * sizeof(int));
   cudaMalloc(&cudaTgt, tgt.size() * sizeof(int));
@@ -26,27 +33,14 @@ std::vector<int> cudaConnectedComponents(const std::vector<int> &src,
   int *cudaLabelsNext;
   cudaMalloc(&cudaLabelsNext, numNodes * sizeof(int));
 
-  connectedComponents<<<1, 1024>>>(cudaSrc, cudaTgt, cudaLabels, cudaLabelsNext,
-                                   src.size(), numNodes);
+  labelConnectedComponents<<<1, 1024>>>(src.size(), cudaSrc, cudaTgt, numNodes,
+                                        cudaLabels, cudaLabelsNext);
 
-  std::vector<int> labels(numNodes);
-  cudaMemcpy(labels.data(), cudaLabels, numNodes * sizeof(int),
+  std::vector<int> labelsFromCuda(numNodes);
+  cudaMemcpy(labelsFromCuda.data(), cudaLabels, numNodes * sizeof(int),
              cudaMemcpyDeviceToHost);
 
-  return labels;
-}
-
-void check(const std::vector<int> &src, const std::vector<int> &tgt) {
-  auto numNodes = std::max(*std::max_element(src.begin(), src.end()),
-                           *std::max_element(tgt.begin(), tgt.end())) +
-                  1;
-  std::cout << "numNodes: " << numNodes << std::endl;
-
-  auto cudaLabels = cudaConnectedComponents(src, tgt, numNodes);
-
-  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>
-      Graph;
-  Graph G(numNodes);
+  BoostGraph G(numNodes);
 
   for (int i = 0; i < src.size(); ++i) {
     boost::add_edge(src[i], tgt[i], G);
@@ -55,6 +49,7 @@ void check(const std::vector<int> &src, const std::vector<int> &tgt) {
   std::vector<std::size_t> cpuLabels(numNodes);
   boost::connected_components(G, &cpuLabels[0]);
 
+  // print
   std::cout << "cpu labels:     ";
   for (int i = 0; i < numNodes; ++i) {
     std::cout << cpuLabels[i] << " ";
@@ -63,9 +58,21 @@ void check(const std::vector<int> &src, const std::vector<int> &tgt) {
 
   std::cout << "my CUDA labels: ";
   for (int i = 0; i < numNodes; ++i) {
-    std::cout << cudaLabels[i] << " ";
+    std::cout << labelsFromCuda[i] << " ";
   }
   std::cout << std::endl;
+
+  // check systematically
+  std::map<int, int> boostToCuda;
+  for (int i = 0; i < numNodes; ++i) {
+    if (boostToCuda.contains(cpuLabels[i])) {
+      BOOST_CHECK_EQUAL(labelsFromCuda[i], boostToCuda.at(cpuLabels[i]));
+    } else {
+      auto [it, success] =
+          boostToCuda.insert({cpuLabels[i], labelsFromCuda[i]});
+      BOOST_CHECK(success);
+    }
+  }
 }
 
 using Vi = std::vector<int>;
@@ -73,19 +80,19 @@ using Vi = std::vector<int>;
 BOOST_AUTO_TEST_CASE(simple_test_1) {
   Vi src{0, 1, 2, 3};
   Vi tgt{1, 2, 3, 4};
-  check(src, tgt);
+  checkLabeling(src, tgt);
 }
 
 BOOST_AUTO_TEST_CASE(simple_test_2) {
   Vi src{0, 1, 2, 4, 5, 6};
   Vi tgt{1, 2, 3, 5, 6, 7};
-  check(src, tgt);
+  checkLabeling(src, tgt);
 }
 
 BOOST_AUTO_TEST_CASE(simple_test_3) {
   Vi src{4, 3, 2, 1};
   Vi tgt{3, 2, 1, 0};
-  check(src, tgt);
+  checkLabeling(src, tgt);
 }
 
 auto makeRandomGraph(std::size_t N) {
@@ -102,30 +109,76 @@ auto makeRandomGraph(std::size_t N) {
 
 BOOST_AUTO_TEST_CASE(test_random_graph) {
   auto [src, tgt] = makeRandomGraph(10);
-  check(src, tgt);
+  checkLabeling(src, tgt);
 }
 
-#if 0
-  // Prefix
-  std::vector<int> array{1,2,3,4,5};
-  std::vector<int> cpuResult(array.size());
-  std::exclusive_scan(array.begin(), array.end(), cpuResult.begin(), 0);
+BOOST_AUTO_TEST_CASE(test_random_graph_with_relabeling) {
+  std::size_t nNodes = 100;
+  auto [src, tgt] = makeRandomGraph(nNodes);
 
-  std::cout << "cpu result: ";
-  for(auto c : cpuResult) {
-    std::cout << c << " ";
+  cudaStream_t stream;
+  BOOST_REQUIRE_EQUAL(cudaStreamCreate(&stream), cudaSuccess);
+
+  // copy src and tgt to device
+  int *cudaSrc, *cudaTgt;
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaSrc, src.size() * sizeof(int), stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaTgt, tgt.size() * sizeof(int), stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpyAsync(cudaSrc, src.data(), src.size() * sizeof(int),
+                      cudaMemcpyHostToDevice, stream),
+      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpyAsync(cudaTgt, tgt.data(), src.size() * sizeof(int),
+                      cudaMemcpyHostToDevice, stream),
+      cudaSuccess);
+
+  // init label array
+  int *cudaLabels;
+  BOOST_REQUIRE_EQUAL(
+      cudaMallocAsync(&cudaLabels, nNodes * sizeof(int), stream), cudaSuccess);
+
+  // run connected components
+  int cudaNumLabels = connectedComponentsCuda(src.size(), cudaSrc, cudaTgt,
+                                              nNodes, cudaLabels, stream);
+  BOOST_REQUIRE_EQUAL(cudaStreamSynchronize(stream), cudaSuccess);
+
+  // print message from last cuda error code
+  std::cout << "CUDA Error msg: " << cudaGetErrorString(cudaPeekAtLastError())
+            << std::endl;
+  BOOST_REQUIRE_EQUAL(cudaGetLastError(), cudaSuccess);
+
+  // copy labels back
+  std::vector<int> labelsFromCuda(nNodes);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpyAsync(labelsFromCuda.data(), cudaLabels, nNodes * sizeof(int),
+                      cudaMemcpyDeviceToHost, stream),
+      cudaSuccess);
+
+  BOOST_REQUIRE_EQUAL(cudaFreeAsync(cudaSrc, stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFreeAsync(cudaTgt, stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaFreeAsync(cudaLabels, stream), cudaSuccess);
+
+  // sync
+  BOOST_REQUIRE_EQUAL(cudaStreamSynchronize(stream), cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaStreamDestroy(stream), cudaSuccess);
+
+  // run boost graph for comparison
+  BoostGraph G(nNodes);
+
+  for (int i = 0; i < src.size(); ++i) {
+    boost::add_edge(src[i], tgt[i], G);
   }
-  std::cout << std::endl;
 
-  int *cudaVector;
-  cudaMalloc(&cudaVector, array.size()*sizeof(int));
-  cudaMemcpy(cudaVector, array.data(), array.size()*sizeof(int), cudaMemcpyHostToDevice);
+  std::vector<std::size_t> cpuLabels(nNodes);
+  int cpuNumLabels = boost::connected_components(G, &cpuLabels[0]);
 
-  thrust::exclusive_scan(thrust::device, cudaVector, cudaVector+array.size(), cudaVector);
+  // check
+  BOOST_CHECK_EQUAL(cudaNumLabels, cpuNumLabels);
 
-  std::cout << "my cuda result: ";
-
-  return 0;
+  // check label vectors are the same
+  for (int i = 0; i < nNodes; ++i) {
+    BOOST_CHECK_EQUAL(labelsFromCuda[i], cpuLabels[i]);
+  }
 }
-
-#endif

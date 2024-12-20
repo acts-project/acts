@@ -7,4 +7,7 @@ add_unittest(ExaTrkXMetricHookTests ExaTrkXMetricHookTests.cpp)
 add_unittest(Walkthrough WalkThroughTests.cpp)
 add_unittest(ModuleMap ModuleMapTests.cpp)
 add_unittest(ConnectedComponentsCuda ConnectedComponentCudaTests.cu)
-target_compile_options(ActsUnitTestConnectedComponentsCuda PRIVATE "-std=c++17")
+set_target_properties(
+    ActsUnitTestConnectedComponentsCuda
+    PROPERTIES CUDA_STANDARD 20 CUDA_STANDARD_REQUIRED ON
+)

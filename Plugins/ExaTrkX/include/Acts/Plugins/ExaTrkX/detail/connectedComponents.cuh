@@ -27,10 +27,12 @@ __device__ void swap(T &a, T &b) {
 }
 
 // https://arxiv.org/abs/1910.05971
-__global__ void connectedComponents(const int *sourceEdges,
-                                    const int *targetEdges, int *labels,
-                                    int *labelsNext, int numEdges,
-                                    int numNodes) {
+template <typename TEdge, typename TLabel>
+__global__ void labelConnectedComponents(std::size_t numEdges,
+                                         const TEdge *sourceEdges,
+                                         const TEdge *targetEdges,
+                                         std::size_t numNodes, TLabel *labels,
+                                         TLabel *labelsNext) {
   for (int i = threadIdx.x; i < numNodes; i += blockDim.x) {
     labels[i] = i;
     labelsNext[i] = i;
@@ -101,10 +103,71 @@ __global__ void connectedComponents(const int *sourceEdges,
   }
 }
 
-__global__ void makeLabelMask(const int *labels, int *labelMask) {
-  int i = threadIdx.x + blockDim.x * blockIdx.x;
+template <typename T>
+__global__ void makeLabelMask(std::size_t nLabels, const T *labels,
+                              T *labelMask) {
+  std::size_t i = threadIdx.x + blockDim.x * blockIdx.x;
+
+  if (i >= nLabels) {
+    return;
+  }
 
   labelMask[labels[i]] = 1;
+}
+
+template <typename T>
+__global__ void mapEdgeLabels(std::size_t nLabels, T *labels,
+                              const T *mapping) {
+  std::size_t i = threadIdx.x + blockDim.x * blockIdx.x;
+
+  if (i >= nLabels) {
+    return;
+  }
+
+  labels[i] = mapping[labels[i]];
+}
+
+template <typename TEdges, typename TLabel>
+TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
+                               const TEdges *targetEdges, std::size_t nNodes,
+                               TLabel *labels, cudaStream_t stream) {
+  TLabel *tmpMemory;
+  cudaMallocAsync(&tmpMemory, nNodes * sizeof(TLabel), stream);
+
+  // Make synchronization in one block, to avoid that inter-block sync is
+  // necessary
+  dim3 blockDim = 1024;
+  labelConnectedComponents<<<1, blockDim, 0, stream>>>(
+      nEdges, sourceEdges, targetEdges, nNodes, labels, tmpMemory);
+
+  // Assume we have the following components:
+  // 0 3 5 3 0 0
+
+  // Fill a mask which labels survived the connected components algorithm
+  // 0 1 2 3 4 5
+  // 1 0 0 1 0 1
+  cudaMemsetAsync(tmpMemory, nNodes * sizeof(TLabel), 0, stream);
+  dim3 gridDim = (nNodes + blockDim.x - 1) / blockDim.x;
+  makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
+
+  // Exclusive prefix sum
+  // 0 1 2 3 4 5
+  // 0 1 1 1 2 2
+  thrust::exclusive_scan(thrust::device.on(stream), tmpMemory,
+                         tmpMemory + nNodes, tmpMemory);
+
+  // Remap edge labels with values in prefix sum
+  // 0 -> 0, 3 -> 1, 5 -> 2
+  mapEdgeLabels<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
+
+  TLabel nLabels;
+  cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1], sizeof(TLabel),
+                  cudaMemcpyDeviceToHost, stream);
+
+  cudaFreeAsync(tmpMemory, stream);
+  cudaStreamSynchronize(stream);
+
+  return nLabels + 1;
 }
 
 }  // namespace Acts::detail
