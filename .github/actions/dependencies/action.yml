@@ -22,7 +22,7 @@ runs:
       if: startsWith(runner.os, 'macos')
       shell: bash
       run: |
-        brew install ninja ccache zstd
+        brew install ninja ccache
 
     - name: Restore cache
       id: cache-restore
