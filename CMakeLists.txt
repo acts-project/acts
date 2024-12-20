@@ -13,6 +13,36 @@ include(ActsRetrieveVersion)
 
 project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
+# policy settings
+
+# Steers how project() handles the VERSION option
+cmake_policy(SET CMP0048 NEW)
+
+# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
+# only local scope, i.e. they are not accessible her for dependencies added
+# via `add_subdirectory`. this overrides the `project(...)` function for
+# sub-projects such that the resulting `<project_name>_VERSION` has
+# global scope and is accessible within the main project later on.
+macro(project)
+    _project(${ARGN})
+    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
+
+# Controls the way python is located
+if(POLICY CMP0094)
+    cmake_policy(SET CMP0094 NEW)
+endif()
+
+# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
+if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+endif()
+
+# Use boost's cmake config files
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 # build options
 
 # all options and compile-time parameters must be defined here for clear
@@ -253,19 +283,8 @@ set(_acts_boost_recommended_version 1.78.0)
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
-# Controls behavior of DOWNLOAD_EXTRACT_TIMESTAMP
-if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
-cmake_policy(SET CMP0094 NEW)
-
 # required packages
 if(ACTS_SETUP_BOOST)
-    if(POLICY CMP0167)
-        cmake_policy(SET CMP0167 NEW)
-    endif()
-
     # Enable both program_options and unit_test_framework to reduce complexity
     # Also Cuda tests seem to use program_options
     if(
@@ -312,17 +331,6 @@ if(ACTS_SETUP_EIGEN3)
 endif()
 
 find_package(Filesystem REQUIRED)
-
-# the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
-# only local scope, i.e. they are not accessible her for dependencies added
-# via `add_subdirectory`. this overrides the `project(...)` function for
-# sub-projects such that the resulting `<project_name>_VERSION` has
-# global scope and is accessible within the main project later on.
-cmake_policy(SET CMP0048 NEW)
-macro(project)
-    _project(${ARGN})
-    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
-endmacro()
 
 # CUDA settings are collected here in a macro, so that they can be reused by different plugins
 macro(enable_cuda)
