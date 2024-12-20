@@ -10,10 +10,5 @@ if [ ! -d "spack" ]; then
     pushd spack > /dev/null
     git config user.name 'CI'
     git config user.email '<>'
-
-    rm -rf .git
-
-    echo "Populating the repository index"
-    bin/spack list > /dev/null
     popd > /dev/null
 fi
