@@ -87,7 +87,8 @@ namespace {}  // namespace
 
 std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
     std::vector<float> &inputValues, std::size_t numNodes,
-    const std::vector<std::uint64_t> &moduleIds, torch::Device device) {
+    const std::vector<std::uint64_t> &moduleIds,
+    const ExecutionContext &execContext) {
   const auto nHits = moduleIds.size();
   const auto nFeatures = inputValues.size() / moduleIds.size();
   auto &features = inputValues;

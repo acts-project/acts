@@ -206,4 +206,4 @@ void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule, std::size_t nHits,
   cudaPrintArray<<<1, 1>>>(ptr, size); \
   CUDA_CHECK(cudaGetLastError());      \
   CUDA_CHECK(cudaDeviceSynchronize()); \
-  std::cout << std::endl;\
+  std::cout << std::endl;

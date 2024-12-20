@@ -67,7 +67,9 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any, std::any>
 TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
-                                std::any inEdgeFeatures, torch::Device device) {
+                                std::any inEdgeFeatures,
+                                const ExecutionContext& execContext) {
+  const auto& device = execContext.device;
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
   t0 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Start edge classification, use " << device);

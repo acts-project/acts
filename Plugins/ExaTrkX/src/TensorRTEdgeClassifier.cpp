@@ -112,7 +112,7 @@ std::tuple<std::any, std::any, std::any, std::any>
 TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
                                    std::any inEdgeIndex,
                                    std::any inEdgeFeatures,
-                                   torch::Device /*device*/) {
+                                   const ExecutionContext &execContext) {
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
   t0 = std::chrono::high_resolution_clock::now();
 

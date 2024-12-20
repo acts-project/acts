@@ -120,8 +120,9 @@ ActsExamples::GraphConstructionWithTruthClassifier::execute(
                                  m_cfg.featureScales);
 
   auto [nodeFeaturesAny, edgeIndexAny, edgeFeaturesAny] =
-      (*m_cfg.graphConstructor)(features, spacepointIDs.size(), moduleIds,
-                                m_cfg.graphConstructor->device());
+      (*m_cfg.graphConstructor)(
+          features, spacepointIDs.size(), moduleIds,
+          Acts::ExecutionContext{m_cfg.graphConstructor->device(), {}});
 
   auto edgeIndex = std::any_cast<at::Tensor>(edgeIndexAny);
 
@@ -170,7 +171,7 @@ ActsExamples::GraphConstructionWithTruthClassifier::execute(
 
   auto trackCandidates = (*m_cfg.trackBuilder)(
       std::move(nodeFeaturesAny), std::move(edgeIndexAfterCut), scores,
-      spacepointIDs, m_cfg.trackBuilder->device());
+      spacepointIDs, Acts::ExecutionContext{m_cfg.trackBuilder->device(), {}});
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");
