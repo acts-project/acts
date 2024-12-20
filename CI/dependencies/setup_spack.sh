@@ -1,10 +1,12 @@
 #!/bin/bash
+set -e
+set -u
 
 _spack_version=${SPACK_VERSION:-develop}
 
 if [ ! -d "spack" ]; then
     echo "Cloning spack"
-    git clone -c feature.manyFiles=true https://github.com/spack/spack.git -b ${_spack_version}
+    git clone --branch ${_spack_version} -c feature.manyFiles=true https://github.com/spack/spack.git
     pushd spack > /dev/null
     git config user.name 'CI'
     git config user.email '<>'
