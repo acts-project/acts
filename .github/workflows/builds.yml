@@ -50,7 +50,7 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - uses: mxschmitt/action-tmate@v3
+      # - uses: mxschmitt/action-tmate@v3
         # if: failure()
 
       - name: Configure
@@ -59,8 +59,6 @@ jobs:
         # versions
         # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
-          git config --global user.name 'CI' &&
-          git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
@@ -353,14 +351,11 @@ jobs:
 
 
       - name: Configure
-        run: |
-          ccache -z
-          echo $PATH
-          which python3
+        run: >
+          ccache -z &&
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
