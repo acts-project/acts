@@ -29,15 +29,16 @@ runs:
       uses: actions/cache/restore@v3
       with:
         path: spack.tar.zst
-        key: spack-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-v2-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
       shell: bash
       run: |
-        zstd -d spack.tar.zst -f
         tar xf spack.tar
+        tar xf -C ~ spack_cache.tar
         rm spack.tar
+        rm spack_cache.tar
 
     - name: Setup Spack from scratch
       if: steps.cache-restore.outputs.cache-hit != 'true'
@@ -47,14 +48,14 @@ runs:
       run: |
         CI/dependencies/setup_spack.sh
         tar cf spack.tar spack/
-        zstd -19 --rm spack.tar
+        tar cf spack_cache.tar -C ~ .spack
 
     - name: Save cache
       if: steps.cache-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v3
       with:
         path: spack.tar.zst
-        key: spack-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-v2-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Install dependencies
       shell: bash

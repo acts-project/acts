@@ -178,14 +178,14 @@ venv_dir="${view_dir}/venv"
 
 "${venv_dir}/bin/python3" -m pip install pyyaml jinja2
 
+end_section
+
+start_section "Set environment variables"
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${view_dir}/bin" >> "$GITHUB_PATH"
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
 fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
-end_section
-
-start_section "Set environment variables"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env LD_LIBRARY_PATH "${view_dir}/lib"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
