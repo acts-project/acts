@@ -349,9 +349,11 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
-        run: >
+        run: |
           ccache -z
-          && cmake -B build -S .
+          echo $PATH
+          which python3
+          cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
           -DPython_EXECUTABLE=$(which python3)
