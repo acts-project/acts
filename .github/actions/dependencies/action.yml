@@ -29,7 +29,7 @@ runs:
       uses: actions/cache/restore@v3
       with:
         path: spack.tar.zst
-        key: spack-${{ runner.os }}-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
@@ -54,7 +54,7 @@ runs:
       uses: actions/cache/save@v3
       with:
         path: spack.tar.zst
-        key: spack-${{ runner.os }}-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Install dependencies
       shell: bash
