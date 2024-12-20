@@ -178,17 +178,10 @@ start_section "Patch up Geant4 data directory"
 # ${SCRIPT_DIR}/with_spack_env.sh ${env_dir} geant4-config --install-datasets
 geant4_dir=$(spack -e "${env_dir}" location -i geant4)
 # Prepare the folder for G4 data, and symlink it to where G4 will look for it
-mkdir -p "${geant4_dir}"/share/Geant4
-ln -s "${geant4_dir}"/share/Geant4/data ${view_dir}/share/Geant4/data
+mkdir -p "${geant4_dir}/share/Geant4"
+ln -s "${geant4_dir}/share/Geant4/data" "${view_dir}/share/Geant4/data"
 end_section
 
-start_section "Set environment variables"
-set_env CMAKE_PREFIX_PATH "${view_dir}"
-set_env LD_LIBRARY_PATH "${view_dir}/lib"
-set_env ROOT_INCLUDE_PATH "${view_dir}/include"
-# Geant4 puts CLHEP in a subdirectory
-set_env ROOT_INCLUDE_PATH "${view_dir}/include/Geant4"
-end_section
 
 start_section "Prepare python environment"
 ls -al
@@ -202,7 +195,13 @@ fi
 set_env PATH "${venv_dir}/bin:${view_dir}/bin/:${PATH}"
 end_section
 
-
+start_section "Set environment variables"
+set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
+set_env LD_LIBRARY_PATH "${view_dir}/lib"
+set_env ROOT_INCLUDE_PATH "${view_dir}/include"
+# Geant4 puts CLHEP in a subdirectory
+set_env ROOT_INCLUDE_PATH "${view_dir}/include/Geant4"
+end_section
 
 # Pythia8 looks for settings in this directory
 # set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
