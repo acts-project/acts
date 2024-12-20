@@ -258,6 +258,8 @@ if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+cmake_policy(SET CMP0094 NEW)
+
 # required packages
 if(ACTS_SETUP_BOOST)
     if(POLICY CMP0167)
