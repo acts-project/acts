@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -41,7 +39,7 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
                << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection =
-      surface.intersect(state.geoContext, stepper.position(state),
+      surface.intersect(state.options.geoContext, stepper.position(state),
                         navDir * stepper.direction(state), boundaryTolerance,
                         surfaceTolerance)[index];
 

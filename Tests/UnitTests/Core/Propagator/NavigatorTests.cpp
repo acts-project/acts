@@ -22,9 +22,9 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
+#include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -36,7 +36,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -74,9 +73,15 @@ struct PropagatorState {
     template <typename, typename>
     using return_parameter_type = void;
 
+    struct Options {
+      const GeometryContext& geoContext = tgContext;
+    };
+
     /// This is a simple cache struct to mimic the
     /// Stepper cache in the propagation
     struct State {
+      Options options{};
+
       /// Position
       Vector4 pos4 = Vector4(0., 0., 0., 0.);
 
