@@ -1044,7 +1044,7 @@ def test_digitization_example_input_parsing(digi_config_file):
         DIGI_SHARE_DIR / "default-smearing-config-generic.json",
         DIGI_SHARE_DIR / "default-geometric-config-generic.json",
     ],
-    ids=["smeared", "geometric"],
+    ids=["smeared", "geometric", "odd-smeared", "odd-geometric"],
 )
 def test_digitization_example_input(
     trk_geo, tmp_path, assert_root_hash, digi_config_file
