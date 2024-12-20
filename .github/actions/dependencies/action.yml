@@ -30,6 +30,8 @@ runs:
       with:
         path: spack.tar.zst
         key: spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        restore-keys: |
+          spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
     - name: Extract cached Spack
       if: steps.cache-restore.outputs.cache-hit == 'true'
