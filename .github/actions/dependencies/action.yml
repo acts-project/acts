@@ -47,7 +47,7 @@ runs:
         SPACK_VERSION: ${{ inputs.spack_version }}
       run: |
         CI/dependencies/setup_spack.sh
-        bin/spack list > /dev/null
+        spack/bin/spack list > /dev/null
         rm -rf spack/.git
         tar cf spack.tar spack/
         tar cf spack_cache.tar -C ~ .spack
