@@ -1,0 +1,35 @@
+name: 'Dependencies'
+description: 'Install dependencies from lockfile'
+
+inputs:
+  compiler:
+    description: 'Compiler to use'
+    required: false
+    default: ''
+  GITHUB_TOKEN:
+    description: 'Secrets to pass to the action'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prerequisites
+      if: startsWith(runner.os, 'macos')
+      shell: bash
+      run: |
+        brew install ninja ccache
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      run: |
+        pwd
+        if [ -n "${{ inputs.compiler }}" ]; then
+          echo "With compiler"
+          CI/dependencies/setup.sh -c "${{ inputs.compiler }}"
+        else
+          echo "Without compiler"
+          CI/dependencies/setup.sh
+        fi
