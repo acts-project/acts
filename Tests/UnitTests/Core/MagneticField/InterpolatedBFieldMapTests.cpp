@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   CHECK_CLOSE_REL(c.getField(transformPos(pos)),
                   BField::value({{perp(pos), pos.z()}}), 1e-6);
 
-  ActsMatrix<3, 3> deriv;
+  SquareMatrix3 deriv;
 
   pos << 1, 1, -5.5;  // this position is outside the grid
   BOOST_CHECK(!b.isInside(pos));
