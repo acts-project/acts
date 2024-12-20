@@ -50,6 +50,9 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
+      - uses: mxschmitt/action-tmate@v3
+        # if: failure()
+
       - name: Configure
         # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -348,8 +351,6 @@ jobs:
           restore-keys: |
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
-      - uses: mxschmitt/action-tmate@v3
-        # if: failure()
 
       - name: Configure
         run: |
