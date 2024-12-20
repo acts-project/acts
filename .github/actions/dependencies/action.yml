@@ -29,7 +29,7 @@ runs:
       uses: actions/cache/restore@v3
       with:
         path: spack.tar.zst
-        key: spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}-${{ github.sha }}
         restore-keys: |
           spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
 
@@ -61,7 +61,7 @@ runs:
         path: |
           spack.tar
           spack_cache.tar
-        key: spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}
+        key: spack-r1-${{ inputs.spack_version }}-${{ hashFiles('CI/dependencies/setup_spack.sh') }}-${{ github.sha }}
 
     - name: Install dependencies
       shell: bash
