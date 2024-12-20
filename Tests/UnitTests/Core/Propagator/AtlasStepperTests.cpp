@@ -12,9 +12,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
@@ -35,12 +35,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/Assertions.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
 #include <array>
-#include <functional>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -561,11 +559,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
                                  particleHypothesis),
       stepSize, tolerance);
 
-  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state, ConstrainedStep::actor);
+  stepper.releaseStepSize(state, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -583,8 +581,9 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                     .planeSurface();
 
   stepper.updateSurfaceStatus(state, *target, 0, navDir,
-                              BoundaryTolerance::Infinite());
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
+                              BoundaryTolerance::Infinite(),
+                              s_onSurfaceTolerance, ConstrainedStep::navigator);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::navigator), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
@@ -594,11 +593,12 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                       navDir * stepper.direction(state),
                       BoundaryTolerance::Infinite())
           .closest(),
-      navDir, false);
+      navDir, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
   state.stepSize.setUser(navDir * stepSize);
+  stepper.releaseStepSize(state, ConstrainedStep::navigator);
   stepper.updateStepSize(
       state,
       target
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                       navDir * stepper.direction(state),
                       BoundaryTolerance::Infinite())
           .closest(),
-      navDir, true);
+      navDir, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
