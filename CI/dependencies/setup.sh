@@ -190,6 +190,8 @@ venv_dir="${view_dir}/venv"
   --system-site-packages \
   "$venv_dir"
 
+"${venv_dir}/bin/python3" -m pip install pyyaml jinja2
+
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "${view_dir}/bin" >> "$GITHUB_PATH"
   echo "${venv_dir}/bin" >> "$GITHUB_PATH"
