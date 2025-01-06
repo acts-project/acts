@@ -290,8 +290,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     particlesSimulatedUnordered.push_back(particleSimulated);
   }
 
-  std::ranges::sort(particlesGeneratorUnordered, detail ::CompareParticleId{});
-  std::ranges::sort(particlesSimulatedUnordered, detail ::CompareParticleId{});
+  std::ranges::sort(particlesGeneratorUnordered, detail::CompareParticleId{});
+  std::ranges::sort(particlesSimulatedUnordered, detail::CompareParticleId{});
 
   SimParticleContainer particlesGenerator{particlesGeneratorUnordered.begin(),
                                           particlesGeneratorUnordered.end()};
@@ -374,7 +374,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     }
   }
 
-  std::ranges::sort(simHitsUnordered, detail ::CompareGeometryId{});
+  std::ranges::sort(simHitsUnordered, detail::CompareGeometryId{});
 
   SimHitContainer simHits{simHitsUnordered.begin(), simHitsUnordered.end()};
 
