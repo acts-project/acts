@@ -70,7 +70,7 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
                                 std::any inEdgeFeatures,
                                 const ExecutionContext& execContext) {
   const auto& device = execContext.device;
-  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
+  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
   ACTS_DEBUG("Start edge classification, use " << device);
   c10::InferenceMode guard(true);
@@ -78,8 +78,10 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   // add a protection to avoid calling for kCPU
 #ifndef ACTS_EXATRKX_CPUONLY
   std::optional<c10::cuda::CUDAGuard> device_guard;
+  std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (device.is_cuda()) {
     device_guard.emplace(device.index());
+    streamGuard.emplace(execContext.stream.value());
   }
 #endif
 

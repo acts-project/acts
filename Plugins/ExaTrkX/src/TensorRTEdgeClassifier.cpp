@@ -17,6 +17,7 @@
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
 #include <NvInferRuntimeBase.h>
+#include <c10/cuda/CUDAGuard.h>
 #include <cuda_runtime.h>
 
 #include "printCudaMemInfo.hpp"
@@ -116,6 +117,8 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
   t0 = std::chrono::high_resolution_clock::now();
 
+  c10::cuda::CUDAStreamGuard(execContext.stream.value());
+
   auto nodeFeatures =
       std::any_cast<torch::Tensor>(inNodeFeatures).to(torch::kCUDA);
 
@@ -148,8 +151,7 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
   t2 = std::chrono::high_resolution_clock::now();
 
   {
-    cudaStream_t stream{};
-    cudaStreamCreate(&stream);
+    auto stream = execContext.stream.value().stream();
     auto status = m_context->enqueueV3(stream);
     cudaStreamSynchronize(stream);
     ACTS_VERBOSE("TensorRT output status: " << std::boolalpha << status);
