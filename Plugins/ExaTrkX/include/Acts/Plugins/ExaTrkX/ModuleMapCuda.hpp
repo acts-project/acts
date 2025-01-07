@@ -110,7 +110,7 @@ class ModuleMapCuda : public GraphConstructionBase {
       const ExecutionContext &execContext = {}) override;
 
   // TODO this returns nothing useful
-  torch::Device device() const override { return torch::Device(torch::kCPU); }
+  torch::Device device() const override { return torch::Device(torch::kCUDA); }
 };
 
 }  // namespace Acts
