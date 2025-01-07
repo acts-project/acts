@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/ModuleMapUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
 #include <CUDA_graph_creator>
@@ -16,6 +17,7 @@
 #include <TTree_hits>
 #include <chrono>
 
+#include <c10/cuda/CUDAGuard.h>
 #include <thrust/execution_policy.h>
 #include <thrust/functional.h>
 #include <thrust/scan.h>
@@ -98,8 +100,19 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_VERBOSE("gridDimHits: " << gridDimHits.x
                                << ", blockDim: " << blockDim.x);
 
+  // Get stream if available, otherwise use default stream
   cudaStream_t stream;
+#if 0
   CUDA_CHECK(cudaStreamCreate(&stream));
+#else
+  assert(execContext.stream);
+  std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
+  if (execContext.stream) {
+    ACTS_VERBOSE("Got stream " << *execContext.stream);
+    stream = execContext.stream->stream();
+    streamGuard.emplace(*execContext.stream);
+  }
+#endif
 
   /////////////////////////
   // Prepare input data
@@ -218,12 +231,15 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
 
   CUDA_CHECK(cudaStreamSynchronize(stream));
   CUDA_CHECK(cudaGetLastError());
+#if 0
+  CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaStreamDestroy(stream));
+#endif
 
   //  Make torch tensors
   auto edgeFeatures = torch::from_blob(
       edgeFeaturePtr, 6 * static_cast<long>(edgeData.nEdges),
-      [&](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },
+      [stream](void *ptr) { CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
       at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
   edgeFeatures = edgeFeatures.reshape({static_cast<long>(edgeData.nEdges), 6});
 
@@ -236,12 +252,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
                        {2, static_cast<long>(edgeData.nEdges)},
                        at::TensorOptions().device(at::kCUDA).dtype(at::kInt))
           .to(torch::kLong);
-  CUDA_CHECK(cudaFree(edgeData.cudaEdgePtr));
+  CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
   ACTS_VERBOSE("edge index:\n" << edgeIndex.index({Slice(), Slice(0, 10)}));
 
   auto nodeFeatures = torch::from_blob(
       cudaNodeFeatures, inputValues.size(),
-      [&](void *ptr) { CUDA_CHECK(cudaFree(ptr)); },
+      [stream](void *ptr) { CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
       at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
   nodeFeatures = nodeFeatures.reshape({(long)nHits, (long)nFeatures});
 

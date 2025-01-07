@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
@@ -177,6 +178,24 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(walkthroughHighCut);
     ACTS_PYTHON_STRUCT_END();
   }
+#ifdef ACTS_EXATRKX_WITH_CUDA
+  {
+    using Alg = Acts::CudaTrackBuilding;
+    using Config = Alg::Config;
+
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "CudaTrackBuilding")
+                   .def(py::init([](const Config &c, Logging::Level lvl) {
+                          return std::make_shared<Alg>(
+                              c, getDefaultLogger("TrackBuilding", lvl));
+                        }),
+                        "config"_a, "level"_a);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_END();
+  }
+#endif
   /*
   {
     using Alg = Acts::SeedingTrackBuilder;

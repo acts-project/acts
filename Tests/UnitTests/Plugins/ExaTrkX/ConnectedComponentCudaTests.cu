@@ -8,7 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <Acts/Plugins/ExaTrkX/detail/connectedComponents.cuh>
+#include <Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh>
+
+#include <random>
+#include <set>
+#include <vector>
+
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/connected_components.hpp>
 
 using namespace Acts::detail;
 
@@ -95,27 +102,97 @@ BOOST_AUTO_TEST_CASE(simple_test_3) {
   checkLabeling(src, tgt);
 }
 
-auto makeRandomGraph(std::size_t N) {
+BOOST_AUTO_TEST_CASE(test_label_mask) {
+  Vi labels{0, 3, 5, 3, 0, 0};
+
+  dim3 blockDim = 32;
+  dim3 gridDim = (labels.size() + blockDim.x - 1) / blockDim.x;
+
+  // Copy labels to device
+  int *cudaLabels;
+  cudaMalloc(&cudaLabels, labels.size() * sizeof(int));
+  cudaMemcpy(cudaLabels, labels.data(), labels.size() * sizeof(int),
+             cudaMemcpyHostToDevice);
+
+  // Init label mask
+  int *cudaLabelMask;
+  cudaMalloc(&cudaLabelMask, labels.size() * sizeof(int));
+  cudaMemset(cudaLabelMask, 0, labels.size() * sizeof(int));
+
+  makeLabelMask<<<1, 256>>>(labels.size(), cudaLabels, cudaLabelMask);
+
+  std::vector<int> labelMask(labels.size());
+  cudaMemcpy(labelMask.data(), cudaLabelMask, 6 * sizeof(int),
+             cudaMemcpyDeviceToHost);
+
+  BOOST_CHECK((labelMask == Vi{1, 0, 0, 1, 0, 1}));
+
+  // Do not test prefix sum here
+  Vi prefixSum{0, 1, 1, 1, 2, 2};
+
+  // copy prefix sum to device
+  int *cudaPrefixSum;
+  cudaMalloc(&cudaPrefixSum, prefixSum.size() * sizeof(int));
+  cudaMemcpy(cudaPrefixSum, prefixSum.data(), prefixSum.size() * sizeof(int),
+             cudaMemcpyHostToDevice);
+
+  // Relabel
+  mapEdgeLabels<<<1, 256>>>(labels.size(), cudaLabels, cudaPrefixSum);
+
+  std::vector<int> labelsFromCuda(labels.size());
+  cudaMemcpy(labelsFromCuda.data(), cudaLabels, labels.size() * sizeof(int),
+             cudaMemcpyDeviceToHost);
+
+  BOOST_CHECK((labelsFromCuda == Vi{0, 1, 2, 1, 0, 0}));
+}
+
+auto makeRandomGraph(std::size_t nodes, std::size_t edges) {
   std::default_random_engine rng(2345);
-  std::uniform_int_distribution<> dist(0, 20);
-  Vi src, tgt;
-  for (int n = 0; n < N; ++n) {
-    src.push_back(dist(rng));
-    tgt.push_back(dist(rng));
+  std::uniform_int_distribution<> dist(0, nodes);
+  std::set<std::pair<int, int>> set;
+  Vi src(edges), tgt(edges);
+  for (int n = 0; n < edges; ++n) {
+    auto a = dist(rng);
+    auto b = dist(rng);
+    if (a == b) {
+      continue;
+    }
+    auto s = std::min(a, b);
+    auto t = std::max(a, b);
+    auto [it, success] = set.insert({s, t});
+    if (success) {
+      src.at(n) = s;
+      tgt.at(n) = t;
+    }
   }
 
   return std::make_pair(src, tgt);
 }
 
 BOOST_AUTO_TEST_CASE(test_random_graph) {
-  auto [src, tgt] = makeRandomGraph(10);
+  auto [src, tgt] = makeRandomGraph(5, 10);
   checkLabeling(src, tgt);
 }
 
-BOOST_AUTO_TEST_CASE(test_random_graph_with_relabeling) {
-  std::size_t nNodes = 100;
-  auto [src, tgt] = makeRandomGraph(nNodes);
+void testFullConnectedComponents(std::size_t nNodes, std::size_t nEdges) {
+  auto [src, tgt] = makeRandomGraph(nNodes, nEdges);
 
+  // the random graph can contain less edges than specified
+  nEdges = src.size();
+
+  // print src and tgt
+  /*
+    std::cout << "src: ";
+    for (int i = 0; i < src.size(); ++i) {
+      std::cout << src[i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "tgt: ";
+    for (int i = 0; i < tgt.size(); ++i) {
+      std::cout << tgt[i] << " ";
+    }
+    std::cout << std::endl;
+  */
   cudaStream_t stream;
   BOOST_REQUIRE_EQUAL(cudaStreamCreate(&stream), cudaSuccess);
 
@@ -164,14 +241,23 @@ BOOST_AUTO_TEST_CASE(test_random_graph_with_relabeling) {
   BOOST_REQUIRE_EQUAL(cudaStreamSynchronize(stream), cudaSuccess);
   BOOST_REQUIRE_EQUAL(cudaStreamDestroy(stream), cudaSuccess);
 
+  // print labelsFromCuda
+  /*
+      std::cout << "CUDA labels: ";
+      for (int i = 0; i < nNodes; ++i) {
+        std::cout << labelsFromCuda[i] << " ";
+      }
+      std::cout << std::endl;
+  */
   // run boost graph for comparison
+
   BoostGraph G(nNodes);
 
   for (int i = 0; i < src.size(); ++i) {
     boost::add_edge(src[i], tgt[i], G);
   }
 
-  std::vector<std::size_t> cpuLabels(nNodes);
+  std::vector<std::size_t> cpuLabels(boost::num_vertices(G));
   int cpuNumLabels = boost::connected_components(G, &cpuLabels[0]);
 
   // check
@@ -181,4 +267,16 @@ BOOST_AUTO_TEST_CASE(test_random_graph_with_relabeling) {
   for (int i = 0; i < nNodes; ++i) {
     BOOST_CHECK_EQUAL(labelsFromCuda[i], cpuLabels[i]);
   }
+}
+
+BOOST_AUTO_TEST_CASE(full_test_tiny_graph) {
+  testFullConnectedComponents(5, 10);
+}
+
+BOOST_AUTO_TEST_CASE(full_test_small_graph) {
+  testFullConnectedComponents(100, 500);
+}
+
+BOOST_AUTO_TEST_CASE(full_test_big_graph) {
+  testFullConnectedComponents(100'000, 500'000);
 }

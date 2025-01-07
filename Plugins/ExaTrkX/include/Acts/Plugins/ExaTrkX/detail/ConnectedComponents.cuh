@@ -8,12 +8,8 @@
 
 #pragma once
 
-#include <algorithm>
-#include <iostream>
-#include <random>
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/connected_components.hpp>
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 
@@ -132,7 +128,7 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
                                const TEdges *targetEdges, std::size_t nNodes,
                                TLabel *labels, cudaStream_t stream) {
   TLabel *tmpMemory;
-  cudaMallocAsync(&tmpMemory, nNodes * sizeof(TLabel), stream);
+  CUDA_CHECK(cudaMallocAsync(&tmpMemory, nNodes * sizeof(TLabel), stream));
 
   // Make synchronization in one block, to avoid that inter-block sync is
   // necessary
@@ -146,7 +142,7 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   // Fill a mask which labels survived the connected components algorithm
   // 0 1 2 3 4 5
   // 1 0 0 1 0 1
-  cudaMemsetAsync(tmpMemory, nNodes * sizeof(TLabel), 0, stream);
+  CUDA_CHECK(cudaMemsetAsync(tmpMemory, nNodes * sizeof(TLabel), 0, stream));
   dim3 gridDim = (nNodes + blockDim.x - 1) / blockDim.x;
   makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
 
@@ -161,13 +157,14 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   mapEdgeLabels<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
 
   TLabel nLabels;
-  cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1], sizeof(TLabel),
-                  cudaMemcpyDeviceToHost, stream);
+  CUDA_CHECK(cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1], sizeof(TLabel),
+                             cudaMemcpyDeviceToHost, stream));
 
-  cudaFreeAsync(tmpMemory, stream);
-  cudaStreamSynchronize(stream);
+  CUDA_CHECK(cudaFreeAsync(tmpMemory, stream));
+  CUDA_CHECK(cudaStreamSynchronize(stream));
+  CUDA_CHECK(cudaGetLastError());
 
-  return nLabels + 1;
+  return nLabels;
 }
 
 }  // namespace Acts::detail
