@@ -14,7 +14,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
@@ -40,11 +39,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-class ISurfaceMaterial;
-class Logger;
-}  // namespace Acts
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
@@ -160,7 +154,6 @@ struct StepCollector {
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   // Set up some variables
-  double stepSize = 123.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
   Vector3 pos(1., 2., 3.);
@@ -169,13 +162,14 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   double absMom = 8.;
   double charge = -1.;
 
+  SympyStepper::Options esOptions(tgContext, mfContext);
+
+  SympyStepper es(bField);
+
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 std::nullopt, ParticleHypothesis::pion());
-  SympyStepper::State esState(tgContext, bField->makeCache(mfContext), cp,
-                              stepSize);
-
-  SympyStepper es(bField);
+  SympyStepper::State esState = es.makeState(esOptions, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -184,22 +178,19 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
   CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
                                  std::nullopt, ParticleHypothesis::pion0());
-  esState = SympyStepper::State(tgContext, bField->makeCache(mfContext), ncp,
-                                stepSize);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
                                    ParticleHypothesis::pion0());
-  esState = SympyStepper::State(tgContext, bField->makeCache(mfContext), ncp,
-                                stepSize);
+  esState = es.makeState(esOptions, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -224,10 +215,12 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 cov, ParticleHypothesis::pion());
 
-  // Build the state and the stepper
-  SympyStepper::State esState(tgContext, bField->makeCache(mfContext), cp,
-                              stepSize);
+  SympyStepper::Options esOptions(tgContext, mfContext);
+  esOptions.maxStepSize = stepSize;
+
+  // Build the stepper and the state
   SympyStepper es(bField);
+  SympyStepper::State esState = es.makeState(esOptions, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
@@ -324,8 +317,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
-                                       cp, stepSize);
+    std::decay_t<decltype(state)> copy = es.makeState(esOptions, cp);
     copy.pars = state.pars;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
@@ -341,13 +333,11 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
         std::in_place_type<typename field_t::Cache>,
         state.fieldCache.template as<typename field_t::Cache>());
 
-    copy.geoContext = state.geoContext;
-
     return copy;
   };
 
   // Reset all possible parameters
-  SympyStepper::State esStateCopy(copyState(*bField, ps.stepping));
+  SympyStepper::State esStateCopy = copyState(*bField, ps.stepping);
   BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), stepSize2);
@@ -424,8 +414,8 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  esState = SympyStepper::State(tgContext, bField->makeCache(mfContext), cp,
-                                stepSize);
+  esOptions = SympyStepper::Options(tgContext, mfContext);
+  esState = es.makeState(esOptions, bp);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
@@ -440,7 +430,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.updateStepSize(
       esState,
       targetSurface
-          ->intersect(esState.geoContext, es.position(esState),
+          ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, ConstrainedStep::navigator);
@@ -450,7 +440,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   es.updateStepSize(
       esState,
       targetSurface
-          ->intersect(esState.geoContext, es.position(esState),
+          ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
       navDir, ConstrainedStep::navigator);

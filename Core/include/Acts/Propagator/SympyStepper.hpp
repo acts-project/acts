@@ -15,8 +15,6 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
@@ -40,6 +38,9 @@ class SympyStepper {
   };
 
   struct Options : public StepperPlainOptions {
+    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
+        : StepperPlainOptions(gctx, mctx) {}
+
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -50,41 +51,16 @@ class SympyStepper {
   /// It contains the stepping information and is provided thread local
   /// by the propagator
   struct State {
-    State() = delete;
-
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] optionsIn The stepper options
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
-    /// @param [in] par The track parameters at start
-    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    explicit State(const GeometryContext& gctx,
-                   MagneticFieldProvider::Cache fieldCacheIn,
-                   const BoundTrackParameters& par,
-                   double ssize = std::numeric_limits<double>::max())
-        : particleHypothesis(par.particleHypothesis()),
-          stepSize(ssize),
-          fieldCache(std::move(fieldCacheIn)),
-          geoContext(gctx) {
-      Vector3 position = par.position(gctx);
-      Vector3 direction = par.direction();
-      pars.template segment<3>(eFreePos0) = position;
-      pars.template segment<3>(eFreeDir0) = direction;
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+    State(const Options& optionsIn, MagneticFieldProvider::Cache fieldCacheIn)
+        : options(optionsIn), fieldCache(std::move(fieldCacheIn)) {}
 
-      // Init the jacobian matrix if needed
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSquareMatrix(*par.covariance());
-        jacToGlobal = surface.boundToFreeJacobian(gctx, position, direction);
-      }
-    }
+    Options options;
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
@@ -129,9 +105,6 @@ class SympyStepper {
     /// See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
 
-    /// The geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
-
     /// Statistics of the stepper
     StepperStatistics statistics;
   };
@@ -144,10 +117,8 @@ class SympyStepper {
   /// @param config The configuration of the stepper
   explicit SympyStepper(const Config& config);
 
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const BoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max()) const;
+  State makeState(const Options& options,
+                  const BoundTrackParameters& par) const;
 
   /// @brief Resets the state
   ///

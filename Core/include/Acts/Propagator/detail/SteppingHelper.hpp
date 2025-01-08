@@ -47,7 +47,7 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
                << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection =
-      surface.intersect(state.geoContext, stepper.position(state),
+      surface.intersect(state.options.geoContext, stepper.position(state),
                         direction * stepper.direction(state), boundaryTolerance,
                         surfaceTolerance)[index];
 
