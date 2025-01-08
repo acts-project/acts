@@ -10,6 +10,8 @@
 
 #include <Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh>
 
+#include <filesystem>
+#include <fstream>
 #include <random>
 #include <set>
 #include <vector>
@@ -22,7 +24,9 @@ using namespace Acts::detail;
 using BoostGraph =
     boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>;
 
-void checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
+using Vi = std::vector<int>;
+
+Vi checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
   std::size_t numNodes = std::max(*std::max_element(src.begin(), src.end()),
                                   *std::max_element(tgt.begin(), tgt.end())) +
                          1;
@@ -80,9 +84,9 @@ void checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
       BOOST_CHECK(success);
     }
   }
-}
 
-using Vi = std::vector<int>;
+  return labelsFromCuda;
+}
 
 BOOST_AUTO_TEST_CASE(simple_test_1) {
   Vi src{0, 1, 2, 3};
@@ -102,9 +106,8 @@ BOOST_AUTO_TEST_CASE(simple_test_3) {
   checkLabeling(src, tgt);
 }
 
-BOOST_AUTO_TEST_CASE(test_label_mask) {
-  Vi labels{0, 3, 5, 3, 0, 0};
-
+void testRelabeling(const Vi &labels, const Vi &refLabelMask,
+                    const Vi &refPrefixSum, const Vi &refLabels) {
   dim3 blockDim = 32;
   dim3 gridDim = (labels.size() + blockDim.x - 1) / blockDim.x;
 
@@ -120,30 +123,59 @@ BOOST_AUTO_TEST_CASE(test_label_mask) {
   cudaMemset(cudaLabelMask, 0, labels.size() * sizeof(int));
 
   makeLabelMask<<<1, 256>>>(labels.size(), cudaLabels, cudaLabelMask);
+  cudaDeviceSynchronize();
 
   std::vector<int> labelMask(labels.size());
-  cudaMemcpy(labelMask.data(), cudaLabelMask, 6 * sizeof(int),
+  cudaMemcpy(labelMask.data(), cudaLabelMask, labelMask.size() * sizeof(int),
              cudaMemcpyDeviceToHost);
 
-  BOOST_CHECK((labelMask == Vi{1, 0, 0, 1, 0, 1}));
+  BOOST_CHECK_EQUAL_COLLECTIONS(labelMask.begin(), labelMask.end(),
+                                refLabelMask.begin(), refLabelMask.end());
 
-  // Do not test prefix sum here
-  Vi prefixSum{0, 1, 1, 1, 2, 2};
-
-  // copy prefix sum to device
+  // Prefix sum
   int *cudaPrefixSum;
-  cudaMalloc(&cudaPrefixSum, prefixSum.size() * sizeof(int));
-  cudaMemcpy(cudaPrefixSum, prefixSum.data(), prefixSum.size() * sizeof(int),
-             cudaMemcpyHostToDevice);
+  cudaMalloc(&cudaPrefixSum, labels.size() * sizeof(int));
+  thrust::exclusive_scan(thrust::device.on(0), cudaLabelMask,
+                         cudaLabelMask + labels.size(), cudaPrefixSum);
+
+  Vi prefixSum(labels.size());
+  cudaMemcpy(prefixSum.data(), cudaPrefixSum, labels.size() * sizeof(int),
+             cudaMemcpyDeviceToHost);
+  BOOST_CHECK_EQUAL_COLLECTIONS(prefixSum.begin(), prefixSum.end(),
+                                refPrefixSum.begin(), refPrefixSum.end());
 
   // Relabel
   mapEdgeLabels<<<1, 256>>>(labels.size(), cudaLabels, cudaPrefixSum);
+  cudaDeviceSynchronize();
 
   std::vector<int> labelsFromCuda(labels.size());
   cudaMemcpy(labelsFromCuda.data(), cudaLabels, labels.size() * sizeof(int),
              cudaMemcpyDeviceToHost);
 
-  BOOST_CHECK((labelsFromCuda == Vi{0, 1, 2, 1, 0, 0}));
+  BOOST_CHECK_EQUAL_COLLECTIONS(labelsFromCuda.begin(), labelsFromCuda.end(),
+                                refLabels.begin(), refLabels.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_relabeling) {
+  // clang-format off
+  Vi labels      {0, 3, 5, 3, 0, 0};
+  Vi refLabelMask{1, 0, 0, 1, 0, 1};
+  Vi refPrefixSum{0, 1, 1, 1, 2, 2};
+  Vi refLabels   {0, 1, 2, 1, 0, 0};
+  // clang-format on
+
+  testRelabeling(labels, refLabelMask, refPrefixSum, refLabels);
+}
+
+BOOST_AUTO_TEST_CASE(test_relabeling_2) {
+  // clang-format off
+  Vi labels      {1, 3, 5, 3, 1, 1};
+  Vi refLabelMask{0, 1, 0, 1, 0, 1};
+  Vi refPrefixSum{0, 0, 1, 1, 2, 2};
+  Vi refLabels   {0, 1, 2, 1, 0, 0};
+  // clang-format on
+
+  testRelabeling(labels, refLabelMask, refPrefixSum, refLabels);
 }
 
 auto makeRandomGraph(std::size_t nodes, std::size_t edges) {
@@ -174,11 +206,11 @@ BOOST_AUTO_TEST_CASE(test_random_graph) {
   checkLabeling(src, tgt);
 }
 
-void testFullConnectedComponents(std::size_t nNodes, std::size_t nEdges) {
-  auto [src, tgt] = makeRandomGraph(nNodes, nEdges);
-
-  // the random graph can contain less edges than specified
-  nEdges = src.size();
+void testFullConnectedComponents(const Vi &src, const Vi &tgt) {
+  const auto nNodes = std::max(*std::max_element(src.begin(), src.end()),
+                               *std::max_element(tgt.begin(), tgt.end())) +
+                      1;
+  const auto nEdges = src.size();
 
   // print src and tgt
   /*
@@ -262,21 +294,76 @@ void testFullConnectedComponents(std::size_t nNodes, std::size_t nEdges) {
 
   // check
   BOOST_CHECK_EQUAL(cudaNumLabels, cpuNumLabels);
-
-  // check label vectors are the same
-  for (int i = 0; i < nNodes; ++i) {
-    BOOST_CHECK_EQUAL(labelsFromCuda[i], cpuLabels[i]);
-  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(labelsFromCuda.begin(), labelsFromCuda.end(),
+                                cpuLabels.begin(), cpuLabels.end());
 }
 
 BOOST_AUTO_TEST_CASE(full_test_tiny_graph) {
-  testFullConnectedComponents(5, 10);
+  auto [src, tgt] = makeRandomGraph(5, 10);
+  testFullConnectedComponents(src, tgt);
 }
 
 BOOST_AUTO_TEST_CASE(full_test_small_graph) {
-  testFullConnectedComponents(100, 500);
+  auto [src, tgt] = makeRandomGraph(100, 500);
+  testFullConnectedComponents(src, tgt);
 }
 
 BOOST_AUTO_TEST_CASE(full_test_big_graph) {
-  testFullConnectedComponents(100'000, 500'000);
+  for (int i = 0; i < 3; ++i) {
+    std::cout << "Test graph " << i << std::endl;
+    auto [src, tgt] = makeRandomGraph(100'000, 500'000);
+    testFullConnectedComponents(src, tgt);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_from_file) {
+  if (!std::filesystem::exists("edges_cuda_trackbuilding.txt")) {
+    std::cout << "File edges_cuda_trackbuilding.txt not found" << std::endl;
+    return;
+  }
+
+  std::ifstream file("edges_cuda_trackbuilding.txt");
+  std::vector<int> src, tgt;
+  int a, b;
+  while (file >> a >> b) {
+    src.push_back(a);
+    tgt.push_back(b);
+  }
+
+  testFullConnectedComponents(src, tgt);
+}
+
+// try this pathologic case
+BOOST_AUTO_TEST_CASE(special_1) {
+  testFullConnectedComponents({1, 2}, {4, 7});
+}
+
+BOOST_AUTO_TEST_CASE(special_2) {
+  Vi src{1, 2};
+  Vi tgt{4, 7};
+  checkLabeling(src, tgt);
+}
+
+BOOST_AUTO_TEST_CASE(special_3) {
+  // clang-format off
+  Vi labels      {0, 1, 2, 3, 1, 5, 6, 2};
+  Vi refLabelMask{1, 1, 1, 1, 0, 1, 1, 0};
+  Vi refPrefixSum{0, 1, 2, 3, 4, 4, 5, 6};
+  Vi refLabels   {0, 1, 2, 3, 1, 4, 5, 2};
+  // clang-format on
+
+  testRelabeling(labels, refLabelMask, refPrefixSum, refLabels);
+}
+
+BOOST_AUTO_TEST_CASE(special_4) {
+  Vi src{1, 2};
+  Vi tgt{4, 7};
+
+  auto labelsFromCuda = checkLabeling(src, tgt);
+
+  Vi refLabelMask{1, 1, 1, 1, 0, 1, 1, 0};
+  Vi refPrefixSum{0, 1, 2, 3, 4, 4, 5, 6};
+  Vi refLabels{0, 1, 2, 3, 1, 4, 5, 2};
+
+  testRelabeling(labelsFromCuda, refLabelMask, refPrefixSum, refLabels);
 }
