@@ -29,7 +29,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
                                          const TEdge *targetEdges,
                                          std::size_t numNodes, TLabel *labels,
                                          TLabel *labelsNext) {
-  for (int i = threadIdx.x; i < numNodes; i += blockDim.x) {
+  for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
     labels[i] = i;
     labelsNext[i] = i;
   }
@@ -43,7 +43,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
     //printf("Iteration %i\n", n);
 
     // Tree hooking for each edge;
-    for (int i = threadIdx.x; i < numEdges; i += blockDim.x) {
+    for (std::size_t i = threadIdx.x; i < numEdges; i += blockDim.x) {
       auto u = sourceEdges[i];
       auto v = targetEdges[i];
 
@@ -61,7 +61,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
     }
     __syncthreads();
 
-    for (int i = threadIdx.x; i < numNodes; i += blockDim.x) {
+    for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
       labels[i] = labelsNext[i];
     }
 
@@ -72,7 +72,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
     }*/
 
     // Shortcutting
-    for (int i = threadIdx.x; i < numNodes; i += blockDim.x) {
+    for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
       if (labels[i] != labels[labels[i]]) {
         labelsNext[i] = labels[labels[i]];
         //printf("Vertex %i: labelsNext[%i] = labels[%i] = %i\n", i, i, labels[i], labels[labels[i]]);
@@ -80,7 +80,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
       }
     }
 
-    for (int i = threadIdx.x; i < numNodes; i += blockDim.x) {
+    for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
       labels[i] = labelsNext[i];
     }
 
@@ -133,7 +133,7 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   // Make synchronization in one block, to avoid that inter-block sync is
   // necessary
   dim3 blockDim = 1024;
-  labelConnectedComponents<<<1, blockDim, 0, stream>>>(
+  labelConnectedComponents<<<1, blockDim, 1, stream>>>(
       nEdges, sourceEdges, targetEdges, nNodes, labels, tmpMemory);
 
   // Assume we have the following components:
@@ -142,7 +142,7 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   // Fill a mask which labels survived the connected components algorithm
   // 0 1 2 3 4 5
   // 1 0 0 1 0 1
-  CUDA_CHECK(cudaMemsetAsync(tmpMemory, nNodes * sizeof(TLabel), 0, stream));
+  CUDA_CHECK(cudaMemsetAsync(tmpMemory, 0, nNodes * sizeof(TLabel), stream));
   dim3 gridDim = (nNodes + blockDim.x - 1) / blockDim.x;
   makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
 
