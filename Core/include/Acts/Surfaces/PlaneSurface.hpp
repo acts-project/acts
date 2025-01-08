@@ -110,7 +110,7 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @return position that can beused for this binning
   Vector3 referencePosition(const GeometryContext& gctx,
-                            AxisDirection bValue) const final;
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

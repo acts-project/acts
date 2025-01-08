@@ -95,7 +95,7 @@ class LineSurface : public Surface {
   ///
   /// @return position that can beused for this binning
   Vector3 referencePosition(const GeometryContext& gctx,
-                            AxisDirection bValue) const final;
+                            AxisDirection aDir) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///

@@ -59,7 +59,7 @@ const std::string& axisDirectionName(AxisDirection axisDir);
 /// @param os is the output stream
 /// @param axisDir is the axis direction
 /// @return the output stream
-std::ostream& operator<<(std::ostream& os, AxisDirection axidDir);
+std::ostream& operator<<(std::ostream& os, AxisDirection axisDir);
 
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
