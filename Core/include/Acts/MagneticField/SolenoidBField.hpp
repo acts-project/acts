@@ -110,14 +110,6 @@ class SolenoidBField final : public MagneticFieldProvider {
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override;
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,MagneticFieldProvider::Cache&) const
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Result<std::pair<Vector3, SquareMatrix3>> getFieldGradient(
-      const Vector3& position,
-      MagneticFieldProvider::Cache& cache) const override;
-
  private:
   Config m_cfg;
   double m_scale;

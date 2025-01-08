@@ -59,26 +59,6 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
     return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
-  /// @brief retrieve magnetic field value & its gradient
-  ///
-  /// @param [in]  position   global position
-  /// @param [out] derivative gradient of magnetic field vector as (3x3)
-  /// matrix
-  /// @param [in] cache Cache object (is ignored)
-  /// @return magnetic field vector
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Acts::Result<std::pair<Acts::Vector3, Acts::SquareMatrix3>> getFieldGradient(
-      const Acts::Vector3& /*position*/,
-      MagneticFieldProvider::Cache& gCache) const override {
-    Cache& cache = gCache.as<Cache>();
-    return Acts::Result<std::pair<Acts::Vector3, Acts::SquareMatrix3>>::success(
-        std::pair{m_BField * cache.scalor, Acts::SquareMatrix3::Zero()});
-  }
-
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
     return Acts::MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);

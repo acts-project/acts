@@ -58,14 +58,6 @@ Acts::Vector2 Acts::SolenoidBField::getField(const Vector2& position) const {
   return multiCoilField(position, m_scale);
 }
 
-Acts::Result<std::pair<Acts::Vector3, Acts::SquareMatrix3>>
-Acts::SolenoidBField::getFieldGradient(
-    const Vector3& /*position*/,
-    MagneticFieldProvider::Cache& /*cache*/) const {
-  return Result<std::pair<Vector3, SquareMatrix3>>::failure(
-      MagneticFieldError::NotImplemented);
-}
-
 Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
                                                    double scale) const {
   // iterate over all coils

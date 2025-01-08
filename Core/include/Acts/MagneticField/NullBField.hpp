@@ -36,21 +36,6 @@ class NullBField final : public MagneticFieldProvider {
     return Result<Vector3>::success(Vector3::Zero());
   }
 
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,MagneticFieldProvider::Cache&) const
-  ///
-  /// @note The @p position is ignored and only kept as argument to provide
-  ///       a consistent interface with other magnetic field services.
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Result<std::pair<Vector3, SquareMatrix3>> getFieldGradient(
-      const Vector3& position,
-      MagneticFieldProvider::Cache& cache) const override {
-    (void)position;
-    (void)cache;
-    return Result<std::pair<Vector3, SquareMatrix3>>::success(
-        std::pair{Vector3::Zero(), SquareMatrix3::Zero()});
-  }
-
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {

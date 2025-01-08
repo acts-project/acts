@@ -72,11 +72,4 @@ Result<Vector3> MultiRangeBField::getField(
   }
 }
 
-Result<std::pair<Vector3, SquareMatrix3>> MultiRangeBField::getFieldGradient(
-    const Vector3& /*position*/,
-    MagneticFieldProvider::Cache& /*cache*/) const {
-  return Result<std::pair<Vector3, SquareMatrix3>>::failure(
-      MagneticFieldError::NotImplemented);
-}
-
 }  // namespace Acts

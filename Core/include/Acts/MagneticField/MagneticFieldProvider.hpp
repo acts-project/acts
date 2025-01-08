@@ -42,15 +42,6 @@ class MagneticFieldProvider {
   virtual Result<Vector3> getField(const Vector3& position,
                                    Cache& cache) const = 0;
 
-  /// Retrieve the magnetic field value and its gradient at a given location.
-  /// Requires a cache object created through makeCache().
-  ///
-  /// @param [in]  position   global 3D position
-  /// @param [in,out] cache Field provider specific cache object
-  /// @return magnetic field vector
-  virtual Result<std::pair<Vector3, SquareMatrix3>> getFieldGradient(
-      const Vector3& position, Cache& cache) const = 0;
-
   virtual ~MagneticFieldProvider() = default;
 };
 
