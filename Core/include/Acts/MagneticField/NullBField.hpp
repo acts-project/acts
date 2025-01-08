@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -49,4 +50,5 @@ class NullBField final : public MagneticFieldProvider {
   /// @note The method will always return true for the null B-Field
   bool isInside(const Vector3& /*position*/) const { return true; }
 };
+
 }  // namespace Acts

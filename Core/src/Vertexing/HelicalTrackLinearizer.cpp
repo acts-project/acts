@@ -9,7 +9,6 @@
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 

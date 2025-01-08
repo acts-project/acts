@@ -181,7 +181,7 @@ AdaptiveGridTrackDensity::getMaxZTPositionAndWidth(
 
 AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
     const BoundTrackParameters& trk, DensityMap& mainDensityMap) const {
-  ActsVector<3> impactParams = trk.impactParameters();
+  Vector3 impactParams = trk.impactParameters();
   ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
   std::uint32_t spatialTrkGridSize =
