@@ -97,7 +97,7 @@ void addInput(Context& ctx) {
       outputStripSpacePoints, outputSpacePoints, outputClusters,
       outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
       skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-      absBoundaryTolerance);
+      absBoundaryTolerance, onlySpacepoints, noTruth);
 
 #ifdef WITH_GEOMODEL_PLUGIN
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,

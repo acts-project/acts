@@ -134,12 +134,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                 &CLparticleLink_eventIndex);
-  m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                 &CLparticleLink_barcode);
-  m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
-  m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
   m_inputchain->SetBranchAddress("CLphis", &CLphis);
   m_inputchain->SetBranchAddress("CLetas", &CLetas);
   m_inputchain->SetBranchAddress("CLtots", &CLtots);
@@ -161,28 +155,40 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
   m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
   m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
-  m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
-  m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
-  m_inputchain->SetBranchAddress("Part_barcode", Part_barcode);
-  m_inputchain->SetBranchAddress("Part_px", Part_px);
-  m_inputchain->SetBranchAddress("Part_py", Part_py);
-  m_inputchain->SetBranchAddress("Part_pz", Part_pz);
-  m_inputchain->SetBranchAddress("Part_pt", Part_pt);
-  m_inputchain->SetBranchAddress("Part_eta", Part_eta);
-  m_inputchain->SetBranchAddress("Part_vx", Part_vx);
-  m_inputchain->SetBranchAddress("Part_vy", Part_vy);
-  m_inputchain->SetBranchAddress("Part_vz", Part_vz);
-  m_inputchain->SetBranchAddress("Part_radius", Part_radius);
-  m_inputchain->SetBranchAddress("Part_status", Part_status);
-  m_inputchain->SetBranchAddress("Part_charge", Part_charge);
-  m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id);
-  m_inputchain->SetBranchAddress("Part_passed", Part_passed);
-  m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin);
-  m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
-  m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
-  m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
-  m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
-  m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+  if (!m_cfg.noTruth) {
+    m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
+                                   &CLparticleLink_eventIndex);
+    m_inputchain->SetBranchAddress("CLparticleLink_barcode",
+                                   &CLparticleLink_barcode);
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
+    m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+  }
+
+  if (!m_cfg.noTruth) {
+    m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
+    m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
+    m_inputchain->SetBranchAddress("Part_barcode", Part_barcode);
+    m_inputchain->SetBranchAddress("Part_px", Part_px);
+    m_inputchain->SetBranchAddress("Part_py", Part_py);
+    m_inputchain->SetBranchAddress("Part_pz", Part_pz);
+    m_inputchain->SetBranchAddress("Part_pt", Part_pt);
+    m_inputchain->SetBranchAddress("Part_eta", Part_eta);
+    m_inputchain->SetBranchAddress("Part_vx", Part_vx);
+    m_inputchain->SetBranchAddress("Part_vy", Part_vy);
+    m_inputchain->SetBranchAddress("Part_vz", Part_vz);
+    m_inputchain->SetBranchAddress("Part_radius", Part_radius);
+    m_inputchain->SetBranchAddress("Part_status", Part_status);
+    m_inputchain->SetBranchAddress("Part_charge", Part_charge);
+    m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id);
+    m_inputchain->SetBranchAddress("Part_passed", Part_passed);
+    m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin);
+    m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
+    m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
+    m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
+    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
+    m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+  }
+
   m_inputchain->SetBranchAddress("nSP", &nSP);
   m_inputchain->SetBranchAddress("SPindex", SPindex);
   m_inputchain->SetBranchAddress("SPx", SPx);
@@ -207,6 +213,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                    &SPtopStripCenterPosition);
   }
 
+  /*
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
   m_inputchain->SetBranchAddress("TRKtrack_fitter", TRKtrack_fitter);
@@ -242,6 +249,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                  &DTTstTrack_subDetType);
   m_inputchain->SetBranchAddress("DTTstCommon_subDetType",
                                  &DTTstCommon_subDetType);
+  */
 
   for (const auto& file : m_cfg.inputfiles) {
     m_inputchain->Add(file.c_str());
@@ -452,25 +460,26 @@ RootAthenaDumpReader::readMeasurements(
     }
 
     std::size_t measIndex = measurements.size();
+    imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
 
-    // Create measurement particles map and particles container
-    for (const auto& [subevt, barcode] :
-         Acts::zip(CLparticleLink_eventIndex->at(im),
-                   CLparticleLink_barcode->at(im))) {
-      auto dummyBarcode = concatInts(barcode, subevt);
-      // If we don't find the particle, create one with default values
-      if (particles.find(dummyBarcode) == particles.end()) {
-        ACTS_VERBOSE("Particle with subevt " << subevt << ", barcode "
-                                             << barcode
-                                             << "not found, create dummy one");
-        particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
+    if (!m_cfg.noTruth) {
+      // Create measurement particles map and particles container
+      for (const auto& [subevt, barcode] :
+           Acts::zip(CLparticleLink_eventIndex->at(im),
+                     CLparticleLink_barcode->at(im))) {
+        auto dummyBarcode = concatInts(barcode, subevt);
+        // If we don't find the particle, create one with default values
+        if (particles.find(dummyBarcode) == particles.end()) {
+          ACTS_VERBOSE("Particle with subevt "
+                       << subevt << ", barcode " << barcode
+                       << "not found, create dummy one");
+          particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
+        }
+        measPartMap.insert(
+            std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
       }
-      measPartMap.insert(
-          std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
     }
-
-    imIdxMap.emplace(im, measIndex);
   }
 
   if (measurements.size() < static_cast<std::size_t>(nCL)) {
@@ -707,19 +716,26 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   std::optional<std::unordered_map<int, std::size_t>> optImIdxMap;
 
   if (!m_cfg.onlySpacepoints) {
-    auto candidateParticles = readParticles();
+    SimParticleContainer candidateParticles;
+
+    if (!m_cfg.noTruth) {
+      candidateParticles = readParticles();
+    }
 
     auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
         readMeasurements(candidateParticles, ctx.geoContext);
     optImIdxMap.emplace(std::move(imIdxMap));
 
-    auto [particles, measPartMap] =
-        reprocessParticles(candidateParticles, candidateMeasPartMap);
-
     m_outputClusters(ctx, std::move(clusters));
-    m_outputParticles(ctx, std::move(particles));
-    m_outputMeasParticleMap(ctx, std::move(measPartMap));
     m_outputMeasurements(ctx, std::move(measurements));
+
+    if (!m_cfg.noTruth) {
+      auto [particles, measPartMap] =
+          reprocessParticles(candidateParticles, candidateMeasPartMap);
+
+      m_outputParticles(ctx, std::move(particles));
+      m_outputMeasParticleMap(ctx, std::move(measPartMap));
+    }
   }
 
   auto [spacePoints, pixelSpacePoints, stripSpacePoints] =

@@ -67,6 +67,9 @@ class RootAthenaDumpReader : public IReader {
     /// Only extract spacepoints
     bool onlySpacepoints = false;
 
+    /// Skip truth data
+    bool noTruth = false;
+
     /// Only extract particles that passed the tracking requirements, for
     /// details see:
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
