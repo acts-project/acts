@@ -1235,7 +1235,7 @@ class MultiTrajectoryTestsCommon {
     auto [par2, cov2] = generateBoundParametersCovariance(rng, {});
 
     ts.allocateCalibrated(3);
-    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), ActsVector<3>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
                       ActsSquareMatrix<3>::Zero());
 

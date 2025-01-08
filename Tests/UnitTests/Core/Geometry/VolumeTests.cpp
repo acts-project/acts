@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   Vector3 translation{1_mm, 2_mm, 3_mm};
 
   // Build a translation
-  ActsMatrix<3, 3> rotation = RotationMatrix3::Identity();
+  SquareMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 60_degree;
   Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);

@@ -836,7 +836,7 @@ ProcessCode VertexNTupleWriter::writeT(
       if (paramsAtVtx.has_value()) {
         Acts::Vector3 recoMom =
             paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
-        const Acts::ActsMatrix<3, 3>& momCov =
+        const Acts::SquareMatrix3& momCov =
             paramsAtVtx->covariance()->template block<3, 3>(Acts::eBoundPhi,
                                                             Acts::eBoundPhi);
         innerRecoPhi.push_back(recoMom[0]);
@@ -889,7 +889,7 @@ ProcessCode VertexNTupleWriter::writeT(
       if (paramsAtVtxFitted.has_value()) {
         Acts::Vector3 recoMomFitted =
             paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
-        const Acts::ActsMatrix<3, 3>& momCovFitted =
+        const Acts::SquareMatrix3& momCovFitted =
             paramsAtVtxFitted->covariance()->block<3, 3>(Acts::eBoundPhi,
                                                          Acts::eBoundPhi);
         innerRecoPhiFitted.push_back(recoMomFitted[0]);
