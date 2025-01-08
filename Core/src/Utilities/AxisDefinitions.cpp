@@ -17,12 +17,12 @@ namespace Acts {
 namespace {
 
 static const std::vector<std::string> s_axisDirectionNames = {
-    "AxisX",    "AxisY", "AxisZ",   "AxisR",  "AxisPhi",
+    "AxisX",    "AxisY",     "AxisZ",   "AxisR",  "AxisPhi",
     "AxisRPhi", "AxisTheta", "AxisEta", "AxisMag"};
 
 static const std::vector<AxisDirection> s_AxisDirections = {
-    AxisDirection::AxisX, AxisDirection::AxisY,   AxisDirection::AxisZ,
-    AxisDirection::AxisR, AxisDirection::AxisPhi, AxisDirection::AxisRPhi,
+    AxisDirection::AxisX,     AxisDirection::AxisY,   AxisDirection::AxisZ,
+    AxisDirection::AxisR,     AxisDirection::AxisPhi, AxisDirection::AxisRPhi,
     AxisDirection::AxisTheta, AxisDirection::AxisEta, AxisDirection::AxisMag};
 
 }  // namespace

@@ -134,18 +134,18 @@ inline std::ostream& operator<<(std::ostream& os, AxisType type) {
 template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
 class Axis;
 
-Axis(double min, double max, std::size_t bins)
-    -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+Axis(double min, double max,
+     std::size_t bins) -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max, std::size_t bins)
-    -> Axis<AxisType::Equidistant, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max,
+     std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
 
 Axis(std::vector<double> bins)
     -> Axis<AxisType::Variable, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<double> bins)
-    -> Axis<AxisType::Variable, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/,
+     std::vector<double> bins) -> Axis<AxisType::Variable, bdt>;
 
 }  // namespace Acts
