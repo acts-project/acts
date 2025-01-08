@@ -27,7 +27,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   assert(edgeTensor.size(0) == 2);
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdges = static_cast<std::size_t>(edgeTensor.size(0));
+  const auto numEdges = static_cast<std::size_t>(edgeTensor.size(1));
 
   if (numEdges == 0) {
     ACTS_WARNING("No edges remained after edge classification");
@@ -43,8 +43,11 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   CUDA_CHECK(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
 
-  int numberLabels = detail::connectedComponentsCuda(
+  std::size_t numberLabels = detail::connectedComponentsCuda(
       numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream);
+
+  // TODO not sure why there is an issue that is not detected in the unit tests
+  numberLabels += 1;
 
   std::vector<int> trackLabels(numSpacepoints);
   CUDA_CHECK(cudaMemcpyAsync(trackLabels.data(), cudaLabels,
