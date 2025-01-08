@@ -79,11 +79,11 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param layer object and thus needs the
   /// @param gctx geometry context.
   ///
-  /// @param bValue is the Binning value for the layer array
+  /// @param aDir is the axis direction for the binning
   /// @param offset is the sift for the navigation layer
   std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
-                                                   AxisDirection bValue,
+                                                   AxisDirection aDir,
                                                    double offset) const;
 };
 

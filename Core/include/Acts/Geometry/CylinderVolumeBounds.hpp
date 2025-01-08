@@ -183,13 +183,13 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Binning offset - overloaded for some R-binning types
   ///
-  /// @param bValue is the type used for the binning
-  Vector3 referenceOffset(AxisDirection bValue) const override;
+  /// @param aDir is the axis direction used for the binning
+  Vector3 referenceOffset(AxisDirection aDir) const override;
 
   /// Binning borders in double
   ///
-  /// @param bValue is the type used for the binning
-  double referenceBorder(AxisDirection bValue) const override;
+  /// @param aDir is the axis direction used for the binning
+  double referenceBorder(AxisDirection aDir) const override;
 
   /// Output Method for std::ostream
   /// @param os is the output stream

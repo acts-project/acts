@@ -131,8 +131,8 @@ void CuboidVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-void CuboidVolumeBounds::set(BoundValues aDir, double value) {
-  set({{aDir, value}});
+void CuboidVolumeBounds::set(BoundValues bValue, double value) {
+  set({{bValue, value}});
 }
 
 void CuboidVolumeBounds::set(

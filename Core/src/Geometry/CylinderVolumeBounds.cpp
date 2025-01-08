@@ -289,8 +289,8 @@ void CylinderVolumeBounds::checkConsistency() {
   }
 }
 
-void CylinderVolumeBounds::set(BoundValues aDir, double value) {
-  set({{aDir, value}});
+void CylinderVolumeBounds::set(BoundValues bValue, double value) {
+  set({{bValue, value}});
 }
 
 void CylinderVolumeBounds::set(

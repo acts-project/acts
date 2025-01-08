@@ -130,10 +130,11 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   /// Binning borders in double
   ///
-  /// @param bValue is the binning schema used
+  /// @param aDir is the axis direction for which the
+  /// reference border is requested
   ///
   /// @return float offset to be used for the binning
-  double referenceBorder(AxisDirection bValue) const final;
+  double referenceBorder(AxisDirection aDir) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
