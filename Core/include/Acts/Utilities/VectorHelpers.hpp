@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <limits>
@@ -145,29 +145,34 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
 /// Helper method to extract the binning value from a 3D vector.
 ///
 /// For this method a 3D vector is required to guarantee all potential
-/// binning values.
-inline double cast(const Vector3& position, BinningValue bval) {
-  switch (bval) {
-    case BinningValue::binX:
+/// axis directions to be casted from
+///
+/// @param position is the position in global
+/// @param aDir is the axis direction to be extracted
+///
+/// @return the value of the binning direction
+inline double cast(const Vector3& position, AxisDirection aDir) {
+  switch (aDir) {
+    case AxisDirection::AxisX:
       return position[0];
-    case BinningValue::binY:
+    case AxisDirection::AxisY:
       return position[1];
-    case BinningValue::binZ:
+    case AxisDirection::AxisZ:
       return position[2];
-    case BinningValue::binR:
+    case AxisDirection::AxisR:
       return perp(position);
-    case BinningValue::binPhi:
+    case AxisDirection::AxisPhi:
       return phi(position);
-    case BinningValue::binRPhi:
+    case AxisDirection::AxisRPhi:
       return perp(position) * phi(position);
-    case BinningValue::binH:
+    case AxisDirection::AxisTheta:
       return theta(position);
-    case BinningValue::binEta:
+    case AxisDirection::AxisEta:
       return eta(position);
-    case BinningValue::binMag:
+    case AxisDirection::AxisMag:
       return position.norm();
     default:
-      assert(false && "Invalid BinningValue enum value");
+      assert(false && "Invalid AxisDirection enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }

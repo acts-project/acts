@@ -6,7 +6,7 @@ mm = acts.UnitConstants.mm
 m = acts.UnitConstants.m
 degree = acts.UnitConstants.degree
 
-bv = acts.BinningValue
+bv = acts.AxisDirection
 
 gctx = acts.GeometryContext()
 logLevel = acts.logging.VERBOSE

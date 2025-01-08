@@ -131,9 +131,9 @@ def run() -> None:
     }
 
     role_instances["enum"] = {
-        "Acts::BinningValue",
+        "Acts::AxisDirection",
         "Acts::BinningType",
-        "Acts::BinningValue",
+        "Acts::AxisDirection",
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",

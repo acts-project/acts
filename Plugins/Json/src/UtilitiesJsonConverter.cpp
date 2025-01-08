@@ -54,7 +54,7 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   float min = j["min"];
   float max = j["max"];
   int bins = j["bins"];
-  auto bValue = j["value"].get<BinningValue>();
+  auto bValue = j["value"].get<AxisDirection>();
   if (bins == 1 && !(j["type"] == "arbitrary")) {
     bd = BinningData(bValue, min, max);
     return;

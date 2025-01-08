@@ -43,7 +43,7 @@ namespace detail::CuboidalDetectorHelper {
 /// @return a proto container with the outside portals
 DetectorComponent::PortalContainer connect(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<DetectorVolume>>& volumes, BinningValue bValue,
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes, AxisDirection bValue,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
@@ -62,7 +62,7 @@ DetectorComponent::PortalContainer connect(
 DetectorComponent::PortalContainer connect(
     const GeometryContext& gctx,
     const std::vector<DetectorComponent::PortalContainer>& containers,
-    BinningValue bValue, const std::vector<unsigned int>& selectedOnly = {},
+    AxisDirection bValue, const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Helper method to extract r,z,phi boundaries for

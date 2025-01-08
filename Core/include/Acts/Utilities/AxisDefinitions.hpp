@@ -13,6 +13,54 @@
 #include <ostream>
 
 namespace Acts {
+
+/// @enum AxisDirection to specify a local axis direction
+enum class AxisDirection : int {
+  /// AxisX, AxisY, AxisZ are the cartesian directions in the local frame
+  AxisX = 0,
+  AxisY = 1,
+  AxisZ = 2,
+  /// AxisR is a radial direction
+  AxisR = 3,
+  /// AxisPhi is the azimuthal direction
+  AxisPhi = 4,
+  /// AxisRPhi is the radial-azimuthal direction
+  AxisRPhi = 5,
+  /// AxisTheta is the polar angle direction
+  AxisTheta = 6,
+  /// AxisEta is the pseudorapidity direction
+  AxisEta = 7,
+  /// AxisMag is the magnitude of the vector
+  AxisMag = 8
+};
+
+/// Get all possible axis directions
+/// @return a vector of all possible axis directions
+const std::vector<AxisDirection>& allAxisDirections();
+
+/// Returns the total number of axis directions
+/// @return the number of axis directions
+constexpr std::size_t numAxisDirections() {
+  return 9;
+}
+
+/// Get an axis direction from its string name
+///
+/// @param name is the name of the axis direction
+/// @return the axis direction
+AxisDirection axisDirectionFromName(const std::string& name);
+
+/// Get the name of a binning value as a string
+/// @param axisDir is the binning value
+/// @return the name of the binning value
+const std::string& axisDirectionName(AxisDirection axisDir);
+
+/// Output stream operator for @c AxisDirection
+/// @param os is the output stream
+/// @param axisDir is the axis direction
+/// @return the output stream
+std::ostream& operator<<(std::ostream& os, AxisDirection axidDir);
+
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values
 enum class AxisBoundaryType {
@@ -86,18 +134,18 @@ inline std::ostream& operator<<(std::ostream& os, AxisType type) {
 template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
 class Axis;
 
-Axis(double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
+Axis(double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max,
-     std::size_t bins) -> Axis<AxisType::Equidistant, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, double min, double max, std::size_t bins)
+    -> Axis<AxisType::Equidistant, bdt>;
 
 Axis(std::vector<double> bins)
     -> Axis<AxisType::Variable, AxisBoundaryType::Open>;
 
 template <AxisBoundaryType bdt>
-Axis(AxisBoundaryTypeTag<bdt> /*bdt*/,
-     std::vector<double> bins) -> Axis<AxisType::Variable, bdt>;
+Axis(AxisBoundaryTypeTag<bdt> /*bdt*/, std::vector<double> bins)
+    -> Axis<AxisType::Variable, bdt>;
 
 }  // namespace Acts

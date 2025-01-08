@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <array>
@@ -118,13 +119,13 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
+  /// Get the canonical binning direction, i.e. the binning directions
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
-            Acts::BinningValue::binZ};
+  std::vector<Acts::AxisDirection> canonicalAxes() const override {
+    return {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
+            Acts::AxisDirection::AxisZ};
   };
 
   /// Binning borders in double
@@ -132,7 +133,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  double binningBorder(BinningValue bValue) const final;
+  double referenceBorder(AxisDirection bValue) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
