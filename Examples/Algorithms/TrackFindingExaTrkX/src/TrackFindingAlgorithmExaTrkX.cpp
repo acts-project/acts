@@ -184,24 +184,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   auto t1 = Clock::now();
 
   // Run the pipeline
-  const auto trackCandidates = [&]() {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    Acts::ExaTrkXTiming timing;
-    auto res = m_pipeline.run(features, moduleIds, idxs, hook, &timing);
-
-    m_timing.graphBuildingTime(timing.graphBuildingTime.count());
-
-    assert(timing.classifierTimes.size() == m_timing.classifierTimes.size());
-    for (auto [aggr, a] :
-         Acts::zip(m_timing.classifierTimes, timing.classifierTimes)) {
-      aggr(a.count());
-    }
-
-    m_timing.trackBuildingTime(timing.trackBuildingTime.count());
-
-    return res;
-  }();
+  Acts::ExaTrkXTiming timing;
+  auto trackCandidates =
+      m_pipeline.run(features, moduleIds, idxs, hook, &timing);
 
   auto t2 = Clock::now();
 
@@ -247,8 +232,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   auto t3 = Clock::now();
-  m_timing.preprocessingTime(Duration(t1 - t0).count());
-  m_timing.postprocessingTime(Duration(t3 - t2).count());
+
+  {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_timing.preprocessingTime(Duration(t1 - t0).count());
+    m_timing.graphBuildingTime(timing.graphBuildingTime.count());
+
+    assert(timing.classifierTimes.size() == m_timing.classifierTimes.size());
+    for (auto [aggr, a] :
+         Acts::zip(m_timing.classifierTimes, timing.classifierTimes)) {
+      aggr(a.count());
+    }
+
+    m_timing.trackBuildingTime(timing.trackBuildingTime.count());
+    m_timing.postprocessingTime(Duration(t3 - t2).count());
+  }
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
