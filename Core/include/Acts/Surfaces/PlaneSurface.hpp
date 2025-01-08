@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -21,8 +20,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <memory>
 #include <string>
 
@@ -73,9 +70,6 @@ class PlaneSurface : public RegularSurface {
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
-  ~PlaneSurface() override = default;
-  PlaneSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
