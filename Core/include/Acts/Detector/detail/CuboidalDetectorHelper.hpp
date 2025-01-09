@@ -33,7 +33,7 @@ namespace detail::CuboidalDetectorHelper {
 ///
 /// @param gctx The geometry context
 /// @param volumes the volumes
-/// @param bValue the binning value  (allowed are binX, binY, binZ)
+/// @param bValue the binning value  (allowed are AxisX, AxisY, AxisZ)
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
@@ -51,7 +51,7 @@ DetectorComponent::PortalContainer connect(
 ///
 /// @param gctx The geometry context
 /// @param containers the containers
-/// @param bValue the binning value  (allowed are binX, binY, binZ)
+/// @param bValue the binning value  (allowed are AxisX, AxisY, AxisZ)
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///

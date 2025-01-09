@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
           .value(),
       nullptr);
 
-  // Cannot merge in binRPhi
+  // Cannot merge in AxisRPhi
   BOOST_CHECK_THROW(
       Portal::merge(gctx, portal1, portal2, AxisDirection::AxisRPhi, *logger),
       SurfaceMergingException);

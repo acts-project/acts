@@ -58,7 +58,7 @@ void Acts::from_json(const nlohmann::json& j, BinningData& bd) {
   // Support legacy format with BinningValue instead of AxisDirection,
   // this will anyway disappear with the removal of BinUtility
   AxisDirection bValue = AxisDirection::AxisX;
-  if (j["value"].get<std::string>().substr(0, 2) == "bin") {
+  if (j["value"].get<std::string>().substr(0, 3) == "bin") {
     std::string bValueStr = j["value"];
     if (bValueStr == "binX") {
       bValue = AxisDirection::AxisX;

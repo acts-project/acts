@@ -320,7 +320,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   assert(dim() == 1);
   if (direction() == AxisDirection::AxisRPhi) {
     const auto& axisRPhi = *grid().axes().front();
-    // 1D direction is binRPhi, so add a Z axis
+    // 1D direction is AxisRPhi, so add a Z axis
     double hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
     auto grid = axisRPhi.visit([&](const auto& axis0) {
@@ -338,7 +338,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 
   } else {
     const auto& axisZ = *grid().axes().front();
-    // 1D direction is binZ, so add an rPhi axis
+    // 1D direction is AxisZ, so add an rPhi axis
     double r = surface->bounds().get(CylinderBounds::eR);
     double hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
     double hlRPhi = r * hlPhi;
@@ -377,7 +377,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
 
   if (direction() == AxisDirection::AxisR) {
     const auto& axisR = *grid().axes().front();
-    // 1D direction is binR, so add a phi axis
+    // 1D direction is AxisR, so add a phi axis
     double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
 
     auto makeGrid = [&](auto bdt) {
@@ -401,7 +401,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
     }
   } else {
     const auto& axisPhi = *grid().axes().front();
-    // 1D direction is binPhi, so add an R axis
+    // 1D direction is AxisPhi, so add an R axis
     double rMin = bounds->get(RadialBounds::eMinR);
     double rMax = bounds->get(RadialBounds::eMaxR);
 

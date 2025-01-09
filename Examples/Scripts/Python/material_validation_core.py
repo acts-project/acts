@@ -171,8 +171,8 @@ if "__main__" == __name__:
             gmBlueprintConfig = gm.GeoModelBlueprintCreater.Config()
             gmBlueprintConfig.detectorSurfaces = gmSurfaces
             gmBlueprintConfig.kdtBinning = [
-                acts.AxisDirection.binZ,
-                acts.AxisDirection.binR,
+                acts.AxisDirection.AxisZ,
+                acts.AxisDirection.AxisR,
             ]
 
             gmBlueprintOptions = gm.GeoModelBlueprintCreater.Options()

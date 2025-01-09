@@ -62,8 +62,8 @@ ActsExamples::buildTelescopeDetector(
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(matProp);
 
   // Construct the rotation
-  // This assumes the binValue is binX, binY or binZ. No reset is necessary in
-  // case of binZ
+  // This assumes the direction is AxisX, AxisY or AxisZ. No reset is necessary
+  // in case of AxisZ
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Identity();
   if (binValue == Acts::AxisDirection::AxisX) {
     rotation.col(0) = Acts::Vector3(0, 0, -1);

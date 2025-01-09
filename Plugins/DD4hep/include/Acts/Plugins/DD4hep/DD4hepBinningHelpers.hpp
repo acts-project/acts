@@ -56,7 +56,7 @@ inline AxisDirection stringToAxisDirection(const std::string &binningString) {
 }
 
 /// Helper method to cenvert a binning list string to a vector of binning values
-/// e.g. "r,z" -> {binR, binZ}
+/// e.g. "r,z" -> {AxisR, AxisZ}
 ///
 /// @param binningString
 /// @param del the delimiter for the splitting

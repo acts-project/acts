@@ -254,7 +254,7 @@ class CylinderSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
   ///       that align, and have the same radius
   /// @param other The other cylinder surface to merge with
-  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param direction The binning direction: either @c AxisZ or @c AxisRPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed

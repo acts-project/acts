@@ -43,8 +43,8 @@ struct Options {
 
 /// Convert an ACTS grid into a actsvg protogrid, it currently works with
 ///
-/// - 1D: [ binX ] , [ binY ], [ binR ] , [ binPhi ]
-/// - 2D: [ binX, binY ], [ binZ, binPhi ], [ binR, binPhi ]
+/// - 1D: [ AxisX ] , [ AxisY ], [ AxisR ] , [ AxisPhi ]
+/// - 2D: [ AxisX, AxisY ], [ AxisZ, AxisPhi ], [ AxisR, AxisPhi ]
 ///
 /// @tparam grid_type is the type of the grid to be converted
 ///

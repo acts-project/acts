@@ -44,7 +44,7 @@ class BinningData {
  public:
   BinningType type{};        ///< binning type: equidistant, arbitrary
   BinningOption option{};    ///< binning option: open, closed
-  AxisDirection binvalue{};  ///< binning value: binX, binY, binZ, binR ...
+  AxisDirection binvalue{};  ///< axis direction: AxisX, AxisY, AxisZ, ...
   float min{};               ///< minimum value
   float max{};               ///< maximum value
   float step{};              ///< binning step
@@ -57,7 +57,7 @@ class BinningData {
 
   /// Constructor for 0D binning
   ///
-  /// @param bValue is the binning value: binX, binY, etc.
+  /// @param bValue is the axis direction AxisX, AxisY, etc.
   /// @param bMin is the minimum value
   /// @param bMax is the maximum value
   BinningData(AxisDirection bValue, float bMin, float bMax)
@@ -80,7 +80,7 @@ class BinningData {
   /// multiplicative or additive
   ///
   /// @param bOption is the binning option : open, closed
-  /// @param bValue is the binning value: binX, binY, etc.
+  /// @param bValue is the axis direction: Axis, AxisY, etc.
   /// @param bBins is number of equidistant bins
   /// @param bMin is the minimum value
   /// @param bMax is the maximum value
@@ -117,7 +117,7 @@ class BinningData {
   /// Constructor for non-equidistant binning
   ///
   /// @param bOption is the binning option : open / closed
-  /// @param bValue is the binning value : binX, binY, etc.
+  /// @param bValue is the axis direction : AxisX, AxisY, etc.
   /// @param bBoundaries are the bin boundaries
   /// @param sBinData is (optional) sub structure
   BinningData(BinningOption bOption, AxisDirection bValue,

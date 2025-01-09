@@ -70,7 +70,7 @@ class BinUtility {
   /// @param min in the minimal value
   /// @param max is the maximal value
   /// @param opt is the binning option : open, closed
-  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param value is the axis direction : AxisX, AxisY, AxisZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::size_t bins, float min, float max, BinningOption opt = open,
              AxisDirection value = AxisDirection::AxisX,
@@ -84,7 +84,7 @@ class BinUtility {
   ///
   /// @param bValues is the boundary values of the binning
   /// @param opt is the binning option : open, closed
-  /// @param value is the binninb value : binX, binY, binZ, etc.
+  /// @param value is the axis direction : AxisX, AxisY, AxisZ, etc.
   /// @param tForm is the (optional) transform
   BinUtility(std::vector<float>& bValues, BinningOption opt = open,
              AxisDirection value = AxisDirection::AxisPhi,

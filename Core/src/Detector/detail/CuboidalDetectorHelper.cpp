@@ -42,9 +42,9 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   // Assign the portal indices according to the volume bounds definition
   std::array<AxisDirection, 3u> possibleValues = {
       AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
-  // 1 -> [ 2,3 ] for binX connection (cylclic one step)
-  // 2 -> [ 4,5 ] for binY connection (cylclic two steps)
-  // 0 -> [ 0,1 ] for binZ connection (to be in line with cylinder covnention)
+  // 1 -> [ 2,3 ] for AxisX connection (cylclic one step)
+  // 2 -> [ 4,5 ] for AxisY connection (cylclic two steps)
+  // 0 -> [ 0,1 ] for AxisZ connection (to be in line with cylinder covnention)
   using PortalSet = std::array<std::size_t, 2u>;
   std::vector<PortalSet> portalSets = {
       {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
