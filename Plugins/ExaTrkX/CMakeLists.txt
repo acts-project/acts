@@ -23,8 +23,6 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     )
 endif()
 
-add_library(ActsPluginExaTrkX SHARED ${SOURCES})
-
 target_include_directories(
     ActsPluginExaTrkX
     PUBLIC
