@@ -53,8 +53,7 @@ class StraightLineStepper {
   struct Config {};
 
   struct Options : public StepperPlainOptions {
-    explicit Options(const GeometryContext& gctx,
-                     const MagneticFieldContext& mctx)
+    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : StepperPlainOptions(gctx, mctx) {}
 
     void setPlainOptions(const StepperPlainOptions& options) {
@@ -67,10 +66,10 @@ class StraightLineStepper {
   struct State {
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] optionsIn The stepper options
+    /// @param [in] optionsIn The options for the stepper
     ///
     /// @note the covariance matrix is copied when needed
-    State(const Options& optionsIn) : options(optionsIn) {}
+    explicit State(const Options& optionsIn) : options(optionsIn) {}
 
     Options options;
 
@@ -129,6 +128,8 @@ class StraightLineStepper {
     state.pars.template segment<3>(eFreeDir0) = direction;
     state.pars[eFreeTime] = par.time();
     state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
+    // Init the jacobian matrix if needed
     if (par.covariance()) {
       // Get the reference surface for navigation
       const auto& surface = par.referenceSurface();
@@ -227,17 +228,16 @@ class StraightLineStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
-  /// @param [in] stype The step size type
-  /// @param [in] release Do we release the step size?
+  /// @param [in] stype The step size type to be set
   /// @param [in] logger A logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance, ConstrainedStep::Type stype, bool release,
+      double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, stype, release, logger);
+        surfaceTolerance, stype, logger);
   }
 
   /// Update step size
@@ -247,16 +247,14 @@ class StraightLineStepper {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param direction [in] The direction of the propagation
+  /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction direction, ConstrainedStep::Type stype,
-                      bool release) const {
+                      Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
     double stepSize = oIntersection.pathLength();
-    updateStepSize(state, stepSize, stype, release);
+    updateStepSize(state, stepSize, stype);
   }
 
   /// Update step size - explicitly with a double
@@ -264,11 +262,10 @@ class StraightLineStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release) const {
+                      ConstrainedStep::Type stype) const {
     state.previousStepSize = state.stepSize.value();
-    state.stepSize.update(stepSize, stype, release);
+    state.stepSize.update(stepSize, stype);
   }
 
   /// Get the step size

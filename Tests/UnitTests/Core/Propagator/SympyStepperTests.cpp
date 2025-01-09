@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.updateStepSize(esState, -1337., ConstrainedStep::navigator, true);
+  es.updateStepSize(esState, -1337., ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
                          BoundaryTolerance::None(), s_onSurfaceTolerance,
-                         ConstrainedStep::navigator, true);
+                         ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::navigator),
                   navDir * 2., eps);
 
@@ -433,16 +433,17 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
           ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
-      navDir, ConstrainedStep::navigator, false);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
+  es.releaseStepSize(esState, ConstrainedStep::navigator);
   es.updateStepSize(
       esState,
       targetSurface
           ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
-      navDir, ConstrainedStep::navigator, true);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction

@@ -23,7 +23,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperDenseExtension.hpp"
-#include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
@@ -110,13 +109,13 @@ struct SurfaceObserver {
               .pathLength();
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance * state.options.direction,
-                                     ConstrainedStep::actor);
+                                     ConstrainedStep::navigator);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;
         result.surface_passed_r = perp(stepper.position(state.stepping));
         // release the step size, will be re-adjusted
-        state.stepping.stepSize.release(ConstrainedStep::actor);
+        state.stepping.stepSize.release(ConstrainedStep::navigator);
       }
     }
   }

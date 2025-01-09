@@ -155,6 +155,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @brief Typedef to the Single-Component Eigen Stepper
   using SingleStepper = EigenStepper<extension_t>;
 
+  /// @brief Typedef to the Single-Component Stepper Options
+  using SingleOptions = typename SingleStepper::Options;
+
   /// @brief Typedef to the State of the single component Stepper
   using SingleState = typename SingleStepper::State;
 
@@ -180,10 +183,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
-  struct Options : public SingleStepper::Options {
-    explicit Options(const GeometryContext& gctx,
-                     const MagneticFieldContext& mctx)
-        : SingleStepper::Options(gctx, mctx) {}
+  struct Options : public SingleOptions {
+    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
+        : SingleOptions(gctx, mctx) {}
 
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
@@ -498,12 +500,11 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] stype The step size type to be set
-  /// @param [in] release Do we release the step size?
   /// @param [in] logger A @c Logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance, ConstrainedStep::Type stype, bool release,
+      double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     using Status = IntersectionStatus;
 
@@ -512,7 +513,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, index, navDir, boundaryTolerance,
-          surfaceTolerance, stype, release, logger);
+          surfaceTolerance, stype, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 
@@ -575,13 +576,11 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param direction [in] The direction of the propagation
+  /// @param direction [in] The propagation direction
   /// @param stype [in] The step size type to be set
-  /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction direction, ConstrainedStep::Type stype,
-                      bool release) const {
+                      Direction direction, ConstrainedStep::Type stype) const {
     const Surface& surface = *oIntersection.object();
 
     for (auto& component : state.components) {
@@ -592,7 +591,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
           BoundaryTolerance::None())[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
-                                    stype, release);
+                                    stype);
     }
   }
 
@@ -601,11 +600,10 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release) const {
+                      ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::updateStepSize(component.state, stepSize, stype, release);
+      SingleStepper::updateStepSize(component.state, stepSize, stype);
     }
   }
 

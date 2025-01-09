@@ -26,27 +26,36 @@ namespace Acts::detail {
 /// returns the status of the intersection to trigger onSurface in case
 /// the surface is reached.
 ///
+/// @tparam stepper_t The type of stepper used for the propagation
+///
+/// @param stepper [in] The stepper in use
 /// @param state [in,out] The stepping state (thread-local cache)
 /// @param surface [in] The surface provided
+/// @param index [in] The surface intersection index
+/// @param direction [in] The propagation direction
 /// @param boundaryTolerance [in] The boundary check for this status update
+/// @param surfaceTolerance [in] Surface tolerance used for intersection
+/// @param stype [in] The step size type to be set
+/// @param logger [in] A @c Logger instance
 template <typename stepper_t>
 Acts::IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, std::uint8_t index, Direction navDir,
+    const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
-    ConstrainedStep::Type stype, bool release, const Logger& logger) {
+    ConstrainedStep::Type stype, const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));
 
   auto sIntersection =
       surface.intersect(state.options.geoContext, stepper.position(state),
-                        navDir * stepper.direction(state), boundaryTolerance,
+                        direction * stepper.direction(state), boundaryTolerance,
                         surfaceTolerance)[index];
 
   // The intersection is on surface already
   if (sIntersection.status() == IntersectionStatus::onSurface) {
     ACTS_VERBOSE("Intersection: state is ON SURFACE");
-    stepper.updateStepSize(state, sIntersection.pathLength(), stype, release);
+    state.stepSize.release(stype);
+    stepper.updateStepSize(state, sIntersection.pathLength(), stype);
     return IntersectionStatus::onSurface;
   }
 
@@ -57,7 +66,8 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
                               logger)) {
     ACTS_VERBOSE("Surface is reachable");
-    stepper.updateStepSize(state, sIntersection.pathLength(), stype, release);
+    stepper.releaseStepSize(state, stype);
+    stepper.updateStepSize(state, sIntersection.pathLength(), stype);
     return IntersectionStatus::reachable;
   }
 

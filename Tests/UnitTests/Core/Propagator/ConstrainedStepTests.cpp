@@ -39,11 +39,12 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   stepSize_p.update(0.05, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.05);
   // we increase the actor, but do not release the step size
-  stepSize_p.update(0.15, ConstrainedStep::navigator, false);
+  stepSize_p.update(0.15, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.05);
   // we increase the actor, but now DO release the step size
   // it falls back to the accuracy
-  stepSize_p.update(0.15, ConstrainedStep::navigator, true);
+  stepSize_p.release(ConstrainedStep::navigator);
+  stepSize_p.update(0.15, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.1);
 
   // now set two and update them

@@ -59,7 +59,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          ConstrainedStep::navigator, true, logger());
+          ConstrainedStep::navigator, logger());
       if (preStepSurfaceStatus == IntersectionStatus::reachable ||
           preStepSurfaceStatus == IntersectionStatus::onSurface) {
         return nextTarget;
@@ -120,7 +120,7 @@ auto Acts::Propagator<S, N>::propagate(propagator_state_t& state) const
           state.stepping, *nextTarget.surface,
           nextTarget.surfaceIntersectionIndex, state.options.direction,
           nextTarget.boundaryTolerance, state.options.surfaceTolerance,
-          ConstrainedStep::navigator, true, logger());
+          ConstrainedStep::navigator, logger());
       if (postStepSurfaceStatus == IntersectionStatus::onSurface) {
         m_navigator.handleSurfaceReached(state.navigation, state.position,
                                          state.direction, *nextTarget.surface);

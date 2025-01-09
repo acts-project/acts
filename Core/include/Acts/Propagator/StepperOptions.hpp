@@ -19,8 +19,8 @@ class MagneticFieldContext;
 
 struct StepperPlainOptions {
   /// StepperPlainOptions with context
-  explicit StepperPlainOptions(const GeometryContext& gctx,
-                               const MagneticFieldContext& mctx)
+  StepperPlainOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx)
       : geoContext(gctx), magFieldContext(mctx) {}
 
   /// Context object for the geometry
