@@ -84,3 +84,14 @@ std::string ActsExamples::WhiteBoard::typeMismatchMessage(
                      boost::core::demangle(req) + " but actually " +
                      boost::core::demangle(act)};
 }
+
+void ActsExamples::WhiteBoard::shareDataWith(WhiteBoard &other) const {
+  for (auto &[key, val] : m_store) {
+    auto [it, success] = other.m_store.insert({key, val});
+
+    if (!success) {
+      throw std::runtime_error("Cannot share key '" + key +
+                               "', is already present");
+    }
+  }
+}

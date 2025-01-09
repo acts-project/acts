@@ -38,11 +38,20 @@ class WhiteBoard {
                  Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
              std::unordered_map<std::string, std::string> objectAliases = {});
 
-  // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
   WhiteBoard& operator=(const WhiteBoard&) = delete;
 
+  WhiteBoard(WhiteBoard&& other) = default;
+  WhiteBoard& operator=(WhiteBoard&& other) = default;
+
   bool exists(const std::string& name) const;
+
+  /// Adds the data of this whiteboard instance to another whiteboard.
+  /// This is a low overhead operation, since the data holders are
+  /// shared pointers.
+  /// Throws an exception if the other whiteboard already contains one of
+  /// the keys in this whiteboard.
+  void shareDataWith(WhiteBoard& other) const;
 
  private:
   /// Store an object on the white board and transfer ownership.
