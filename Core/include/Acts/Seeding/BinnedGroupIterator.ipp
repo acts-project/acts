@@ -85,8 +85,8 @@ void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
     passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
   }
   // loop and only stop when we find a non-empty bin which is not masked
-  while ((++m_gridItr != m_gridItrEnd) &&
-         (dimCollection == 0ul || !passesMask)) {
+  while ((dimCollection == 0ul || !passesMask) &&
+         (++m_gridItr != m_gridItrEnd)) {
     dimCollection = (*m_gridItr).size();
     if (dimCollection == 0ul) {
       continue;
