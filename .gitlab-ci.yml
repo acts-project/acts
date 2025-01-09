@@ -6,6 +6,17 @@ variables:
 
   DEPENDENCY_TAG: v5
 
+.ccache_base:
+  cache:
+    key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
+    fallback_keys:
+      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
+      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-main-
+    when: always
+    paths:
+      - ${CCACHE_DIR}
+
+
 clang_tidy:
   stage: build
   image: ghcr.io/acts-project/ubuntu2404:63
@@ -68,12 +79,7 @@ build_exatrkx_cpu:
     - large
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
@@ -106,12 +112,7 @@ build_exatrkx:
     - large
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   artifacts:
     paths:
@@ -193,12 +194,7 @@ build_linux_ubuntu:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   artifacts:
     paths:
@@ -303,12 +299,7 @@ linux_physmon:
   stage: build
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   script:
     - git clone $CLONE_URL src
@@ -384,12 +375,7 @@ linux_ubuntu_2204_clang:
     SETUP:
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base]
 
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
