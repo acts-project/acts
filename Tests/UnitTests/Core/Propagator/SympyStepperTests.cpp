@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.updateStepSize(esState, -1337., ConstrainedStep::actor, true);
+  es.updateStepSize(esState, -1337., ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState, ConstrainedStep::actor);
+  es.releaseStepSize(esState, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
@@ -421,9 +421,10 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   auto targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
-                         BoundaryTolerance::None(), s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
-                  eps);
+                         BoundaryTolerance::None(), s_onSurfaceTolerance,
+                         ConstrainedStep::navigator);
+  CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::navigator),
+                  navDir * 2., eps);
 
   // Test the step size modification in the context of a surface
   es.updateStepSize(
@@ -432,16 +433,17 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
           ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
-      navDir);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
+  es.releaseStepSize(esState, ConstrainedStep::navigator);
   es.updateStepSize(
       esState,
       targetSurface
           ->intersect(tgContext, es.position(esState),
                       navDir * es.direction(esState), BoundaryTolerance::None())
           .closest(),
-      navDir);
+      navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
