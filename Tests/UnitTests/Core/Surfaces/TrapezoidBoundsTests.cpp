@@ -20,10 +20,8 @@
 #include <algorithm>
 #include <array>
 #include <optional>
-#include <ostream>
 #include <random>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;

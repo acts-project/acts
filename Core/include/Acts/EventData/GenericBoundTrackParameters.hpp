@@ -123,10 +123,10 @@ class GenericBoundTrackParameters {
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
   /// Vector of spatial impact parameters (i.e., d0 and z0)
-  ActsVector<2> spatialImpactParameters() const { return m_params.head<2>(); }
+  Vector2 spatialImpactParameters() const { return m_params.head<2>(); }
   /// Vector of spatial and temporal impact parameters (i.e., d0, z0, and t)
-  ActsVector<3> impactParameters() const {
-    ActsVector<3> ip;
+  Vector3 impactParameters() const {
+    Vector3 ip;
     ip.template head<2>() = m_params.template head<2>();
     ip(2) = m_params(eBoundTime);
     return ip;

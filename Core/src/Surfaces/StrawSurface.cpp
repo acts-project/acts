@@ -14,33 +14,32 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <algorithm>
 #include <numbers>
 #include <utility>
 #include <vector>
 
-Acts::StrawSurface::StrawSurface(const Transform3& transform, double radius,
-                                 double halez)
+namespace Acts {
+
+StrawSurface::StrawSurface(const Transform3& transform, double radius,
+                           double halez)
     : GeometryObject(), LineSurface(transform, radius, halez) {}
 
-Acts::StrawSurface::StrawSurface(const Transform3& transform,
-                                 std::shared_ptr<const LineBounds> lbounds)
+StrawSurface::StrawSurface(const Transform3& transform,
+                           std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), LineSurface(transform, std::move(lbounds)) {}
 
-Acts::StrawSurface::StrawSurface(
-    const std::shared_ptr<const LineBounds>& lbounds,
-    const DetectorElementBase& detelement)
+StrawSurface::StrawSurface(const std::shared_ptr<const LineBounds>& lbounds,
+                           const DetectorElementBase& detelement)
     : GeometryObject(), LineSurface(lbounds, detelement) {}
 
-Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
+StrawSurface::StrawSurface(const StrawSurface& other)
     : GeometryObject(), LineSurface(other) {}
 
-Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
-                                 const StrawSurface& other,
-                                 const Transform3& shift)
+StrawSurface::StrawSurface(const GeometryContext& gctx,
+                           const StrawSurface& other, const Transform3& shift)
     : GeometryObject(), LineSurface(gctx, other, shift) {}
 
-Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
+StrawSurface& StrawSurface::operator=(const StrawSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
     m_bounds = other.m_bounds;
@@ -48,7 +47,7 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   return *this;
 }
 
-Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
+Polyhedron StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
@@ -62,7 +61,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
-      /// Helper method to create the segment
+      // Helper method to create the segment
       auto svertices = detail::VerticesHelper::segmentVertices(
           {r, r}, -std::numbers::pi, std::numbers::pi, {}, quarterSegments,
           Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
@@ -86,3 +85,5 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
 
   return Polyhedron(vertices, faces, triangularMesh, false);
 }
+
+}  // namespace Acts
