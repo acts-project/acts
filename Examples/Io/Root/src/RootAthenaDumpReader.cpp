@@ -78,8 +78,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacepoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
-      m_outputClusters.initialize(m_cfg.outputClusters);
       m_outputParticles.initialize(m_cfg.outputParticles);
       m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
       m_outputParticleMeasMap.initialize(m_cfg.outputParticleMeasurementsMap);
