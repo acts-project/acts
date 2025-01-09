@@ -51,15 +51,15 @@ constexpr std::size_t numAxisDirections() {
 AxisDirection axisDirectionFromName(const std::string& name);
 
 /// Get the name of a binning value as a string
-/// @param axisDir is the binning value
+/// @param aDir is the binning value
 /// @return the name of the binning value
-const std::string& axisDirectionName(AxisDirection axisDir);
+const std::string& axisDirectionName(AxisDirection aDir);
 
 /// Output stream operator for @c AxisDirection
 /// @param os is the output stream
-/// @param axisDir is the axis direction
+/// @param aDir is the axis direction
 /// @return the output stream
-std::ostream& operator<<(std::ostream& os, AxisDirection axisDir);
+std::ostream& operator<<(std::ostream& os, AxisDirection aDir);
 
 /// Enum which determines how the axis handle its outer boundaries
 /// possible values values

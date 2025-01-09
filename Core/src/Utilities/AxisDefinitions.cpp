@@ -20,7 +20,7 @@ static const std::vector<std::string> s_axisDirectionNames = {
     "AxisX",    "AxisY",     "AxisZ",   "AxisR",  "AxisPhi",
     "AxisRPhi", "AxisTheta", "AxisEta", "AxisMag"};
 
-static const std::vector<AxisDirection> s_AxisDirections = {
+static const std::vector<AxisDirection> s_axisDirections = {
     AxisDirection::AxisX,     AxisDirection::AxisY,   AxisDirection::AxisZ,
     AxisDirection::AxisR,     AxisDirection::AxisPhi, AxisDirection::AxisRPhi,
     AxisDirection::AxisTheta, AxisDirection::AxisEta, AxisDirection::AxisMag};
@@ -28,7 +28,7 @@ static const std::vector<AxisDirection> s_AxisDirections = {
 }  // namespace
 
 const std::vector<AxisDirection>& allAxisDirections() {
-  return s_AxisDirections;
+  return s_axisDirections;
 }
 
 AxisDirection axisDirectionFromName(const std::string& name) {
@@ -40,13 +40,13 @@ AxisDirection axisDirectionFromName(const std::string& name) {
       std::distance(s_axisDirectionNames.begin(), it));
 }
 
-const std::string& axisDirectionName(AxisDirection bValue) {
+const std::string& axisDirectionName(AxisDirection aDir) {
   return s_axisDirectionNames.at(
-      static_cast<std::underlying_type_t<AxisDirection>>(bValue));
+      static_cast<std::underlying_type_t<AxisDirection>>(aDir));
 }
 
-std::ostream& operator<<(std::ostream& os, AxisDirection bValue) {
-  os << axisDirectionName(bValue);
+std::ostream& operator<<(std::ostream& os, AxisDirection aDir) {
+  os << axisDirectionName(aDir);
   return os;
 }
 

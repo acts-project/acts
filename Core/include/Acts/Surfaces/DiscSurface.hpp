@@ -141,14 +141,24 @@ class DiscSurface : public RegularSurface {
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
 
-  /// The binning position The position calculated
-  /// for a certain binning type
+  /// A reference position for a given axis direction
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param aDir The axis direction for the reference position request
   /// @return position that can beused for this binning
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const final;
+
+  /// A reference position value for a given axis direction
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param aDir the value generated for the reference position
+  ///
+  /// @note This calls the parent method except for binR
+  ///
+  /// @return float to be used for the binning schema
+  double referencePositionValue(const GeometryContext& gctx,
+                                AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -288,17 +298,6 @@ class DiscSurface : public RegularSurface {
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
-
-  /// Implement the binningValue
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
-  ///
-  /// @note This calls the parent method except for binR
-  ///
-  /// @return float to be used for the binning schema
-  double referencePositionValue(const GeometryContext& gctx,
-                                AxisDirection bValue) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;
