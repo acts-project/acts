@@ -13,15 +13,10 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <cstdlib>
-#include <exception>
 #include <iosfwd>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -47,8 +42,6 @@ class EllipseBounds : public PlanarBounds {
     eSize = 6
   };
 
-  EllipseBounds() = delete;
-
   /// Constructor for full of an ellipsoid ring
   ///
   /// @param innerRx The inner ellipse radius in x
@@ -73,9 +66,7 @@ class EllipseBounds : public PlanarBounds {
     checkConsistency();
   }
 
-  ~EllipseBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eEllipse; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -85,6 +76,8 @@ class EllipseBounds : public PlanarBounds {
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
   /// tol1 is given
+  ///
+  /// @warning This **only** works for tolerance-based checks
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param boundaryTolerance boundary check directive
@@ -120,28 +113,5 @@ class EllipseBounds : public PlanarBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> EllipseBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
-      get(eOuterRx) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along x axis");
-  }
-  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
-      get(eOuterRy) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along y axis.");
-  }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > std::numbers::pi) {
-    throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("EllipseBounds: invalid phi positioning.");
-  }
-}
 
 }  // namespace Acts
