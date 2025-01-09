@@ -77,10 +77,13 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacepoints) {
-    m_outputClusters.initialize(m_cfg.outputClusters);
-    m_outputParticles.initialize(m_cfg.outputParticles);
-    m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    if (!m_cfg.noTruth) {
+      m_outputClusters.initialize(m_cfg.outputClusters);
+      m_outputParticles.initialize(m_cfg.outputParticles);
+      m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
+      m_outputParticleMeasMap.initialize(m_cfg.outputParticleMeasurementsMap);
+    }
   }
 
   if (m_inputchain->GetBranch("SPtopStripDirection") == nullptr) {
@@ -734,6 +737,7 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
           reprocessParticles(candidateParticles, candidateMeasPartMap);
 
       m_outputParticles(ctx, std::move(particles));
+      m_outputParticleMeasMap(ctx, invertIndexMultimap(measPartMap));
       m_outputMeasParticleMap(ctx, std::move(measPartMap));
     }
   }
