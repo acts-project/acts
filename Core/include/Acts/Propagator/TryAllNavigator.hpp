@@ -372,8 +372,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, boundaryTolerance,
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state)
@@ -393,7 +392,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
     }
 
     if (!intersectionFound) {
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
 
       ACTS_VERBOSE(volInfo(state) << "no intersections found. advance without "
                                      "constraints. step size is "
@@ -438,8 +437,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, BoundaryTolerance::Infinite(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
         break;
@@ -468,8 +466,7 @@ class TryAllNavigator : public TryAllNavigatorBase {
       IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
       if (surfaceStatus != IntersectionStatus::onSurface) {
         continue;
@@ -668,8 +665,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, intersection.index(),
           state.options.direction, boundaryTolerance,
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
       if (surfaceStatus == IntersectionStatus::onSurface) {
         ACTS_ERROR(volInfo(state)
@@ -696,7 +692,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         state.navigation.activeCandidates.size()) {
       state.navigation.lastPosition = stepper.position(state.stepping);
 
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
 
       ACTS_VERBOSE(volInfo(state)
                    << "blindly step forwards. step size updated to "
@@ -795,7 +791,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
             state.options.direction, BoundaryTolerance::Infinite(),
-            state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+            state.options.surfaceTolerance, ConstrainedStep::navigator,
             logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {
@@ -823,7 +819,7 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
         IntersectionStatus surfaceStatus = stepper.updateSurfaceStatus(
             state.stepping, surface, intersection.index(),
             state.options.direction, BoundaryTolerance::None(),
-            state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
+            state.options.surfaceTolerance, ConstrainedStep::navigator,
             logger());
 
         if (surfaceStatus != IntersectionStatus::onSurface) {

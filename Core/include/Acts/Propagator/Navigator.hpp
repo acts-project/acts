@@ -442,7 +442,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "No volume found, stop navigation.");
       // Set navigation break and release the navigation step size
       state.navigation.navigationBreak = true;
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
       return;
     }
 
@@ -461,7 +461,7 @@ class Navigator {
                                    "really lost! Stop navigation.");
     // Set navigation break and release the navigation step size
     state.navigation.navigationBreak = true;
-    stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+    stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
   }
 
   /// @brief Navigator post step call
@@ -568,8 +568,7 @@ class Navigator {
               << "No more volume to progress to, stopping navigation.");
           // Navigation break & release navigation stepping
           state.navigation.navigationBreak = true;
-          stepper.releaseStepSize(state.stepping,
-                                  ConstrainedStep::Type::Navigator);
+          stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
@@ -650,7 +649,7 @@ class Navigator {
     auto surfaceStatus = stepper.updateSurfaceStatus(
         state.stepping, *surface, intersection.index(), state.options.direction,
         BoundaryTolerance::None(), state.options.surfaceTolerance,
-        ConstrainedStep::Type::Navigator, logger());
+        ConstrainedStep::navigator, logger());
     if (surfaceStatus == IntersectionStatus::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -726,8 +725,7 @@ class Navigator {
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, *surface, intersection.index(),
           state.options.direction, boundaryTolerance,
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
       if (surfaceStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -817,8 +815,7 @@ class Navigator {
       auto layerStatus = stepper.updateSurfaceStatus(
           state.stepping, *layerSurface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
       if (layerStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
@@ -870,7 +867,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "No sufficient information to resolve boundary, "
                       "stopping navigation.");
-      stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+      stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
       return false;
     }
 
@@ -882,7 +879,7 @@ class Navigator {
       navOpts.startObject = state.navigation.currentSurface;
       navOpts.nearLimit = state.options.surfaceTolerance;
       navOpts.farLimit =
-          stepper.getStepSize(state.stepping, ConstrainedStep::Type::Actor);
+          stepper.getStepSize(state.stepping, ConstrainedStep::actor);
 
       ACTS_VERBOSE(volInfo(state)
                    << "Try to find boundaries, we are at: "
@@ -917,7 +914,7 @@ class Navigator {
         // Set to the first and return to the stepper
         stepper.updateStepSize(
             state.stepping, state.navigation.navBoundary().first,
-            state.options.direction, ConstrainedStep::Type::Navigator);
+            state.options.direction, ConstrainedStep::navigator);
         ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;
@@ -940,8 +937,7 @@ class Navigator {
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, intersection.index(),
           state.options.direction, BoundaryTolerance::None(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
       if (boundaryStatus == IntersectionStatus::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
@@ -1011,7 +1007,7 @@ class Navigator {
 
     navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::Type::Actor);
+        stepper.getStepSize(state.stepping, ConstrainedStep::actor);
 
     // get the surfaces
     state.navigation.navSurfaces = currentLayer->compatibleSurfaces(
@@ -1038,7 +1034,7 @@ class Navigator {
       // The stepper updates the step size ( single / multi component)
       stepper.updateStepSize(state.stepping, state.navigation.navSurface(),
                              state.options.direction,
-                             ConstrainedStep::Type::Navigator);
+                             ConstrainedStep::navigator);
       ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                   << stepper.outputStepSize(state.stepping));
       return true;
@@ -1077,7 +1073,7 @@ class Navigator {
     navOpts.startObject = state.navigation.currentLayer;
     navOpts.nearLimit = state.options.surfaceTolerance;
     navOpts.farLimit =
-        stepper.getStepSize(state.stepping, ConstrainedStep::Type::Actor);
+        stepper.getStepSize(state.stepping, ConstrainedStep::actor);
 
     // Request the compatible layers
     state.navigation.navLayers =
@@ -1110,7 +1106,7 @@ class Navigator {
       // The stepper updates the step size ( single / multi component)
       stepper.updateStepSize(state.stepping, state.navigation.navLayer().first,
                              state.options.direction,
-                             ConstrainedStep::Type::Navigator);
+                             ConstrainedStep::navigator);
       ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                   << stepper.outputStepSize(state.stepping));
       return true;
@@ -1122,7 +1118,7 @@ class Navigator {
     // Screen output - no layer candidates found
     ACTS_VERBOSE(volInfo(state) << "No compatible layer candidates found.");
     // Release the step size
-    stepper.releaseStepSize(state.stepping, ConstrainedStep::Type::Navigator);
+    stepper.releaseStepSize(state.stepping, ConstrainedStep::navigator);
     return false;
   }
 
@@ -1165,8 +1161,7 @@ class Navigator {
       auto targetStatus = stepper.updateSurfaceStatus(
           state.stepping, *state.navigation.targetSurface, 0,
           state.options.direction, BoundaryTolerance::None(),
-          state.options.surfaceTolerance, ConstrainedStep::Type::Navigator,
-          logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
       // the only advance could have been to the target
       if (targetStatus == IntersectionStatus::onSurface) {
         // set the target surface
