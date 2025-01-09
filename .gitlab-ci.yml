@@ -8,10 +8,9 @@ variables:
 
 .ccache_base:
   cache:
-    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
+    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${CLONE_URL}_${HEAD_REF}
       fallback_keys:
-        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
-        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-main-
+        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-https://github.com/acts-project/acts.git-main
       when: always
       paths:
         - ${CCACHE_DIR}
