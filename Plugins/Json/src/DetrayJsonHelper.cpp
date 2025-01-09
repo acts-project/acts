@@ -66,29 +66,23 @@ void addVolumeLink(nlohmann::json& jSurface, int vLink) {
 
 std::size_t accelerationLink(std::span<const AxisDirection> casts) {
   // Default is `brute_force`
+  using enum AxisDirection;
   std::size_t accLink = 0u;
   if (casts.size() == 2u) {
-    if (casts[0u] == AxisDirection::AxisX &&
-        casts[1u] == AxisDirection::AxisY) {
+    if (casts[0u] == AxisX && casts[1u] == AxisY) {
       accLink = 1u;
-    } else if (casts[0u] == AxisDirection::AxisR &&
-               casts[1u] == AxisDirection::AxisPhi) {
+    } else if (casts[0u] == AxisR && casts[1u] == AxisPhi) {
       accLink = 3u;
-    } else if (casts[0u] == AxisDirection::AxisZ &&
-               casts[1u] == AxisDirection::AxisPhi) {
+    } else if (casts[0u] == AxisZ && casts[1u] == AxisPhi) {
       accLink = 4u;
-    } else if (casts[0u] == AxisDirection::AxisZ &&
-               casts[1u] == AxisDirection::AxisR) {
+    } else if (casts[0u] == AxisZ && casts[1u] == AxisR) {
       accLink = 5u;
     }
   } else if (casts.size() == 3u) {
-    if (casts[0u] == AxisDirection::AxisX &&
-        casts[1u] == AxisDirection::AxisY &&
-        casts[2u] == AxisDirection::AxisZ) {
+    if (casts[0u] == AxisX && casts[1u] == AxisY && casts[2u] == AxisZ) {
       accLink = 2u;
-    } else if (casts[0u] == AxisDirection::AxisZ &&
-               casts[1u] == AxisDirection::AxisPhi &&
-               casts[2u] == AxisDirection::AxisR) {
+    } else if (casts[0u] == AxisZ && casts[1u] == AxisPhi &&
+               casts[2u] == AxisR) {
       accLink = 5u;
     }
   }

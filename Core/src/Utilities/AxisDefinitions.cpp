@@ -19,16 +19,16 @@ namespace {
 // Legacy binning value names
 //
 // NOTE: this should be removed once the BinUtility is removed
-static const std::vector<std::string> s_legacyBinningValueNames = {
+const std::vector<std::string> s_legacyBinningValueNames = {
     "binX",    "binY", "binZ",   "binR",  "binPhi",
     "binRPhi", "binH", "binEta", "binMag"};
 // end of legacy binning values
 
-static const std::vector<std::string> s_axisDirectionNames = {
+const std::vector<std::string> s_axisDirectionNames = {
     "AxisX",    "AxisY",     "AxisZ",   "AxisR",  "AxisPhi",
     "AxisRPhi", "AxisTheta", "AxisEta", "AxisMag"};
 
-static const std::vector<AxisDirection> s_axisDirections = {
+const std::vector<AxisDirection> s_axisDirections = {
     AxisDirection::AxisX,     AxisDirection::AxisY,   AxisDirection::AxisZ,
     AxisDirection::AxisR,     AxisDirection::AxisPhi, AxisDirection::AxisRPhi,
     AxisDirection::AxisTheta, AxisDirection::AxisEta, AxisDirection::AxisMag};

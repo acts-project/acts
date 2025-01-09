@@ -152,24 +152,25 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
 ///
 /// @return the value of the binning direction
 inline double cast(const Vector3& position, AxisDirection aDir) {
+  using enum AxisDirection;
   switch (aDir) {
-    case AxisDirection::AxisX:
+    case AxisX:
       return position[0];
-    case AxisDirection::AxisY:
+    case AxisY:
       return position[1];
-    case AxisDirection::AxisZ:
+    case AxisZ:
       return position[2];
-    case AxisDirection::AxisR:
+    case AxisR:
       return perp(position);
-    case AxisDirection::AxisPhi:
+    case AxisPhi:
       return phi(position);
-    case AxisDirection::AxisRPhi:
+    case AxisRPhi:
       return perp(position) * phi(position);
-    case AxisDirection::AxisTheta:
+    case AxisTheta:
       return theta(position);
-    case AxisDirection::AxisEta:
+    case AxisEta:
       return eta(position);
-    case AxisDirection::AxisMag:
+    case AxisMag:
       return position.norm();
     default:
       assert(false && "Invalid AxisDirection enum value");

@@ -23,16 +23,17 @@ namespace Acts::detail::GeoModelBinningHelper {
 ///
 /// @param binning the binning string
 inline AxisDirection toAxisDirection(const std::string& binning) {
+  using enum AxisDirection;
   if (binning == "x") {
-    return AxisDirection::AxisX;
+    return AxisX;
   } else if (binning == "y") {
-    return AxisDirection::AxisY;
+    return AxisY;
   } else if (binning == "z") {
-    return AxisDirection::AxisZ;
+    return AxisZ;
   } else if (binning == "r") {
-    return AxisDirection::AxisR;
+    return AxisR;
   } else if (binning == "phi") {
-    return AxisDirection::AxisPhi;
+    return AxisPhi;
   }
   throw std::invalid_argument("GeoModelBinningHelper: Unknown binning value '" +
                               binning + "'");

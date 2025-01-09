@@ -129,9 +129,9 @@ class VolumeBounds {
   /// @note This is the default implementation that
   /// returns the bounding box binning. Individual shapes
   /// should override this method
-  virtual std::vector<Acts::AxisDirection> canonicalAxes() const {
-    return {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
-            Acts::AxisDirection::AxisZ};
+  virtual std::vector<AxisDirection> canonicalAxes() const {
+    using enum AxisDirection;
+    return {AxisX, AxisY, AxisZ};
   };
 
   /// Binning offset - overloaded for some R-binning types

@@ -29,7 +29,7 @@ class ObjectSorterT {
   /// Constructor from a binning value
   ///
   /// @param aDir is the direction in which the sorting is done
-  ObjectSorterT(AxisDirection aDir) : m_sortingDirection(aDir) {}
+  explicit ObjectSorterT(AxisDirection aDir) : m_sortingDirection(aDir) {}
 
   /// Comparison operator
   ///
@@ -38,32 +38,33 @@ class ObjectSorterT {
   ///
   /// @return boolean indicator
   bool operator()(T one, T two) const {
-    using Acts::VectorHelpers::eta;
-    using Acts::VectorHelpers::perp;
-    using Acts::VectorHelpers::phi;
+    using VectorHelpers::eta;
+    using VectorHelpers::perp;
+    using VectorHelpers::phi;
+    using enum AxisDirection;
     switch (m_sortingDirection) {
       // compare on x
-      case AxisDirection::AxisX: {
+      case AxisX: {
         return one.x() < two.x();
       }
       // compare on y
-      case AxisDirection::AxisY: {
+      case AxisY: {
         return one.y() < two.y();
       }
       // compare on z
-      case AxisDirection::AxisZ: {
+      case AxisZ: {
         return one.z() < two.z();
       }
       // compare on r
-      case AxisDirection::AxisR: {
+      case AxisR: {
         return perp(one) < perp(two);
       }
       // compare on phi
-      case AxisDirection::AxisPhi: {
+      case AxisPhi: {
         return phi(one) < phi(two);
       }
       // compare on eta
-      case AxisDirection::AxisEta: {
+      case AxisEta: {
         return eta(one) < eta(two);
       }
       // default for the moment

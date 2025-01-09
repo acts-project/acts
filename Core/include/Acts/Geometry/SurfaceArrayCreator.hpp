@@ -246,8 +246,8 @@ class SurfaceArrayCreator {
 
     if (aDir == Acts::AxisDirection::AxisPhi) {
       // Take the two binning positions
-      auto pos1 = a->referencePosition(gctx, AxisDirection::AxisR),
-           pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
+      Vector3 pos1 = a->referencePosition(gctx, AxisDirection::AxisR);
+      Vector3 pos2 = b->referencePosition(gctx, AxisDirection::AxisR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();

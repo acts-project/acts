@@ -86,14 +86,15 @@ constexpr auto AxisBound = AxisBoundaryTypeTag<AxisBoundaryType::Bound>{};
 constexpr auto AxisClosed = AxisBoundaryTypeTag<AxisBoundaryType::Closed>{};
 
 inline std::ostream& operator<<(std::ostream& os, AxisBoundaryType bdt) {
+  using enum AxisBoundaryType;
   switch (bdt) {
-    case AxisBoundaryType::Open:
+    case Open:
       os << "Open";
       break;
-    case AxisBoundaryType::Bound:
+    case Bound:
       os << "Bound";
       break;
-    case AxisBoundaryType::Closed:
+    case Closed:
       os << "Closed";
       break;
   }

@@ -123,9 +123,9 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::AxisDirection> canonicalAxes() const override {
-    return {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
-            Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisX, AxisY, AxisZ};
   };
 
   /// Binning borders in double

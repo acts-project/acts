@@ -38,16 +38,17 @@ static std::vector<std::tuple<std::string, AxisDirection>> allowedBinnings = {
 ///
 /// @return a binningValue
 inline AxisDirection stringToAxisDirection(const std::string &binningString) {
+  using enum AxisDirection;
   if (binningString == "x") {
-    return AxisDirection::AxisX;
+    return AxisX;
   } else if (binningString == "y") {
-    return AxisDirection::AxisY;
+    return AxisY;
   } else if (binningString == "z") {
-    return AxisDirection::AxisZ;
+    return AxisZ;
   } else if (binningString == "phi") {
-    return AxisDirection::AxisPhi;
+    return AxisPhi;
   } else if (binningString == "r") {
-    return AxisDirection::AxisR;
+    return AxisR;
   } else {
     throw std::invalid_argument("DD4hepBinningHelpers: Binning value " +
                                 binningString + " not allowed.");

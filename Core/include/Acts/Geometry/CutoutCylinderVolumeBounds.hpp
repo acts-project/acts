@@ -114,9 +114,9 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::AxisDirection> canonicalAxes() const override {
-    return {Acts::AxisDirection::AxisR, Acts::AxisDirection::AxisPhi,
-            Acts::AxisDirection::AxisZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisR, AxisPhi, AxisZ};
   };
 
   /// Write information about this instance to an outstream
