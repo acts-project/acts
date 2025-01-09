@@ -508,7 +508,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
@@ -537,7 +538,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::onSurface);
 
@@ -553,7 +555,8 @@ void test_multi_stepper_surface_status_update() {
   {
     auto status = multi_stepper.updateSurfaceStatus(
         multi_state, *start_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
 
     BOOST_CHECK_EQUAL(status, IntersectionStatus::reachable);
 
@@ -622,14 +625,16 @@ void test_component_bound_state() {
   {
     multi_stepper.updateSurfaceStatus(
         multi_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(
         single_state, *right_surface, 0, Direction::Forward,
-        BoundaryTolerance::Infinite(), s_onSurfaceTolerance);
+        BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
+        ConstrainedStep::navigator);
     auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
