@@ -1,45 +1,8 @@
-add_library(
-    ActsPluginExaTrkX
-    SHARED
-    src/buildEdges.cpp
-    src/ExaTrkXPipeline.cpp
-    src/BoostWalkthrough.cpp
-)
+add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
-endif()
-
-if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    option(ACTS_EXATRKX_OLD_MMG_API OFF)
-
-    #target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCpp.cpp)
-
-    if(ACTS_EXATRKX_OLD_MMG_API)
-        target_compile_definitions(
-            ActsPluginExaTrkX
-            PRIVATE ACTS_EXATRKX_OLD_MMG_API
-        )
-    endif()
-
-    target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
-
-    if(ACTS_EXATRKX_ENABLE_CUDA)
-        target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
-
-        #if(ACTS_EXATRKX_OLD_MMG_API)
-        #    target_sources(
-        #        ActsPluginExaTrkX
-        #        PRIVATE src/GraphCreatorWrapperCuda.cu
-        #    )
-        #else()
-        #    target_sources(
-        #        ActsPluginExaTrkX
-        #        PRIVATE src/GraphCreatorWrapperCuda2.cu
-        #    )
-        #endif()
-    endif()
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
