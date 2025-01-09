@@ -5,7 +5,6 @@ add_library(
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
     src/JsonDigitizationConfig.cpp
-    src/JsonTrackWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoJson

@@ -116,7 +116,7 @@ struct SimpleOutlierFinder {
         trackState.effectiveCalibrated().data(),
         trackState.effectiveCalibratedCovariance().data(),
         trackState.predicted(), trackState.predictedCovariance(),
-        trackState.boundSubspaceIndices(), trackState.calibratedSize());
+        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
     return chi2 > chi2Cut;
   }
 };

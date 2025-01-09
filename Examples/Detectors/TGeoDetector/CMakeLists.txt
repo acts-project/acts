@@ -20,7 +20,6 @@ target_link_libraries(
         ActsExamplesDetectorGeneric
         ActsExamplesITkHelpers
         ActsExamplesDetectorsCommon
-        ActsExamplesITkModuleSplitting
 )
 
 install(
