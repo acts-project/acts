@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -45,7 +47,8 @@ class ConstrainedStep {
   /// from navigator - this would be a navigation step
   /// from actor     - this would be an actor condition
   /// from user      - this is user given for what reason ever
-  enum Type : int { Navigator = 0, Actor = 1, User = 2 };
+  enum class Type : int { Navigator = 0, Actor = 1, User = 2 };
+  using enum Type;
 
   constexpr ConstrainedStep() = default;
 
@@ -59,20 +62,20 @@ class ConstrainedStep {
   /// exposed to the Propagator
   ///
   /// @param value is the new accuracy value
-  constexpr void setAccuracy(double value) {
-    assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
+  constexpr void setAccuracy(double v) {
+    assert(v > 0 && "ConstrainedStep accuracy must be > 0.");
     // set the accuracy value
-    m_accuracy = value;
+    m_accuracy = v;
   }
 
   /// set user
   ///
   /// @param value is the new user value
-  constexpr void setUser(double value) {
+  constexpr void setUser(double v) {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
-    // assert(value != 0 && "ConstrainedStep user must be != 0.");
+    // assert(v != 0 && "ConstrainedStep user must be != 0.");
     // set the user value
-    m_values[Type::User] = value;
+    value_(Type::User) = v;
   }
 
   /// returns the min step size
@@ -86,7 +89,9 @@ class ConstrainedStep {
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
-  constexpr double value(Type type) const { return m_values[type]; }
+  constexpr double value(Type type) const {
+    return m_values[toUnderlying(type)];
+  }
 
   /// Access the accuracy value
   constexpr double accuracy() const { return m_accuracy; }
@@ -94,7 +99,7 @@ class ConstrainedStep {
   /// release a certain constraint value
   ///
   /// @param type is the constraint type to be released
-  constexpr void release(Type type) { m_values[type] = kNotSet; }
+  constexpr void release(Type type) { value_(type) = kNotSet; }
 
   /// release accuracy
   constexpr void releaseAccuracy() { m_accuracy = kNotSet; }
@@ -106,14 +111,14 @@ class ConstrainedStep {
   ///
   /// @param value is the new value to be updated
   /// @param type is the constraint type
-  constexpr void update(double value, Type type) {
+  constexpr void update(double v, Type type) {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
-    if (std::abs(value) < std::abs(m_values[type])) {
+    if (std::abs(v) < std::abs(value(type))) {
       // TODO enable assert; see
       // https://github.com/acts-project/acts/issues/2543
       // assert(value != 0 && "ConstrainedStep user must be != 0.");
-      m_values[type] = value;
+      value_(type) = v;
     }
   }
 
@@ -154,6 +159,8 @@ class ConstrainedStep {
   std::array<double, 3> m_values = {kNotSet, kNotSet, kNotSet};
   /// the accuracy value - this can vary up and down given a good step estimator
   double m_accuracy = kNotSet;
+
+  constexpr double& value_(Type type) { return m_values[toUnderlying(type)]; }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {
