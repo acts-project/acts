@@ -8,13 +8,13 @@ variables:
 
 .ccache_base:
   cache:
-    key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
-      - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-main-
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-${HEAD_SHA}
+      fallback_keys:
+        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${HEAD_REF}-
+        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-main-
+      when: always
+      paths:
+        - ${CCACHE_DIR}
 
 
 clang_tidy:
