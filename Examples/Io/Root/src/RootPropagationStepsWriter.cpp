@@ -191,9 +191,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_dz.push_back(direction.z());
 
       double accuracy = step.stepSize.accuracy();
-      double actor = step.stepSize.value(Acts::ConstrainedStep::navigator);
-      double aborter = step.stepSize.value(Acts::ConstrainedStep::actor);
-      double user = step.stepSize.value(Acts::ConstrainedStep::user);
+      double actor = step.stepSize.value(Acts::ConstrainedStep::Navigator);
+      double aborter = step.stepSize.value(Acts::ConstrainedStep::Actor);
+      double user = step.stepSize.value(Acts::ConstrainedStep::User);
       double actAbs = std::abs(actor);
       double accAbs = std::abs(accuracy);
       double aboAbs = std::abs(aborter);

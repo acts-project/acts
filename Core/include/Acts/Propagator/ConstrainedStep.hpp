@@ -45,7 +45,7 @@ class ConstrainedStep {
   /// from navigator - this would be a navigation step
   /// from actor     - this would be an actor condition
   /// from user      - this is user given for what reason ever
-  enum Type : int { navigator = 0, actor = 1, user = 2 };
+  enum Type : int { Navigator = 0, Actor = 1, User = 2 };
 
   constexpr ConstrainedStep() = default;
 
@@ -72,7 +72,7 @@ class ConstrainedStep {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
     // assert(value != 0 && "ConstrainedStep user must be != 0.");
     // set the user value
-    m_values[user] = value;
+    m_values[Type::User] = value;
   }
 
   /// returns the min step size
@@ -131,11 +131,11 @@ class ConstrainedStep {
     os << "(";
     streamValue(m_accuracy);
     os << ", ";
-    streamValue(value(navigator));
+    streamValue(value(Type::Navigator));
     os << ", ";
-    streamValue(value(actor));
+    streamValue(value(Type::Actor));
     os << ", ";
-    streamValue(value(user));
+    streamValue(value(Type::User));
     os << ")";
 
     return os;
