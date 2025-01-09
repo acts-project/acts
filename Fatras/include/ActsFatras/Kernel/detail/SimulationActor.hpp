@@ -123,7 +123,7 @@ struct SimulationActor {
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
       stepper.updateStepSize(state.stepping, stepSize,
-                             Acts::ConstrainedStep::user);
+                             Acts::ConstrainedStep::Type::User);
     }
 
     // arm the point-like interaction limits in the first step
