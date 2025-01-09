@@ -90,7 +90,7 @@ def runSeeding(
         postSelectParticles=ParticleSelectorConfig(
             pt=(1.0 * u.GeV, None),
             eta=(-2.5, 2.5),
-            measurements=(9, None),
+            hits=(9, None),
             removeNeutral=True,
         ),
     )
@@ -152,8 +152,9 @@ if "__main__" == __name__:
     )
 
     args = p.parse_args()
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # detector = getOpenDataDetector()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

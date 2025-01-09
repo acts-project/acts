@@ -378,7 +378,9 @@ You can now use the ODD in the python binding by using:
 
 ```python
 oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
-detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
+detector = getOpenDataDetector(oddMaterialDeco)
+trackingGeometry = detector.trackingGeometry()
+decorators = detector.contextDecorators()
 ```
 
 ## Using ACTS

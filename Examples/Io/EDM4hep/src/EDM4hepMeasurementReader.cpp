@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -18,8 +19,6 @@
 #include <list>
 #include <stdexcept>
 
-#include <edm4hep/TrackerHit.h>
-#include <edm4hep/TrackerHitCollection.h>
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
 
@@ -60,7 +59,7 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   const auto& trackerHitPlaneCollection =
       frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
   const auto& trackerHitRawCollection =
-      frame.get<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+      frame.get<edm4hep::TrackerHit3DCollection>("ActsTrackerHitsRaw");
 
   for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;

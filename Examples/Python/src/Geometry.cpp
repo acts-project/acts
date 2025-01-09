@@ -30,6 +30,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -91,6 +92,9 @@ struct IdentifierSurfacesCollector {
 }  // namespace
 
 namespace Acts::Python {
+
+void addBlueprint(Context& ctx);
+
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -305,6 +309,8 @@ void addGeometry(Context& ctx) {
         .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
         .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
   }
+
+  addBlueprint(ctx);
 }
 
 void addExperimentalGeometry(Context& ctx) {
@@ -494,6 +500,21 @@ void addExperimentalGeometry(Context& ctx) {
                std::shared_ptr<KdtSurfacesProviderDim2Bin100>>(
         m, "KdtSurfacesProviderDim2Bin100")
         .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>, const Extent&>());
+  }
+
+  {
+    using RangeXDDim3 = Acts::RangeXD<3u, double>;
+
+    py::class_<RangeXDDim3>(m, "RangeXDDim3")
+        .def(py::init([](const std::array<double, 2u>& range0,
+                         const std::array<double, 2u>& range1,
+                         const std::array<double, 2u>& range2) {
+          RangeXDDim3 range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          range[2].shrink(range2[0], range2[1]);
+          return range;
+        }));
   }
 
   {
@@ -691,6 +712,15 @@ void addExperimentalGeometry(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,
                                 "VolumeAssociationTest", name, ntests,
                                 randomNumbers, randomRange, detector);
+
+  py::class_<ProtoLayer>(m, "ProtoLayer")
+      .def(py::init<const GeometryContext&,
+                    const std::vector<std::shared_ptr<Surface>>&,
+                    const Transform3&>(),
+           "gctx"_a, "surfaces"_a, "transform"_a = Transform3::Identity())
+      .def("min", &ProtoLayer::min, "bval"_a, "addenv"_a = true)
+      .def("max", &ProtoLayer::max, "bval"_a, "addenv"_a = true)
+      .def_property_readonly("surfaces", &ProtoLayer::surfaces);
 }
 
 }  // namespace Acts::Python

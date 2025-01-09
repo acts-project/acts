@@ -209,7 +209,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*first, intersection.pathLength());
+      return std::pair(*first, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -229,7 +229,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*last, intersection.pathLength());
+      return std::pair(*last, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -256,13 +256,13 @@ findTrackStateForExtrapolation(
       if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
-        return std::make_pair(*first, intersectionFirst.pathLength());
+        return std::pair(*first, intersectionFirst.pathLength());
       }
 
       if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
-        return std::make_pair(*last, intersectionLast.pathLength());
+        return std::pair(*last, intersectionLast.pathLength());
       }
 
       ACTS_ERROR("no intersection found");
@@ -517,10 +517,11 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector predicted =
       subspaceHelper.projectVector(trackState.predicted());
   MeasurementMatrix predictedCovariance =
@@ -530,7 +531,7 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + predictedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the filtered residual and its covariance
@@ -553,10 +554,11 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector filtered =
       subspaceHelper.projectVector(trackState.filtered());
   MeasurementMatrix filteredCovariance =
@@ -566,7 +568,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + filteredCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the smoothed residual and its covariance
@@ -589,10 +591,11 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector smoothed =
       subspaceHelper.projectVector(trackState.smoothed());
   MeasurementMatrix smoothedCovariance =
@@ -602,7 +605,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + smoothedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the predicted chi2
@@ -620,11 +623,13 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculatePredictedResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 
@@ -643,11 +648,13 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculateFilteredResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 
@@ -666,11 +673,13 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculateSmoothedResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 
@@ -693,8 +702,11 @@ std::pair<BoundVector, BoundMatrix> calculateUnbiasedParametersCovariance(
   return visit_measurement(
       trackState.calibratedSize(),
       [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
-        auto H = trackState.projector()
-                     .template topLeftCorner<measdim, eBoundSize>();
+        FixedBoundSubspaceHelper<measdim> subspaceHelper =
+            trackState.template projectorSubspaceHelper<measdim>();
+
+        // TODO use subspace helper for projection instead
+        auto H = subspaceHelper.projector();
         auto s = trackState.smoothed();
         auto C = trackState.smoothedCovariance();
         auto m = trackState.template calibrated<measdim>();

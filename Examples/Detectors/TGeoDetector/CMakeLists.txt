@@ -9,6 +9,7 @@ target_include_directories(
     ActsExamplesDetectorTGeo
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
@@ -18,6 +19,8 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesDetectorGeneric
         ActsExamplesITkHelpers
+        ActsExamplesDetectorsCommon
+        ActsExamplesITkModuleSplitting
 )
 
 install(

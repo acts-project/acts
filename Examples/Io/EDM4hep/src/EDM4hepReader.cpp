@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -23,6 +25,7 @@
 #include <map>
 #include <stdexcept>
 
+#include <DD4hep/Detector.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/SimTrackerHitCollection.h>
@@ -239,10 +242,10 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
 
   ACTS_DEBUG("Found " << unorderedParticlesInitial.size() << " particles");
 
-  // @TODO: Order simhits by time
-
-  SimParticleContainer particlesGenerator;
-  SimParticleContainer particlesSimulated;
+  std::vector<SimParticle> particlesGeneratorUnordered;
+  particlesGeneratorUnordered.reserve(mcParticleCollection.size());
+  std::vector<SimParticle> particlesSimulatedUnordered;
+  particlesSimulatedUnordered.reserve(mcParticleCollection.size());
 
   for (const auto& inParticle : mcParticleCollection) {
     auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
@@ -254,7 +257,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     const std::size_t index = particleIt->second;
     const auto& particleInitial = unorderedParticlesInitial.at(index);
     if (!inParticle.isCreatedInSimulation()) {
-      particlesGenerator.insert(particleInitial);
+      particlesGeneratorUnordered.push_back(particleInitial);
     }
     SimParticle particleSimulated = particleInitial;
 
@@ -284,8 +287,16 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
                  << particleInitial.fourMomentum().transpose() << " -> "
                  << particleSimulated.final().fourMomentum().transpose());
 
-    particlesSimulated.insert(particleSimulated);
+    particlesSimulatedUnordered.push_back(particleSimulated);
   }
+
+  std::ranges::sort(particlesGeneratorUnordered, detail::CompareParticleId{});
+  std::ranges::sort(particlesSimulatedUnordered, detail::CompareParticleId{});
+
+  SimParticleContainer particlesGenerator{particlesGeneratorUnordered.begin(),
+                                          particlesGeneratorUnordered.end()};
+  SimParticleContainer particlesSimulated{particlesSimulatedUnordered.begin(),
+                                          particlesSimulatedUnordered.end()};
 
   if (!m_cfg.graphvizOutput.empty()) {
     std::string path = perEventFilepath(m_cfg.graphvizOutput, "particles.dot",
@@ -294,19 +305,22 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
     graphviz(dot, unorderedParticlesInitial, parentRelationship);
   }
 
-  SimHitContainer simHits;
+  std::vector<SimHit> simHitsUnordered;
 
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
                                       << " sim hit collections");
   for (const auto& name : m_cfg.inputSimHits) {
     const auto& inputHits = frame.get<edm4hep::SimTrackerHitCollection>(name);
 
+    simHitsUnordered.reserve(simHitsUnordered.size() + inputHits.size());
+
     for (const auto& hit : inputHits) {
       auto simHit = EDM4hepUtil::readSimHit(
           hit,
           [&](const auto& inParticle) {
-            ACTS_VERBOSE("SimHit has source particle: "
-                         << hit.getMCParticle().getObjectID().index);
+            ACTS_VERBOSE(
+                "SimHit has source particle: "
+                << Acts::EDM4hepUtil::getParticle(hit).getObjectID().index);
             auto it = edm4hepParticleMap.find(inParticle.getObjectID().index);
             if (it == edm4hepParticleMap.end()) {
               ACTS_ERROR(
@@ -321,8 +335,8 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
           [&](std::uint64_t cellId) {
             ACTS_VERBOSE("CellID: " << cellId);
 
-            const auto& vm = m_cfg.dd4hepDetector->geometryService->detector()
-                                 .volumeManager();
+            const auto& vm =
+                m_cfg.dd4hepDetector->dd4hepDetector().volumeManager();
 
             const auto detElement = vm.lookupDetElement(cellId);
 
@@ -356,9 +370,13 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
             return surface->geometryId();
           });
 
-      simHits.insert(std::move(simHit));
+      simHitsUnordered.push_back(std::move(simHit));
     }
   }
+
+  std::ranges::sort(simHitsUnordered, detail::CompareGeometryId{});
+
+  SimHitContainer simHits{simHitsUnordered.begin(), simHitsUnordered.end()};
 
   if (m_cfg.sortSimHitsInTime) {
     ACTS_DEBUG("Sorting sim hits in time");

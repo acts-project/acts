@@ -471,8 +471,8 @@ class MultiTrajectoryTestsCommon {
         pc.sourceLink.sourceId);
     // Explicitly unset to avoid error below
     ts.unset(TrackStatePropMask::Calibrated);
-    testSourceLinkCalibratorReturn<trajectory_t>(
-        gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
+    testSourceLinkCalibrator<trajectory_t>(gctx, cctx,
+                                           SourceLink{ttsb.sourceLink}, ts);
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
@@ -549,21 +549,6 @@ class MultiTrajectoryTestsCommon {
         BOOST_CHECK_EQUAL(ts.template calibratedCovariance<measdim>(), expCov);
       });
     }
-
-    BOOST_CHECK(ts.hasProjector());
-    ActsMatrix<MultiTrajectoryTraits::MeasurementSizeMax, eBoundSize> fullProj;
-    fullProj.setZero();
-    {
-      Acts::GeometryContext gctx;
-      Acts::CalibrationContext cctx;
-      // create a temporary measurement to extract the projector matrix
-      testSourceLinkCalibratorReturn<trajectory_t>(
-          gctx, cctx, SourceLink{pc.sourceLink}, ts);
-      fullProj = ts.projector();
-    }
-    BOOST_CHECK_EQUAL(ts.effectiveProjector(),
-                      fullProj.topLeftCorner(nMeasurements, eBoundSize));
-    BOOST_CHECK_EQUAL(ts.projector(), fullProj);
   }
 
   void testTrackStateProxyAllocations(std::default_random_engine& rng) {
@@ -782,7 +767,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_NE(ts1.projector(), ts2.projector());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() !=
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -813,7 +799,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() ==
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
@@ -840,7 +827,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_NE(ts1.projector(), ts2.projector());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() !=
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
@@ -864,7 +852,8 @@ class MultiTrajectoryTestsCommon {
     });
 
     BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
-    BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
+    BOOST_CHECK(ts1.projectorSubspaceIndices() ==
+                ts2.projectorSubspaceIndices());
 
     BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
     BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied
@@ -1236,7 +1225,7 @@ class MultiTrajectoryTestsCommon {
 
     auto [par, cov] = generateBoundParametersCovariance(rng, {});
 
-    ts.template allocateCalibrated(par.head<3>(), cov.topLeftCorner<3, 3>());
+    ts.allocateCalibrated(par.head<3>(), cov.topLeftCorner<3, 3>());
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), par.head<3>());
@@ -1246,11 +1235,11 @@ class MultiTrajectoryTestsCommon {
     auto [par2, cov2] = generateBoundParametersCovariance(rng, {});
 
     ts.allocateCalibrated(3);
-    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), ActsVector<3>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
                       ActsSquareMatrix<3>::Zero());
 
-    ts.template allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
+    ts.allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);
     // The values are re-assigned
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), par2.head<3>());
@@ -1258,9 +1247,9 @@ class MultiTrajectoryTestsCommon {
                       (cov2.topLeftCorner<3, 3>()));
 
     // Re-allocation with a different measurement dimension is an error
-    BOOST_CHECK_THROW(ts.template allocateCalibrated(
-                          par2.head<4>(), cov2.topLeftCorner<4, 4>()),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        ts.allocateCalibrated(par2.head<4>(), cov2.topLeftCorner<4, 4>()),
+        std::invalid_argument);
   }
 };
 }  // namespace Acts::detail::Test

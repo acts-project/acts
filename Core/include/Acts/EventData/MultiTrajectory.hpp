@@ -696,7 +696,7 @@ class MultiTrajectory {
 
     visit_measurement(measdim, [this, istate]<std::size_t DIM>(
                                    std::integral_constant<std::size_t, DIM>) {
-      self().template allocateCalibrated_impl(
+      self().allocateCalibrated_impl(
           istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
           ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
     });
@@ -705,7 +705,7 @@ class MultiTrajectory {
   template <std::size_t measdim, typename val_t, typename cov_t>
   void allocateCalibrated(IndexType istate, const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov) {
-    self().template allocateCalibrated_impl(istate, val, cov);
+    self().allocateCalibrated_impl(istate, val, cov);
   }
 
   void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)

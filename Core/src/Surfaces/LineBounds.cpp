@@ -14,13 +14,23 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
-  return SurfaceBounds::eLine;
+namespace Acts {
+
+std::vector<double> LineBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
-bool Acts::LineBounds::inside(
-    const Acts::Vector2& lposition,
-    const Acts::BoundaryTolerance& boundaryTolerance) const {
+void LineBounds::checkConsistency() noexcept(false) {
+  if (get(eR) < 0.) {
+    throw std::invalid_argument("LineBounds: zero radius.");
+  }
+  if (get(eHalfLengthZ) <= 0.) {
+    throw std::invalid_argument("LineBounds: zero/negative length.");
+  }
+}
+
+bool LineBounds::inside(const Vector2& lposition,
+                        const BoundaryTolerance& boundaryTolerance) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
@@ -28,8 +38,7 @@ bool Acts::LineBounds::inside(
                                   lposition, std::nullopt);
 }
 
-// ostream operator overload
-std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
+std::ostream& LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::LineBounds: (radius, halflengthInZ) = ";
@@ -38,3 +47,5 @@ std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

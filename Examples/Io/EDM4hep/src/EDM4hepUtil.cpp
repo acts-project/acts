@@ -70,9 +70,10 @@ void EDM4hepUtil::writeParticle(const SimParticle& from,
 ActsFatras::Hit EDM4hepUtil::readSimHit(
     const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
     const MapGeometryIdFrom& geometryMapper) {
-  ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
+  auto particle = Acts::EDM4hepUtil::getParticle(from);
+  ActsFatras::Barcode particleId = particleMapper(particle);
 
-  const auto mass = from.getMCParticle().getMass() * 1_GeV;
+  const auto mass = particle.getMass() * 1_GeV;
   const Acts::Vector3 momentum{
       from.getMomentum().x * 1_GeV,
       from.getMomentum().y * 1_GeV,
@@ -116,7 +117,7 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
   const auto delta4 = from.momentum4After() - momentum4Before;
 
   if (particleMapper) {
-    to.setMCParticle(particleMapper(from.particleId()));
+    Acts::EDM4hepUtil::setParticle(to, particleMapper(from.particleId()));
   }
 
   if (geometryMapper) {
@@ -146,8 +147,8 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
 
 VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
     MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
-    const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
-    const MapGeometryIdFrom& geometryMapper) {
+    const edm4hep::TrackerHit3DCollection* /*fromClusters*/,
+    Cluster* /*toCluster*/, const MapGeometryIdFrom& geometryMapper) {
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
@@ -171,32 +172,15 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
 
   auto to = createMeasurement(container, geometryId, dParameters);
 
-  if (fromClusters != nullptr) {
-    for (const auto objectId : from.getRawHits()) {
-      const auto& c = fromClusters->at(objectId.index);
-
-      // TODO get EDM4hep fixed
-      // misusing some fields to store ACTS specific information
-      // don't ask ...
-      ActsFatras::Segmentizer::Bin2D bin{
-          static_cast<unsigned int>(c.getType()),
-          static_cast<unsigned int>(c.getQuality())};
-      ActsFatras::Segmentizer::Segment2D path2D{
-          {Acts::Vector2::Zero(), Acts::Vector2::Zero()}};
-      double activation = c.getTime();
-      ActsFatras::Segmentizer::ChannelSegment cell{bin, path2D, activation};
-
-      toCluster->channels.push_back(cell);
-    }
-  }
+  // @TODO: Figure out if cell information is accessible
 
   return to;
 }
 
 void EDM4hepUtil::writeMeasurement(
     const ConstVariableBoundMeasurementProxy& from,
-    edm4hep::MutableTrackerHitPlane to, const Cluster* fromCluster,
-    edm4hep::TrackerHitCollection& toClusters,
+    edm4hep::MutableTrackerHitPlane to, const Cluster* /*fromCluster*/,
+    edm4hep::TrackerHit3DCollection& /*toClusters*/,
     const MapGeometryIdTo& geometryMapper) {
   Acts::GeometryIdentifier geoId = from.geometryId();
 
@@ -224,21 +208,7 @@ void EDM4hepUtil::writeMeasurement(
       0,
   });
 
-  if (fromCluster != nullptr) {
-    for (const auto& c : fromCluster->channels) {
-      auto toChannel = toClusters.create();
-      to.addToRawHits(toChannel.getObjectID());
-
-      // TODO digitization channel
-
-      // TODO get EDM4hep fixed
-      // misusing some fields to store ACTS specific information
-      // don't ask ...
-      toChannel.setType(c.bin[0]);
-      toChannel.setQuality(c.bin[1]);
-      toChannel.setTime(c.activation);
-    }
-  }
+  // @TODO: Check if we can write cell info
 }
 
 void EDM4hepUtil::writeTrajectory(
@@ -296,17 +266,18 @@ void EDM4hepUtil::writeTrajectory(
     trackState.referencePoint.z = center.z();
 
     if (converted.covariance) {
-      const auto& c = converted.covariance.value();
+      auto c = [&](std::size_t row, std::size_t col) {
+        return static_cast<float>(converted.covariance.value()(row, col));
+      };
 
-      trackState.covMatrix = {
-          static_cast<float>(c(0, 0)), static_cast<float>(c(1, 0)),
-          static_cast<float>(c(1, 1)), static_cast<float>(c(2, 0)),
-          static_cast<float>(c(2, 1)), static_cast<float>(c(2, 2)),
-          static_cast<float>(c(3, 0)), static_cast<float>(c(3, 1)),
-          static_cast<float>(c(3, 2)), static_cast<float>(c(3, 3)),
-          static_cast<float>(c(4, 0)), static_cast<float>(c(4, 1)),
-          static_cast<float>(c(4, 2)), static_cast<float>(c(4, 3)),
-          static_cast<float>(c(4, 4))};
+      // clang-format off
+      trackState.covMatrix = {c(0, 0),
+                              c(1, 0), c(1, 1),
+                              c(2, 0), c(2, 1), c(2, 2),
+                              c(3, 0), c(3, 1), c(3, 2), c(3, 3),
+                              c(4, 0), c(4, 1), c(4, 2), c(4, 3), c(4, 4),
+                              c(5, 0), c(5, 1), c(5, 2), c(5, 3), c(5, 4), c(5, 5)};
+      // clang-format on
     }
 
     to.addToTrackStates(trackState);

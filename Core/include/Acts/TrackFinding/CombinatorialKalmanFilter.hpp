@@ -365,7 +365,7 @@ class CombinatorialKalmanFilter {
 
         ACTS_VERBOSE("Create temp track state with mask: " << mask);
         // CAREFUL! This trackstate has a previous index that is not in this
-        // MultiTrajectory Visiting brackwards from this track state will
+        // MultiTrajectory Visiting backwards from this track state will
         // fail!
         auto ts = bufferTrajectory.makeTrackState(mask, prevTip);
 
@@ -689,8 +689,12 @@ class CombinatorialKalmanFilter {
       materialInteractor(navigator.currentSurface(state.navigation), state,
                          stepper, navigator, MaterialUpdateStage::PostUpdate);
 
+      // Set path limit based on loop protection
       detail::setupLoopProtection(state, stepper, result.pathLimitReached, true,
                                   logger());
+
+      // Set path limit based on target surface
+      targetReached.checkAbort(state, stepper, navigator, logger());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation:
