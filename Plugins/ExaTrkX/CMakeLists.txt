@@ -22,7 +22,36 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     )
 endif()
 
-add_library(ActsPluginExaTrkX SHARED ${SOURCES})
+if(ACTS_EXATRKX_ENABLE_TORCH_AOT)
+    target_sources(ActsPluginExaTrkX PRIVATE src/TorchEdgeClassifierAOT.cpp)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_TORCH_AOT
+    )
+
+    add_library(TorchGnnAot SHARED IMPORTED)
+    set_target_properties(
+        TorchGnnAot
+        PROPERTIES
+            IMPORTED_LOCATION
+                "/root/reproduce_gnn_results/rel24/data/gnn.test.so"
+    )
+    target_link_libraries(ActsPluginExaTrkX PUBLIC TorchGnnAot)
+endif()
+
+if(ACTS_EXATRKX_ENABLE_TENSORRT)
+    find_package(TensorRT REQUIRED)
+    message(STATUS "Found TensorRT ${TensorRT_VERSION}")
+    target_link_libraries(
+        ActsPluginExaTrkX
+        PUBLIC trt::nvinfer trt::nvinfer_plugin
+    )
+    target_sources(ActsPluginExaTrkX PRIVATE src/TensorRTEdgeClassifier.cpp)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_TENSORRT
+    )
+endif()
 
 target_include_directories(
     ActsPluginExaTrkX
