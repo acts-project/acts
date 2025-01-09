@@ -15,7 +15,6 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Io/Root/RootAthenaDumpGeoIdCollector.hpp"
 #include <ActsExamples/EventData/Cluster.hpp>
 #include <ActsExamples/EventData/SimParticle.hpp>
 #include <ActsExamples/EventData/Track.hpp>
