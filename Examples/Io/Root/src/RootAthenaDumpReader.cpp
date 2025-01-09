@@ -216,6 +216,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                    &SPtopStripCenterPosition);
   }
 
+  // These quantities are not used currently and thus commented out
+  // I would like to keep the code, since it is always a pain to write it
   /*
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
