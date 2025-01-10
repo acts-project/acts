@@ -441,7 +441,10 @@ def test_edm4hep_tracks_reader(tmp_path):
 def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
     # Test the buffered reader with the ROOT particle reader
     # need to write out some particles first
-    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    eventsInBuffer = 5
+    eventsToProcess = 10
+
+    s = Sequencer(numThreads=1, events=eventsInBuffer, logLevel=acts.logging.WARNING)
     evGen = ptcl_gun(s)
 
     file = tmp_path / "particles.root"
@@ -457,7 +460,7 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
     s.run()
 
     # reset sequencer for reading
-    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+    s2 = Sequencer(events=eventsToProcess, numThreads=1, logLevel=acts.logging.WARNING)
 
     reader = acts.examples.RootParticleReader(
         level=acts.logging.WARNING,
@@ -469,7 +472,7 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
         acts.examples.BufferedReader(
             level=acts.logging.WARNING,
             downstreamReader=reader,
-            bufferSize=10,
+            bufferSize=eventsInBuffer,
         )
     )
 
@@ -480,4 +483,4 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
 
     s2.run()
 
-    assert alg.events_seen == 10
+    assert alg.events_seen == eventsToProcess
