@@ -1,4 +1,5 @@
 (geometry_impl)=
+
 # Geometry module
 
 The ACTS geometry model is strongly based on the ATLAS Tracking geometry. Its
@@ -15,9 +16,11 @@ logical layers will be modelled as volumes, see [](layerless_geometry).
 
 :::{toctree}
 :maxdepth: 1
+concepts
 geometry_id
 material
 surfaces
 legacy/legacy
+construction
 layerless/layerless
 :::

@@ -234,12 +234,6 @@ AmbiguityResolutionMLConfig = namedtuple(
     defaults=[None] * 3,
 )
 
-AmbiguityResolutionMLDBScanConfig = namedtuple(
-    "AmbiguityResolutionMLDBScanConfig",
-    ["nMeasurementsMin", "epsilonDBScan", "minPointsDBScan"],
-    defaults=[None] * 3,
-)
-
 SeedFilterMLDBScanConfig = namedtuple(
     "SeedFilterMLDBScanConfig",
     ["epsilonDBScan", "minPointsDBScan", "minSeedScore"],
@@ -580,7 +574,7 @@ def addTruthSmearedSeeding(
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
         inputParticles=selectedParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",
+        inputParticleMeasurementsMap="particle_measurements_map",
         outputProtoTracks="truth_particle_tracks",
     )
     s.addAlgorithm(truthTrkFndAlg)
@@ -601,7 +595,7 @@ def addTruthEstimatedSeeding(
     truthSeeding = acts.examples.TruthSeedingAlgorithm(
         level=logLevel,
         inputParticles=inputParticles,
-        inputMeasurementParticlesMap="measurement_particles_map",
+        inputParticleMeasurementsMap="particle_measurements_map",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
@@ -1294,7 +1288,6 @@ def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    directNavigation: bool = False,
     reverseFilteringMomThreshold: float = 0 * u.GeV,
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
@@ -1304,17 +1297,6 @@ def addKalmanTracks(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    if directNavigation:
-        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-            level=customLogLevel(),
-            inputProtoTracks=inputProtoTracks,
-            inputSimHits="simhits",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            outputProtoTracks="sorted_truth_particle_tracks",
-        )
-        s.addAlgorithm(srfSortAlg)
-        inputProtoTracks = srfSortAlg.config.outputProtoTracks
 
     kalmanOptions = {
         "multipleScattering": multipleScattering,
@@ -1792,13 +1774,12 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
-        metricLearningConfig["numFeatures"] = 3
+        metricLearningConfig["selectedFeatures"] = [0, 1, 2]
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
-        filterConfig["nChunks"] = 10
-        filterConfig["numFeatures"] = 3
+        filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
-        gnnConfig["numFeatures"] = 3
+        gnnConfig["selectedFeatures"] = [0, 1, 2]
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
@@ -1830,11 +1811,18 @@ def addExaTrkX(
     s.addAlgorithm(findingAlg)
     s.addWhiteboardAlias("prototracks", findingAlg.config.outputProtoTracks)
 
-    # TODO convert prototracks to tracks
+    s.addAlgorithm(
+        acts.examples.PrototracksToTracks(
+            level=customLogLevel(),
+            inputProtoTracks="prototracks",
+            inputMeasurements="measurements",
+            outputTracks="tracks",
+        )
+    )
 
     matchAlg = acts.examples.TrackTruthMatcher(
         level=customLogLevel(),
-        inputProtoTracks=findingAlg.config.outputProtoTracks,
+        inputTracks="tracks",
         inputParticles="particles",
         inputMeasurementParticlesMap="measurement_particles_map",
         outputTrackParticleMatching="exatrkx_track_particle_matching",
@@ -1849,15 +1837,13 @@ def addExaTrkX(
         "particle_track_matching", matchAlg.config.outputParticleTrackMatching
     )
 
-    # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.TrackFinderNTupleWriter(
                 level=customLogLevel(),
-                inputProtoTracks=findingAlg.config.outputProtoTracks,
-                # the original selected particles after digitization
-                inputParticles="particles_initial",
-                inputMeasurementParticlesMap="measurement_particles_map",
+                inputTracks="tracks",
+                inputParticles="particles",
+                inputParticleMeasurementsMap="particle_measurements_map",
                 inputTrackParticleMatching=matchAlg.config.outputTrackParticleMatching,
                 filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
@@ -1972,14 +1958,31 @@ def addScoreBasedAmbiguityResolution(
     s.addAlgorithm(algScoreBased)
     s.addWhiteboardAlias("tracks", algScoreBased.config.outputTracks)
 
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=algScoreBased.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="ambi_scorebased_track_particle_matching",
+        outputParticleTrackMatching="ambi_scorebased_particle_track_matching",
+        doubleMatching=True,
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
+
     addTrackWriters(
         s,
         name="ambi_scorebased",
         tracks=algScoreBased.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackStates,
-        writeStates=writeTrackSummary,
+        writeSummary=writeTrackSummary,
+        writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
@@ -1995,6 +1998,7 @@ def addScoreBasedAmbiguityResolution(
 def addAmbiguityResolutionML(
     s,
     config: AmbiguityResolutionMLConfig = AmbiguityResolutionMLConfig(),
+    tracks: str = "tracks",
     onnxModelFile: Optional[Union[Path, str]] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -2008,10 +2012,9 @@ def addAmbiguityResolutionML(
     from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
     algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTracks="tracks",
+        inputTracks=tracks,
         inputDuplicateNN=onnxModelFile,
         outputTracks="ambiTracksML",
         **acts.examples.defaultKWArgs(
@@ -2033,63 +2036,33 @@ def addAmbiguityResolutionML(
     s.addAlgorithm(algML)
     s.addAlgorithm(algGreedy)
 
+    s.addWhiteboardAlias("tracks", algGreedy.config.outputTracks)
+
+    matchAlg = acts.examples.TrackTruthMatcher(
+        level=customLogLevel(),
+        inputTracks=algGreedy.config.outputTracks,
+        inputParticles="particles",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTrackParticleMatching="ambiML_track_particle_matching",
+        outputParticleTrackMatching="ambiML_particle_track_matching",
+        doubleMatching=True,
+    )
+    s.addAlgorithm(matchAlg)
+    s.addWhiteboardAlias(
+        "track_particle_matching", matchAlg.config.outputTrackParticleMatching
+    )
+    s.addWhiteboardAlias(
+        "particle_track_matching", matchAlg.config.outputParticleTrackMatching
+    )
+
     addTrackWriters(
         s,
         name="ambiML",
         tracks=algGreedy.config.outputTracks,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeSummary=writeTrackStates,
-        writeStates=writeTrackSummary,
-        writeFitterPerformance=writePerformance,
-        writeFinderPerformance=writePerformance,
-        writeCovMat=writeCovMat,
-        logLevel=logLevel,
-    )
-
-    return s
-
-
-@acts.examples.NamedTypeArgs(
-    config=AmbiguityResolutionMLDBScanConfig,
-)
-def addAmbiguityResolutionMLDBScan(
-    s,
-    config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
-    onnxModelFile: Optional[Union[Path, str]] = None,
-    outputDirCsv: Optional[Union[Path, str]] = None,
-    outputDirRoot: Optional[Union[Path, str]] = None,
-    writeTrackSummary: bool = True,
-    writeTrackStates: bool = False,
-    writePerformance: bool = True,
-    writeCovMat=False,
-    logLevel: Optional[acts.logging.Level] = None,
-) -> None:
-    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
-
-    customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    alg = AmbiguityResolutionMLDBScanAlgorithm(
-        level=customLogLevel(),
-        inputTracks="tracks",
-        inputDuplicateNN=onnxModelFile,
-        outputTracks="ambiTracksMLDBScan",
-        **acts.examples.defaultKWArgs(
-            nMeasurementsMin=config.nMeasurementsMin,
-            epsilonDBScan=config.epsilonDBScan,
-            minPointsDBScan=config.minPointsDBScan,
-        ),
-    )
-    s.addAlgorithm(alg)
-
-    addTrackWriters(
-        s,
-        name="ambiMLDBScan",
-        trajectories=alg.config.outputTracks,
-        outputDirRoot=outputDirRoot,
-        outputDirCsv=outputDirCsv,
-        writeSummary=writeTrackStates,
-        writeStates=writeTrackSummary,
+        writeSummary=writeTrackSummary,
+        writeStates=writeTrackStates,
         writeFitterPerformance=writePerformance,
         writeFinderPerformance=writePerformance,
         writeCovMat=writeCovMat,
