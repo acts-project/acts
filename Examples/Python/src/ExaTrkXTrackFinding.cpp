@@ -156,6 +156,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_MEMBER(doSigmoid);
+    ACTS_PYTHON_MEMBER(numExecutionContexts);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif

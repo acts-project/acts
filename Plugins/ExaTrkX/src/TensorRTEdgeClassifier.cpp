@@ -80,7 +80,15 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
 
   m_engine.reset(m_runtime->deserializeCudaEngine(engineData.data(), fsize));
 
-  m_context.reset(m_engine->createExecutionContext());
+  for (auto i = 0ul; i < m_cfg.numExecutionContexts; ++i) {
+    m_contexts.emplace_back(m_engine->createExecutionContext());
+  }
+
+  std::size_t freeMem, totalMem;
+  cudaMemGetInfo(&freeMem, &totalMem);
+  ACTS_DEBUG("Used CUDA memory after TensorRT initialization: "
+             << (totalMem - freeMem) * 1e-9 << " / " << totalMem * 1e-9
+             << " GB");
 }
 
 TensorRTEdgeClassifier::~TensorRTEdgeClassifier() {}
@@ -114,7 +122,7 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
                                    std::any inEdgeIndex,
                                    std::any inEdgeFeatures,
                                    const ExecutionContext &execContext) {
-  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
+  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
   c10::cuda::CUDAStreamGuard(execContext.stream.value());
@@ -131,33 +139,47 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
 
   t1 = std::chrono::high_resolution_clock::now();
 
-  m_context->setInputShape(
+  // get a context from the list of contexts
+  std::unique_ptr<nvinfer1::IExecutionContext> context;
+  while (true) {
+    std::lock_guard<std::mutex> lock(m_contextMutex);
+    if (!m_contexts.empty()) {
+      context = std::move(m_contexts.back());
+      m_contexts.pop_back();
+      break;
+    }
+  }
+
+  context->setInputShape(
       "x", nvinfer1::Dims2{nodeFeatures.size(0), nodeFeatures.size(1)});
-  m_context->setTensorAddress("x", nodeFeatures.data_ptr());
+  context->setTensorAddress("x", nodeFeatures.data_ptr());
 
-  m_context->setInputShape(
-      "edge_index", nvinfer1::Dims2{edgeIndex.size(0), edgeIndex.size(1)});
-  m_context->setTensorAddress("edge_index", edgeIndex.data_ptr());
+  context->setInputShape("edge_index",
+                         nvinfer1::Dims2{edgeIndex.size(0), edgeIndex.size(1)});
+  context->setTensorAddress("edge_index", edgeIndex.data_ptr());
 
-  m_context->setInputShape(
+  context->setInputShape(
       "edge_attr", nvinfer1::Dims2{edgeFeatures.size(0), edgeFeatures.size(1)});
-  m_context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
+  context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
 
   void *outputMem{nullptr};
   std::size_t outputSize = edgeIndex.size(1) * sizeof(float);
   cudaMalloc(&outputMem, outputSize);
-  m_context->setTensorAddress("output", outputMem);
+  context->setTensorAddress("output", outputMem);
 
   t2 = std::chrono::high_resolution_clock::now();
 
-  {
-    auto stream = execContext.stream.value().stream();
-    auto status = m_context->enqueueV3(stream);
-    cudaStreamSynchronize(stream);
-    ACTS_VERBOSE("TensorRT output status: " << std::boolalpha << status);
-  }
+  auto stream = execContext.stream.value().stream();
+  auto status = context->enqueueV3(stream);
+  cudaStreamSynchronize(stream);
+  ACTS_VERBOSE("TensorRT output status: " << std::boolalpha << status);
 
   t3 = std::chrono::high_resolution_clock::now();
+
+  {
+    std::lock_guard<std::mutex> lock(m_contextMutex);
+    m_contexts.push_back(std::move(context));
+  }
 
   auto scores = torch::from_blob(
       outputMem, edgeIndex.size(1), 1, [](void *ptr) { cudaFree(ptr); },

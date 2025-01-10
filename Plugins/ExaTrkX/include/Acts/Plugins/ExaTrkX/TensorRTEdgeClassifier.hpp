@@ -33,6 +33,8 @@ class TensorRTEdgeClassifier final : public Acts::EdgeClassificationBase {
     int deviceID = 0;
     bool useEdgeFeatures = false;
     bool doSigmoid = true;
+
+    std::size_t numExecutionContexts = 1;
   };
 
   TensorRTEdgeClassifier(const Config &cfg,
@@ -55,7 +57,9 @@ class TensorRTEdgeClassifier final : public Acts::EdgeClassificationBase {
   std::unique_ptr<nvinfer1::IRuntime> m_runtime;
   std::unique_ptr<nvinfer1::ICudaEngine> m_engine;
   std::unique_ptr<nvinfer1::ILogger> m_trtLogger;
-  std::unique_ptr<nvinfer1::IExecutionContext> m_context;
+
+  mutable std::mutex m_contextMutex;
+  mutable std::vector<std::unique_ptr<nvinfer1::IExecutionContext>> m_contexts;
 };
 
 }  // namespace Acts
