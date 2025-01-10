@@ -435,3 +435,49 @@ def test_edm4hep_tracks_reader(tmp_path):
     )
 
     s.run()
+
+
+@pytest.mark.root
+def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
+    # Test the buffered reader with the ROOT particle reader
+    # need to write out some particles first
+    s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
+    evGen = ptcl_gun(s)
+
+    file = tmp_path / "particles.root"
+    s.addWriter(
+        conf_const(
+            RootParticleWriter,
+            acts.logging.WARNING,
+            inputParticles=evGen.config.outputParticles,
+            filePath=str(file),
+        )
+    )
+
+    s.run()
+
+    # reset sequencer for reading
+    s2 = Sequencer(numThreads=1, logLevel=acts.logging.WARNING)
+
+    reader = acts.examples.RootParticleReader(
+        level=acts.logging.WARNING,
+        outputParticles="particles_input",
+        filePath=str(file),
+    )
+
+    s2.addReader(
+        acts.examples.BufferedReader(
+            level=acts.logging.WARNING,
+            downstreamReader=reader,
+            bufferSize=10,
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        "particles_input", "check_alg", acts.logging.WARNING
+    )
+    s2.addAlgorithm(alg)
+
+    s2.run()
+
+    assert alg.events_seen == 10
