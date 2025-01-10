@@ -48,7 +48,6 @@ class ConstrainedStep {
   /// from actor     - this would be an actor condition
   /// from user      - this is user given for what reason ever
   enum class Type : int { Navigator = 0, Actor = 1, User = 2 };
-  using enum Type;
 
   constexpr ConstrainedStep() = default;
 

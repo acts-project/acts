@@ -622,7 +622,8 @@ class CombinatorialKalmanFilter {
                 boundParams.referenceSurface().getSharedPtr());
           }
 
-          stepper.releaseStepSize(state.stepping, ConstrainedStep::Navigator);
+          stepper.releaseStepSize(state.stepping,
+                                  ConstrainedStep::Type::Navigator);
         }
 
         // Record the active branch and remove it from the list
