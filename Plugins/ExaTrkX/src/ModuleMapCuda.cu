@@ -295,78 +295,159 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   // ----------------------------------
   // memory allocation for hits + edges
   // ----------------------------------
-  int nb_doublets = m_cudaModuleMapDoublet->size();
-  int *cuda_M1_hits, *cuda_M2_hits;
-  CUDA_CHECK(cudaMallocAsync(&cuda_M1_hits,
-                             nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
-                             stream));
-  CUDA_CHECK(cudaMallocAsync(&cuda_M2_hits,
-                             nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
-                             stream));
-
-  int *cuda_nb_edges;
-  CUDA_CHECK(
-      cudaMallocAsync(&cuda_nb_edges, (nb_doublets + 1) * sizeof(int), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
-
-  // ---------------------------------------------
-  // loop over module doublets to kill connections
-  // ---------------------------------------------
-  dim3 grid_dim = ((nb_doublets + block_dim.x - 1) / block_dim.x);
-  doublet_cuts<float><<<grid_dim, block_dim, 0, stream>>>(
-      nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
-      m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
-      cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
-      m_cudaModuleMapDoublet->cuda_z0_min(),
-      m_cudaModuleMapDoublet->cuda_z0_max(),
-      m_cudaModuleMapDoublet->cuda_deta_min(),
-      m_cudaModuleMapDoublet->cuda_deta_max(),
-      m_cudaModuleMapDoublet->cuda_phi_slope_min(),
-      m_cudaModuleMapDoublet->cuda_phi_slope_max(),
-      m_cudaModuleMapDoublet->cuda_dphi_min(),
-      m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
-      std::numeric_limits<float>::max(), cuda_M1_hits, cuda_M2_hits,
-      cuda_nb_edges, m_cfg.maxEdgesAllocate);
-  CUDA_CHECK(cudaGetLastError());
-
-  //----------------
-  // sum nb of edges
-  //----------------
+  const int nb_doublets = m_cudaModuleMapDoublet->size();
   ACTS_DEBUG("nb doublets " << nb_doublets);
+  dim3 grid_dim = ((nb_doublets + block_dim.x - 1) / block_dim.x);
+
+  // hit buffer pointers need to be visible outside the scope
+  int *cuda_reduced_M1_hits, *cuda_reduced_M2_hits;
+
+  // count the edges per doublet
+  int *cuda_nb_edges_per_doublet;
+  CUDA_CHECK(cudaMallocAsync(&cuda_nb_edges_per_doublet,
+                             (nb_doublets + 1) * sizeof(int), stream));
+
   int *cuda_edge_sum;
   CUDA_CHECK(
       cudaMallocAsync(&cuda_edge_sum, (nb_doublets + 1) * sizeof(int), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
 
-  thrust::exclusive_scan(thrust::device.on(stream), cuda_nb_edges,
-                         cuda_nb_edges + (nb_doublets + 1), cuda_edge_sum);
-  // scan(cuda_edge_sum, cuda_nb_edges, m_cfg.gpuBlocks, nb_doublets);
-  CUDA_CHECK(cudaGetLastError());
+  int nb_doublet_edges{};
+  // ---------------------------------------------
+  // A: Allocate fixed memory for edges
+  // ---------------------------------------------
+  if (m_cfg.maxEdgesAllocate > 0) {
+    ACTS_DEBUG("Allocate fixed memory for edges, " << m_cfg.maxEdgesAllocate
+                                                   << " edges per doublet");
+
+    int *cuda_M1_hits, *cuda_M2_hits;
+    CUDA_CHECK(cudaMallocAsync(
+        &cuda_M1_hits, nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
+        stream));
+    CUDA_CHECK(cudaMallocAsync(
+        &cuda_M2_hits, nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
+        stream));
+    ACTS_DEBUG("Allocate " << (2ul * nb_doublets *
+                               int(m_cfg.maxEdgesAllocate * sizeof(int))) *
+                                  1.0e-6
+                           << " MB for edges");
+
+    // ---------------------------------------------
+    // loop over module doublets to kill connections
+    // ---------------------------------------------
+    doublet_cuts<float><<<grid_dim, block_dim, 0, stream>>>(
+        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
+        m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
+        cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
+        m_cudaModuleMapDoublet->cuda_z0_min(),
+        m_cudaModuleMapDoublet->cuda_z0_max(),
+        m_cudaModuleMapDoublet->cuda_deta_min(),
+        m_cudaModuleMapDoublet->cuda_deta_max(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_min(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_max(),
+        m_cudaModuleMapDoublet->cuda_dphi_min(),
+        m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
+        std::numeric_limits<float>::max(), cuda_M1_hits, cuda_M2_hits,
+        cuda_nb_edges_per_doublet, m_cfg.maxEdgesAllocate);
+    CUDA_CHECK(cudaGetLastError());
+
+    //----------------
+    // sum nb of edges
+    //----------------
+
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+
+    thrust::exclusive_scan(thrust::device.on(stream), cuda_nb_edges_per_doublet,
+                           cuda_nb_edges_per_doublet + (nb_doublets + 1),
+                           cuda_edge_sum);
+    // scan(cuda_edge_sum, cuda_nb_edges, m_cfg.gpuBlocks, nb_doublets);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, &(cuda_edge_sum[nb_doublets]),
+                               sizeof(int), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
+
+    CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M1_hits,
+                               nb_doublet_edges * sizeof(int), stream));
+    CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M2_hits,
+                               nb_doublet_edges * sizeof(int), stream));
+
+    compact_stream<<<grid_dim, block_dim, 0, stream>>>(
+        cuda_reduced_M1_hits, cuda_M1_hits, cuda_edge_sum,
+        m_cfg.maxEdgesAllocate, nb_doublets);
+    CUDA_CHECK(cudaGetLastError());
+    compact_stream<<<grid_dim, block_dim, 0, stream>>>(
+        cuda_reduced_M2_hits, cuda_M2_hits, cuda_edge_sum,
+        m_cfg.maxEdgesAllocate, nb_doublets);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaFreeAsync(cuda_M2_hits, stream));
+    CUDA_CHECK(cudaFreeAsync(cuda_M1_hits, stream));
+  }
+  // ---------------------------------------------
+  // B: Allocate memory for edges dynamically
+  // ---------------------------------------------
+  else {
+    ACTS_DEBUG("Allocate memory for edges dynamically");
+
+    // Allocate one integer on device and set it to 0
+    int *cuda_nb_doublet_edges;
+    CUDA_CHECK(cudaMallocAsync(&cuda_nb_doublet_edges, sizeof(int), stream));
+    CUDA_CHECK(cudaMemsetAsync(cuda_nb_doublet_edges, 0, sizeof(int), stream));
+
+    detail::count_doublet_edges<float><<<grid_dim, block_dim>>>(
+        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
+        m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
+        cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
+        m_cudaModuleMapDoublet->cuda_z0_min(),
+        m_cudaModuleMapDoublet->cuda_z0_max(),
+        m_cudaModuleMapDoublet->cuda_deta_min(),
+        m_cudaModuleMapDoublet->cuda_deta_max(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_min(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_max(),
+        m_cudaModuleMapDoublet->cuda_dphi_min(),
+        m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
+        std::numeric_limits<float>::max(), cuda_nb_doublet_edges,
+        cuda_edge_sum);
+    CUDA_CHECK(cudaGetLastError());
+
+    // Copy the number of edges to the host, synchronize and allocate
+    CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, cuda_nb_doublet_edges,
+                               sizeof(int), cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaFreeAsync(cuda_nb_doublet_edges, stream));
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
+    ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
+                           << " MB for edges");
+    CUDA_CHECK(cudaMallocAsync(
+        &cuda_reduced_M1_hits,
+        static_cast<std::size_t>(nb_doublet_edges) * sizeof(int), stream));
+    CUDA_CHECK(cudaMallocAsync(
+        &cuda_reduced_M2_hits,
+        static_cast<std::size_t>(nb_doublet_edges) * sizeof(int), stream));
+
+    // Prefix sum to get the edge offset for each doublet
+    thrust::exclusive_scan(thrust::device.on(stream), cuda_edge_sum,
+                           cuda_edge_sum + (nb_doublets + 1), cuda_edge_sum);
+
+    detail::doublet_cuts_new<float><<<grid_dim, block_dim, 0, stream>>>(
+        nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
+        m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
+        cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
+        m_cudaModuleMapDoublet->cuda_z0_min(),
+        m_cudaModuleMapDoublet->cuda_z0_max(),
+        m_cudaModuleMapDoublet->cuda_deta_min(),
+        m_cudaModuleMapDoublet->cuda_deta_max(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_min(),
+        m_cudaModuleMapDoublet->cuda_phi_slope_max(),
+        m_cudaModuleMapDoublet->cuda_dphi_min(),
+        m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
+        std::numeric_limits<float>::max(), cuda_reduced_M1_hits,
+        cuda_reduced_M2_hits, cuda_edge_sum);
+    CUDA_CHECK(cudaGetLastError());
+  }
 
   //---------------------------------------------
   // reduce nb of hits and sort by hid id M2 hits
   //---------------------------------------------
-
-  int nb_doublet_edges;
-  CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, &(cuda_edge_sum[nb_doublets]),
-                             sizeof(int), cudaMemcpyDeviceToHost, stream));
-  ACTS_VERBOSE("nb_doublet_edges: " << nb_doublet_edges);
-
-  int *cuda_reduced_M1_hits, *cuda_reduced_M2_hits;
-  CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M1_hits,
-                             nb_doublet_edges * sizeof(int), stream));
-  CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M2_hits,
-                             nb_doublet_edges * sizeof(int), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
-
-  compact_stream<<<grid_dim, block_dim, 0, stream>>>(
-      cuda_reduced_M1_hits, cuda_M1_hits, cuda_edge_sum, m_cfg.maxEdgesAllocate,
-      nb_doublets);
-  CUDA_CHECK(cudaGetLastError());
-  compact_stream<<<grid_dim, block_dim, 0, stream>>>(
-      cuda_reduced_M2_hits, cuda_M2_hits, cuda_edge_sum, m_cfg.maxEdgesAllocate,
-      nb_doublets);
-  CUDA_CHECK(cudaGetLastError());
 
   int *cuda_sorted_M2_hits;
   CUDA_CHECK(cudaMallocAsync(&cuda_sorted_M2_hits,
@@ -501,9 +582,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   CUDA_CHECK(cudaFreeAsync(cuda_reduced_M2_hits, stream));
   CUDA_CHECK(cudaFreeAsync(cuda_reduced_M1_hits, stream));
   CUDA_CHECK(cudaFreeAsync(cuda_edge_sum, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_nb_edges, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_M2_hits, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_M1_hits, stream));
+  CUDA_CHECK(cudaFreeAsync(cuda_nb_edges_per_doublet, stream));
 
   detail::CUDA_edge_data<float> edge_data;
   edge_data.nEdges = nb_graph_edges;

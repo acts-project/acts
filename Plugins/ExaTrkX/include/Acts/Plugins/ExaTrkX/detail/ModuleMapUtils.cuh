@@ -162,4 +162,86 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
   }
 }
 
+/// Counting kernel to allow counting the edges
+template <class T>
+__global__ void count_doublet_edges(
+    int nb_doublets, const int *modules1, const int *modules2, const T *R,
+    const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max, T *deta_min,
+    T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min, T *dphi_max,
+    const int *indices, T pi, T max, int *nb_edges_total,
+    int *nb_edges_doublet) {
+  // loop over module1 SP
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nb_doublets)
+    return;
+
+  int module1 = modules1[i];
+  int module2 = modules2[i];
+  int edges = 0;
+
+  for (int k = indices[module1]; k < indices[module1 + 1]; k++) {
+    T phi_SP1 = phi[k];
+    T eta_SP1 = eta[k];
+    T R_SP1 = R[k];
+    T z_SP1 = z[k];
+
+    for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
+      T z0, phi_slope, deta, dphi;
+      hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
+                             phi[l], pi, max, z0, phi_slope, deta, dphi);
+
+      if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
+                               deta_min, deta_max, phi_slope_min, phi_slope_max,
+                               dphi_min, dphi_max)) {
+        edges++;
+      }
+    }
+  }
+
+  // increase global and local counter
+  nb_edges_doublet[i] = edges;
+  atomicAdd(nb_edges_total, edges);
+}
+
+/// New kernel that use precounted number of edges
+template <class T>
+__global__ void doublet_cuts_new(int nb_doublets, const int *modules1,
+                                 const int *modules2, const T *R, const T *z,
+                                 const T *eta, const T *phi, T *z0_min,
+                                 T *z0_max, T *deta_min, T *deta_max,
+                                 T *phi_slope_min, T *phi_slope_max,
+                                 T *dphi_min, T *dphi_max, const int *indices,
+                                 T pi, T max, int *M1_SP, int *M2_SP,
+                                 const int *nb_edges) {
+  // loop over module1 SP
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nb_doublets)
+    return;
+
+  int module1 = modules1[i];
+  int module2 = modules2[i];
+  int edges = nb_edges[i];
+
+  for (int k = indices[module1]; k < indices[module1 + 1]; k++) {
+    T phi_SP1 = phi[k];
+    T eta_SP1 = eta[k];
+    T R_SP1 = R[k];
+    T z_SP1 = z[k];
+
+    for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
+      T z0, phi_slope, deta, dphi;
+      hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
+                             phi[l], pi, max, z0, phi_slope, deta, dphi);
+
+      if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
+                               deta_min, deta_max, phi_slope_min, phi_slope_max,
+                               dphi_min, dphi_max)) {
+        M1_SP[edges] = k;
+        M2_SP[edges] = l;
+        edges++;
+      }
+    }
+  }
+}
+
 }  // namespace Acts::detail
