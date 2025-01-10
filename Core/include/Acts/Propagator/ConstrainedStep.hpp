@@ -53,15 +53,15 @@ class ConstrainedStep {
   constexpr ConstrainedStep() = default;
 
   /// constructor
-  /// @param value is the user given initial value
-  constexpr explicit ConstrainedStep(double value) { setUser(value); }
+  /// @param v is the user given initial value
+  constexpr explicit ConstrainedStep(double v) { setUser(v); }
 
   /// set accuracy
   ///
   /// this will set only the accuracy, as this is the most
   /// exposed to the Propagator
   ///
-  /// @param value is the new accuracy value
+  /// @param v is the new accuracy value
   constexpr void setAccuracy(double v) {
     assert(v > 0 && "ConstrainedStep accuracy must be > 0.");
     // set the accuracy value
@@ -70,7 +70,7 @@ class ConstrainedStep {
 
   /// set user
   ///
-  /// @param value is the new user value
+  /// @param v is the new user value
   constexpr void setUser(double v) {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
     // assert(v != 0 && "ConstrainedStep user must be != 0.");
@@ -109,7 +109,7 @@ class ConstrainedStep {
   /// Only navigation and target abortion step size
   /// updates may change the sign due to overstepping
   ///
-  /// @param value is the new value to be updated
+  /// @param v is the new value to be updated
   /// @param type is the constraint type
   constexpr void update(double v, Type type) {
     // check the current value and set it if appropriate
@@ -124,12 +124,12 @@ class ConstrainedStep {
 
   std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
-    auto streamValue = [&](double val) {
+    auto streamValue = [&](double v) {
       os << std::setw(5);
-      if (std::abs(val) == kNotSet) {
-        os << (val > 0 ? "+∞" : "-∞");
+      if (std::abs(v) == kNotSet) {
+        os << (v > 0 ? "+∞" : "-∞");
       } else {
-        os << val;
+        os << v;
       }
     };
 

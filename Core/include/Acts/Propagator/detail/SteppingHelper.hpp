@@ -38,7 +38,7 @@ namespace Acts::detail {
 /// @param stype [in] The step size type to be set
 /// @param logger [in] A @c Logger instance
 template <typename stepper_t>
-Acts::IntersectionStatus updateSingleSurfaceStatus(
+IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
@@ -60,7 +60,7 @@ Acts::IntersectionStatus updateSingleSurfaceStatus(
   }
 
   const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = state.stepSize.value(ConstrainedStep::Actor);
+  const double farLimit = state.stepSize.value(ConstrainedStep::Type::Actor);
 
   if (sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,
