@@ -100,14 +100,14 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 ///
 /// @return The track alignment state containing fundamental alignment
 /// ingredients
-template <typename traj_t, typename parameters_t = BoundTrackParameters>
+template <typename traj_t, typename parameters_t = Acts::BoundTrackParameters>
 TrackAlignmentState trackAlignmentState(
     const Acts::GeometryContext& gctx, const traj_t& multiTraj,
     const std::size_t& entryIndex,
     const std::pair<Acts::ActsDynamicMatrix,
                     std::unordered_map<std::size_t, std::size_t>>&
         globalTrackParamsCov,
-    const std::unordered_map<const Surface*, std::size_t>& idxedAlignSurfaces,
+    const std::unordered_map<const Acts::Surface*, std::size_t>& idxedAlignSurfaces,
     const AlignmentMask& alignMask) {
   using CovMatrix = typename parameters_t::CovarianceMatrix;
 
@@ -164,7 +164,7 @@ TrackAlignmentState trackAlignmentState(
   // The alignment degree of freedom
   alignState.alignmentDof = eAlignmentSize * nAlignSurfaces;
   // Dimension of global track parameters (from only measurement states)
-  alignState.trackParametersDim = eBoundSize * measurementStates.size();
+  alignState.trackParametersDim = Acts::eBoundSize * measurementStates.size();
 
   // Initialize the alignment matrices with components from the measurement
   // states
@@ -224,17 +224,17 @@ TrackAlignmentState trackAlignmentState(
       const auto surface = &state.referenceSurface();
       alignState.alignedSurfaces.at(surface).second = iSurface;
       // The free parameters transformed from the smoothed parameters
-      const FreeVector freeParams =
+      const Acts::FreeVector freeParams =
           Acts::MultiTrajectoryHelpers::freeSmoothed(gctx, state);
       // The position
-      const Acts::Vector3 position = freeParams.segment<3>(eFreePos0);
+      const Acts::Vector3 position = freeParams.segment<3>(Acts::eFreePos0);
       // The direction
-      const Acts::Vector3 direction = freeParams.segment<3>(eFreeDir0);
+      const Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
       // The derivative of free parameters w.r.t. path length. @note Here, we
       // assume a linear track model, i.e. neglecting the change of track
       // direction. Otherwise, we need to know the magnetic field at the free
       // parameters
-      Acts::FreeVector pathDerivative = FreeVector::Zero();
+      Acts::FreeVector pathDerivative = Acts::FreeVector::Zero();
       pathDerivative.head<3>() = direction;
       // Get the derivative of bound parameters w.r.t. alignment parameters
       Acts::AlignmentToBoundMatrix alignToBound =
@@ -259,13 +259,13 @@ TrackAlignmentState trackAlignmentState(
       std::size_t colStateIndex = measurementStates.at(iColState).first;
       // Retrieve the block from the source covariance matrix
       CovMatrix correlation =
-          sourceTrackParamsCov.block<eBoundSize, eBoundSize>(
+          sourceTrackParamsCov.block<Acts::eBoundSize, Acts::eBoundSize>(
               stateRowIndices.at(rowStateIndex),
               stateRowIndices.at(colStateIndex));
       // Fill the block of the target covariance matrix
       std::size_t iCol =
-          alignState.trackParametersDim - (iColState + 1) * eBoundSize;
-      alignState.trackParametersCovariance.block<eBoundSize, eBoundSize>(
+          alignState.trackParametersDim - (iColState + 1) * Acts::eBoundSize;
+      alignState.trackParametersCovariance.block<Acts::eBoundSize, Acts::eBoundSize>(
           iParams, iCol) = correlation;
     }
   }
