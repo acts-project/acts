@@ -44,8 +44,8 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::fit(
       // and the linearization point of the tracks. If it is too large,
       // we relinearize the tracks and recalculate their 3D impact
       // parameters.
-      ActsVector<2> xyDiff = vtxInfo.oldPosition.template head<2>() -
-                             vtxInfo.linPoint.template head<2>();
+      Vector2 xyDiff = vtxInfo.oldPosition.template head<2>() -
+                       vtxInfo.linPoint.template head<2>();
       if (xyDiff.norm() > m_cfg.maxDistToLinPoint) {
         // Set flag for relinearization
         vtxInfo.relinearize = true;

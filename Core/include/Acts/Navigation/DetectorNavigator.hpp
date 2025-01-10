@@ -8,24 +8,20 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/NavigatorOptions.hpp"
 #include "Acts/Propagator/NavigatorStatistics.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-#include <iomanip>
-#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -218,7 +214,7 @@ class DetectorNavigator {
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, c.objectIntersection.index(),
           state.options.direction, c.boundaryTolerance,
-          state.options.surfaceTolerance, logger());
+          state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
       ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
                                   << "surface status is " << surfaceStatus);
@@ -289,7 +285,7 @@ class DetectorNavigator {
         state.stepping, *nextSurface,
         nState.surfaceCandidate().objectIntersection.index(),
         state.options.direction, boundaryTolerance,
-        state.options.surfaceTolerance, logger());
+        state.options.surfaceTolerance, ConstrainedStep::navigator, logger());
 
     // Check if we are at a surface
     if (surfaceStatus == IntersectionStatus::onSurface) {

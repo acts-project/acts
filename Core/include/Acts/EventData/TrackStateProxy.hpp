@@ -16,6 +16,7 @@
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/EigenConcepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -782,12 +783,11 @@ class TrackStateProxy {
   template <typename val_t, typename cov_t>
   void allocateCalibrated(const Eigen::DenseBase<val_t>& val,
                           const Eigen::DenseBase<cov_t>& cov)
-    requires(Eigen::PlainObjectBase<val_t>::RowsAtCompileTime > 0 &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <= eBoundSize &&
-             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime &&
-             Eigen::PlainObjectBase<cov_t>::RowsAtCompileTime ==
-                 Eigen::PlainObjectBase<cov_t>::ColsAtCompileTime)
+    requires(Concepts::eigen_base_is_fixed_size<val_t> &&
+             Concepts::eigen_bases_have_same_num_rows<val_t, cov_t> &&
+             Concepts::eigen_base_is_square<cov_t> &&
+             Eigen::PlainObjectBase<val_t>::RowsAtCompileTime <=
+                 static_cast<std::underlying_type_t<BoundIndices>>(eBoundSize))
   {
     m_traj->template allocateCalibrated<
         Eigen::PlainObjectBase<val_t>::RowsAtCompileTime>(m_istate, val, cov);

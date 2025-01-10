@@ -14,9 +14,13 @@
 
 #include <cmath>
 
-Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
-    const Vector2& s0, const Vector2& s1, const Vector2& origin,
-    const Vector2& dir, bool boundCheck) {
+namespace Acts::detail {
+
+Intersection2D IntersectionHelper2D::intersectSegment(const Vector2& s0,
+                                                      const Vector2& s1,
+                                                      const Vector2& origin,
+                                                      const Vector2& dir,
+                                                      bool boundCheck) {
   using Line = Eigen::ParametrizedLine<double, 2>;
   using Plane = Eigen::Hyperplane<double, 2>;
 
@@ -40,13 +44,11 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   return Intersection2D(intersection, d, status);
 }
 
-std::array<Acts::Intersection2D, 2>
-Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
-                                                     const Vector2& origin,
-                                                     const Vector2& dir) {
+std::array<Intersection2D, 2> IntersectionHelper2D::intersectEllipse(
+    double Rx, double Ry, const Vector2& origin, const Vector2& dir) {
   auto createSolution =
       [&](const Vector2& sol,
-          const Vector2& alt) -> std::array<Acts::Intersection2D, 2> {
+          const Vector2& alt) -> std::array<Intersection2D, 2> {
     Vector2 toSolD(sol - origin);
     Vector2 toAltD(alt - origin);
 
@@ -98,7 +100,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
   double alpha = 1. / (Rx * Rx) + k * k / Ry2;
   double beta = 2. * k * d / Ry2;
   double gamma = d * d / Ry2 - 1;
-  Acts::detail::RealQuadraticEquation solver(alpha, beta, gamma);
+  RealQuadraticEquation solver(alpha, beta, gamma);
   if (solver.solutions == 1) {
     double x = solver.first;
     Vector2 sol(x, k * x + d);
@@ -116,13 +118,13 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
   return {Intersection2D::invalid(), Intersection2D::invalid()};
 }
 
-Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
+Intersection2D IntersectionHelper2D::intersectCircleSegment(
     double R, double phiMin, double phiMax, const Vector2& origin,
     const Vector2& dir) {
   auto intersections = intersectCircle(R, origin, dir);
   for (const auto& candidate : intersections) {
     if (candidate.pathLength() > 0.) {
-      double phi = Acts::VectorHelpers::phi(candidate.position());
+      double phi = VectorHelpers::phi(candidate.position());
       if (phi > phiMin && phi < phiMax) {
         return candidate;
       }
@@ -130,3 +132,5 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
   }
   return Intersection2D::invalid();
 }
+
+}  // namespace Acts::detail
