@@ -585,11 +585,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 
   Stepper::State state = stepper.makeState(options, cp);
 
-  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor, true);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state, ConstrainedStep::actor);
+  stepper.releaseStepSize(state, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -611,8 +611,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
   stepper.updateSurfaceStatus(state, *target, 0, navDir,
                               BoundaryTolerance::Infinite(),
-                              s_onSurfaceTolerance);
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
+                              s_onSurfaceTolerance, ConstrainedStep::navigator);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::navigator), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(state,
@@ -621,18 +621,19 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
                              .closest(),
-                         navDir, false);
+                         navDir, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
   state.stepSize.setUser(navDir * stepSize);
+  stepper.releaseStepSize(state, ConstrainedStep::navigator);
   stepper.updateStepSize(state,
                          target
                              ->intersect(geoCtx, stepper.position(state),
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
                              .closest(),
-                         navDir, true);
+                         navDir, ConstrainedStep::navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
