@@ -226,6 +226,27 @@ build_linux_ubuntu:
     - cmake --build build -- -j6
     - ccache -s
 
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
 linux_test_examples:
   stage: test
   image: ghcr.io/acts-project/ubuntu2404:63
