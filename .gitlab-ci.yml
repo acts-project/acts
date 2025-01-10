@@ -18,7 +18,7 @@ variables:
 
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   tags:
     - large
   artifacts:
@@ -71,7 +71,7 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
@@ -104,7 +104,7 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
@@ -146,7 +146,7 @@ test_exatrkx_unittests:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
@@ -165,7 +165,7 @@ test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
@@ -188,7 +188,7 @@ test_exatrkx_python:
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
@@ -228,7 +228,7 @@ build_linux_ubuntu:
 
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
@@ -252,7 +252,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
@@ -347,14 +347,14 @@ linux_ubuntu_2204:
   variables:
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:63
 
 linux_ubuntu_2204_clang:
   extends: .linux_ubuntu_extra
   variables:
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204_clang:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_clang:63
 
 
 ######################
@@ -362,7 +362,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg_base_job:
-  image: ghcr.io/acts-project/${OS}-base:63
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:63
   stage: build
   tags:
     - cvmfs
