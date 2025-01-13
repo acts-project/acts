@@ -116,17 +116,14 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
         }
       }
 
-      ACTS_VERBOSE("Stepper performed "
-                   << m_stepLimitAfterFirstComponentOnSurface
-                   << " steps after the first component hit a surface.");
-      ACTS_VERBOSE(
-          "-> remove all components not on a surface, perform no step");
-
       removeMissedComponents(stepping);
       reweightComponents(stepping);
 
-      ACTS_VERBOSE(stepping.components.size()
-                   << " components left after removing missed components");
+      ACTS_VERBOSE("Stepper performed "
+                   << m_stepLimitAfterFirstComponentOnSurface
+                   << " after the first component hit a surface.");
+      ACTS_VERBOSE(
+          "-> remove all components not on a surface, perform no step");
 
       stepping.stepCounterAfterFirstComponentOnSurface.reset();
 
