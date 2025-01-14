@@ -17,6 +17,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -41,11 +42,6 @@
 #include <system_error>
 #include <tuple>
 #include <utility>
-
-namespace Acts {
-class Layer;
-struct FreeToBoundCorrection;
-}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -148,24 +144,27 @@ struct PropagatorState {
     IntersectionStatus updateSurfaceStatus(
         State& state, const Surface& surface, std::uint8_t index,
         Direction navDir, const BoundaryTolerance& boundaryTolerance,
-        double surfaceTolerance, const Logger& logger) const {
+        double surfaceTolerance, ConstrainedStep::Type stype,
+        const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
           *this, state, surface, index, navDir, boundaryTolerance,
-          surfaceTolerance, logger);
+          surfaceTolerance, stype, logger);
     }
 
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
-                        Direction /*direction*/, bool release = true) const {
-      detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
+                        Direction direction,
+                        ConstrainedStep::Type stype) const {
+      (void)direction;
+      double stepSize = oIntersection.pathLength();
+      updateStepSize(state, stepSize, stype);
     }
 
     void updateStepSize(State& state, double stepSize,
-                        ConstrainedStep::Type stype,
-                        bool release = true) const {
+                        ConstrainedStep::Type stype) const {
       state.previousStepSize = state.stepSize.value();
-      state.stepSize.update(stepSize, stype, release);
+      state.stepSize.update(stepSize, stype);
     }
 
     double getStepSize(const State& state, ConstrainedStep::Type stype) const {
