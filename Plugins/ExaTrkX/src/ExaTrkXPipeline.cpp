@@ -41,7 +41,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     ExaTrkXTiming *timing) const {
   ExecutionContext ctx;
   ctx.device = m_graphConstructor->device();
-#ifndef EXATRKX_CPUONLY
+#ifndef ACTS_EXATRKX_CPUONLY
   if (ctx.device.type() == torch::kCUDA) {
     ctx.stream = c10::cuda::getStreamFromPool(ctx.device.index());
   }
