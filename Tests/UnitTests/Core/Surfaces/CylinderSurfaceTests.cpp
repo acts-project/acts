@@ -254,6 +254,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
 
 /// Unit test for testing CylinderSurface properties
 BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
+  using enum AxisDirection;
+
   // Some radius and half length
   const double radius = 1.;
   const double halfZ = 10.;
@@ -266,22 +268,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   auto cylinderExtent =
       cylinderSurface->polyhedronRepresentation(testContext, 1).extent();
 
-  CHECK_CLOSE_ABS(-8, cylinderExtent.min(AxisDirection::AxisZ),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(12, cylinderExtent.max(AxisDirection::AxisZ),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.min(AxisDirection::AxisR),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisDirection::AxisR),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisDirection::AxisX),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisDirection::AxisX),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisDirection::AxisY),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisDirection::AxisY),
-                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-8, cylinderExtent.min(AxisZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(12, cylinderExtent.max(AxisZ), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.min(AxisR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisR), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisX), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(-radius, cylinderExtent.min(AxisY), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(radius, cylinderExtent.max(AxisY), s_onSurfaceTolerance);
 }
 
 /// Unit test for testing CylinderSurface alignment derivatives

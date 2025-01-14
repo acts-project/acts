@@ -44,7 +44,7 @@ class NavigationLayer : public Layer {
   /// The binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param aDir is the axis direction for which the binning position is requested
+  /// @param aDir is the axis direction for which the reference position is requested
   ///  - as default the center is given, but may be overloaded
   ///
   /// @return The return vector can be used for binning in a TrackingVolume

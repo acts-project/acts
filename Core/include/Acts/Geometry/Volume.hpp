@@ -111,7 +111,7 @@ class Volume : public GeometryObject {
   /// - as default the center is given, but may be overloaded
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param aDir is the acis direction for the reference position
+  /// @param aDir is the axis direction for the reference position
   /// @return vector 3D that can be used for the binning
   Vector3 referencePosition(const GeometryContext& gctx,
                             AxisDirection aDir) const override;
