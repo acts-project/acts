@@ -222,12 +222,7 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
 
       // check if SP is pixel, dependent of type of SP so must be done in
       // examples
-      bool isPixel = false;
-      if (sourceLink.size() == 1) {  // pixels have 1 SL
-        isPixel = true;
-      } else {
-        isPixel = false;
-      }
+      bool isPixel = (sourceLink.size() == 1);  // pixels have 1 SL
 
       float ClusterWidth =
           0;  // false input as this is not available in examples
