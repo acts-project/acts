@@ -174,7 +174,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
                bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ &&
                bUtility.binningData()[1u].binvalue == AxisDirection::AxisPhi) {
       BinUtility nbUtility(bUtility.binningData()[1u]);
-      nbUtility += bUtility.binningData()[0u];
+      nbUtility += BinUtility{bUtility.binningData()[0u]};
       bUtility = std::move(nbUtility);
       swapped = true;
     }

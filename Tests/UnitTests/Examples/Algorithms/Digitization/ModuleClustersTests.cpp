@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsFatras/Digitization/Segmentizer.hpp"
