@@ -168,7 +168,7 @@ histograms:
   t_prodR:
     nbins: 100
     min: 0
-    max: 900
+    max: 200
 
   trackClassification:
     nbins: 4
