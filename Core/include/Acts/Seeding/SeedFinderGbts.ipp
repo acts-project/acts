@@ -675,8 +675,8 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
       } else {
         // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and
         // PPS by 10000
-        if (seed.s3().isSCT()) {
-          newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
+        if (seed.s3().isStrip()) {
+          newQ += seed.s1().isStrip() ? 1000.0 : 10000.0;
         }
       }
       seed.Q(newQ);
