@@ -43,7 +43,7 @@ struct SeedFinderGbtsConfig {
   float m_nMaxPhiSlice = 53;  // used to calculate phi slices
   bool m_useClusterWidth =
       false;  // bool for use of cluster width in loadSpacePoints function
-  std::string ConnectorInputFile;  // input file for connector object
+  std::string ConnectorInputFile;  //Path to the connector configuration file that defines the layer connections
   std::vector<TrigInDetSiLayer> m_layerGeometry;
 
   // for runGbts_TrackFinder
