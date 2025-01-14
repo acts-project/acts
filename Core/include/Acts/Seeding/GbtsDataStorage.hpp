@@ -44,7 +44,7 @@ struct GbtsSP {
     m_r = std::sqrt((SP->x() * SP->x()) + (SP->y() * SP->y()));
   };
   bool isPixel() const { return m_isPixel; }
-  bool isSCT() const { return !m_isPixel; }
+  bool isStrip() const { return !m_isPixel; }
   float phi() const { return m_phi; }
   float r() const { return m_r; }
   float ClusterWidth() const { return m_ClusterWidth; }
