@@ -86,19 +86,18 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
       MakeGbtsSpacePoints(ctx, m_cfg.ActsGbtsMap);
 
   for (auto sp : GbtsSpacePoints) {
-    const auto& links = sp.SP->sourceLinks();
+    const auto &links = sp.SP->sourceLinks();
     if (!links.empty()) {
-        const auto& frontLink = links.front();
-        if (frontLink.template has<IndexSourceLink>()) {
-            ACTS_DEBUG("Gbts space points: " << " Gbts_id: " << sp.gbtsID
-                                            << " z: " << sp.SP->z() << " r: " << sp.r()
-                                            << " ACTS volume:  "
-                                            << frontLink.template get<IndexSourceLink>()
-                                                     .geometryId()
-                                                     .volume()
-                                            << "\n");
-         }
-     }
+      const auto &frontLink = links.front();
+      if (frontLink.template has<IndexSourceLink>()) {
+        ACTS_DEBUG(
+            "Gbts space points: "
+            << " Gbts_id: " << sp.gbtsID << " z: " << sp.SP->z()
+            << " r: " << sp.r() << " ACTS volume:  "
+            << frontLink.template get<IndexSourceLink>().geometryId().volume()
+            << "\n");
+      }
+    }
   }
   // this is now calling on a core algorithm
   Acts::SeedFinderGbts<SimSpacePoint> finder(
