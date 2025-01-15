@@ -47,7 +47,7 @@ class Direction final {
   /// @return a direction enum
   static constexpr Direction fromScalar(double scalar) {
     assert(scalar != 0);
-    return Direction{scalar >= 0 ? Value::Positive : Value::Negative};
+    return scalar >= 0 ? Positive() : Negative();
   }
 
   /// This turns a signed value into a direction and 0 will be handled as a
@@ -58,7 +58,7 @@ class Direction final {
   ///
   /// @return a direction enum
   static constexpr Direction fromScalarZeroAsPositive(double scalar) {
-    return Direction{scalar >= 0 ? Value::Positive : Value::Negative};
+    return scalar >= 0 ? Positive() : Negative();
   }
 
   /// Convert and index [0,1] to a direction e.g. for sorting in
@@ -66,10 +66,7 @@ class Direction final {
   ///
   /// @param index is the direction at input
   static constexpr Direction fromIndex(std::size_t index) {
-    if (index == 0u) {
-      return Direction{Value::Negative};
-    }
-    return Direction{Value::Positive};
+    return index == 0u ? Negative() : Positive();
   }
 
   /// Convert dir to index [0,1] which allows to store direction dependent
@@ -92,20 +89,18 @@ class Direction final {
   ///
   /// @return an opposite direction
   constexpr Direction invert() const {
-    return Direction{m_value == Value::Positive ? Value::Negative
-                                                : Value::Positive};
+    return *this == Positive() ? Negative() : Positive();
   }
 
   std::string toString() const;
-
-  constexpr Direction() = default;
-  explicit constexpr Direction(Value value) : m_value(value) {}
 
   friend constexpr bool operator==(Direction lhs, Direction rhs) {
     return lhs.m_value == rhs.m_value;
   }
 
  private:
+  explicit constexpr Direction(Value value) : m_value(value) {}
+
   Value m_value = Value::Positive;
 };
 
