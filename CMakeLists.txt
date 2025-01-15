@@ -73,7 +73,6 @@ option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -227,6 +226,7 @@ endif()
 set(_acts_actsvg_version 0.4.50)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
+set(_acts_geant4_version 11.1.3)
 set(_acts_edm4hep_version 0.7)
 set(_acts_eigen3_version 3.4.0)
 set(_acts_podio_version 1.0.1) # will try this first
@@ -290,8 +290,12 @@ if(ACTS_SETUP_BOOST)
     endif()
 
     if(Boost_VERSION VERSION_EQUAL "1.85.0")
+        set(_boost_version_severity WARNING)
+        if(ACTS_BUILD_EXAMPLES)
+            set(_boost_version_severity FATAL_ERROR)
+        endif()
         message(
-            WARNING
+            ${_boost_version_severity}
             "Boost 1.85.0 is known to be broken (https://github.com/boostorg/container/issues/273). Please use a different version."
         )
     endif()
@@ -453,7 +457,7 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP)
     find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
-    find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
+    find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
@@ -544,13 +548,6 @@ endif()
 if(ACTS_BUILD_DOCS)
     find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
     find_package(Sphinx REQUIRED)
-endif()
-
-if(ACTS_CUSTOM_SCALARTYPE)
-    message(
-        STATUS
-        "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}"
-    )
 endif()
 
 # core library, core plugins, and other components

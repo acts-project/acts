@@ -6,49 +6,33 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace py::literals;
 
 namespace Acts::Python {
 
 void addTrackFitting(Context& ctx) {
   auto mex = ctx.get("examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SurfaceSortingAlgorithm, mex,
-                                "SurfaceSortingAlgorithm", inputProtoTracks,
-                                inputSimHits, inputMeasurementSimHitsMap,
-                                outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
@@ -106,12 +90,17 @@ void addTrackFitting(Context& ctx) {
         .value("KLDistance", MixtureReductionAlgorithm::KLDistance);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles",
-                    &ActsExamples::BetheHeitlerApprox::loadFromFiles,
-                    py::arg("lowParametersPath"), py::arg("highParametersPath"),
-                    py::arg("lowLimit") = 0.1, py::arg("highLimit") = 0.2)
-        .def_static("makeDefault",
-                    []() { return Acts::makeDefaultBetheHeitlerApprox(); });
+        .def_static(
+            "loadFromFiles", &ActsExamples::BetheHeitlerApprox::loadFromFiles,
+            "lowParametersPath"_a, "highParametersPath"_a, "lowLimit"_a = 0.1,
+            "highLimit"_a = 0.2, "clampToRange"_a = false)
+        .def_static(
+            "makeDefault",
+            [](bool clampToRange) {
+              return Acts::makeDefaultBetheHeitlerApprox(clampToRange);
+            },
+            "clampToRange"_a = false);
+
     mex.def(
         "makeGsfFitterFunction",
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,

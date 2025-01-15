@@ -140,10 +140,10 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(
+    IntersectionStatus updateSurfaceStatus(
         State& state, const Surface& surface, std::uint8_t index,
         Direction navDir, const BoundaryTolerance& boundaryTolerance,
-        ActsScalar surfaceTolerance, const Logger& logger) const {
+        double surfaceTolerance, const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
           *this, state, surface, index, navDir, boundaryTolerance,
           surfaceTolerance, logger);
@@ -230,7 +230,7 @@ struct PropagatorState {
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
-    ActsScalar surfaceTolerance = s_onSurfaceTolerance;
+    double surfaceTolerance = s_onSurfaceTolerance;
   };
 
   /// Navigation cache: the start surface

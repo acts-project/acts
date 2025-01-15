@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-
 #include <iosfwd>
 #include <limits>
-#include <utility>
+
+#include <Eigen/Dense>
 
 namespace Acts {
 
@@ -112,6 +111,15 @@ class Material {
   float m_z = 0.0f;
   float m_molarRho = 0.0f;
 
+  /// @brief Check if two materials are exactly equal.
+  ///
+  /// This is a strict equality check, i.e. the materials must have identical
+  /// properties.
+  ///
+  /// @param lhs is the left hand side material
+  /// @param rhs is the right hand side material
+  ///
+  /// @return true if the materials are equal
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
            (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&

@@ -66,19 +66,19 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     // TODO validate geo id consistency
     const auto particleId = ActsFatras::Barcode(data.particle_id);
 
-    ActsFatras::Hit::Vector4 pos4{
+    Acts::Vector4 pos4{
         data.tx * Acts::UnitConstants::mm,
         data.ty * Acts::UnitConstants::mm,
         data.tz * Acts::UnitConstants::mm,
         data.tt * Acts::UnitConstants::mm,
     };
-    ActsFatras::Hit::Vector4 mom4{
+    Acts::Vector4 mom4{
         data.tpx * Acts::UnitConstants::GeV,
         data.tpy * Acts::UnitConstants::GeV,
         data.tpz * Acts::UnitConstants::GeV,
         data.te * Acts::UnitConstants::GeV,
     };
-    ActsFatras::Hit::Vector4 delta4{
+    Acts::Vector4 delta4{
         data.deltapx * Acts::UnitConstants::GeV,
         data.deltapy * Acts::UnitConstants::GeV,
         data.deltapz * Acts::UnitConstants::GeV,

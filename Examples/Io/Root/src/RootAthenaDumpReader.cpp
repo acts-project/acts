@@ -13,11 +13,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include <ActsExamples/Digitization/MeasurementCreation.hpp>
-
-#include <cmath>
 
 #include <TChain.h>
 #include <boost/container/static_vector.hpp>
@@ -40,7 +38,8 @@ std::pair<std::uint32_t, std::uint32_t> splitInt(std::uint64_t v) {
 /// In cases when there is built up a particle collection in an iterative way it
 /// can be way faster to build up a vector and afterwards use a special
 /// constructor to speed up the set creation.
-inline auto particleVectorToSet(std::vector<ActsFatras::Particle>& particles) {
+inline auto particleVectorToSet(
+    std::vector<ActsExamples::SimParticle>& particles) {
   using namespace ActsExamples;
   auto cmp = [](const auto& a, const auto& b) {
     return a.particleId().value() == b.particleId().value();
@@ -82,6 +81,11 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_outputParticles.initialize(m_cfg.outputParticles);
     m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  }
+
+  if (m_inputchain->GetBranch("SPtopStripDirection") == nullptr) {
+    ACTS_WARNING("Additional SP strip features not available");
+    m_haveStripFeatures = false;
   }
 
   // Set the branches
@@ -192,13 +196,13 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("SPcovz", SPcovz);
   m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
   m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-  m_inputchain->SetBranchAddress("SPtopStripDirection", SPtopStripDirection);
+  m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
   m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                 SPbottomStripDirection);
+                                 &SPbottomStripDirection);
   m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                 SPstripCenterDistance);
+                                 &SPstripCenterDistance);
   m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                 SPtopStripCenterPosition);
+                                 &SPtopStripCenterPosition);
 
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
@@ -245,7 +249,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
 }  // constructor
 
 SimParticleContainer RootAthenaDumpReader::readParticles() const {
-  std::vector<ActsFatras::Particle> particles;
+  std::vector<SimParticle> particles;
   particles.reserve(nPartEVT);
 
   for (auto ip = 0; ip < nPartEVT; ++ip) {
@@ -254,8 +258,8 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     }
 
     auto dummyBarcode = concatInts(Part_barcode[ip], Part_event_number[ip]);
-    SimParticle particle(dummyBarcode,
-                         static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
+    SimParticleState particle(dummyBarcode,
+                              static_cast<Acts::PdgParticle>(Part_pdg_id[ip]));
 
     Acts::Vector3 p = Acts::Vector3{Part_px[ip], Part_py[ip], Part_pz[ip]} *
                       Acts::UnitConstants::MeV;
@@ -266,7 +270,7 @@ SimParticleContainer RootAthenaDumpReader::readParticles() const {
     auto x = Acts::Vector4{Part_vx[ip], Part_vy[ip], Part_vz[ip], 0.0};
     particle.setPosition4(x);
 
-    particles.push_back(particle);
+    particles.push_back(SimParticle(particle, particle));
   }
 
   ACTS_DEBUG("Created " << particles.size() << " particles");
@@ -578,21 +582,25 @@ RootAthenaDumpReader::readSpacepoints(
       sLinks.emplace_back(second);
 
       using Vector3f = Eigen::Matrix<float, 3, 1>;
-      const Vector3f topStripDirection{SPtopStripDirection->at(isp).at(0),
-                                       SPtopStripDirection->at(isp).at(1),
-                                       SPtopStripDirection->at(isp).at(2)};
-      const Vector3f bottomStripDirection{
-          SPbottomStripDirection->at(isp).at(0),
-          SPbottomStripDirection->at(isp).at(1),
-          SPbottomStripDirection->at(isp).at(2)};
-      const Vector3f stripCenterDistance{SPstripCenterDistance->at(isp).at(0),
-                                         SPstripCenterDistance->at(isp).at(1),
-                                         SPstripCenterDistance->at(isp).at(2)};
-      const Vector3f topStripCenterPosition{
-          SPtopStripCenterPosition->at(isp).at(0),
-          SPtopStripCenterPosition->at(isp).at(1),
-          SPtopStripCenterPosition->at(isp).at(2)};
+      Vector3f topStripDirection = Vector3f::Zero();
+      Vector3f bottomStripDirection = Vector3f::Zero();
+      Vector3f stripCenterDistance = Vector3f::Zero();
+      Vector3f topStripCenterPosition = Vector3f::Zero();
 
+      if (m_haveStripFeatures) {
+        topStripDirection = {SPtopStripDirection->at(isp).at(0),
+                             SPtopStripDirection->at(isp).at(1),
+                             SPtopStripDirection->at(isp).at(2)};
+        bottomStripDirection = {SPbottomStripDirection->at(isp).at(0),
+                                SPbottomStripDirection->at(isp).at(1),
+                                SPbottomStripDirection->at(isp).at(2)};
+        stripCenterDistance = {SPstripCenterDistance->at(isp).at(0),
+                               SPstripCenterDistance->at(isp).at(1),
+                               SPstripCenterDistance->at(isp).at(2)};
+        topStripCenterPosition = {SPtopStripCenterPosition->at(isp).at(0),
+                                  SPtopStripCenterPosition->at(isp).at(1),
+                                  SPtopStripCenterPosition->at(isp).at(2)};
+      }
       sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
                          sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
                          topStripDirection.cast<double>(),
@@ -626,7 +634,7 @@ std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
 RootAthenaDumpReader::reprocessParticles(
     const SimParticleContainer& particles,
     const IndexMultimap<ActsFatras::Barcode>& measPartMap) const {
-  std::vector<ActsFatras::Particle> newParticles;
+  std::vector<ActsExamples::SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
 
@@ -664,6 +672,7 @@ RootAthenaDumpReader::reprocessParticles(
     }
 
     auto newParticle = particle.withParticleId(fatrasBarcode);
+    newParticle.final().setNumberOfHits(std::distance(begin, end));
     newParticles.push_back(newParticle);
 
     for (auto it = begin; it != end; ++it) {

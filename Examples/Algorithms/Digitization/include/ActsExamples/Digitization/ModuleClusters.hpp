@@ -16,10 +16,8 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <set>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -29,8 +27,8 @@ struct DigitizedParameters;
 
 struct ModuleValue {
   std::vector<Acts::BoundIndices> paramIndices = {};
-  std::vector<Acts::ActsScalar> paramValues = {};
-  std::vector<Acts::ActsScalar> paramVariances = {};
+  std::vector<double> paramValues = {};
+  std::vector<double> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
   std::set<SimHitContainer::size_type> sources = {};
   Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
@@ -69,4 +67,5 @@ class ModuleClusters {
   std::vector<std::vector<ModuleValue>> mergeParameters(
       std::vector<ModuleValue> values);
 };
+
 }  // namespace ActsExamples

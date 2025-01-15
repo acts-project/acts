@@ -11,12 +11,12 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -69,6 +69,11 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         rnd=rnd,
+        postSelectParticles=ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            hits=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addDigitization(
@@ -83,7 +88,6 @@ with tempfile.TemporaryDirectory() as temp:
         s,
         setup.trackingGeometry,
         setup.field,
-        TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
             deltaR=(1 * u.mm, 60 * u.mm),
@@ -92,7 +96,7 @@ with tempfile.TemporaryDirectory() as temp:
             maxSeedsPerSpM=1,
             sigmaScattering=5,
             radLengthPerSeed=0.1,
-            minPt=500 * u.MeV,
+            minPt=0.5 * u.GeV,
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
@@ -116,7 +120,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TrackSelectorConfig(
-            pt=(500 * u.MeV, None),
+            pt=(0.9 * u.GeV, None),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=6,
             maxHoles=2,
@@ -192,8 +196,12 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
 
     shutil.move(
-        tp / "performance_ambi.root",
-        tp / "performance_ckf_ambi.root",
+        tp / "performance_finding_ambi.root",
+        tp / "performance_finding_ckf_ambi.root",
+    )
+    shutil.move(
+        tp / "performance_fitting_ambi.root",
+        tp / "performance_fitting_ckf_ambi.root",
     )
     for vertexing in ["ivf_notime", "amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
@@ -204,8 +212,10 @@ with tempfile.TemporaryDirectory() as temp:
     for file in [
         "performance_seeding.root",
         "tracksummary_ckf.root",
-        "performance_ckf.root",
-        "performance_ckf_ambi.root",
+        "performance_finding_ckf.root",
+        "performance_fitting_ckf.root",
+        "performance_finding_ckf_ambi.root",
+        "performance_fitting_ckf_ambi.root",
         "performance_vertexing_ivf_notime.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",

@@ -12,10 +12,11 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iostream>
+#include <numbers>
 
 std::tuple<std::shared_ptr<Acts::AnnulusBounds>, Acts::Transform3>
 Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
-                                          ActsScalar rMin, ActsScalar rMax,
+                                          double rMin, double rMax,
                                           std::vector<Vector2> vertices) {
   using Line2D = Eigen::Hyperplane<double, 2>;
 
@@ -27,7 +28,8 @@ Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
     Vector2 ab = b - a;
     double phi = VectorHelpers::phi(ab);
 
-    if (std::abs(phi) > 3 * M_PI / 4. || std::abs(phi) < M_PI / 4.) {
+    if (std::abs(phi) > 3 * std::numbers::pi / 4. ||
+        std::abs(phi) < std::numbers::pi / 4.) {
       if (a.norm() < b.norm()) {
         boundLines.push_back(std::make_pair(a, b));
       } else {
@@ -61,5 +63,5 @@ Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
   auto annulusBounds = std::make_shared<AnnulusBounds>(
       rMin, rMax, phiMin, phiMax, originShift, phiShift);
 
-  return std::make_tuple(annulusBounds, boundsTransform);
+  return {annulusBounds, boundsTransform};
 }

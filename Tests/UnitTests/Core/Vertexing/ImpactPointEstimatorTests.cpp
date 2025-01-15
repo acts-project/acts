@@ -43,6 +43,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <tuple>
 #include <utility>
@@ -183,7 +184,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // BOOST_CHECK_NE(atPerigee[eBoundPhi], atIp3d[eBoundPhi]);
   CHECK_CLOSE_ABS(atPerigee[eBoundTheta], atIp3d[eBoundTheta], 0.01_mrad);
   CHECK_CLOSE_REL(atPerigee[eBoundQOverP], atIp3d[eBoundQOverP],
-                  std::numeric_limits<ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 
   // check that we get sensible compatibility scores
   // this is a chi2-like value and should always be positive
@@ -241,7 +242,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Correct quantities for checking if IP estimation worked
   // Time of the track with respect to the vertex
-  ActsScalar corrTimeDiff = t0 - vt0;
+  double corrTimeDiff = t0 - vt0;
 
   // Momentum direction at vertex (i.e., at 3D PCA)
   double cosPhi = std::cos(phi);
@@ -309,7 +310,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
     // Check quantities:
     // Spatial distance should be 0 as track passes through the vertex
-    ActsScalar dist = distVec.head<3>().norm();
+    double dist = distVec.head<3>().norm();
     CHECK_CLOSE_ABS(dist, 0., 30_nm);
     // Distance in time should correspond to the time of the track in a
     // coordinate system with the vertex as the origin since the track passes
@@ -371,6 +372,9 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
   paramVecClose[eBoundLoc1] = l0;
+  paramVecClose[eBoundPhi] = 0;
+  paramVecClose[eBoundTheta] = std::numbers::pi / 2;
+  paramVecClose[eBoundQOverP] = 0;
   paramVecClose[eBoundTime] = vt0 + sgnClose * timeDiffClose;
 
   BoundVector paramVecFar = paramVecClose;

@@ -301,7 +301,6 @@ components.
 | ACTS_BUILD_EXAMPLES_HASHING         | Build Hashing-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in<br>the examples<br> type: `bool`, default: `ON`                                                                                                                                           |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
@@ -376,7 +375,9 @@ You can now use the ODD in the python binding by using:
 
 ```python
 oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
-detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
+detector = getOpenDataDetector(oddMaterialDeco)
+trackingGeometry = detector.trackingGeometry()
+decorators = detector.contextDecorators()
 ```
 
 ## Using ACTS

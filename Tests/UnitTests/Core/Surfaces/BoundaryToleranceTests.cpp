@@ -20,8 +20,6 @@
 #include <optional>
 #include <vector>
 
-#include "BoundaryToleranceTestsRefs.hpp"
-
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
@@ -42,6 +40,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
   BOOST_CHECK(
       !detail::insideAlignedBox(ll, ur, tolerance, {2, 0}, std::nullopt));
 }
+
 // Aligned box w/ tolerance check along first axis
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   boost::execution_monitor em;
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
   cov << 1, 0.5, 0.5, 2;
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 3.0);
+  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 3.);
   BOOST_CHECK(
       detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(
@@ -190,7 +189,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
 
   {
     auto tolerance =
-        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.0);
+        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(

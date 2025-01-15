@@ -8,24 +8,22 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <functional>
 
-#include "edm4hep/MCParticle.h"
-#include "edm4hep/MutableMCParticle.h"
-#include "edm4hep/MutableSimTrackerHit.h"
-#include "edm4hep/MutableTrack.h"
-#include "edm4hep/MutableTrackerHit.h"
-#include "edm4hep/MutableTrackerHitPlane.h"
-#include "edm4hep/SimTrackerHit.h"
-#include "edm4hep/TrackerHit.h"
-#include "edm4hep/TrackerHitCollection.h"
-#include "edm4hep/TrackerHitPlane.h"
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MutableMCParticle.h>
+#include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableTrack.h>
+#include <edm4hep/MutableTrackerHitPlane.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <edm4hep/TrackerHitPlane.h>
 
 namespace ActsExamples::EDM4hepUtil {
 
@@ -49,7 +47,7 @@ using MapGeometryIdTo =
 /// Inpersistent information:
 /// - particle ID
 /// - process
-ActsFatras::Particle readParticle(
+SimParticle readParticle(
     const edm4hep::MCParticle& from,
     const MapParticleIdFrom& particleMapper = zeroParticleMapper);
 
@@ -58,8 +56,7 @@ ActsFatras::Particle readParticle(
 /// Inpersistent information:
 /// - particle ID
 /// - process
-void writeParticle(const ActsFatras::Particle& from,
-                   edm4hep::MutableMCParticle to);
+void writeParticle(const SimParticle& from, edm4hep::MutableMCParticle to);
 
 /// Reads a Fatras hit from EDM4hep.
 ///
@@ -93,7 +90,7 @@ void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
 /// - local 2D coordinates and time are read from position
 VariableBoundMeasurementProxy readMeasurement(
     MeasurementContainer& container, const edm4hep::TrackerHitPlane& from,
-    const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
+    const edm4hep::TrackerHit3DCollection* fromClusters, Cluster* toCluster,
     const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a measurement cluster to EDM4hep.
@@ -109,7 +106,7 @@ VariableBoundMeasurementProxy readMeasurement(
 void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
                       edm4hep::MutableTrackerHitPlane to,
                       const Cluster* fromCluster,
-                      edm4hep::TrackerHitCollection& toClusters,
+                      edm4hep::TrackerHit3DCollection& toClusters,
                       const MapGeometryIdTo& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.

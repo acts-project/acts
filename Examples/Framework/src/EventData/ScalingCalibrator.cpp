@@ -52,22 +52,22 @@ std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
   std::regex reg("^map_([0-9]+)-([0-9]+)-([0-9]+)_([xy]_.*)$");
   std::smatch matches;
 
-  if (std::regex_search(mapkey, matches, reg) && matches.size() == 5) {
-    std::size_t vol = std::stoull(matches[1].str());
-    std::size_t lyr = std::stoull(matches[2].str());
-    std::size_t mod = std::stoull(matches[3].str());
-
-    Acts::GeometryIdentifier geoId;
-    geoId.setVolume(vol);
-    geoId.setLayer(lyr);
-    geoId.setSensitive(mod);
-
-    std::string var(matches[4].str());
-
-    return std::make_pair(geoId, var);
-  } else {
+  if (!std::regex_search(mapkey, matches, reg) || matches.size() != 5) {
     throw std::runtime_error("Invalid map key: " + mapkey);
   }
+
+  std::size_t vol = std::stoull(matches[1].str());
+  std::size_t lyr = std::stoull(matches[2].str());
+  std::size_t mod = std::stoull(matches[3].str());
+
+  Acts::GeometryIdentifier geoId;
+  geoId.setVolume(vol);
+  geoId.setLayer(lyr);
+  geoId.setSensitive(mod);
+
+  std::string var(matches[4].str());
+
+  return {geoId, var};
 }
 
 std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
@@ -165,7 +165,8 @@ void ActsExamples::ScalingCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
     Acts::ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
@@ -177,9 +178,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) *= ct.x_scale;
     calibratedCovariance(boundLoc1, boundLoc1) *= ct.y_scale;
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

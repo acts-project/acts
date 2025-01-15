@@ -27,13 +27,15 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
-#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
+    !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
   SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
-#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#if defined(__GNUC__) && (__GNUC__ == 13 || __GNUC__ == 14) && \
+    !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 
@@ -57,7 +59,9 @@ class SurfaceBoundsStub : public SurfaceBounds {
 }  // namespace Acts
 
 namespace Acts::Test {
+
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant SurfaceBounds object
 BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
   SurfaceBoundsStub u;
@@ -65,6 +69,7 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
   SurfaceBoundsStub t(s);
   SurfaceBoundsStub v(u);
 }
+
 BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   SurfaceBoundsStub surface(5);
   std::vector<double> reference{0, 1, 2, 3, 4};
@@ -72,6 +77,7 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(), reference.cend(),
                                 boundValues.cbegin(), boundValues.cend());
 }
+
 /// Unit test for testing SurfaceBounds properties
 BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   SurfaceBoundsStub surface(1);
@@ -79,15 +85,18 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   SurfaceBoundsStub differentSurface(2);
   BOOST_CHECK_EQUAL(surface, copiedSurface);
   BOOST_CHECK_NE(surface, differentSurface);
+
   SurfaceBoundsStub assignedSurface;
   assignedSurface = surface;
   BOOST_CHECK_EQUAL(surface, assignedSurface);
+
   const auto& surfaceboundValues = surface.values();
   const auto& assignedboundValues = assignedSurface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(
       surfaceboundValues.cbegin(), surfaceboundValues.cend(),
       assignedboundValues.cbegin(), assignedboundValues.cend());
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

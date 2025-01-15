@@ -10,35 +10,18 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
 #include <cstddef>
-#include <memory>
-#include <utility>
-#include <vector>
-
-namespace Acts {
-class TrackingGeometry;
-class IMaterialDecorator;
-}  // namespace Acts
 
 namespace ActsExamples {
-class IContextDecorator;
-namespace Generic {
-class GenericDetectorElement;
-}  // namespace Generic
-}  // namespace ActsExamples
 
-namespace ActsExamples::Contextual {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector {
+class AlignedDetector : public Detector {
  public:
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
     std::size_t seed = 1324354657;
@@ -63,21 +46,14 @@ class AlignedDetector {
 
     enum class Mode { Internal, External };
     Mode mode = Mode::Internal;
+
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
   };
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
-
-  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
-  detectorStore() {
-    return m_detectorStore;
-  }
+  explicit AlignedDetector(const Config& cfg);
 
  private:
-  /// The Store of the detector elements (lifetime: job)
-  std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
-      m_detectorStore;
+  Config m_cfg;
 };
 
-}  // namespace ActsExamples::Contextual
+}  // namespace ActsExamples

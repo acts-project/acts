@@ -15,6 +15,8 @@ namespace Acts {
 
 template <typename external_spacepoint_t, std::size_t N = 3ul>
 class Seed {
+  static_assert(N >= 3ul);
+
  public:
   using value_type = external_spacepoint_t;
   static constexpr std::size_t DIM = N;
