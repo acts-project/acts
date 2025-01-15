@@ -74,7 +74,7 @@ class ConstrainedStep {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
     // assert(v != 0 && "ConstrainedStep user must be != 0.");
     // set the user value
-    value_(Type::User) = v;
+    setValue(Type::User, v);
   }
 
   /// returns the min step size
@@ -98,7 +98,7 @@ class ConstrainedStep {
   /// release a certain constraint value
   ///
   /// @param type is the constraint type to be released
-  constexpr void release(Type type) { value_(type) = kNotSet; }
+  constexpr void release(Type type) { setValue(type, kNotSet); }
 
   /// release accuracy
   constexpr void releaseAccuracy() { m_accuracy = kNotSet; }
@@ -117,7 +117,7 @@ class ConstrainedStep {
       // TODO enable assert; see
       // https://github.com/acts-project/acts/issues/2543
       // assert(value != 0 && "ConstrainedStep user must be != 0.");
-      value_(type) = v;
+      setValue(type, v);
     }
   }
 
@@ -159,7 +159,9 @@ class ConstrainedStep {
   /// the accuracy value - this can vary up and down given a good step estimator
   double m_accuracy = kNotSet;
 
-  constexpr double& value_(Type type) { return m_values[toUnderlying(type)]; }
+  constexpr void setValue(Type type, double v) {
+    m_values[toUnderlying(type)] = v;
+  }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {
