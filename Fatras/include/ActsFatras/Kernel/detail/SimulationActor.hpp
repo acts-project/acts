@@ -122,7 +122,8 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
-      stepper.releaseStepSize(state.stepping, Acts::ConstrainedStep::user);
+      stepper.releaseStepSize(state.stepping,
+                              Acts::ConstrainedStep::Type::User);
       stepper.updateStepSize(state.stepping, stepSize,
                              Acts::ConstrainedStep::Type::User);
     }
