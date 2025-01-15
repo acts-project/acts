@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   auto portalContainer =
       Acts::Experimental::detail::CuboidalDetectorHelper::connect(
-          geoContext, detectorVolumes, Acts::BinningValue::binX, {},
+          geoContext, detectorVolumes, Acts::AxisDirection::AxisX, {},
           Acts::Logging::VERBOSE);
 
   // Make sure that the geometry ids are
