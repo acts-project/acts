@@ -13,16 +13,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cstddef>
-#include <limits>
 #include <memory>
 #include <string>
 
@@ -73,9 +70,6 @@ class PlaneSurface : public RegularSurface {
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
-  ~PlaneSurface() override = default;
-  PlaneSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
@@ -112,11 +106,11 @@ class PlaneSurface : public RegularSurface {
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the binning type to be used
+  /// @param aDir is the axis direction of reference position request
   ///
   /// @return position that can beused for this binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

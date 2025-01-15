@@ -22,7 +22,6 @@
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
@@ -30,23 +29,17 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <numbers>
 #include <optional>
 #include <ostream>
-#include <stdexcept>
-#include <string>
 #include <tuple>
 #include <vector>
-
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
 
 namespace Acts::Test {
 
@@ -99,13 +92,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
 
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
-  // binningPosition()
+  // referencePosition()
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
   LineSurfaceStub line(transform, 2., 20.);
   Vector3 referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition,
-                  line.binningPosition(tgContext, BinningValue::binX), 1e-6);
+                  line.referencePosition(tgContext, AxisDirection::AxisX),
+                  1e-6);
 
   // bounds()
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.);

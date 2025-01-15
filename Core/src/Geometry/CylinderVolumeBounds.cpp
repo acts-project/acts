@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -231,29 +232,27 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (insideZ && insideR && insidePhi);
 }
 
-Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
+Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
     const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::BinningValue::binR ||
-      bValue == Acts::BinningValue::binRPhi) {
+  if (aDir == Acts::AxisDirection::AxisR ||
+      aDir == Acts::AxisDirection::AxisRPhi) {
     return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
-  return VolumeBounds::binningOffset(bValue);
+  return VolumeBounds::referenceOffset(aDir);
 }
 
-double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::BinningValue::binR) {
+double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
+  if (aDir == Acts::AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
-  if (bValue == Acts::BinningValue::binZ) {
+  if (aDir == Acts::AxisDirection::AxisZ) {
     return get(eHalfLengthZ);
   }
-  return VolumeBounds::binningBorder(bValue);
+  return VolumeBounds::referenceBorder(aDir);
 }
 
 std::vector<double> CylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
+  return {m_values.begin(), m_values.end()};
 }
 
 void CylinderVolumeBounds::checkConsistency() {

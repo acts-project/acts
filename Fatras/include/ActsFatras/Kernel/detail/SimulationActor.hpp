@@ -10,17 +10,15 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <limits>
 
 namespace ActsFatras::detail {
 
@@ -124,6 +122,7 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
+      stepper.releaseStepSize(state.stepping, Acts::ConstrainedStep::user);
       stepper.updateStepSize(state.stepping, stepSize,
                              Acts::ConstrainedStep::user);
     }
