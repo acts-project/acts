@@ -111,6 +111,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         }),
                         py::arg("level"));
   }
+#endif
 
 #ifdef ACTS_EXATRKX_WITH_CUDA
   {

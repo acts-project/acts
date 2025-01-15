@@ -40,7 +40,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   auto cudaTgtPtr = edgeTensor.data_ptr<std::int64_t>() + numEdges;
 
   int* cudaLabels;
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
 
   std::size_t numberLabels = detail::connectedComponentsCuda(
@@ -50,12 +50,12 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   numberLabels += 1;
 
   std::vector<int> trackLabels(numSpacepoints);
-  CUDA_CHECK(cudaMemcpyAsync(trackLabels.data(), cudaLabels,
-                             numSpacepoints * sizeof(int),
-                             cudaMemcpyDeviceToHost, stream));
-  CUDA_CHECK(cudaFreeAsync(cudaLabels, stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(trackLabels.data(), cudaLabels,
+                                  numSpacepoints * sizeof(int),
+                                  cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cudaLabels, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_VERBOSE("Found " << numberLabels << " track candidates");
 

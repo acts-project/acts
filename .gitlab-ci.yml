@@ -159,7 +159,7 @@ test_exatrkx_unittests:
     - git checkout $HEAD_SHA
     - source CI/dependencies.sh
     - cd ..
-    - ctest --test-dir build -R (ExaTrkX|CudaConnectedComponents)
+    - ctest --test-dir build -R "(ExaTrkX|CudaConnectedComponents)"
 
 test_exatrkx_python:
   stage: test

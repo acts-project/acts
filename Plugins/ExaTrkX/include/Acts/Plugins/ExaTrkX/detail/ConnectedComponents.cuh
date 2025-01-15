@@ -22,13 +22,17 @@ __device__ void swap(T &a, T &b) {
   b = tmp;
 }
 
-// https://arxiv.org/abs/1910.05971
+/// Implementation of the FastSV algorithm as shown in
+/// https://arxiv.org/abs/1910.05971
 template <typename TEdge, typename TLabel>
 __global__ void labelConnectedComponents(std::size_t numEdges,
                                          const TEdge *sourceEdges,
                                          const TEdge *targetEdges,
                                          std::size_t numNodes, TLabel *labels,
                                          TLabel *labelsNext) {
+  // Currently this kernel works only with 1 block
+  assert(gridDim.x == 1);
+
   for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
     labels[i] = i;
     labelsNext[i] = i;
@@ -36,7 +40,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
 
   __shared__ bool changed;
 
-  while (true) {
+  do {
     changed = false;
     __syncthreads();
 
@@ -91,12 +95,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
     }*/
 
     __syncthreads();
-
-    if (!changed) {
-      //printf("break!\n");
-      break;
-    }
-  }
+  } while (changed == true)
 }
 
 template <typename T>
@@ -128,13 +127,14 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
                                const TEdges *targetEdges, std::size_t nNodes,
                                TLabel *labels, cudaStream_t stream) {
   TLabel *tmpMemory;
-  CUDA_CHECK(cudaMallocAsync(&tmpMemory, nNodes * sizeof(TLabel), stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&tmpMemory, nNodes * sizeof(TLabel), stream));
 
   // Make synchronization in one block, to avoid that inter-block sync is
   // necessary
   dim3 blockDim = 1024;
   labelConnectedComponents<<<1, blockDim, 1, stream>>>(
       nEdges, sourceEdges, targetEdges, nNodes, labels, tmpMemory);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   // Assume we have the following components:
   // 0 3 5 3 0 0
@@ -142,11 +142,13 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   // Fill a mask which labels survived the connected components algorithm
   // 0 1 2 3 4 5
   // 1 0 0 1 0 1
-  CUDA_CHECK(cudaMemsetAsync(tmpMemory, 0, nNodes * sizeof(TLabel), stream));
+  ACTS_CUDA_CHECK(
+      cudaMemsetAsync(tmpMemory, 0, nNodes * sizeof(TLabel), stream));
   dim3 gridDim = (nNodes + blockDim.x - 1) / blockDim.x;
   makeLabelMask<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
-  // Exclusive prefix sum
+  // Exclusive prefix sum on the label mask
   // 0 1 2 3 4 5
   // 0 1 1 1 2 2
   thrust::exclusive_scan(thrust::device.on(stream), tmpMemory,
@@ -155,14 +157,15 @@ TLabel connectedComponentsCuda(std::size_t nEdges, const TEdges *sourceEdges,
   // Remap edge labels with values in prefix sum
   // 0 -> 0, 3 -> 1, 5 -> 2
   mapEdgeLabels<<<gridDim, blockDim, 0, stream>>>(nNodes, labels, tmpMemory);
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   TLabel nLabels;
-  CUDA_CHECK(cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1], sizeof(TLabel),
-                             cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(&nLabels, &tmpMemory[nNodes - 1],
+                                  sizeof(TLabel), cudaMemcpyDeviceToHost,
+                                  stream));
 
-  CUDA_CHECK(cudaFreeAsync(tmpMemory, stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaFreeAsync(tmpMemory, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   return nLabels;
 }
