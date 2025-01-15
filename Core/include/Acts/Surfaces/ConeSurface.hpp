@@ -180,7 +180,7 @@ class ConeSurface : public RegularSurface {
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
-          BoundaryTolerance::infinite(),
+          BoundaryTolerance::Infinite(),
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// The pathCorrection for derived classes with thickness

@@ -158,9 +158,9 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test isOnSurface
   Vector3 offSurface{100, 1, 2};
   BOOST_CHECK(coneSurfaceObject->isOnSurface(
-      tgContext, globalPosition, momentum, BoundaryTolerance::none()));
+      tgContext, globalPosition, momentum, BoundaryTolerance::None()));
   BOOST_CHECK(!coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum,
-                                              BoundaryTolerance::none()));
+                                              BoundaryTolerance::None()));
 
   /// Test pathCorrection
   CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(tgContext, offSurface,

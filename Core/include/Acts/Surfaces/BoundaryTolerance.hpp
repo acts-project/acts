@@ -128,12 +128,12 @@ class BoundaryTolerance {
   }
 
   /// Absolute tolerance in Cartesian coordinates
-  static auto absoluteCartesian(double tolerance0, double tolerance1) {
+  static auto AbsoluteCartesian(double tolerance0, double tolerance1) {
     return BoundaryTolerance{AbsoluteCartesianParams{tolerance0, tolerance1}};
   }
 
   /// Absolute tolerance in Euclidean distance
-  static auto absoluteEuclidean(double tolerance) {
+  static auto AbsoluteEuclidean(double tolerance) {
     return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
   }
 

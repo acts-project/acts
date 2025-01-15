@@ -179,10 +179,10 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 
   /// Test inside
   BOOST_CHECK(
-      !ellipseBoundsObject.inside(inRectangle, BoundaryTolerance::none()));
+      !ellipseBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
   // don't understand why this is so:
   BOOST_CHECK(
-      !ellipseBoundsObject.inside(outsideBy15, BoundaryTolerance::none()));
+      !ellipseBoundsObject.inside(outsideBy15, BoundaryTolerance::None()));
 }
 /// Unit test for testing EllipseBounds assignment
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {

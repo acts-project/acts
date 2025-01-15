@@ -35,7 +35,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   auto intersection =
       perigeeSurface
           .intersect(gctx, params.position(gctx), params.direction(),
-                     BoundaryTolerance::infinite())
+                     BoundaryTolerance::Infinite())
           .closest();
 
   // Setting the propagation direction using the intersection length from
@@ -123,7 +123,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     // Obtain propagation direction
     intersection = perigeeSurface
                        .intersect(gctx, paramVecCopy.template head<3>(),
-                                  wiggledDir, BoundaryTolerance::infinite())
+                                  wiggledDir, BoundaryTolerance::Infinite())
                        .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());

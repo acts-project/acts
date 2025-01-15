@@ -186,7 +186,7 @@ SurfaceMultiIntersection LineSurface::intersect(
 BoundToFreeMatrix LineSurface::boundToFreeJacobian(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // retrieve the reference frame
   auto rframe = referenceFrame(gctx, position, direction);
@@ -223,7 +223,7 @@ BoundToFreeMatrix LineSurface::boundToFreeJacobian(
 FreeToPathMatrix LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
@@ -252,7 +252,7 @@ FreeToPathMatrix LineSurface::freeToPathDerivative(
 AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction) const {
-  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::infinite()));
+  assert(isOnSurface(gctx, position, direction, BoundaryTolerance::Infinite()));
 
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);

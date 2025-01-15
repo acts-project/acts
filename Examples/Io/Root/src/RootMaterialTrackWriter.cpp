@@ -302,7 +302,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
           auto sfIntersection =
               surface
                   ->intersect(ctx.geoContext, mint.position, mint.direction,
-                              Acts::BoundaryTolerance::none())
+                              Acts::BoundaryTolerance::None())
                   .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);

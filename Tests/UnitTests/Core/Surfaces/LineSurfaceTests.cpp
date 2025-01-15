@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
     const Vector3 direction{0., 1., 2.};
     auto sfIntersection =
         line.intersect(tgContext, {0., 0., 0.}, direction.normalized(),
-                       BoundaryTolerance::infinite())
+                       BoundaryTolerance::Infinite())
             .closest();
     BOOST_CHECK(sfIntersection.isValid());
     Vector3 expectedIntersection(0, 1., 2.);
@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   const Vector3 insidePosition{0., 2.5, 0.};
   BOOST_CHECK(line.isOnSurface(
       tgContext, insidePosition, mom,
-      BoundaryTolerance::infinite()));  // need better test here
+      BoundaryTolerance::Infinite()));  // need better test here
   const Vector3 outsidePosition{100., 100., 200.};
   BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom,
-                                BoundaryTolerance::none()));
+                                BoundaryTolerance::None()));
 
   // localToGlobal
   Vector3 returnedGlobalPosition{0., 0., 0.};

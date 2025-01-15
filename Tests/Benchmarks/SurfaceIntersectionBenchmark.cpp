@@ -32,7 +32,7 @@ namespace Acts::Test {
 // Some randomness & number crunching
 unsigned int ntests = 10;
 unsigned int nrepts = 2000;
-const BoundaryTolerance boundaryTolerance = BoundaryTolerance::infinite();
+const BoundaryTolerance boundaryTolerance = BoundaryTolerance::Infinite();
 const bool testPlane = true;
 const bool testDisc = true;
 const bool testCylinder = true;

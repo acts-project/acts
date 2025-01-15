@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
       0.,
   };
   Vector3 zDir{0., 0., 1.};
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
   double nearLimit = -100 * UnitConstants::um;
   double farLimit = std::numeric_limits<double>::max();
   //
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
 BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3 origin{0., -0.5, 1.};
   Vector3 direction{0., 1., 0.};
-  BoundaryTolerance boundaryTolerance = BoundaryTolerance::none();
+  BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
   double nearLimit = -100 * UnitConstants::um;
   double farLimit = std::numeric_limits<double>::max();
 

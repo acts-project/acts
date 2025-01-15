@@ -111,7 +111,7 @@ inline void emplaceAllVolumeCandidates(
 
     for (const auto& boundary : boundaries) {
       addCandidate(boundary.get(), &boundary->surfaceRepresentation(),
-                   BoundaryTolerance::none());
+                   BoundaryTolerance::None());
     }
   }
 
@@ -131,7 +131,7 @@ inline void emplaceAllVolumeCandidates(
       if (!resolveSensitive ||
           layer->surfaceRepresentation().surfaceMaterial() != nullptr) {
         addCandidate(layer.get(), &layer->surfaceRepresentation(),
-                     BoundaryTolerance::none());
+                     BoundaryTolerance::None());
       }
 
       if (layer->approachDescriptor() != nullptr) {
@@ -139,7 +139,7 @@ inline void emplaceAllVolumeCandidates(
             layer->approachDescriptor()->containedSurfaces();
 
         for (const auto& approach : approaches) {
-          addCandidate(layer.get(), approach, BoundaryTolerance::none());
+          addCandidate(layer.get(), approach, BoundaryTolerance::None());
         }
       }
 

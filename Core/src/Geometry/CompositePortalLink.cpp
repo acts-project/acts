@@ -143,11 +143,11 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
 Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector3& position,
     double tolerance) const {
-  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::none(),
+  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
                                 tolerance));
 
   for (const auto& child : m_children) {
-    if (child->surface().isOnSurface(gctx, position, BoundaryTolerance::none(),
+    if (child->surface().isOnSurface(gctx, position, BoundaryTolerance::None(),
                                      tolerance)) {
       return child->resolveVolume(gctx, position);
     }

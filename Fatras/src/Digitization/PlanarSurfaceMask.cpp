@@ -98,9 +98,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                             Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(localStart, Acts::BoundaryTolerance::none());
+        surface.bounds().inside(localStart, Acts::BoundaryTolerance::None());
     bool endInside =
-        surface.bounds().inside(localEnd, Acts::BoundaryTolerance::none());
+        surface.bounds().inside(localEnd, Acts::BoundaryTolerance::None());
 
     // Fast exit, both inside
     if (startInside && endInside) {
@@ -133,9 +133,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                          Acts::VectorHelpers::phi(segment[1]));
 
     bool startInside =
-        surface.bounds().inside(sPolar, Acts::BoundaryTolerance::none());
+        surface.bounds().inside(sPolar, Acts::BoundaryTolerance::None());
     bool endInside =
-        surface.bounds().inside(ePolar, Acts::BoundaryTolerance::none());
+        surface.bounds().inside(ePolar, Acts::BoundaryTolerance::None());
 
     // Fast exit for both inside
     if (startInside && endInside) {

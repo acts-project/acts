@@ -108,10 +108,10 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
 
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
-                                  BoundaryTolerance::infinite()));
+                                  BoundaryTolerance::Infinite()));
   BOOST_CHECK(surface.isOnSurface(
       tgContext, reference, mom,
-      BoundaryTolerance::none()));  // need to improve bounds()
+      BoundaryTolerance::None()));  // need to improve bounds()
 
   // referenceFrame()
   RotationMatrix3 unitary;

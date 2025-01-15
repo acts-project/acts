@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     targetSurface
                         ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
-                                    BoundaryTolerance::infinite())
+                                    BoundaryTolerance::Infinite())
                         .closest(),
                     navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     targetSurface
                         ->intersect(tgContext, es.position(esState),
                                     navDir * es.direction(esState),
-                                    BoundaryTolerance::infinite())
+                                    BoundaryTolerance::Infinite())
                         .closest(),
                     navDir, ConstrainedStep::navigator);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);

@@ -201,7 +201,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   Vector3 direction = mean.segment<3>(eFreeDir0);
   auto intersection = surface
                           .intersect(GeometryContext{}, position, direction,
-                                     BoundaryTolerance::infinite())
+                                     BoundaryTolerance::Infinite())
                           .closest();
   mean.head<3>() = intersection.position();
 

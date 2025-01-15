@@ -77,7 +77,7 @@ class NavigationLayer : public Layer {
   /// @return boolean that indicates if the position is on surface
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
                  const BoundaryTolerance& boundaryTolerance =
-                     BoundaryTolerance::none()) const final;
+                     BoundaryTolerance::None()) const final;
 
   /// Accept layer according to the following collection directives
   ///

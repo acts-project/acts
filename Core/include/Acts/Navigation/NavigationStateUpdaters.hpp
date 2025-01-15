@@ -54,7 +54,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
         sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
     BoundaryTolerance boundaryTolerance =
-        sc.portal != nullptr ? BoundaryTolerance::none() : sc.boundaryTolerance;
+        sc.portal != nullptr ? BoundaryTolerance::None() : sc.boundaryTolerance;
     // Check the surface intersection
     auto sIntersection = surface.intersect(
         gctx, position, direction, boundaryTolerance, s_onSurfaceTolerance);

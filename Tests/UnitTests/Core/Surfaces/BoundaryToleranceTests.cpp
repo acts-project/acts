@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
   {
     // Valid positive tolerances
     auto tolerance = BoundaryTolerance::AbsoluteBound(1.0, 2.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance0, 1.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance1, 2.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::AbsoluteBound(0.0, 0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteBound().tolerance0, 1.0);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteBound().tolerance1, 2.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance::AbsoluteBound(0.0, 0.0).toleranceMode() ==
+                None);
 
     // Negative tolerances should throw
     BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteBound(-1.0, 2.0),
@@ -56,27 +56,26 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
   {
     // Valid positive tolerance
     auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance, 1.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::AbsoluteEuclidean(0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteEuclidean().tolerance, 1.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance::AbsoluteEuclidean(0.0).toleranceMode() ==
+                None);
 
     // Valid negative tolerance
     tolerance = BoundaryTolerance::AbsoluteEuclidean(-1.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance, -1.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Shrink);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteEuclidean().tolerance, -1.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Shrink);
   }
 
   // Test AbsoluteCartesian constructor
   {
     // Valid positive tolerance
     auto tolerance = BoundaryTolerance::AbsoluteCartesian(1.0, 2.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance0, 1.0);
-    BOOST_CHECK_EQUAL(tolerance.tolerance1, 2.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteCartesian().tolerance0, 1.0);
+    BOOST_CHECK_EQUAL(tolerance.asAbsoluteCartesian().tolerance1, 2.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
     BOOST_CHECK(
-        BoundaryTolerance{BoundaryTolerance::AbsoluteCartesian(0.0, 0.0)}
-            .toleranceMode() == None);
+        BoundaryTolerance::AbsoluteCartesian(0.0, 0.0).toleranceMode() == None);
 
     // Negative tolerances should throw
     BOOST_CHECK_THROW(BoundaryTolerance::AbsoluteCartesian(-1.0, 2.0),
@@ -92,15 +91,14 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
 
     // Valid positive chi2 bound
     auto tolerance = BoundaryTolerance::Chi2Bound(cov, 3.0);
-    BOOST_CHECK_EQUAL(tolerance.maxChi2, 3.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Extend);
-    BOOST_CHECK(BoundaryTolerance{BoundaryTolerance::Chi2Bound(cov, 0.0)}
-                    .toleranceMode() == None);
+    BOOST_CHECK_EQUAL(tolerance.asChi2Bound().maxChi2, 3.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Extend);
+    BOOST_CHECK(BoundaryTolerance::Chi2Bound(cov, 0.0).toleranceMode() == None);
 
     // Valid negative chi2 bound
     tolerance = BoundaryTolerance::Chi2Bound(cov, -3.0);
-    BOOST_CHECK_EQUAL(tolerance.maxChi2, -3.0);
-    BOOST_CHECK(BoundaryTolerance{tolerance}.toleranceMode() == Shrink);
+    BOOST_CHECK_EQUAL(tolerance.asChi2Bound().maxChi2, -3.0);
+    BOOST_CHECK(tolerance.toleranceMode() == Shrink);
   }
 
   // Test None constructor
@@ -113,7 +111,7 @@ BOOST_AUTO_TEST_CASE(BoundaryToleranceConstructors) {
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxSimple) {
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::none();
+  auto tolerance = BoundaryTolerance::None();
   BOOST_CHECK(
       detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
   em.execute([]() {
     Vector2 ll(-1, -1);
     Vector2 ur(1, 1);
-    auto tolerance = BoundaryTolerance::absoluteBound(
+    auto tolerance = BoundaryTolerance::AbsoluteBound(
         1.5, std::numeric_limits<double>::infinity());
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
@@ -155,7 +153,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
   cov << 1, 0.5, 0.5, 2;
   Vector2 ll(-1, -1);
   Vector2 ur(1, 1);
-  auto tolerance = BoundaryTolerance::chi2Bound(cov.inverse(), 3.);
+  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 3.);
   BOOST_CHECK(
       detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(
@@ -171,7 +169,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
 // Triangle w/ simple check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
-  auto tolerance = BoundaryTolerance::none();
+  auto tolerance = BoundaryTolerance::None();
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 1}, std::nullopt));
   BOOST_CHECK(
@@ -184,7 +182,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
   SquareMatrix2 cov;
   cov << 0.5, 0, 0, 0.5;
-  auto tolerance = BoundaryTolerance::chi2Bound(cov.inverse(), 4.1);
+  auto tolerance = BoundaryTolerance::Chi2Bound(cov.inverse(), 4.1);
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 0}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 1}, std::nullopt));
   BOOST_CHECK(detail::insidePolygon(vertices, tolerance, {0, 2}, std::nullopt));
@@ -199,7 +197,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   Vector2 ur(1, 1);
 
   {
-    auto tolerance = BoundaryTolerance::none();
+    auto tolerance = BoundaryTolerance::None();
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -211,7 +209,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::infinite();
+    auto tolerance = BoundaryTolerance::Infinite();
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -223,7 +221,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::absoluteBound(0.5, 0.5);
+    auto tolerance = BoundaryTolerance::AbsoluteBound(0.5, 0.5);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -241,7 +239,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::absoluteCartesian(0.5, 0.5);
+    auto tolerance = BoundaryTolerance::AbsoluteCartesian(0.5, 0.5);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -259,7 +257,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
   }
 
   {
-    auto tolerance = BoundaryTolerance::absoluteEuclidean(1.1);
+    auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1.1);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
@@ -272,7 +270,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckDifferentTolerances) {
 
   {
     auto tolerance =
-        BoundaryTolerance::chi2Bound(SquareMatrix2::Identity(), 1.);
+        BoundaryTolerance::Chi2Bound(SquareMatrix2::Identity(), 1.);
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(
