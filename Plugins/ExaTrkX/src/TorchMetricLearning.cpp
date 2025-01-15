@@ -76,7 +76,9 @@ std::tuple<std::any, std::any, std::any> TorchMetricLearning::operator()(
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
-#ifndef ACTS_EXATRKX_CPUONLY
+#ifdef ACTS_EXATRKX_CPUONLY
+  assert(device == torch::Device(torch::kCPU));
+#else
   std::optional<c10::cuda::CUDAGuard> device_guard;
   std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (device.is_cuda()) {
