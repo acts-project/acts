@@ -1225,7 +1225,7 @@ class MultiTrajectoryTestsCommon {
 
     auto [par, cov] = generateBoundParametersCovariance(rng, {});
 
-    ts.template allocateCalibrated(par.head<3>(), cov.topLeftCorner<3, 3>());
+    ts.allocateCalibrated(par.head<3>(), cov.topLeftCorner<3, 3>());
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), par.head<3>());
@@ -1235,11 +1235,11 @@ class MultiTrajectoryTestsCommon {
     auto [par2, cov2] = generateBoundParametersCovariance(rng, {});
 
     ts.allocateCalibrated(3);
-    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), ActsVector<3>::Zero());
+    BOOST_CHECK_EQUAL(ts.template calibrated<3>(), Vector3::Zero());
     BOOST_CHECK_EQUAL(ts.template calibratedCovariance<3>(),
                       ActsSquareMatrix<3>::Zero());
 
-    ts.template allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
+    ts.allocateCalibrated(par2.head<3>(), cov2.topLeftCorner<3, 3>());
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 3);
     // The values are re-assigned
     BOOST_CHECK_EQUAL(ts.template calibrated<3>(), par2.head<3>());
@@ -1247,9 +1247,9 @@ class MultiTrajectoryTestsCommon {
                       (cov2.topLeftCorner<3, 3>()));
 
     // Re-allocation with a different measurement dimension is an error
-    BOOST_CHECK_THROW(ts.template allocateCalibrated(
-                          par2.head<4>(), cov2.topLeftCorner<4, 4>()),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        ts.allocateCalibrated(par2.head<4>(), cov2.topLeftCorner<4, 4>()),
+        std::invalid_argument);
   }
 };
 }  // namespace Acts::detail::Test

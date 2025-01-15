@@ -6,9 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/TransformRange.hpp"
+
+#include <algorithm>
 
 using namespace Acts;
 
@@ -99,6 +102,14 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(*(++r.begin())), int&>);
       checkSameAddresses(v, r);
 
+      std::vector<int> unpacked;
+      std::ranges::transform(r, std::back_inserter(unpacked),
+                             [](auto val) { return val; });
+      std::vector<int> exp = {1, 2, 4};
+
+      BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), unpacked.begin(),
+                                    unpacked.end());
+
       auto cr = detail::TransformRange{detail::ConstDereference{}, raw_v};
       static_assert(std::is_same_v<decltype(cr)::value_type, const int>);
       static_assert(std::is_same_v<decltype(cr)::reference, const int&>);
@@ -108,6 +119,13 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(*cr.begin()), const int&>);
       static_assert(std::is_same_v<decltype(*(++cr.begin())), const int&>);
       checkSameAddresses(v, r);
+
+      unpacked.clear();
+      std::ranges::transform(cr, std::back_inserter(unpacked),
+                             [](auto val) { return val; });
+
+      BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), unpacked.begin(),
+                                    unpacked.end());
     }
   }
 
@@ -127,6 +145,12 @@ BOOST_AUTO_TEST_CASE(TransformRangeDeref) {
       static_assert(std::is_same_v<decltype(*r.begin()), const int&>);
       static_assert(std::is_same_v<decltype(*(++r.begin())), const int&>);
       checkSameAddresses(v, r);
+
+      std::vector<int> unpacked;
+      std::ranges::transform(r, std::back_inserter(unpacked),
+                             [](auto val) { return val; });
+
+      BOOST_CHECK(unpacked == std::vector<int>({1, 2, 3}));
     }
 
     std::vector<const int*> raw_v;

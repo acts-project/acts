@@ -21,7 +21,7 @@ namespace Acts {
 
 void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
                                              const PortalLinkBase& b,
-                                             BinningValue direction) {
+                                             AxisDirection direction) {
   const auto& surfaceA = a.surface();
   const auto& surfaceB = b.surface();
 
@@ -40,17 +40,17 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
     throw_assert(cylB != nullptr,
                  "Cannot merge CylinderSurface with "
                  "non-CylinderSurface");
-    throw_assert(
-        direction == BinningValue::binZ || direction == BinningValue::binRPhi,
-        "Invalid binning direction: " + binningValueName(direction));
+    throw_assert(direction == AxisDirection::AxisZ ||
+                     direction == AxisDirection::AxisRPhi,
+                 "Invalid binning direction: " + axisDirectionName(direction));
   } else if (const auto* discA = dynamic_cast<const DiscSurface*>(&surfaceA);
              discA != nullptr) {
     const auto* discB = dynamic_cast<const DiscSurface*>(&surfaceB);
     throw_assert(discB != nullptr,
                  "Cannot merge DiscSurface with non-DiscSurface");
-    throw_assert(
-        direction == BinningValue::binR || direction == BinningValue::binPhi,
-        "Invalid binning direction: " + binningValueName(direction));
+    throw_assert(direction == AxisDirection::AxisR ||
+                     direction == AxisDirection::AxisPhi,
+                 "Invalid binning direction: " + axisDirectionName(direction));
 
     throw_assert(dynamic_cast<const RadialBounds*>(&discA->bounds()) &&
                      dynamic_cast<const RadialBounds*>(&discB->bounds()),
@@ -63,7 +63,7 @@ void PortalLinkBase::checkMergePreconditions(const PortalLinkBase& a,
 
 std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,
-    BinningValue direction, const Logger& logger) {
+    AxisDirection direction, const Logger& logger) {
   ACTS_VERBOSE("Merging two arbitrary portals");
 
   ACTS_VERBOSE(" - a: " << *a);
@@ -109,7 +109,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
     } else if (const auto* bTrivial =
                    dynamic_cast<const TrivialPortalLink*>(b.get());
                bTrivial != nullptr) {
-      ACTS_VERBOSE(
+      ACTS_WARNING(
           "Merging a grid portal with a trivial portal (via composite)");
       return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
@@ -128,7 +128,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
              aTrivial != nullptr) {
     if (const auto* bGrid = dynamic_cast<const GridPortalLink*>(b.get());
         bGrid) {
-      ACTS_VERBOSE(
+      ACTS_WARNING(
           "Merging a trivial portal with a grid portal (via composite)");
       return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
@@ -141,7 +141,7 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                                                    direction);
 
     } else if (dynamic_cast<const CompositePortalLink*>(b.get()) != nullptr) {
-      ACTS_WARNING("Merging a trivial portal with a composite portal");
+      ACTS_VERBOSE("Merging a trivial portal with a composite portal");
       return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
@@ -156,12 +156,12 @@ std::unique_ptr<PortalLinkBase> PortalLinkBase::merge(
                                                    direction);
 
     } else if (dynamic_cast<const TrivialPortalLink*>(b.get()) != nullptr) {
-      ACTS_WARNING("Merging a composite portal with a trivial portal");
+      ACTS_VERBOSE("Merging a composite portal with a trivial portal");
       return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 
     } else if (dynamic_cast<CompositePortalLink*>(b.get()) != nullptr) {
-      ACTS_WARNING("Merging two composite portals");
+      ACTS_VERBOSE("Merging two composite portals");
       return std::make_unique<CompositePortalLink>(std::move(a), std::move(b),
                                                    direction);
 

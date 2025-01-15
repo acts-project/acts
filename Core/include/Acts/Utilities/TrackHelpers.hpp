@@ -209,7 +209,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*first, intersection.pathLength());
+      return std::pair(*first, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::last: {
@@ -229,7 +229,7 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_VERBOSE("found intersection at " << intersection.pathLength());
-      return std::make_pair(*last, intersection.pathLength());
+      return std::pair(*last, intersection.pathLength());
     }
 
     case TrackExtrapolationStrategy::firstOrLast: {
@@ -256,13 +256,13 @@ findTrackStateForExtrapolation(
       if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
                      << intersectionFirst.pathLength());
-        return std::make_pair(*first, intersectionFirst.pathLength());
+        return std::pair(*first, intersectionFirst.pathLength());
       }
 
       if (intersectionLast.isValid() && absDistanceLast <= absDistanceFirst) {
         ACTS_VERBOSE("using last track state with intersection at "
                      << intersectionLast.pathLength());
-        return std::make_pair(*last, intersectionLast.pathLength());
+        return std::pair(*last, intersectionLast.pathLength());
       }
 
       ACTS_ERROR("no intersection found");
@@ -412,9 +412,10 @@ void calculateTrackQuantities(track_proxy_t track)
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
+/// @param trimOtherNoneMeasurement whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                    bool trimMaterial)
+                    bool trimMaterial, bool trimOtherNoneMeasurement)
   requires(!track_proxy_t::ReadOnly)
 {
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
@@ -425,14 +426,23 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 
   for (TrackStateProxy trackState : track.trackStatesReversed()) {
     TrackStateType typeFlags = trackState.typeFlags();
-    if (trimHoles && typeFlags.test(TrackStateFlag::HoleFlag)) {
+    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
+    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
+    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
+                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    bool isOtherNoneMeasurement =
+        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
+        !isOutlier && !isMaterial;
+    if (trimHoles && isHole) {
       continue;
     }
-    if (trimOutliers && typeFlags.test(TrackStateFlag::OutlierFlag)) {
+    if (trimOutliers && isOutlier) {
       continue;
     }
-    if (trimMaterial && typeFlags.test(TrackStateFlag::MaterialFlag) &&
-        !typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+    if (trimMaterial && isMaterial) {
+      continue;
+    }
+    if (trimOtherNoneMeasurement && isOtherNoneMeasurement) {
       continue;
     }
 
@@ -450,9 +460,10 @@ void trimTrackFront(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
+/// @param trimOtherNoneMeasurement whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-                   bool trimMaterial)
+                   bool trimMaterial, bool trimOtherNoneMeasurement)
   requires(!track_proxy_t::ReadOnly)
 {
   using TrackStateProxy = typename track_proxy_t::TrackStateProxy;
@@ -463,14 +474,23 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
     back = trackState;
 
     TrackStateType typeFlags = trackState.typeFlags();
-    if (trimHoles && typeFlags.test(TrackStateFlag::HoleFlag)) {
+    bool isHole = typeFlags.test(TrackStateFlag::HoleFlag);
+    bool isOutlier = typeFlags.test(TrackStateFlag::OutlierFlag);
+    bool isMaterial = typeFlags.test(TrackStateFlag::MaterialFlag) &&
+                      !typeFlags.test(TrackStateFlag::MeasurementFlag);
+    bool isOtherNoneMeasurement =
+        !typeFlags.test(TrackStateFlag::MeasurementFlag) && !isHole &&
+        !isOutlier && !isMaterial;
+    if (trimHoles && isHole) {
       continue;
     }
-    if (trimOutliers && typeFlags.test(TrackStateFlag::OutlierFlag)) {
+    if (trimOutliers && isOutlier) {
       continue;
     }
-    if (trimMaterial && typeFlags.test(TrackStateFlag::MaterialFlag) &&
-        !typeFlags.test(TrackStateFlag::MeasurementFlag)) {
+    if (trimMaterial && isMaterial) {
+      continue;
+    }
+    if (trimOtherNoneMeasurement && isOtherNoneMeasurement) {
       continue;
     }
 
@@ -488,13 +508,16 @@ void trimTrackBack(track_proxy_t track, bool trimHoles, bool trimOutliers,
 /// @param trimHoles whether to trim holes
 /// @param trimOutliers whether to trim outliers
 /// @param trimMaterial whether to trim pure material states
+/// @param trimOtherNoneMeasurement whether to trim other, non measurement, states
 template <TrackProxyConcept track_proxy_t>
 void trimTrack(track_proxy_t track, bool trimHoles, bool trimOutliers,
-               bool trimMaterial)
+               bool trimMaterial, bool trimOtherNoneMeasurement)
   requires(!track_proxy_t::ReadOnly)
 {
-  trimTrackFront(track, trimHoles, trimOutliers, trimMaterial);
-  trimTrackBack(track, trimHoles, trimOutliers, trimMaterial);
+  trimTrackFront(track, trimHoles, trimOutliers, trimMaterial,
+                 trimOtherNoneMeasurement);
+  trimTrackBack(track, trimHoles, trimOutliers, trimMaterial,
+                trimOtherNoneMeasurement);
 }
 
 /// Helper function to calculate the predicted residual and its covariance
@@ -517,10 +540,11 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector predicted =
       subspaceHelper.projectVector(trackState.predicted());
   MeasurementMatrix predictedCovariance =
@@ -530,7 +554,7 @@ calculatePredictedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + predictedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the filtered residual and its covariance
@@ -553,10 +577,11 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector filtered =
       subspaceHelper.projectVector(trackState.filtered());
   MeasurementMatrix filteredCovariance =
@@ -566,7 +591,7 @@ calculateFilteredResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + filteredCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the smoothed residual and its covariance
@@ -589,10 +614,11 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   }
 
   auto subspaceHelper =
-      trackState.template fixedBoundSubspaceHelper<nMeasurementDim>();
+      trackState.template projectorSubspaceHelper<nMeasurementDim>();
 
-  auto measurement = trackState.calibrated();
-  auto measurementCovariance = trackState.calibratedCovariance();
+  auto measurement = trackState.template calibrated<nMeasurementDim>();
+  auto measurementCovariance =
+      trackState.template calibratedCovariance<nMeasurementDim>();
   MeasurementVector smoothed =
       subspaceHelper.projectVector(trackState.smoothed());
   MeasurementMatrix smoothedCovariance =
@@ -602,7 +628,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
   MeasurementMatrix residualCovariance =
       measurementCovariance + smoothedCovariance;
 
-  return std::pair(residual, residualCovariance);
+  return {residual, residualCovariance};
 }
 
 /// Helper function to calculate the predicted chi2
@@ -620,11 +646,13 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculatePredictedResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 
@@ -643,11 +671,13 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculateFilteredResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 
@@ -666,11 +696,13 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
 
   return visit_measurement(
       trackState.calibratedSize(),
-      [&]<std::size_t measdim>(std::integral_constant<std::size_t, measdim>) {
+      [&]<std::size_t measdim>(
+          std::integral_constant<std::size_t, measdim>) -> double {
         auto [residual, residualCovariance] =
             calculateSmoothedResidual<measdim>(trackState);
 
-        return residual.transpose() * residualCovariance.inverse() * residual;
+        return (residual.transpose() * residualCovariance.inverse() * residual)
+            .eval()(0, 0);
       });
 }
 

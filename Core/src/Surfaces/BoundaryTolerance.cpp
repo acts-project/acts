@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 
@@ -61,38 +60,59 @@ bool BoundaryTolerance::hasChi2Bound() const {
   return holdsVariant<Chi2Bound>();
 }
 
-bool BoundaryTolerance::hasTolerance() const {
+BoundaryTolerance::ToleranceMode BoundaryTolerance::toleranceMode() const {
+  using enum ToleranceMode;
   if (isInfinite()) {
-    return true;
+    return Extend;
   }
 
   if (isNone()) {
-    return false;
+    return None;
   }
 
   if (const auto* absoluteBound = getVariantPtr<AbsoluteBound>();
       absoluteBound != nullptr) {
-    return absoluteBound->tolerance0 != 0. || absoluteBound->tolerance1 != 0.;
+    if (absoluteBound->tolerance0 == 0. && absoluteBound->tolerance1 == 0.) {
+      return None;
+    }
+
+    return Extend;
   }
 
   if (const auto* absoluteCartesian = getVariantPtr<AbsoluteCartesian>();
       absoluteCartesian != nullptr) {
-    return absoluteCartesian->tolerance0 != 0. ||
-           absoluteCartesian->tolerance1 != 0.;
+    if (absoluteCartesian->tolerance0 == 0. &&
+        absoluteCartesian->tolerance1 == 0.) {
+      return None;
+    }
+
+    return Extend;
   }
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();
       absoluteEuclidean != nullptr) {
-    return absoluteEuclidean->tolerance != 0.;
+    if (absoluteEuclidean->tolerance == 0.) {
+      return None;
+    } else if (absoluteEuclidean->tolerance > 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   if (const auto* chi2Bound = getVariantPtr<Chi2Bound>();
       chi2Bound != nullptr) {
-    return chi2Bound->maxChi2 != 0.;
+    if (chi2Bound->maxChi2 == 0.) {
+      return None;
+    } else if (chi2Bound->maxChi2 >= 0.) {
+      return Extend;
+    } else {
+      return Shrink;
+    }
   }
 
   assert(false && "Unsupported tolerance type");
-  return false;
+  return None;
 }
 
 BoundaryTolerance::AbsoluteBound BoundaryTolerance::asAbsoluteBound(
@@ -149,9 +169,13 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* chi2Bound = getVariantPtr<Chi2Bound>();
       chi2Bound != nullptr) {
-    double chi2 = distance.transpose() * chi2Bound->weight * distance;
     // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
-    return chi2 <= 2 * chi2Bound->maxChi2;
+    double chi2 = distance.transpose() * chi2Bound->weight * distance;
+    if (chi2Bound->maxChi2 < 0) {
+      return chi2 > 2 * std::abs(chi2Bound->maxChi2);
+    } else {
+      return chi2 <= 2 * chi2Bound->maxChi2;
+    }
   }
 
   bool isCartesian = !jacobianOpt.has_value();
@@ -171,7 +195,11 @@ bool BoundaryTolerance::isTolerated(
 
   if (const auto* absoluteEuclidean = getVariantPtr<AbsoluteEuclidean>();
       absoluteEuclidean != nullptr) {
-    return cartesianDistance.norm() <= absoluteEuclidean->tolerance;
+    if (absoluteEuclidean->tolerance < 0) {
+      return cartesianDistance.norm() > std::abs(absoluteEuclidean->tolerance);
+    } else {
+      return cartesianDistance.norm() <= absoluteEuclidean->tolerance;
+    }
   }
 
   throw std::logic_error("Unsupported tolerance type");

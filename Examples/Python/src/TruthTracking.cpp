@@ -40,7 +40,7 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthTrackFinder, mex, "TruthTrackFinder", inputParticles,
-      inputMeasurementParticlesMap, outputProtoTracks);
+      inputParticleMeasurementsMap, outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticleTrackParamExtractor, mex,
                                 "ParticleTrackParamExtractor", inputParticles,
@@ -67,6 +67,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputParticleMeasurementsMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -84,6 +85,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(hitsMin);
+    ACTS_PYTHON_MEMBER(hitsMax);
     ACTS_PYTHON_MEMBER(measurementsMin);
     ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
@@ -159,7 +162,7 @@ void addTruthTracking(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
-      inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
+      inputParticles, inputParticleMeasurementsMap, inputSpacePoints,
       outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HitSelector, mex, "HitSelector",

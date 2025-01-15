@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -21,8 +20,30 @@
 #include <limits>
 #include <stdexcept>
 
-Acts::AnnulusBounds::AnnulusBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+namespace Acts {
+
+namespace {
+
+Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
+                         const SquareMatrix2& weight) {
+  // connecting vector
+  auto n = b - a;
+  // squared norm of line
+  auto f = (n.transpose() * weight * n).value();
+  // weighted scalar product of line to point and segment line
+  auto u = ((p - a).transpose() * weight * n).value() / f;
+  // clamp to [0, 1], convert to point
+  return std::clamp(u, 0., 1.) * n + a;
+}
+
+double squaredNorm(const Vector2& v, const SquareMatrix2& weight) {
+  return (v.transpose() * weight * v).value();
+}
+
+}  // namespace
+
+AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
+    false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
   m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
@@ -68,17 +89,13 @@ Acts::AnnulusBounds::AnnulusBounds(
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
   m_outLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMaxPhiRel));
   m_inLeftStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMaxPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMaxPhiRel));
   m_outRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMaxR), get(eMinPhiRel));
   m_inRightStripXY =
-      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
-             get(eMinPhiRel));
+      circIx(m_moduleOrigin[0], m_moduleOrigin[1], get(eMinR), get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -95,14 +112,33 @@ Acts::AnnulusBounds::AnnulusBounds(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::corners() const {
+std::vector<double> AnnulusBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void AnnulusBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMaxR) < 0. || get(eMinR) > get(eMaxR) ||
+      std::abs(get(eMinR) - get(eMaxR)) < s_epsilon) {
+    throw std::invalid_argument("AnnulusBounds: invalid radial setup.");
+  }
+  if (get(eMinPhiRel) != detail::radian_sym(get(eMinPhiRel)) ||
+      get(eMaxPhiRel) != detail::radian_sym(get(eMaxPhiRel)) ||
+      get(eMinPhiRel) > get(eMaxPhiRel)) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi boundary setup.");
+  }
+  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
+    throw std::invalid_argument("AnnulusBounds: invalid phi positioning.");
+  }
+}
+
+std::vector<Vector2> AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
+std::vector<Vector2> AnnulusBounds::vertices(
     unsigned int quarterSegments) const {
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
@@ -114,7 +150,7 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
-    std::vector<Acts::Vector2> rvertices =
+    std::vector<Vector2> rvertices =
         detail::VerticesHelper::segmentVertices<Vector2, Transform2>(
             {get(eMinR), get(eMinR)}, phiMinInner, phiMaxInner, {},
             quarterSegments);
@@ -128,20 +164,20 @@ std::vector<Acts::Vector2> Acts::AnnulusBounds::vertices(
     rvertices.insert(rvertices.end(), overtices.begin(), overtices.end());
 
     std::for_each(rvertices.begin(), rvertices.end(),
-                  [&](Acts::Vector2& rv) { rv += m_moduleOrigin; });
+                  [&](Vector2& rv) { rv += m_moduleOrigin; });
     return rvertices;
   }
   return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
           m_outLeftStripXY};
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                                 double tolPhi) const {
+bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
+                           double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by average phi
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[eBoundLoc1];
-  double rLoc = locpo_rotated[eBoundLoc0];
+  double phiLoc = locpo_rotated[1];
+  double rLoc = locpo_rotated[0];
 
   if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
       phiLoc > (get(eMaxPhiRel) + tolPhi)) {
@@ -151,18 +187,16 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   if (tolR == 0.) {
     // don't need R, can use R^2
-    double r_mod2 =
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
+    double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                    2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
 
     if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
     // use R
-    double r_mod = sqrt(
-        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
+    double r_mod = sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                        2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
@@ -171,9 +205,9 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool AnnulusBounds::inside(const Vector2& lposition,
+                           const BoundaryTolerance& boundaryTolerance) const {
+  using enum BoundaryTolerance::ToleranceMode;
   if (boundaryTolerance.isInfinite()) {
     return true;
   }
@@ -188,187 +222,230 @@ bool Acts::AnnulusBounds::inside(
                   absoluteBound->tolerance1);
   }
 
-  // first check if inside. We don't need to look into the covariance if inside
-  if (inside(lposition, 0., 0.)) {
+  bool insideStrict = inside(lposition, 0., 0.);
+
+  BoundaryTolerance::ToleranceMode mode = boundaryTolerance.toleranceMode();
+  if (mode == None) {
+    // first check if inside if we're in None tolerance mode. We don't need to
+    // look into the covariance if inside
+    return insideStrict;
+  }
+
+  if (mode == Extend && insideStrict) {
     return true;
   }
-
-  if (!boundaryTolerance.hasChi2Bound()) {
-    throw std::logic_error("not implemented");
-  }
-
-  const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
 
   // locpo is PC in STRIP SYSTEM
   // we need to rotate the locpo
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
 
-  // covariance is given in STRIP SYSTEM in PC we need to convert the covariance
-  // to the MODULE SYSTEM in PC via jacobian. The following transforms into
-  // STRIP XY, does the shift into MODULE XY, and then transforms into MODULE PC
+  // covariance is given in STRIP SYSTEM in PC we need to convert the
+  // covariance to the MODULE SYSTEM in PC via jacobian. The following
+  // transforms into STRIP XY, does the shift into MODULE XY, and then
+  // transforms into MODULE PC
   double dphi = get(eAveragePhi);
-  double phi_strip = locpo_rotated[eBoundLoc1];
-  double r_strip = locpo_rotated[eBoundLoc0];
-  double O_x = m_shiftXY[eBoundLoc0];
-  double O_y = m_shiftXY[eBoundLoc1];
+  double phi_strip = locpo_rotated[1];
+  double r_strip = locpo_rotated[0];
+  double O_x = m_shiftXY[0];
+  double O_y = m_shiftXY[1];
 
-  // For a transformation from cartesian into polar coordinates
-  //
-  //              [         _________      ]
-  //              [        /  2    2       ]
-  //              [      \/  x  + y        ]
-  //     [ r' ]   [                        ]
-  // v = [    ] = [      /       y        \]
-  //     [phi']   [2*atan|----------------|]
-  //              [      |       _________|]
-  //              [      |      /  2    2 |]
-  //              [      \x + \/  x  + y  /]
-  //
-  // Where x, y are polar coordinates that can be rotated by dPhi
-  //
-  // [x]   [O_x + r*cos(dPhi - phi)]
-  // [ ] = [                       ]
-  // [y]   [O_y - r*sin(dPhi - phi)]
-  //
-  // The general jacobian is:
-  //
-  //        [d        d      ]
-  //        [--(f_x)  --(f_x)]
-  //        [dx       dy     ]
-  // Jgen = [                ]
-  //        [d        d      ]
-  //        [--(f_y)  --(f_y)]
-  //        [dx       dy     ]
-  //
-  // which means in this case:
-  //
-  //     [     d                   d           ]
-  //     [ ----------(rMod)    ---------(rMod) ]
-  //     [ dr_{strip}          dphiStrip       ]
-  // J = [                                     ]
-  //     [    d                   d            ]
-  //     [----------(phiMod)  ---------(phiMod)]
-  //     [dr_{strip}          dphiStrip        ]
-  //
-  // Performing the derivative one gets:
-  //
-  //     [B*O_x + C*O_y + rStrip  rStrip*(B*O_y + O_x*sin(dPhi - phiStrip))]
-  //     [----------------------  -----------------------------------------]
-  //     [          ___                               ___                  ]
-  //     [        \/ A                              \/ A                   ]
-  // J = [                                                                 ]
-  //     [  -(B*O_y - C*O_x)           rStrip*(B*O_x + C*O_y + rStrip)     ]
-  //     [  -----------------          -------------------------------     ]
-  //     [          A                                 A                    ]
-  //
-  // where
-  //        2                                          2
-  // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y
-  //                                                 2
-  //     - 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip
-  // B = cos(dPhi - phiStrip)
-  // C = -sin(dPhi - phiStrip)
+  auto closestPointDistanceBound = [&](const SquareMatrix2& weight) {
+    // For a transformation from cartesian into polar coordinates
+    //
+    //              [         _________      ]
+    //              [        /  2    2       ]
+    //              [      \/  x  + y        ]
+    //     [ r' ]   [                        ]
+    // v = [    ] = [      /       y        \]
+    //     [phi']   [2*atan|----------------|]
+    //              [      |       _________|]
+    //              [      |      /  2    2 |]
+    //              [      \x + \/  x  + y  /]
+    //
+    // Where x, y are polar coordinates that can be rotated by dPhi
+    //
+    // [x]   [O_x + r*cos(dPhi - phi)]
+    // [ ] = [                       ]
+    // [y]   [O_y - r*sin(dPhi - phi)]
+    //
+    // The general jacobian is:
+    //
+    //        [d        d      ]
+    //        [--(f_x)  --(f_x)]
+    //        [dx       dy     ]
+    // Jgen = [                ]
+    //        [d        d      ]
+    //        [--(f_y)  --(f_y)]
+    //        [dx       dy     ]
+    //
+    // which means in this case:
+    //
+    //     [     d                   d           ]
+    //     [ ----------(rMod)    ---------(rMod) ]
+    //     [ dr_{strip}          dphiStrip       ]
+    // J = [                                     ]
+    //     [    d                   d            ]
+    //     [----------(phiMod)  ---------(phiMod)]
+    //     [dr_{strip}          dphiStrip        ]
+    //
+    // Performing the derivative one gets:
+    //
+    //     [B*O_x + C*O_y + rStrip  rStrip*(B*O_y + O_x*sin(dPhi - phiStrip))]
+    //     [----------------------  -----------------------------------------]
+    //     [          ___                               ___                  ]
+    //     [        \/ A                              \/ A                   ]
+    // J = [                                                                 ]
+    //     [  -(B*O_y - C*O_x)           rStrip*(B*O_x + C*O_y + rStrip)     ]
+    //     [  -----------------          -------------------------------     ]
+    //     [          A                                 A                    ]
+    //
+    // where
+    //        2                                          2
+    // A = O_x  + 2*O_x*rStrip*cos(dPhi - phiStrip) + O_y
+    //                                                 2
+    //     - 2*O_y*rStrip*sin(dPhi - phiStrip) + rStrip
+    // B = cos(dPhi - phiStrip)
+    // C = -sin(dPhi - phiStrip)
 
-  double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
-  double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
+    double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
+    double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
 
-  double A = O_x * O_x + 2 * O_x * r_strip * cosDPhiPhiStrip + O_y * O_y -
-             2 * O_y * r_strip * sinDPhiPhiStrip + r_strip * r_strip;
-  double sqrtA = std::sqrt(A);
+    double A = O_x * O_x + 2 * O_x * r_strip * cosDPhiPhiStrip + O_y * O_y -
+               2 * O_y * r_strip * sinDPhiPhiStrip + r_strip * r_strip;
+    double sqrtA = std::sqrt(A);
 
-  double B = cosDPhiPhiStrip;
-  double C = -sinDPhiPhiStrip;
-  ActsMatrix<2, 2> jacobianStripPCToModulePC;
-  jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
-  jacobianStripPCToModulePC(0, 1) =
-      r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
-  jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
-  jacobianStripPCToModulePC(1, 1) = r_strip * (B * O_x + C * O_y + r_strip) / A;
+    double B = cosDPhiPhiStrip;
+    double C = -sinDPhiPhiStrip;
+    SquareMatrix2 jacobianStripPCToModulePC;
+    jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
+    jacobianStripPCToModulePC(0, 1) =
+        r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
+    jacobianStripPCToModulePC(1, 0) = -(B * O_y - C * O_x) / A;
+    jacobianStripPCToModulePC(1, 1) =
+        r_strip * (B * O_x + C * O_y + r_strip) / A;
 
-  // Mahalanobis distance uses inverse covariance as weights
-  const auto& weightStripPC = boundaryToleranceChi2.weight;
-  auto weightModulePC = jacobianStripPCToModulePC.transpose() * weightStripPC *
-                        jacobianStripPCToModulePC;
+    // Mahalanobis distance uses inverse covariance as weights
+    const auto& weightStripPC = weight;
+    auto weightModulePC = jacobianStripPCToModulePC.transpose() *
+                          weightStripPC * jacobianStripPCToModulePC;
 
-  double minDist = std::numeric_limits<double>::max();
+    double minDist = std::numeric_limits<double>::max();
+    Vector2 delta;
 
-  Vector2 currentClosest;
-  double currentDist = 0;
+    Vector2 currentClosest;
+    double currentDist = 0;
 
-  // do projection in STRIP PC
+    // do projection in STRIP PC
 
-  // first: STRIP system. locpo is in STRIP PC already
-  currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
-  minDist = currentDist;
-
-  currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                    locpo_rotated, weightStripPC);
-  currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
-  if (currentDist < minDist) {
+    // first: STRIP system. locpo is in STRIP PC already
+    currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
+                                      locpo_rotated, weightStripPC);
+    currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
     minDist = currentDist;
+    delta = locpo_rotated - currentClosest;
+    currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
+                                      locpo_rotated, weightStripPC);
+    currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      delta = locpo_rotated - currentClosest;
+    }
+
+    // now: MODULE system. Need to transform locpo to MODULE PC
+    //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
+    Vector2 locpoStripXY(
+        locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
+        locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
+    Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
+
+    // now check edges in MODULE PC (inner and outer circle) assuming
+    // Mahalanobis distances are of same unit if covariance is correctly
+    // transformed
+    currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
+                                      locpoModulePC, weightModulePC);
+    currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      delta = jacobianStripPCToModulePC.inverse() *
+              (currentClosest - locpoModulePC);
+    }
+
+    currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
+                                      locpoModulePC, weightModulePC);
+    currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
+    if (currentDist < minDist) {
+      minDist = currentDist;
+      delta = jacobianStripPCToModulePC.inverse() *
+              (currentClosest - locpoModulePC);
+    }
+
+    return std::tuple{delta, minDist};
+  };
+
+  if (boundaryTolerance.hasChi2Bound()) {
+    const auto& boundaryToleranceChi2 = boundaryTolerance.asChi2Bound();
+
+    // Calculate minDist based on weight from the boundary tolerance object.
+    // That weight matrix is in STRIP PC
+    auto [delta, minDist] =
+        closestPointDistanceBound(boundaryToleranceChi2.weight);
+
+    // compare resulting Mahalanobis distance to configured "number of sigmas"
+    // we square it b/c we never took the square root of the distance
+    if (mode == Extend) {
+      return minDist <
+             boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
+    } else if (mode == Shrink) {
+      return minDist > boundaryToleranceChi2.maxChi2 *
+                           boundaryToleranceChi2.maxChi2 &&
+             insideStrict;
+    }
+  } else if (boundaryTolerance.hasAbsoluteEuclidean()) {
+    const auto& boundaryToleranceAbsoluteEuclidean =
+        boundaryTolerance.asAbsoluteEuclidean();
+
+    SquareMatrix2 jacobianPCToXY;
+    jacobianPCToXY(0, 0) = std::cos(phi_strip);
+    jacobianPCToXY(0, 1) = -r_strip * std::sin(phi_strip);
+    jacobianPCToXY(1, 0) = std::sin(phi_strip);
+    jacobianPCToXY(1, 1) = r_strip * std::cos(phi_strip);
+
+    // This is J.T * J but we can also calculate it directly
+    SquareMatrix2 weightStripPC;
+    weightStripPC(0, 0) = 1;
+    weightStripPC(0, 1) = 0;
+    weightStripPC(1, 0) = 0;
+    weightStripPC(1, 1) = r_strip * r_strip;
+
+    auto [delta, minDist] = closestPointDistanceBound(weightStripPC);
+
+    Vector2 cartesianDistance = jacobianPCToXY * delta;
+
+    if (mode == Extend) {
+      return cartesianDistance.squaredNorm() <
+             boundaryToleranceAbsoluteEuclidean.tolerance *
+                 boundaryToleranceAbsoluteEuclidean.tolerance;
+    } else if (mode == Shrink) {
+      return cartesianDistance.squaredNorm() >
+                 boundaryToleranceAbsoluteEuclidean.tolerance *
+                     boundaryToleranceAbsoluteEuclidean.tolerance &&
+             insideStrict;
+    }
   }
 
-  // now: MODULE system. Need to transform locpo to MODULE PC
-  //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
-  Vector2 locpoStripXY(
-      locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
-      locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
-  Vector2 locpoModulePC = stripXYToModulePC(locpoStripXY);
-
-  // now check edges in MODULE PC (inner and outer circle) assuming Mahalanobis
-  // distances are of same unit if covariance is correctly transformed
-  currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
-  if (currentDist < minDist) {
-    minDist = currentDist;
-  }
-
-  currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                    locpoModulePC, weightModulePC);
-  currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
-  if (currentDist < minDist) {
-    minDist = currentDist;
-  }
-
-  // compare resulting Mahalanobis distance to configured "number of sigmas" we
-  // square it b/c we never took the square root of the distance
-  return minDist <
-         boundaryToleranceChi2.maxChi2 * boundaryToleranceChi2.maxChi2;
+  throw std::logic_error("not implemented");
 }
 
-Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
-    const Vector2& vStripXY) const {
+Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
   Vector2 vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
 }
 
-Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
-    const Vector2& a, const Vector2& b, const Vector2& p,
-    const SquareMatrix2& weight) const {
-  // connecting vector
-  auto n = b - a;
-  // squared norm of line
-  auto f = (n.transpose() * weight * n).value();
-  // weighted scalar product of line to point and segment line
-  auto u = ((p - a).transpose() * weight * n).value() / f;
-  // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.), 1.) * n + a;
-}
-
-double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SquareMatrix2& weight) const {
-  return (v.transpose() * weight * v).value();
-}
-
-Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
+Vector2 AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
-// Ostream operator overload
-std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
+std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";
@@ -379,3 +456,5 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setprecision(-1);
   return sl;
 }
+
+}  // namespace Acts

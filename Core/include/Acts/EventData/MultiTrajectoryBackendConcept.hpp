@@ -56,7 +56,7 @@ concept CommonMultiTrajectoryBackend =
 
       {
         cv.template calibrated_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const ActsVector<2>>>;
+      } -> std::same_as<Eigen::Map<const Vector2>>;
 
       {
         cv.template calibratedCovariance_impl<2>(istate)
@@ -86,7 +86,7 @@ concept ConstMultiTrajectoryBackend =
 
       {
         v.template calibrated_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<const ActsVector<2>>>;
+      } -> std::same_as<Eigen::Map<const Vector2>>;
 
       {
         v.template calibratedCovariance_impl<2>(istate)
@@ -107,7 +107,7 @@ concept MutableMultiTrajectoryBackend =
 
       {
         v.template calibrated_impl<2>(istate)
-      } -> std::same_as<Eigen::Map<ActsVector<2>>>;
+      } -> std::same_as<Eigen::Map<Vector2>>;
 
       {
         v.template calibratedCovariance_impl<2>(istate)
@@ -131,13 +131,13 @@ concept MutableMultiTrajectoryBackend =
       { v.template addColumn_impl<double>(col) };
 
       {
-        v.template allocateCalibrated_impl(istate, ActsVector<1>{},
-                                           ActsSquareMatrix<1>{})
+        v.allocateCalibrated_impl(istate, ActsVector<1>{},
+                                  ActsSquareMatrix<1>{})
       };
       // Assuming intermediate values also work
       {
-        v.template allocateCalibrated_impl(istate, ActsVector<eBoundSize>{},
-                                           ActsSquareMatrix<eBoundSize>{})
+        v.allocateCalibrated_impl(istate, ActsVector<eBoundSize>{},
+                                  ActsSquareMatrix<eBoundSize>{})
       };
 
       { v.setUncalibratedSourceLink_impl(istate, std::move(sl)) };
