@@ -440,7 +440,14 @@ if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
     find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
-    find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
+    find_package(podio ${_acts_podio_version} CONFIG)
+    if(NOT podio_FOUND)
+        message(
+            STATUS
+            "Podio not found, trying ${_acts_podio_fallback_version} version"
+        )
+        find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
+    endif()
     find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
