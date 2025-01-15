@@ -27,8 +27,9 @@ constexpr std::size_t N_SEG_CONNS = 6;          // was 6
 template <typename space_point_t>
 struct GbtsSP {
   const space_point_t *SP;  // want inside to have pointer
-  int gbtsID;
-  int combined_ID;
+  int gbtsID;  // used to access detector layer information in connector input
+               // file
+  int combined_ID;  // includes eta id which references the detector module
   bool m_isPixel;
   float m_phi;
   float m_r;
