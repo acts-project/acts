@@ -8,7 +8,6 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
-#include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
@@ -175,17 +174,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_STRUCT_END();
-  }
-  {
-    using Alg = Acts::CugraphTrackBuilding;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "CugraphTrackBuilding")
-                   .def(py::init([](Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              getDefaultLogger("EdgeClassifier", lvl));
-                        }),
-                        py::arg("level"));
   }
 #endif
 

@@ -6,28 +6,23 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    list(
-        APPEND
-        SOURCES
-        src/OnnxEdgeClassifier.cpp
-        src/OnnxMetricLearning.cpp
-        src/CugraphTrackBuilding.cpp
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/OnnxEdgeClassifier.cpp src/OnnxMetricLearning.cpp
     )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
-    list(
-        APPEND
-        SOURCES
-        src/TorchEdgeClassifier.cpp
-        src/TorchMetricLearning.cpp
-        src/BoostTrackBuilding.cpp
-        src/TorchTruthGraphMetricsHook.cpp
-        src/TorchGraphStoreHook.cpp
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE
+            src/TorchEdgeClassifier.cpp
+            src/TorchMetricLearning.cpp
+            src/BoostTrackBuilding.cpp
+            src/TorchTruthGraphMetricsHook.cpp
+            src/TorchGraphStoreHook.cpp
     )
 endif()
-
-add_library(ActsPluginExaTrkX SHARED ${SOURCES})
 
 target_include_directories(
     ActsPluginExaTrkX
@@ -50,15 +45,21 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     set_target_properties(
         ActsPluginExaTrkX
         PROPERTIES
-            CUDA_STANDARD 17
+            CUDA_STANDARD 20
             CUDA_STANDARD_REQUIRED ON
             CUDA_SEPARABLE_COMPILATION ON
+    )
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:-g
+            --generate-line-info
+            --extended-lambda>
     )
     target_compile_definitions(
         ActsPluginExaTrkX
         PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-    target_compile_definitions(ActsPluginExaTrkX PUBLIC NO_CUGRAPH_OPS)
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
@@ -69,10 +70,7 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
         PUBLIC ACTS_EXATRKX_ONNX_BACKEND
     )
 
-    target_link_libraries(
-        ActsPluginExaTrkX
-        PRIVATE OnnxRuntime cugraph::cugraph
-    )
+    target_link_libraries(ActsPluginExaTrkX PRIVATE OnnxRuntime)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
