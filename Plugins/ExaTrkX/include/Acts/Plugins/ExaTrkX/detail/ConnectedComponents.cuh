@@ -95,7 +95,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
     }*/
 
     __syncthreads();
-  } while (changed == true)
+  } while (changed == true);
 }
 
 template <typename T>
