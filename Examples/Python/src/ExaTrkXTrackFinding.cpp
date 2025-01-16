@@ -100,6 +100,17 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(useEdgeFeatures);
     ACTS_PYTHON_STRUCT_END();
   }
+  {
+    using Alg = Acts::BoostTrackBuilding;
+
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "BoostTrackBuilding")
+                   .def(py::init([](Logging::Level lvl) {
+                          return std::make_shared<Alg>(
+                              getDefaultLogger("EdgeClassifier", lvl));
+                        }),
+                        py::arg("level"));
+  }
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_TENSORRT
@@ -125,18 +136,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(deviceID);
     ACTS_PYTHON_MEMBER(doSigmoid);
     ACTS_PYTHON_STRUCT_END();
-  }
-#endif
-  {
-    using Alg = Acts::BoostTrackBuilding;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "BoostTrackBuilding")
-                   .def(py::init([](Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              getDefaultLogger("EdgeClassifier", lvl));
-                        }),
-                        py::arg("level"));
   }
 #endif
 
