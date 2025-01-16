@@ -65,7 +65,7 @@ ProcessCode BufferedReader::read(const AlgorithmContext &ctx) {
   std::uniform_int_distribution<std::size_t> dist(0, m_cfg.bufferSize - 1);
 
   const auto entry = dist(rng);
-  ctx.eventStore.copyFrom(m_buffer.at(entry));
+  ctx.eventStore.copyFrom(*m_buffer.at(entry));
 
   ACTS_DEBUG("Use buffer entry " << entry << " for event " << ctx.eventNumber);
 
