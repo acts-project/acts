@@ -53,7 +53,6 @@ class WhiteBoard {
   void copyFrom(const WhiteBoard& other);
 
  private:
- private:
   /// Find similar names for suggestions with levenshtein-distance
   std::vector<std::string_view> similarNames(const std::string_view& name,
                                              int distThreshold,
