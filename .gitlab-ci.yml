@@ -213,6 +213,7 @@ build_gnn_tensorrt:
     - >
       cmake -B build -S src
       -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_EXATRKX_ENABLE_TORCH=OFF
       -DACTS_EXATRKX_ENABLE_TENSORRT=ON
       -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
