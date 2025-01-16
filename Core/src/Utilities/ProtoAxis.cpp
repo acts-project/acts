@@ -17,7 +17,6 @@ Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
       m_axisBoundaryType(abType),
       m_edges(edges),
       m_autorange(false) {
-
   if (m_edges.size() < 2) {
     throw std::invalid_argument(
         "ProtoBinning: Invalid binning, at least two bin edges are needed.");

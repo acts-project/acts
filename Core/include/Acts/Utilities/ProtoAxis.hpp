@@ -42,8 +42,7 @@ class ProtoAxis : public IAxis {
   /// @param nbins the number of bins
   ///
   /// @note that auto-range is only supported for equidistant binning
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           std::size_t nbins);
+  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
 
   /// @brief returns whether the axis is equidistant
   ///
