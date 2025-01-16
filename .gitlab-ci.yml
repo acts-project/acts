@@ -188,7 +188,7 @@ test_exatrkx_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404_tensorrt:sha-b4f481f@sha256:8887aa00ad4394a53b4ca54968121d8893d537e5daf50805f1dd2030caef78ce
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:74
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
