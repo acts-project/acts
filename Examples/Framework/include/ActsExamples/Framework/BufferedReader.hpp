@@ -54,7 +54,7 @@ class BufferedReader final : public IReader {
   }
 
   /// Return a event from the buffer
-  ProcessCode read(const AlgorithmContext& context) override;
+  ProcessCode read(const AlgorithmContext& ctx) override;
 
   /// Fulfill the algorithm interface
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
