@@ -83,7 +83,6 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
 
       if (!ForcedSurfaceReached::checkAbort(singleState, singleStepper,
                                             navigator, logger)) {
-        cmp.status() = Acts::IntersectionStatus::reachable;
         reached = false;
       } else {
         cmp.status() = Acts::IntersectionStatus::onSurface;

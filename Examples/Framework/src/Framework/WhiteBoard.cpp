@@ -37,9 +37,9 @@ inline int levenshteinDistance(const std::string_view &a,
   }
 
   // Fill matrix
-  for (std::size_t j = 1; j < b.size() + 1; ++j) {
-    for (std::size_t i = 1; i < a.size() + 1; ++i) {
-      const auto substitutionCost = a[i] == b[j] ? 0 : 1;
+  for (std::size_t j = 1; j < b.size(); ++j) {
+    for (std::size_t i = 1; i < a.size(); ++i) {
+      const auto substitutionCost = a.at(i) == b.at(j) ? 0 : 1;
 
       std::array<int, 3> possibilities = {{
           d(i - 1, j) + 1,                    // deletion
