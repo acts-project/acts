@@ -85,13 +85,14 @@ std::string ActsExamples::WhiteBoard::typeMismatchMessage(
                      boost::core::demangle(act)};
 }
 
-void ActsExamples::WhiteBoard::shareDataWith(WhiteBoard &other) const {
-  for (auto &[key, val] : m_store) {
-    auto [it, success] = other.m_store.insert({key, val});
+void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
+  for (auto &[key, val] : other.m_store) {
+    auto [it, success] = m_store.insert({key, val});
 
     if (!success) {
-      throw std::runtime_error("Cannot share key '" + key +
+      throw std::runtime_error("Cannot insert key '" + key +
                                "', is already present");
     }
+    ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
   }
 }

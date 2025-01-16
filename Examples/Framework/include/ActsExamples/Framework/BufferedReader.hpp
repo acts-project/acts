@@ -26,15 +26,15 @@ class WhiteBoard;
 class BufferedReader final : public IReader {
  public:
   struct Config {
-    /// The downstream reader that should be used
-    std::shared_ptr<IReader> downstreamReader;
+    /// The upstream reader that should be used
+    std::shared_ptr<IReader> upstreamReader;
 
     /// The seed for sampling events from the buffer
     std::size_t selectionSeed = 123456;
 
     /// Buffer size. The reader will throw and exception if the downstream
     /// reader does not provide enough events
-    std::size_t bufferSize;
+    std::size_t bufferSize = 1;
   };
 
   /// Constructed the reader
@@ -45,7 +45,7 @@ class BufferedReader final : public IReader {
 
   /// Give the reader a understandable name
   std::string name() const override {
-    return "Buffered" + m_cfg.downstreamReader->name();
+    return "Buffered" + m_cfg.upstreamReader->name();
   }
 
   /// The buffered reader provides the maximum available event range

@@ -42,7 +42,7 @@ void addInput(Context& ctx) {
 
   // Buffered reader
   ACTS_PYTHON_DECLARE_READER(ActsExamples::BufferedReader, mex,
-                             "BufferedReader", downstreamReader, selectionSeed,
+                             "BufferedReader", upstreamReader, selectionSeed,
                              bufferSize);
 
   // ROOT READERS

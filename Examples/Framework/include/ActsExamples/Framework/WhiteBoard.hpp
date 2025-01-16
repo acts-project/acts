@@ -18,7 +18,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
 #include <utility>
@@ -46,12 +45,12 @@ class WhiteBoard {
 
   bool exists(const std::string& name) const;
 
-  /// Adds the data of this whiteboard instance to another whiteboard.
+  /// Copies key from another whiteboard to this whiteboard.
   /// This is a low overhead operation, since the data holders are
   /// shared pointers.
-  /// Throws an exception if the other whiteboard already contains one of
-  /// the keys in this whiteboard.
-  void shareDataWith(WhiteBoard& other) const;
+  /// Throws an exception if this whiteboard already contains one of
+  /// the keys in the other whiteboard.
+  void copyFrom(const WhiteBoard& other);
 
  private:
   /// Store an object on the white board and transfer ownership.

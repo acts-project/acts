@@ -471,7 +471,7 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
     s2.addReader(
         acts.examples.BufferedReader(
             level=acts.logging.WARNING,
-            downstreamReader=reader,
+            upstreamReader=reader,
             bufferSize=eventsInBuffer,
         )
     )
