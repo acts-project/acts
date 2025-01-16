@@ -188,7 +188,7 @@ test_exatrkx_python:
 
 build_gnn_tensorrt:
   stage: build
-  image: nvcr.io/nvidia/tensorrt:24.12-py3
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:sha-b4f481f@sha256:8887aa00ad4394a53b4ca54968121d8893d537e5daf50805f1dd2030caef78ce
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
@@ -204,40 +204,6 @@ build_gnn_tensorrt:
     - docker-gpu-nvidia
 
   script:
-    - apt-get update -y
-    - apt-get upgrade -y
-    - >
-      apt-get install -y
-      build-essential
-      curl
-      git
-      freeglut3-dev
-      libexpat-dev
-      libftgl-dev
-      libgl2ps-dev
-      libglew-dev
-      libgsl-dev
-      liblz4-dev
-      liblzma-dev
-      libpcre3-dev
-      libx11-dev
-      libxext-dev
-      libxft-dev
-      libxpm-dev
-      libxerces-c-dev
-      libzstd-dev
-      zstd
-      ninja-build
-      python3
-      python3-dev
-      python3-pip
-      rsync
-      unzip
-      zlib1g-dev
-      ccache
-      libsqlite3-dev
-      time
-    - apt-get clean -y
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
@@ -250,7 +216,9 @@ build_gnn_tensorrt:
       -DACTS_EXATRKX_ENABLE_TENSORRT=ON
       -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
 
 
 build_linux_ubuntu:
