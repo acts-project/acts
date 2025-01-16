@@ -8,4 +8,5 @@ target_sources(
         TrackHelpers.cpp
         Intersection.cpp
         GraphViz.cpp
+        ProtoAxis.cpp
 )
