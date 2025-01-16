@@ -92,35 +92,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   }
 
   // Set the branches
-
-  // Set object pointer
-  CLhardware = nullptr;
-  CLparticleLink_eventIndex = nullptr;
-  CLparticleLink_barcode = nullptr;
-  CLbarcodesLinked = nullptr;
-  CLparticle_charge = nullptr;
-  CLphis = nullptr;
-  CLetas = nullptr;
-  CLtots = nullptr;
-  CLlocal_cov = nullptr;
-  Part_vParentID = nullptr;
-  Part_vParentBarcode = nullptr;
-  SPtopStripDirection = nullptr;
-  SPbottomStripDirection = nullptr;
-  SPstripCenterDistance = nullptr;
-  SPtopStripCenterPosition = nullptr;
-  TRKproperties = nullptr;
-  TRKpattern = nullptr;
-  TRKmeasurementsOnTrack_pixcl_sctcl_index = nullptr;
-  TRKoutliersOnTrack_pixcl_sctcl_index = nullptr;
-  TRKperigee_position = nullptr;
-  TRKperigee_momentum = nullptr;
-  DTTtrajectory_eventindex = nullptr;
-  DTTtrajectory_barcode = nullptr;
-  DTTstTruth_subDetType = nullptr;
-  DTTstTrack_subDetType = nullptr;
-  DTTstCommon_subDetType = nullptr;
-
   m_inputchain->SetBranchAddress("run_number", &run_number);
   m_inputchain->SetBranchAddress("event_number", &event_number);
   m_inputchain->SetBranchAddress("nSE", &nSE);
