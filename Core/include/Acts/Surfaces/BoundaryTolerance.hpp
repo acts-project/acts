@@ -53,7 +53,7 @@ namespace Acts {
 /// coordinates.
 ///
 class BoundaryTolerance {
- private:
+ public:
   struct InfiniteParams {};
 
   struct NoneParams {};
@@ -107,6 +107,7 @@ class BoundaryTolerance {
         : maxChi2(maxChi2_), weight(weight_) {}
   };
 
+ private:
   /// Underlying variant type
   using Variant = std::variant<InfiniteParams, NoneParams, AbsoluteBoundParams,
                                AbsoluteCartesianParams, AbsoluteEuclideanParams,
