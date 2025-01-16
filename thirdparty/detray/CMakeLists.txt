@@ -89,6 +89,7 @@ set(DETRAY_SETUP_DFELIBS
     "Do not set up Dfelibs as part of Detray"
 )
 set(DETRAY_SVG_DISPLAY OFF CACHE BOOL "No not build the ActSVG display module")
+set(DETRAY_BUILD_CUDA OFF CACHE BOOL "Turn off the detray CUDA build")
 
 #Now set up its build.
 FetchContent_MakeAvailable(Detray)

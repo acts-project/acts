@@ -63,6 +63,8 @@ set(TRACCC_BUILD_BENCHMARKS
     CACHE BOOL
     "Turn off the build of the Traccc benchmarks"
 )
+set(TRACCC_BUILD_IO OFF CACHE BOOL "Turn off the build of the Traccc IO code")
+set(TRACCC_BUILD_CUDA OFF CACHE BOOL "Turn on/off the traccc CUDA build")
 
 # Now set up its build.
 FetchContent_MakeAvailable(traccc)
