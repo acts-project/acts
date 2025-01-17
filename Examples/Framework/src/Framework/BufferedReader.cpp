@@ -23,7 +23,7 @@ BufferedReader::BufferedReader(const Config &config, Acts::Logging::Level level)
     throw std::invalid_argument("No upstream reader provided!");
   }
 
-  // Register write and read handles of the downstream reader
+  // Register write and read handles of the upstream reader
   for (auto rh : m_cfg.upstreamReader->readHandles()) {
     registerReadHandle(*rh);
   }

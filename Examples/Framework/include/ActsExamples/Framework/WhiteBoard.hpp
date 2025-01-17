@@ -71,7 +71,7 @@ class WhiteBoard {
     const std::type_info& type() const override { return typeid(T); }
   };
 
-  /// Store an holder on the white board and transfer ownership.
+  /// Store a holder on the white board.
   ///
   /// @param name Non-empty identifier to store it under
   /// @param holder The holder to store
