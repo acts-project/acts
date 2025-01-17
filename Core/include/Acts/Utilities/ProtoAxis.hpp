@@ -62,14 +62,14 @@ class ProtoAxis {
   /// @brief check if this is an auto-range binning
   bool isAutorange() const;
 
+  /// Dump into a string
+  /// @return the string representation
+  std::string toString() const;
+
  protected:
   /// Dispatch to the correct stream operator
   /// @param os output stream
   void toStream(std::ostream& os) const;
-
-  /// Dump into a string
-  /// @return the string representation
-  std::string toString() const;
 
   /// The axis direction
   AxisDirection m_axisDir = AxisDirection::AxisX;

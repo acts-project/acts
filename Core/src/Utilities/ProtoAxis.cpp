@@ -65,7 +65,7 @@ std::string Acts::ProtoAxis::toString() const {
                                                    : ", equidistant ");
   if (!m_autorange) {
     const auto& edges = getAxis().getBinEdges();
-    ss << "within [" << edges.front() << ", " << edges.back() << "] ";
+    ss << "within [" << edges.front() << ", " << edges.back() << "]";
   } else {
     ss << "within automatic range";
   }

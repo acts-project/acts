@@ -46,6 +46,11 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
 
   CHECK_CLOSE_ABS(epab.getAxis().getMax(), 1.0, 1e-15);
 
+  std::string rString =
+      "ProtoAxis: 10 bins in AxisX, equidistant within [0, 1]";
+  std::string oString = epab.toString();
+  BOOST_CHECK_EQUAL(rString, oString);
+
   // Open, equidistant axis
   Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
 
@@ -88,6 +93,11 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
 
   BOOST_CHECK_EQUAL(epa.getAxis().getNBins(), 10);
 
+  std::string rString =
+      "ProtoAxis: 10 bins in AxisX, equidistant within automatic range";
+  std::string oString = epa.toString();
+  BOOST_CHECK_EQUAL(rString, oString);
+
   // Invalid constructor, closed with somethgin else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
 }
@@ -123,6 +133,10 @@ BOOST_AUTO_TEST_CASE(VariabletProtoAxis) {
 
   CHECK_CLOSE_ABS(vpab.getAxis().getMax(), 10.0, 1e-15);
 
+  std::string rString = "ProtoAxis: 2 bins in AxisX, variable within [0, 10]";
+  std::string oString = vpab.toString();
+  BOOST_CHECK_EQUAL(rString, oString);
+
   // Invalid constructor, min > max
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, std::vector<double>{2.}),
                     std::invalid_argument);
@@ -132,8 +146,12 @@ BOOST_AUTO_TEST_CASE(VariabletProtoAxis) {
                     std::invalid_argument);
 
   // Invalid constructor, closed with somethgin else than phi or rphi
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, {0., 1., 2., 3.}),
-                    std::invalid_argument);
+  std::vector<Acts::AxisDirection> invalidDirections = {
+      AxisX, AxisY, AxisZ, AxisR, AxisEta, AxisTheta, AxisMag};
+  for (const auto& adir : invalidDirections) {
+    BOOST_CHECK_THROW(Acts::ProtoAxis(adir, Closed, {0., 1., 2., 3.}),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
