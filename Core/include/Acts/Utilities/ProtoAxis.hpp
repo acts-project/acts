@@ -53,6 +53,11 @@ class ProtoAxis {
   /// @note that auto-range is only supported for equidistant binning
   ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
 
+  ProtoAxis(const ProtoAxis&) = delete;
+  ProtoAxis& operator=(const ProtoAxis&) = delete;
+  ProtoAxis(ProtoAxis&&) = default;
+  ProtoAxis& operator=(ProtoAxis&&) = default;
+
   /// @brief returns the axis direction
   ///
   /// @return @c AxisDirection of this axis
@@ -91,7 +96,7 @@ class ProtoAxis {
 ///
 /// @param a the proto axis
 ///
-/// @return an IGrid unique ptr
+/// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
   return a.getAxis().visit([&](const auto& axis) -> std::unique_ptr<IGrid> {
@@ -108,7 +113,7 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 /// @param a the first proto axis
 /// @param b the second proto axis
 ///
-/// @return an IGrid unique ptr
+/// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   return a.getAxis().visit([&](const auto& axisA) -> std::unique_ptr<IGrid> {

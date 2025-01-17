@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 0.0, 1.0, 0),
                     std::invalid_argument);
 
-  // Invalid constructor, closed with somethgin else than phi or rphi
+  // Invalid constructor, closed with something else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 0.0, 1.0, 10),
                     std::invalid_argument);
 }
@@ -121,11 +121,11 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   std::string oString = epa.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
-  // Invalid constructor, closed with somethgin else than phi or rphi
+  // Invalid constructor, closed with something else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(VariabletProtoAxis) {
+BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   using enum Acts::AxisBoundaryType;
   using enum Acts::AxisDirection;
   using enum Acts::AxisType;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(VariabletProtoAxis) {
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, {3., 2., 1}),
                     std::invalid_argument);
 
-  // Invalid constructor, closed with somethgin else than phi or rphi
+  // Invalid constructor, closed with something else than phi or rphi
   std::vector<Acts::AxisDirection> invalidDirections = {
       AxisX, AxisY, AxisZ, AxisR, AxisEta, AxisTheta, AxisMag};
   for (const auto& adir : invalidDirections) {
