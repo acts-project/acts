@@ -12,8 +12,8 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <iosfwd>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
