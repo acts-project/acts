@@ -67,6 +67,11 @@ std::vector<std::string_view> ActsExamples::WhiteBoard::similarNames(
       names.push_back({d, n});
     }
   }
+  for (const auto &[from, to] : m_objectAliases) {
+    if (const auto d = levenshteinDistance(from, name); d < distThreshold) {
+      names.push_back({d, from});
+    }
+  }
 
   std::ranges::sort(names, {}, [](const auto &n) { return n.first; });
 
@@ -83,4 +88,37 @@ std::string ActsExamples::WhiteBoard::typeMismatchMessage(
   return std::string{"Type mismatch for '" + name + "'. Requested " +
                      boost::core::demangle(req) + " but actually " +
                      boost::core::demangle(act)};
+}
+
+void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
+  for (auto &[key, val] : other.m_store) {
+    addHolder(key, val);
+    ACTS_VERBOSE("Copied key '" << key << "' to whiteboard");
+  }
+}
+
+void ActsExamples::WhiteBoard::addHolder(const std::string &name,
+                                         std::shared_ptr<IHolder> holder) {
+  if (name.empty()) {
+    throw std::invalid_argument("Object can not have an empty name");
+  }
+
+  if (holder == nullptr) {
+    throw std::invalid_argument("Object '" + name + "' is nullptr");
+  }
+
+  auto [storeIt, success] = m_store.insert({name, std::move(holder)});
+
+  if (!success) {
+    throw std::invalid_argument("Object '" + name + "' already exists");
+  }
+  ACTS_VERBOSE("Added object '" << name << "' of type "
+                                << storeIt->second->type().name());
+
+  if (success) {
+    if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
+      m_store[it->second] = storeIt->second;
+      ACTS_VERBOSE("Added alias object '" << it->second << "'");
+    }
+  }
 }
