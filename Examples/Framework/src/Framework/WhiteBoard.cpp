@@ -107,7 +107,7 @@ void ActsExamples::WhiteBoard::addHolder(const std::string &name,
     throw std::invalid_argument("Object '" + name + "' is nullptr");
   }
 
-  auto [storeIt, success] = m_store.insert({name, std::move(holder)});
+  auto [storeIt, success] = m_store.insert({name, holder});
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
