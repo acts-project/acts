@@ -85,6 +85,8 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   }
 #endif
 
+  torch::NoGradGuard noGradGuard;
+
   auto nodeFeatures = std::any_cast<torch::Tensor>(inNodeFeatures).to(device);
   auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(device);
 
