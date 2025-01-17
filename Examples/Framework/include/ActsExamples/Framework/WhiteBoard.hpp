@@ -38,28 +38,20 @@ class WhiteBoard {
           Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
       std::unordered_multimap<std::string, std::string> objectAliases = {});
 
-  // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
   WhiteBoard& operator=(const WhiteBoard&) = delete;
 
+  WhiteBoard(WhiteBoard&& other) = default;
+  WhiteBoard& operator=(WhiteBoard&& other) = default;
+
   bool exists(const std::string& name) const;
 
- private:
-  /// Store an object on the white board and transfer ownership.
-  ///
-  /// @param name Non-empty identifier to store it under
-  /// @param object Movable reference to the transferable object
-  /// @throws std::invalid_argument on empty or duplicate name
-  template <typename T>
-  void add(const std::string& name, T&& object);
-
-  /// Get access to a stored object.
-  ///
-  /// @param[in] name Identifier for the object
-  /// @return reference to the stored object
-  /// @throws std::out_of_range if no object is stored under the requested name
-  template <typename T>
-  const T& get(const std::string& name) const;
+  /// Copies key from another whiteboard to this whiteboard.
+  /// This is a low overhead operation, since the data holders are
+  /// shared pointers.
+  /// Throws an exception if this whiteboard already contains one of
+  /// the keys in the other whiteboard.
+  void copyFrom(const WhiteBoard& other);
 
  private:
   /// Find similar names for suggestions with levenshtein-distance
@@ -79,6 +71,30 @@ class WhiteBoard {
     explicit HolderT(T&& v) : value(std::move(v)) {}
     const std::type_info& type() const override { return typeid(T); }
   };
+
+  /// Store a holder on the white board.
+  ///
+  /// @param name Non-empty identifier to store it under
+  /// @param holder The holder to store
+  /// @throws std::invalid_argument on empty or duplicate name
+  void addHolder(const std::string& name, std::shared_ptr<IHolder> holder);
+
+  /// Store an object on the white board and transfer ownership.
+  ///
+  /// @param name Non-empty identifier to store it under
+  /// @param object Movable reference to the transferable object
+  template <typename T>
+  void add(const std::string& name, T&& object) {
+    addHolder(name, std::make_shared<HolderT<T>>(std::forward<T>(object)));
+  }
+
+  /// Get access to a stored object.
+  ///
+  /// @param[in] name Identifier for the object
+  /// @return reference to the stored object
+  /// @throws std::out_of_range if no object is stored under the requested name
+  template <typename T>
+  const T& get(const std::string& name) const;
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
@@ -102,27 +118,6 @@ inline ActsExamples::WhiteBoard::WhiteBoard(
     std::unique_ptr<const Acts::Logger> logger,
     std::unordered_multimap<std::string, std::string> objectAliases)
     : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
-
-template <typename T>
-inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
-  if (name.empty()) {
-    throw std::invalid_argument("Object can not have an empty name");
-  }
-  if (m_store.contains(name)) {
-    throw std::invalid_argument("Object '" + name + "' already exists");
-  }
-
-  auto holder = std::make_shared<HolderT<T>>(std::forward<T>(object));
-  m_store.emplace(name, holder);
-  ACTS_VERBOSE("Added object '" << name << "' of type " << typeid(T).name());
-
-  // deal with aliases
-  auto range = m_objectAliases.equal_range(name);
-  for (auto it = range.first; it != range.second; ++it) {
-    m_store[it->second] = holder;
-    ACTS_VERBOSE("Added alias object '" << it->second << "'");
-  }
-}
 
 template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
