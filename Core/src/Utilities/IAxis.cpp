@@ -7,14 +7,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/IAxis.hpp"
+
 #include "Acts/Utilities/Axis.hpp"
 
 #include <algorithm>
 #include <stdexcept>
 
 std::unique_ptr<Acts::IAxis> Acts::IAxis::create(AxisBoundaryType aBoundaryType,
-                                                double min, double max,
-                                                std::size_t nbins) {
+                                                 double min, double max,
+                                                 std::size_t nbins) {
   using enum AxisType;
   using enum AxisBoundaryType;
 
@@ -30,7 +31,7 @@ std::unique_ptr<Acts::IAxis> Acts::IAxis::create(AxisBoundaryType aBoundaryType,
         "IAxis: Invalid binning, at least one bin is needed.");
   }
 
-  switch(aBoundaryType) {
+  switch (aBoundaryType) {
     case Open:
       return std::make_unique<Axis<Equidistant, Open>>(min, max, nbins);
     case Bound:
