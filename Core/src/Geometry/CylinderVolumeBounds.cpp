@@ -115,24 +115,24 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::AlongNormal});
+      OrientedSurface{std::move(dSurface), Direction::AlongNormal()});
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(dSurface), Direction::OppositeNormal});
+      OrientedSurface{std::move(dSurface), Direction::OppositeNormal()});
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(cSurface), Direction::OppositeNormal});
+      OrientedSurface{std::move(cSurface), Direction::OppositeNormal()});
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(cSurface), Direction::AlongNormal});
+        OrientedSurface{std::move(cSurface), Direction::AlongNormal()});
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -147,7 +147,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::AlongNormal});
+        OrientedSurface{std::move(pSurface), Direction::AlongNormal()});
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
@@ -158,7 +158,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface{std::move(pSurface), Direction::OppositeNormal});
+        OrientedSurface{std::move(pSurface), Direction::OppositeNormal()});
   }
   return oSurfaces;
 }
@@ -232,23 +232,23 @@ bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (insideZ && insideR && insidePhi);
 }
 
-Vector3 CylinderVolumeBounds::binningOffset(BinningValue bValue)
+Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
     const {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::BinningValue::binR ||
-      bValue == Acts::BinningValue::binRPhi) {
+  if (aDir == Acts::AxisDirection::AxisR ||
+      aDir == Acts::AxisDirection::AxisRPhi) {
     return Vector3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
   }
-  return VolumeBounds::binningOffset(bValue);
+  return VolumeBounds::referenceOffset(aDir);
 }
 
-double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue == Acts::BinningValue::binR) {
+double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
+  if (aDir == Acts::AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
-  if (bValue == Acts::BinningValue::binZ) {
+  if (aDir == Acts::AxisDirection::AxisZ) {
     return get(eHalfLengthZ);
   }
-  return VolumeBounds::binningBorder(bValue);
+  return VolumeBounds::referenceBorder(aDir);
 }
 
 std::vector<double> CylinderVolumeBounds::values() const {
