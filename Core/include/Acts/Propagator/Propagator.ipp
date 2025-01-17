@@ -18,19 +18,18 @@
 
 #include <concepts>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 template <typename Stepper, typename StateType, typename N>
 concept propagator_stepper_compatible_with =
     requires(const Stepper& s, StateType& st, const N& n) {
       { s.step(st, n) } -> std::same_as<Result<double>>;
     };
-}  // namespace detail
+}  // namespace Acts::detail
 
 template <typename S, typename N>
 template <typename propagator_state_t>
-Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
+Acts::Result<void> Acts::Propagator<S, N>::propagate(
+    propagator_state_t& state) const {
   ACTS_VERBOSE("Entering propagation.");
 
   state.stage = PropagatorStage::prePropagation;
@@ -188,9 +187,9 @@ Result<void> Propagator<S, N>::propagate(propagator_state_t& state) const {
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Propagator<S, N>::propagate(const parameters_t& start,
-                                 const propagator_options_t& options,
-                                 bool makeCurvilinear) const
+auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                       const propagator_options_t& options,
+                                       bool makeCurvilinear) const
     -> Result<
         actor_list_t_result_t<StepperCurvilinearTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -215,9 +214,9 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Propagator<S, N>::propagate(const parameters_t& start,
-                                 const Surface& target,
-                                 const propagator_options_t& options) const
+auto Acts::Propagator<S, N>::propagate(
+    const parameters_t& start, const Surface& target,
+    const propagator_options_t& options) const
     -> Result<
         actor_list_t_result_t<StepperBoundTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -241,8 +240,8 @@ auto Propagator<S, N>::propagate(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Propagator<S, N>::makeState(const parameters_t& start,
-                                 const propagator_options_t& options) const {
+auto Acts::Propagator<S, N>::makeState(
+    const parameters_t& start, const propagator_options_t& options) const {
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -283,9 +282,9 @@ auto Propagator<S, N>::makeState(const parameters_t& start,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Propagator<S, N>::makeState(const parameters_t& start,
-                                 const Surface& target,
-                                 const propagator_options_t& options) const {
+auto Acts::Propagator<S, N>::makeState(
+    const parameters_t& start, const Acts::Surface& target,
+    const propagator_options_t& options) const {
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -321,10 +320,10 @@ auto Propagator<S, N>::makeState(const parameters_t& start,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Propagator<S, N>::makeResult(propagator_state_t state,
-                                  Result<void> propagationResult,
-                                  const propagator_options_t& /*options*/,
-                                  bool makeCurvilinear) const
+auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
+                                        Acts::Result<void> propagationResult,
+                                        const propagator_options_t& /*options*/,
+                                        bool makeCurvilinear) const
     -> Result<
         actor_list_t_result_t<StepperCurvilinearTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -367,10 +366,9 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
-auto Propagator<S, N>::makeResult(propagator_state_t state,
-                                  Result<void> propagationResult,
-                                  const Surface& target,
-                                  const propagator_options_t& /*options*/) const
+auto Acts::Propagator<S, N>::makeResult(
+    propagator_state_t state, Acts::Result<void> propagationResult,
+    const Acts::Surface& target, const propagator_options_t& /*options*/) const
     -> Result<
         actor_list_t_result_t<StepperBoundTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -410,7 +408,8 @@ auto Propagator<S, N>::makeResult(propagator_state_t state,
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename path_aborter_t>
-Result<void> Propagator<S, N>::initialize(propagator_state_t& state) const {
+Acts::Result<void> Acts::Propagator<S, N>::initialize(
+    propagator_state_t& state) const {
   state.position = m_stepper.position(state.stepping);
   state.direction =
       state.options.direction * m_stepper.direction(state.stepping);
@@ -433,8 +432,8 @@ Result<void> Propagator<S, N>::initialize(propagator_state_t& state) const {
 
 template <typename S, typename N>
 template <typename propagator_state_t, typename result_t>
-void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
-                                         result_t& result) const {
+void Acts::Propagator<S, N>::moveStateToResult(propagator_state_t& state,
+                                               result_t& result) const {
   result.tuple() = std::move(state.tuple());
 
   result.steps = state.steps;
@@ -445,8 +444,8 @@ void Propagator<S, N>::moveStateToResult(propagator_state_t& state,
 }
 
 template <typename derived_t>
-Result<BoundTrackParameters>
-detail::BasePropagatorHelper<derived_t>::propagateToSurface(
+Acts::Result<Acts::BoundTrackParameters>
+Acts::detail::BasePropagatorHelper<derived_t>::propagateToSurface(
     const BoundTrackParameters& start, const Surface& target,
     const Options& options) const {
   using ResultType = Result<typename derived_t::template actor_list_t_result_t<
@@ -481,5 +480,3 @@ detail::BasePropagatorHelper<derived_t>::propagateToSurface(
   assert((*res).endParameters);
   return std::move((*res).endParameters.value());
 }
-
-}  // namespace Acts
