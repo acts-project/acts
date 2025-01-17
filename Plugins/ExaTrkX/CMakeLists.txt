@@ -42,12 +42,10 @@ target_link_libraries(
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
+    target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(
         ActsPluginExaTrkX
-        PROPERTIES
-            CUDA_STANDARD 20
-            CUDA_STANDARD_REQUIRED ON
-            CUDA_SEPARABLE_COMPILATION ON
+        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
     )
     target_compile_options(
         ActsPluginExaTrkX

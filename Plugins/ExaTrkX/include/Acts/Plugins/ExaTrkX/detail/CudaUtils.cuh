@@ -21,7 +21,6 @@ inline void cudaAssert(cudaError_t code, const char *file, int line) {
        << line;
     throw std::runtime_error(ss.str());
   }
-  cudaDeviceSynchronize();
 }
 
 }  // namespace Acts::detail
