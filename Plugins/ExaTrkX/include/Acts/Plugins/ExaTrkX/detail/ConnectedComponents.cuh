@@ -31,18 +31,17 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
                                          std::size_t numNodes, TLabel *labels,
                                          TLabel *labelsNext) {
   // Currently this kernel works only with 1 block
-  assert(gridDim.x == 1);
+  assert(gridDim.x == 1 && gridDim.y == 1 && gridDim.z == 1);
 
   for (std::size_t i = threadIdx.x; i < numNodes; i += blockDim.x) {
     labels[i] = i;
     labelsNext[i] = i;
   }
 
-  __shared__ bool changed;
+  bool changed = false;
 
   do {
     changed = false;
-    __syncthreads();
 
     //printf("Iteration %i\n", n);
 
@@ -94,8 +93,7 @@ __global__ void labelConnectedComponents(std::size_t numEdges,
       }
     }*/
 
-    __syncthreads();
-  } while (changed == true);
+  } while (__syncthreads_or(changed));
 }
 
 template <typename T>
