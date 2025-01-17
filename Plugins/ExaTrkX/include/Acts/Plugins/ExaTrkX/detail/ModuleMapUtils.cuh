@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <CUDA_graph_creator>
 #include <algorithm>
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 #include <cuda_runtime_api.h>
