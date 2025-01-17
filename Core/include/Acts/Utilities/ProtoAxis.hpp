@@ -18,6 +18,10 @@ namespace Acts {
 /// and lets the user to define a certain axis type, boundary type
 /// and associated binning.
 ///
+/// The IAxis allows via the visitor pattern to access the actual axis type
+/// which helps to create grid creation code by the compiler as done
+/// in the makeGrid helper functions.
+///
 /// In addition to a simple axis definitions, it holds also a description
 /// of the axis direction.
 class ProtoAxis {
@@ -80,5 +84,41 @@ class ProtoAxis {
   /// Indicate if this is a place holder auto-range binning
   bool m_autorange = false;
 };
+
+/// @brief Helper method to create a 1D grid from a single proto axis
+///
+/// @tparam payload_t the grid payloat type
+///
+/// @param a the proto axis
+///
+/// @return an IGrid unique ptr
+template <typename payload_t>
+std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
+  return a.getAxis().visit([&](const auto& axis) -> std::unique_ptr<IGrid> {
+    using AxisType = std::decay_t<decltype(axis)>;
+    using GridType = Grid<payload_t, AxisType>;
+    return std::make_unique<GridType>(axis);
+  });
+}
+
+/// @brief Helper method to create a 2D grid from a two proto axes
+///
+/// @tparam payload_t the grid payloat type
+///
+/// @param a the first proto axis
+/// @param b the second proto axis
+///
+/// @return an IGrid unique ptr
+template <typename payload_t>
+std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
+  return a.getAxis().visit([&](const auto& axisA) -> std::unique_ptr<IGrid> {
+    return b.getAxis().visit([&](const auto& axisB) -> std::unique_ptr<IGrid> {
+      using AxisTypeA = std::decay_t<decltype(axisA)>;
+      using AxisTypeB = std::decay_t<decltype(axisB)>;
+      using GridType = Grid<payload_t, AxisTypeA, AxisTypeB>;
+      return std::make_unique<GridType>(axisA, axisB);
+    });
+  });
+}
 
 }  // namespace Acts

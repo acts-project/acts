@@ -51,8 +51,31 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   std::string oString = epab.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
+  // Create a grid from a single proto axis
+  auto grid1D = Acts::makeGrid<double>(epab);
+  BOOST_CHECK(grid1D != nullptr);
+  BOOST_CHECK_EQUAL(grid1D->axes().size(), 1);
+  auto axis1D =
+      dynamic_cast<const Acts::Axis<Acts::AxisType::Equidistant, Bound>*>(
+          grid1D->axes().front());
+  BOOST_CHECK(axis1D != nullptr);
+
   // Open, equidistant axis
   Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
+
+  // Create a 2D grid from a two proto axes
+  auto grid2D = Acts::makeGrid<double>(epab, epao);
+  BOOST_CHECK(grid2D != nullptr);
+  auto grid2Daxes = grid2D->axes();
+  BOOST_CHECK_EQUAL(grid2Daxes.size(), 2);
+  auto axis2D1 =
+      dynamic_cast<const Acts::Axis<Acts::AxisType::Equidistant, Bound>*>(
+          grid2Daxes[0]);
+  BOOST_CHECK(axis2D1 != nullptr);
+  auto axis2D2 =
+      dynamic_cast<const Acts::Axis<Acts::AxisType::Equidistant, Open>*>(
+          grid2Daxes[1]);
+  BOOST_CHECK(axis2D2 != nullptr);
 
   BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
