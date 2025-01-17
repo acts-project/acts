@@ -55,7 +55,7 @@ std::unique_ptr<Acts::IAxis> Acts::IAxis::create(
   }
 
   // Not sorted
-  if (!std::is_sorted(edges.begin(), edges.end())) {
+  if (!std::ranges::is_sorted(edges.begin(), edges.end())) {
     throw std::invalid_argument(
         "IAxis: Invalid binning, bin edges are not sorted.");
   }
