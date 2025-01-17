@@ -95,8 +95,8 @@ class ProtoAxis {
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
   return a.getAxis().visit([&](const auto& axis) -> std::unique_ptr<IGrid> {
-    using AxisType = std::decay_t<decltype(axis)>;
-    using GridType = Grid<payload_t, AxisType>;
+    using AxisTypeA = std::decay_t<decltype(axis)>;
+    using GridType = Grid<payload_t, AxisTypeA>;
     return std::make_unique<GridType>(axis);
   });
 }
