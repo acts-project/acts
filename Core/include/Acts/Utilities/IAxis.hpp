@@ -13,6 +13,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <memory>
 
 namespace Acts {
 
