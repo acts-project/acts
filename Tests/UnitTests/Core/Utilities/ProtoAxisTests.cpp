@@ -24,34 +24,32 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   // Bound, equidistant axis
   Acts::ProtoAxis epab(AxisX, Bound, 0.0, 1.0, 10);
 
-  BOOST_CHECK(epab.isEquidistant());
-
-  BOOST_CHECK(!epab.isVariable());
-
-  auto edges = epab.getBinEdges();
-  BOOST_CHECK_EQUAL(edges.size(), 11);
-
+  // Direct access
   BOOST_CHECK_EQUAL(epab.getAxisDirection(), AxisX);
-
-  BOOST_CHECK_EQUAL(epab.getType(), Equidistant);
-
-  BOOST_CHECK_EQUAL(epab.getBoundaryType(), Bound);
-
-  BOOST_CHECK_EQUAL(epab.getNBins(), 10);
-
-  CHECK_CLOSE_ABS(epab.getMin(), 0.0, 1e-15);
-
-  CHECK_CLOSE_ABS(epab.getMax(), 1.0, 1e-15);
-
   BOOST_CHECK(!epab.isAutorange());
 
-  // Generate a 1 dimensional grid from double,
-  // return type needs to be type-erased
+  // Access via IAxis
+  BOOST_CHECK(epab.getAxis().isEquidistant());
+
+  BOOST_CHECK(!epab.getAxis().isVariable());
+
+  auto edges = epab.getAxis().getBinEdges();
+  BOOST_CHECK_EQUAL(edges.size(), 11);
+
+  BOOST_CHECK_EQUAL(epab.getAxis().getType(), Equidistant);
+
+  BOOST_CHECK_EQUAL(epab.getAxis().getBoundaryType(), Bound);
+
+  BOOST_CHECK_EQUAL(epab.getAxis().getNBins(), 10);
+
+  CHECK_CLOSE_ABS(epab.getAxis().getMin(), 0.0, 1e-15);
+
+  CHECK_CLOSE_ABS(epab.getAxis().getMax(), 1.0, 1e-15);
 
   // Open, equidistant axis
   Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
 
-  BOOST_CHECK_EQUAL(epao.getBoundaryType(), Open);
+  BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
   // Invalid constructor, min > max
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 1.0, 0.0, 10),
@@ -74,19 +72,21 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   // Bound, equidistant axis, autorange
   Acts::ProtoAxis epa(AxisX, Bound, 10);
 
-  BOOST_CHECK(epa.isEquidistant());
-
-  BOOST_CHECK(!epa.isVariable());
-
+  // Direct access
   BOOST_CHECK_EQUAL(epa.getAxisDirection(), AxisX);
 
-  BOOST_CHECK_EQUAL(epa.getType(), Equidistant);
-
-  BOOST_CHECK_EQUAL(epa.getBoundaryType(), Bound);
-
-  BOOST_CHECK_EQUAL(epa.getNBins(), 10);
-
   BOOST_CHECK(epa.isAutorange());
+
+  // Access via IAxis
+  BOOST_CHECK(epa.getAxis().isEquidistant());
+
+  BOOST_CHECK(!epa.getAxis().isVariable());
+
+  BOOST_CHECK_EQUAL(epa.getAxis().getType(), Equidistant);
+
+  BOOST_CHECK_EQUAL(epa.getAxis().getBoundaryType(), Bound);
+
+  BOOST_CHECK_EQUAL(epa.getAxis().getNBins(), 10);
 
   // Invalid constructor, closed with somethgin else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
@@ -100,26 +100,28 @@ BOOST_AUTO_TEST_CASE(VariabletProtoAxis) {
   // Bound, equidistant axis
   Acts::ProtoAxis vpab(AxisX, Bound, {0.0, 1.0, 10});
 
-  BOOST_CHECK(!vpab.isEquidistant());
-
-  BOOST_CHECK(vpab.isVariable());
-
-  auto edges = vpab.getBinEdges();
-  BOOST_CHECK_EQUAL(edges.size(), 3);
-
+  // Direct access
   BOOST_CHECK_EQUAL(vpab.getAxisDirection(), AxisX);
 
-  BOOST_CHECK_EQUAL(vpab.getType(), Variable);
-
-  BOOST_CHECK_EQUAL(vpab.getBoundaryType(), Bound);
-
-  BOOST_CHECK_EQUAL(vpab.getNBins(), 2);
-
-  CHECK_CLOSE_ABS(vpab.getMin(), 0.0, 1e-15);
-
-  CHECK_CLOSE_ABS(vpab.getMax(), 10.0, 1e-15);
-
   BOOST_CHECK(!vpab.isAutorange());
+
+  // Access via IAxis
+  BOOST_CHECK(!vpab.getAxis().isEquidistant());
+
+  BOOST_CHECK(vpab.getAxis().isVariable());
+
+  auto edges = vpab.getAxis().getBinEdges();
+  BOOST_CHECK_EQUAL(edges.size(), 3);
+
+  BOOST_CHECK_EQUAL(vpab.getAxis().getType(), Variable);
+
+  BOOST_CHECK_EQUAL(vpab.getAxis().getBoundaryType(), Bound);
+
+  BOOST_CHECK_EQUAL(vpab.getAxis().getNBins(), 2);
+
+  CHECK_CLOSE_ABS(vpab.getAxis().getMin(), 0.0, 1e-15);
+
+  CHECK_CLOSE_ABS(vpab.getAxis().getMax(), 10.0, 1e-15);
 
   // Invalid constructor, min > max
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, std::vector<double>{2.}),
