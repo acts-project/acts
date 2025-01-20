@@ -29,6 +29,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @param [in] state State of the stepper
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] volumeMaterial Material of the volume
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
   /// @param [out] kQoP k_i elements of the momenta
@@ -64,6 +65,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @param [in] state State of the stepper
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] volumeMaterial Material of the volume
   /// @param [in] h Step size
   ///
   /// @return Boolean flag if the calculation is valid
@@ -84,6 +86,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @param [in] state State of the stepper
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] volumeMaterial Material of the volume
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   ///

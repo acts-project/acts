@@ -734,6 +734,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param [in,out] state The state of the stepper
+  /// @param propDir is the direction of propagation
+  /// @param material is the material properties
+  /// @return the result of the step
   ///
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive

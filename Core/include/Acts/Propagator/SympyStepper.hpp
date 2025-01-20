@@ -364,7 +364,10 @@ class SympyStepper {
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param [in,out] state State of the stepper
-  /// @note The state contains the desired step size.  It can be negative during
+  /// @param propDir is the direction of propagation
+  /// @param material is the material properties
+  /// @return the result of the step
+  /// @note The state contains the desired step size. It can be negative during
   ///       backwards track propagation, and since we're using an adaptive
   ///       algorithm, it can be modified by the stepper class during
   ///       propagation.

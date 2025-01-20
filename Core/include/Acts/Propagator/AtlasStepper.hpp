@@ -1153,6 +1153,9 @@ class AtlasStepper {
   /// Perform the actual step on the state
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
+  /// @param propDir is the direction of propagation
+  /// @param material is the material properties
+  /// @return the result of the step
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
     (void)material;

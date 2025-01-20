@@ -400,13 +400,14 @@ class StraightLineStepper {
   /// Perform a straight line propagation step
   ///
   /// @param [in,out] state The state of the stepper
-  /// parameters that are being propagated.
-  ///                The state contains the desired step size,
-  ///                it can be negative during backwards track propagation,
-  ///                and since we're using an adaptive algorithm, it can
-  ///                be modified by the stepper class during propagation.
+  /// @param propDir is the direction of propagation
+  /// @param material is the material properties
+  /// @return the result of the step
   ///
-  /// @return the step size taken
+  /// The state contains the desired step size,
+  /// it can be negative during backwards track propagation,
+  /// and since we're using an adaptive algorithm, it can
+  /// be modified by the stepper class during propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
     (void)material;
