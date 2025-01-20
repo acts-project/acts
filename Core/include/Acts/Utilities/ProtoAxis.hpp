@@ -53,6 +53,7 @@ class ProtoAxis {
   /// @note that auto-range is only supported for equidistant binning
   ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
 
+  ProtoAxis() = delete;
   ProtoAxis(const ProtoAxis&) = delete;
   ProtoAxis& operator=(const ProtoAxis&) = delete;
   ProtoAxis(ProtoAxis&&) = default;
