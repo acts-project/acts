@@ -97,8 +97,8 @@ void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
   }
 }
 
-void ActsExamples::WhiteBoard::addHolder(const std::string &name,
-                                         std::shared_ptr<IHolder> holder) {
+void ActsExamples::WhiteBoard::addHolder(
+    const std::string &name, const std::shared_ptr<IHolder> &holder) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -107,7 +107,7 @@ void ActsExamples::WhiteBoard::addHolder(const std::string &name,
     throw std::invalid_argument("Object '" + name + "' is nullptr");
   }
 
-  auto [storeIt, success] = m_store.insert({name, std::move(holder)});
+  auto [storeIt, success] = m_store.insert({name, holder});
 
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
@@ -116,8 +116,10 @@ void ActsExamples::WhiteBoard::addHolder(const std::string &name,
                                 << storeIt->second->type().name());
 
   if (success) {
-    if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
-      m_store[it->second] = storeIt->second;
+    // deal with aliases
+    auto range = m_objectAliases.equal_range(name);
+    for (auto it = range.first; it != range.second; ++it) {
+      m_store[it->second] = holder;
       ACTS_VERBOSE("Added alias object '" << it->second << "'");
     }
   }
