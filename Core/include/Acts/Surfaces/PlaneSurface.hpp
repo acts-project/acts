@@ -28,6 +28,7 @@ namespace Acts {
 class DetectorElementBase;
 class PlanarBounds;
 class SurfaceBounds;
+enum class BinningValue;
 
 /// @class PlaneSurface
 ///
