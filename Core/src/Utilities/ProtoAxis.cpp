@@ -8,7 +8,7 @@
 
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include <string>
+#include <sstream>
 
 namespace {
 void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
@@ -62,16 +62,17 @@ void Acts::ProtoAxis::toStream(std::ostream& os) const {
 }
 
 std::string Acts::ProtoAxis::toString() const {
-  std::string axisType =
-      getAxis().getType() == AxisType::Variable ? "variable" : "equidistant";
-  std::string rangeStr;
+  std::stringstream ss;
+  const auto& axis = getAxis();
+  ss << "ProtoAxis: " << axis.getNBins() << " bins in "
+     << axisDirectionName(getAxisDirection());
+  ss << (axis.getType() == AxisType::Variable ? ", variable "
+                                              : ", equidistant ");
   if (!m_autorange) {
-    const auto& edges = getAxis().getBinEdges();
-    rangeStr = std::format("within [{}, {}]", edges.front(), edges.back());
+    const auto& edges = axis.getBinEdges();
+    ss << "within [" << edges.front() << ", " << edges.back() << "]";
   } else {
-    rangeStr = "within automatic range";
+    ss << "within automatic range";
   }
-  return std::string("ProtoAxis: ") + std::to_string(getAxis().getNBins()) +
-         std::string(" bins in ") + axisDirectionName(m_axisDir) +
-         std::string(", ") + axisType + std::string(" ") + rangeStr;
+  return ss.str();
 }
