@@ -28,7 +28,6 @@ namespace Acts {
 class DetectorElementBase;
 class PlanarBounds;
 class SurfaceBounds;
-enum class BinningValue;
 
 /// @class PlaneSurface
 ///
@@ -228,7 +227,7 @@ class PlaneSurface : public RegularSurface {
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<PlaneSurface>, bool> mergedWith(
-      const PlaneSurface& other, BinningValue direction,
+      const PlaneSurface& other, AxisDirection direction,
       const Logger& logger = getDummyLogger()) const;
 
  protected:

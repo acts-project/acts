@@ -195,9 +195,9 @@ ActsMatrix<2, 3> PlaneSurface::localCartesianToBoundLocalDerivative(
 }
 
 std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
-    const PlaneSurface& other, BinningValue direction,
+    const PlaneSurface& other, AxisDirection direction,
     const Logger& logger) const {
-  ACTS_VERBOSE("Merging plane surfaces in " << binningValueName(direction)
+  ACTS_VERBOSE("Merging plane surfaces in " << axisDirectionName(direction)
                                             << " direction");
 
   if (m_associatedDetElement != nullptr ||
@@ -232,13 +232,13 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
         "PlaneSurface::merge: only Rectangle Bounds are supported");
   }
 
-  if (direction != BinningValue::binX && direction != BinningValue::binY) {
+  if (direction != AxisDirection::AxisX && direction != AxisDirection::AxisY) {
     throw SurfaceMergingException(getSharedPtr(), other.getSharedPtr(),
                                   "PlaneSurface::merge: invalid direction " +
-                                      binningValueName(direction));
+                                      axisDirectionName(direction));
   }
 
-  bool mergeX = direction == BinningValue::binX;
+  bool mergeX = direction == AxisDirection::AxisX;
 
   double thisHalfMerge =
       mergeX ? thisBounds->halfLengthX() : thisBounds->halfLengthY();
