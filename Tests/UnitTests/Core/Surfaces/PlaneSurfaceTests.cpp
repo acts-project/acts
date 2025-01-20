@@ -401,19 +401,15 @@ BOOST_AUTO_TEST_CASE(MisalignedMergingException) {
   auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
   auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
 
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeX, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeY, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeX, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeY, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
 
-  BOOST_CHECK_THROW(
-      planeX->mergedWith(*plane, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      planeY->mergedWith(*plane, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(planeX->mergedWith(*plane, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(planeY->mergedWith(*plane, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
 }
 
 BOOST_AUTO_TEST_CASE(MisalignedOrthogonalException) {
@@ -432,25 +428,19 @@ BOOST_AUTO_TEST_CASE(MisalignedOrthogonalException) {
   auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
   auto planeZ = Surface::makeShared<PlaneSurface>(otherZ, rBounds);
 
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeX, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeY, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeZ, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeX, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeY, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeZ, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
 
-  BOOST_CHECK_THROW(
-      planeX->mergedWith(*plane, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      planeY->mergedWith(*plane, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      planeZ->mergedWith(*plane, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(planeX->mergedWith(*plane, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(planeY->mergedWith(*plane, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(planeZ->mergedWith(*plane, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
 }
 
 BOOST_AUTO_TEST_CASE(MisalignedAngleException) {
@@ -469,25 +459,19 @@ BOOST_AUTO_TEST_CASE(MisalignedAngleException) {
   auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
   auto planeZ = Surface::makeShared<PlaneSurface>(otherZ, rBounds);
 
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeX, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeY, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeZ, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeX, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeY, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeZ, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
 
-  BOOST_CHECK_THROW(
-      planeX->mergedWith(*plane, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      planeY->mergedWith(*plane, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
-  BOOST_CHECK_THROW(
-      planeZ->mergedWith(*plane, Acts::AxisDirection::AxisY, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(planeX->mergedWith(*plane, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(planeY->mergedWith(*plane, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
+  BOOST_CHECK_THROW(planeZ->mergedWith(*plane, Acts::AxisDirection::AxisY),
+                    SurfaceMergingException);
 }
 
 BOOST_AUTO_TEST_CASE(DifferentBoundsException) {
@@ -502,9 +486,8 @@ BOOST_AUTO_TEST_CASE(DifferentBoundsException) {
   auto rBoundsOther = std::make_shared<const RectangleBounds>(2., 4.);
   auto planeOther = Surface::makeShared<PlaneSurface>(other, rBoundsOther);
 
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeOther, Acts::AxisDirection::AxisX, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeOther, Acts::AxisDirection::AxisX),
+                    SurfaceMergingException);
 }
 
 BOOST_AUTO_TEST_CASE(XYDirection) {
@@ -521,9 +504,8 @@ BOOST_AUTO_TEST_CASE(XYDirection) {
   auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
   auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
 
-  BOOST_CHECK_THROW(
-      plane->mergedWith(*planeX, Acts::AxisDirection::AxisZ, *logger),
-      SurfaceMergingException);
+  BOOST_CHECK_THROW(plane->mergedWith(*planeX, Acts::AxisDirection::AxisZ),
+                    SurfaceMergingException);
 
   auto [planeXMerged, reversedX] =
       plane->mergedWith(*planeX, Acts::AxisDirection::AxisX, *logger);
