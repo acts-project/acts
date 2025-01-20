@@ -209,7 +209,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   assert(m_transform != nullptr && other.m_transform != nullptr);
 
   Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
-  
+
   // TODO: Is it a good tolerance?
   constexpr auto tolerance = s_onSurfaceTolerance;
 
