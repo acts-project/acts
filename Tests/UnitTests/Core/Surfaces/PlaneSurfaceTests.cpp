@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMisalignmentShift) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceMisalignedAngle) {
-  // Correct poisitioning, rotated in different directions
+  // Correct positioning, rotated in different directions
   Translation3 offsetX{2., 0., 0.};
   Translation3 offsetY{0., 4., 0.};
 
