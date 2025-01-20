@@ -77,7 +77,8 @@ class WhiteBoard {
   /// @param name Non-empty identifier to store it under
   /// @param holder The holder to store
   /// @throws std::invalid_argument on empty or duplicate name
-  void addHolder(const std::string& name, std::shared_ptr<IHolder> holder);
+  void addHolder(const std::string& name,
+                 const std::shared_ptr<IHolder>& holder);
 
   /// Store an object on the white board and transfer ownership.
   ///

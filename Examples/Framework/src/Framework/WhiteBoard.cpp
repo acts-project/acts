@@ -97,8 +97,8 @@ void ActsExamples::WhiteBoard::copyFrom(const WhiteBoard &other) {
   }
 }
 
-void ActsExamples::WhiteBoard::addHolder(const std::string &name,
-                                         std::shared_ptr<IHolder> holder) {
+void ActsExamples::WhiteBoard::addHolder(
+    const std::string &name, const std::shared_ptr<IHolder> &holder) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
