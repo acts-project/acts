@@ -92,7 +92,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
-  bool finalize(stepper_t::State state, const stepper_t& stepper,
+  bool finalize(stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
                 FreeMatrix& D) const {
     (void)volumeMaterial;
