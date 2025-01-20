@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -21,6 +22,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -378,6 +380,176 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   CHECK_CLOSE_ABS(alignToloc1, expAlignToloc1, 1e-10);
 }
 
+BOOST_AUTO_TEST_SUITE(PlaneSurfaceMerging)
+
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+
+// Create a test context
+GeometryContext gctx = GeometryContext();
+
+auto rBounds = std::make_shared<const RectangleBounds>(1., 2.);
+
+BOOST_AUTO_TEST_CASE(MisalignedMergingException) {
+  // Correct orientation, not aligned along merging
+  Translation3 offsetX{4., 0., 0.};
+  Translation3 offsetY{0., 2., 0.};
+
+  Transform3 base(Translation3::Identity());
+  Transform3 otherX = base * offsetX;
+  Transform3 otherY = base * offsetY;
+
+  auto plane = Surface::makeShared<PlaneSurface>(base, rBounds);
+  auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
+  auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
+
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeX, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeY, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+
+  BOOST_CHECK_THROW(
+      planeX->mergedWith(*plane, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      planeY->mergedWith(*plane, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+}
+
+BOOST_AUTO_TEST_CASE(MisalignedOrthogonalException) {
+  // Correct orientation, not aligned along merging
+  Translation3 offsetX{2., 1., 0.};
+  Translation3 offsetY{-1., 4., 0.};
+  Translation3 offsetZ{0., 4., 1.};
+
+  Transform3 base(Translation3::Identity());
+  Transform3 otherX = base * offsetX;
+  Transform3 otherY = base * offsetY;
+  Transform3 otherZ = base * offsetZ;
+
+  auto plane = Surface::makeShared<PlaneSurface>(base, rBounds);
+  auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
+  auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
+  auto planeZ = Surface::makeShared<PlaneSurface>(otherZ, rBounds);
+
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeX, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeY, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeZ, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+
+  BOOST_CHECK_THROW(
+      planeX->mergedWith(*plane, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      planeY->mergedWith(*plane, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      planeZ->mergedWith(*plane, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+}
+
+BOOST_AUTO_TEST_CASE(MisalignedAngleException) {
+  // Correct orientation, not aligned along merging
+  Translation3 offsetX{2., 0., 0.};
+  Translation3 offsetY{0., 4., 0.};
+
+  double angle = std::numbers::pi / 12;
+  Transform3 base(Translation3::Identity());
+  Transform3 otherX = base * offsetX * AngleAxis3(angle, Vector3::UnitZ());
+  Transform3 otherY = base * offsetY * AngleAxis3(angle, Vector3::UnitY());
+  Transform3 otherZ = base * offsetY * AngleAxis3(angle, Vector3::UnitZ());
+
+  auto plane = Surface::makeShared<PlaneSurface>(base, rBounds);
+  auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
+  auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
+  auto planeZ = Surface::makeShared<PlaneSurface>(otherZ, rBounds);
+
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeX, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeY, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeZ, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+
+  BOOST_CHECK_THROW(
+      planeX->mergedWith(*plane, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      planeY->mergedWith(*plane, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+  BOOST_CHECK_THROW(
+      planeZ->mergedWith(*plane, Acts::BinningValue::binY, *logger),
+      SurfaceMergingException);
+}
+
+BOOST_AUTO_TEST_CASE(DifferentBoundsException) {
+  // Correct orientation, not aligned along merging
+  Translation3 offset{2., 0., 0.};
+
+  Transform3 base(Translation3::Identity());
+  Transform3 other = base * offset;
+
+  auto plane = Surface::makeShared<PlaneSurface>(base, rBounds);
+
+  auto rBoundsOther = std::make_shared<const RectangleBounds>(2., 4.);
+  auto planeOther = Surface::makeShared<PlaneSurface>(other, rBoundsOther);
+
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeOther, Acts::BinningValue::binX, *logger),
+      SurfaceMergingException);
+}
+
+BOOST_AUTO_TEST_CASE(XYDirection) {
+  double angle = std::numbers::pi / 12;
+  Translation3 offsetX{2., 0., 0.};
+  Translation3 offsetY{0., 4., 0.};
+
+  Transform3 base =
+      AngleAxis3(angle, Vector3::UnitX()) * Translation3::Identity();
+  Transform3 otherX = base * offsetX;
+  Transform3 otherY = base * offsetY;
+
+  auto plane = Surface::makeShared<PlaneSurface>(base, rBounds);
+  auto planeX = Surface::makeShared<PlaneSurface>(otherX, rBounds);
+  auto planeY = Surface::makeShared<PlaneSurface>(otherY, rBounds);
+
+  BOOST_CHECK_THROW(
+      plane->mergedWith(*planeX, Acts::BinningValue::binZ, *logger),
+      SurfaceMergingException);
+
+  auto [planeXMerged, reversedX] =
+      plane->mergedWith(*planeX, Acts::BinningValue::binX, *logger);
+  BOOST_REQUIRE_NE(planeXMerged, nullptr);
+  BOOST_CHECK(!reversedX);
+
+  auto [planeYMerged, reversedY] =
+      plane->mergedWith(*planeY, Acts::BinningValue::binY, *logger);
+  BOOST_REQUIRE_NE(planeYMerged, nullptr);
+  BOOST_CHECK(!reversedY);
+
+  auto [planeXMerged2, reversedX2] =
+      planeX->mergedWith(*plane, Acts::BinningValue::binX, *logger);
+  BOOST_REQUIRE_NE(planeXMerged2, nullptr);
+  BOOST_CHECK(planeXMerged->bounds() == planeXMerged2->bounds());
+  BOOST_CHECK(reversedX2);
+
+  auto [planeYMerged2, reversedY2] =
+      planeY->mergedWith(*plane, Acts::BinningValue::binY, *logger);
+  BOOST_REQUIRE_NE(planeYMerged2, nullptr);
+  BOOST_CHECK(planeYMerged->bounds() == planeYMerged2->bounds());
+  BOOST_CHECK(reversedY2);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

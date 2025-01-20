@@ -216,6 +216,20 @@ class PlaneSurface : public RegularSurface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
+  /// Merge two plane surfaces into a single one.
+  /// @note The surfaces need to be *compatible*, i.e. have bounds
+  ///       that align along merging direction, and have the same bound size 
+  ///       along the non-merging direction
+  /// @param other The other plane surface to merge with
+  /// @param direction The binning direction: either @c binX or @c binY
+  /// @param logger The logger to use
+  /// @return The merged plane surface and a boolean indicating if surfaces are reversed
+  /// @note The returned boolean is `false` if `this` is *left* or
+  ///       *counter-clockwise* of @p other, and `true` if not.
+  std::pair<std::shared_ptr<PlaneSurface>, bool> mergedWith(
+      const PlaneSurface& other, BinningValue direction,
+      const Logger& logger = getDummyLogger()) const;
+
  protected:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
