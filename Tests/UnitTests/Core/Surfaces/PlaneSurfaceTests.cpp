@@ -388,8 +388,8 @@ GeometryContext gctx = GeometryContext();
 
 auto rBounds = std::make_shared<const RectangleBounds>(1., 2.);
 
-BOOST_AUTO_TEST_CASE(MisalignedMergingException) {
-  // Correct orientation, not aligned along merging
+BOOST_AUTO_TEST_CASE(SurfaceOverlap) {
+  // Correct orientation, overlapping along merging direction
   Translation3 offsetX{4., 0., 0.};
   Translation3 offsetY{0., 2., 0.};
 
@@ -412,8 +412,8 @@ BOOST_AUTO_TEST_CASE(MisalignedMergingException) {
                     SurfaceMergingException);
 }
 
-BOOST_AUTO_TEST_CASE(MisalignedOrthogonalException) {
-  // Correct orientation, not aligned along merging
+BOOST_AUTO_TEST_CASE(SurfaceMisalignmentShift) {
+  // Correct orientation, not aligned along orthogonal to merging direction
   Translation3 offsetX{2., 1., 0.};
   Translation3 offsetY{-1., 4., 0.};
   Translation3 offsetZ{0., 4., 1.};
@@ -443,8 +443,8 @@ BOOST_AUTO_TEST_CASE(MisalignedOrthogonalException) {
                     SurfaceMergingException);
 }
 
-BOOST_AUTO_TEST_CASE(MisalignedAngleException) {
-  // Correct orientation, not aligned along merging
+BOOST_AUTO_TEST_CASE(SurfaceMisalignedAngle) {
+  // Correct poisitioning, rotated in different directions
   Translation3 offsetX{2., 0., 0.};
   Translation3 offsetY{0., 4., 0.};
 
@@ -474,8 +474,9 @@ BOOST_AUTO_TEST_CASE(MisalignedAngleException) {
                     SurfaceMergingException);
 }
 
-BOOST_AUTO_TEST_CASE(DifferentBoundsException) {
-  // Correct orientation, not aligned along merging
+BOOST_AUTO_TEST_CASE(SurfaceDifferentBounds) {
+  // Correct orientation and alignment, different bounds lengths along
+  // orthogonal to merging direction
   Translation3 offset{2., 0., 0.};
 
   Transform3 base(Translation3::Identity());
@@ -507,27 +508,37 @@ BOOST_AUTO_TEST_CASE(XYDirection) {
   BOOST_CHECK_THROW(plane->mergedWith(*planeX, Acts::AxisDirection::AxisZ),
                     SurfaceMergingException);
 
+  auto expectedBoundsX = std::make_shared<const RectangleBounds>(2, 2);
   auto [planeXMerged, reversedX] =
       plane->mergedWith(*planeX, Acts::AxisDirection::AxisX, *logger);
   BOOST_REQUIRE_NE(planeXMerged, nullptr);
   BOOST_CHECK(!reversedX);
+  BOOST_CHECK_EQUAL(planeXMerged->bounds(), *expectedBoundsX);
+  BOOST_CHECK_EQUAL(planeXMerged->center(gctx), base * Vector3::UnitX() * 1);
 
+  auto expectedBoundsY = std::make_shared<const RectangleBounds>(1, 4);
   auto [planeYMerged, reversedY] =
       plane->mergedWith(*planeY, Acts::AxisDirection::AxisY, *logger);
   BOOST_REQUIRE_NE(planeYMerged, nullptr);
   BOOST_CHECK(!reversedY);
+  BOOST_CHECK_EQUAL(planeYMerged->bounds(), *expectedBoundsY);
+  BOOST_CHECK_EQUAL(planeYMerged->center(gctx), base * Vector3::UnitY() * 2);
 
   auto [planeXMerged2, reversedX2] =
       planeX->mergedWith(*plane, Acts::AxisDirection::AxisX, *logger);
   BOOST_REQUIRE_NE(planeXMerged2, nullptr);
   BOOST_CHECK(planeXMerged->bounds() == planeXMerged2->bounds());
   BOOST_CHECK(reversedX2);
+  BOOST_CHECK_EQUAL(planeXMerged2->bounds(), *expectedBoundsX);
+  BOOST_CHECK_EQUAL(planeXMerged2->center(gctx), base * Vector3::UnitX() * 1);
 
   auto [planeYMerged2, reversedY2] =
       planeY->mergedWith(*plane, Acts::AxisDirection::AxisY, *logger);
   BOOST_REQUIRE_NE(planeYMerged2, nullptr);
   BOOST_CHECK(planeYMerged->bounds() == planeYMerged2->bounds());
   BOOST_CHECK(reversedY2);
+  BOOST_CHECK_EQUAL(planeYMerged2->bounds(), *expectedBoundsY);
+  BOOST_CHECK_EQUAL(planeYMerged2->center(gctx), base * Vector3::UnitY() * 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
