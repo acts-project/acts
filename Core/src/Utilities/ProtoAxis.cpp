@@ -8,7 +8,7 @@
 
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-#include <format>
+#include <string>
 
 namespace {
 void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
@@ -71,6 +71,7 @@ std::string Acts::ProtoAxis::toString() const {
   } else {
     rangeStr = "within automatic range";
   }
-  return std::format("ProtoAxis: {} bins in {}, {} {}", getAxis().getNBins(),
-                     axisDirectionName(m_axisDir), axisType, rangeStr);
+  return std::string("ProtoAxis: ") + std::to_string(getAxis().getNBins()) +
+         std::string(" bins in ") + axisDirectionName(m_axisDir) +
+         std::string(", ") + axisType + std::string(" ") + rangeStr;
 }
