@@ -20,9 +20,8 @@ Acts::EigenStepper<E>::EigenStepper(
     : m_bField(std::move(bField)) {}
 
 template <typename E>
-auto Acts::EigenStepper<E>::makeState(const Options& options,
-                                      const BoundTrackParameters& par) const
-    -> State {
+auto Acts::EigenStepper<E>::makeState(
+    const Options& options, const BoundTrackParameters& par) const -> State {
   State state{options, m_bField->makeCache(options.magFieldContext)};
 
   state.particleHypothesis = par.particleHypothesis();
@@ -120,9 +119,8 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 }
 
 template <typename E>
-auto Acts::EigenStepper<E>::curvilinearState(State& state,
-                                             bool transportCov) const
-    -> CurvilinearState {
+auto Acts::EigenStepper<E>::curvilinearState(
+    State& state, bool transportCov) const -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.particleHypothesis,
