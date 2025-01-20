@@ -33,9 +33,10 @@ namespace ActsExamples {
 /// Its lifetime is bound to the lifetime of the white board.
 class WhiteBoard {
  public:
-  WhiteBoard(std::unique_ptr<const Acts::Logger> logger =
-                 Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
-             std::unordered_map<std::string, std::string> objectAliases = {});
+  WhiteBoard(
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
+      std::unordered_multimap<std::string, std::string> objectAliases = {});
 
   WhiteBoard(const WhiteBoard& other) = delete;
   WhiteBoard& operator=(const WhiteBoard&) = delete;
@@ -76,7 +77,8 @@ class WhiteBoard {
   /// @param name Non-empty identifier to store it under
   /// @param holder The holder to store
   /// @throws std::invalid_argument on empty or duplicate name
-  void addHolder(const std::string& name, std::shared_ptr<IHolder> holder);
+  void addHolder(const std::string& name,
+                 const std::shared_ptr<IHolder>& holder);
 
   /// Store an object on the white board and transfer ownership.
   ///
@@ -97,7 +99,7 @@ class WhiteBoard {
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
-  std::unordered_map<std::string, std::string> m_objectAliases;
+  std::unordered_multimap<std::string, std::string> m_objectAliases;
 
   const Acts::Logger& logger() const { return *m_logger; }
 
@@ -115,7 +117,7 @@ class WhiteBoard {
 
 inline ActsExamples::WhiteBoard::WhiteBoard(
     std::unique_ptr<const Acts::Logger> logger,
-    std::unordered_map<std::string, std::string> objectAliases)
+    std::unordered_multimap<std::string, std::string> objectAliases)
     : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
