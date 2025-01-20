@@ -155,7 +155,8 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
 
   // Lambda that performs the step for a component and returns false if the step
   // went ok and true if there was an error
-  auto errorInStep = [&](auto& component) {
+  auto errorInStep = [this, &results, propDir, material, &accumulatedPathLength,
+                      &errorSteps, &reweightNecessary](auto& component) {
     if (component.status == Status::onSurface) {
       // We need to add these, so the propagation does not fail if we have only
       // components on surfaces and failing states
