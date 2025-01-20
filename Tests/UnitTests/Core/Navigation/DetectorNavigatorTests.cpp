@@ -117,17 +117,15 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
-    navigator.initialize(state, stepper);
+    navigator.initialize(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping),
+                         state.options.direction);
 
-    navigator.preStep(state, stepper);
+    navigator.nextTarget(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping));
     auto preStepState = state.navigation;
     BOOST_CHECK_EQUAL(preStepState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(preStepState.currentPortal, nullptr);
-
-    navigator.postStep(state, stepper);
-    auto postStepState = state.navigation;
-    BOOST_CHECK_EQUAL(postStepState.currentSurface, nullptr);
-    BOOST_CHECK_EQUAL(postStepState.currentPortal, nullptr);
   }
 
   //
@@ -166,7 +164,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(start, options);
 
-    navigator.initialize(state, stepper);
+    navigator.initialize(state.navigation, stepper.position(state.stepping),
+                         stepper.direction(state.stepping),
+                         state.options.direction);
+
     auto initState = state.navigation;
     BOOST_CHECK_EQUAL(initState.currentDetector, detector.get());
     BOOST_CHECK_EQUAL(
@@ -279,7 +280,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
                                              Acts::Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward;
+  options.direction = Acts::Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
@@ -295,7 +296,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   auto resultFwd = propagator.propagate(startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward;
+  options.direction = Acts::Direction::Backward();
 
   Acts::Vector4 posBwd(14, 0, 0, 0);
   Acts::CurvilinearTrackParameters startBwd(
@@ -439,7 +440,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
                                              Acts::Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward;
+  options.direction = Acts::Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
@@ -457,7 +458,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   auto resultFwd = propagator.propagate(start, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward;
+  options.direction = Acts::Direction::Backward();
 
   auto resultBwd = propagator.propagate(start, options).value();
   auto statesBwd = resultBwd.get<StateRecorder::result_type>();
@@ -554,7 +555,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
                                              Acts::Logging::Level::VERBOSE));
 
   PropagatorOptions options(geoContext, mfContext);
-  options.direction = Acts::Direction::Forward;
+  options.direction = Acts::Direction::Forward();
 
   Propagator propagator(
       stepper, navigator,
@@ -572,7 +573,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   auto resultFwd = propagator.propagate(startFwd, options).value();
   auto statesFwd = resultFwd.get<StateRecorder::result_type>();
 
-  options.direction = Acts::Direction::Backward;
+  options.direction = Acts::Direction::Backward();
   Acts::Vector4 posBwd(5, 0, 0, 0);
   Acts::CurvilinearTrackParameters startBwd(
       posBwd, 0_degree, 90_degree, 1_e / 1_GeV, std::nullopt,
