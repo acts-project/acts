@@ -21,7 +21,6 @@
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -210,11 +209,13 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   assert(m_transform != nullptr && other.m_transform != nullptr);
 
   Transform3 otherLocal = m_transform->inverse() * *other.m_transform;
+  
+  // TODO: Is it a good tolerance?
   constexpr auto tolerance = s_onSurfaceTolerance;
 
   // Surface cannot have any relative rotation
-  if (std::abs((otherLocal.rotation().matrix() - RotationMatrix3::Identity())
-                   .norm())) {
+  if ((otherLocal.rotation().matrix() - RotationMatrix3::Identity()).norm() >
+      tolerance) {
     ACTS_ERROR("PlaneSurface::merge: surfaces have relative rotation");
     throw SurfaceMergingException(
         getSharedPtr(), other.getSharedPtr(),
