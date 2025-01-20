@@ -71,7 +71,7 @@ struct EigenStepperDenseExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <int i, typename stepper_t>
-  bool k(const stepper_t::State& state, const stepper_t& stepper,
+  bool k(const typename stepper_t::State& state, const stepper_t& stepper,
          const IVolumeMaterial* volumeMaterial, Vector3& knew,
          const Vector3& bField, std::array<double, 4>& kQoP,
          const double h = 0., const Vector3& kprev = Vector3::Zero())
@@ -133,7 +133,7 @@ struct EigenStepperDenseExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
-  bool finalize(stepper_t::State& state, const stepper_t& stepper,
+  bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h) const {
     if (volumeMaterial == nullptr) {
       return defaultExtension.finalize(state, stepper, volumeMaterial, h);
@@ -184,7 +184,7 @@ struct EigenStepperDenseExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
-  bool finalize(stepper_t::State& state, const stepper_t& stepper,
+  bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
                 FreeMatrix& D) const {
     if (volumeMaterial == nullptr) {
@@ -208,8 +208,9 @@ struct EigenStepperDenseExtension {
   ///
   /// @return Boolean flag if evaluation is valid
   template <typename stepper_t>
-  bool transportMatrix(stepper_t::State& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+  bool transportMatrix(typename stepper_t::State& state,
+                       const stepper_t& stepper, const double h,
+                       FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -348,7 +349,7 @@ struct EigenStepperDenseExtension {
   /// @param [in] state Deliverer of configurations
   /// @param [in] stepper Stepper of the propagator
   template <typename stepper_t>
-  void initializeEnergyLoss(const stepper_t::State& state,
+  void initializeEnergyLoss(const typename stepper_t::State& state,
                             const stepper_t& stepper) {
     const auto& particleHypothesis = stepper.particleHypothesis(state);
     float mass = particleHypothesis.mass();
@@ -404,8 +405,8 @@ struct EigenStepperDenseExtension {
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_t>
   void updateEnergyLoss(const double mass, const double h,
-                        const stepper_t::State& state, const stepper_t& stepper,
-                        const int i) {
+                        const typename stepper_t::State& state,
+                        const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
     energy[i] = fastHypot(currentMomentum, mass);

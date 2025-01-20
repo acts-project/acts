@@ -39,7 +39,7 @@ namespace Acts::detail {
 /// @param logger [in] A @c Logger instance
 template <typename stepper_t>
 IntersectionStatus updateSingleSurfaceStatus(
-    const stepper_t& stepper, typename stepper_t::State& state,
+    const stepper_t& stepper, typename typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction direction,
     const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
     ConstrainedStep::Type stype, const Logger& logger) {

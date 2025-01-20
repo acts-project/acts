@@ -38,7 +38,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <int i, typename stepper_t>
-  bool k(const stepper_t::State& state, const stepper_t& stepper,
+  bool k(const typename stepper_t::State& state, const stepper_t& stepper,
          const IVolumeMaterial* volumeMaterial, Vector3& knew,
          const Vector3& bField, std::array<double, 4>& kQoP,
          const double h = 0., const Vector3& kprev = Vector3::Zero())
@@ -70,7 +70,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
-  bool finalize(stepper_t::State& state, const stepper_t& stepper,
+  bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h) const {
     (void)volumeMaterial;
 
@@ -92,7 +92,7 @@ struct EigenStepperDefaultExtension {
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
-  bool finalize(stepper_t::State& state, const stepper_t& stepper,
+  bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
                 FreeMatrix& D) const {
     (void)volumeMaterial;
@@ -110,7 +110,7 @@ struct EigenStepperDefaultExtension {
   /// @param [in] stepper Stepper of the propagation
   /// @param [in] h Step size
   template <typename stepper_t>
-  void propagateTime(stepper_t::State& state, const stepper_t& stepper,
+  void propagateTime(typename stepper_t::State& state, const stepper_t& stepper,
                      const double h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
@@ -135,8 +135,9 @@ struct EigenStepperDefaultExtension {
   ///
   /// @return Boolean flag if evaluation is valid
   template <typename stepper_t>
-  bool transportMatrix(stepper_t::State& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+  bool transportMatrix(typename stepper_t::State& state,
+                       const stepper_t& stepper, const double h,
+                       FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
