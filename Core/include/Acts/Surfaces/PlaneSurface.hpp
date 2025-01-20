@@ -218,7 +218,7 @@ class PlaneSurface : public RegularSurface {
 
   /// Merge two plane surfaces into a single one.
   /// @note The surfaces need to be *compatible*, i.e. have bounds
-  ///       that align along merging direction, and have the same bound size 
+  ///       that align along merging direction, and have the same bound size
   ///       along the non-merging direction
   /// @param other The other plane surface to merge with
   /// @param direction The binning direction: either @c binX or @c binY

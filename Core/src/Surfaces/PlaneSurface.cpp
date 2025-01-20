@@ -229,7 +229,7 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   if (thisBounds == nullptr || otherBounds == nullptr) {
     throw SurfaceMergingException(
         getSharedPtr(), other.getSharedPtr(),
-        "PlaneSurface::merge: only Recangle Bounds are supported");
+        "PlaneSurface::merge: only Rectangle Bounds are supported");
   }
 
   if (direction != BinningValue::binX && direction != BinningValue::binY) {
