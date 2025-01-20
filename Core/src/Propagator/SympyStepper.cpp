@@ -137,7 +137,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
   (void)material;
   return stepImpl(state, propDir, state.options.stepTolerance,
-                  state.options.maxStepSize,
+                  state.options.stepSizeCutOff,
                   state.options.maxRungeKuttaStepTrials);
 }
 

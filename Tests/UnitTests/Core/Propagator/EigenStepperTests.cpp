@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   esState.cov = cov;
 
   esState.covTransport = false;
-  es.step(esState, Direction::Forward(), nullptr).value();
+  es.step(esState, navDir, nullptr).value();
   CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
 
   esState.covTransport = true;
-  es.step(esState, Direction::Forward(), nullptr).value();
+  es.step(esState, navDir, nullptr).value();
   CHECK_CLOSE_COVARIANCE(esState.cov, cov, eps);
   BOOST_CHECK_NE(es.position(esState).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(esState), newMom.normalized());

@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   slsState.cov = cov;
 
   slsState.covTransport = false;
-  double h = sls.step(slsState, Direction::Forward(), nullptr).value();
+  double h = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), h * navDir);
   CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
 
   slsState.covTransport = true;
-  double h2 = sls.step(slsState, Direction::Forward(), nullptr).value();
+  double h2 = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);

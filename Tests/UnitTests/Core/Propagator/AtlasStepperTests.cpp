@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(Step) {
   state.covTransport = false;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state, Direction::Forward(), nullptr);
+  auto res = stepper.step(state, Direction::Backward(), nullptr);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   state.covTransport = true;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state, Direction::Forward(), nullptr);
+  auto res = stepper.step(state, Direction::Backward(), nullptr);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   state.covTransport = true;
 
   // ensure step does not result in an error
-  stepper.step(state, Direction::Forward(), nullptr);
+  stepper.step(state, Direction::Backward(), nullptr);
 
   // Construct the parameters
   Vector3 newPos(1.5, -2.5, 3.5);
