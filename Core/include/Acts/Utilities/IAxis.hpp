@@ -69,6 +69,8 @@ class IAxis {
   /// @param max the maximum edge of the axis
   /// @param nbins the number of bins
   ///
+  /// @throws std::invalid_argument if min >= max or nbins == 0
+  ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> create(AxisBoundaryType aBoundaryType,
                                        double min, double max,
@@ -78,6 +80,8 @@ class IAxis {
   ///
   /// @param aBoundaryType the axis boundary type
   /// @param edges are the bin edges
+  ///
+  /// @throws std::invalid_argument if edges is empty or not strictly increasing
   ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> create(AxisBoundaryType aBoundaryType,

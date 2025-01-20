@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
 
   // Open, equidistant axis
   Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
+  BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
   // Create a 2D grid from a two proto axes
   auto grid2D = Acts::makeGrid<double>(epab, epao);
@@ -77,7 +78,8 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
           grid2Daxes[1]);
   BOOST_CHECK(axis2D2 != nullptr);
 
-  BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
+  // Invalid grid construction with two proto axis in the same direction
+  BOOST_CHECK_THROW(Acts::makeGrid<double>(epab, epab), std::invalid_argument);
 
   // Invalid constructor, min > max
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 1.0, 0.0, 10),

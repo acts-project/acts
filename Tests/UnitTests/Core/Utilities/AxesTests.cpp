@@ -633,6 +633,10 @@ BOOST_AUTO_TEST_CASE(IAxis_Factories) {
   // edges not ordered
   BOOST_CHECK_THROW(IAxis::create(Bound, std::vector<double>{2., 1.5, 1.}),
                     std::invalid_argument);
+
+  // Test memory management
+  auto axis = IAxis::create(Bound, 0.0, 10., 10);
+  BOOST_CHECK_NO_THROW(axis.reset());
 }
 
 BOOST_AUTO_TEST_CASE(Output) {

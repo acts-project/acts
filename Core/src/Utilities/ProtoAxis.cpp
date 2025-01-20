@@ -8,6 +8,8 @@
 
 #include "Acts/Utilities/ProtoAxis.hpp"
 
+#include <format>
+
 namespace {
 void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
   if (abType == Acts::AxisBoundaryType::Closed &&
@@ -15,7 +17,9 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
       aDir != Acts::AxisDirection::AxisRPhi) {
     std::string msg =
         "ProtoBinning: Invalid axis boundary type 'Closed' for direction '";
-    msg += axisDirectionName(aDir) + "'.";
+    msg += axisDirectionName(aDir) +
+           "'. Closed boundary type is only valid for "
+           "AxisPhi and AxisRPhi directions.";
     throw std::invalid_argument(msg);
   }
 }
@@ -58,16 +62,15 @@ void Acts::ProtoAxis::toStream(std::ostream& os) const {
 }
 
 std::string Acts::ProtoAxis::toString() const {
-  std::stringstream ss;
-  ss << "ProtoAxis: " << getAxis().getNBins() << " bins in "
-     << axisDirectionName(m_axisDir);
-  ss << (getAxis().getType() == AxisType::Variable ? ", variable "
-                                                   : ", equidistant ");
+  std::string axisType =
+      getAxis().getType() == AxisType::Variable ? "variable" : "equidistant";
+  std::string rangeStr;
   if (!m_autorange) {
     const auto& edges = getAxis().getBinEdges();
-    ss << "within [" << edges.front() << ", " << edges.back() << "]";
+    rangeStr = std::format("within [{}, {}]", edges.front(), edges.back());
   } else {
-    ss << "within automatic range";
+    rangeStr = "within automatic range";
   }
-  return ss.str();
+  return std::format("ProtoAxis: {} bins in {}, {} {}", getAxis().getNBins(),
+                     axisDirectionName(m_axisDir), axisType, rangeStr);
 }

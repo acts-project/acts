@@ -116,6 +116,11 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 /// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
+  // Validate axis compatibility
+  if (a.getAxisDirection() == b.getAxisDirection()) {
+    throw std::invalid_argument(
+        "ProtoAxis::makeGrid: Axes must have different directions");
+  }
   return a.getAxis().visit([&](const auto& axisA) -> std::unique_ptr<IGrid> {
     return b.getAxis().visit([&](const auto& axisB) -> std::unique_ptr<IGrid> {
       using AxisTypeA = std::decay_t<decltype(axisA)>;
