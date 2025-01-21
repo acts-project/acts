@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <chrono>
@@ -65,7 +66,9 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
       m_cfg(cfg),
       m_trtLogger(std::make_unique<TensorRTLogger>(m_logger->level())) {
   auto status = initLibNvInferPlugins(m_trtLogger.get(), "");
-  assert(status);
+  if (!status) {
+    throw std::runtime_error("Failed to initialize TensorRT plugins");
+  }
 
   std::size_t fsize =
       std::filesystem::file_size(std::filesystem::path(m_cfg.modelPath));
@@ -74,47 +77,45 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
   ACTS_DEBUG("Load '" << m_cfg.modelPath << "' with size " << fsize);
 
   std::ifstream engineFile(m_cfg.modelPath);
-  engineFile.read(engineData.data(), fsize);
+  if (!engineFile) {
+    throw std::runtime_error("Failed to open engine file");
+  } else if (!engineFile.read(engineData.data(), fsize)) {
+    throw std::runtime_error("Failed to read engine file");
+  }
 
   m_runtime.reset(nvinfer1::createInferRuntime(*m_trtLogger));
+  if (!m_runtime) {
+    throw std::runtime_error("Failed to create TensorRT runtime");
+  }
 
   m_engine.reset(m_runtime->deserializeCudaEngine(engineData.data(), fsize));
+  if (!m_engine) {
+    throw std::runtime_error("Failed to deserialize CUDA engine");
+  }
 
-  m_context.reset(m_engine->createExecutionContext());
+  for (auto i = 0ul; i < m_cfg.numExecutionContexts; ++i) {
+    ACTS_DEBUG("Create execution context " << i);
+    m_contexts.emplace_back(m_engine->createExecutionContext());
+    if (!m_contexts.back()) {
+      throw std::runtime_error("Failed to create execution context");
+    }
+  }
+
+  std::size_t freeMem, totalMem;
+  cudaMemGetInfo(&freeMem, &totalMem);
+  ACTS_DEBUG("Used CUDA memory after TensorRT initialization: "
+             << (totalMem - freeMem) * 1e-9 << " / " << totalMem * 1e-9
+             << " GB");
 }
 
 TensorRTEdgeClassifier::~TensorRTEdgeClassifier() {}
-
-auto milliseconds = [](const auto &a, const auto &b) {
-  return std::chrono::duration<double, std::milli>(b - a).count();
-};
-
-struct TimePrinter {
-  const char *name;
-  decltype(std::chrono::high_resolution_clock::now()) t0, t1;
-  TimePrinter(const char *n) : name(n) {
-    t0 = std::chrono::high_resolution_clock::now();
-  }
-  ~TimePrinter() {
-    std::cout << name << ": " << milliseconds(t0, t1) << std::endl;
-  }
-};
-
-#if 0
-#define TIME_BEGIN(name) TimePrinter printer##name(#name);
-#define TIME_END(name) \
-  printer##name.t1 = std::chrono::high_resolution_clock::now();
-#else
-#define TIME_BEGIN(name) /*nothing*/
-#define TIME_END(name)   /*ǹothing*/
-#endif
 
 std::tuple<std::any, std::any, std::any, std::any>
 TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
                                    std::any inEdgeIndex,
                                    std::any inEdgeFeatures,
                                    const ExecutionContext &execContext) {
-  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4, t5;
+  decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
   c10::cuda::CUDAStreamGuard(execContext.stream.value());
@@ -131,33 +132,50 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
 
   t1 = std::chrono::high_resolution_clock::now();
 
-  m_context->setInputShape(
+  // get a context from the list of contexts
+  std::unique_ptr<nvinfer1::IExecutionContext> context;
+  while (true) {
+    std::lock_guard<std::mutex> lock(m_contextMutex);
+    if (!m_contexts.empty()) {
+      context = std::move(m_contexts.back());
+      m_contexts.pop_back();
+      break;
+    }
+  }
+  assert(context);
+
+  context->setInputShape(
       "x", nvinfer1::Dims2{nodeFeatures.size(0), nodeFeatures.size(1)});
-  m_context->setTensorAddress("x", nodeFeatures.data_ptr());
+  context->setTensorAddress("x", nodeFeatures.data_ptr());
 
-  m_context->setInputShape(
-      "edge_index", nvinfer1::Dims2{edgeIndex.size(0), edgeIndex.size(1)});
-  m_context->setTensorAddress("edge_index", edgeIndex.data_ptr());
+  context->setInputShape("edge_index",
+                         nvinfer1::Dims2{edgeIndex.size(0), edgeIndex.size(1)});
+  context->setTensorAddress("edge_index", edgeIndex.data_ptr());
 
-  m_context->setInputShape(
+  context->setInputShape(
       "edge_attr", nvinfer1::Dims2{edgeFeatures.size(0), edgeFeatures.size(1)});
-  m_context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
+  context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
 
   void *outputMem{nullptr};
   std::size_t outputSize = edgeIndex.size(1) * sizeof(float);
-  cudaMalloc(&outputMem, outputSize);
-  m_context->setTensorAddress("output", outputMem);
+  ACTS_CUDA_CHECK(cudaMalloc(&outputMem, outputSize));
+  context->setTensorAddress("output", outputMem);
 
   t2 = std::chrono::high_resolution_clock::now();
 
-  {
-    auto stream = execContext.stream.value().stream();
-    auto status = m_context->enqueueV3(stream);
-    cudaStreamSynchronize(stream);
-    ACTS_VERBOSE("TensorRT output status: " << std::boolalpha << status);
+  auto stream = execContext.stream.value().stream();
+  auto status = context->enqueueV3(stream);
+  if (!status) {
+    throw std::runtime_error("Failed to execute TensorRT model");
   }
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   t3 = std::chrono::high_resolution_clock::now();
+
+  {
+    std::lock_guard<std::mutex> lock(m_contextMutex);
+    m_contexts.push_back(std::move(context));
+  }
 
   auto scores = torch::from_blob(
       outputMem, edgeIndex.size(1), 1, [](void *ptr) { cudaFree(ptr); },
