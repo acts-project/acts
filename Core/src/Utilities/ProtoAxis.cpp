@@ -33,7 +33,8 @@ Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
                            double minE, double maxE, std::size_t nbins)
-    : m_axisDir(aDir), m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
+    : m_axisDir(aDir),
+      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
   checkConsistency(aDir, abType);
 }
 
