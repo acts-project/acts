@@ -16,7 +16,7 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
       aDir != Acts::AxisDirection::AxisPhi &&
       aDir != Acts::AxisDirection::AxisRPhi) {
     std::string msg =
-        "ProtoBinning: Invalid axis boundary type 'Closed' for direction '";
+        "ProtoAxis: Invalid axis boundary type 'Closed' for direction '";
     msg += axisDirectionName(aDir) +
            "'. Closed boundary type is only valid for "
            "AxisPhi and AxisRPhi directions.";
