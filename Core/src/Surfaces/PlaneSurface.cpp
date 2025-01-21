@@ -26,6 +26,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <numeric>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -222,9 +223,8 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
         "PlaneSurface::merge: surfaces have relative rotation");
   }
 
-  const RectangleBounds* thisBounds =
-      dynamic_cast<const RectangleBounds*>(&bounds());
-  const RectangleBounds* otherBounds =
+  const auto* thisBounds = dynamic_cast<const RectangleBounds*>(&bounds());
+  const auto* otherBounds =
       dynamic_cast<const RectangleBounds*>(&other.bounds());
 
   if (thisBounds == nullptr || otherBounds == nullptr) {
@@ -293,9 +293,8 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   double newMaxMerge = std::max(thisMaxMerge, otherMaxMerge);
   double newMinMerge = std::min(thisMinMerge, otherMinMerge);
 
-  double newHalfMerge = (newMaxMerge - newMinMerge) / 2;
-
-  double newMidMerge = (newMaxMerge + newMinMerge) / 2;
+  double newHalfMerge = std::midpoint(newMaxMerge, -newMinMerge);
+  double newMidMerge = std::midpoint(newMaxMerge, newMinMerge);
 
   auto newBounds =
       mergeX
