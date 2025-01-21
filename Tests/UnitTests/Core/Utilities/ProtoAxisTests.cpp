@@ -90,8 +90,12 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
                     std::invalid_argument);
 
   // Invalid constructor, closed with something else than phi or rphi
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 0.0, 1.0, 10),
-                    std::invalid_argument);
+  std::vector<Acts::AxisDirection> invalidDirections = {
+      AxisX, AxisY, AxisZ, AxisR, AxisEta, AxisTheta, AxisMag};
+  for (const auto& adir : invalidDirections) {
+    BOOST_CHECK_THROW(Acts::ProtoAxis(adir, Closed, 0.0, 1.0, 10),
+                      std::invalid_argument);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
