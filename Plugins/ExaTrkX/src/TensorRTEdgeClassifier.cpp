@@ -197,6 +197,9 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
 
   t4 = std::chrono::high_resolution_clock::now();
 
+  auto milliseconds = [](const auto &a, const auto &b) {
+    return std::chrono::duration<double, std::milli>(b - a).count();
+  };
   ACTS_DEBUG("Time anycast:  " << milliseconds(t0, t1));
   ACTS_DEBUG("Time alloc, set shape " << milliseconds(t1, t2));
   ACTS_DEBUG("Time inference:       " << milliseconds(t2, t3));
