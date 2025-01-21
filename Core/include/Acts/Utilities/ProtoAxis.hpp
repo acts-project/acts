@@ -121,10 +121,8 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Axes must have different directions");
   }
-  return a.getAxis().visit([&](const auto& axisA) -> std::unique_ptr<IGrid> {
-    return b.getAxis().visit([&](const auto& axisB) -> std::unique_ptr<IGrid> {
-      using AxisTypeA = std::decay_t<decltype(axisA)>;
-      using AxisTypeB = std::decay_t<decltype(axisB)>;
+  return a.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axisA) -> std::unique_ptr<IGrid> {
+    return b.getAxis().visit([&]<typename AxisTypeB>(const AxisTypeB& axisB) -> std::unique_ptr<IGrid> {
       using GridType = Grid<payload_t, AxisTypeA, AxisTypeB>;
       return std::make_unique<GridType>(axisA, axisB);
     });
