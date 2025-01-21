@@ -411,7 +411,7 @@ if(ACTS_BUILD_PLUGIN_TGEO)
         ${_acts_root_version}
         REQUIRED
         CONFIG
-        COMPONENTS Geom Graf
+        COMPONENTS Geom Graf RIO ROOTDataFrame
     )
     check_root_compatibility()
 endif()
