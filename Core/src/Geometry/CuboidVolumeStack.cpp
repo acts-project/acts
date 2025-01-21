@@ -120,8 +120,7 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
   } else if ((localDirVector - Vector3::UnitZ()).norm() < tolerance) {
     m_dir = AxisDirection::AxisZ;
   } else {
-    throw std::invalid_argument(
-        "CuboidVolumeStack: Invalid axis direction");
+    throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
   }
 
   std::size_t dirIdx = static_cast<std::size_t>(m_dir);
