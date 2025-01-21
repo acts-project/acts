@@ -178,10 +178,6 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
     m_contexts.push_back(std::move(context));
   }
 
-  auto scores = torch::from_blob(
-      outputMem, edgeIndex.size(1), 1, [](void *ptr) { cudaFree(ptr); },
-      torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat32));
-
   scores.sigmoid_();
 
   ACTS_VERBOSE("Size after classifier: " << scores.size(0));
