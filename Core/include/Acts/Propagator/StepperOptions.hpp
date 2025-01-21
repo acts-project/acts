@@ -8,11 +8,27 @@
 
 #pragma once
 
-#include <limits>
+#include "Acts/Definitions/Units.hpp"
+
+#include <functional>
 
 namespace Acts {
 
+class GeometryContext;
+class MagneticFieldContext;
+
 struct StepperPlainOptions {
+  /// StepperPlainOptions with context
+  StepperPlainOptions(const GeometryContext& gctx,
+                      const MagneticFieldContext& mctx)
+      : geoContext(gctx), magFieldContext(mctx) {}
+
+  /// Context object for the geometry
+  std::reference_wrapper<const GeometryContext> geoContext;
+
+  /// Context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+
   /// Tolerance for the error of the integration
   double stepTolerance = 1e-4;
 
@@ -20,7 +36,7 @@ struct StepperPlainOptions {
   double stepSizeCutOff = 0.;
 
   /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
+  double maxStepSize = 10 * Acts::UnitConstants::m;
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
