@@ -114,11 +114,11 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
         "resolved, call setRange() first.");
   }
 
-  return a.getAxis().visit([&](const auto& axis) -> std::unique_ptr<IGrid> {
-    using AxisTypeA = std::decay_t<decltype(axis)>;
-    using GridType = Grid<payload_t, AxisTypeA>;
-    return std::make_unique<GridType>(axis);
-  });
+  return a.getAxis().visit(
+      [&]<typename AxisTypeA>(const AxisTypeA& axis) -> std::unique_ptr<IGrid> {
+        using GridType = Grid<payload_t, AxisTypeA>;
+        return std::make_unique<GridType>(axis);
+      });
 }
 
 /// @brief Helper method to create a 2D grid from a two proto axes
