@@ -30,8 +30,7 @@ class TensorRTEdgeClassifier final : public Acts::EdgeClassificationBase {
   struct Config {
     std::string modelPath;
     std::vector<int> selectedFeatures = {};
-    float cut = 0.21;
-    int deviceID = 0;
+    float cut = 0.5;
 
     std::size_t numExecutionContexts = 1;
   };
