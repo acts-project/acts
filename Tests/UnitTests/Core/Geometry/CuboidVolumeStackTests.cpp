@@ -22,7 +22,11 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/Zip.hpp"
+
+#include <cassert>
+#include <stdexcept>
 
 using namespace Acts::UnitLiterals;
 
@@ -122,11 +126,13 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   auto origVolumes = volumes;
 
   std::vector<CuboidVolumeBounds> originalBounds;
-  std::transform(
-      volumes.begin(), volumes.end(), std::back_inserter(originalBounds),
-      [](const auto& vol) {
-        return *dynamic_cast<const CuboidVolumeBounds*>(&vol->volumeBounds());
-      });
+  std::transform(volumes.begin(), volumes.end(),
+                 std::back_inserter(originalBounds), [](const auto& vol) {
+                   const auto* res =
+                       static_cast<CuboidVolumeBounds*>(&vol->volumeBounds());
+                   throw_assert(res != nullptr, "");
+                   return *res;
+                 });
 
   if (shift < 1.0) {
     BOOST_CHECK_THROW(
