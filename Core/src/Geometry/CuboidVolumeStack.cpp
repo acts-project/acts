@@ -102,7 +102,7 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
 }
 
 CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
-                                     Vector3 direction,
+                                     const Vector3& direction,
                                      AttachmentStrategy strategy,
                                      ResizeStrategy resizeStrategy,
                                      const Logger& logger)
@@ -250,7 +250,7 @@ void CuboidVolumeStack::initializeOuterVolume(AttachmentStrategy strategy,
 
   Translation3 translation(Vector3::Unit(dirIdx) * mid);
   m_transform = m_groupTransform * translation;
-  std::array<double, 3> bounds;
+  std::array<double, 3> bounds{};
   bounds.at(dirIdx) = hl;
   bounds.at(static_cast<std::size_t>(m_dirOrth1)) = hl1;
   bounds.at(static_cast<std::size_t>(m_dirOrth2)) = hl2;
@@ -419,7 +419,7 @@ CuboidVolumeStack::checkOverlapAndAttach(
           Transform3 gapLocalTransform{gapTranslation};
           Transform3 gapGlobalTransform = m_groupTransform * gapLocalTransform;
 
-          std::array<double, 3> gapBoundsVals;
+          std::array<double, 3> gapBoundsVals{};
           gapBoundsVals[dirIdx] = gapHl;
           gapBoundsVals[static_cast<std::size_t>(m_dirOrth1)] =
               (max1 - min1) / 2;
@@ -752,7 +752,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
           printGapDimensions(candidate, " before");
 
-          std::array<double, 3> gap1BoundsVals;
+          std::array<double, 3> gap1BoundsVals{};
           gap1BoundsVals[dirIdx] = gap1Hl;
           gap1BoundsVals[dirOrth1Idx] = newVolume.halfLength(m_dirOrth1);
           gap1BoundsVals[dirOrth2Idx] = newVolume.halfLength(m_dirOrth2);
@@ -767,7 +767,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
         } else {
           ACTS_VERBOSE("~> Creating new gap volume at negative ");
-          std::array<double, 3> gap1BoundsVals;
+          std::array<double, 3> gap1BoundsVals{};
           gap1BoundsVals[dirIdx] = gap1Hl;
           gap1BoundsVals[dirOrth1Idx] = newVolume.halfLength(m_dirOrth1);
           gap1BoundsVals[dirOrth2Idx] = newVolume.halfLength(m_dirOrth2);
@@ -800,7 +800,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           gap2Min = newVolume.max(m_dir) - gap2Hl * 2;
           gap2P = (gap2Max + gap2Min) / 2.0;
 
-          std::array<double, 3> gap2BoundsVals;
+          std::array<double, 3> gap2BoundsVals{};
           gap2BoundsVals[dirIdx] = gap2Hl;
           gap2BoundsVals[dirOrth1Idx] = newVolume.halfLength(m_dirOrth1);
           gap2BoundsVals[dirOrth2Idx] = newVolume.halfLength(m_dirOrth2);
@@ -814,7 +814,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           printGapDimensions(candidate, " after ");
         } else {
           ACTS_VERBOSE("~> Creating new gap volume at positive ");
-          std::array<double, 3> gap2BoundsVals;
+          std::array<double, 3> gap2BoundsVals{};
           gap2BoundsVals[dirIdx] = gap2Hl;
           gap2BoundsVals[dirOrth1Idx] = newVolume.halfLength(m_dirOrth1);
           gap2BoundsVals[dirOrth2Idx] = newVolume.halfLength(m_dirOrth2);

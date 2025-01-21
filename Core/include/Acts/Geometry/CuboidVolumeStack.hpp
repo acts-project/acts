@@ -90,7 +90,7 @@ class CuboidVolumeStack : public Volume {
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CuboidVolumeBounds
   /// @note Preconditions are checked on construction
-  CuboidVolumeStack(std::vector<Volume*>& volumes, Vector3 direction,
+  CuboidVolumeStack(std::vector<Volume*>& volumes, const Vector3& direction,
                     AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
                     ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
                     const Logger& logger = Acts::getDummyLogger());

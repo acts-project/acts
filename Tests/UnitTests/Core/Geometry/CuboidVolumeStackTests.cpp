@@ -87,19 +87,19 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
   auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
 
-  std::array<double, 3> bounds1Vals;
+  std::array<double, 3> bounds1Vals{};
   bounds1Vals.at(boundDir) = halfDir;
   bounds1Vals.at(boundDirOrth1) = 100_mm;
   bounds1Vals.at(boundDirOrth2) = 400_mm;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
 
-  std::array<double, 3> bounds2Vals;
+  std::array<double, 3> bounds2Vals{};
   bounds2Vals.at(boundDir) = halfDir;
   bounds2Vals.at(boundDirOrth1) = 200_mm;
   bounds2Vals.at(boundDirOrth2) = 600_mm;
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
 
-  std::array<double, 3> bounds3Vals;
+  std::array<double, 3> bounds3Vals{};
   bounds3Vals.at(boundDir) = halfDir;
   bounds3Vals.at(boundDirOrth1) = 300_mm;
   bounds3Vals.at(boundDirOrth2) = 500_mm;
@@ -430,19 +430,19 @@ BOOST_DATA_TEST_CASE(Asymmetric,
   auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
   auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
 
-  std::array<double, 3> bounds1Vals;
+  std::array<double, 3> bounds1Vals{};
   bounds1Vals[dirIdx] = halfDir1;
   bounds1Vals[dirOrth1Idx] = 100_mm;
   bounds1Vals[dirOrth2Idx] = 400_mm;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
 
-  std::array<double, 3> bounds2Vals;
+  std::array<double, 3> bounds2Vals{};
   bounds2Vals[dirIdx] = halfDir2;
   bounds2Vals[dirOrth1Idx] = 200_mm;
   bounds2Vals[dirOrth2Idx] = 600_mm;
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
 
-  std::array<double, 3> bounds3Vals;
+  std::array<double, 3> bounds3Vals{};
   bounds3Vals[dirIdx] = halfDir3;
   bounds3Vals[dirOrth1Idx] = 300_mm;
   bounds3Vals[dirOrth2Idx] = 500_mm;
@@ -509,19 +509,19 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
   auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
 
-  std::array<double, 3> bounds1Vals;
+  std::array<double, 3> bounds1Vals{};
   bounds1Vals[dirIdx] = halfDir;
   bounds1Vals[dirOrth1Idx] = 100_mm;
   bounds1Vals[dirOrth2Idx] = 600_mm;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
 
-  std::array<double, 3> bounds2Vals;
+  std::array<double, 3> bounds2Vals{};
   bounds2Vals[dirIdx] = halfDir;
   bounds2Vals[dirOrth1Idx] = 100_mm;
   bounds2Vals[dirOrth2Idx] = 600_mm;
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
 
-  std::array<double, 3> bounds3Vals;
+  std::array<double, 3> bounds3Vals{};
   bounds3Vals[dirIdx] = halfDir;
   bounds3Vals[dirOrth1Idx] = 100_mm;
   bounds3Vals[dirOrth2Idx] = 600_mm;
@@ -768,13 +768,13 @@ BOOST_DATA_TEST_CASE(
   auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
   auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
 
-  std::array<double, 3> bounds1Vals;
+  std::array<double, 3> bounds1Vals{};
   bounds1Vals[dirIdx] = 400_mm;
   bounds1Vals[dirOrth1Idx] = 100_mm;
   bounds1Vals[dirOrth2Idx] = 300_mm;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
 
-  std::array<double, 3> bounds2Vals;
+  std::array<double, 3> bounds2Vals{};
   bounds2Vals[dirIdx] = 400_mm;
   bounds2Vals[dirOrth1Idx] = 100_mm;
   bounds2Vals[dirOrth2Idx] = 300_mm;
@@ -937,7 +937,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
   auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
   auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
 
-  std::array<double, 3> boundsVals;
+  std::array<double, 3> boundsVals{};
   boundsVals[dirIdx] = 100;
   boundsVals[dirOrth1Idx] = 70;
   boundsVals[dirOrth2Idx] = 100;
@@ -955,7 +955,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_CHECK_EQUAL(volumes.size(), 1);
     BOOST_CHECK(stack.gaps().empty());
 
-    std::array<double, 3> newBounds1Vals;
+    std::array<double, 3> newBounds1Vals{};
     newBounds1Vals[dirIdx] = 200;
     newBounds1Vals[dirOrth1Idx] = 70;
     newBounds1Vals[dirOrth2Idx] = 100;
@@ -973,7 +973,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDir), 100.0);
 
-    std::array<double, 3> newBounds2Vals;
+    std::array<double, 3> newBounds2Vals{};
     newBounds2Vals[dirIdx] = 300;
     newBounds2Vals[dirOrth1Idx] = 70;
     newBounds2Vals[dirOrth2Idx] = 100;
@@ -1003,7 +1003,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_CHECK_EQUAL(volumes.size(), 1);
     BOOST_CHECK(stack.gaps().empty());
 
-    std::array<double, 3> newBounds1Vals;
+    std::array<double, 3> newBounds1Vals{};
     newBounds1Vals[dirIdx] = 200;
     newBounds1Vals[dirOrth1Idx] = 70;
     newBounds1Vals[dirOrth2Idx] = 100;
@@ -1021,7 +1021,7 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDir), 100.0);
 
-    std::array<double, 3> newBounds2Vals;
+    std::array<double, 3> newBounds2Vals{};
     newBounds2Vals[dirIdx] = 300;
     newBounds2Vals[dirOrth1Idx] = 70;
     newBounds2Vals[dirOrth2Idx] = 100;
