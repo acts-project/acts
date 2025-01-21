@@ -600,7 +600,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
     checkVolumeAlignment(volTemp, logger);
   }
 
-  constexpr auto tolerance = 1e-1;
+  constexpr auto tolerance = s_onSurfaceTolerance;
   auto same = [](double a, double b) { return std::abs(a - b) < tolerance; };
 
   for (const auto& dir : {m_dir, m_dirOrth1, m_dirOrth2}) {
