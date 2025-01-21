@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-std::unique_ptr<Acts::IAxis> Acts::IAxis::create(AxisBoundaryType aBoundaryType,
+std::unique_ptr<Acts::IAxis> Acts::IAxis::createEquidistant(AxisBoundaryType aBoundaryType,
                                                  double min, double max,
                                                  std::size_t nbins) {
   using enum AxisType;
@@ -43,7 +43,7 @@ std::unique_ptr<Acts::IAxis> Acts::IAxis::create(AxisBoundaryType aBoundaryType,
   }
 }
 
-std::unique_ptr<Acts::IAxis> Acts::IAxis::create(
+std::unique_ptr<Acts::IAxis> Acts::IAxis::createVariable(
     AxisBoundaryType aBoundaryType, const std::vector<double>& edges) {
   using enum AxisType;
   using enum AxisBoundaryType;

@@ -27,20 +27,20 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
                            const std::vector<double>& edges)
-    : m_axisDir(aDir), m_axis(IAxis::create(abType, edges)) {
+    : m_axisDir(aDir), m_axis(IAxis::createVariable(abType, edges)) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
                            double minE, double maxE, std::size_t nbins)
-    : m_axisDir(aDir), m_axis(IAxis::create(abType, minE, maxE, nbins)) {
+    : m_axisDir(aDir), m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
                            std::size_t nbins)
     : m_axisDir(aDir),
-      m_axis(IAxis::create(abType, 0., 1., nbins)),
+      m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
       m_autorange(true) {
   checkConsistency(aDir, abType);
 }

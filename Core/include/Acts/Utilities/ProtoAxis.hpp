@@ -75,7 +75,7 @@ class ProtoAxis {
   /// @return the string representation
   std::string toString() const;
 
- protected:
+ private:
   /// Dispatch to the correct stream operator
   /// @param os output stream
   void toStream(std::ostream& os) const;
