@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
     BOOST_CHECK(!check(tolerance, {midRadius, -hlPhi * 1.5}));
     BOOST_CHECK(!check(tolerance, {midRadius, -hlPhi * 1.1}));
     BOOST_CHECK(!check(tolerance, {midRadius, -hlPhi * 0.8}));
-    BOOST_CHECK(check(tolerance, {midRadius, -hlPhi * 0.5}));
+    BOOST_CHECK(!check(tolerance, {midRadius, -hlPhi * 0.5}));
 
     BOOST_CHECK(!check(tolerance, {midRadius, hlPhi * 0.5}));
     BOOST_CHECK(!check(tolerance, {midRadius, hlPhi * 0.8}));
