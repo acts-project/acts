@@ -54,6 +54,19 @@ const Acts::IAxis& Acts::ProtoAxis::getAxis() const {
   return *m_axis;
 }
 
+void Acts::ProtoAxis::setRange(double minE, double maxE) {
+  if (!m_autorange) {
+    throw std::invalid_argument("ProtoAxis::setRange: Range is already set.");
+  }
+  if (m_axis->getType() != AxisType::Equidistant) {
+    throw std::invalid_argument(
+        "ProtoAxis::setRange: Range can only be set for equidistant binning.");
+  }
+  m_axis = IAxis::createEquidistant(m_axis->getBoundaryType(), minE, maxE,
+                                    m_axis->getNBins());
+  m_autorange = false;
+}
+
 bool Acts::ProtoAxis::isAutorange() const {
   return m_autorange;
 }

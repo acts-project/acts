@@ -127,6 +127,24 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   std::string oString = epa.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
+  // Invalid 1D grid construction with autorange axis
+  BOOST_CHECK_THROW(Acts::makeGrid<double>(epa), std::invalid_argument);
+
+  // Invalid 2D grid construction with autorange axis
+  Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
+  BOOST_CHECK_THROW(Acts::makeGrid<double>(epao, epa), std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::makeGrid<double>(epa, epao), std::invalid_argument);
+
+  // Set the range now
+  epa.setRange(0.0, 20.0);
+  BOOST_CHECK(!epa.isAutorange());
+
+  // 1D Grid consstruction works now
+  BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa));
+
+  // 2D Grid consstruction works now
+  BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa, epao));
+
   // Invalid constructor, closed with something else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
 }

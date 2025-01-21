@@ -68,6 +68,15 @@ class ProtoAxis {
   /// @return @c AxisType of this axis
   const IAxis& getAxis() const;
 
+  /// Set the range, this will change auto-range to false
+  ///
+  /// @throws std::invalid_argument if the axis is not auto-range
+  /// @throws std::invalid_argument if the axis is not equidistant
+  ///
+  /// @param minE the lowest edge of the binning
+  /// @param maxE the highest edge of the binning
+  void setRange(double minE, double maxE);
+
   /// @brief check if this is an auto-range binning
   bool isAutorange() const;
 
@@ -99,6 +108,12 @@ class ProtoAxis {
 /// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
+  if (a.isAutorange()) {
+    throw std::invalid_argument(
+        "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
+        "resolved, call setRange() first.");
+  }
+
   return a.getAxis().visit([&](const auto& axis) -> std::unique_ptr<IGrid> {
     using AxisTypeA = std::decay_t<decltype(axis)>;
     using GridType = Grid<payload_t, AxisTypeA>;
@@ -121,6 +136,13 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Axes must have different directions");
   }
+
+  if (a.isAutorange() || b.isAutorange()) {
+    throw std::invalid_argument(
+        "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
+        "resolved, call setRange() first.");
+  }
+
   return a.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axisA)
                                -> std::unique_ptr<IGrid> {
     return b.getAxis().visit([&]<typename AxisTypeB>(const AxisTypeB& axisB)
