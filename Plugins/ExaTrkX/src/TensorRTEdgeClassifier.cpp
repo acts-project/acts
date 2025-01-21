@@ -115,34 +115,35 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
                                    std::any inEdgeIndex,
                                    std::any inEdgeFeatures,
                                    const ExecutionContext &execContext) {
+  assert(execContext.device.is_cuda());
   decltype(std::chrono::high_resolution_clock::now()) t0, t1, t2, t3, t4;
   t0 = std::chrono::high_resolution_clock::now();
 
   c10::cuda::CUDAStreamGuard(execContext.stream.value());
 
   auto nodeFeatures =
-      std::any_cast<torch::Tensor>(inNodeFeatures).to(torch::kCUDA);
+      std::any_cast<torch::Tensor>(inNodeFeatures).to(execContext.device);
 
-  auto edgeIndex = std::any_cast<torch::Tensor>(inEdgeIndex).to(torch::kCUDA);
+  auto edgeIndex =
+      std::any_cast<torch::Tensor>(inEdgeIndex).to(execContext.device);
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
 
   auto edgeFeatures =
-      std::any_cast<torch::Tensor>(inEdgeFeatures).to(torch::kCUDA);
+      std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
   ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
 
   t1 = std::chrono::high_resolution_clock::now();
 
   // get a context from the list of contexts
   std::unique_ptr<nvinfer1::IExecutionContext> context;
-  while (true) {
+  while (context == nullptr) {
     std::lock_guard<std::mutex> lock(m_contextMutex);
     if (!m_contexts.empty()) {
       context = std::move(m_contexts.back());
       m_contexts.pop_back();
-      break;
     }
   }
-  assert(context);
+  assert(context != nullptr);
 
   context->setInputShape(
       "x", nvinfer1::Dims2{nodeFeatures.size(0), nodeFeatures.size(1)});
@@ -156,10 +157,10 @@ TensorRTEdgeClassifier::operator()(std::any inNodeFeatures,
       "edge_attr", nvinfer1::Dims2{edgeFeatures.size(0), edgeFeatures.size(1)});
   context->setTensorAddress("edge_attr", edgeFeatures.data_ptr());
 
-  void *outputMem{nullptr};
-  std::size_t outputSize = edgeIndex.size(1) * sizeof(float);
-  ACTS_CUDA_CHECK(cudaMalloc(&outputMem, outputSize));
-  context->setTensorAddress("output", outputMem);
+  auto scores = torch::empty(
+      edgeIndex.size(1),
+      torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat32));
+  context->setTensorAddress("output", scores.data_ptr());
 
   t2 = std::chrono::high_resolution_clock::now();
 
