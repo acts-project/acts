@@ -94,7 +94,7 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
       m_dir(direction),
       m_resizeStrategy(resizeStrategy),
       m_volumes(volumes) {
-  std::size_t dirIdx = static_cast<std::size_t>(m_dir);
+  auto dirIdx = static_cast<std::size_t>(m_dir);
   m_dirOrth1 = static_cast<AxisDirection>((dirIdx + 1) % 3);
   m_dirOrth2 = static_cast<AxisDirection>((dirIdx + 2) % 3);
 
@@ -123,7 +123,7 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
     throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
   }
 
-  std::size_t dirIdx = static_cast<std::size_t>(m_dir);
+  auto dirIdx = static_cast<std::size_t>(m_dir);
   m_dirOrth1 = static_cast<AxisDirection>((dirIdx + 1) % 3);
   m_dirOrth2 = static_cast<AxisDirection>((dirIdx + 2) % 3);
 
@@ -192,7 +192,7 @@ void CuboidVolumeStack::initializeOuterVolume(AttachmentStrategy strategy,
   ACTS_VERBOSE("Checking volume alignment");
   checkVolumeAlignment(volumeTuples, logger);
 
-  std::size_t dirIdx = static_cast<std::size_t>(m_dir);
+  auto dirIdx = static_cast<std::size_t>(m_dir);
   ACTS_VERBOSE("Sorting by volume " << axisDirectionName(m_dir) << " position");
   std::ranges::sort(volumeTuples, {}, [&dirIdx](const auto& v) {
     return v.localTransform.translation()[dirIdx];
@@ -471,9 +471,9 @@ void CuboidVolumeStack::printVolumeSequence(
 void CuboidVolumeStack::checkVolumeAlignment(
     const std::vector<VolumeTuple>& volumes, const Logger& logger) const {
   std::size_t n = 0;
-  std::size_t dirIdx = static_cast<std::size_t>(m_dir);
-  std::size_t dirOrth1Idx = static_cast<std::size_t>(m_dirOrth1);
-  std::size_t dirOrth2Idx = static_cast<std::size_t>(m_dirOrth2);
+  auto dirIdx = static_cast<std::size_t>(m_dir);
+  auto dirOrth1Idx = static_cast<std::size_t>(m_dirOrth1);
+  auto dirOrth2Idx = static_cast<std::size_t>(m_dirOrth2);
 
   for (auto& vt : volumes) {
     ACTS_VERBOSE("Checking volume #"
@@ -675,9 +675,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
     ACTS_VERBOSE("Halflength " << axisDirectionName(m_dir) << "is the same, no "
                                << axisDirectionName(m_dir) << "resize needed");
   } else {
-    std::size_t dirIdx = static_cast<std::size_t>(m_dir);
-    std::size_t dirOrth1Idx = static_cast<std::size_t>(m_dirOrth1);
-    std::size_t dirOrth2Idx = static_cast<std::size_t>(m_dirOrth2);
+    auto dirIdx = static_cast<std::size_t>(m_dir);
+    auto dirOrth1Idx = static_cast<std::size_t>(m_dirOrth1);
+    auto dirOrth2Idx = static_cast<std::size_t>(m_dirOrth2);
     auto boundDirIdx = static_cast<CuboidVolumeBounds::BoundValues>(m_dir);
     if (m_resizeStrategy == ResizeStrategy::Expand) {
       if (newVolume.min(m_dir) < oldVolume.min(m_dir)) {
