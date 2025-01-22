@@ -23,19 +23,33 @@ nlohmann::json Acts::ProtoAxisJsonConverter::toJson(const Acts::ProtoAxis& pa) {
 Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
     const nlohmann::json& j) {
   auto axisDir = j.at("axis_dir").get<Acts::AxisDirection>();
-  auto axisBoundaryType =
-      j["axis"]["boundary_type"].get<Acts::AxisBoundaryType>();
-  auto axisType = j["axis"]["type"].get<Acts::AxisType>();
+  auto axisBoundaryType = j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
+  auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
   if (axisType == AxisType::Equidistant) {
-    if (j["autorange"].get<bool>()) {
-      auto nbins = j["axis"]["bins"].get<std::size_t>();
+    if (j.at("autorange").get<bool>()) {
+      auto nbins = j.at("axis").at("bins").get<std::size_t>();
+      if (nbins == 0) {
+        throw std::invalid_argument("Number of bins must be positive");
+      }
       return ProtoAxis(axisDir, axisBoundaryType, nbins);
     }
-    auto min = j["axis"]["range"][0].get<double>();
-    auto max = j["axis"]["range"][1].get<double>();
-    auto nbins = j["axis"]["bins"].get<std::size_t>();
+    auto min = j.at("axis").at("range").at(0).get<double>();
+    auto max = j.at("axis").at("range").at(1).get<double>();
+    auto nbins = j.at("axis").at("bins").get<std::size_t>();
+    if (min >= max) {
+        throw std::invalid_argument("Invalid range: min must be less than max");
+    }
+    if (nbins == 0) {
+        throw std::invalid_argument("Number of bins must be positive");
+    }
     return ProtoAxis(axisDir, axisBoundaryType, min, max, nbins);
   }
-  auto binEdges = j["axis"]["boundaries"].get<std::vector<double>>();
+  auto binEdges = j.at("axis").at("boundaries").get<std::vector<double>>();
+  if (binEdges.size() < 2) {
+    throw std::invalid_argument("At least two bin edges required");
+  }
+  if (!std::is_sorted(binEdges.begin(), binEdges.end())) {
+    throw std::invalid_argument("Bin edges must be sorted in ascending order");
+  }
   return ProtoAxis(axisDir, axisBoundaryType, binEdges);
 }
