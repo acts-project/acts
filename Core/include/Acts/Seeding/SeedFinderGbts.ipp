@@ -46,10 +46,6 @@ void SeedFinderGbts<external_spacepoint_t>::loadSpacePoints(
     const std::vector<GbtsSP<external_spacepoint_t>>& gbtsSPvect) {
   ACTS_VERBOSE("Loading space points");
   for (const auto& gbtssp : gbtsSPvect) {
-    bool is_Pixel = gbtssp.isPixel();
-    if (!is_Pixel) {
-      continue;
-    }
     m_storage->addSpacePoint(gbtssp, (m_config.m_useClusterWidth > 0));
   }
 
@@ -307,12 +303,12 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
                   nEdges++;
                 }
               }  // loop over n2 (outer) nodes
-            }  // loop over n1 (inner) nodes
-          }  // loop over source eta bins
-        }  // loop over dst eta bins
-      }  // loop over L2(L1) layers
-    }  // loop over dst layers
-  }  // loop over the stages of doublet making
+            }    // loop over n1 (inner) nodes
+          }      // loop over source eta bins
+        }        // loop over dst eta bins
+      }          // loop over L2(L1) layers
+    }            // loop over dst layers
+  }              // loop over the stages of doublet making
 
   std::vector<const GbtsNode<external_spacepoint_t>*> vNodes;
 
@@ -655,31 +651,32 @@ void SeedFinderGbts<external_spacepoint_t>::createSeeds(
     return;
   }
 
-  m_triplets.clear();  // member of class , saying not declared, maybe public?
+  m_triplets.clear();
 
   for (auto& track : vTracks) {
     for (auto& seed : track.m_seeds) {  // access member of GbtsTrigTracklet
-
-      float newQ = seed.Q();  // function of TrigInDetTriplet
-      if (m_config.m_LRTmode) {
-        // In LRT mode penalize pixels in Triplets
-        if (seed.s1().isPixel()) {
-          newQ += 1000;  // functions of TrigSiSpacePointBase
-        }
-        if (seed.s2().isPixel()) {
-          newQ += 1000;
-        }
-        if (seed.s3().isPixel()) {
-          newQ += 1000;
-        }
-      } else {
-        // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled) and
-        // PPS by 10000
-        if (seed.s3().isStrip()) {
-          newQ += seed.s1().isStrip() ? 1000.0 : 10000.0;
-        }
-      }
-      seed.Q(newQ);
+      // Currently not used, but leaving in to use concept in future development
+      //  float newQ = seed.Q();  // function of TrigInDetTriplet
+      //  if (m_config.m_LRTmode) {
+      //    // In LRT mode penalize pixels in Triplets
+      //    if (seed.s1().isPixel()) {
+      //      newQ += 1000;  // functions of TrigSiSpacePointBase
+      //    }
+      //    if (seed.s2().isPixel()) {
+      //      newQ += 1000;
+      //    }
+      //    if (seed.s3().isPixel()) {
+      //      newQ += 1000;
+      //    }
+      //  } else {
+      //    // In normal (non LRT) mode penalise SSS by 1000, PSS (if enabled)
+      //    and
+      //    // PPS by 10000
+      //    if (seed.s3().isSCT()) {
+      //      newQ += seed.s1().isSCT() ? 1000.0 : 10000.0;
+      //    }
+      //  }
+      //  seed.Q(newQ);
       m_triplets.emplace_back(seed);
     }
   }

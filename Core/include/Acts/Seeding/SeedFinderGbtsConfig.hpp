@@ -48,7 +48,6 @@ struct SeedFinderGbtsConfig {
   std::vector<TrigInDetSiLayer> m_layerGeometry;
 
   // for runGbts_TrackFinder
-  bool m_LRTmode = true;  // eventually want to set from full chain
   bool m_useEtaBinning =
       true;  // bool to use eta binning from geometry structure
   bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets

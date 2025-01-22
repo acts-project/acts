@@ -27,28 +27,22 @@ constexpr std::size_t N_SEG_CONNS = 6;          // was 6
 template <typename space_point_t>
 struct GbtsSP {
   const space_point_t *SP;  // want inside to have pointer
-  int gbtsID;  // used to access detector layer information in connector input
-               // file
-  int combined_ID;  // includes eta id which references the detector module
-  bool m_isPixel;
+  int gbtsID;
+  int combined_ID;
   float m_phi;
   float m_r;
   float m_ClusterWidth;
-  GbtsSP(const space_point_t *sp, int id, int combined_id, bool isPixel,
-         float ClusterWidth)
+  GbtsSP(const space_point_t *sp, int id, int combined_id, float ClusterWidth)
       : SP(sp),
         gbtsID(id),
         combined_ID{combined_id},
-        m_isPixel(isPixel),
         m_ClusterWidth(ClusterWidth) {
     m_phi = std::atan2(SP->y(), SP->x());
     m_r = std::sqrt((SP->x() * SP->x()) + (SP->y() * SP->y()));
   };
-  bool isPixel() const { return m_isPixel; }
-  bool isStrip() const { return !m_isPixel; }
   float phi() const { return m_phi; }
   float r() const { return m_r; }
-  float ClusterWidth() const { return m_ClusterWidth; }
+  bool ClusterWidth() const { return m_ClusterWidth; }
 };
 
 template <typename space_point_t>
@@ -183,6 +177,8 @@ class GbtsDataStorage {
     } else {
       if (useClusterWidth) {
         float cluster_width = sp.ClusterWidth();
+        // if (cluster_width == 0) {continue;} //catch for casses that dont have
+        // cluster width available
         if (cluster_width > 0.2) {
           return -3;
         }
