@@ -16,11 +16,12 @@
 /// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 /// can not match our naming guidelines.
 ///
-/// This uses a custom API and nemclature as it would
+/// This uses a custom API and nomenclature as it would
 /// otherwise require the ProtoAxis to have a default
-/// constructor which is disallowed to to the unique_ptr
+/// constructor which is deleted
 namespace Acts::ProtoAxisJsonConverter {
-/// @brief Write the ProtoAxis to a json object
+
+/// Write the ProtoAxis to a json object
 ///
 /// @param pa the proto axis to be written out
 nlohmann::json toJson(const ProtoAxis& pa);
