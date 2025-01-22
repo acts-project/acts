@@ -16,6 +16,7 @@ pybind11_add_module(ActsPythonBindings
   src/Material.cpp
   src/Geometry.cpp
   src/GeometryBuildingGen1.cpp
+  src/Blueprint.cpp
   src/ExampleAlgorithms.cpp
   src/MagneticField.cpp
   src/Output.cpp
@@ -267,9 +268,11 @@ foreach(f ${py_files})
         CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target}
         SYMBOLIC
     )
-endforeach()
 
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/
-    DESTINATION ${_python_install_dir}
-)
+    get_filename_component(_rel ${f} DIRECTORY)
+
+    install(
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f}
+        DESTINATION ${_python_install_dir}/${_rel}
+    )
+endforeach()

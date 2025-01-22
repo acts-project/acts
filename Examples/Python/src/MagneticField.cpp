@@ -26,7 +26,6 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include <pybind11/pybind11.h>

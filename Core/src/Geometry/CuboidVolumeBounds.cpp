@@ -30,6 +30,10 @@ CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
   buildSurfaceBounds();
 }
 
+std::vector<double> CuboidVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
 std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
@@ -38,36 +42,36 @@ std::vector<Acts::OrientedSurface> Acts::CuboidVolumeBounds::orientedSurfaces(
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal});
+  oSurfaces.push_back(OrientedSurface{std::move(sf), Direction::AlongNormal()});
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
   oSurfaces.push_back(
-      OrientedSurface{std::move(sf), Direction::OppositeNormal});
+      OrientedSurface{std::move(sf), Direction::OppositeNormal()});
 
   return oSurfaces;
 }
@@ -100,15 +104,15 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-double CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
-  if (bValue <= BinningValue::binZ) {
-    return m_values[toUnderlying(bValue)];
+double CuboidVolumeBounds::referenceBorder(AxisDirection aDir) const {
+  if (aDir <= AxisDirection::AxisZ) {
+    return m_values[toUnderlying(aDir)];
   }
-  if (bValue == BinningValue::binR) {
-    return std::sqrt(m_values[toUnderlying(BinningValue::binX)] *
-                         m_values[toUnderlying(BinningValue::binX)] +
-                     m_values[toUnderlying(BinningValue::binY)] *
-                         m_values[toUnderlying(BinningValue::binY)]);
+  if (aDir == AxisDirection::AxisR) {
+    return std::sqrt(m_values[toUnderlying(AxisDirection::AxisX)] *
+                         m_values[toUnderlying(AxisDirection::AxisX)] +
+                     m_values[toUnderlying(AxisDirection::AxisY)] *
+                         m_values[toUnderlying(AxisDirection::AxisY)]);
   }
   return 0.0;
 }
@@ -117,12 +121,6 @@ bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
-}
-
-std::vector<double> CuboidVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
 }
 
 void CuboidVolumeBounds::checkConsistency() noexcept(false) {

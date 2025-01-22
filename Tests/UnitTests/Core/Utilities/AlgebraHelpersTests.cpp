@@ -82,18 +82,15 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
   m(1, 1) = 1;
 
   auto mInv = Acts::safeInverse(m);
+  BOOST_REQUIRE(mInv.has_value());
   auto mInvInv = Acts::safeInverse(*mInv);
-
-  BOOST_CHECK(mInv);
   BOOST_CHECK(!mInvInv);
 
   ACTS_VERBOSE("Test: SafeInverseFPESmallMatrix" << "\n"
                                                  << "m:\n"
                                                  << m << "\n"
                                                  << "mInv:\n"
-                                                 << *mInv << "\n"
-                                                 << "mInvInv [garbage]:\n"
-                                                 << *mInvInv);
+                                                 << *mInv);
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
@@ -107,9 +104,7 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
   ACTS_VERBOSE("Test: SafeInverseFPELargeMatrix" << "\n"
                                                  << "m:\n"
-                                                 << m << "\n"
-                                                 << "mInv [garbage]:\n"
-                                                 << *mInv);
+                                                 << m);
 }
 
 /// This test should not compile

@@ -77,20 +77,6 @@ struct GaussianSumFitter {
   /// The actor type
   using GsfActor = detail::GsfActor<bethe_heitler_approx_t, traj_t>;
 
-  /// This allows to break the propagation by setting the navigationBreak
-  /// TODO refactor once we can do this more elegantly
-  struct NavigationBreakAborter {
-    NavigationBreakAborter() = default;
-
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
-    bool checkAbort(propagator_state_t& state, const stepper_t& /*stepper*/,
-                    const navigator_t& navigator,
-                    const Logger& /*logger*/) const {
-      return navigator.navigationBreak(state.navigation);
-    }
-  };
-
   /// @brief The fit function for the Direct navigator
   template <typename source_link_it_t, typename start_parameters_t,
             TrackContainerFrontend track_container_t>
@@ -105,7 +91,7 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActorList<GsfActor, NavigationBreakAborter>;
+      using Actors = ActorList<GsfActor>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
@@ -151,8 +137,7 @@ struct GaussianSumFitter {
 
     // Initialize the forward propagation with the DirectNavigator
     auto fwdPropInitializer = [this](const auto& opts) {
-      using Actors =
-          ActorList<GsfActor, EndOfWorldReached, NavigationBreakAborter>;
+      using Actors = ActorList<GsfActor, EndOfWorldReached>;
       using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
       PropagatorOptions propOptions(opts.geoContext, opts.magFieldContext);
