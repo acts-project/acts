@@ -72,6 +72,10 @@ class MultiWireInternalStructureBuilder
         Acts::Experimental::MultiLayerSurfacesNavigation>
         isg{internalSurfaces,
             {},
+            if (m_cfg.binning.size() < 2) {
+                throw std::runtime_error(
+                    "MultiWireStructureBuilder: At least 2 binning axes required");
+            }
             {m_cfg.binning[0u].getAxisDirection(),
              m_cfg.binning[1u].getAxisDirection()},
             {m_cfg.binning[0u].getFillExpansion(),
