@@ -9,11 +9,15 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
+#include <algorithm>
+#include <array>
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {
@@ -26,6 +30,24 @@ CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
 
 CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
     : m_values(values) {
+  checkConsistency();
+  buildSurfaceBounds();
+}
+
+CuboidVolumeBounds::CuboidVolumeBounds(
+    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
+  // Consistency check will fail if
+  // not all the bounds are constructed
+  std::array<double, eSize> values = {-1, -1, -1};
+  for (const auto& [key, value] : keyValues) {
+    values[key] = value;
+  }
+  if (std::any_of(values.begin(), values.end(),
+                  [](const auto& val) { return val == -1; })) {
+    throw std::logic_error("Missing bound values");
+  }
+
+  m_values = values;
   checkConsistency();
   buildSurfaceBounds();
 }
@@ -147,6 +169,24 @@ void CuboidVolumeBounds::set(
   } catch (std::invalid_argument& e) {
     m_values = previous;
     throw e;
+  }
+}
+
+CuboidVolumeBounds::BoundValues CuboidVolumeBounds::fromAxisDirection(
+    AxisDirection direction) {
+  using enum AxisDirection;
+  switch (direction) {
+    case AxisX:
+      return BoundValues::eHalfLengthX;
+      break;
+    case AxisY:
+      return BoundValues::eHalfLengthY;
+      break;
+    case AxisZ:
+      return BoundValues::eHalfLengthZ;
+      break;
+    default:
+      throw std::invalid_argument("Invalid axis direction");
   }
 }
 

@@ -34,6 +34,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/detail/VolumeResizeStrategy.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -294,16 +296,15 @@ void addGeometry(Context& ctx) {
   {
     auto cylStack = py::class_<CylinderVolumeStack>(m, "CylinderVolumeStack");
 
-    py::enum_<CylinderVolumeStack::AttachmentStrategy>(cylStack,
-                                                       "AttachmentStrategy")
-        .value("Gap", CylinderVolumeStack::AttachmentStrategy::Gap)
-        .value("First", CylinderVolumeStack::AttachmentStrategy::First)
-        .value("Second", CylinderVolumeStack::AttachmentStrategy::Second)
-        .value("Midpoint", CylinderVolumeStack::AttachmentStrategy::Midpoint);
+    py::enum_<VolumeAttachmentStrategy>(cylStack, "AttachmentStrategy")
+        .value("Gap", VolumeAttachmentStrategy::Gap)
+        .value("First", VolumeAttachmentStrategy::First)
+        .value("Second", VolumeAttachmentStrategy::Second)
+        .value("Midpoint", VolumeAttachmentStrategy::Midpoint);
 
-    py::enum_<CylinderVolumeStack::ResizeStrategy>(cylStack, "ResizeStrategy")
-        .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
-        .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
+    py::enum_<VolumeResizeStrategy>(cylStack, "ResizeStrategy")
+        .value("Gap", VolumeResizeStrategy::Gap)
+        .value("Expand", VolumeResizeStrategy::Expand);
   }
 
   addBlueprint(ctx);

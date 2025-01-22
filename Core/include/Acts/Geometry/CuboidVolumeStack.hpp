@@ -10,9 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/detail/VolumeResizeStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <vector>
 
 namespace Acts {
@@ -30,29 +33,6 @@ namespace Acts {
 /// @note The size adjustment convention is that volumes are never shrunk
 class CuboidVolumeStack : public Volume {
  public:
-  /// The attachment strategy defines how the volumes are attached
-  /// Attachment always happens pair-wise
-  enum class AttachmentStrategy {
-    /// Given two volumes, the *left* one, i.e. the one with the lower **local**
-    /// x, y, or z value is extended
-    First,
-    /// Given two volumes, the *right* one, i.e. the one with the higher
-    /// **local** x, y, or z value is extended
-    Second,
-    /// Given two volumes, the *midpoint* between the two volumes is found
-    Midpoint,
-    /// A gap volume is created to fit between the two volumes
-    Gap,
-  };
-
-  /// The resize strategy defines how the volumes are resized
-  enum class ResizeStrategy {
-    /// Extend the volume connected to the respective edge to fit the new bounds
-    Expand,
-    /// Create a gap volume at the respective edge to fit the new bounds
-    Gap,
-  };
-
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
   /// @param direction is the axis direction
@@ -69,10 +49,11 @@ class CuboidVolumeStack : public Volume {
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CuboidVolumeBounds
   /// @note Preconditions are checked on construction
-  CuboidVolumeStack(std::vector<Volume*>& volumes, AxisDirection direction,
-                    AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
-                    ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
-                    const Logger& logger = Acts::getDummyLogger());
+  CuboidVolumeStack(
+      std::vector<Volume*>& volumes, AxisDirection direction,
+      VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
+      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
+      const Logger& logger = Acts::getDummyLogger());
 
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
@@ -90,10 +71,11 @@ class CuboidVolumeStack : public Volume {
   ///      in @c x or @c y.
   /// @pre The volumes all need to have @c CuboidVolumeBounds
   /// @note Preconditions are checked on construction
-  CuboidVolumeStack(std::vector<Volume*>& volumes, const Vector3& direction,
-                    AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
-                    ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
-                    const Logger& logger = Acts::getDummyLogger());
+  CuboidVolumeStack(
+      std::vector<Volume*>& volumes, const Vector3& direction,
+      VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
+      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
+      const Logger& logger = Acts::getDummyLogger());
 
   /// Update the volume bounds and transform. This
   /// will update the bounds of all volumes in the stack
@@ -113,6 +95,17 @@ class CuboidVolumeStack : public Volume {
   /// @return the vector of gap volumes
   const std::vector<std::shared_ptr<Volume>>& gaps() const;
 
+  /// Conert axis direction to an array index according to
+  /// stack convention. For example, AxisX --> 0
+  /// @param direction is the axis direction to convert
+  static std::size_t axisToIndex(AxisDirection direction);
+
+  /// Get axis directions orthogonal to the given one according
+  /// to stack convention. For example AxisX --> <AxisY, AxisZ>
+  /// @param direction is the axis direction to find the orthogonal for
+  static std::pair<AxisDirection, AxisDirection> getOrthogonalAxes(
+      AxisDirection direction);
+
  private:
   /// Helper to get the first volume in the input, and throw an exception if
   /// there is not one.
@@ -124,7 +117,8 @@ class CuboidVolumeStack : public Volume {
   /// internal attachment and produces the overall outer volume bounds.
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
-  void initializeOuterVolume(AttachmentStrategy strategy, const Logger& logger);
+  void initializeOuterVolume(VolumeAttachmentStrategy strategy,
+                             const Logger& logger);
 
   struct VolumeTuple;
 
@@ -157,7 +151,7 @@ class CuboidVolumeStack : public Volume {
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttach(
-      std::vector<VolumeTuple>& volumes, AttachmentStrategy strategy,
+      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
       const Logger& logger);
 
   /// Helper function to synchronize the bounds of the volumes
@@ -184,24 +178,10 @@ class CuboidVolumeStack : public Volume {
   AxisDirection m_dirOrth1{};
   AxisDirection m_dirOrth2{};
 
-  ResizeStrategy m_resizeStrategy{};
+  VolumeResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
   std::vector<std::shared_ptr<Volume>> m_gaps{};
   std::vector<Volume*>& m_volumes;
 };
-
-/// Output operator for the attachment strategy
-/// @param os is the output stream
-/// @param strategy is the attachment strategy
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os,
-                         CuboidVolumeStack::AttachmentStrategy strategy);
-
-/// Output operator for the resize strategy
-/// @param os is the output stream
-/// @param strategy is the resize strategy
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os,
-                         CuboidVolumeStack::ResizeStrategy strategy);
 
 }  // namespace Acts

@@ -19,6 +19,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeStack.hpp"
+#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/detail/VolumeResizeStrategy.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -26,7 +28,9 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <cassert>
+#include <initializer_list>
 #include <stdexcept>
+#include <utility>
 
 using namespace Acts::UnitLiterals;
 
@@ -46,16 +50,16 @@ struct Fixture {
 
 BOOST_FIXTURE_TEST_SUITE(Geometry, Fixture)
 
-static const std::vector<CuboidVolumeStack::AttachmentStrategy> strategies = {
-    CuboidVolumeStack::AttachmentStrategy::Gap,
-    CuboidVolumeStack::AttachmentStrategy::First,
-    CuboidVolumeStack::AttachmentStrategy::Second,
-    CuboidVolumeStack::AttachmentStrategy::Midpoint,
+static const std::vector<VolumeAttachmentStrategy> strategies = {
+    VolumeAttachmentStrategy::Gap,
+    VolumeAttachmentStrategy::First,
+    VolumeAttachmentStrategy::Second,
+    VolumeAttachmentStrategy::Midpoint,
 };
 
-static const std::vector<CuboidVolumeStack::ResizeStrategy> resizeStrategies = {
-    CuboidVolumeStack::ResizeStrategy::Expand,
-    CuboidVolumeStack::ResizeStrategy::Gap,
+static const std::vector<VolumeResizeStrategy> resizeStrategies = {
+    VolumeResizeStrategy::Expand,
+    VolumeResizeStrategy::Gap,
 };
 
 BOOST_AUTO_TEST_SUITE(CuboidVolumeStackTest)
@@ -76,34 +80,32 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
                      angle, rotate, shift, offset, strategy, dir) {
   double halfDir = 400_mm;
 
-  std::size_t dirIdx = static_cast<std::size_t>(dir);
-  std::size_t dirOrth1Idx = (dirIdx + 1) % 3;
-  std::size_t dirOrth2Idx = (dirIdx + 2) % 3;
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
-  auto dirOrth1 = static_cast<AxisDirection>(dirOrth1Idx);
-  auto dirOrth2 = static_cast<AxisDirection>(dirOrth2Idx);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
+  auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
 
-  auto boundDir = static_cast<CuboidVolumeBounds::BoundValues>(dir);
-  auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
-  auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
 
-  std::array<double, 3> bounds1Vals{};
-  bounds1Vals.at(boundDir) = halfDir;
-  bounds1Vals.at(boundDirOrth1) = 100_mm;
-  bounds1Vals.at(boundDirOrth2) = 400_mm;
-  auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
+  auto bounds1 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 400_mm}});
 
-  std::array<double, 3> bounds2Vals{};
-  bounds2Vals.at(boundDir) = halfDir;
-  bounds2Vals.at(boundDirOrth1) = 200_mm;
-  bounds2Vals.at(boundDirOrth2) = 600_mm;
-  auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
+  auto bounds2 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 200_mm},
+          {boundDirOrth2, 600_mm}});
 
-  std::array<double, 3> bounds3Vals{};
-  bounds3Vals.at(boundDir) = halfDir;
-  bounds3Vals.at(boundDirOrth1) = 300_mm;
-  bounds3Vals.at(boundDirOrth2) = 500_mm;
-  auto bounds3 = std::make_shared<CuboidVolumeBounds>(bounds3Vals);
+  auto bounds3 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 300_mm},
+          {boundDirOrth2, 500_mm}});
 
   Transform3 base = AngleAxis3(angle * 1_degree, Vector3::Unit(dirOrth1Idx)) *
                     Translation3(offset);
@@ -129,20 +131,19 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   std::transform(volumes.begin(), volumes.end(),
                  std::back_inserter(originalBounds), [](const auto& vol) {
                    const auto* res =
-                       static_cast<CuboidVolumeBounds*>(&vol->volumeBounds());
+                       dynamic_cast<CuboidVolumeBounds*>(&vol->volumeBounds());
                    throw_assert(res != nullptr, "");
                    return *res;
                  });
 
   if (shift < 1.0) {
-    BOOST_CHECK_THROW(
-        CuboidVolumeStack(volumes, dir, strategy,
-                          CuboidVolumeStack::ResizeStrategy::Gap, *logger),
-        std::invalid_argument);
+    BOOST_CHECK_THROW(CuboidVolumeStack(volumes, dir, strategy,
+                                        VolumeResizeStrategy::Gap, *logger),
+                      std::invalid_argument);
     return;
   }
-  CuboidVolumeStack stack(volumes, dir, strategy,
-                          CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+  CuboidVolumeStack stack(volumes, dir, strategy, VolumeResizeStrategy::Gap,
+                          *logger);
 
   auto stackBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
@@ -187,7 +188,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       BOOST_CHECK_EQUAL(newBounds->get(boundDir), bounds.get(boundDir));
     }
   } else {
-    if (strategy == CuboidVolumeStack::AttachmentStrategy::Gap) {
+    if (strategy == VolumeAttachmentStrategy::Gap) {
       // Gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 5);
       auto gap1 = volumes.at(1);
@@ -231,7 +232,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       BOOST_CHECK_EQUAL(vol1->transform().matrix(), transform1.matrix());
       BOOST_CHECK_EQUAL(vol2->transform().matrix(), transform2.matrix());
       BOOST_CHECK_EQUAL(vol3->transform().matrix(), transform3.matrix());
-    } else if (strategy == CuboidVolumeStack::AttachmentStrategy::First) {
+    } else if (strategy == VolumeAttachmentStrategy::First) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
@@ -266,7 +267,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Transform3 expectedTransform3 = base * expectedTranslation3;
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
-    } else if (strategy == CuboidVolumeStack::AttachmentStrategy::Second) {
+    } else if (strategy == VolumeAttachmentStrategy::Second) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
@@ -301,7 +302,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Transform3 expectedTransform3 = base * expectedTranslation3;
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
                            expectedTransform3.matrix(), 1e-10, 1e-14);
-    } else if (strategy == CuboidVolumeStack::AttachmentStrategy::Midpoint) {
+    } else if (strategy == VolumeAttachmentStrategy::Midpoint) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
@@ -387,11 +388,10 @@ BOOST_DATA_TEST_CASE(BaselineGlobal,
               volumesAxisDirection.end());
 
   CuboidVolumeStack stackOrientation(volumesOrientation, orientation, strategy,
-                                     CuboidVolumeStack::ResizeStrategy::Gap,
-                                     *logger);
-  CuboidVolumeStack stackAxisDirection(
-      volumesAxisDirection, AxisDirection::AxisZ, strategy,
-      CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+                                     VolumeResizeStrategy::Gap, *logger);
+  CuboidVolumeStack stackAxisDirection(volumesAxisDirection,
+                                       AxisDirection::AxisZ, strategy,
+                                       VolumeResizeStrategy::Gap, *logger);
 
   auto stackBoundsOrientation =
       dynamic_cast<const CuboidVolumeBounds*>(&stackOrientation.volumeBounds());
@@ -419,34 +419,31 @@ BOOST_DATA_TEST_CASE(Asymmetric,
   double halfDir3 = 400_mm;
   double pDir3 = 850_mm;
 
-  std::size_t dirIdx = static_cast<std::size_t>(dir);
-  std::size_t dirOrth1Idx = (dirIdx + 1) % 3;
-  std::size_t dirOrth2Idx = (dirIdx + 2) % 3;
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
-  auto dirOrth1 = static_cast<AxisDirection>(dirOrth1Idx);
-  auto dirOrth2 = static_cast<AxisDirection>(dirOrth2Idx);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
 
-  auto boundDir = static_cast<CuboidVolumeBounds::BoundValues>(dir);
-  auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
-  auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
 
-  std::array<double, 3> bounds1Vals{};
-  bounds1Vals[dirIdx] = halfDir1;
-  bounds1Vals[dirOrth1Idx] = 100_mm;
-  bounds1Vals[dirOrth2Idx] = 400_mm;
-  auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
+  auto bounds1 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir1},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 400_mm}});
 
-  std::array<double, 3> bounds2Vals{};
-  bounds2Vals[dirIdx] = halfDir2;
-  bounds2Vals[dirOrth1Idx] = 200_mm;
-  bounds2Vals[dirOrth2Idx] = 600_mm;
-  auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
+  auto bounds2 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir2},
+          {boundDirOrth1, 200_mm},
+          {boundDirOrth2, 600_mm}});
 
-  std::array<double, 3> bounds3Vals{};
-  bounds3Vals[dirIdx] = halfDir3;
-  bounds3Vals[dirOrth1Idx] = 300_mm;
-  bounds3Vals[dirOrth2Idx] = 500_mm;
-  auto bounds3 = std::make_shared<CuboidVolumeBounds>(bounds3Vals);
+  auto bounds3 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir3},
+          {boundDirOrth1, 300_mm},
+          {boundDirOrth2, 500_mm}});
 
   Translation3 translation1(Vector3::Unit(dirIdx) * pDir1);
   Transform3 transform1(translation1);
@@ -462,9 +459,8 @@ BOOST_DATA_TEST_CASE(Asymmetric,
 
   std::vector<Volume*> volumes = {vol2.get(), vol1.get(), vol3.get()};
 
-  CuboidVolumeStack stack(volumes, dir,
-                          CuboidVolumeStack::AttachmentStrategy::Gap,
-                          CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+  CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+                          VolumeResizeStrategy::Gap, *logger);
   BOOST_CHECK_EQUAL(volumes.size(), 5);
 
   auto stackBounds =
@@ -498,34 +494,32 @@ BOOST_DATA_TEST_CASE(UpdateStack,
                      angle, offset, zshift, strategy, dir) {
   double halfDir = 400_mm;
 
-  std::size_t dirIdx = static_cast<std::size_t>(dir);
-  std::size_t dirOrth1Idx = (dirIdx + 1) % 3;
-  std::size_t dirOrth2Idx = (dirIdx + 2) % 3;
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
-  auto dirOrth1 = static_cast<AxisDirection>(dirOrth1Idx);
-  auto dirOrth2 = static_cast<AxisDirection>(dirOrth2Idx);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
+  auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
 
-  auto boundDir = static_cast<CuboidVolumeBounds::BoundValues>(dir);
-  auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
-  auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
 
-  std::array<double, 3> bounds1Vals{};
-  bounds1Vals[dirIdx] = halfDir;
-  bounds1Vals[dirOrth1Idx] = 100_mm;
-  bounds1Vals[dirOrth2Idx] = 600_mm;
-  auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
+  auto bounds1 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 600_mm}});
 
-  std::array<double, 3> bounds2Vals{};
-  bounds2Vals[dirIdx] = halfDir;
-  bounds2Vals[dirOrth1Idx] = 100_mm;
-  bounds2Vals[dirOrth2Idx] = 600_mm;
-  auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
+  auto bounds2 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 600_mm}});
 
-  std::array<double, 3> bounds3Vals{};
-  bounds3Vals[dirIdx] = halfDir;
-  bounds3Vals[dirOrth1Idx] = 100_mm;
-  bounds3Vals[dirOrth2Idx] = 600_mm;
-  auto bounds3 = std::make_shared<CuboidVolumeBounds>(bounds3Vals);
+  auto bounds3 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, halfDir},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 600_mm}});
 
   Vector3 shift = Vector3::Unit(dirIdx) * zshift;
   Transform3 base = AngleAxis3(angle * 1_degree, Vector3::Unit(dirOrth1Idx)) *
@@ -548,11 +542,10 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   std::vector<Transform3> originalTransforms = {transform1, transform2,
                                                 transform3};
 
-  CuboidVolumeStack stack(
-      volumes, dir,
-      CuboidVolumeStack::AttachmentStrategy::Gap,  // should not make a
-                                                   // difference
-      strategy, *logger);
+  CuboidVolumeStack stack(volumes, dir,
+                          VolumeAttachmentStrategy::Gap,  // should not make a
+                                                          // difference
+                          strategy, *logger);
 
   const auto* originalBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
@@ -679,7 +672,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDirOrth1), 700_mm);
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDirOrth2), 700_mm);
 
-    if (strategy == CuboidVolumeStack::ResizeStrategy::Expand) {
+    if (strategy == VolumeResizeStrategy::Expand) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
 
@@ -708,7 +701,7 @@ BOOST_DATA_TEST_CASE(UpdateStack,
       Transform3 expectedTransform3 = base * expectedTranslation3;
       BOOST_CHECK_EQUAL(vol3->transform().matrix(),
                         expectedTransform3.matrix());
-    } else if (strategy == CuboidVolumeStack::ResizeStrategy::Gap) {
+    } else if (strategy == VolumeResizeStrategy::Gap) {
       // Gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 5);
 
@@ -751,34 +744,33 @@ BOOST_DATA_TEST_CASE(UpdateStack,
 BOOST_DATA_TEST_CASE(
     UpdateStackOneSided,
     ((boost::unit_test::data::make(-1.0, 1.0) ^
-      boost::unit_test::data::make(CuboidVolumeStack::ResizeStrategy::Gap,
-                                   CuboidVolumeStack::ResizeStrategy::Expand)) *
+      boost::unit_test::data::make(VolumeResizeStrategy::Gap,
+                                   VolumeResizeStrategy::Expand)) *
      boost::unit_test::data::make(Acts::AxisDirection::AxisX,
                                   Acts::AxisDirection::AxisY,
                                   Acts::AxisDirection::AxisZ)),
     f, strategy, dir) {
-  std::size_t dirIdx = static_cast<std::size_t>(dir);
-  std::size_t dirOrth1Idx = (dirIdx + 1) % 3;
-  std::size_t dirOrth2Idx = (dirIdx + 2) % 3;
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
-  auto dirOrth1 = static_cast<AxisDirection>(dirOrth1Idx);
-  auto dirOrth2 = static_cast<AxisDirection>(dirOrth2Idx);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
+  auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
+  auto dirOrth2Idx = CuboidVolumeStack::axisToIndex(dirOrth2);
 
-  auto boundDir = static_cast<CuboidVolumeBounds::BoundValues>(dir);
-  auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
-  auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
 
-  std::array<double, 3> bounds1Vals{};
-  bounds1Vals[dirIdx] = 400_mm;
-  bounds1Vals[dirOrth1Idx] = 100_mm;
-  bounds1Vals[dirOrth2Idx] = 300_mm;
-  auto bounds1 = std::make_shared<CuboidVolumeBounds>(bounds1Vals);
+  auto bounds1 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, 400_mm},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 300_mm}});
 
-  std::array<double, 3> bounds2Vals{};
-  bounds2Vals[dirIdx] = 400_mm;
-  bounds2Vals[dirOrth1Idx] = 100_mm;
-  bounds2Vals[dirOrth2Idx] = 300_mm;
-  auto bounds2 = std::make_shared<CuboidVolumeBounds>(bounds2Vals);
+  auto bounds2 = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, 400_mm},
+          {boundDirOrth1, 100_mm},
+          {boundDirOrth2, 300_mm}});
 
   auto trf = Transform3::Identity();
 
@@ -792,8 +784,7 @@ BOOST_DATA_TEST_CASE(
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
-  CuboidVolumeStack stack{volumes, dir,
-                          CuboidVolumeStack::AttachmentStrategy::Gap, strategy,
+  CuboidVolumeStack stack{volumes, dir, VolumeAttachmentStrategy::Gap, strategy,
                           *logger};
   const auto* originalBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&stack.volumeBounds());
@@ -857,7 +848,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_CHECK_EQUAL(volBounds->get(boundDirOrth2), 300_mm);
   }
 
-  if (strategy == CuboidVolumeStack::ResizeStrategy::Expand) {
+  if (strategy == VolumeResizeStrategy::Expand) {
     // No gaps were added, there was one gap initially
     BOOST_CHECK_EQUAL(volumes.size(), 3);
     const Volume* vol = nullptr;
@@ -874,7 +865,7 @@ BOOST_DATA_TEST_CASE(
     BOOST_REQUIRE(volBounds != nullptr);
     BOOST_CHECK_EQUAL(volBounds->get(boundDir), 450_mm);
     BOOST_CHECK_EQUAL(vol->center()[dirIdx], f * 550_mm);
-  } else if (strategy == CuboidVolumeStack::ResizeStrategy::Gap) {
+  } else if (strategy == VolumeResizeStrategy::Gap) {
     // One gap volume was added
     BOOST_CHECK_EQUAL(volumes.size(), 4);
 
@@ -926,42 +917,32 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
                                                   Acts::AxisDirection::AxisY,
                                                   Acts::AxisDirection::AxisZ),
                      dir) {
-  std::size_t dirIdx = static_cast<std::size_t>(dir);
-  std::size_t dirOrth1Idx = (dirIdx + 1) % 3;
-  std::size_t dirOrth2Idx = (dirIdx + 2) % 3;
+  auto [dirOrth1, dirOrth2] = CuboidVolumeStack::getOrthogonalAxes(dir);
 
-  auto dirOrth1 = static_cast<AxisDirection>(dirOrth1Idx);
-  auto dirOrth2 = static_cast<AxisDirection>(dirOrth2Idx);
+  auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
 
-  auto boundDir = static_cast<CuboidVolumeBounds::BoundValues>(dir);
-  auto boundDirOrth1 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth1);
-  auto boundDirOrth2 = static_cast<CuboidVolumeBounds::BoundValues>(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
 
-  std::array<double, 3> boundsVals{};
-  boundsVals[dirIdx] = 100;
-  boundsVals[dirOrth1Idx] = 70;
-  boundsVals[dirOrth2Idx] = 100;
-  auto bounds = std::make_shared<CuboidVolumeBounds>(boundsVals);
-
+  auto bounds = std::make_shared<CuboidVolumeBounds>(
+      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+          {boundDir, 100}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
   Transform3 trf = Transform3::Identity();
   Volume vol{trf, bounds};
 
   BOOST_TEST_CONTEXT("Positive") {
     std::vector<Volume*> volumes = {&vol};
-    CuboidVolumeStack stack(volumes, dir,
-                            CuboidVolumeStack::AttachmentStrategy::Gap,
-                            CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+    CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+                            VolumeResizeStrategy::Gap, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 1);
     BOOST_CHECK(stack.gaps().empty());
 
-    std::array<double, 3> newBounds1Vals{};
-    newBounds1Vals[dirIdx] = 200;
-    newBounds1Vals[dirOrth1Idx] = 70;
-    newBounds1Vals[dirOrth2Idx] = 100;
-    auto newBounds1 = std::make_shared<CuboidVolumeBounds>(newBounds1Vals);
-    newBounds1->set(
-        {{boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
+    auto newBounds1 = std::make_shared<CuboidVolumeBounds>(
+        std::initializer_list<
+            std::pair<CuboidVolumeBounds::BoundValues, double>>{
+            {boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
     stack.update(newBounds1, trf * Translation3{Vector3::Unit(dirIdx) * 100},
                  *logger);
     BOOST_CHECK_EQUAL(volumes.size(), 2);
@@ -973,13 +954,10 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDir), 100.0);
 
-    std::array<double, 3> newBounds2Vals{};
-    newBounds2Vals[dirIdx] = 300;
-    newBounds2Vals[dirOrth1Idx] = 70;
-    newBounds2Vals[dirOrth2Idx] = 100;
-    auto newBounds2 = std::make_shared<CuboidVolumeBounds>(newBounds2Vals);
-    newBounds2->set(
-        {{boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
+    auto newBounds2 = std::make_shared<CuboidVolumeBounds>(
+        std::initializer_list<
+            std::pair<CuboidVolumeBounds::BoundValues, double>>{
+            {boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
     stack.update(newBounds2, trf * Translation3{Vector3::Unit(dirIdx) * 200},
                  *logger);
 
@@ -996,20 +974,16 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
 
   BOOST_TEST_CONTEXT("Negative") {
     std::vector<Volume*> volumes = {&vol};
-    CuboidVolumeStack stack(volumes, dir,
-                            CuboidVolumeStack::AttachmentStrategy::Gap,
-                            CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+    CuboidVolumeStack stack(volumes, dir, VolumeAttachmentStrategy::Gap,
+                            VolumeResizeStrategy::Gap, *logger);
 
     BOOST_CHECK_EQUAL(volumes.size(), 1);
     BOOST_CHECK(stack.gaps().empty());
 
-    std::array<double, 3> newBounds1Vals{};
-    newBounds1Vals[dirIdx] = 200;
-    newBounds1Vals[dirOrth1Idx] = 70;
-    newBounds1Vals[dirOrth2Idx] = 100;
-    auto newBounds1 = std::make_shared<CuboidVolumeBounds>(newBounds1Vals);
-    newBounds1->set(
-        {{boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
+    auto newBounds1 = std::make_shared<CuboidVolumeBounds>(
+        std::initializer_list<
+            std::pair<CuboidVolumeBounds::BoundValues, double>>{
+            {boundDir, 200}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
     stack.update(newBounds1, trf * Translation3{Vector3::Unit(dirIdx) * -100},
                  *logger);
     BOOST_CHECK_EQUAL(volumes.size(), 2);
@@ -1021,13 +995,10 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
     BOOST_REQUIRE_NE(updatedBounds, nullptr);
     BOOST_CHECK_EQUAL(updatedBounds->get(boundDir), 100.0);
 
-    std::array<double, 3> newBounds2Vals{};
-    newBounds2Vals[dirIdx] = 300;
-    newBounds2Vals[dirOrth1Idx] = 70;
-    newBounds2Vals[dirOrth2Idx] = 100;
-    auto newBounds2 = std::make_shared<CuboidVolumeBounds>(newBounds2Vals);
-    newBounds2->set(
-        {{boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
+    auto newBounds2 = std::make_shared<CuboidVolumeBounds>(
+        std::initializer_list<
+            std::pair<CuboidVolumeBounds::BoundValues, double>>{
+            {boundDir, 300}, {boundDirOrth1, 70}, {boundDirOrth2, 100}});
     stack.update(newBounds2, trf * Translation3{Vector3::Unit(dirIdx) * -200},
                  *logger);
 
@@ -1093,10 +1064,9 @@ BOOST_DATA_TEST_CASE(InvalidInput,
           std::make_shared<CuboidVolumeBounds>(100_mm, 400_mm, 400_mm));
       volumes.push_back(vol2.get());
 
-      BOOST_CHECK_THROW(
-          CuboidVolumeStack(volumes, direction, strategy,
-                            CuboidVolumeStack::ResizeStrategy::Gap, *logger),
-          std::invalid_argument);
+      BOOST_CHECK_THROW(CuboidVolumeStack(volumes, direction, strategy,
+                                          VolumeResizeStrategy::Gap, *logger),
+                        std::invalid_argument);
     }
   }
 
@@ -1115,10 +1085,9 @@ BOOST_DATA_TEST_CASE(InvalidInput,
           std::make_shared<CuboidVolumeBounds>(100_mm, 400_mm, 400_mm));
       volumes.push_back(vol2.get());
 
-      BOOST_CHECK_THROW(
-          CuboidVolumeStack(volumes, direction, strategy,
-                            CuboidVolumeStack::ResizeStrategy::Gap, *logger),
-          std::invalid_argument);
+      BOOST_CHECK_THROW(CuboidVolumeStack(volumes, direction, strategy,
+                                          VolumeResizeStrategy::Gap, *logger),
+                        std::invalid_argument);
     }
   }
 }
@@ -1137,7 +1106,7 @@ BOOST_DATA_TEST_CASE(JoinCuboidVolumeSingle,
   std::vector<Volume*> volumes{vol.get()};
 
   CuboidVolumeStack stack(volumes, direction, strategy,
-                          CuboidVolumeStack::ResizeStrategy::Gap, *logger);
+                          VolumeResizeStrategy::Gap, *logger);
 
   // Cuboid stack has the same transform as bounds as the single input
   // volume
