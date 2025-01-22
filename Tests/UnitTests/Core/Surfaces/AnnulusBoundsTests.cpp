@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 

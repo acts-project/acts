@@ -378,8 +378,9 @@ Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
 }
 
 Vector2 AnnulusBounds::stripPCToModulePC(const Vector2& vStripPC) const {
-  return stripXYToModulePC({vStripPC[0] * std::cos(vStripPC[1]),
-                            vStripPC[0] * std::sin(vStripPC[1])});
+  Vector2 vStripXY = {vStripPC[0] * std::cos(vStripPC[1]),
+                      vStripPC[0] * std::sin(vStripPC[1])};
+  return stripXYToModulePC(vStripXY);
 }
 
 Vector2 AnnulusBounds::modulePCToStripPC(const Vector2& vModulePC) const {

@@ -187,8 +187,7 @@ class AnnulusBounds : public DiscBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 
-  /// Transform the strip cartesian
-  /// into the module polar system
+  /// Transform the strip cartesian into the module polar system
   ///
   /// @param vStripXY the position in the cartesian strip system
   /// @return the position in the module polar coordinate system

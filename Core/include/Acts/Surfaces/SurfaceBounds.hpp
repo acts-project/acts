@@ -104,44 +104,7 @@ class SurfaceBounds {
   /// @param boundaryTolerance is the boundary tolerance object
   /// @return true if the local position is inside the bounds and tolerance
   virtual bool inside(const Vector2& lposition,
-                      const BoundaryTolerance& boundaryTolerance) const {
-    using enum BoundaryTolerance::Mode;
-
-    if (boundaryTolerance.isInfinite()) {
-      return true;
-    }
-
-    BoundaryTolerance::Mode toleranceMode = boundaryTolerance.mode();
-    bool strictlyInside = inside(lposition);
-
-    if (toleranceMode == None) {
-      return strictlyInside;
-    }
-
-    if (toleranceMode == Extend && strictlyInside) {
-      return true;
-    }
-
-    std::optional<SquareMatrix2> jacobian;
-    std::optional<SquareMatrix2> metric;
-    if (boundaryTolerance.hasChi2Bound()) {
-      SquareMatrix2 j = boundToCartesianJacobian(lposition);
-      jacobian = j;
-      metric = j.transpose() * boundaryTolerance.asChi2Bound().weight * j;
-    } else if (!isCartesian()) {
-      jacobian = boundToCartesianJacobian(lposition);
-      metric = boundToCartesianMetric(lposition);
-    }
-
-    Vector2 closest = closestPoint(lposition, metric);
-    Vector2 distance = closest - lposition;
-
-    if (toleranceMode == Shrink) {
-      return boundaryTolerance.isTolerated(distance, jacobian) &&
-             strictlyInside;
-    }
-    return boundaryTolerance.isTolerated(distance, jacobian);
-  }
+                      const BoundaryTolerance& boundaryTolerance) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   /// @param os is the outstream in which the string dump is done
