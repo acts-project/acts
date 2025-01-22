@@ -91,38 +91,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     double score = 1;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
-    auto phi = Acts::VectorHelpers::phi(track.momentum());
-    // cuts on pT
-    if (pT < m_cfg.pTMin || pT > m_cfg.pTMax) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to pT cuts --- pT = " << pT);
-      continue;
-    }
-
-    // cuts on phi
-    if (phi > m_cfg.phiMax || phi < m_cfg.phiMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to phi cuts --- phi =  "
-                           << phi);
-      continue;
-    }
-
-    // cuts on eta
-    if (eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to eta cuts --- eta =  "
-                           << eta);
-      continue;
-    }
 
     // cuts on optional cuts
     for (const auto& cutFunction : optionalCuts.cuts) {
@@ -140,6 +108,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
+
     // Reject tracks which didn't pass the detector cuts.
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -147,15 +116,14 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
 
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
-      ACTS_DEBUG("---> Found summary information");
-      ACTS_DEBUG("---> Detector ID: " << detectorId);
-      ACTS_DEBUG("---> Number of hits: " << trackFeatures.nHits);
-      ACTS_DEBUG("---> Number of holes: " << trackFeatures.nHoles);
-      ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
+      ACTS_VERBOSE("---> Found summary information");
+      ACTS_VERBOSE("---> Detector ID: " << detectorId);
+      ACTS_VERBOSE("---> Number of hits: " << trackFeatures.nHits);
+      ACTS_VERBOSE("---> Number of holes: " << trackFeatures.nHoles);
+      ACTS_VERBOSE("---> Number of outliers: " << trackFeatures.nOutliers);
 
-      if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHoles > detector.maxHoles) ||
-          (trackFeatures.nOutliers > detector.maxOutliers)) {
+      // eta based cuts
+      if (etaBasedCuts(detector, trackFeatures, eta)) {
         score = 0;
         ACTS_DEBUG("Track: " << iTrack
                              << " has score = 0, due to detector cuts");
@@ -170,9 +138,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
       continue;
     }
 
-    // real scoring starts here
-    // if the ambiguity scoring function is used, the score is processed with a
-    // different algorithm than the simple score.
+    // All cuts passed, now start scoring the track
 
     ACTS_VERBOSE("Using Simple Scoring function");
 
@@ -241,38 +207,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
     double score = 1;
     auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
-    auto phi = Acts::VectorHelpers::phi(track.momentum());
-    // cuts on pT
-    if (pT < m_cfg.pTMin || pT > m_cfg.pTMax) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to pT cuts --- pT = " << pT);
-      continue;
-    }
-
-    // cuts on phi
-    if (phi > m_cfg.phiMax || phi < m_cfg.phiMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to phi cuts --- phi =  "
-                           << phi);
-      continue;
-    }
-
-    // cuts on eta
-    if (eta > m_cfg.etaMax || eta < m_cfg.etaMin) {
-      score = 0;
-      iTrack++;
-      trackScore.push_back(score);
-      ACTS_DEBUG("Track: " << iTrack
-                           << " has score = 0, due to eta cuts --- eta =  "
-                           << eta);
-      continue;
-    }
 
     // cuts on optional cuts
     for (const auto& cutFunction : optionalCuts.cuts) {
@@ -290,6 +224,7 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       ACTS_DEBUG("Track: " << iTrack << " score : " << score);
       continue;
     }
+
     // Reject tracks which didn't pass the detector cuts.
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -297,15 +232,14 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
-      ACTS_DEBUG("---> Found summary information");
-      ACTS_DEBUG("---> Detector ID: " << detectorId);
-      ACTS_DEBUG("---> Number of hits: " << trackFeatures.nHits);
-      ACTS_DEBUG("---> Number of holes: " << trackFeatures.nHoles);
-      ACTS_DEBUG("---> Number of outliers: " << trackFeatures.nOutliers);
+      ACTS_VERBOSE("---> Found summary information");
+      ACTS_VERBOSE("---> Detector ID: " << detectorId);
+      ACTS_VERBOSE("---> Number of hits: " << trackFeatures.nHits);
+      ACTS_VERBOSE("---> Number of holes: " << trackFeatures.nHoles);
+      ACTS_VERBOSE("---> Number of outliers: " << trackFeatures.nOutliers);
 
-      if ((trackFeatures.nHits < detector.minHits) ||
-          (trackFeatures.nHoles > detector.maxHoles) ||
-          (trackFeatures.nOutliers > detector.maxOutliers)) {
+      // eta based cuts
+      if (etaBasedCuts(detector, trackFeatures, eta)) {
         score = 0;
         ACTS_DEBUG("Track: " << iTrack
                              << " has score = 0, due to detector cuts");
@@ -320,11 +254,18 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       continue;
     }
 
+    // All cuts passed, now start scoring the track
+
+    std::cout << ", Score before Pt," << score << ", pT, " << pT << ", eta, "
+              << eta << std::endl;
     // start with larger score for tracks with higher pT.
     score = std::log10(pT / UnitConstants::MeV) - 1.;
     // pT in GeV, hence 100 MeV is minimum and gets score = 1
     ACTS_DEBUG("Modifier for pT = " << pT << " GeV is : " << score
                                     << "  New score now: " << score);
+
+    std::cout << ", Score after Pt," << score << ", pT, " << pT << ", eta, "
+              << eta << std::endl;
 
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
@@ -332,17 +273,25 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
 
       const auto& trackFeatures = trackFeaturesVector[detectorId];
 
+      std::cout << ", Score before detector " << detectorId << " Hits," << score
+                << ", pT, " << pT << ", eta, " << eta << std::endl;
       // choosing a scaling factor based on the number of hits in a track per
       // detector.
       std::size_t nHits = trackFeatures.nHits;
       if (nHits > detector.maxHits) {
-        score = score * (detector.maxHits - nHits + 1);  // hits are good !
+        score = score * (nHits - detector.maxHits + 1);  // hits are good !
         nHits = detector.maxHits;
       }
       score = score * detector.factorHits[nHits];
       ACTS_DEBUG("Modifier for " << nHits
                                  << " hits: " << detector.factorHits[nHits]
                                  << "  New score now: " << score);
+
+      std::cout << ", Score after detector " << detectorId << " Hits," << score
+                << ", pT, " << pT << ", eta, " << eta << std::endl;
+
+      std::cout << ", Score before detector " << detectorId << " Holes,"
+                << score << ", pT, " << pT << ", eta, " << eta << std::endl;
 
       // choosing a scaling factor based on the number of holes in a track per
       // detector.
@@ -355,11 +304,16 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
       ACTS_DEBUG("Modifier for " << iHoles
                                  << " holes: " << detector.factorHoles[iHoles]
                                  << "  New score now: " << score);
+      std::cout << ", Score after detector " << detectorId << " Holes," << score
+                << ", pT, " << pT << ", eta, " << eta << std::endl;
     }
 
     for (const auto& scoreFunction : optionalCuts.scores) {
       scoreFunction(track, score);
     }
+
+    std::cout << ", Score before chi2," << score << ", pT, " << pT << ", eta, "
+              << eta << std::endl;
 
     if (track.chi2() > 0 && track.nDoF() > 0) {
       double chi2 = track.chi2();
@@ -370,6 +324,9 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::ambiguityScore(
                                         << " is : " << fac
                                         << "  New score now: " << score);
     }
+
+    std::cout << ", Score after chi2," << score << ", pT, " << pT << ", eta, "
+              << eta << std::endl;
     iTrack++;
 
     // Add the score to the vector
@@ -451,11 +408,24 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
     // Check if the track has too many shared hits to be accepted.
     auto trackFeaturesVector = trackFeaturesVectors.at(iTrack);
     bool trkCouldBeAccepted = true;
+    double eta = Acts::VectorHelpers::eta(track.momentum());
+
     for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
          detectorId++) {
       auto detector = m_cfg.detectorConfigs.at(detectorId);
-      if (trackFeaturesVector[detectorId].nSharedHits >
-          detector.maxSharedHits) {
+
+      std::vector<double> etaBins = detector.etaBins;
+      int etaBin = 0;
+
+      for (std::size_t i = 0; i < detector.etaBins.size() - 1; ++i) {
+        if (eta >= etaBins[i] && eta < detector.etaBins[i + 1]) {
+          etaBin = i;
+          break;
+        }
+      }
+
+      if (trackFeaturesVector[detectorId].nSharedHits <
+          getValueAtEta(detector.maxSharedHitsPerEta, etaBins.size(), etaBin)) {
         trkCouldBeAccepted = false;
         break;
       }

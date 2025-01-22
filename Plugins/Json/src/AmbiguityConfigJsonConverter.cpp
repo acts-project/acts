@@ -27,12 +27,6 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     detectorConfig.outliersScoreWeight = value["outliersScoreWeight"];
     detectorConfig.otherScoreWeight = value["otherScoreWeight"];
 
-    detectorConfig.minHits = value["minHits"];
-    detectorConfig.maxHits = value["maxHits"];
-    detectorConfig.maxHoles = value["maxHoles"];
-    detectorConfig.maxOutliers = value["maxOutliers"];
-    detectorConfig.maxSharedHits = value["maxSharedHits"];
-
     detectorConfig.sharedHitsFlag = value["sharedHitsFlag"];
 
     const std::vector<double>& goodHits = value["goodHits"];
@@ -41,9 +35,18 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     const std::vector<double>& fakeHits = value["fakeHits"];
     const std::vector<double>& fakeHoles = value["fakeHoles"];
 
+    const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
+    const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
+    const std::vector<std::size_t>& maxOutliersPerEta =
+        value["maxOutliersPerEta"];
+    const std::vector<std::size_t>& maxSharedHitsPerEta =
+        value["maxSharedHitsPerEta"];
+
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
     }
+
+    detectorConfig.maxHits = goodHits.size() - 1;
 
     for (std::size_t i = 0; i < goodHits.size(); i++) {
       detectorConfig.factorHits.push_back(goodHits[i] / fakeHits[i]);
@@ -52,6 +55,8 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     if (goodHoles.size() != fakeHoles.size()) {
       throw std::invalid_argument("goodHoles and FakeHoles size mismatch");
     }
+
+    detectorConfig.maxHoles = goodHoles.size() - 1;
 
     for (std::size_t i = 0; i < goodHoles.size(); i++) {
       detectorConfig.factorHoles.push_back(goodHoles[i] / fakeHoles[i]);
