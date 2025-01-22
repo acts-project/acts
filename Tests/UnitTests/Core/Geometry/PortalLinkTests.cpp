@@ -2880,8 +2880,9 @@ BOOST_DATA_TEST_CASE(TrivialTrivial,
                           .makeGrid(gctx, *logger),
                       nullptr);
 
-    auto composite = PortalLinkBase::merge(
-        std::move(trivial1), std::move(trivial2), AxisDirection::AxisX, *logger);
+    auto composite =
+        PortalLinkBase::merge(std::move(trivial1), std::move(trivial2),
+                              AxisDirection::AxisX, *logger);
     BOOST_REQUIRE(composite);
 
     auto grid12 =
@@ -2952,8 +2953,9 @@ BOOST_DATA_TEST_CASE(TrivialTrivial,
                           .makeGrid(gctx, *logger),
                       nullptr);
 
-    auto composite = PortalLinkBase::merge(
-        std::move(trivial1), std::move(trivial2), AxisDirection::AxisY, *logger);
+    auto composite =
+        PortalLinkBase::merge(std::move(trivial1), std::move(trivial2),
+                              AxisDirection::AxisY, *logger);
     BOOST_REQUIRE(composite);
 
     auto grid12 =

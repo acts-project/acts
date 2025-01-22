@@ -70,7 +70,8 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
                  dynamic_cast<const PlaneSurface*>(surface.get());
              plane != nullptr) {
     const auto& bounds = dynamic_cast<const RectangleBounds&>(plane->bounds());
-    if (direction != AxisDirection::AxisX && direction != AxisDirection::AxisY) {
+    if (direction != AxisDirection::AxisX &&
+        direction != AxisDirection::AxisY) {
       throw std::invalid_argument{"Invalid binning direction"};
     }
     double min = (direction == AxisDirection::AxisX)
