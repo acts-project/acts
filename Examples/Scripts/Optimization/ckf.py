@@ -116,9 +116,10 @@ def runCKFTracks(
         EtaConfig,
         PhiConfig,
         ParticleConfig,
-        ParticleSelectorConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
 
     from acts.examples.reconstruction import (
@@ -160,7 +161,7 @@ def runCKFTracks(
             RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                outputParticles="particles_input",
+                outputParticles="particles_generated",
             )
         )
 
@@ -169,11 +170,6 @@ def runCKFTracks(
         trackingGeometry,
         field,
         rnd=rnd,
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     addDigitization(
@@ -182,6 +178,15 @@ def runCKFTracks(
         field,
         digiConfigFile=digiConfigFile,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addSeeding(
@@ -259,7 +264,9 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

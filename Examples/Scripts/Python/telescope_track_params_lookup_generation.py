@@ -47,10 +47,9 @@ def estimateLookup(trackingGeometry, numEvents, outputPath):
         s,
         trackingGeometry,
         field,
-        inputParticles="particles_input",
+        inputParticles="particles_generated",
         outputSimHits="sim_hits",
         rnd=rnd,
-        preSelectParticles=None,
     )
 
     # Set up the track lookup grid writer
@@ -66,7 +65,7 @@ def estimateLookup(trackingGeometry, numEvents, outputPath):
         refLayers={refGeometryId: refSurface},
         bins=(1, 1000),
         inputHits="sim_hits",
-        inputParticles="particles_input",
+        inputParticles="particles_generated",
         trackLookupGridWriters=[jsonWriter],
     )
     trackEstAlg = acts.examples.TrackParamsLookupEstimation(
@@ -99,13 +98,14 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     # Initialize the geometry
-    detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
+    detector = acts.examples.TelescopeDetector(
         bounds=[4, 10],
         positions=[30, 60, 90],
         stereos=[0, 0, 0],
         binValue=2,
         surfaceType=0,
     )
+    trackingGeometry = detector.trackingGeometry()
 
     # Estimate the lookup
     estimateLookup(trackingGeometry, args.events, args.output)

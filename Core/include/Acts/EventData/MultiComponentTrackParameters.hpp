@@ -129,11 +129,11 @@ class MultiComponentBoundTrackParameters {
 
   /// Get the weight and a GenericBoundTrackParameters object for one component
   std::pair<double, Parameters> operator[](std::size_t i) const {
-    return std::make_pair(
+    return {
         std::get<double>(m_components[i]),
         Parameters(m_surface, std::get<BoundVector>(m_components[i]),
                    std::get<std::optional<BoundSquareMatrix>>(m_components[i]),
-                   m_particleHypothesis));
+                   m_particleHypothesis)};
   }
 
   /// Parameters vector.

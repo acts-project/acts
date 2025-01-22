@@ -15,7 +15,6 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -54,7 +53,7 @@ Geant4SimulationBase::Geant4SimulationBase(const Config& cfg, std::string name,
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }
-  if (cfg.detectorConstructionFactory == nullptr) {
+  if (cfg.detector == nullptr) {
     throw std::invalid_argument("Missing detector construction factory");
   }
   if (cfg.randomNumbers == nullptr) {
@@ -82,7 +81,10 @@ void Geant4SimulationBase::commonInitialization() {
     }
     // G4RunManager will take care of deletion
     m_detectorConstruction =
-        config().detectorConstructionFactory->factorize().release();
+        config()
+            .detector
+            ->buildGeant4DetectorConstruction(config().constructionOptions)
+            .release();
     runManager().SetUserInitialization(m_detectorConstruction);
     runManager().InitializeGeometry();
   }
@@ -218,10 +220,11 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     Geant4::SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
-    stepCfg.charged = true;
+    stepCfg.charged = cfg.recordHitsOfCharged;
     stepCfg.neutral = cfg.recordHitsOfNeutrals;
-    stepCfg.primary = true;
+    stepCfg.primary = cfg.recordHitsOfPrimaries;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
+    stepCfg.stepLogging = cfg.recordPropagationSummaries;
 
     Geant4::SteppingActionList::Config steppingCfg;
     steppingCfg.actions.push_back(std::make_unique<Geant4::ParticleKillAction>(
@@ -286,6 +289,10 @@ Geant4Simulation::Geant4Simulation(const Config& cfg,
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputSimHits.initialize(cfg.outputSimHits);
   m_outputParticles.initialize(cfg.outputParticles);
+
+  if (cfg.recordPropagationSummaries) {
+    m_outputPropagationSummaries.initialize(cfg.outputPropagationSummaries);
+  }
 }
 
 Geant4Simulation::~Geant4Simulation() = default;
@@ -311,6 +318,16 @@ ProcessCode Geant4Simulation::execute(const AlgorithmContext& ctx) const {
   m_outputSimHits(
       ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
 #endif
+
+  // Output the propagation summaries if requested
+  if (m_cfg.recordPropagationSummaries) {
+    PropagationSummaries summaries;
+    summaries.reserve(eventStore().propagationRecords.size());
+    for (auto& [trackId, summary] : eventStore().propagationRecords) {
+      summaries.push_back(std::move(summary));
+    }
+    m_outputPropagationSummaries(ctx, std::move(summaries));
+  }
 
   return ProcessCode::SUCCESS;
 }

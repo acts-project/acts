@@ -8,11 +8,11 @@
 
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <utility>
 
-Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
+namespace Acts {
+
+detail::RotationToAxes detail::rotationToLocalAxesDerivative(
     const RotationMatrix3& compositeRotation,
     const RotationMatrix3& relRotation) {
   // Suppose the local axes of the composite have small rotation first around
@@ -87,6 +87,8 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
                     rotToCompositeLocalYAxis * relRotation(1, 2) +
                     rotToCompositeLocalZAxis * relRotation(2, 2);
 
-  return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
-                         std::move(rotToLocalZAxis));
+  return {std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
+          std::move(rotToLocalZAxis)};
 }
+
+}  // namespace Acts
