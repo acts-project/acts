@@ -95,7 +95,7 @@ class CuboidVolumeStack : public Volume {
   /// @return the vector of gap volumes
   const std::vector<std::shared_ptr<Volume>>& gaps() const;
 
-  /// Conert axis direction to an array index according to
+  /// Convert axis direction to an array index according to
   /// stack convention. For example, AxisX --> 0
   /// @param direction is the axis direction to convert
   static std::size_t axisToIndex(AxisDirection direction);

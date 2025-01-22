@@ -18,6 +18,9 @@ std::ostream& operator<<(std::ostream& os, VolumeResizeStrategy strategy) {
     case VolumeResizeStrategy::Gap:
       os << "Gap";
       break;
+    default:
+      os << "Unknown";
+      break;
   }
   return os;
 }

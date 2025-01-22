@@ -154,7 +154,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
   /// Convert axis direction to a corresponding bound value
-  /// in local coordinate convetion
+  /// in local coordinate convention
   /// @param direction the axis direction to convert
   static BoundValues fromAxisDirection(AxisDirection direction);
 

@@ -23,6 +23,9 @@ std::ostream& operator<<(std::ostream& os, VolumeAttachmentStrategy strategy) {
     case VolumeAttachmentStrategy::Gap:
       os << "Gap";
       break;
+    default:
+      os << "Unknown";
+      break;
   }
   return os;
 }
