@@ -23,7 +23,8 @@ nlohmann::json Acts::ProtoAxisJsonConverter::toJson(const Acts::ProtoAxis& pa) {
 Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
     const nlohmann::json& j) {
   auto axisDir = j.at("axis_dir").get<Acts::AxisDirection>();
-  auto axisBoundaryType = j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
+  auto axisBoundaryType =
+      j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
   auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
   if (axisType == AxisType::Equidistant) {
     if (j.at("autorange").get<bool>()) {
@@ -37,10 +38,10 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
     auto max = j.at("axis").at("range").at(1).get<double>();
     auto nbins = j.at("axis").at("bins").get<std::size_t>();
     if (min >= max) {
-        throw std::invalid_argument("Invalid range: min must be less than max");
+      throw std::invalid_argument("Invalid range: min must be less than max");
     }
     if (nbins == 0) {
-        throw std::invalid_argument("Number of bins must be positive");
+      throw std::invalid_argument("Number of bins must be positive");
     }
     return ProtoAxis(axisDir, axisBoundaryType, min, max, nbins);
   }
