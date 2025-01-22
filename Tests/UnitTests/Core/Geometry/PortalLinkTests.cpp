@@ -2911,8 +2911,7 @@ BOOST_DATA_TEST_CASE(TrivialTrivial,
                       vol2.get());
 
     BOOST_CHECK_EQUAL(
-        grid123->resolveVolume(gctx, Vector2{80_mm, 0_mm}).value(),
-        vol3.get());
+        grid123->resolveVolume(gctx, Vector2{80_mm, 0_mm}).value(), vol3.get());
   }
   BOOST_TEST_CONTEXT("PlaneYDirection") {
     auto vol1 = std::make_shared<TrackingVolume>(
