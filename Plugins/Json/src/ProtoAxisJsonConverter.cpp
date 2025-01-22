@@ -49,7 +49,7 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
   if (binEdges.size() < 2) {
     throw std::invalid_argument("At least two bin edges required");
   }
-  if (!std::is_sorted(binEdges.begin(), binEdges.end())) {
+  if (!std::ranges::is_sorted(binEdges)) {
     throw std::invalid_argument("Bin edges must be sorted in ascending order");
   }
   return ProtoAxis(axisDir, axisBoundaryType, binEdges);
