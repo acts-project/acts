@@ -31,8 +31,11 @@ class ProtoAxis {
   /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param edges the bin edges (variable binning)
+  /// @param fillExpansion the number of bins to both sides
+  /// that should also be filled with the content to create
+  /// an enforced bin overlap with objects
   ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-            const std::vector<double>& edges);
+            const std::vector<double>& edges, std::size_t fillExpansion = 0);
 
   /// Convenience constructors - for equidistant binning
   ///
@@ -41,20 +44,32 @@ class ProtoAxis {
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
+  /// @param fillExpansion the number of bins to both sides
+  /// that should also be filled with the content to create
+  /// an enforced bin overlap with objects
   ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, double minE,
-            double maxE, std::size_t nbins);
+            double maxE, std::size_t nbins, std::size_t fillExpansion = 0);
 
   /// Placeholder constructor for auto-range binning
   ///
   /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param nbins the number of bins
+  /// @param fillExpansion the number of bins to both sides
+  /// that should also be filled with the content to create
+  /// an enforced bin overlap with objects
   ///
   /// @note that auto-range is only supported for equidistant binning
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
+  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins,
+            std::size_t fillExpansion = 0);
+  /// Custom copy constructor
+  /// @param other is the right hand side ProtoAxis
+  ProtoAxis(const ProtoAxis& other);
 
-  ProtoAxis(const ProtoAxis&) = delete;
-  ProtoAxis& operator=(const ProtoAxis&) = delete;
+  /// Custom assignment operator
+  /// @param other is the right hand side ProtoAxis
+  ProtoAxis& operator=(const ProtoAxis& other);
+
   ProtoAxis(ProtoAxis&&) = default;
   ProtoAxis& operator=(ProtoAxis&&) = default;
 
@@ -68,10 +83,17 @@ class ProtoAxis {
   /// @return @c AxisType of this axis
   const IAxis& getAxis() const;
 
-  /// Set the range, this will change auto-range to false
+  /// Set the range, in case of autorange, this
+  /// will toggle the autorange flag to false
   ///
-  /// @throws std::invalid_argument if the axis is not auto-range
-  /// @throws std::invalid_argument if the axis is not equidistant
+  /// @throws an exception if minE > maxE
+  ///
+  /// @note In case of variable binning, it will clip the bins outside
+  /// the new range off, i.e. it will potentially change the number
+  /// of bins.
+  ///
+  /// @note In case of equidistant binning, it will adapt the bin size,
+  /// and NOT change the number of bins.
   ///
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
@@ -79,6 +101,9 @@ class ProtoAxis {
 
   /// @brief check if this is an auto-range binning
   bool isAutorange() const;
+
+  /// Return the fill expansion
+  std::size_t getFillExpansion() const;
 
   /// Dump into a string
   /// @return the string representation
@@ -97,6 +122,9 @@ class ProtoAxis {
 
   /// Indicate if this is a place holder auto-range binning
   bool m_autorange = false;
+
+  /// The Fill expansion parameter
+  std::size_t m_fillExpansion = 0;
 };
 
 /// @brief Helper method to create a 1D grid from a single proto axis
@@ -152,5 +180,10 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
     });
   });
 }
+
+// friend output stream operator
+std::ostream& operator<<(std::ostream& os, const ProtoAxis& a);
+
+std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
 }  // namespace Acts

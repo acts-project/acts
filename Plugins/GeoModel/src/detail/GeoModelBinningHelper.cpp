@@ -12,8 +12,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-Acts::Experimental::ProtoBinning
-Acts::detail::GeoModelBinningHelper::toProtoBinning(
+Acts::ProtoAxis Acts::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
@@ -75,8 +74,7 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
     }
   }
 
-  return autoRange ? Experimental::ProtoBinning(bValue, boundaryType, nBins,
-                                                nExpansion)
-                   : Experimental::ProtoBinning(bValue, boundaryType, rangeMin,
-                                                rangeMax, nBins, nExpansion);
+  return autoRange ? ProtoAxis(bValue, boundaryType, nBins, nExpansion)
+                   : ProtoAxis(bValue, boundaryType, rangeMin, rangeMax, nBins,
+                               nExpansion);
 }

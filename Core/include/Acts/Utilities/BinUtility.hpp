@@ -13,6 +13,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <cstddef>
@@ -100,6 +101,30 @@ class BinUtility {
   BinUtility(const BinUtility& sbu) = default;
 
   BinUtility(BinUtility&& sbu) = default;
+
+  /// Create from ProtoAxis
+  ///
+  /// @param pAxis the ProtoAxis to be used
+  BinUtility(const ProtoAxis& pAxis)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    m_binningData.push_back(BinningData(pAxis));
+  }
+
+  /// Create from ProtoAxis
+  ///
+  /// @param pAxes the ProtoAxes to be used
+  BinUtility(const std::vector<ProtoAxis>& pAxes)
+      : m_binningData(),
+        m_transform(Transform3::Identity()),
+        m_itransform(Transform3::Identity()) {
+    m_binningData.reserve(3);
+    for (const auto& pAxis : pAxes) {
+      m_binningData.push_back(BinningData(pAxis));
+    }
+  }
 
   /// Assignment operator
   ///

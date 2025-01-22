@@ -11,7 +11,6 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
@@ -23,6 +22,7 @@
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -38,7 +38,7 @@ class MultiWireInternalStructureBuilder
     std::vector<std::shared_ptr<Acts::Surface>> iSurfaces;
 
     /// Definition of Binning
-    std::vector<Acts::Experimental::ProtoBinning> binning;
+    std::vector<Acts::ProtoAxis> binning;
 
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
@@ -72,15 +72,19 @@ class MultiWireInternalStructureBuilder
         Acts::Experimental::MultiLayerSurfacesNavigation>
         isg{internalSurfaces,
             {},
-            {m_cfg.binning[0u].axisDir, m_cfg.binning[1u].axisDir},
-            {m_cfg.binning[0u].expansion, m_cfg.binning[1u].expansion},
+            {m_cfg.binning[0u].getAxisDirection(),
+             m_cfg.binning[1u].getAxisDirection()},
+            {m_cfg.binning[0u].getFillExpansion(),
+             m_cfg.binning[1u].getFillExpansion()},
             m_cfg.transform};
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
     Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
-        {m_cfg.binning[0u].edges.front(), m_cfg.binning[0u].edges.back()},
-        m_cfg.binning[0u].edges.size() - 1,
-        {m_cfg.binning[1u].edges.front(), m_cfg.binning[1u].edges.back()},
-        m_cfg.binning[1u].edges.size() - 1};
+        {m_cfg.binning[0u].getAxis().getBinEdges().front(),
+         m_cfg.binning[0u].getAxis().getBinEdges().back()},
+        m_cfg.binning[0u].getAxis().getNBins(),
+        {m_cfg.binning[1u].getAxis().getBinEdges().front(),
+         m_cfg.binning[1u].getAxis().getBinEdges().back()},
+        m_cfg.binning[1u].getAxis().getNBins()};
 
     auto sfCandidatesUpdater = isg(gctx, aGenerator, rGenerator);
 

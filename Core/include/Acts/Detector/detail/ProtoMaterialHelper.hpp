@@ -9,14 +9,13 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 namespace Acts {
 
 class Surface;
 
 namespace Experimental {
-
-struct BinningDescription;
 
 namespace detail::ProtoMaterialHelper {
 
@@ -29,9 +28,9 @@ namespace detail::ProtoMaterialHelper {
 ///
 /// @return an (eventual) updated binning description for structured
 ///         screen logging output
-BinningDescription attachProtoMaterial(const GeometryContext& gctx,
-                                       Surface& surface,
-                                       const BinningDescription& bDescription);
+std::vector<ProtoAxis> attachProtoMaterial(
+    const GeometryContext& gctx, Surface& surface,
+    const std::vector<ProtoAxis>& bDescription);
 
 }  // namespace detail::ProtoMaterialHelper
 }  // namespace Experimental

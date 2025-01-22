@@ -26,24 +26,72 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
 }  // namespace
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-                           const std::vector<double>& edges)
-    : m_axisDir(aDir), m_axis(IAxis::createVariable(abType, edges)) {
-  checkConsistency(aDir, abType);
-}
-
-Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           double minE, double maxE, std::size_t nbins)
+                           const std::vector<double>& edges,
+                           std::size_t fillExpansion)
     : m_axisDir(aDir),
-      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
+      m_axis(IAxis::createVariable(abType, edges)),
+      m_fillExpansion(fillExpansion) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           std::size_t nbins)
+                           double minE, double maxE, std::size_t nbins,
+                           std::size_t fillExpansion)
+    : m_axisDir(aDir),
+      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)),
+      m_fillExpansion(fillExpansion) {
+  checkConsistency(aDir, abType);
+}
+
+Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
+                           std::size_t nbins, std::size_t fillExpansion)
     : m_axisDir(aDir),
       m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
-      m_autorange(true) {
+      m_autorange(true),
+      m_fillExpansion(fillExpansion) {
   checkConsistency(aDir, abType);
+}
+
+Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
+    : m_axisDir(other.m_axisDir),
+      m_axis(nullptr),
+      m_autorange(other.m_autorange),
+      m_fillExpansion(other.m_fillExpansion) {
+  const auto& axis = other.getAxis();
+  if (!m_autorange) {
+    const auto& edges = axis.getBinEdges();
+    if (axis.getType() == AxisType::Variable) {
+      m_axis = IAxis::createVariable(axis.getBoundaryType(), edges);
+    } else {
+      m_axis = IAxis::createEquidistant(axis.getBoundaryType(), edges.front(),
+                                        edges.back(), axis.getNBins());
+    }
+  } else {
+    m_axis = IAxis::createEquidistant(axis.getBoundaryType(), 0., 1.,
+                                      axis.getNBins());
+  }
+}
+
+Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
+  if (this != &other) {
+    m_axisDir = other.m_axisDir;
+    m_autorange = other.m_autorange;
+    m_fillExpansion = other.m_fillExpansion;
+    const auto& axis = other.getAxis();
+    if (!m_autorange) {
+      const auto& edges = axis.getBinEdges();
+      if (axis.getType() == AxisType::Variable) {
+        m_axis = IAxis::createVariable(axis.getBoundaryType(), edges);
+      } else {
+        m_axis = IAxis::createEquidistant(axis.getBoundaryType(), edges.front(),
+                                          edges.back(), axis.getNBins());
+      }
+    } else {
+      m_axis = IAxis::createEquidistant(axis.getBoundaryType(), 0., 1.,
+                                        axis.getNBins());
+    }
+  }
+  return *this;
 }
 
 Acts::AxisDirection Acts::ProtoAxis::getAxisDirection() const {
@@ -55,20 +103,37 @@ const Acts::IAxis& Acts::ProtoAxis::getAxis() const {
 }
 
 void Acts::ProtoAxis::setRange(double minE, double maxE) {
-  if (!m_autorange) {
-    throw std::invalid_argument("ProtoAxis::setRange: Range is already set.");
-  }
-  if (m_axis->getType() != AxisType::Equidistant) {
+  if (minE > maxE) {
     throw std::invalid_argument(
-        "ProtoAxis::setRange: Range can only be set for equidistant binning.");
+        "ProtoAxis::setRange: minE > maxE is not allowed.");
   }
-  m_axis = IAxis::createEquidistant(m_axis->getBoundaryType(), minE, maxE,
-                                    m_axis->getNBins());
+
+  if (m_axis->getType() == AxisType::Equidistant) {
+    m_axis = IAxis::createEquidistant(m_axis->getBoundaryType(), minE, maxE,
+                                      m_axis->getNBins());
+  } else {
+    std::vector<double> edges = m_axis->getBinEdges();
+    // Clip it to min/max
+    auto [first, last] = std::ranges::remove_if(
+        edges,
+        [minE, maxE](double e) -> bool { return (e < minE || e > maxE); });
+    edges.erase(first, last);
+    edges.emplace_back(minE);
+    edges.emplace_back(maxE);
+    std::ranges::sort(edges);
+    m_axis = IAxis::createVariable(m_axis->getBoundaryType(), edges);
+  }
+
+  // Force autorange to be false
   m_autorange = false;
 }
 
 bool Acts::ProtoAxis::isAutorange() const {
   return m_autorange;
+}
+
+std::size_t Acts::ProtoAxis::getFillExpansion() const {
+  return m_fillExpansion;
 }
 
 void Acts::ProtoAxis::toStream(std::ostream& os) const {
@@ -89,4 +154,20 @@ std::string Acts::ProtoAxis::toString() const {
     ss << "within automatic range";
   }
   return ss.str();
+}
+
+// ostream operator implementation
+std::ostream& Acts::operator<<(std::ostream& os, const ProtoAxis& a) {
+  os << a.toString();
+  return os;
+}
+
+// ostream operator implementation
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const std::vector<ProtoAxis>& as) {
+  for (const auto& a : as) {
+    os << a.toString() << '\n';
+    ;
+  }
+  return os;
 }

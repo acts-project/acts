@@ -12,6 +12,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
@@ -172,6 +173,29 @@ class BinningData {
     } else {
       m_functionPtr = &searchInVectorWithBoundary;
     }
+  }
+
+  /// Constructor from ProtoAxis
+  ///
+  /// @param pAxis is the ProtoAxis object
+  ///
+  BinningData(const ProtoAxis& pAxis) {
+    const auto& axis = pAxis.getAxis();
+    type = axis.getType() == AxisType::Equidistant ? equidistant : arbitrary;
+    option = axis.getBoundaryType() == AxisBoundaryType::Closed ? closed : open;
+    binvalue = pAxis.getAxisDirection();
+    min = axis.getMin();
+    max = axis.getMax();
+    m_bins = axis.getNBins();
+    step = (max - min) / m_bins;
+    zdim = (m_bins == 1);
+    subBinningData = nullptr;
+    m_boundaries.reserve(axis.getBinEdges().size());
+    for (auto& edge : axis.getBinEdges()) {
+      m_boundaries.push_back(edge);
+    }
+    m_totalBins = m_bins;
+    m_totalBoundaries = m_boundaries;
   }
 
   /// Assignment operator
