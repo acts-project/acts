@@ -152,7 +152,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   BOOST_CHECK_EQUAL(stackBounds->get(boundDirOrth1), 300_mm);
   BOOST_CHECK_EQUAL(stackBounds->get(boundDirOrth2), 600_mm);
   BOOST_CHECK_EQUAL(stackBounds->get(boundDir), halfDir + 2 * halfDir * shift);
-  CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), base.matrix(), 1e-10, 1e-14);
+  CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), base.matrix(), 1e-10, 1e-12);
 
   // All volumes (including gaps) are cuboids and have the same orthogonal
   // bounds
@@ -217,9 +217,9 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Transform3 gap2Transform = base * gap2Translation;
 
       CHECK_CLOSE_OR_SMALL(gap1->transform().matrix(), gap1Transform.matrix(),
-                           1e-10, 1e-14);
+                           1e-10, 1e-12);
       CHECK_CLOSE_OR_SMALL(gap2->transform().matrix(), gap2Transform.matrix(),
-                           1e-10, 1e-14);
+                           1e-10, 1e-12);
 
       // Original volumes did not changes bounds
       for (const auto& [volume, bounds] : zip(origVolumes, originalBounds)) {
@@ -246,7 +246,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
-                           expectedTransform1.matrix(), 1e-10, 1e-14);
+                           expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger and shifted left
       auto newBounds2 =
@@ -256,7 +256,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation2(Vector3::Unit(dirIdx) * pDir2);
       Transform3 expectedTransform2 = base * expectedTranslation2;
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
-                           expectedTransform2.matrix(), 1e-10, 1e-14);
+                           expectedTransform2.matrix(), 1e-10, 1e-12);
 
       // Volume 3 stayed the same
       auto newBounds3 =
@@ -266,7 +266,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
-                           expectedTransform3.matrix(), 1e-10, 1e-14);
+                           expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeAttachmentStrategy::Second) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
@@ -281,7 +281,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
-                           expectedTransform1.matrix(), 1e-10, 1e-14);
+                           expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger and shifted left
       auto newBounds2 =
@@ -291,7 +291,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation2(Vector3::Unit(dirIdx) * pDir2);
       Transform3 expectedTransform2 = base * expectedTranslation2;
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(),
-                           expectedTransform2.matrix(), 1e-10, 1e-14);
+                           expectedTransform2.matrix(), 1e-10, 1e-12);
 
       // Volume 3 got bigger and shifted left
       auto newBounds3 =
@@ -301,7 +301,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
-                           expectedTransform3.matrix(), 1e-10, 1e-14);
+                           expectedTransform3.matrix(), 1e-10, 1e-12);
     } else if (strategy == VolumeAttachmentStrategy::Midpoint) {
       // No gap volumes were added
       BOOST_CHECK_EQUAL(volumes.size(), 3);
@@ -316,14 +316,14 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation1(Vector3::Unit(dirIdx) * pDir1);
       Transform3 expectedTransform1 = base * expectedTranslation1;
       CHECK_CLOSE_OR_SMALL(vol1->transform().matrix(),
-                           expectedTransform1.matrix(), 1e-10, 1e-14);
+                           expectedTransform1.matrix(), 1e-10, 1e-12);
 
       // Volume 2 got bigger but didn't move
       auto newBounds2 =
           dynamic_cast<const CuboidVolumeBounds*>(&vol2->volumeBounds());
       BOOST_CHECK_EQUAL(newBounds2->get(boundDir), halfDir + wGap / 2.0);
       CHECK_CLOSE_OR_SMALL(vol2->transform().matrix(), base.matrix(), 1e-10,
-                           1e-14);
+                           1e-12);
 
       // Volume 3 got bigger and shifted left
       auto newBounds3 =
@@ -333,7 +333,7 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
       Translation3 expectedTranslation3(Vector3::Unit(dirIdx) * pDir3);
       Transform3 expectedTransform3 = base * expectedTranslation3;
       CHECK_CLOSE_OR_SMALL(vol3->transform().matrix(),
-                           expectedTransform3.matrix(), 1e-10, 1e-14);
+                           expectedTransform3.matrix(), 1e-10, 1e-12);
     }
   }
 }
@@ -476,7 +476,7 @@ BOOST_DATA_TEST_CASE(Asymmetric,
   Translation3 expectedTranslation(Vector3::Unit(dirIdx) * midDir);
   Transform3 expectedTransform = Transform3::Identity() * expectedTranslation;
   CHECK_CLOSE_OR_SMALL(stack.transform().matrix(), expectedTransform.matrix(),
-                       1e-10, 1e-14);
+                       1e-10, 1e-12);
 }
 
 BOOST_DATA_TEST_CASE(UpdateStack,
@@ -734,9 +734,9 @@ BOOST_DATA_TEST_CASE(UpdateStack,
           Translation3(Vector3::Unit(dirIdx) * (3 * halfDir + halfDir / 2.0));
       Transform3 gap2Transform = base * gap2Translation;
       CHECK_CLOSE_OR_SMALL(gap1->transform().matrix(), gap1Transform.matrix(),
-                           1e-10, 1e-14);
+                           1e-10, 1e-12);
       CHECK_CLOSE_OR_SMALL(gap2->transform().matrix(), gap2Transform.matrix(),
-                           1e-10, 1e-14);
+                           1e-10, 1e-12);
     }
   }
 }

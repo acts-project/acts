@@ -36,18 +36,15 @@ CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
 
 CuboidVolumeBounds::CuboidVolumeBounds(
     std::initializer_list<std::pair<BoundValues, double>> keyValues) {
-  // Consistency check will fail if
-  // not all the bounds are constructed
-  std::array<double, eSize> values = {-1, -1, -1};
+  m_values = {-1, -1, -1};
   for (const auto& [key, value] : keyValues) {
-    values[key] = value;
+    m_values[key] = value;
   }
-  if (std::any_of(values.begin(), values.end(),
+  // Throw error here instead of consistency check for clarity
+  if (std::any_of(m_values.begin(), m_values.end(),
                   [](const auto& val) { return val == -1; })) {
     throw std::logic_error("Missing bound values");
   }
-
-  m_values = values;
   checkConsistency();
   buildSurfaceBounds();
 }
