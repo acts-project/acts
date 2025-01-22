@@ -17,6 +17,7 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <iosfwd>
 
@@ -569,7 +570,7 @@ class GridPortalLinkT : public GridPortalLink {
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
       double /*tolerance*/ = s_onSurfaceTolerance) const override {
-    assert(surface().insideBounds(position, BoundaryTolerance::None()));
+    throw_assert(surface().insideBounds(position, BoundaryTolerance::None()), "Checking volume outside of bounds");
     return m_grid.atPosition(m_projection(position));
   }
 
