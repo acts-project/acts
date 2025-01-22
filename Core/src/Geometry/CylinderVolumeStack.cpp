@@ -324,10 +324,9 @@ void CylinderVolumeStack::overlapPrint(
 }
 
 std::vector<CylinderVolumeStack::VolumeTuple>
-CylinderVolumeStack::checkOverlapAndAttachInZ(
-    std::vector<VolumeTuple>& volumes,
-    VolumeAttachmentStrategy strategy,
-    const Logger& logger) {
+CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
+                                              VolumeAttachmentStrategy strategy,
+                                              const Logger& logger) {
   // Preconditions: volumes are sorted by z
   std::vector<VolumeTuple> gapVolumes;
   for (std::size_t i = 0; i < volumes.size() - 1; i++) {
@@ -460,10 +459,9 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
 }
 
 std::vector<CylinderVolumeStack::VolumeTuple>
-CylinderVolumeStack::checkOverlapAndAttachInR(
-    std::vector<VolumeTuple>& volumes,
-    VolumeAttachmentStrategy strategy,
-    const Logger& logger) {
+CylinderVolumeStack::checkOverlapAndAttachInR(std::vector<VolumeTuple>& volumes,
+                                              VolumeAttachmentStrategy strategy,
+                                              const Logger& logger) {
   std::vector<VolumeTuple> gapVolumes;
   for (std::size_t i = 0; i < volumes.size() - 1; i++) {
     std::size_t j = i + 1;
