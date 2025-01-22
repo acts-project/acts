@@ -244,13 +244,12 @@ AxisDirection CylinderContainerBlueprintNode::direction() const {
   return m_direction;
 }
 
-VolumeAttachmentStrategy
-CylinderContainerBlueprintNode::attachmentStrategy() const {
+VolumeAttachmentStrategy CylinderContainerBlueprintNode::attachmentStrategy()
+    const {
   return m_attachmentStrategy;
 }
 
-VolumeResizeStrategy
-CylinderContainerBlueprintNode::resizeStrategy() const {
+VolumeResizeStrategy CylinderContainerBlueprintNode::resizeStrategy() const {
   return m_resizeStrategy;
 }
 

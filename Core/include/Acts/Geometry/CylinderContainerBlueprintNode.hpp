@@ -41,8 +41,7 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
       const std::string& name, AxisDirection direction,
       VolumeAttachmentStrategy attachmentStrategy =
           VolumeAttachmentStrategy::Midpoint,
-      VolumeResizeStrategy resizeStrategy =
-          VolumeResizeStrategy::Expand);
+      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand);
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -143,8 +142,7 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   VolumeAttachmentStrategy m_attachmentStrategy{
       VolumeAttachmentStrategy::Midpoint};
 
-  VolumeResizeStrategy m_resizeStrategy{
-      VolumeResizeStrategy::Expand};
+  VolumeResizeStrategy m_resizeStrategy{VolumeResizeStrategy::Expand};
 
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;
