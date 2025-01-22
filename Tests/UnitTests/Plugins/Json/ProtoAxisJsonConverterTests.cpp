@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxisJsonConversion) {
   using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
-  // Bound, equidistant axis
+  // Bound, variable axis
   Acts::ProtoAxis vpab(AxisX, Bound, {0.0, 1.0, 10});
 
   nlohmann::json jProtoAxis = Acts::ProtoAxisJsonConverter::toJson(vpab);
