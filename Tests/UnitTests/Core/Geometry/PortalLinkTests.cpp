@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(FromTrivial) {
     Axis axisYExpected{AxisBound, -100_mm, 100_mm, 1};
     BOOST_CHECK_EQUAL(*gridY->grid().axes().front(), axisYExpected);
 
-    BOOST_CHECK_EQUAL(gridY->resolveVolume(gctx, Vector2{50_mm, 20_mm}).value(),
+    BOOST_CHECK_EQUAL(gridY->resolveVolume(gctx, Vector2{15_mm, 20_mm}).value(),
                       vol.get());
   }
 }
@@ -2904,14 +2904,14 @@ BOOST_DATA_TEST_CASE(TrivialTrivial,
     BOOST_REQUIRE(grid123);
 
     BOOST_CHECK_EQUAL(
-        grid123->resolveVolume(gctx, Vector2{-160_mm, 0_mm}).value(),
+        grid123->resolveVolume(gctx, Vector2{-80_mm, 0_mm}).value(),
         vol1.get());
 
     BOOST_CHECK_EQUAL(grid123->resolveVolume(gctx, Vector2{0_mm, 0_mm}).value(),
                       vol2.get());
 
     BOOST_CHECK_EQUAL(
-        grid123->resolveVolume(gctx, Vector2{160_mm, 0_mm}).value(),
+        grid123->resolveVolume(gctx, Vector2{80_mm, 0_mm}).value(),
         vol3.get());
   }
   BOOST_TEST_CONTEXT("PlaneYDirection") {
@@ -2985,7 +2985,7 @@ BOOST_DATA_TEST_CASE(TrivialTrivial,
         vol2.get());
 
     BOOST_CHECK_EQUAL(
-        grid123->resolveVolume(gctx, Vector2{0_mm, 190_mm}).value(),
+        grid123->resolveVolume(gctx, Vector2{0_mm, 110_mm}).value(),
         vol3.get());
   }
 }
