@@ -25,8 +25,8 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
   auto axisDir = j.at("axis_dir").get<Acts::AxisDirection>();
   auto axisBoundaryType =
       j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
-  auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
-  if (axisType == AxisType::Equidistant) {
+  if (auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
+      axisType == AxisType::Equidistant) {
     if (j.at("autorange").get<bool>()) {
       auto nbins = j.at("axis").at("bins").get<std::size_t>();
       if (nbins == 0) {
