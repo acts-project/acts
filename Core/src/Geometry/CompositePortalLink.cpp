@@ -311,7 +311,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
     Transform3 itransform = groupTransform.inverse();
 
     std::size_t sortingDir = dirX ? eX : eY;
-    std::ranges::sort(trivialLinks, [&itransform, &gctx, &sortingDir](
+    std::ranges::sort(trivialLinks, [&itransform, &gctx, sortingDir](
                                         const auto& a, const auto& b) {
       return (itransform * a->surface().transform(gctx))
                  .translation()[sortingDir] <
