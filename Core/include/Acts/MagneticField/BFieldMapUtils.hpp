@@ -7,10 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 #include <array>

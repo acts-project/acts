@@ -81,7 +81,12 @@ interactive testing with one-off configuration specified by command-line options
         "--output-csv",
         action="count",
         default=0,
-        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+        help="Use CSV output instead of ROOT. Specify -cc to output all formats (ROOT, CSV, and obj).",
+    )
+    parser.add_argument(
+        "--output-obj",
+        action="store_true",
+        help="Enable obj output",
     )
     parser.add_argument(
         "-n",
@@ -272,6 +277,11 @@ def full_chain(args):
     outputDirCsv = outputDir if args.output_csv != 0 else None
     outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
     outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
+    outputDirObj = (
+        outputDirLess
+        if args.output_obj
+        else outputDir if args.output_csv == 2 else None
+    )
 
     # fmt: off
     if args.generic_detector:
@@ -391,9 +401,8 @@ def full_chain(args):
                 "LongStripBarrelReadout",
                 "LongStripEndcapReadout",
             ],
-            outputParticlesGenerator="particles_input",
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticlesGenerator="particles_generated",
+            outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
             graphvizOutput="graphviz",
             dd4hepDetector=detector,
@@ -483,6 +492,7 @@ def full_chain(args):
                 postSelectParticles=postSelectParticles,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
         else:
             if s.config.numThreads != 1:
@@ -508,6 +518,7 @@ def full_chain(args):
                 killAfterTime=25 * u.ns,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
 
     addDigitization(

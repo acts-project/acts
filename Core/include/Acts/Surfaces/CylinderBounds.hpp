@@ -12,14 +12,11 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
-#include <cstddef>
 #include <iostream>
 #include <numbers>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -60,8 +57,6 @@ class CylinderBounds : public SurfaceBounds {
     eSize = 6
   };
 
-  CylinderBounds() = delete;
-
   /// Constructor - full cylinder
   ///
   /// @param r The radius of the cylinder
@@ -88,9 +83,7 @@ class CylinderBounds : public SurfaceBounds {
     checkConsistency();
   }
 
-  ~CylinderBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eCylinder; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -112,7 +105,7 @@ class CylinderBounds : public SurfaceBounds {
   double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
-  bool coversFullAzimuth() const;
+  bool coversFullAzimuth() const { return m_closed; }
 
   /// Create the bow/circle vertices on either side of the cylinder
   ///
@@ -145,17 +138,7 @@ class CylinderBounds : public SurfaceBounds {
   Vector2 shifted(const Vector2& lposition) const;
 
   /// Return the jacobian into the polar coordinate
-  ActsMatrix<2, 2> jacobian() const;
+  SquareMatrix2 jacobian() const;
 };
-
-inline std::vector<double> CylinderBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline bool CylinderBounds::coversFullAzimuth() const {
-  return m_closed;
-}
 
 }  // namespace Acts
