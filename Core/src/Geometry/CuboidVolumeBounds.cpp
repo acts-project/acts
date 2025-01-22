@@ -35,8 +35,8 @@ CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
 }
 
 CuboidVolumeBounds::CuboidVolumeBounds(
-    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
-  m_values = {-1, -1, -1};
+    std::initializer_list<std::pair<BoundValues, double>> keyValues)
+    : m_values({-1, -1, -1}) {
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
   }
