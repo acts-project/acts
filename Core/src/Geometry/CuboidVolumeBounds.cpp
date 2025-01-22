@@ -175,13 +175,10 @@ CuboidVolumeBounds::BoundValues CuboidVolumeBounds::fromAxisDirection(
   switch (direction) {
     case AxisX:
       return BoundValues::eHalfLengthX;
-      break;
     case AxisY:
       return BoundValues::eHalfLengthY;
-      break;
     case AxisZ:
       return BoundValues::eHalfLengthZ;
-      break;
     default:
       throw std::invalid_argument("Invalid axis direction");
   }
