@@ -595,10 +595,6 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         "CuboidVolumeStack requires CuboidVolumeBounds");
   }
 
-  if (bounds == nullptr) {
-    throw std::invalid_argument("New bounds are nullptr");
-  }
-
   if (*bounds == volumeBounds()) {
     ACTS_VERBOSE("Bounds are the same, no resize needed");
     return;
