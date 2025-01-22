@@ -42,7 +42,7 @@ struct GbtsSP {
   };
   float phi() const { return m_phi; }
   float r() const { return m_r; }
-  bool ClusterWidth() const { return m_ClusterWidth; }
+  float ClusterWidth() const { return m_ClusterWidth; }
 };
 
 template <typename space_point_t>
@@ -177,8 +177,6 @@ class GbtsDataStorage {
     } else {
       if (useClusterWidth) {
         float cluster_width = sp.ClusterWidth();
-        // if (cluster_width == 0) {continue;} //catch for casses that dont have
-        // cluster width available
         if (cluster_width > 0.2) {
           return -3;
         }
