@@ -54,15 +54,6 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     // maximum number of shared hit per track
     std::size_t maxShared = 5;
 
-    double pTMin = 0 * Acts::UnitConstants::GeV;
-    double pTMax = 1e5 * Acts::UnitConstants::GeV;
-
-    double phiMin = -std::numbers::pi * Acts::UnitConstants::rad;
-    double phiMax = std::numbers::pi * Acts::UnitConstants::rad;
-
-    double etaMin = -5;
-    double etaMax = 5;
-
     bool useAmbiguityFunction = false;
   };
 

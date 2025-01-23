@@ -49,12 +49,6 @@ struct Fixture {
     config.minScoreSharedTracks = 100;
     config.maxShared = 5;
     config.maxSharedTracksPerMeasurement = 10;
-    config.phiMax = 3.14;
-    config.phiMin = -3.14;
-    config.etaMax = 2.7;
-    config.etaMin = -2.7;
-    config.pTMax = 1400;
-    config.pTMin = 0.5;
     config.useAmbiguityFunction = false;
   }
 
