@@ -409,7 +409,8 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
 
       const auto& covariance = track.covariance();
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        error[i] = std::sqrt(covariance(i, i));
+        error[i] =
+            std::sqrt(covariance(i, i));  // MARK: fpeMask(FLTINV, 1, #3999)
       }
     }
 
