@@ -51,6 +51,6 @@ target_sources(
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
         MaterialDesignatorBlueprintNode.cpp
-        detail/VolumeAttachmentStrategy.cpp
-        detail/VolumeResizeStrategy.cpp
+        VolumeAttachmentStrategy.cpp
+        VolumeResizeStrategy.cpp
 )

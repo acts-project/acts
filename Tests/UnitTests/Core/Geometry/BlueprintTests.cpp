@@ -22,7 +22,7 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"

@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
-#include "Acts/Geometry/detail/VolumeResizeStrategy.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 

@@ -11,8 +11,8 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
-#include "Acts/Geometry/detail/VolumeAttachmentStrategy.hpp"
-#include "Acts/Geometry/detail/VolumeResizeStrategy.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
