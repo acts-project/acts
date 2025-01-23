@@ -72,30 +72,11 @@ class MultiWireInternalStructureBuilder
     }
 
     // Create the indexed surfaces
-    auto internalSurfaces = m_cfg.iSurfaces;
-    Acts::Experimental::detail::IndexedSurfacesGenerator<
-        decltype(internalSurfaces),
-        Acts::Experimental::MultiLayerSurfacesNavigation>
-        isg{internalSurfaces,
-            {},
-            {m_cfg.binning[0u].getAxisDirection(),
-             m_cfg.binning[1u].getAxisDirection()},
-            {m_cfg.binning[0u].getFillExpansion(),
-             m_cfg.binning[1u].getFillExpansion()},
-            m_cfg.transform};
-
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
-        {m_cfg.binning[0u].getAxis().getBinEdges().front(),
-         m_cfg.binning[0u].getAxis().getBinEdges().back()},
-        m_cfg.binning[0u].getAxis().getNBins(),
-        {m_cfg.binning[1u].getAxis().getBinEdges().front(),
-         m_cfg.binning[1u].getAxis().getBinEdges().back()},
-        m_cfg.binning[1u].getAxis().getNBins()};
+    auto sfCandidatesUpdater = Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
+        gctx, m_cfg.iSurfaces, rGenerator, m_cfg.binning[0], m_cfg.binning[1]);
 
-    auto sfCandidatesUpdater = isg(gctx, aGenerator, rGenerator);
-
-    return {internalSurfaces,
+    return {m_cfg.iSurfaces,
             {},
             std::move(sfCandidatesUpdater),
             std::move(internalVolumeUpdater)};

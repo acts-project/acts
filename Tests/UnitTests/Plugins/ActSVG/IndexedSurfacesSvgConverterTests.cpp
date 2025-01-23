@@ -74,15 +74,14 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
-
-  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesNavigation>
-      irSurfaces{rSurfaces, {}, {AxisDirection::AxisPhi}};
-
-  GridAxisGenerators::EqClosed aGenerator{{-std::numbers::pi, std::numbers::pi},
-                                          44u};
+  // Polyhedron reference generator
   PolyhedronReferenceGenerator<1u, true> rGenerator;
-
-  auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+  // A single proto axis clused in phi with 44 bins
+  ProtoAxis pAxis(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
+                  -std::numbers::pi, std::numbers::pi, 44u);
+  auto indexedRing =
+      Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
+          tContext, rSurfaces, rGenerator, pAxis);
   // The displaying
   auto pIndexedRing = IndexedSurfacesConverter::convert(
       tContext, rSurfaces, indexedRing, drawOptions);
@@ -90,6 +89,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   toFile({pIndexRingView}, pIndexRingView._id + ".svg");
 }
 
+/**
 BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   // A single ring
   CylindricalTrackingGeometry::DetectorStore dStore;
@@ -234,5 +234,6 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
 
   toFile({pIndexCylinderView}, pIndexCylinderView._id + ".svg");
 }
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

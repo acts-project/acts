@@ -63,28 +63,6 @@ void adaptBinningRange(std::vector<Acts::ProtoAxis>& pBinning,
   }
 }
 
-/// Helper for 1-dimensional generators
-///
-/// @tparam aType is the axis boundary type: closed or bound
-///
-/// @param gctx the geometry context
-/// @param lSurfaces the surfaces of the layer
-/// @param assignToAll the indices assigned to all
-/// @param binning the binning struct
-///
-/// @return a configured surface candidate updators
-Acts::Experimental::InternalNavigationDelegate createUpdater(
-    const Acts::GeometryContext& /*gctx*/,
-    std::vector<std::shared_ptr<Acts::Surface>> /*lSurfaces*/,
-    std::vector<std::size_t> /*assignToAll*/,
-    const std::vector<Acts::ProtoAxis>& /*binning*/) {
-  // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::InternalNavigationDelegate sfCandidates;
-  // Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
-
-  return sfCandidates;
-}
-
 }  // namespace
 
 Acts::Experimental::LayerStructureBuilder::LayerStructureBuilder(
@@ -229,9 +207,27 @@ Acts::Experimental::LayerStructureBuilder::construct(
         ACTS_DEBUG("- adapting the proto binning range to the surface extent.");
         adaptBinningRange(binnings, m_cfg.extent.value());
       }
-      // Now create the updater
-      internalCandidatesUpdater =
-          createUpdater(gctx, internalSurfaces, assignToAll, binnings);
+
+      // Provide a reference generator
+      Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
+
+      // 1D surface binning
+      if (binnings.size() == 1) {
+        ACTS_DEBUG("- creating a 1D internal binning and portal navigation");
+        internalCandidatesUpdater =
+            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
+                gctx, internalSurfaces, rGenerator, binnings.at(0), assignToAll);
+      } else if (binnings.size() == 2u) {
+        ACTS_DEBUG("- creating a 2D internal binning and portal navigation");
+        internalCandidatesUpdater =
+            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
+                gctx, internalSurfaces, rGenerator, binnings.at(0), binnings.at(1),
+                assignToAll);
+      } else {
+        throw std::runtime_error(
+            "LayerStructureBuilder: only 1D or 2D surface binning "
+            "supported.");
+      }
     }
   } else {
     ACTS_DEBUG("Only " << internalSurfaces.size() << " surfaces provided, "

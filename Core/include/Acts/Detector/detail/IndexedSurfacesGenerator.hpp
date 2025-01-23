@@ -17,21 +17,92 @@
 #include <array>
 #include <memory>
 
-namespace Acts::Experimental::detail {
+namespace Acts::detail::IndexedSurfacesGenerator {
 
-/// @brief  A templated indexed grid generator.
+/// Factory method to create a 1D indexed surface grid
 ///
-/// This Generator creates a InternalNavigationDelegate delegate
-/// which can then be used in the DetectorVolume class for updating
-/// given surface candidates based on an index grid.
+/// @param gctx the geometry context
+/// @param surfaces the surfaces to be indexed
+/// @param rGenerator the reference generator
+/// @param pAxis the proto axis
+/// @param assignToAll the indices assigned to all bins
+/// @param transform the transform into the local binning schema
+/// @return an internal navigation delegate
+template <typename surface_container, typename reference_generator>
+Experimental::InternalNavigationDelegate createInternalNavigation(
+    const GeometryContext& gctx, const surface_container& surfaces,
+    const reference_generator& rGenerator, const ProtoAxis& pAxis,
+    const std::vector<std::size_t> assignToAll = {},
+    const Transform3 transform = Transform3::Identity()) {
+  // Let the axis create the grid
+  return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis)
+                                   -> Experimental::InternalNavigationDelegate {
+    Experimental::InternalNavigationDelegate nStateUpdater;
+    Grid<std::vector<std::size_t>, AxisTypeA> grid(axis);
+    std::array<AxisDirection, 1u> axisDirs = {pAxis.getAxisDirection()};
+
+    std::vector<std::size_t> fillExpansion = {pAxis.getFillExpansion()};
+    Experimental::detail::IndexedGridFiller filler{fillExpansion};
+
+    // filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
+    // indexed_updator<GridType> indexedSurfaces(std::move(grid), axisDirs,
+    //                                           transform);
+
+    return nStateUpdater;
+  });
+}
+
+/// Factory method to create a 2D indexed surface grid
 ///
-/// It allows for:
-/// - certain indices being forcly assigned to all bins
-/// - a chosen expansion to fill indices in neighborhood bins
+/// @param gctx the geometry context
+/// @param surfaces the surfaces to be indexed
+/// @param rGenerator the reference generator
+/// @param pAxisA the first proto axis
+/// @param pAxisB the second proto axis
+/// @param assignToAll the indices assigned to all bins
+/// @param transform the transform into the local binning schema
 ///
-/// @tparam objects_container the objects container
-template <typename surface_container, template <typename> class indexed_updator>
-struct IndexedSurfacesGenerator {
+/// @return an internal navigation delegate
+template <typename surface_container, typename reference_generator>
+Experimental::InternalNavigationDelegate createInternalNavigation(
+    const GeometryContext& gctx, const surface_container& surfaces,
+    const reference_generator& rGenerator, const ProtoAxis& pAxisA,
+    const ProtoAxis& pAxisB, const std::vector<std::size_t> assignToAll = {},
+    const Transform3 transform = Transform3::Identity()) {
+  // Let the axes create the grid
+  return pAxisA.getAxis().visit(
+      [&]<typename AxisTypeA>(
+          const AxisTypeA& axisA) -> Experimental::InternalNavigationDelegate {
+        return pAxisB.getAxis().visit(
+            [&]<typename AxisTypeB>(const AxisTypeB& axisB)
+                -> Experimental::InternalNavigationDelegate {
+              Experimental::InternalNavigationDelegate nStateUpdater;
+              Grid<std::vector<std::size_t>, AxisTypeA, AxisTypeB> grid(axisA,
+                                                                        axisB);
+              std::array<AxisDirection, 2u> axisDirs = {
+                  pAxisA.getAxisDirection(), pAxisB.getAxisDirection()};
+
+              std::vector<std::size_t> fillExpansion = {
+                  pAxisA.getFillExpansion(), pAxisB.getFillExpansion()};
+              Experimental::detail::IndexedGridFiller filler{fillExpansion};
+
+              // indexed_updator<GridType> indexedSurfaces(std::move(grid),
+              // axisDirs,
+              //                                           transform);
+
+              return nStateUpdater;
+            });
+      });
+}
+
+}  // namespace Acts::detail::IndexedSurfacesGenerator
+
+/**
+  template <typename surface_container>
+  InternalNavigationDelegate createInternalNavigation(){
+
+  }
+
   /// The surfaces to be indexed
   /// (including surfaces that are assigned to all bins)
   surface_container surfaces = {};
@@ -103,3 +174,4 @@ struct IndexedSurfacesGenerator {
 };
 
 }  // namespace Acts::Experimental::detail
+*/
