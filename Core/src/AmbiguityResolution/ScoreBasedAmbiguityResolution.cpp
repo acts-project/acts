@@ -43,11 +43,12 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
   }
 
   cutApplied = (trackFeatures.nHits <= getValueAtEta(detector.minHitsPerEta,
-                                                    etaBins.size(), etaBin)) ||
-               cutApplied;
-  cutApplied = (trackFeatures.nHoles >= getValueAtEta(detector.maxHolesPerEta,
                                                      etaBins.size(), etaBin)) ||
                cutApplied;
+  cutApplied =
+      (trackFeatures.nHoles >=
+       getValueAtEta(detector.maxHolesPerEta, etaBins.size(), etaBin)) ||
+      cutApplied;
   cutApplied =
       (trackFeatures.nOutliers >=
        getValueAtEta(detector.maxOutliersPerEta, etaBins.size(), etaBin)) ||
