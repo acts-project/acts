@@ -35,12 +35,10 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     const std::vector<double>& fakeHits = value["fakeHits"];
     const std::vector<double>& fakeHoles = value["fakeHoles"];
 
-    const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
-    const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
-    const std::vector<std::size_t>& maxOutliersPerEta =
-        value["maxOutliersPerEta"];
-    const std::vector<std::size_t>& maxSharedHitsPerEta =
-        value["maxSharedHitsPerEta"];
+    detectorConfig.minHitsPerEta = value["minHitsPerEta"];
+    detectorConfig.maxHolesPerEta = value["maxHolesPerEta"];
+    detectorConfig.maxOutliersPerEta = value["maxOutliersPerEta"];
+    detectorConfig.maxSharedHitsPerEta = value["maxSharedHitsPerEta"];
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
