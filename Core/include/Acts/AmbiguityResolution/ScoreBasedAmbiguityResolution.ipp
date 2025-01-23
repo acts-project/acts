@@ -89,7 +89,6 @@ std::vector<double> Acts::ScoreBasedAmbiguityResolution::simpleScore(
     // get the trackFeatures map for the track
     const auto& trackFeaturesVector = trackFeaturesVectors[iTrack];
     double score = 1;
-    auto pT = Acts::VectorHelpers::perp(track.momentum());
     auto eta = Acts::VectorHelpers::eta(track.momentum());
 
     // cuts on optional cuts
