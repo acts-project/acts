@@ -65,6 +65,12 @@ class MultiWireInternalStructureBuilder
 
     Acts::Experimental::ExternalNavigationDelegate internalVolumeUpdater =
         Acts::Experimental::tryNoVolumes();
+
+    if (m_cfg.binning.size() < 2) {
+      throw std::runtime_error(
+          "MultiWireStructureBuilder: At least 2 binning axes required");
+    }
+
     // Create the indexed surfaces
     auto internalSurfaces = m_cfg.iSurfaces;
     Acts::Experimental::detail::IndexedSurfacesGenerator<
@@ -72,15 +78,12 @@ class MultiWireInternalStructureBuilder
         Acts::Experimental::MultiLayerSurfacesNavigation>
         isg{internalSurfaces,
             {},
-            if (m_cfg.binning.size() < 2) {
-                throw std::runtime_error(
-                    "MultiWireStructureBuilder: At least 2 binning axes required");
-            }
             {m_cfg.binning[0u].getAxisDirection(),
              m_cfg.binning[1u].getAxisDirection()},
             {m_cfg.binning[0u].getFillExpansion(),
              m_cfg.binning[1u].getFillExpansion()},
             m_cfg.transform};
+
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
     Acts::GridAxisGenerators::EqBoundEqBound aGenerator{
         {m_cfg.binning[0u].getAxis().getBinEdges().front(),

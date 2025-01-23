@@ -74,10 +74,10 @@ void adaptBinningRange(std::vector<Acts::ProtoAxis>& pBinning,
 ///
 /// @return a configured surface candidate updators
 Acts::Experimental::InternalNavigationDelegate createUpdater(
-    const Acts::GeometryContext& gctx,
-    std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
-    std::vector<std::size_t> assignToAll,
-    const std::vector<Acts::ProtoAxis>& binning) {
+    const Acts::GeometryContext& /*gctx*/,
+    std::vector<std::shared_ptr<Acts::Surface>> /*lSurfaces*/,
+    std::vector<std::size_t> /*assignToAll*/,
+    const std::vector<Acts::ProtoAxis>& /*binning*/) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::InternalNavigationDelegate sfCandidates;
   // Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;

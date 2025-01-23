@@ -197,8 +197,8 @@ class BinningData {
     m_totalBins = m_bins;
     m_totalBoundaries = m_boundaries;
     // Set the search function pointer based on axis type
-    m_functionPtr = (type == equidistant) ? &searchEquidistantWithBoundary 
-                                         : &searchInVectorWithBoundary;
+    m_functionPtr = (type == equidistant) ? &searchEquidistantWithBoundary
+                                          : &searchInVectorWithBoundary;
   }
 
   /// Assignment operator
