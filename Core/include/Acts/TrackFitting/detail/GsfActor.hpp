@@ -317,13 +317,20 @@ struct GsfActor {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
     }
+  }
 
-    // Break the navigation if we found all measurements
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, const result_type& result,
+                  const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
       ACTS_VERBOSE("Stop navigation because all measurements are found");
-      navigator.navigationBreak(state.navigation, true);
+      return true;
     }
+
+    return false;
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -365,12 +372,12 @@ struct GsfActor {
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
-        old_bound.position(state.stepping.geoContext), state.options.direction,
+        old_bound.position(state.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
     const auto pathCorrection = surface.pathCorrection(
-        state.stepping.geoContext,
-        old_bound.position(state.stepping.geoContext), old_bound.direction());
+        state.geoContext, old_bound.position(state.geoContext),
+        old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     const double pathXOverX0 = slab.thicknessInX0();
@@ -409,7 +416,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           return p_prev * (gaussian.mean - 1.);
         } else {
           return p_prev * (1. / gaussian.mean - 1.);
@@ -424,7 +431,7 @@ struct GsfActor {
       auto new_cov = old_bound.covariance().value();
 
       const auto varInvP = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           const auto f = 1. / (p_prev * gaussian.mean);
           return f * f * gaussian.var;
         } else {
@@ -485,7 +492,7 @@ struct GsfActor {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
       cmp.pars() =
-          MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
+          MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
       cmp.cov() = proxy.filteredCovariance();
       cmp.weight() = tmpStates.weights.at(idx);
     }

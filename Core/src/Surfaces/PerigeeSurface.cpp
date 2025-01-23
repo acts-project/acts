@@ -15,38 +15,39 @@
 #include <memory>
 #include <vector>
 
-Acts::PerigeeSurface::PerigeeSurface(const Vector3& gp)
+namespace Acts {
+
+PerigeeSurface::PerigeeSurface(const Vector3& gp)
     : LineSurface(Transform3(Translation3(gp.x(), gp.y(), gp.z())), nullptr) {}
 
-Acts::PerigeeSurface::PerigeeSurface(const Transform3& transform)
+PerigeeSurface::PerigeeSurface(const Transform3& transform)
     : GeometryObject(), LineSurface(transform) {}
 
-Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
+PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
     : GeometryObject(), LineSurface(other) {}
 
-Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
-                                     const PerigeeSurface& other,
-                                     const Transform3& shift)
+PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
+                               const PerigeeSurface& other,
+                               const Transform3& shift)
     : GeometryObject(), LineSurface(gctx, other, shift) {}
 
-Acts::PerigeeSurface& Acts::PerigeeSurface::operator=(
-    const PerigeeSurface& other) {
+PerigeeSurface& PerigeeSurface::operator=(const PerigeeSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
   }
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::PerigeeSurface::type() const {
+Surface::SurfaceType PerigeeSurface::type() const {
   return Surface::Perigee;
 }
 
-std::string Acts::PerigeeSurface::name() const {
+std::string PerigeeSurface::name() const {
   return "Acts::PerigeeSurface";
 }
 
-std::ostream& Acts::PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
-                                                 std::ostream& sl) const {
+std::ostream& PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
+                                           std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
@@ -57,7 +58,7 @@ std::ostream& Acts::PerigeeSurface::toStreamImpl(const GeometryContext& gctx,
   return sl;
 }
 
-Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
+Polyhedron PerigeeSurface::polyhedronRepresentation(
     const GeometryContext& gctx, unsigned int /*quarterSegments*/) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
@@ -77,3 +78,5 @@ Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
 
   return Polyhedron(vertices, faces, triangularMesh);
 }
+
+}  // namespace Acts
