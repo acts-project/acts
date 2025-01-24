@@ -7,9 +7,11 @@ import shutil
 import acts
 from acts.examples.simulation import (
     addPythia8,
+    ParticleSelectorConfig,
+    addGenParticleSelection,
     addFatras,
     addDigitization,
-    ParticleSelectorConfig,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -19,7 +21,9 @@ from acts.examples.reconstruction import (
     CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
+    addAmbiguityResolutionML,
     AmbiguityResolutionConfig,
+    AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
     TrackSelectorConfig,
@@ -33,9 +37,10 @@ setup = makeSetup()
 
 
 with tempfile.TemporaryDirectory() as temp:
+    # Running with a single thread to avoid rance conditions with Pythia8, see https://github.com/acts-project/acts/issues/3963
     s = acts.examples.Sequencer(
         events=3,
-        numThreads=-1,
+        numThreads=1,  # run with single thread
         logLevel=acts.logging.INFO,
     )
 
@@ -58,20 +63,19 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         setup.trackingGeometry,
         setup.field,
         rnd=rnd,
-        preSelectParticles=ParticleSelectorConfig(
-            rho=(0.0, 24 * u.mm),
-            absZ=(0.0, 1.0 * u.m),
-        ),
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.5 * u.GeV, None),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
     )
 
     addDigitization(
@@ -80,6 +84,15 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         digiConfigFile=setup.digiConfig,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.5 * u.GeV, None),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     addSeeding(
@@ -134,6 +147,17 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
+    addAmbiguityResolutionML(
+        s,
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=6
+        ),
+        tracks="ckf_tracks",
+        outputDirRoot=tp,
+        onnxModelFile=Path(__file__).resolve().parent.parent.parent.parent
+        / "thirdparty/OpenDataDetector/data/duplicateClassifier.onnx",
+    )
+
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
@@ -141,6 +165,7 @@ with tempfile.TemporaryDirectory() as temp:
             maximumIterations=100000,
             nMeasurementsMin=6,
         ),
+        tracks="ckf_tracks",
         outputDirRoot=tp,
     )
 
@@ -187,6 +212,17 @@ with tempfile.TemporaryDirectory() as temp:
         tp / "performance_fitting_ambi.root",
         tp / "performance_fitting_ckf_ambi.root",
     )
+
+    shutil.move(
+        tp / "performance_finding_ambiML.root",
+        tp / "performance_finding_ckf_ml_solver.root",
+    )
+
+    shutil.move(
+        tp / "performance_fitting_ambiML.root",
+        tp / "performance_fitting_ckf_ml_solver.root",
+    )
+
     for vertexing in ["amvf_gauss_notime", "amvf_grid_time"]:
         shutil.move(
             tp / f"{vertexing}/performance_vertexing.root",
@@ -200,6 +236,8 @@ with tempfile.TemporaryDirectory() as temp:
         "performance_fitting_ckf.root",
         "performance_finding_ckf_ambi.root",
         "performance_fitting_ckf_ambi.root",
+        "performance_finding_ckf_ml_solver.root",
+        "performance_fitting_ckf_ml_solver.root",
         "performance_vertexing_amvf_gauss_notime.root",
         "performance_vertexing_amvf_grid_time.root",
     ]:

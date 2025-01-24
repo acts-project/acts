@@ -16,6 +16,7 @@ pybind11_add_module(ActsPythonBindings
   src/Material.cpp
   src/Geometry.cpp
   src/GeometryBuildingGen1.cpp
+  src/Blueprint.cpp
   src/ExampleAlgorithms.cpp
   src/MagneticField.cpp
   src/Output.cpp
@@ -91,10 +92,20 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_GEOMODEL)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginGeoModel)
+    target_link_libraries(
+        ActsPythonBindings
+        PUBLIC ActsPluginGeoModel ActsExamplesDetectorGeoModel
+    )
     target_sources(ActsPythonBindings PRIVATE src/GeoModel.cpp)
 else()
     target_sources(ActsPythonBindings PRIVATE src/GeoModelStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_TGEO)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsPluginTGeo)
+    target_sources(ActsPythonBindings PRIVATE src/TGeo.cpp)
+else()
+    target_sources(ActsPythonBindings PRIVATE src/TGeoStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
@@ -169,56 +180,6 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/geant4/__init__.py)
-
-    if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
-        pybind11_add_module(ActsPythonBindingsDDG4 src/Geant4DD4hepComponent.cpp)
-        target_link_libraries(
-            ActsPythonBindingsDDG4
-            PUBLIC
-                ActsPythonUtilities
-                ActsExamplesGeant4
-                ActsExamplesDetectorDD4hep
-        )
-        add_dependencies(ActsPythonBindings ActsPythonBindingsDDG4)
-
-        install(
-            TARGETS ActsPythonBindingsDDG4 DESTINATION ${_python_install_dir}
-        )
-        set_target_properties(
-            ActsPythonBindingsDDG4
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-        )
-        set_target_properties(
-            ActsPythonBindingsDDG4
-            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-        )
-        list(APPEND py_files examples/geant4/dd4hep.py)
-    endif()
-
-    if(ACTS_BUILD_PLUGIN_GEOMODEL)
-        pybind11_add_module(ActsPythonBindingsGeoModelG4 src/Geant4GeoModelComponent.cpp)
-        target_link_libraries(
-            ActsPythonBindingsGeoModelG4
-            PUBLIC ActsPythonUtilities ActsExamplesGeant4
-        )
-        add_dependencies(ActsPythonBindings ActsPythonBindingsGeoModelG4)
-        install(
-            TARGETS
-                ActsPythonBindingsGeoModelG4
-                DESTINATION
-                ${_python_install_dir}
-        )
-        set_target_properties(
-            ActsPythonBindingsGeoModelG4
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../${CMAKE_INSTALL_LIBDIR}"
-        )
-        set_target_properties(
-            ActsPythonBindingsGeoModelG4
-            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
-        )
-
-        list(APPEND py_files examples/geant4/geomodel.py)
-    endif()
 
     if(ACTS_BUILD_EXAMPLES_HEPMC3)
         target_link_libraries(
@@ -307,9 +268,11 @@ foreach(f ${py_files})
         CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f} ${_target}
         SYMBOLIC
     )
-endforeach()
 
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/
-    DESTINATION ${_python_install_dir}
-)
+    get_filename_component(_rel ${f} DIRECTORY)
+
+    install(
+        FILES ${CMAKE_CURRENT_SOURCE_DIR}/python/acts/${f}
+        DESTINATION ${_python_install_dir}/${_rel}
+    )
+endforeach()

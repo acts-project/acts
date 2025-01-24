@@ -6,9 +6,19 @@ variables:
 
   DEPENDENCY_TAG: v5
 
+.ccache_base:
+  cache:
+    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${CLONE_URL}_${HEAD_REF}
+      fallback_keys:
+        - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-https://github.com/acts-project/acts.git-main
+      when: always
+      paths:
+        - ${CCACHE_DIR}
+
+
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   tags:
     - large
   artifacts:
@@ -61,19 +71,14 @@ clang_tidy:
 
 build_exatrkx_cpu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - large
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   script:
     - export PATH=/usr/local/sbin:/usr/sbin:/sbin:$PATH
@@ -99,19 +104,14 @@ build_exatrkx_cpu:
 
 build_exatrkx:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   tags:
     - large
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   artifacts:
     paths:
@@ -142,47 +142,58 @@ build_exatrkx:
     - cmake --build build -- -j6
     - ccache -s
 
-# test_exatrkx_unittests:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - ctest --test-dir build -R ExaTrkX
-#
-# test_exatrkx_python:
-#   stage: test
-#   needs:
-#     - build_exatrkx
-#   image: ghcr.io/acts-project/ubuntu2204_exatrkx:63
-#   tags:
-#     - docker-gpu-nvidia
-#   script:
-#     - apt-get update -y
-#     - apt-get install -y python3 libxxhash0
-#     - source build/this_acts_withdeps.sh
-#     - git clone $CLONE_URL src
-#     - cd src
-#     - git checkout $HEAD_SHA
-#     - pip3 install -r Examples/Python/tests/requirements.txt
-#     - nvidia-smi
-#     - pytest -rFsv -k test_exatrkx
+test_exatrkx_unittests:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - source CI/dependencies.sh
+    - cd ..
+    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda)"
+
+test_exatrkx_python:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204_exatrkx:63
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - apt-get update -y
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - nvidia-smi
+    - source CI/dependencies.sh
+    - source ../build/this_acts_withdeps.sh
+    - python3 -m pip install -r Examples/Python/tests/requirements.txt
+    - echo $PYTHONPATH
+    - which python3
+    - python3 --version
+    - python3 -c "import acts"
+    - pytest -rFsv -k torch --collect-only
+    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
 
 build_linux_ubuntu:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   artifacts:
     paths:
@@ -215,9 +226,29 @@ build_linux_ubuntu:
     - cmake --build build -- -j6
     - ccache -s
 
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # Install main project
+    - cmake --install build
+
+    # Downstream configure
+    - >
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
 linux_test_examples:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
@@ -241,7 +272,7 @@ linux_test_examples:
 
 linux_physmon:
   stage: test
-  image: ghcr.io/acts-project/ubuntu2404:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404:63
   variables:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   needs: [build_linux_ubuntu]
@@ -283,16 +314,12 @@ linux_physmon:
 .linux_ubuntu_extra:
   variables:
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
+    CXX: g++
 
   stage: build
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   script:
     - git clone $CLONE_URL src
@@ -310,6 +337,7 @@ linux_physmon:
       --preset=gitlab-ci
       -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_CXX_COMPILER=${CXX}
 
     - ccache -z
     - cmake --build build -- -j6
@@ -341,14 +369,15 @@ linux_ubuntu_2204:
   variables:
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
 
 linux_ubuntu_2204_clang:
   extends: .linux_ubuntu_extra
   variables:
+    CXX: clang++
     CXXSTD: 20
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: ghcr.io/acts-project/ubuntu2204_clang:63
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
 
 
 ######################
@@ -356,7 +385,7 @@ linux_ubuntu_2204_clang:
 ######################
 
 .lcg_base_job:
-  image: ghcr.io/acts-project/${OS}-base:63
+  image: registry.cern.ch/ghcr.io/acts-project/${OS}-base:63
   stage: build
   tags:
     - cvmfs
@@ -368,12 +397,7 @@ linux_ubuntu_2204_clang:
     SETUP:
 
   cache:
-    key: ccache-${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}-${CCACHE_KEY_SUFFIX}
-    fallback_keys:
-      - ccache-${CI_JOB_NAME}-${CI_DEFAULT_BRANCH}-${CCACHE_KEY_SUFFIX}
-    when: always
-    paths:
-      - ${CCACHE_DIR}
+   - !reference [.ccache_base, cache]
 
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'

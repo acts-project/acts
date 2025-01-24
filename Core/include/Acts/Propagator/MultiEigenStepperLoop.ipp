@@ -34,7 +34,7 @@ auto MultiEigenStepperLoop<E, R>::boundState(
     // onSurface.
     cmpState.pars.template segment<3>(eFreePos0) =
         surface
-            .intersect(state.geoContext,
+            .intersect(state.options.geoContext,
                        cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0),
                        BoundaryTolerance::Infinite())
@@ -78,7 +78,7 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
         state.components[i].state, transportCov);
 
     cmps.emplace_back(state.components[i].weight,
-                      cp.fourPosition(state.geoContext), cp.direction(),
+                      cp.fourPosition(state.options.geoContext), cp.direction(),
                       cp.qOverP(),
                       cp.covariance().value_or(BoundSquareMatrix::Zero()));
     accumulatedPathLength += state.components[i].weight * pl;
@@ -116,14 +116,17 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
         }
       }
 
+      ACTS_VERBOSE("Stepper performed "
+                   << m_stepLimitAfterFirstComponentOnSurface
+                   << " steps after the first component hit a surface.");
+      ACTS_VERBOSE(
+          "-> remove all components not on a surface, perform no step");
+
       removeMissedComponents(stepping);
       reweightComponents(stepping);
 
-      ACTS_VERBOSE("Stepper performed "
-                   << m_stepLimitAfterFirstComponentOnSurface
-                   << " after the first component hit a surface.");
-      ACTS_VERBOSE(
-          "-> remove all components not on a surface, perform no step");
+      ACTS_VERBOSE(components.size()
+                   << " components left after removing missed components");
 
       stepping.stepCounterAfterFirstComponentOnSurface.reset();
 
@@ -184,7 +187,7 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
   };
 
   // Loop over components and remove errorous components
-  stepping.components.erase(
+  components.erase(
       std::remove_if(components.begin(), components.end(), errorInStep),
       components.end());
 
@@ -218,8 +221,13 @@ Result<double> MultiEigenStepperLoop<E, R>::step(
   }
 
   // Return error if there is no ok result
-  if (stepping.components.empty()) {
+  if (components.empty()) {
     return MultiStepperError::AllComponentsSteppingError;
+  }
+
+  // Invalidate the component status after each step
+  for (auto& cmp : components) {
+    cmp.status = Status::unreachable;
   }
 
   // Return the weighted accumulated path length of all successful steps

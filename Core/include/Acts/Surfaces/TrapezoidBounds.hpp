@@ -7,18 +7,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
 #include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -40,8 +37,6 @@ class TrapezoidBounds : public PlanarBounds {
     eSize = 4
   };
 
-  TrapezoidBounds() = delete;
-
   /// Constructor for symmetric Trapezoid
   ///
   /// @param halfXnegY minimal half length X, definition at negative Y
@@ -56,9 +51,7 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param values the values to be stream in
   TrapezoidBounds(const std::array<double, eSize>& values) noexcept(false);
 
-  ~TrapezoidBounds() override;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eTrapezoid; }
 
   std::vector<double> values() const final;
 

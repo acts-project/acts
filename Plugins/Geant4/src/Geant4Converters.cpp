@@ -110,7 +110,7 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   }
   double thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
   auto cBounds = std::make_shared<CylinderBounds>(tArray);
-  return std::make_tuple(std::move(cBounds), thickness);
+  return {std::move(cBounds), thickness};
 }
 
 std::tuple<std::shared_ptr<Acts::RadialBounds>, double>
@@ -133,7 +133,7 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   }
   double thickness = g4Tubs.GetZHalfLength() * 2;
   auto rBounds = std::make_shared<RadialBounds>(tArray);
-  return std::make_tuple(std::move(rBounds), thickness);
+  return {std::move(rBounds), thickness};
 }
 
 std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
@@ -173,7 +173,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   }
   auto rBounds = std::make_shared<RectangleBounds>(hG4XYZ[std::abs(rAxes[0u])],
                                                    hG4XYZ[std::abs(rAxes[1u])]);
-  return std::make_tuple(std::move(rBounds), rAxes, thickness);
+  return {std::move(rBounds), rAxes, thickness};
 }
 
 std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
@@ -226,7 +226,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
 
   auto tBounds = std::make_shared<TrapezoidBounds>(
       halfLengthXminY, halfLengthXmaxY, halfLengthY);
-  return std::make_tuple(std::move(tBounds), rAxes, thickness);
+  return {std::move(tBounds), rAxes, thickness};
 }
 
 std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>, double>
@@ -234,19 +234,19 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {
     auto [rBounds, axes, thickness] = rectangleBounds(*box);
-    return std::make_tuple(std::move(rBounds), axes, thickness);
+    return {std::move(rBounds), axes, thickness};
   }
 
   const G4Trd* trd = dynamic_cast<const G4Trd*>(&g4Solid);
   if (trd != nullptr) {
     auto [tBounds, axes, thickness] = trapezoidBounds(*trd);
-    return std::make_tuple(std::move(tBounds), axes, thickness);
+    return {std::move(tBounds), axes, thickness};
   }
 
   std::shared_ptr<Acts::PlanarBounds> pBounds = nullptr;
   std::array<int, 2u> rAxes = {};
   double rThickness = 0.;
-  return std::make_tuple(std::move(pBounds), rAxes, rThickness);
+  return {std::move(pBounds), rAxes, rThickness};
 }
 
 namespace {

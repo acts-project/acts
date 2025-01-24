@@ -102,19 +102,24 @@ template <typename generator_t>
 inline std::pair<double, double> generateBoundDirection(
     generator_t& rng, const GenerateBoundDirectionOptions& options) {
   using UniformReal = std::uniform_real_distribution<double>;
+  assert(options.thetaMin >= 0.f);
+  assert(options.thetaMax <= std::numbers::pi);
+  assert(options.thetaMin <= options.thetaMax);
 
   // since we want to draw the direction uniform on the unit sphere, we must
   // draw from cos(theta) instead of theta. see e.g.
   // https://mathworld.wolfram.com/SpherePointPicking.html
-  double cosThetaMin = std::cos(options.thetaMin);
+  // Get cosThetaMin from thetaMax and vice versa, because cos is
+  // monothonical decreasing between [0, pi]
+  double cosThetaMin = std::cos(options.thetaMax);
   // ensure upper bound is included. see e.g.
   // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-  double cosThetaMax = std::nextafter(std::cos(options.thetaMax),
+  double cosThetaMax = std::nextafter(std::cos(options.thetaMin),
                                       std::numeric_limits<double>::max());
 
   // in case we force uniform eta generation
-  double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
-  double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
+  double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
+  double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
 
   UniformReal phiDist(options.phiMin, options.phiMax);
   UniformReal cosThetaDist(cosThetaMin, cosThetaMax);

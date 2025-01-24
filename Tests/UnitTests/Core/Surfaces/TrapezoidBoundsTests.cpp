@@ -20,10 +20,8 @@
 #include <algorithm>
 #include <array>
 #include <optional>
-#include <ostream>
 #include <random>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
@@ -191,7 +189,7 @@ BOOST_DATA_TEST_CASE(
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 
   if (tol != 0.) {
-    tolerance = BoundaryTolerance::AbsoluteBound{tol, tol};
+    tolerance = BoundaryTolerance::AbsoluteBound(tol, tol);
   }
 
   BOOST_CHECK_EQUAL(

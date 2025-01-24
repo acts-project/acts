@@ -398,8 +398,8 @@ RootAthenaDumpReader::readMeasurements(
 
       bool inside =
           surface->isOnSurface(gctx, cluster.globalPosition, {},
-                               Acts::BoundaryTolerance::AbsoluteEuclidean{
-                                   m_cfg.absBoundaryTolerance},
+                               Acts::BoundaryTolerance::AbsoluteEuclidean(
+                                   m_cfg.absBoundaryTolerance),
                                std::numeric_limits<double>::max());
 
       if (!inside) {
@@ -672,6 +672,7 @@ RootAthenaDumpReader::reprocessParticles(
     }
 
     auto newParticle = particle.withParticleId(fatrasBarcode);
+    newParticle.final().setNumberOfHits(std::distance(begin, end));
     newParticles.push_back(newParticle);
 
     for (auto it = begin; it != end; ++it) {

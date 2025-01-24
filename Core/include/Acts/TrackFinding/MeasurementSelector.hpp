@@ -11,7 +11,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -21,7 +20,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <iterator>
 #include <limits>
 #include <utility>
 #include <vector>
