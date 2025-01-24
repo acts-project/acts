@@ -185,6 +185,7 @@ class DirectNavigator {
     }
 
     state.direction = propagationDirection;
+    ACTS_VERBOSE("Navigation direction is " << propagationDirection);
 
     // We set the current surface to the start surface
     state.currentSurface = state.options.startSurface;
@@ -195,15 +196,17 @@ class DirectNavigator {
       ACTS_VERBOSE("Current surface set to nullptr");
     }
 
-    // Reset the surface index
-    state.resetSurfaceIndex();
+    // Find initial index. Because the list of surfaces has the same order
+    // regardless the direction, we need to increment the surfaceIndex manually
+    // instead of calling nextSurface
     bool foundStartSurface = false;
+    state.surfaceIndex = 0;
     for (const Surface* surface : state.options.surfaces) {
       if (surface == state.currentSurface) {
         foundStartSurface = true;
         break;
       }
-      state.nextSurface();
+      state.surfaceIndex++;
     }
     ACTS_VERBOSE("Initial surface index set to " << state.surfaceIndex);
     if (!foundStartSurface) {
