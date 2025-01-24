@@ -59,7 +59,7 @@ class CuboidPortalShell : public PortalShellBase {
 std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face);
 
 /// @class SingleCuboidPortalShell
-/// This class describes a cuboid shell containing a single volume. 
+/// This class describes a cuboid shell containing a single volume.
 class SingleCuboidPortalShell : public CuboidPortalShell {
  public:
   /// Construct a single cuboid portal shell for the given volume
@@ -98,7 +98,7 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
 };
 
 /// @class CuboidStackPortalShell
-/// This class describes a cuboid shell containing multiple volumes. 
+/// This class describes a cuboid shell containing multiple volumes.
 class CuboidStackPortalShell : public CuboidPortalShell {
  public:
   /// Construct the portal shell stack from the given shells

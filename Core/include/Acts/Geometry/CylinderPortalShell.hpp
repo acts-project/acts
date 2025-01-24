@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& os, CylinderPortalShell::Face face);
 /// cylinder portal slot.
 class SingleCylinderPortalShell : public CylinderPortalShell {
  public:
-    using Base = CylinderPortalShell;
+  using Base = CylinderPortalShell;
 
   /// Construct a single cylinder portal shell for the given volume
   /// @param volume The volume to create the shell for
@@ -130,7 +130,7 @@ class SingleCylinderPortalShell : public CylinderPortalShell {
 /// looked up from the innermost and outermost shell in the r direction.
 class CylinderStackPortalShell : public CylinderPortalShell {
  public:
-    using SingleShell = SingleCylinderPortalShell;
+  using SingleShell = SingleCylinderPortalShell;
 
   /// Construct the portal shell stack from the given shells
   /// @param gctx The geometry context
