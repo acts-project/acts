@@ -33,7 +33,7 @@ struct GbtsEdgeState {
 
   GbtsEdgeState(bool f) : m_initialized(f) {}
 
-  void initialize(Acts::GbtsEdge<external_spacepoint_t>* pS) {
+  void initialize(Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS) {
     m_initialized = true;
 
     m_J = 0.0;
@@ -99,7 +99,7 @@ struct GbtsEdgeState {
 
   float m_J{};
 
-  std::vector<Acts::GbtsEdge<external_spacepoint_t>*> m_vs;
+  std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>*> m_vs;
 
   float m_X[3]{}, m_Y[2]{}, m_Cx[3][3]{}, m_Cy[2][2]{};
   float m_refX{}, m_refY{}, m_c{}, m_s{};
@@ -112,14 +112,14 @@ struct GbtsEdgeState {
 template <typename external_spacepoint_t>
 class GbtsTrackingFilter {
  public:
-  GbtsTrackingFilter(const std::vector<Acts::TrigInDetSiLayer>& g,
-                     std::vector<Acts::GbtsEdge<external_spacepoint_t>>& sb,
+  GbtsTrackingFilter(const std::vector<Acts::Experimental::TrigInDetSiLayer>& g,
+                     std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>>& sb,
                      std::unique_ptr<const Acts::Logger> logger =
                          Acts::getDefaultLogger("Filter",
                                                 Acts::Logging::Level::INFO))
       : m_geo(g), m_segStore(sb), m_logger(std::move(logger)) {}
 
-  void followTrack(Acts::GbtsEdge<external_spacepoint_t>* pS,
+  void followTrack(Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS,
                    GbtsEdgeState<external_spacepoint_t>& output) {
     if (pS->m_level == -1) {
       return;  // already collected
@@ -153,7 +153,7 @@ class GbtsTrackingFilter {
   }
 
  protected:
-  void propagate(Acts::GbtsEdge<external_spacepoint_t>* pS,
+  void propagate(Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS,
                  GbtsEdgeState<external_spacepoint_t>& ts) {
     if (m_globalStateCounter >= MAX_EDGE_STATE) {
       return;
@@ -173,13 +173,13 @@ class GbtsTrackingFilter {
     }
     int level = pS->m_level;
 
-    std::list<Acts::GbtsEdge<external_spacepoint_t>*> lCont;
+    std::list<Acts::Experimental::GbtsEdge<external_spacepoint_t>*> lCont;
 
     for (int nIdx = 0; nIdx < pS->m_nNei;
          nIdx++) {  // loop over the neighbours of this segment
       unsigned int nextSegmentIdx = pS->m_vNei[nIdx];
 
-      Acts::GbtsEdge<external_spacepoint_t>* pN =
+      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pN =
           &(m_segStore.at(nextSegmentIdx));
 
       if (pN->m_level == -1) {
@@ -210,7 +210,7 @@ class GbtsTrackingFilter {
       }
     } else {  // branching
       int nBranches = 0;
-      for (typename std::list<Acts::GbtsEdge<external_spacepoint_t>*>::iterator
+      for (typename std::list<Acts::Experimental::GbtsEdge<external_spacepoint_t>*>::iterator
                sIt = lCont.begin();
            sIt != lCont.end(); ++sIt, nBranches++) {
         propagate((*sIt), new_ts);  // recursive call
@@ -218,7 +218,7 @@ class GbtsTrackingFilter {
     }
   }
 
-  bool update(Acts::GbtsEdge<external_spacepoint_t>* pS,
+  bool update(Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS,
               GbtsEdgeState<external_spacepoint_t>& ts) {
     const float sigma_t = 0.0003;
     const float sigma_w = 0.00009;
@@ -379,9 +379,9 @@ class GbtsTrackingFilter {
     return m_geo.at(index).m_type;  // needs to be 0, 2, or -2
   }
 
-  const std::vector<Acts::TrigInDetSiLayer>& m_geo;
+  const std::vector<Acts::Experimental::TrigInDetSiLayer>& m_geo;
 
-  std::vector<Acts::GbtsEdge<external_spacepoint_t>>& m_segStore;
+  std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>>& m_segStore;
 
   std::vector<GbtsEdgeState<external_spacepoint_t>*> m_stateVec;
 

@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 template <typename external_spacepoint_t>
 struct GbtsTrigTracklet {
@@ -66,13 +66,13 @@ class SeedFinderGbts {
   // inner
   template <typename output_container_t>
   void createSeeds(
-      const Acts::RoiDescriptor & /*roi*/,
-      const Acts::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/,
+      const Acts::Experimental::RoiDescriptor & /*roi*/,
+      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/,
       output_container_t & /*out_cont*/);
   // outer
   std::vector<seed_t> createSeeds(
-      const Acts::RoiDescriptor & /*roi*/,
-      const Acts::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/);
+      const Acts::Experimental::RoiDescriptor & /*roi*/,
+      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/);
 
  private:
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
@@ -82,8 +82,8 @@ class SeedFinderGbts {
 
   void runGbts_TrackFinder(
       std::vector<GbtsTrigTracklet<external_spacepoint_t>> &vTracks,
-      const Acts::RoiDescriptor &roi,
-      const Acts::GbtsGeometry<external_spacepoint_t> &gbtsgeo);
+      const Acts::Experimental::RoiDescriptor &roi,
+      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> &gbtsgeo);
 
   // needs to be member of class so can accessed by all member functions
   std::unique_ptr<GbtsDataStorage<external_spacepoint_t>> m_storage{nullptr};
@@ -96,6 +96,6 @@ class SeedFinderGbts {
       Acts::getDefaultLogger("Finder", Acts::Logging::Level::INFO);
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 #include "Acts/Seeding/SeedFinderGbts.ipp"

@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 struct GbtsConnection {
  public:
@@ -29,11 +29,11 @@ class GbtsConnector {
  public:
   struct LayerGroup {
     LayerGroup(unsigned int l1Key,
-               const std::vector<const Acts::GbtsConnection *> &v)
+               const std::vector<const Acts::Experimental::GbtsConnection *> &v)
         : m_dst(l1Key), m_sources(v) {}
 
     unsigned int m_dst;  // the target layer of the group
-    std::vector<const Acts::GbtsConnection *>
+    std::vector<const Acts::Experimental::GbtsConnection *>
         m_sources;  // the source layers of the group
   };
 
@@ -42,7 +42,7 @@ class GbtsConnector {
   float m_etaBin{};
 
   std::map<int, std::vector<struct LayerGroup>> m_layerGroups;
-  std::map<int, std::vector<std::unique_ptr<Acts::GbtsConnection>>> m_connMap;
+  std::map<int, std::vector<std::unique_ptr<Acts::Experimental::GbtsConnection>>> m_connMap;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
