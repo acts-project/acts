@@ -439,7 +439,7 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
         nTracksPerMeasurement, optionalHitSelections);
     if (trkCouldBeAccepted) {
       cleanTrackIndex++;
-      if (trackScore[iTrack] >= m_cfg.minScore) {
+      if (trackScore[iTrack] > m_cfg.minScore) {
         goodTracks.push_back(track.index());
       }
     }
