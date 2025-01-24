@@ -70,22 +70,22 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   const auto* pXY = shell1.portal(positiveXYPlane);
   BOOST_REQUIRE_NE(pXY, nullptr);
   BOOST_CHECK_EQUAL(
-      pXY->resolveVolume(gctx, Vector3{35_mm, 20_mm, 50_mm}, -Vector3::UnitZ())
+      pXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, 50_mm}, -Vector3::UnitZ())
           .value(),
       &cube);
   BOOST_CHECK_EQUAL(
-      pXY->resolveVolume(gctx, Vector3{35_mm, 20_mm, 50_mm}, Vector3::UnitZ())
+      pXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, 50_mm}, Vector3::UnitZ())
           .value(),
       nullptr);
 
   const auto* nXY = shell1.portal(negativeXYPlane);
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_CHECK_EQUAL(
-      nXY->resolveVolume(gctx, Vector3{35_mm, 20_mm, -50_mm}, -Vector3::UnitZ())
+      nXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, -50_mm}, -Vector3::UnitZ())
           .value(),
       nullptr);
   BOOST_CHECK_EQUAL(
-      nXY->resolveVolume(gctx, Vector3{35_mm, 20_mm, -50_mm}, Vector3::UnitZ())
+      nXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, -50_mm}, Vector3::UnitZ())
           .value(),
       &cube);
 
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
 
   const auto* nZX = shell1.portal(negativeZXPlane);
   BOOST_REQUIRE_NE(nZX, nullptr);
+  BOOST_CHECK_EQUAL(nZX->resolveVolume(gctx, Vector3{15_mm, -40_mm, -10_mm},
+                                       -Vector3::UnitY())
+                        .value(),
+                    nullptr);
   BOOST_CHECK_EQUAL(
-      nZX->resolveVolume(gctx, Vector3{15_mm, 40_mm, -10_mm}, -Vector3::UnitY())
-          .value(),
-      nullptr);
-  BOOST_CHECK_EQUAL(
-      nZX->resolveVolume(gctx, Vector3{15_mm, 40_mm, -10_mm}, Vector3::UnitY())
+      nZX->resolveVolume(gctx, Vector3{15_mm, -40_mm, -10_mm}, Vector3::UnitY())
           .value(),
       &cube);
 }
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
     return portal->resolveVolume(gctx, position, direction).value();
   };
 
-  // Shell 1
+  // Volume 1
   BOOST_CHECK_EQUAL(lookup(shell1, negativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
@@ -552,10 +552,10 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                     &vol4);
 
   BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
-                           Vector3(60_mm, 10_mm, 300_mm), -Vector3::UnitX()),
+                           Vector3(90_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     &vol4);
   BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
-                           Vector3(60_mm, 10_mm, 300_mm), Vector3::UnitX()),
+                           Vector3(90_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     nullptr);
 
   BOOST_CHECK_EQUAL(lookup(shell4, negativeZXPlane,
@@ -674,10 +674,10 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                     &vol3);
 
   BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
-                           Vector3(60_mm, 10_mm, 300_mm), -Vector3::UnitX()),
+                           Vector3(90_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     &vol4);
   BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
-                           Vector3(60_mm, 10_mm, 300_mm), Vector3::UnitX()),
+                           Vector3(90_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     nullptr);
 
   BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
