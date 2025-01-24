@@ -171,15 +171,15 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param direction the axis direction to convert
   static BoundValues boundsFromAxisDirection(AxisDirection direction);
 
-
-
-  /// Convert axis direction to a corresponding bound value
+  /// Convert axis direction to a set of corresponding cuboid faces
   /// in local coordinate convention
   /// @param direction the axis direction to convert
+  /// @return A tuple of cuboid faces with the following ordering convention:
+  /// (1) negative face orthogonal to the axis direction
+  /// (2) positive face orthogonal to the axis direction
+  /// (3) list of side faces parallel to the axis direction
   static std::tuple<Face, Face, std::array<Face, 4>> facesFromAxisDirection(
       AxisDirection direction);
-
-
 
   /// Output Method for std::ostream
   ///

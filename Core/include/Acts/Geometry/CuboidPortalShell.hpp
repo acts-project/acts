@@ -59,11 +59,7 @@ class CuboidPortalShell : public PortalShellBase {
 std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face);
 
 /// @class SingleCuboidPortalShell
-/// This class describes a cuboid shell containing a single volume. The
-/// available faces depend on the configuration of the cuboid volume bounds.
-/// If a phi sector is configured, the shell will have corresponding portal
-/// slots. If the inner radius is non-zero, the shell will have an inner
-/// cuboid portal slot.
+/// This class describes a cuboid shell containing a single volume. 
 class SingleCuboidPortalShell : public CuboidPortalShell {
  public:
   /// Construct a single cuboid portal shell for the given volume
@@ -102,39 +98,7 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
 };
 
 /// @class CuboidStackPortalShell
-/// This class describes a cuboid shell containing multiple volumes. The
-/// available faces depend on the configuration of the cuboid volume bounds.
-/// @note The stack shell currently does not support phi sectors
-/// The stack can be oriented along the (local) z or r direction, which drives
-/// the stacking. Depending on the direction, portals on the shells of children
-/// are merged or fused. Subsequently, portal access respects shared portals
-/// between shells. Below is an illustration of a stack in the r direction:
-///
-///  Fused         +-----------------+
-/// portals ----+  |                 |
-///   |         |  v           OuterCuboid
-///   |  +------+------+
-///   |  |      |      |
-///   |  |      |      |<--+
-///   +--+---+  v      |   |
-///      +---+---------+   |
-///      |   |         |   |      Shared portal
-///      |   |         |<--+---      (grid)
-///      |   v         |   |      PositiveDisc
-///      +-------------+   |
-/// r ^  |             |   |
-///   |  |             |<--+
-///   |  |             |
-///   |  +-------------+       InnerCuboid
-///   +----->      ^            (if rMin>0)
-///          z     |                 |
-///                +-----------------+
-///
-/// @note The shells must be ordered in the given direction
-/// Depending on the stack direction, the portal lookup will return different
-/// portals. In the illustration above, the `PositiveDisc` portal is shared
-/// among all shells, while the `OuterCuboid` and `InnerCuboid` portals are
-/// looked up from the innermost and outermost shell in the r direction.
+/// This class describes a cuboid shell containing multiple volumes. 
 class CuboidStackPortalShell : public CuboidPortalShell {
  public:
   /// Construct the portal shell stack from the given shells
@@ -181,20 +145,15 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// @copydoc PortalShellBase::label
   std::string label() const override;
 
+  /// Return the stack's group transform
   const Transform3& transform() const override;
 
-
-
+  /// Convert a global vector to an axis direction in local stack coordinates
+  /// @param dir is the global direction to convert
   static AxisDirection directionToAxis(const Vector3& dir);
 
-
-
  private:
-
-
   void stackShell(const GeometryContext& gctx, const Logger& logger);
-
-
 
   /// Shell stacking direction in global coordinates
   Vector3 m_direction;

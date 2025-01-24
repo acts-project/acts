@@ -25,10 +25,10 @@
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <cstddef>
+#include <initializer_list>
 #include <memory>
 #include <stdexcept>
 #include <utility>
-#include <initializer_list>
 
 using namespace Acts::UnitLiterals;
 
