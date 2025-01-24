@@ -22,6 +22,8 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -269,13 +271,12 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
     mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
       det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
-        cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap)
-            .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
+        cyl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
+            .setResizeStrategy(VolumeResizeStrategy::Gap);
 
         cyl.addCylinderContainer(
             "PixelNegativeEndcap", AxisDirection::AxisZ, [&](auto& ec) {
-              ec.setAttachmentStrategy(
-                  CylinderVolumeStack::AttachmentStrategy::Gap);
+              ec.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
               auto makeLayer = [&](const Transform3& trf, auto& layer) {
                 std::vector<std::shared_ptr<Surface>> surfaces;
@@ -306,9 +307,8 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
         cyl.addCylinderContainer(
             "PixelBarrel", AxisDirection::AxisR, [&](auto& brl) {
-              brl.setAttachmentStrategy(
-                     CylinderVolumeStack::AttachmentStrategy::Gap)
-                  .setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
+              brl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
+                  .setResizeStrategy(VolumeResizeStrategy::Gap);
 
               auto makeLayer = [&](const std::string& name, double r,
                                    std::size_t nStaves, int nSensorsPerStave) {
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
         auto& ec =
             cyl.addCylinderContainer("PixelPosWrapper", AxisDirection::AxisR);
-        ec.setResizeStrategy(CylinderVolumeStack::ResizeStrategy::Gap);
+        ec.setResizeStrategy(VolumeResizeStrategy::Gap);
         ec.addStaticVolume(std::make_unique<TrackingVolume>(
             base * Translation3{Vector3{0, 0, 600_mm}},
             std::make_shared<CylinderVolumeBounds>(150_mm, 390_mm, 200_mm),
