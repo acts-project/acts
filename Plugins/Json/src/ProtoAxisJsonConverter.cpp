@@ -27,21 +27,18 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
       j.at("axis").at("boundary_type").get<Acts::AxisBoundaryType>();
   if (auto axisType = j.at("axis").at("type").get<Acts::AxisType>();
       axisType == AxisType::Equidistant) {
+    auto nbins = j.at("axis").at("bins").get<std::size_t>();
+    if (nbins == 0) {
+      throw std::invalid_argument("Number of bins must be positive");
+    }
+
     if (j.at("autorange").get<bool>()) {
-      auto nbins = j.at("axis").at("bins").get<std::size_t>();
-      if (nbins == 0) {
-        throw std::invalid_argument("Number of bins must be positive");
-      }
       return ProtoAxis(axisDir, axisBoundaryType, nbins);
     }
     auto min = j.at("axis").at("range").at(0).get<double>();
     auto max = j.at("axis").at("range").at(1).get<double>();
-    auto nbins = j.at("axis").at("bins").get<std::size_t>();
     if (min >= max) {
       throw std::invalid_argument("Invalid range: min must be less than max");
-    }
-    if (nbins == 0) {
-      throw std::invalid_argument("Number of bins must be positive");
     }
     return ProtoAxis(axisDir, axisBoundaryType, min, max, nbins);
   }
