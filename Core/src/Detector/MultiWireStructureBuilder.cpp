@@ -10,7 +10,6 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
@@ -20,9 +19,9 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"
+#include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -71,14 +70,56 @@ class MultiWireInternalStructureBuilder
           "MultiWireStructureBuilder: At least 2 binning axes required");
     }
 
+    const auto& iaxisA = m_cfg.binning[0].getAxis();
+    const auto& iaxisB = m_cfg.binning[1].getAxis();
+    // Binning needs to be equidistant
+    if (iaxisA.getType() != Acts::AxisType::Equidistant ||
+        iaxisB.getType() != Acts::AxisType::Equidistant) {
+      throw std::runtime_error(
+          "MultiWireStructureBuilder: Binning axes need to be equidistant");
+    }
+
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>
+        axisA(iaxisA.getBinEdges().front(), iaxisA.getBinEdges().back(),
+              iaxisA.getNBins());
+
+    Acts::Axis<Acts::AxisType::Equidistant, Acts::AxisBoundaryType::Bound>
+        axisB(iaxisB.getBinEdges().front(), iaxisB.getBinEdges().back(),
+              iaxisB.getNBins());
+
+    Acts::Grid<std::vector<std::size_t>, decltype(axisA), decltype(axisB)> grid(
+        axisA, axisB);
+
+    // Prepare the indexed updator
+    std::array<Acts::AxisDirection, 2u> axisDirs = {
+        m_cfg.binning[0].getAxisDirection(),
+        m_cfg.binning[1].getAxisDirection()};
+    Acts::Experimental::MultiLayerSurfacesNavigation<decltype(grid)>
+        indexedSurfaces(std::move(grid), axisDirs, m_cfg.transform);
+
+    std::vector<std::size_t> fillExpansion = {
+        m_cfg.binning[0].getFillExpansion(),
+        m_cfg.binning[1].getFillExpansion()};
+
+    Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
+    Acts::Experimental::detail::IndexedGridFiller filler{fillExpansion};
+    filler.fill(gctx, indexedSurfaces, m_cfg.iSurfaces, rGenerator, {});
+
     Acts::Experimental::InternalNavigationDelegate sfCandidatesUpdater;
-    // Create the indexed surfaces
-    // Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    // auto sfCandidatesUpdater =
-    //    Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
-    //        Acts::Experimental::MultiLayerSurfacesNavigation>(
-    //        gctx, m_cfg.iSurfaces, rGenerator, m_cfg.binning[0],
-    //        m_cfg.binning[1]);
+
+    // The portal delegate
+    Acts::Experimental::AllPortalsNavigation allPortals;
+
+    // The chained delegate: indexed surfaces and all portals
+    using DelegateType =
+        Acts::Experimental::IndexedSurfacesAllPortalsNavigation<
+            decltype(grid), Acts::Experimental::MultiLayerSurfacesNavigation>;
+    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
+        std::tie(allPortals, indexedSurfaces));
+
+    // Create the delegate and connect it
+    sfCandidatesUpdater.connect<&DelegateType::update>(
+        std::move(indexedSurfacesAllPortals));
 
     return {m_cfg.iSurfaces,
             {},

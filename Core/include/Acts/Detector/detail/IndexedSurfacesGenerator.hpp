@@ -38,7 +38,6 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
   // Let the axis create the grid
   return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis)
                                    -> Experimental::InternalNavigationDelegate {
-    Experimental::InternalNavigationDelegate nStateUpdater;
     Grid<std::vector<std::size_t>, AxisTypeA> grid(axis);
 
     // Prepare the indexed updator
@@ -47,6 +46,8 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
                                                     transform);
 
     // Prepare the filling
+    Experimental::InternalNavigationDelegate nStateUpdater;
+
     std::vector<std::size_t> fillExpansion = {pAxis.getFillExpansion()};
     Experimental::detail::IndexedGridFiller filler{fillExpansion};
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
