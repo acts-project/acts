@@ -33,7 +33,9 @@ def makeSetup() -> PhysmonSetup:
         level=acts.logging.INFO,
     )
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector = getOpenDataDetector(matDeco)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
     setup = PhysmonSetup(
         detector=detector,
         trackingGeometry=trackingGeometry,

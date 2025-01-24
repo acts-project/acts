@@ -7,9 +7,11 @@ import acts
 import acts.examples
 from acts.examples.simulation import (
     addPythia8,
-    addFatras,
     ParticleSelectorConfig,
+    addGenParticleSelection,
+    addFatras,
     addDigitization,
+    addDigiParticleSelection,
 )
 
 from acts.examples.reconstruction import (
@@ -125,9 +127,8 @@ class Config:
             oddSeedingSel = geoDir / "config/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector, trackingGeometry, decorators = getOpenDataDetector(
-                odd_dir=geoDir, mdecorator=oddMaterialDeco
-            )
+            detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+            trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
 
@@ -136,7 +137,8 @@ class Config:
         elif self.detector == DetectorName.generic:
             print("Create detector and tracking geometry")
 
-            detector, trackingGeometry, a = acts.examples.GenericDetector.create()
+            detector = acts.examples.GenericDetector()
+            trackingGeometry = detector.trackingGeometry()
             digiConfig = (
                 actsExamplesDir
                 / "Algorithms/Digitization/share/default-smearing-config-generic.json"
@@ -204,20 +206,18 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         trackingGeometry,
         field,
-        preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta),
-            pt=(150 * u.MeV, None),
-        ),
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(1.0 * u.GeV, None),
-            eta=(-eta, eta),
-            measurements=(9, None),
-            removeNeutral=True,
-        ),
         enableInteractions=True,
         # outputDirRoot=outputDir,  # RootParticle ERROR when setting the outputDirRoot
         outputDirCsv=outputDir if saveFiles else None,
@@ -232,6 +232,16 @@ def runHashingSeeding(
         outputDirRoot=outputDir,
         outputDirCsv=outputDir if saveFiles else None,
         rnd=rnd,
+    )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
     )
 
     import numpy as np

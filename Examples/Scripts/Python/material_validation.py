@@ -42,8 +42,8 @@ def runMaterialValidation(
 
     trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
         level=acts.logging.INFO,
-        inputParticles="particles_input",
-        outputTrackParameters="params_particles_input",
+        inputParticles="particles_generated",
+        outputTrackParameters="params_particles_generated",
     )
     s.addAlgorithm(trkParamExtractor)
 
@@ -52,7 +52,7 @@ def runMaterialValidation(
         level=acts.logging.INFO,
         sterileLogger=True,
         recordMaterialInteractions=True,
-        inputTrackParameters="params_particles_input",
+        inputTrackParameters="params_particles_generated",
         outputSummaryCollection="propagation_summary",
         outputMaterialCollection="material_tracks",
     )
@@ -97,9 +97,9 @@ if "__main__" == __name__:
         acts.IMaterialDecorator.fromFile(args.map) if args.map != None else None
     )
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=materialDecorator
-    )
+    detector = getOpenDataDetector(materialDecorator)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 0 * acts.UnitConstants.T))
 

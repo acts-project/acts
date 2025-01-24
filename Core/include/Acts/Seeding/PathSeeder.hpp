@@ -108,8 +108,6 @@ class PathSeeder {
   /// @param gctx The geometry context
   /// @param sourceLinkGridLookup The lookup table for the source links
   /// @param seedCollection The collection of seeds to fill
-  ///
-  /// @return The vector of seeds
   template <Acts::detail::SourceLinkGrid grid_t, typename container_t>
   void findSeeds(const GeometryContext& gctx,
                  const std::unordered_map<GeometryIdentifier, grid_t>&

@@ -119,4 +119,5 @@ concept RegularSurfaceConcept =
 
       { cs.isOnSurface(gctx, Vector3{}, tolerance) } -> std::same_as<bool>;
     };
+
 }  // namespace Acts

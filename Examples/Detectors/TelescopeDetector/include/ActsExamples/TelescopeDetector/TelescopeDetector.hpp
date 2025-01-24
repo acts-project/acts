@@ -9,26 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 
 #include <array>
 #include <memory>
-#include <utility>
 #include <vector>
 
 namespace Acts {
-class TrackingGeometry;
 class IMaterialDecorator;
 }  // namespace Acts
 
 namespace ActsExamples {
 
-class IContextDecorator;
-
-struct TelescopeDetector {
-  using ContextDecorators = std::vector<std::shared_ptr<IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
+class TelescopeDetector : public Detector {
+ public:
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
     std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
@@ -37,15 +33,17 @@ struct TelescopeDetector {
     double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
     int binValue{2};
+    std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
+    Acts::Logging::Level logLevel{Acts::Logging::WARNING};
   };
 
-  Config config;
-  /// The store of the detector elements (lifetime: job)
-  std::vector<std::shared_ptr<const Acts::DetectorElementBase>> detectorStore;
+  explicit TelescopeDetector(const Config& cfg);
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      const std::shared_ptr<const Acts::IMaterialDecorator>& mdecorator);
+  std::unique_ptr<G4VUserDetectorConstruction> buildGeant4DetectorConstruction(
+      const Geant4ConstructionOptions& options) const override;
+
+ private:
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples
