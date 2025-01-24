@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -56,6 +57,18 @@ class CuboidVolumeBounds : public VolumeBounds {
     eHalfLengthY = 1,
     eHalfLengthZ = 2,
     eSize
+  };
+
+  /// Enum describing the possible faces of a cuboid volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    negativeXYPlane = BoundarySurfaceFace::negativeFaceXY,
+    positiveXYPlane = BoundarySurfaceFace::positiveFaceXY,
+    negativeYZPlane = BoundarySurfaceFace::negativeFaceYZ,
+    positiveYZPlane = BoundarySurfaceFace::positiveFaceYZ,
+    negativeZXPlane = BoundarySurfaceFace::negativeFaceZX,
+    positiveZXPlane = BoundarySurfaceFace::positiveFaceZX
   };
 
   CuboidVolumeBounds() = delete;
@@ -156,7 +169,17 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Convert axis direction to a corresponding bound value
   /// in local coordinate convention
   /// @param direction the axis direction to convert
-  static BoundValues fromAxisDirection(AxisDirection direction);
+  static BoundValues boundsFromAxisDirection(AxisDirection direction);
+
+
+
+  /// Convert axis direction to a corresponding bound value
+  /// in local coordinate convention
+  /// @param direction the axis direction to convert
+  static std::tuple<Face, Face, std::array<Face, 4>> facesFromAxisDirection(
+      AxisDirection direction);
+
+
 
   /// Output Method for std::ostream
   ///

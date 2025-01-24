@@ -85,9 +85,9 @@ BOOST_DATA_TEST_CASE(BaselineLocal,
   auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
   auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
 
-  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
 
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
@@ -424,9 +424,9 @@ BOOST_DATA_TEST_CASE(Asymmetric,
 
   auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
 
-  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
 
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
@@ -501,9 +501,9 @@ BOOST_DATA_TEST_CASE(UpdateStack,
   auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
   auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
 
-  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
 
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
@@ -762,9 +762,9 @@ BOOST_DATA_TEST_CASE(
   auto dirOrth1Idx = CuboidVolumeStack::axisToIndex(dirOrth1);
   auto dirOrth2Idx = CuboidVolumeStack::axisToIndex(dirOrth2);
 
-  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
 
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
@@ -927,9 +927,9 @@ BOOST_DATA_TEST_CASE(ResizeGapMultiple,
 
   auto dirIdx = CuboidVolumeStack::axisToIndex(dir);
 
-  auto boundDir = CuboidVolumeBounds::fromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::fromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::fromAxisDirection(dirOrth2);
+  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
+  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
+  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
 
   auto bounds = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{

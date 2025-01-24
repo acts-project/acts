@@ -17,7 +17,7 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/Portal.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/SurfaceMergingException.hpp"
@@ -392,9 +392,9 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
-    BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
-                                               AxisDirection::AxisR),
-                      SurfaceMergingException);
+    BOOST_CHECK_THROW(
+        CylinderStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
+        SurfaceMergingException);
   }
 
   BOOST_TEST_CONTEXT("rMin==0") {
@@ -440,9 +440,9 @@ BOOST_AUTO_TEST_CASE(ZDirection) {
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
-    BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
-                                               AxisDirection::AxisR),
-                      SurfaceMergingException);
+    BOOST_CHECK_THROW(
+        CylinderStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
+        SurfaceMergingException);
   }
 }
 
@@ -492,9 +492,9 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
-    BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
-                                               AxisDirection::AxisZ),
-                      SurfaceMergingException);
+    BOOST_CHECK_THROW(
+        CylinderStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisZ),
+        SurfaceMergingException);
   }
 
   BOOST_TEST_CONTEXT("rMin==0") {
@@ -541,9 +541,9 @@ BOOST_AUTO_TEST_CASE(RDirection) {
     shell1 = SingleCylinderPortalShell{vol1};
     shell2 = SingleCylinderPortalShell{vol2};
 
-    BOOST_CHECK_THROW(CylinderStackPortalShell(gctx, {&shell1, &shell2},
-                                               AxisDirection::AxisZ),
-                      std::invalid_argument);
+    BOOST_CHECK_THROW(
+        CylinderStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisZ),
+        std::invalid_argument);
   }
 }
 
@@ -730,26 +730,22 @@ BOOST_AUTO_TEST_CASE(Fill) {
   BOOST_CHECK_EQUAL(
       shell.portal(OuterCylinder)->getLink(Direction::AlongNormal()), nullptr);
   BOOST_CHECK_EQUAL(
-      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()),
-      nullptr);
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()), nullptr);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveDisc)->getLink(Direction::AlongNormal()),
+                    nullptr);
   BOOST_CHECK_EQUAL(
-      shell.portal(PositiveDisc)->getLink(Direction::AlongNormal()), nullptr);
-  BOOST_CHECK_EQUAL(
-      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()),
-      nullptr);
+      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()), nullptr);
 
   shell.fill(cyl2);
 
   BOOST_CHECK_NE(shell.portal(OuterCylinder)->getLink(Direction::AlongNormal()),
                  nullptr);
   BOOST_CHECK_NE(
-      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()),
-      nullptr);
+      shell.portal(InnerCylinder)->getLink(Direction::OppositeNormal()), nullptr);
   BOOST_CHECK_NE(shell.portal(PositiveDisc)->getLink(Direction::AlongNormal()),
                  nullptr);
-  BOOST_CHECK_NE(
-      shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()),
-      nullptr);
+  BOOST_CHECK_NE(shell.portal(NegativeDisc)->getLink(Direction::OppositeNormal()),
+                 nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(RegisterInto) {
