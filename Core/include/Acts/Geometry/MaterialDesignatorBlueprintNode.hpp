@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 
 #include <variant>
 
