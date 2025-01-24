@@ -158,7 +158,7 @@ AxisDirection CuboidStackPortalShell::directionToAxis(
 
 void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
                                         const Logger& logger) {
-  ACTS_VERBOSE("Making cuboid stack shell in " << m_direction << " direction");
+  ACTS_VERBOSE("Making cuboid stack shell in " << m_axis << " direction");
   if (std::ranges::any_of(m_shells,
                           [](const auto* shell) { return shell == nullptr; })) {
     ACTS_ERROR("Invalid shell pointer");

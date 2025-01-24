@@ -229,14 +229,11 @@ BOOST_DATA_TEST_CASE(XYZDirectionLocal,
   using enum CuboidVolumeBounds::Face;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {{boundDir, 100_mm},
-           {boundDirOrth1, 30_mm},
-           {boundDirOrth2, 100_mm}}});
+          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
+
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {{boundDir, 100_mm},
-           {boundDirOrth1, 30_mm},
-           {boundDirOrth2, 100_mm}}});
+          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
   TrackingVolume vol1(Transform3{Translation3{Vector3::Unit(dirIdx) * -100_mm}},
                       bounds1);
@@ -288,14 +285,11 @@ BOOST_DATA_TEST_CASE(XYZDirectionGlobal,
   using enum CuboidVolumeBounds::Face;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {{boundDir, 100_mm},
-           {boundDirOrth1, 30_mm},
-           {boundDirOrth2, 100_mm}}});
+          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
+
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {{boundDir, 100_mm},
-           {boundDirOrth1, 30_mm},
-           {boundDirOrth2, 100_mm}}});
+          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
   Transform3 tranform1 =
       baseRotation * Translation3(Vector3::Unit(dirIdx) * -100_mm);
@@ -397,15 +391,7 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                    Vector3 direction) -> const TrackingVolume* {
     const auto* portal = shell.portal(face);
     BOOST_REQUIRE_NE(portal, nullptr);
-    const auto* vol = portal->resolveVolume(gctx, position, direction).value();
-    if (vol != nullptr) {
-      std::cout << "PORTAL " << portal->surface().center(gctx).transpose()
-                << " -- VOLUME: " << vol->volumeName() << "\n";
-    } else {
-      std::cout << "PORTAL " << portal->surface().center(gctx).transpose()
-                << " -- VOLUME: NULL\n";
-    }
-    return vol;
+    return portal->resolveVolume(gctx, position, direction).value();
   };
 
   // Shell 1
@@ -538,19 +524,6 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
                     nullptr);
 
   // Volume 4
-
-  for (CuboidVolumeBounds::Face face :
-       {negativeXYPlane, positiveXYPlane, negativeYZPlane, positiveYZPlane,
-        negativeZXPlane, positiveZXPlane}) {
-    const auto& portalAtFace = shell4.portal(face);
-    if (portalAtFace != nullptr) {
-      std::cout << "FACE: " << face << " -- "
-                << portalAtFace->surface().center(gctx).transpose() << "\n";
-    } else {
-      std::cout << "FACE: " << face << " NULL\n";
-    }
-  }
-
   BOOST_CHECK_EQUAL(lookup(shell4, negativeXYPlane,
                            Vector3(50_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
