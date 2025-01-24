@@ -34,8 +34,8 @@ Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
   static_cast<void>(position);
   static_cast<void>(tolerance);
   throw_assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
-                                tolerance),
-         "Trivial portal lookup point should be on surface");
+                                      tolerance),
+               "Trivial portal lookup point should be on surface");
   return m_volume;
 }
 
