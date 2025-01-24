@@ -28,7 +28,8 @@ namespace Acts::detail::IndexedSurfacesGenerator {
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
 /// @return an internal navigation delegate
-template <typename surface_container, typename reference_generator>
+template <template <typename> class indexed_updator, typename surface_container,
+          typename reference_generator>
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
     const reference_generator& rGenerator, const ProtoAxis& pAxis,
@@ -39,14 +40,30 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
                                    -> Experimental::InternalNavigationDelegate {
     Experimental::InternalNavigationDelegate nStateUpdater;
     Grid<std::vector<std::size_t>, AxisTypeA> grid(axis);
-    std::array<AxisDirection, 1u> axisDirs = {pAxis.getAxisDirection()};
 
+    // Prepare the indexed updator
+    std::array<AxisDirection, 1u> axisDirs = {pAxis.getAxisDirection()};
+    indexed_updator<decltype(grid)> indexedSurfaces(std::move(grid), axisDirs,
+                                                    transform);
+
+    // Prepare the filling
     std::vector<std::size_t> fillExpansion = {pAxis.getFillExpansion()};
     Experimental::detail::IndexedGridFiller filler{fillExpansion};
+    filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
-    // filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
-    // indexed_updator<GridType> indexedSurfaces(std::move(grid), axisDirs,
-    //                                           transform);
+    // The portal delegate
+    Experimental::AllPortalsNavigation allPortals;
+
+    // The chained delegate: indexed surfaces and all portals
+    using DelegateType =
+        Experimental::IndexedSurfacesAllPortalsNavigation<decltype(grid),
+                                                          indexed_updator>;
+    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
+        std::tie(allPortals, indexedSurfaces));
+
+    // Create the delegate and connect it
+    nStateUpdater.connect<&DelegateType::update>(
+        std::move(indexedSurfacesAllPortals));
 
     return nStateUpdater;
   });
@@ -63,7 +80,8 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
 /// @param transform the transform into the local binning schema
 ///
 /// @return an internal navigation delegate
-template <typename surface_container, typename reference_generator>
+template <template <typename> class indexed_updator, typename surface_container,
+          typename reference_generator>
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
     const reference_generator& rGenerator, const ProtoAxis& pAxisA,
@@ -76,19 +94,37 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
         return pAxisB.getAxis().visit(
             [&]<typename AxisTypeB>(const AxisTypeB& axisB)
                 -> Experimental::InternalNavigationDelegate {
-              Experimental::InternalNavigationDelegate nStateUpdater;
               Grid<std::vector<std::size_t>, AxisTypeA, AxisTypeB> grid(axisA,
                                                                         axisB);
+              Experimental::InternalNavigationDelegate nStateUpdater;
+
+              // Prepare the indexed updator
               std::array<AxisDirection, 2u> axisDirs = {
                   pAxisA.getAxisDirection(), pAxisB.getAxisDirection()};
+              indexed_updator<decltype(grid)> indexedSurfaces(
+                  std::move(grid), axisDirs, transform);
 
               std::vector<std::size_t> fillExpansion = {
                   pAxisA.getFillExpansion(), pAxisB.getFillExpansion()};
-              Experimental::detail::IndexedGridFiller filler{fillExpansion};
 
-              // indexed_updator<GridType> indexedSurfaces(std::move(grid),
-              // axisDirs,
-              //                                           transform);
+              Experimental::detail::IndexedGridFiller filler{fillExpansion};
+              filler.fill(gctx, indexedSurfaces, surfaces, rGenerator,
+                          assignToAll);
+
+              // The portal delegate
+              Experimental::AllPortalsNavigation allPortals;
+
+              // The chained delegate: indexed surfaces and all portals
+              using DelegateType =
+                  Experimental::IndexedSurfacesAllPortalsNavigation<
+                      decltype(grid), indexed_updator>;
+              auto indexedSurfacesAllPortals =
+                  std::make_unique<const DelegateType>(
+                      std::tie(allPortals, indexedSurfaces));
+
+              // Create the delegate and connect it
+              nStateUpdater.connect<&DelegateType::update>(
+                  std::move(indexedSurfacesAllPortals));
 
               return nStateUpdater;
             });
@@ -96,82 +132,3 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
 }
 
 }  // namespace Acts::detail::IndexedSurfacesGenerator
-
-/**
-  template <typename surface_container>
-  InternalNavigationDelegate createInternalNavigation(){
-
-  }
-
-  /// The surfaces to be indexed
-  /// (including surfaces that are assigned to all bins)
-  surface_container surfaces = {};
-  // Indices of surfaces that are to be assigned to all bins
-  std::vector<std::size_t> assignToAll = {};
-  /// The binning for the indexing
-  std::vector<AxisDirection> bValues = {};
-  // Bin expansion
-  std::vector<std::size_t> binExpansion = {};
-  /// The transform into the local binning schema
-  Transform3 transform = Transform3::Identity();
-  /// Screen output logger
-  std::unique_ptr<const Logger> oLogger =
-      getDefaultLogger("IndexedSurfacesGenerator", Logging::INFO);
-
-  /// Create the Surface candidate updator
-  ///
-  /// @tparam axis_generator does generate the axis of the grid
-  /// @tparam reference_generator does generate the reference query points
-  ///
-  /// @param gctx the geometry context
-  /// @param aGenerator the axis generator
-  /// @param rGenerator the reference generataor
-  ///
-  /// @return an InternalNavigationDelegate
-  template <typename axis_generator, typename reference_generator>
-  InternalNavigationDelegate operator()(
-      const GeometryContext& gctx, const axis_generator& aGenerator,
-      const reference_generator& rGenerator) const {
-    ACTS_DEBUG("Indexing " << surfaces.size() << " surface, "
-                           << assignToAll.size() << " of which into all bins.");
-    // Create the grid with the provided axis generator
-    using GridType =
-        typename axis_generator::template grid_type<std::vector<std::size_t>>;
-    GridType grid(std::move(aGenerator()));
-
-    std::array<AxisDirection, decltype(grid)::DIM> bvArray = {};
-    for (auto [ibv, bv] : enumerate(bValues)) {
-      bvArray[ibv] = bv;
-    }
-
-    indexed_updator<GridType> indexedSurfaces(std::move(grid), bvArray,
-                                              transform);
-    // Fill the bin indices
-    IndexedGridFiller filler{binExpansion};
-    filler.oLogger = oLogger->cloneWithSuffix("_filler");
-    filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
-
-    // The portal delegate
-    AllPortalsNavigation allPortals;
-
-    // The chained delegate: indexed surfaces and all portals
-    using DelegateType =
-        IndexedSurfacesAllPortalsNavigation<decltype(grid), indexed_updator>;
-    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
-        std::tie(allPortals, indexedSurfaces));
-
-    // Create the delegate and connect it
-    InternalNavigationDelegate nStateUpdater;
-    nStateUpdater.connect<&DelegateType::update>(
-        std::move(indexedSurfacesAllPortals));
-    return nStateUpdater;
-  }
-
-  /// Access to the logger
-  ///
-  /// @return a const reference to the logger
-  const Logger& logger() const { return *oLogger; }
-};
-
-}  // namespace Acts::Experimental::detail
-*/

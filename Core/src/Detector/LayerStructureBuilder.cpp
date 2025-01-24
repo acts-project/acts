@@ -21,7 +21,6 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
-#include "Acts/Utilities/GridAxisGenerators.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
@@ -215,14 +214,17 @@ Acts::Experimental::LayerStructureBuilder::construct(
       if (binnings.size() == 1) {
         ACTS_DEBUG("- creating a 1D internal binning and portal navigation");
         internalCandidatesUpdater =
-            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
-                gctx, internalSurfaces, rGenerator, binnings.at(0), assignToAll);
+            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+                Experimental::IndexedSurfacesNavigation>(
+                gctx, internalSurfaces, rGenerator, binnings.at(0),
+                assignToAll);
       } else if (binnings.size() == 2u) {
         ACTS_DEBUG("- creating a 2D internal binning and portal navigation");
         internalCandidatesUpdater =
-            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
-                gctx, internalSurfaces, rGenerator, binnings.at(0), binnings.at(1),
-                assignToAll);
+            Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+                Experimental::IndexedSurfacesNavigation>(
+                gctx, internalSurfaces, rGenerator, binnings.at(0),
+                binnings.at(1), assignToAll);
       } else {
         throw std::runtime_error(
             "LayerStructureBuilder: only 1D or 2D surface binning "

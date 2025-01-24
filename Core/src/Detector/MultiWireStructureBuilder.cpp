@@ -71,10 +71,14 @@ class MultiWireInternalStructureBuilder
           "MultiWireStructureBuilder: At least 2 binning axes required");
     }
 
+    Acts::Experimental::InternalNavigationDelegate sfCandidatesUpdater;
     // Create the indexed surfaces
-    Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
-    auto sfCandidatesUpdater = Acts::detail::IndexedSurfacesGenerator::createInternalNavigation(
-        gctx, m_cfg.iSurfaces, rGenerator, m_cfg.binning[0], m_cfg.binning[1]);
+    // Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
+    // auto sfCandidatesUpdater =
+    //    Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
+    //        Acts::Experimental::MultiLayerSurfacesNavigation>(
+    //        gctx, m_cfg.iSurfaces, rGenerator, m_cfg.binning[0],
+    //        m_cfg.binning[1]);
 
     return {m_cfg.iSurfaces,
             {},
