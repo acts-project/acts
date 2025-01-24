@@ -197,8 +197,9 @@ BOOST_DATA_TEST_CASE(XYZDirectionLocal,
                                                   Acts::AxisDirection::AxisY,
                                                   Acts::AxisDirection::AxisZ),
                      dir) {
-  AxisDirection dirOrth1, dirOrth2;
-  std::size_t dirIdx;
+  AxisDirection dirOrth1{};
+  AxisDirection dirOrth2{};
+  std::size_t dirIdx = 0;
   switch (dir) {
     case Acts::AxisDirection::AxisX:
       dirOrth1 = Acts::AxisDirection::AxisY;

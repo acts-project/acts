@@ -136,7 +136,11 @@ CuboidStackPortalShell::CuboidStackPortalShell(
 CuboidStackPortalShell::CuboidStackPortalShell(
     const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
     const Vector3& direction, const Logger& logger)
-    : m_direction{direction}, m_shells{std::move(shells)} {
+    : m_direction{direction},
+      m_frontFace{},
+      m_backFace{},
+      m_sideFaces{},
+      m_shells{std::move(shells)} {
   Vector3 stackDirection = transform().rotation().inverse() * m_direction;
   m_axis = directionToAxis(stackDirection);
   stackShell(gctx, logger);

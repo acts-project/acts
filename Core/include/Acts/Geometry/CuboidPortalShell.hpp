@@ -109,7 +109,7 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// @param logger A logging instance for debugging
   CuboidStackPortalShell(const GeometryContext& gctx,
                          std::vector<CuboidPortalShell*> shells,
-                         AxisDirection direction,
+                         AxisDirection axis,
                          const Logger& logger = getDummyLogger());
 
   /// Construct the portal shell stack from the given shells
