@@ -65,14 +65,15 @@ class SeedFinderGbts {
 
   // inner
   template <typename output_container_t>
-  void createSeeds(
-      const Acts::Experimental::RoiDescriptor & /*roi*/,
-      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/,
-      output_container_t & /*out_cont*/);
+  void createSeeds(const Acts::Experimental::RoiDescriptor & /*roi*/,
+                   const Acts::Experimental::GbtsGeometry<external_spacepoint_t>
+                       & /*gbtsgeo*/,
+                   output_container_t & /*out_cont*/);
   // outer
   std::vector<seed_t> createSeeds(
       const Acts::Experimental::RoiDescriptor & /*roi*/,
-      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> & /*gbtsgeo*/);
+      const Acts::Experimental::GbtsGeometry<external_spacepoint_t>
+          & /*gbtsgeo*/);
 
  private:
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };

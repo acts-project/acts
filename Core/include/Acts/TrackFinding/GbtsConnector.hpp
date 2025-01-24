@@ -42,7 +42,9 @@ class GbtsConnector {
   float m_etaBin{};
 
   std::map<int, std::vector<struct LayerGroup>> m_layerGroups;
-  std::map<int, std::vector<std::unique_ptr<Acts::Experimental::GbtsConnection>>> m_connMap;
+  std::map<int,
+           std::vector<std::unique_ptr<Acts::Experimental::GbtsConnection>>>
+      m_connMap;
 };
 
 }  // namespace Acts::Experimental

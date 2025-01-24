@@ -112,11 +112,11 @@ struct GbtsEdgeState {
 template <typename external_spacepoint_t>
 class GbtsTrackingFilter {
  public:
-  GbtsTrackingFilter(const std::vector<Acts::Experimental::TrigInDetSiLayer>& g,
-                     std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>>& sb,
-                     std::unique_ptr<const Acts::Logger> logger =
-                         Acts::getDefaultLogger("Filter",
-                                                Acts::Logging::Level::INFO))
+  GbtsTrackingFilter(
+      const std::vector<Acts::Experimental::TrigInDetSiLayer>& g,
+      std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>>& sb,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("Filter", Acts::Logging::Level::INFO))
       : m_geo(g), m_segStore(sb), m_logger(std::move(logger)) {}
 
   void followTrack(Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS,
@@ -210,8 +210,8 @@ class GbtsTrackingFilter {
       }
     } else {  // branching
       int nBranches = 0;
-      for (typename std::list<Acts::Experimental::GbtsEdge<external_spacepoint_t>*>::iterator
-               sIt = lCont.begin();
+      for (typename std::list<Acts::Experimental::GbtsEdge<
+               external_spacepoint_t>*>::iterator sIt = lCont.begin();
            sIt != lCont.end(); ++sIt, nBranches++) {
         propagate((*sIt), new_ts);  // recursive call
       }

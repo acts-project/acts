@@ -104,11 +104,11 @@ ActsExamples::ProcessCode ActsExamples::GbtsSeedingAlgorithm::execute(
   finder.loadSpacePoints(GbtsSpacePoints);
 
   // trigGbts file :
-  Acts::Experimental::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -std::numbers::pi,
-                                  std::numbers::pi, 0, -150., 150.);
+  Acts::Experimental::RoiDescriptor internalRoi(
+      0, -4.5, 4.5, 0, -std::numbers::pi, std::numbers::pi, 0, -150., 150.);
   // ROI file:
-  //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0, -std::numbers::pi,
-  //  std::numbers::pi, 0, -225., 225.);
+  //  Acts::Experimental::RoiDescriptor internalRoi(0, -5, 5, 0,
+  //  -std::numbers::pi, std::numbers::pi, 0, -225., 225.);
 
   // new version returns seeds
   SimSeedContainer seeds = finder.createSeeds(internalRoi, *m_gbtsGeo);
@@ -154,7 +154,8 @@ ActsExamples::GbtsSeedingAlgorithm::MakeGbtsSpacePoints(
     const AlgorithmContext &ctx,
     std::map<std::pair<int, int>, std::pair<int, int>> map) const {
   // create space point vectors
-  std::vector<Acts::Experimental::GbtsSP<ActsExamples::SimSpacePoint>> gbtsSpacePoints;
+  std::vector<Acts::Experimental::GbtsSP<ActsExamples::SimSpacePoint>>
+      gbtsSpacePoints;
   gbtsSpacePoints.reserve(
       m_inputSpacePoints.size());  // not sure if this is enough
 
@@ -329,8 +330,8 @@ ActsExamples::GbtsSeedingAlgorithm::LayerNumbering() const {
 
     } else {  // end so doesn't exists
       // make new if one with Gbts ID doesn't exist:
-      Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec, rc, minBound,
-                                         maxBound);
+      Acts::Experimental::TrigInDetSiLayer new_Gbts_ID(combined_id, barrel_ec,
+                                                       rc, minBound, maxBound);
       input_vector.push_back(new_Gbts_ID);
       count_vector.push_back(
           1);  // so the element exists and not divinding by 0

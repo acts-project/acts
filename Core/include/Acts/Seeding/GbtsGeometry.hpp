@@ -334,7 +334,9 @@ class GbtsGeometry {
 
   int num_bins() const { return m_nEtaBins; }
 
-  Acts::Experimental::GbtsConnector *connector() const { return m_connector.get(); }
+  Acts::Experimental::GbtsConnector *connector() const {
+    return m_connector.get();
+  }
 
  protected:
   const GbtsLayer<space_point_t> *addNewLayer(const TrigInDetSiLayer &l,

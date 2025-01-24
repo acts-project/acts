@@ -330,13 +330,15 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
     for (int inIdx = 0; inIdx < static_cast<int>(pN.m_in.size()); inIdx++) {
       int inEdgeIdx = pN.m_in.at(inIdx);
-      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
+      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS =
+          &(edgeStorage.at(inEdgeIdx));
       in_sort[inIdx].second = inEdgeIdx;
       in_sort[inIdx].first = pS->m_p[0];
     }
     for (int outIdx = 0; outIdx < static_cast<int>(pN.m_out.size()); outIdx++) {
       int outEdgeIdx = pN.m_out.at(outIdx);
-      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(outEdgeIdx));
+      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS =
+          &(edgeStorage.at(outEdgeIdx));
       out_sort[outIdx].second = outEdgeIdx;
       out_sort[outIdx].first = pS->m_p[0];
     }
@@ -351,7 +353,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
       int inEdgeIdx = in_sort[in_idx].second;
 
-      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(inEdgeIdx));
+      Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS =
+          &(edgeStorage.at(inEdgeIdx));
 
       pS->m_nNei = 0;
       float tau1 = pS->m_p[0];
@@ -413,7 +416,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
   std::vector<Acts::Experimental::GbtsEdge<external_spacepoint_t>*> v_old;
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
-    Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
+    Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS =
+        &(edgeStorage.at(edgeIndex));
     if (pS->m_nNei == 0) {
       continue;
     }
@@ -473,7 +477,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
   vSeeds.reserve(m_config.MaxEdges / 2);
 
   for (int edgeIndex = 0; edgeIndex < nEdges; edgeIndex++) {
-    Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS = &(edgeStorage.at(edgeIndex));
+    Acts::Experimental::GbtsEdge<external_spacepoint_t>* pS =
+        &(edgeStorage.at(edgeIndex));
 
     if (pS->m_level < minLevel) {
       continue;
@@ -484,8 +489,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
   m_triplets.clear();
 
-  std::ranges::sort(
-      vSeeds, typename Acts::Experimental::GbtsEdge<external_spacepoint_t>::CompareLevel());
+  std::ranges::sort(vSeeds, typename Acts::Experimental::GbtsEdge<
+                                external_spacepoint_t>::CompareLevel());
 
   if (vSeeds.empty()) {
     return;
@@ -516,9 +521,8 @@ void SeedFinderGbts<external_spacepoint_t>::runGbts_TrackFinder(
 
     std::vector<const GbtsSP<external_spacepoint_t>*> vSP;
 
-    for (typename std::vector<
-             Acts::Experimental::GbtsEdge<external_spacepoint_t>*>::reverse_iterator sIt =
-             rs.m_vs.rbegin();
+    for (typename std::vector<Acts::Experimental::GbtsEdge<
+             external_spacepoint_t>*>::reverse_iterator sIt = rs.m_vs.rbegin();
          sIt != rs.m_vs.rend(); ++sIt) {
       (*sIt)->m_level = -1;  // mark as collected
 
