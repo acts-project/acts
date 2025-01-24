@@ -36,28 +36,33 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     const std::vector<double>& fakeHoles = value["fakeHoles"];
 
     const std::vector<double>& etaBins = value["etaBins"];
+    detectorConfig.etaBins = {};
     for (auto etaBin : etaBins) {
       detectorConfig.etaBins.push_back(etaBin);
     }
 
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
+    detectorConfig.minHitsPerEta = {};
     for (auto minHit : minHitsPerEta) {
       detectorConfig.minHitsPerEta.push_back(minHit);
     }
 
     const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
+    detectorConfig.maxHolesPerEta = {};
     for (auto maxHole : maxHolesPerEta) {
       detectorConfig.maxHolesPerEta.push_back(maxHole);
     }
 
     const std::vector<std::size_t>& maxOutliersPerEta =
         value["maxOutliersPerEta"];
+    detectorConfig.maxOutliersPerEta = {};
     for (auto maxOutlier : maxOutliersPerEta) {
       detectorConfig.maxOutliersPerEta.push_back(maxOutlier);
     }
 
     const std::vector<std::size_t>& maxSharedHitsPerEta =
         value["maxSharedHitsPerEta"];
+    detectorConfig.maxSharedHitsPerEta = {};
     for (auto maxSharedHit : maxSharedHitsPerEta) {
       detectorConfig.maxSharedHitsPerEta.push_back(maxSharedHit);
     }
@@ -66,6 +71,7 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
     }
 
+    detectorConfig.factorHits = {};
     detectorConfig.maxHits = goodHits.size() - 1;
     for (std::size_t i = 0; i < goodHits.size(); i++) {
       detectorConfig.factorHits.push_back(goodHits[i] / fakeHits[i]);
@@ -75,6 +81,7 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
       throw std::invalid_argument("goodHoles and FakeHoles size mismatch");
     }
 
+    detectorConfig.factorHoles = {};
     detectorConfig.maxHoles = goodHoles.size() - 1;
     for (std::size_t i = 0; i < goodHoles.size(); i++) {
       detectorConfig.factorHoles.push_back(goodHoles[i] / fakeHoles[i]);
