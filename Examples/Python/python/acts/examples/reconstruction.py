@@ -216,7 +216,7 @@ ScoreBasedAmbiguityResolutionConfig = namedtuple(
         "minScore",
         "minScoreSharedTracks",
         "maxShared",
-        'minUnshared',
+        "minUnshared",
         "maxSharedTracksPerMeasurement",
         "useAmbiguityFunction",
     ],
