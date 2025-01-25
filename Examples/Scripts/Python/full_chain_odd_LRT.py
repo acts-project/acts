@@ -417,6 +417,7 @@ if args.reco:
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
                 useAmbiguityFunction=False,
             ),

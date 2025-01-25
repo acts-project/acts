@@ -44,6 +44,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
   result.minScoreSharedTracks = cfg.minScoreSharedTracks;
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
   result.maxShared = cfg.maxShared;
+  result.minUnshared = cfg.minUnshared;
   result.useAmbiguityFunction = cfg.useAmbiguityFunction;
   return result;
 }

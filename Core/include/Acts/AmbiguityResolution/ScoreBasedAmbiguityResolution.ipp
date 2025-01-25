@@ -554,7 +554,7 @@ bool Acts::ScoreBasedAmbiguityResolution::getCleanedOutTracks(
     }
   }
   // Check if the track has enough hits to be accepted.
-  if (newMeasurementsPerTrack.size() < 3) {
+  if (newMeasurementsPerTrack.size() < m_cfg.minUnshared) {
     return false;
   } else {
     return true;

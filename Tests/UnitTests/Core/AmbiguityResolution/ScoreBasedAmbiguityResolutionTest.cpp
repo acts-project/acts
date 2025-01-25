@@ -48,6 +48,7 @@ struct Fixture {
     config.minScore = 0;
     config.minScoreSharedTracks = 100;
     config.maxShared = 5;
+    config.minUnshared = 3;
     config.maxSharedTracksPerMeasurement = 10;
     config.useAmbiguityFunction = false;
   }

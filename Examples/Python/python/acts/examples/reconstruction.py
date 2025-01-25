@@ -216,10 +216,11 @@ ScoreBasedAmbiguityResolutionConfig = namedtuple(
         "minScore",
         "minScoreSharedTracks",
         "maxShared",
+        'minUnshared',
         "maxSharedTracksPerMeasurement",
         "useAmbiguityFunction",
     ],
-    defaults=[None] * 5,
+    defaults=[None] * 6,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1941,6 +1942,7 @@ def addScoreBasedAmbiguityResolution(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
             maxShared=config.maxShared,
+            minUnshared=config.minUnshared,
             maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
             useAmbiguityFunction=config.useAmbiguityFunction,
         ),
