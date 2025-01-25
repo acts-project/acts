@@ -116,7 +116,6 @@ class ScoreBasedAmbiguityResolution {
     /// minimum number of unshared hits per track
     std::size_t minUnshared = 5;
 
-
     // if true, the ambiguity score is computed based on a different function.
     bool useAmbiguityFunction = false;
   };
@@ -185,9 +184,9 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
-  bool etaBasedCuts(
-    const DetectorConfig& detector, const TrackFeatures& trackFeatures,
-    const double& eta) const;
+  bool etaBasedCuts(const DetectorConfig& detector,
+                    const TrackFeatures& trackFeatures,
+                    const double& eta) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
@@ -225,8 +224,9 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
-  static std::size_t getValueAtEta(std::vector<std::size_t> cuts, std::size_t etaBinSize,
-                          std::size_t binIndex);
+  static std::size_t getValueAtEta(std::vector<std::size_t> cuts,
+                                   std::size_t etaBinSize,
+                                   std::size_t binIndex);
 
  private:
   Config m_cfg;
