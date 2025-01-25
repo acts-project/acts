@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK(epabCopy.getAxis() == epab.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis epabAssign(AxisX, Bound, {0.0, 50.0, 20});
+  Acts::ProtoAxis epabAssign(AxisX, Bound, 0.0, 50.0, 20);
   epabAssign = epab;
   BOOST_CHECK_EQUAL(epabAssign.getAxisDirection(), epab.getAxisDirection());
   BOOST_CHECK_EQUAL(epabAssign.isAutorange(), epab.isAutorange());
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK(epaCopy.getAxis() == epa.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis epaAssign(AxisX, Bound, {0.0, 50.0, 20});
+  Acts::ProtoAxis epaAssign(AxisX, Bound, 0.0, 50.0, 20);
   epaAssign = epa;
   BOOST_CHECK_EQUAL(epaAssign.getAxisDirection(), epa.getAxisDirection());
   BOOST_CHECK_EQUAL(epaAssign.isAutorange(), epa.isAutorange());
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   BOOST_CHECK(vpabCopy.getAxis() == vpab.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis vpabAssign(AxisX, Bound, {0.0, 50.0, 20});
+  Acts::ProtoAxis vpabAssign(AxisX, Bound, 0.0, 50.0, 20);
   vpabAssign = vpab;
   BOOST_CHECK_EQUAL(vpabAssign.getAxisDirection(), vpab.getAxisDirection());
   BOOST_CHECK_EQUAL(vpabAssign.isAutorange(), vpab.isAutorange());
