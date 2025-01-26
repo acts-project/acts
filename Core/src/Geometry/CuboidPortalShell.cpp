@@ -130,19 +130,19 @@ CuboidStackPortalShell::CuboidStackPortalShell(
       throw std::invalid_argument(axisDirectionName(axis) +
                                   " is not supported ");
   }
+  std::tie(m_frontFace, m_backFace, m_sideFaces) =
+      CuboidVolumeBounds::facesFromAxisDirection(m_axis);
   stackShell(gctx, logger);
 }
 
 CuboidStackPortalShell::CuboidStackPortalShell(
     const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
     const Vector3& direction, const Logger& logger)
-    : m_direction{direction},
-      m_frontFace{},
-      m_backFace{},
-      m_sideFaces{},
-      m_shells{std::move(shells)} {
+    : m_direction{direction}, m_shells{std::move(shells)} {
   Vector3 stackDirection = transform().rotation().inverse() * m_direction;
   m_axis = directionToAxis(stackDirection);
+  std::tie(m_frontFace, m_backFace, m_sideFaces) =
+      CuboidVolumeBounds::facesFromAxisDirection(m_axis);
   stackShell(gctx, logger);
 }
 
@@ -176,9 +176,6 @@ void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
     ACTS_ERROR("Invalid shell");
     throw std::invalid_argument("Invalid shell");
   }
-  std::tie(m_frontFace, m_backFace, m_sideFaces) =
-      CuboidVolumeBounds::facesFromAxisDirection(m_axis);
-
   std::unordered_map<Face, AxisDirection> onSurfaceDirs;
   for (Face face : m_sideFaces) {
     const auto& portalAtFace = m_shells.front()->portalPtr(face);

@@ -105,7 +105,7 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// @param gctx The geometry context
   /// @param shells The shells to stack
   /// @note The shells must be ordered in the given direction
-  /// @param direction The stacking direction in local stack coordinates
+  /// @param axis The stacking direction (along x/y/z axis) in local stack coordinates
   /// @param logger A logging instance for debugging
   CuboidStackPortalShell(const GeometryContext& gctx,
                          std::vector<CuboidPortalShell*> shells,
