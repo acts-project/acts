@@ -143,7 +143,7 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   bool isValid() const override;
 
   /// @copydoc PortalShellBase::label
-  std::string label() const override;
+  std::string label() const final;
 
   /// Return the stack's group transform
   const Transform3& transform() const override;
