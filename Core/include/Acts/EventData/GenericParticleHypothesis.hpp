@@ -10,11 +10,10 @@
 
 #include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/ChargeConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 
-#include <iosfwd>
+#include <cassert>
+#include <ostream>
 #include <utility>
 
 namespace Acts {

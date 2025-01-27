@@ -3,8 +3,7 @@ target_sources(
   PRIVATE
     PrintParameters.cpp
     TrackParameters.cpp
-    TransformationBoundToFree.cpp
-    TransformationFreeToBound.cpp
+    TransformationHelpers.cpp
     CorrectedTransformationFreeToBound.cpp
     TrackStatePropMask.cpp
     VectorMultiTrajectory.cpp

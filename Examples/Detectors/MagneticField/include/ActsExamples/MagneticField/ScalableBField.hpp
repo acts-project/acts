@@ -56,7 +56,7 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   Acts::Result<Acts::Vector3> getField(
       const Acts::Vector3& /*position*/,
       MagneticFieldProvider::Cache& gCache) const override {
-    Cache& cache = gCache.get<Cache>();
+    Cache& cache = gCache.as<Cache>();
     return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
@@ -75,13 +75,13 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   Acts::Result<Acts::Vector3> getFieldGradient(
       const Acts::Vector3& /*position*/, Acts::ActsMatrix<3, 3>& /*derivative*/,
       MagneticFieldProvider::Cache& gCache) const override {
-    Cache& cache = gCache.get<Cache>();
+    Cache& cache = gCache.as<Cache>();
     return Acts::Result<Acts::Vector3>::success(m_BField * cache.scalor);
   }
 
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
-    return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
+    return Acts::MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
   }
 
   /// @brief check whether given 3D position is inside look-up domain

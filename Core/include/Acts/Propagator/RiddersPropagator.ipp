@@ -26,7 +26,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Propagate the nominal parameters
   auto result = m_propagator.propagate(startWithoutCov, options);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return ThisResult::failure(result.error());
   }
   // Extract results from the nominal propagation
@@ -68,7 +68,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Propagate the nominal parameters
   auto result = m_propagator.propagate(startWithoutCov, target, options);
-  if (not result.ok()) {
+  if (!result.ok()) {
     return ThisResult::failure(result.error());
   }
   // Extract results from the nominal propagation

@@ -76,7 +76,7 @@ ActsExamples::Telescope::buildDetector(
   }
 
   // Construct the surfaces and layers
-  size_t nLayers = positions.size();
+  std::size_t nLayers = positions.size();
   std::vector<Acts::LayerPtr> layers(nLayers);
   for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet
@@ -128,12 +128,12 @@ ActsExamples::Telescope::buildDetector(
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
   auto length = positions.back() - positions.front();
-  Acts::VolumeBoundsPtr boundsVol = nullptr;
+  std::shared_ptr<Acts::VolumeBounds> boundsVol = nullptr;
   if (surfaceType == TelescopeSurfaceType::Plane) {
-    boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(
+    boundsVol = std::make_shared<Acts::CuboidVolumeBounds>(
         bounds[0] + 5._mm, bounds[1] + 5._mm, length + 10._mm);
   } else {
-    boundsVol = std::make_shared<const Acts::CylinderVolumeBounds>(
+    boundsVol = std::make_shared<Acts::CylinderVolumeBounds>(
         std::max(bounds[0] - 5.0_mm, 0.), bounds[1] + 5._mm, length + 10._mm);
   }
 
@@ -152,9 +152,9 @@ ActsExamples::Telescope::buildDetector(
       Acts::BinningType::arbitrary, binValue));
 
   // Build the tracking volume
-  auto trackVolume =
-      Acts::TrackingVolume::create(trafoVol, boundsVol, nullptr,
-                                   std::move(layArr), nullptr, {}, "Telescope");
+  auto trackVolume = std::make_shared<Acts::TrackingVolume>(
+      trafoVol, boundsVol, nullptr, std::move(layArr), nullptr,
+      Acts::MutableTrackingVolumeVector{}, "Telescope");
 
   // Build and return tracking geometry
   return std::make_unique<Acts::TrackingGeometry>(trackVolume);

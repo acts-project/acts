@@ -18,12 +18,7 @@ from helpers import (
 )
 
 import acts
-
-from common import getOpenDataDetectorDirectory
-
 from acts import PlanarModuleStepper, UnitConstants as u
-
-
 from acts.examples import (
     ObjPropagationStepsWriter,
     TrackFinderPerformanceWriter,
@@ -35,14 +30,14 @@ from acts.examples import (
     RootMaterialWriter,
     RootPlanarClusterWriter,
     RootSimHitWriter,
-    RootTrajectoryStatesWriter,
-    RootTrajectorySummaryWriter,
+    RootTrackStatesWriter,
+    RootTrackSummaryWriter,
     VertexPerformanceWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvPlanarClusterWriter,
     CsvSimHitWriter,
-    CsvMultiTrajectoryWriter,
+    CsvTrackWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
     PlanarSteppingAlgorithm,
@@ -51,6 +46,7 @@ from acts.examples import (
     Sequencer,
     GenericDetector,
 )
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 @pytest.mark.obj
@@ -351,8 +347,8 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         RootMaterialWriter,
         RootPlanarClusterWriter,
         RootSimHitWriter,
-        RootTrajectoryStatesWriter,
-        RootTrajectorySummaryWriter,
+        RootTrackStatesWriter,
+        RootTrackSummaryWriter,
         VertexPerformanceWriter,
         SeedingPerformanceWriter,
     ],
@@ -389,7 +385,7 @@ def test_root_writer_interface(writer, conf_const, tmp_path, trk_geo):
         CsvMeasurementWriter,
         CsvPlanarClusterWriter,
         CsvSimHitWriter,
-        CsvMultiTrajectoryWriter,
+        CsvTrackWriter,
         CsvTrackingGeometryWriter,
     ],
 )
@@ -485,9 +481,9 @@ def test_csv_multitrajectory_writer(tmp_path):
     csv_dir = tmp_path / "csv"
     csv_dir.mkdir()
     s.addWriter(
-        CsvMultiTrajectoryWriter(
+        CsvTrackWriter(
             level=acts.logging.INFO,
-            inputTrajectories="trajectories",
+            inputTracks="tracks",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputDir=str(csv_dir),
         )
@@ -681,6 +677,14 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
         s=s,
     )
 
+    s.addAlgorithm(
+        acts.examples.TracksToTrajectories(
+            level=acts.logging.INFO,
+            inputTracks="tracks",
+            outputTrajectories="trajectories",
+        )
+    )
+
     out = tmp_path / "trajectories_edm4hep.root"
 
     s.addWriter(
@@ -727,7 +731,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     s.addWriter(
         EDM4hepTrackWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kfTracks",
+            inputTracks="kf_tracks",
             outputPath=str(out),
             Bz=2 * u.T,
         )

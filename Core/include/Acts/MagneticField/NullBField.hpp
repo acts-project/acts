@@ -54,7 +54,7 @@ class NullBField final : public MagneticFieldProvider {
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   Acts::MagneticFieldProvider::Cache makeCache(
       const Acts::MagneticFieldContext& mctx) const override {
-    return Acts::MagneticFieldProvider::Cache::make<Cache>(mctx);
+    return Acts::MagneticFieldProvider::Cache(std::in_place_type<Cache>, mctx);
   }
 
   /// @brief check whether given 3D position is inside look-up domain

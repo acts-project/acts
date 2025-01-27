@@ -12,8 +12,7 @@
 
 #include <vector>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 
 /// @brief Data storage of the parametrized nuclear interaction
 struct NuclearInteractionParameters {
@@ -104,5 +103,4 @@ using NuclearInteractionParametrisation =
 /// Parametrisation of multiple particles
 using MultiParticleNuclearInteractionParametrisation =
     std::vector<std::pair<int, NuclearInteractionParametrisation>>;
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

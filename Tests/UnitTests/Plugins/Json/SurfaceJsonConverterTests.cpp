@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
   auto coneTest = SurfaceJsonConverter::fromJson(coneIn);
 
   BOOST_CHECK(coneTest->transform(gctx).isApprox(coneRef->transform(gctx)));
-  BOOST_CHECK(coneTest->geometryId() == coneRef->geometryId());
-  BOOST_CHECK(coneTest->bounds() == coneRef->bounds());
+  BOOST_CHECK_EQUAL(coneTest->geometryId(), coneRef->geometryId());
+  BOOST_CHECK_EQUAL(coneTest->bounds(), coneRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(DiscSurfaceRoundTripTests) {
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceRoundTripTests) {
 
   BOOST_CHECK(
       ringDiscTest->transform(gctx).isApprox(ringDiscRef->transform(gctx)));
-  BOOST_CHECK(ringDiscTest->geometryId() == ringDiscRef->geometryId());
-  BOOST_CHECK(ringDiscTest->bounds() == ringDiscRef->bounds());
+  BOOST_CHECK_EQUAL(ringDiscTest->geometryId(), ringDiscRef->geometryId());
+  BOOST_CHECK_EQUAL(ringDiscTest->bounds(), ringDiscRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceRoundTripTests) {
@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceRoundTripTests) {
 
   BOOST_CHECK(
       cylinderTest->transform(gctx).isApprox(cylinderRef->transform(gctx)));
-  BOOST_CHECK(cylinderTest->geometryId() == cylinderRef->geometryId());
-  BOOST_CHECK(cylinderTest->bounds() == cylinderRef->bounds());
+  BOOST_CHECK_EQUAL(cylinderTest->geometryId(), cylinderRef->geometryId());
+  BOOST_CHECK_EQUAL(cylinderTest->bounds(), cylinderRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
 
   BOOST_CHECK(trapezoidPlaneTest->transform(gctx).isApprox(
       trapezoidPlaneRef->transform(gctx)));
-  BOOST_CHECK(trapezoidPlaneTest->geometryId() ==
-              trapezoidPlaneRef->geometryId());
-  BOOST_CHECK(trapezoidPlaneTest->bounds() == trapezoidPlaneRef->bounds());
+  BOOST_CHECK_EQUAL(trapezoidPlaneTest->geometryId(),
+                    trapezoidPlaneRef->geometryId());
+  BOOST_CHECK_EQUAL(trapezoidPlaneTest->bounds(), trapezoidPlaneRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(StrawSurfaceRoundTripTests) {
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceRoundTripTests) {
   auto strawTest = SurfaceJsonConverter::fromJson(strawIn);
 
   BOOST_CHECK(strawTest->transform(gctx).isApprox(strawRef->transform(gctx)));
-  BOOST_CHECK(strawTest->geometryId() == strawRef->geometryId());
-  BOOST_CHECK(strawTest->bounds() == strawRef->bounds());
+  BOOST_CHECK_EQUAL(strawTest->geometryId(), strawRef->geometryId());
+  BOOST_CHECK_EQUAL(strawTest->bounds(), strawRef->bounds());
 }
 
 BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
 
   BOOST_CHECK(
       perigeeTest->transform(gctx).isApprox(perigeeRef->transform(gctx)));
-  BOOST_CHECK(perigeeTest->geometryId() == perigeeRef->geometryId());
+  BOOST_CHECK_EQUAL(perigeeTest->geometryId(), perigeeRef->geometryId());
 }
 
 BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {

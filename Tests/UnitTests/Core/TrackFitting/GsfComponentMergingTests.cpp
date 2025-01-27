@@ -11,8 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -21,7 +20,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -188,7 +187,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   FreeVector mean = FreeVector::Zero();
 
   for (const auto &cmp : cmps) {
-    mean += cmp.weight * detail::transformBoundToFreeParameters(
+    mean += cmp.weight * transformBoundToFreeParameters(
                              surface, GeometryContext{}, cmp.boundPars);
   }
 
@@ -199,13 +198,13 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
-  auto intersection =
-      surface.intersect(GeometryContext{}, position, direction, false)
-          .closest();
+  auto intersection = surface
+                          .intersect(GeometryContext{}, position, direction,
+                                     BoundaryCheck(false))
+                          .closest();
   mean.head<3>() = intersection.position();
 
-  return *detail::transformFreeToBoundParameters(mean, surface,
-                                                 GeometryContext{});
+  return *transformFreeToBoundParameters(mean, surface, GeometryContext{});
 }
 
 // Typedef to describe local positions of 4 components

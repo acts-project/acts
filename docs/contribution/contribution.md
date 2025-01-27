@@ -12,5 +12,4 @@ physmon
 root_hash_checks
 release
 profiling
-style_guide
 :::

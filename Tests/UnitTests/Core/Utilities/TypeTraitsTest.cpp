@@ -13,13 +13,9 @@
 
 #include <type_traits>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
 using namespace Acts::Concepts;
 
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 

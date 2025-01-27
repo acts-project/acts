@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/GridBinFinder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -28,8 +28,8 @@
 #include <vector>
 
 namespace Acts {
-template <typename external_spacepoint_t>
-class BinFinder;
+template <std::size_t>
+class GridBinFinder;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -51,8 +51,8 @@ class SeedingAlgorithm final : public IAlgorithm {
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
-    Acts::SpacePointGridConfig gridConfig;
-    Acts::SpacePointGridOptions gridOptions;
+    Acts::CylindricalSpacePointGridConfig gridConfig;
+    Acts::CylindricalSpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -63,7 +63,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     std::vector<std::pair<int, int>> zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors = 0;
+    int numPhiNeighbors = 1;
   };
 
   /// Construct the seeding algorithm.
@@ -82,9 +82,12 @@ class SeedingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
-  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
+  Acts::SeedFinder<SimSpacePoint,
+                   Acts::CylindricalSpacePointGrid<SimSpacePoint>>
+      m_seedFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+
   Config m_cfg;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>

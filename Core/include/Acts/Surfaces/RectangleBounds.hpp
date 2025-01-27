@@ -24,6 +24,8 @@ namespace Acts {
 
 /// @class RectangleBounds
 ///
+/// @image html RectangleBounds.gif
+///
 /// Bounds for a rectangular, planar surface - it can be used to for
 /// rectangles that are symmetrically centered around (0./0.) and for
 /// generic shifted rectangles
@@ -162,7 +164,7 @@ inline double RectangleBounds::get(BoundValues bValue) const {
     case eMaxY:
       return m_max.y();
     default:
-      assert(false and "Invalid BoundValue enum value");
+      assert(false && "Invalid BoundValue enum value");
       return std::numeric_limits<double>::quiet_NaN();
   }
 }

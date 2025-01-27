@@ -2,20 +2,19 @@
 set -e
 
 if [ $# -ne 1 ]; then
-    echo "wrong number of arguments"
-    echo ""
-    echo "usage: check_format <DIR>"
+    echo "\033[31mERROR\033[0m"\
+         "wrong number of arguments"
+    echo "\tusage: check_format <DIR>\n"
     exit 1
 fi
 
 # Setup some variables
-WD="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 USER_ID=`id -u`
 GROUP_ID=`id -g`
 
 docker run --rm -ti \
-       -v ${WD}:/work_dir:rw \
+       -v $PWD:/work_dir:rw \
        --user "${USER_ID}:${GROUP_ID}" \
        -w "/work_dir" \
        ghcr.io/acts-project/format14:v41 \
-       CI/check_format .
+       CI/check_format $1

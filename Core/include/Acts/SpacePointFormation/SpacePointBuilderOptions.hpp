@@ -15,15 +15,17 @@
 
 namespace Acts {
 
+using ParamCovAccessor =
+    std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
+        const SourceLink&)>;
+
 struct SpacePointBuilderOptions {
   // ends of strip pairs
   std::pair<const std::pair<Vector3, Vector3>,
             const std::pair<Vector3, Vector3>>
       stripEndsPair;
   // accessor of local position and covariance from source link
-  std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
-      const SourceLink&)>
-      paramCovAccessor;
+  ParamCovAccessor paramCovAccessor;
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
   /// Allowed increase of strip length
@@ -34,9 +36,7 @@ struct SpacePointBuilderOptions {
 
 struct StripPairOptions {
   // accessor of local position and covariance from source link
-  std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
-      const SourceLink&)>
-      paramCovAccessor;
+  ParamCovAccessor paramCovAccessor;
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
   /// Accepted squared difference in theta for two clusters

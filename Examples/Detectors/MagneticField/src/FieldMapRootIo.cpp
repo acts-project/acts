@@ -19,8 +19,8 @@
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromRoot(
-    const std::function<size_t(std::array<size_t, 2> binsRZ,
-                               std::array<size_t, 2> nBinsRZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
+                                    std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
     Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
@@ -70,8 +70,8 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromRoot(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
+    const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
+                                    std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
     Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,

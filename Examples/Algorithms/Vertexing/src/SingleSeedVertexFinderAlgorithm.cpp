@@ -51,7 +51,7 @@ ActsExamples::SingleSeedVertexFinderAlgorithm::execute(
                                      << "mm, y = " << vtx.value()[1]
                                      << "mm, z = " << vtx.value()[2] << "mm");
 
-    std::vector<Acts::Vertex<Acts::BoundTrackParameters>> vertexCollection;
+    std::vector<Acts::Vertex> vertexCollection;
     vertexCollection.emplace_back(vtx.value());
 
     // store found vertices

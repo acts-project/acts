@@ -14,9 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 // The container for derivative of local frame axis w.r.t. its
 // rotation parameters. The first element is for x axis, second for y axis and
@@ -34,6 +32,4 @@ using RotationToAxes =
 /// rotation angles (extrinsic Euler angles) around global x/y/z axis
 RotationToAxes rotationToLocalAxesDerivative(const RotationMatrix3& rotation);
 
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

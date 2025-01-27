@@ -16,8 +16,11 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
+
+#include <memory>
 
 namespace Acts {
 
@@ -38,46 +41,15 @@ namespace Acts {
 /// This class computes A and B using the analytic formulae of Ref. (1).
 ///
 /// Ref. (1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
-///
-/// @tparam propagator_t Propagator type
-/// @tparam propagator_options_t Propagator options type
-template <typename propagator_t,
-          typename propagator_options_t = PropagatorOptions<>>
 class HelicalTrackLinearizer {
  public:
-  using Propagator_t = propagator_t;
-
-  /// State struct
-  struct State {
-    /// @brief The state constructor
-    ///
-    /// @param fieldCacheIn The magnetic field cache
-    State(MagneticFieldProvider::Cache fieldCacheIn)
-        : fieldCache(std::move(fieldCacheIn)) {}
-    /// Magnetic field cache
-    MagneticFieldProvider::Cache fieldCache;
-  };
-
   /// @brief Configuration struct
   struct Config {
-    /// @ Config constructor if magnetic field is present
-    ///
-    /// @param bIn The magnetic field
-    /// @param prop The propagator
-    Config(std::shared_ptr<const MagneticFieldProvider> bIn,
-           std::shared_ptr<const Propagator_t> prop)
-        : bField(std::move(bIn)), propagator(std::move(prop)) {}
-
-    /// @brief Config constructor without B field -> uses NullBField
-    ///
-    /// @param prop The propagator
-    Config(std::shared_ptr<const Propagator_t> prop)
-        : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
-
     // The magnetic field
-    std::shared_ptr<const MagneticFieldProvider> bField;
-    // The propagator
-    std::shared_ptr<const Propagator_t> propagator;
+    std::shared_ptr<const MagneticFieldProvider> bField =
+        std::make_shared<NullBField>();
+
+    std::shared_ptr<const BasePropagator> propagator;
 
     /// Tolerance determining how close we need to get to the Perigee surface to
     /// reach it during propagation
@@ -91,7 +63,11 @@ class HelicalTrackLinearizer {
   HelicalTrackLinearizer(const Config& config,
                          std::unique_ptr<const Logger> _logger =
                              getDefaultLogger("HelTrkLinProp", Logging::INFO))
-      : m_cfg(config), m_logger{std::move(_logger)} {}
+      : m_cfg(config), m_logger{std::move(_logger)} {
+    if (!m_cfg.propagator) {
+      throw std::invalid_argument("HelicalTrackLinearizer: propagator is null");
+    }
+  }
 
   /// @brief Function that linearizes BoundTrackParameters at
   /// the PCA to a given Perigee surface
@@ -103,15 +79,14 @@ class HelicalTrackLinearizer {
   /// @param perigeeSurface Perigee surface belonging to @p linPoint
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
-  /// @param state Linearizer state object
+  /// @param fieldCache Magnetic field cache
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         double linPointTime,
-                                         const Surface& perigeeSurface,
-                                         const Acts::GeometryContext& gctx,
-                                         const Acts::MagneticFieldContext& mctx,
-                                         State& state) const;
+  Result<LinearizedTrack> linearizeTrack(
+      const BoundTrackParameters& params, double linPointTime,
+      const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx,
+      MagneticFieldProvider::Cache& fieldCache) const;
 
  private:
   /// Configuration object
@@ -123,5 +98,3 @@ class HelicalTrackLinearizer {
 };
 
 }  // namespace Acts
-
-#include "HelicalTrackLinearizer.ipp"

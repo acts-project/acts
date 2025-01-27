@@ -63,8 +63,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   auto itrack = 0ul;
   for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 and
-        m_cfg.pickTrack != static_cast<int>(itrack++)) {
+    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack++)) {
       continue;
     }
 
@@ -82,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     for (auto state : track.trackStatesReversed()) {
       surfSequence.push_back(&state.referenceSurface());
 
-      if (not state.hasCalibrated()) {
+      if (!state.hasCalibrated()) {
         continue;
       }
 

@@ -54,8 +54,8 @@ struct AlignmentOptions {
       const AlignedTransformUpdater& aTransformUpdater,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
-      const std::pair<size_t, double>& deltaChi2CutOff = {5, 0.01},
-      size_t maxIters = 5,
+      const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
+      std::size_t maxIters = 5,
       const std::map<unsigned int, AlignmentMask>& iterState = {})
       : fitOptions(fOptions),
         alignedTransformUpdater(aTransformUpdater),
@@ -79,10 +79,10 @@ struct AlignmentOptions {
 
   // The delta of average chi2/ndf within a couple of iterations to determine if
   // alignment is converged
-  std::pair<size_t, double> deltaAverageChi2ONdfCutOff = {5, 0.01};
+  std::pair<std::size_t, double> deltaAverageChi2ONdfCutOff = {5, 0.01};
 
   // The maximum number of iterations to run alignment
-  size_t maxIterations = 5;
+  std::size_t maxIterations = 5;
 
   // The alignment mask for different iterations
   std::map<unsigned int, AlignmentMask> iterationState;
@@ -111,16 +111,16 @@ struct AlignmentResult {
   double chi2 = 0;
 
   // The measurement dimension from all tracks
-  size_t measurementDim = 0;
+  std::size_t measurementDim = 0;
 
   // The alignment degree of freedom
-  size_t alignmentDof = 0;
+  std::size_t alignmentDof = 0;
 
   // The number of tracks used for alignment
-  size_t numTracks = 0;
+  std::size_t numTracks = 0;
 
   // The indexed alignable surfaces
-  std::unordered_map<const Acts::Surface*, size_t> idxedAlignSurfaces;
+  std::unordered_map<const Acts::Surface*, std::size_t> idxedAlignSurfaces;
 
   Acts::Result<void> result{Acts::Result<void>::success()};
 };
@@ -163,7 +163,7 @@ struct Alignment {
       const Acts::GeometryContext& gctx,
       const std::vector<source_link_t>& sourcelinks,
       const start_parameters_t& sParameters, const fit_options_t& fitOptions,
-      const std::unordered_map<const Acts::Surface*, size_t>&
+      const std::unordered_map<const Acts::Surface*, std::size_t>&
           idxedAlignSurfaces,
       const AlignmentMask& alignMask) const;
 

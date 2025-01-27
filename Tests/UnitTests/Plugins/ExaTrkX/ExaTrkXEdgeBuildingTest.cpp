@@ -103,7 +103,7 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 #endif
 
   // Check
-  BOOST_CHECK(edges_ref_cantor.size() == edges_test_cantor.size());
+  BOOST_CHECK_EQUAL(edges_ref_cantor.size(), edges_test_cantor.size());
   BOOST_CHECK(std::equal(edges_test_cantor.begin(), edges_test_cantor.end(),
                          edges_ref_cantor.begin()));
 }
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int b = 23;
   // Use non-sorted cantor pair to make this work
   const auto [aa, bb] = CantorPair(a, b, false).inverse();
-  BOOST_CHECK(a == aa);
-  BOOST_CHECK(b == bb);
+  BOOST_CHECK_EQUAL(a, aa);
+  BOOST_CHECK_EQUAL(b, bb);
 }
 
 BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
   int b = 23;
   CantorPair c1(a, b);
   CantorPair c2(b, a);
-  BOOST_CHECK(c1.value() == c2.value());
+  BOOST_CHECK_EQUAL(c1.value(), c2.value());
 }
 
 const int emb_dim = 3;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   };
   // clang-format on
 
-  BOOST_CHECK(ref == postEdges);
+  BOOST_CHECK_EQUAL(ref, postEdges);
 }
 
 BOOST_AUTO_TEST_CASE(test_random_flip) {
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
       flipped.data_ptr<int64_t>(),
       flipped.data_ptr<int64_t>() + flipped.numel());
 
-  BOOST_CHECK(postEdges.size() == edges.size());
+  BOOST_CHECK_EQUAL(postEdges.size(), edges.size());
   for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {
     int found = 0;
 
@@ -267,6 +267,6 @@ BOOST_AUTO_TEST_CASE(test_random_flip) {
       found += (flp or noflp);
     }
 
-    BOOST_CHECK(found == 1);
+    BOOST_CHECK_EQUAL(found, 1);
   }
 }

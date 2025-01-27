@@ -56,7 +56,7 @@ struct DeviceSeedFinderConfig {
   float filterDeltaRMin;
   float compatSeedWeight;
   float impactMax;
-  size_t compatSeedLimit;
+  std::size_t compatSeedLimit;
 };
 
 /// Struct holding information about triplets that are calculated in the triplet

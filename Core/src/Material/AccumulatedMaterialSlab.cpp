@@ -22,7 +22,7 @@ void Acts::AccumulatedMaterialSlab::accumulate(MaterialSlab slab,
 void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
                                                   bool useEmptyTrack) {
   // Only use real tracks or if empty tracks are allowed.
-  if (useEmptyTrack or (0 < m_trackAverage.thickness())) {
+  if (useEmptyTrack || (0 < m_trackAverage.thickness())) {
     float variance = ((1 / m_trackAverage.material().X0()) -
                       (1 / slabReference.material().X0())) *
                      ((1 / m_trackAverage.material().X0()) -
@@ -39,7 +39,7 @@ void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
 
 void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
   // average only real tracks or if empty tracks are allowed.
-  if (useEmptyTrack or (0 < m_trackAverage.thickness())) {
+  if (useEmptyTrack || (0 < m_trackAverage.thickness())) {
     if (m_totalCount == 0u) {
       m_totalAverage = m_trackAverage;
     } else {

@@ -49,7 +49,7 @@ struct SurfaceBinningMatcher {
     double otherMin = otherExt.min(bValue);
     double otherMax = otherExt.max(bValue);
 
-    return (std::abs(oneMin - otherMin) <= tolerances[bValue].first and
+    return (std::abs(oneMin - otherMin) <= tolerances[bValue].first &&
             std::abs(oneMax - otherMax) <= tolerances[bValue].second);
   }
 };

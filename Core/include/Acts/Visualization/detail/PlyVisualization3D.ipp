@@ -34,9 +34,9 @@ template <typename T>
 void PlyVisualization3D<T>::line(const Vector3& a, const Vector3& b,
                                  ColorRGB color) {
   vertex(a, color);
-  size_t idx_a = m_vertices.size() - 1;
+  std::size_t idx_a = m_vertices.size() - 1;
   vertex(b, color);
-  size_t idx_b = m_vertices.size() - 1;
+  std::size_t idx_b = m_vertices.size() - 1;
   m_edges.emplace_back(std::make_pair(std::make_pair(idx_a, idx_b), color));
 }
 
@@ -44,7 +44,7 @@ template <typename T>
 void PlyVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
-  if (not IVisualization3D::hasExtension(path)) {
+  if (!IVisualization3D::hasExtension(path)) {
     objectpath += std::string(".ply");
   }
   os.open(objectpath);
@@ -80,14 +80,15 @@ void PlyVisualization3D<T>::write(std::ostream& os) const {
 
   for (const FaceType& fc : m_faces) {
     os << fc.size();
-    for (size_t i = 0; i < fc.size(); i++) {
+    for (std::size_t i = 0; i < fc.size(); i++) {
       os << " " << fc[i];
     }
     os << "\n";
   }
 
-  for (const std::pair<std::pair<size_t, size_t>, ColorRGB>& edge : m_edges) {
-    std::pair<size_t, size_t> idxs = edge.first;
+  for (const std::pair<std::pair<std::size_t, std::size_t>, ColorRGB>& edge :
+       m_edges) {
+    std::pair<std::size_t, std::size_t> idxs = edge.first;
     os << idxs.first << " " << idxs.second << " ";
     os << edge.second[0] << " " << edge.second[1] << " " << edge.second[2]
        << "\n";

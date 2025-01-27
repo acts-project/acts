@@ -57,13 +57,13 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
     const Acts::GeometryContext& /*gctx*/, int side) const {
   LayerVector eLayers;
   // pos/neg layers
-  size_t numpnLayers = m_cfg.posnegLayerPositionZ.size();
+  std::size_t numpnLayers = m_cfg.posnegLayerPositionZ.size();
   if (numpnLayers != 0u) {
     ACTS_DEBUG("Configured to build " << numpnLayers
                                       << " passive layers on side :" << side);
     eLayers.reserve(numpnLayers);
     // loop through
-    for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
+    for (std::size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
       ACTS_VERBOSE("- build layers "
                    << (ipnl)
@@ -101,13 +101,13 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
     const Acts::GeometryContext& /*gctx*/) const {
   LayerVector cLayers;
   // the central layers
-  size_t numcLayers = m_cfg.centralLayerRadii.size();
+  std::size_t numcLayers = m_cfg.centralLayerRadii.size();
   if (numcLayers != 0u) {
     ACTS_DEBUG("Configured to build " << numcLayers
                                       << " passive central layers.");
     cLayers.reserve(numcLayers);
     // loop through
-    for (size_t icl = 0; icl < numcLayers; ++icl) {
+    for (std::size_t icl = 0; icl < numcLayers; ++icl) {
       // some screen output
       ACTS_VERBOSE("- build layer "
                    << icl

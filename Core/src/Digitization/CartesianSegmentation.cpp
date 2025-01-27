@@ -22,8 +22,8 @@
 #include <utility>
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    const std::shared_ptr<const PlanarBounds>& mBounds, size_t numCellsX,
-    size_t numCellsY)
+    const std::shared_ptr<const PlanarBounds>& mBounds, std::size_t numCellsX,
+    std::size_t numCellsY)
     : m_activeBounds(mBounds), m_binUtility(nullptr) {
   auto mutableBinUtility = std::make_shared<BinUtility>(
       numCellsX, -mBounds->boundingBox().halfLengthX(),
@@ -134,7 +134,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // boundarySurfaces
   segmentationSurfacesX.reserve(m_binUtility->bins(0));
   // create and fill them
-  for (size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
+  for (std::size_t ibinx = 0; ibinx <= m_binUtility->bins(0); ++ibinx) {
     // the current step x position
     double cPosX =
         -m_activeBounds->boundingBox().halfLengthX() + ibinx * pitchX;
@@ -194,7 +194,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // reserve, it's always (number of bins-1) as the boundaries are within the
   // boundarySurfaces
   segmentationSurfacesY.reserve(m_binUtility->bins(1));
-  for (size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
+  for (std::size_t ibiny = 0; ibiny <= m_binUtility->bins(1); ++ibiny) {
     // the position of the bin surface
     double binPosY =
         -m_activeBounds->boundingBox().halfLengthY() + ibiny * pitchY;

@@ -20,7 +20,6 @@
 namespace Acts {
 
 class VolumeBounds;
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class Volume
 ///
@@ -38,16 +37,13 @@ class Volume : public virtual GeometryObject {
   ///
   /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const Transform3& transform, VolumeBoundsPtr volbounds);
+  Volume(const Transform3& transform,
+         std::shared_ptr<const VolumeBounds> volbounds);
 
   /// Copy Constructor - with optional shift
   ///
   /// @param vol is the source volume for the copy
   /// @param shift is the optional shift applied as : shift * vol.transform()
-  /// @note This will automatically build an oriented bounding box with an
-  /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3& shift = Transform3::Identity());
 
   Volume() = delete;
@@ -67,8 +63,11 @@ class Volume : public virtual GeometryObject {
   /// returns the center of the volume
   const Vector3& center() const;
 
-  /// returns the volumeBounds()
+  /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
+
+  /// Set volume bounds and update volume bounding boxes implicitly
+  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -76,8 +75,10 @@ class Volume : public virtual GeometryObject {
   BoundingBox boundingBox(const Vector3& envelope = {0, 0, 0}) const;
 
   /// Construct oriented bounding box for this shape
+  /// @note This will build an oriented bounding box with an
+  ///       envelope value of (0.05, 0.05, 0.05)mm
   /// @return Constructed oriented bounding box pointing to this volume
-  const BoundingBox& orientedBoundingBox() const;
+  BoundingBox orientedBoundingBox() const;
 
   /// Inside() method for checks
   ///
@@ -85,7 +86,7 @@ class Volume : public virtual GeometryObject {
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const;
+  bool inside(const Vector3& gpos, ActsScalar tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded
@@ -101,25 +102,8 @@ class Volume : public virtual GeometryObject {
   Transform3 m_transform;
   Transform3 m_itransform;
   Vector3 m_center;
-  VolumeBoundsPtr m_volumeBounds;
-  BoundingBox m_orientedBoundingBox;
+  std::shared_ptr<const VolumeBounds> m_volumeBounds;
 };
-
-inline const Transform3& Volume::transform() const {
-  return m_transform;
-}
-
-inline const Transform3& Volume::itransform() const {
-  return m_itransform;
-}
-
-inline const Vector3& Volume::center() const {
-  return m_center;
-}
-
-inline const VolumeBounds& Volume::volumeBounds() const {
-  return (*(m_volumeBounds.get()));
-}
 
 /**Overload of << operator for std::ostream for debug output*/
 std::ostream& operator<<(std::ostream& sl, const Volume& vol);

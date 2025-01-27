@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
+
 import os
-from pathlib import Path
 
 import acts
 import acts.examples
-
 import acts.examples.hepmc3
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
 import acts.examples.geant4.hepmc3
+from acts.examples.odd import getOpenDataDetector
+
 
 u = acts.UnitConstants
-
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
 
 
 def runEventRecording(detectorConstructionFactory, outputDir, s=None):
@@ -45,6 +43,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
             )
         ],
         outputParticles="particles_input",
+        outputVertices="vertices_input",
         randomNumbers=rnd,
     )
 
@@ -77,9 +76,7 @@ def runEventRecording(detectorConstructionFactory, outputDir, s=None):
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     detectorConstructionFactory = (
         acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)

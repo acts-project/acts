@@ -23,7 +23,6 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 
 def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
-
     # create temporary file with pixel SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp = open(tmpdirname + "/event000000000-spacepoints_pixel.csv", "w+t")

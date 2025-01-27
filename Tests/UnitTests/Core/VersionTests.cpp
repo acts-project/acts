@@ -28,6 +28,6 @@ BOOST_AUTO_TEST_CASE(Version) {
 }
 
 BOOST_AUTO_TEST_CASE(CommitHash) {
-  BOOST_CHECK(not std::string_view(Acts::CommitHash).empty());
-  BOOST_CHECK(not std::string_view(Acts::CommitHashShort).empty());
+  BOOST_CHECK(!std::string_view(Acts::CommitHash).empty());
+  BOOST_CHECK(!std::string_view(Acts::CommitHashShort).empty());
 }

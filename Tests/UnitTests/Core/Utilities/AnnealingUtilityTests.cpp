@@ -15,8 +15,7 @@
 #include <iostream>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
   std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
@@ -176,5 +175,4 @@ BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -65,12 +65,12 @@ members: center
 :::
 
 (cheatsheetlabels)=
-## Cross referencing and labels
+## Cross-referencing and labels
 
 * Setting a label (should be in front of a heading or something like that):
 
 ```text
-## Cross referencing and labels
+## Cross-referencing and labels
 (cheatsheetlabels)=
 ```
 

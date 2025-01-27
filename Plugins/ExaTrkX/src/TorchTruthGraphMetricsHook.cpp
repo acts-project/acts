@@ -46,7 +46,8 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
 }
 
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
-                                                  const std::any& edges) const {
+                                                  const std::any& edges,
+                                                  const std::any&) const {
   // We need to transpose the edges here for the right memory layout
   const auto edgeIndex = Acts::detail::tensor2DToVector<int64_t>(
       std::any_cast<torch::Tensor>(edges).t());

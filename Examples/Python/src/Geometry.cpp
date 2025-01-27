@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/CuboidalContainerBuilder.hpp"
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorBuilder.hpp"
@@ -79,7 +80,8 @@ void addGeometry(Context& ctx) {
         .def("boundary", &Acts::GeometryIdentifier::boundary)
         .def("approach", &Acts::GeometryIdentifier::approach)
         .def("sensitive", &Acts::GeometryIdentifier::sensitive)
-        .def("extra", &Acts::GeometryIdentifier::extra);
+        .def("extra", &Acts::GeometryIdentifier::extra)
+        .def("value", &Acts::GeometryIdentifier::value);
   }
 
   {
@@ -182,12 +184,17 @@ void addExperimentalGeometry(Context& ctx) {
 
   using namespace Acts::Experimental;
 
-  // Detector definition
-  py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector");
-
   // Detector volume definition
   py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
                                                               "DetectorVolume");
+
+  // Detector definition
+  py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector")
+      .def("number_volumes",
+           [](Detector& self) { return self.volumes().size(); });
+
+  // Portal definition
+  py::class_<Portal, std::shared_ptr<Portal>>(m, "Portal");
 
   {
     // The surface hierarchy map
@@ -269,36 +276,61 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using Range2D = Acts::RangeXD<2u, Acts::ActsScalar>;
-    using KdtSurfaces2D = Acts::Experimental::KdtSurfaces<2u, 100u>;
-    using KdtSurfacesProvider2D =
+    using RangeXDDim1 = Acts::RangeXD<1u, Acts::ActsScalar>;
+    using KdtSurfacesDim1Bin100 = Acts::Experimental::KdtSurfaces<1u, 100u>;
+    using KdtSurfacesProviderDim1Bin100 =
+        Acts::Experimental::KdtSurfacesProvider<1u, 100u>;
+
+    py::class_<RangeXDDim1>(m, "RangeXDDim1")
+        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& irange) {
+          RangeXDDim1 range;
+          range[0].shrink(irange[0], irange[1]);
+          return range;
+        }));
+
+    py::class_<KdtSurfacesDim1Bin100, std::shared_ptr<KdtSurfacesDim1Bin100>>(
+        m, "KdtSurfacesDim1Bin100")
+        .def(py::init<const GeometryContext&,
+                      const std::vector<std::shared_ptr<Acts::Surface>>&,
+                      const std::array<Acts::BinningValue, 1u>&>())
+        .def("surfaces", py::overload_cast<const RangeXDDim1&>(
+                             &KdtSurfacesDim1Bin100::surfaces, py::const_));
+
+    py::class_<KdtSurfacesProviderDim1Bin100,
+               Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<KdtSurfacesProviderDim1Bin100>>(
+        m, "KdtSurfacesProviderDim1Bin100")
+        .def(py::init<std::shared_ptr<KdtSurfacesDim1Bin100>, const Extent&>());
+  }
+
+  {
+    using RangeXDDim2 = Acts::RangeXD<2u, Acts::ActsScalar>;
+    using KdtSurfacesDim2Bin100 = Acts::Experimental::KdtSurfaces<2u, 100u>;
+    using KdtSurfacesProviderDim2Bin100 =
         Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
 
-    py::class_<Range2D>(m, "Range2D")
+    py::class_<RangeXDDim2>(m, "RangeXDDim2")
         .def(py::init([](const std::array<Acts::ActsScalar, 2u>& range0,
                          const std::array<Acts::ActsScalar, 2u>& range1) {
-          Range2D range;
+          RangeXDDim2 range;
           range[0].shrink(range0[0], range0[1]);
           range[1].shrink(range1[0], range1[1]);
           return range;
         }));
 
-    py::class_<KdtSurfaces2D, std::shared_ptr<KdtSurfaces2D>>(m,
-                                                              "KdtSurfaces2D")
+    py::class_<KdtSurfacesDim2Bin100, std::shared_ptr<KdtSurfacesDim2Bin100>>(
+        m, "KdtSurfacesDim2Bin100")
         .def(py::init<const GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
                       const std::array<Acts::BinningValue, 2u>&>())
-        .def("surfaces", [](KdtSurfaces2D& self, const Range2D& range) {
-          return self.surfaces(range);
-        });
+        .def("surfaces", py::overload_cast<const RangeXDDim2&>(
+                             &KdtSurfacesDim2Bin100::surfaces, py::const_));
 
-    py::class_<KdtSurfacesProvider2D, Acts::Experimental::ISurfacesProvider,
-               std::shared_ptr<KdtSurfacesProvider2D>>(m,
-                                                       "KdtSurfacesProvider2D")
-        .def(py::init(
-            [](std::shared_ptr<KdtSurfaces2D> kdt, const Extent& extent) {
-              return std::make_shared<KdtSurfacesProvider2D>(kdt, extent);
-            }));
+    py::class_<KdtSurfacesProviderDim2Bin100,
+               Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<KdtSurfacesProviderDim2Bin100>>(
+        m, "KdtSurfacesProviderDim2Bin100")
+        .def(py::init<std::shared_ptr<KdtSurfacesDim2Bin100>, const Extent&>());
   }
 
   {
@@ -430,6 +462,35 @@ void addExperimentalGeometry(Context& ctx) {
             .def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
+    ACTS_PYTHON_MEMBER(builders);
+    ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(geoIdReverseGen);
+    ACTS_PYTHON_MEMBER(auxiliary);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    // Cuboidal container builder
+    auto ccBuilder =
+        py::class_<CuboidalContainerBuilder,
+                   Acts::Experimental::IDetectorComponentBuilder,
+                   std::shared_ptr<CuboidalContainerBuilder>>(
+            m, "CuboidalContainerBuilder")
+            .def(py::init([](const CuboidalContainerBuilder::Config& config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<CuboidalContainerBuilder>(
+                  config, getDefaultLogger(name, level));
+            }))
+            .def("construct", &CuboidalContainerBuilder::construct);
+
+    auto ccConfig =
+        py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
+            .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CuboidalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
     ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);

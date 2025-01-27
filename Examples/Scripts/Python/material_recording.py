@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+
 import os
 import warnings
-from pathlib import Path
 import argparse
 
 import acts
@@ -12,13 +12,10 @@ from acts.examples import (
     EventGenerator,
     RandomNumbers,
 )
-
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
-from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
-from acts.examples.geant4 import GdmlDetectorConstructionFactory
 
 u = acts.UnitConstants
 
@@ -61,6 +58,7 @@ def runMaterialRecording(
             )
         ],
         outputParticles="particles_initial",
+        outputVertices="vertices_initial",
         randomNumbers=rnd,
     )
 
@@ -80,7 +78,7 @@ def runMaterialRecording(
         acts.examples.RootMaterialTrackWriter(
             prePostStep=True,
             recalculateTotals=True,
-            collection="material_tracks",
+            inputMaterialTracks="material_tracks",
             filePath=os.path.join(outputDir, "geant4_material_tracks.root"),
             level=acts.logging.INFO,
         )
@@ -90,7 +88,6 @@ def runMaterialRecording(
 
 
 def main():
-
     p = argparse.ArgumentParser()
     p.add_argument(
         "-n", "--events", type=int, default=1000, help="Number of events to generate"
@@ -110,9 +107,7 @@ def main():
             acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
         )
     else:
-        detector, trackingGeometry, decorators = getOpenDataDetector(
-            getOpenDataDetectorDirectory()
-        )
+        detector, trackingGeometry, decorators = getOpenDataDetector()
 
         detectorConstructionFactory = (
             acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)

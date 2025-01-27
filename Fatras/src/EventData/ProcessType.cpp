@@ -19,7 +19,6 @@ std::ostream &operator<<(std::ostream &os, ProcessType processType) {
     default:
       return (os << static_cast<uint32_t>(processType));
   }
-  return os;
 }
 
 }  // namespace ActsFatras

@@ -26,7 +26,6 @@ class IVolumeMaterial;
 using LayerPtr = std::shared_ptr<const Layer>;
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 using LayerVector = std::vector<LayerPtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
@@ -64,7 +63,8 @@ class ITrackingVolumeHelper {
   virtual MutableTrackingVolumePtr createTrackingVolume(
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
+      std::shared_ptr<VolumeBounds> volumeBounds,
+      MutableTrackingVolumeVector mtvVector = {},
       const Transform3& transform = Transform3::Identity(),
       const std::string& volumeName = "UndefinedVolume",
       BinningType btype = arbitrary) const = 0;

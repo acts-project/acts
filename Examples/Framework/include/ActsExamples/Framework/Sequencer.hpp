@@ -66,9 +66,9 @@ class Sequencer {
 
   struct Config {
     /// number of events to skip at the beginning
-    size_t skip = 0;
+    std::size_t skip = 0;
     /// number of events to process, SIZE_MAX to process all available events
-    std::optional<size_t> events = std::nullopt;
+    std::optional<std::size_t> events = std::nullopt;
     /// logging level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
     /// number of parallel threads to run, negative for automatic
@@ -159,7 +159,7 @@ class Sequencer {
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
-  std::pair<size_t, size_t> determineEventsRange() const;
+  std::pair<std::size_t, std::size_t> determineEventsRange() const;
 
   std::pair<std::string, std::size_t> fpeMaskCount(
       const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;

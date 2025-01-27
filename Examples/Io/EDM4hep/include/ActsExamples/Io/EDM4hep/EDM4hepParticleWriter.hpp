@@ -11,6 +11,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <mutex>
 #include <string>
 
 #include <podio/ROOTFrameWriter.h>
@@ -54,6 +55,8 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
 
  private:
   Config m_cfg;
+
+  std::mutex m_writeMutex;
 
   podio::ROOTFrameWriter m_writer;
 };

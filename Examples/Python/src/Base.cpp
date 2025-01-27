@@ -228,6 +228,8 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("ePionZero", Acts::PdgParticle::ePionZero)
       .value("ePionPlus", Acts::PdgParticle::ePionPlus)
       .value("ePionMinus", Acts::PdgParticle::ePionMinus)
+      .value("eKaonPlus", Acts::PdgParticle::eKaonPlus)
+      .value("eKaonMinus", Acts::PdgParticle::eKaonMinus)
       .value("eNeutron", Acts::PdgParticle::eNeutron)
       .value("eAntiNeutron", Acts::PdgParticle::eAntiNeutron)
       .value("eProton", Acts::PdgParticle::eProton)

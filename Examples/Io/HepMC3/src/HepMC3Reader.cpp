@@ -13,19 +13,20 @@
 
 #include <HepMC3/Units.h>
 
-bool ActsExamples::HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,
-                                                HepMC3::GenEvent& event) {
+namespace ActsExamples {
+
+bool HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,
+                                  HepMC3::GenEvent& event) {
   // Read event and store it
   return reader.read_event(event);
 }
 
-bool ActsExamples::HepMC3AsciiReader::status(HepMC3::ReaderAscii& reader) {
+bool HepMC3AsciiReader::status(HepMC3::ReaderAscii& reader) {
   return !reader.failed();
 }
 
-ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader(
-    const ActsExamples::HepMC3AsciiReader::Config& cfg,
-    Acts::Logging::Level lvl)
+HepMC3AsciiReader::HepMC3AsciiReader(const HepMC3AsciiReader::Config& cfg,
+                                     Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_eventsRange(
           determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".hepmc3")),
@@ -40,17 +41,15 @@ ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader(
   m_outputEvents.initialize(m_cfg.outputEvents);
 }
 
-std::string ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader::name() const {
+std::string HepMC3AsciiReader::HepMC3AsciiReader::name() const {
   return "HepMC3AsciiReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::HepMC3AsciiReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t> HepMC3AsciiReader::availableEvents() const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
-    const ActsExamples::AlgorithmContext& ctx) {
+ProcessCode HepMC3AsciiReader::read(const AlgorithmContext& ctx) {
   std::vector<HepMC3::GenEvent> events;
   HepMC3::GenEvent event(HepMC3::Units::GEV, HepMC3::Units::MM);
 
@@ -68,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
   }
 
   if (events.empty()) {
-    return ActsExamples::ProcessCode::ABORT;
+    return ProcessCode::ABORT;
   }
 
   ACTS_VERBOSE(events.size()
@@ -76,5 +75,7 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
   m_outputEvents(ctx, std::move(events));
 
   reader.close();
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

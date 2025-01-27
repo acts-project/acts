@@ -24,8 +24,7 @@ template <>
 struct is_error_code_enum<HoughError> : std::true_type {};
 }  // namespace std
 
-namespace ActsExamples {
-namespace DefaultHoughFunctions {
+namespace ActsExamples::DefaultHoughFunctions {
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
@@ -124,5 +123,4 @@ ResultBool inSliceDefault(double z, unsigned layer, int slice) {
     }
   }
 }
-}  // namespace DefaultHoughFunctions
-}  // namespace ActsExamples
+}  // namespace ActsExamples::DefaultHoughFunctions

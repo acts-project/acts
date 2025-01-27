@@ -13,6 +13,8 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -26,11 +28,9 @@ namespace Acts {
 /// The Surface axis is fixed to be the z-axis of the Tracking frame.
 /// It inherits from StraingLineSurface.
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class PerigeeSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from GlobalPosition
@@ -90,7 +90,9 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+                                      std::size_t lseg) const final;
 };
+
+ACTS_STATIC_CHECK_CONCEPT(SurfaceConcept, PerigeeSurface);
 
 }  // namespace Acts

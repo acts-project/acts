@@ -35,8 +35,7 @@ namespace dd4hep {
 class Detector;
 }  // namespace dd4hep
 
-namespace ActsExamples {
-namespace DD4hep {
+namespace ActsExamples::DD4hep {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 
@@ -130,5 +129,4 @@ class DD4hepGeometryService {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace DD4hep
-}  // namespace ActsExamples
+}  // namespace ActsExamples::DD4hep

@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> moduleThickness = {0.15, 0.15, 0.15, 0.15};
 
   std::vector<const Surface*> cylinderSurfaces;
-  for (size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
         dStore, moduleHalfX[ilp], moduleHalfY[ilp], moduleThickness[ilp],
         moduleTiltPhi[ilp], layerRadii[ilp], 2., 5., layerBinning[ilp]);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   auto radialLayers = plHelper.protoLayers(
       tgContext, cylinderSurfaces, ProtoLayerHelper::SortingConfig(binR, 5.));
 
-  BOOST_CHECK(radialLayers.size() == 4);
+  BOOST_CHECK_EQUAL(radialLayers.size(), 4);
 
   std::vector<ColorRGB> sortedColors = {{102, 204, 255},
                                         {102, 255, 153},
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
                                         {204, 102, 0},
                                         {278, 123, 55}};
 
-  size_t il = 0;
+  std::size_t il = 0;
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig sorted(sortedColors[il]);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
   std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
-  for (size_t ilp = 0; ilp < discZ.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp], dModuleHalfY[ilp],
         dModuleThickness[ilp], dModuleTilt[ilp], discRadii[ilp], discZ[ilp], 2.,
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   // Sort into ProtoLayers
   auto discLayersZ = plHelper.protoLayers(tgContext, discSurfaces, {binZ, 5.});
 
-  BOOST_CHECK(discLayersZ.size() == 4);
+  BOOST_CHECK_EQUAL(discLayersZ.size(), 4);
 
   il = 0;
   for (auto& layer : discLayersZ) {
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> rModuleTilt(11, 0.075);
   std::vector<double> rModuleThickness(11, 0.15);
 
-  for (size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
+  for (std::size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
         dStore, rModuleHalfXMinY[ilp], rModuleHalfXMaxY[ilp], rModuleHalfY[ilp],
         rModuleThickness[ilp], rModuleTilt[ilp], ringRadii[ilp], ringZ[ilp], 2.,
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   // First: Sort into ProtoLayers radially
   auto rSorted = plHelper.protoLayers(
       tgContext, ringSurfaces, ProtoLayerHelper::SortingConfig(binR, 1.));
-  BOOST_CHECK(rSorted.size() == 3);
+  BOOST_CHECK_EQUAL(rSorted.size(), 3);
 
   ColorRGB dColor = {0, 0, 0};
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   auto rzSorted =
       plHelper.protoLayers(tgContext, ringSurfaces, {{binR, 1.}, {binZ, 5}});
 
-  size_t irz = 0;
+  std::size_t irz = 0;
   for (auto& layer : rzSorted) {
     for (auto& sf : layer.surfaces()) {
       GeometryView3D::drawSurface(objVis, *sf, tgContext);

@@ -21,32 +21,43 @@ namespace Acts {
 /// The position of the highest track density (of either a single
 /// bin or the sum of a certain region) can be determined.
 /// Single tracks can be cached and removed from the overall density.
-///
-/// @tparam mainGridSize The size of the z-axis 1-dim main density grid
-/// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int mainGridSize = 2000, int trkGridSize = 15>
 class GaussianGridTrackDensity {
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
-  // Assert bigger main grid than track grid
-  static_assert(mainGridSize > trkGridSize);
-
  public:
-  using MainGridVector = Eigen::Matrix<float, mainGridSize, 1>;
-  using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
+  using MainGridVector = Eigen::Matrix<float, Eigen::Dynamic, 1>;
+  using TrackGridVector = Eigen::Matrix<float, Eigen::Dynamic, 1>;
 
   /// The configuration struct
   struct Config {
     /// @param zMinMax_ The minimum and maximum z-values (in mm) that
     ///                 should be covered by the main 1-dim density grid along
     ///                 the z-axis
-    /// @note The value of @p zMinMax_ together with @p mainGridSize determines the
+    /// @param mainGridSize_ The size of the z-axis 1-dim main density grid
+    /// @param trkGridSize_ The 2(!)-dim grid size of a single track, i.e.
+    /// a single track is modelled as a (trkGridSize x trkGridSize) grid
+    /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
+    /// @note The value of @p zMinMax_ together with @p mainGridSize_ determines the
     /// overall bin size to be used as seen below
-    Config(float zMinMax_ = 100) : zMinMax(zMinMax_) {
+    Config(float zMinMax_ = 100, int mainGridSize_ = 2000,
+           int trkGridSize_ = 15)
+        : mainGridSize(mainGridSize_),
+          trkGridSize(trkGridSize_),
+          zMinMax(zMinMax_) {
       binSize = 2. * zMinMax / mainGridSize;
+
+      if (trkGridSize % 2 == 0) {
+        throw std::runtime_error(
+            "GaussianGridTrackDensity: trkGridSize has to be an odd value!");
+      }
+      if (mainGridSize < trkGridSize) {
+        throw std::runtime_error(
+            "GaussianGridTrackDensity: mainGridSize has to be bigger than "
+            "trkGridSize!");
+      }
     }
+
+    int mainGridSize;
+    int trkGridSize;
+
     // Min and max z value of big grid
     float zMinMax;  // mm
 
@@ -104,6 +115,8 @@ class GaussianGridTrackDensity {
   /// @param mainGrid The main 1-dim density grid along the z-axis
   void removeTrackGridFromMainGrid(int zBin, const TrackGridVector& trkGrid,
                                    MainGridVector& mainGrid) const;
+
+  const Config& config() const { return m_cfg; }
 
  private:
   /// @brief Helper function that actually adds the track to the
@@ -176,5 +189,3 @@ class GaussianGridTrackDensity {
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/GaussianGridTrackDensity.ipp"

@@ -8,8 +8,8 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-template <typename value_t, size_t DIM, size_t SIDES>
-template <size_t D, std::enable_if_t<D == 2, int>>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
+template <std::size_t D, std::enable_if_t<D == 2, int>>
 Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
                                             const VertexType& dir,
                                             value_type opening_angle)
@@ -30,8 +30,8 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   m_normals = {rot * VertexType::UnitX(), rot * normal1, rot * normal2};
 }
 
-template <typename value_t, size_t DIM, size_t SIDES>
-template <size_t D, std::enable_if_t<D == 3, int>>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
+template <std::size_t D, std::enable_if_t<D == 3, int>>
 Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
                                             const VertexType& dir,
                                             value_type opening_angle)
@@ -63,7 +63,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   VertexType current_outward = lup;
   m_normals[1] = calculate_normal(current_outward);
 
-  for (size_t i = 1; i < sides; i++) {
+  for (std::size_t i = 1; i < sides; i++) {
     current_outward = rot * current_outward;
     m_normals[i + 1] = calculate_normal(current_outward);
   }
@@ -73,8 +73,8 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
   }
 }
 
-template <typename value_t, size_t DIM, size_t SIDES>
-template <size_t D, std::enable_if_t<D == 3, int>>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
+template <std::size_t D, std::enable_if_t<D == 3, int>>
 void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
                                               value_type far_distance) const {
   static_assert(DIM == 3, "Drawing is only supported in 3D");
@@ -101,7 +101,7 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
   };
 
   // skip i=0 <=> pseudo-near
-  for (size_t i = 1; i < n_normals; i++) {
+  for (std::size_t i = 1; i < n_normals; i++) {
     const auto ixLine =
         ixPlanePlane(far_normal, far_center, m_normals[i], VertexType::Zero());
     planeFarIXs.at(i - 1) = ixLine;
@@ -109,8 +109,8 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
 
   std::array<VertexType, SIDES> points;
 
-  for (size_t i = 0; i < std::size(planeFarIXs); i++) {
-    size_t j = (i + 1) % std::size(planeFarIXs);
+  for (std::size_t i = 0; i < std::size(planeFarIXs); i++) {
+    std::size_t j = (i + 1) % std::size(planeFarIXs);
     const auto& l1 = planeFarIXs.at(i);
     const auto& l2 = planeFarIXs.at(j);
     const VertexType ix =
@@ -118,15 +118,15 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
     points.at(i) = ix;
   }
 
-  for (size_t i = 0; i < std::size(points); i++) {
-    size_t j = (i + 1) % std::size(points);
+  for (std::size_t i = 0; i < std::size(points); i++) {
+    std::size_t j = (i + 1) % std::size(points);
     helper.face(
         std::vector<VertexType>({m_origin, points.at(i), points.at(j)}));
   }
 }
 
-template <typename value_t, size_t DIM, size_t SIDES>
-template <size_t D, std::enable_if_t<D == 2, int>>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
+template <std::size_t D, std::enable_if_t<D == 2, int>>
 std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
                                                       value_type w,
                                                       value_type h,
@@ -146,7 +146,7 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   std::array<std::string, 3> colors({"orange", "blue", "red"});
 
   auto draw_line = [&](const VertexType& left_, const VertexType& right_,
-                       const std::string& color, size_t width) {
+                       const std::string& color, std::size_t width) {
     VertexType left = trf * left_;
     VertexType right = trf * right_;
     os << "<line ";
@@ -160,7 +160,7 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   };
 
   auto draw_point = [&](const VertexType& p_, const std::string& color,
-                        size_t r) {
+                        std::size_t r) {
     VertexType p = trf * p_;
     os << "<circle ";
     os << "cx=\"" << p.x() << "\" cy=\"" << p.y() << "\" r=\"" << r << "\"";
@@ -196,7 +196,7 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
 
   std::array<VertexType, 2> points;
 
-  for (size_t i = 1; i < n_normals; i++) {
+  for (std::size_t i = 1; i < n_normals; i++) {
     VertexType plane_dir(m_normals[i].y(), -m_normals[i].x());
 
     const VertexType ix = ixLineLine(far_point, far_dir, {0, 0}, plane_dir);
@@ -215,14 +215,14 @@ std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
   return os;
 }
 
-template <typename value_t, size_t DIM, size_t SIDES>
+template <typename value_t, std::size_t DIM, std::size_t SIDES>
 Acts::Frustum<value_t, DIM, SIDES>
 Acts::Frustum<value_t, DIM, SIDES>::transformed(
     const transform_type& trf) const {
   const auto& rot = trf.rotation();
 
   std::array<VertexType, n_normals> new_normals;
-  for (size_t i = 0; i < n_normals; i++) {
+  for (std::size_t i = 0; i < n_normals; i++) {
     new_normals[i] = rot * m_normals[i];
   }
 

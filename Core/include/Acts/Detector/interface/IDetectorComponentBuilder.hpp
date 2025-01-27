@@ -11,8 +11,7 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief  This is the interface for detector component builders;
 /// such a builder could be a simple detector volume builder, with
@@ -31,5 +30,4 @@ class IDetectorComponentBuilder {
   virtual DetectorComponent construct(const GeometryContext& gctx) const = 0;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

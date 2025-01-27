@@ -35,14 +35,14 @@ void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
 
 void Acts::from_json(const nlohmann::json& j, Acts::Transform3& t) {
   t = Acts::Transform3::Identity();
-  if (j.find("rotation") != j.end() and not j["rotation"].empty()) {
+  if (j.find("rotation") != j.end() && !j["rotation"].empty()) {
     std::array<Acts::ActsScalar, 9> rdata = j["rotation"];
     Acts::RotationMatrix3 rot;
     rot << rdata[0], rdata[1], rdata[2], rdata[3], rdata[4], rdata[5], rdata[6],
         rdata[7], rdata[8];
     t.prerotate(rot);
   }
-  if (j.find("translation") != j.end() and not j["translation"].empty()) {
+  if (j.find("translation") != j.end() && !j["translation"].empty()) {
     std::array<Acts::ActsScalar, 3> tdata = j["translation"];
     t.pretranslate(Acts::Vector3(tdata[0], tdata[1], tdata[2]));
   }
@@ -53,7 +53,7 @@ nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t,
   nlohmann::json jTransform;
   // Write out the translation
   auto translation = t.translation();
-  if (translation != Acts::Vector3(0., 0., 0) or options.writeIdentity) {
+  if (translation != Acts::Vector3(0., 0., 0) || options.writeIdentity) {
     std::array<Acts::ActsScalar, 3> tdata = {translation.x(), translation.y(),
                                              translation.z()};
     jTransform["translation"] = tdata;
@@ -62,7 +62,7 @@ nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t,
   }
   // Write out the rotation, could be transposed
   auto rotation = options.transpose ? t.rotation().transpose() : t.rotation();
-  if (rotation != Acts::RotationMatrix3::Identity() or options.writeIdentity) {
+  if (rotation != Acts::RotationMatrix3::Identity() || options.writeIdentity) {
     std::array<Acts::ActsScalar, 9> rdata = {
         rotation(0, 0), rotation(0, 1), rotation(0, 2),
         rotation(1, 0), rotation(1, 1), rotation(1, 2),

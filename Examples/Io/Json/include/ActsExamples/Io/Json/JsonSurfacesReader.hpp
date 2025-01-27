@@ -18,9 +18,7 @@ namespace Acts {
 class Surface;
 }
 
-namespace ActsExamples {
-
-namespace JsonSurfacesReader {
+namespace ActsExamples::JsonSurfacesReader {
 
 /// @brief Options specification for surface reading
 struct Options {
@@ -38,6 +36,4 @@ struct Options {
 Acts::GeometryHierarchyMap<std::shared_ptr<Acts::Surface>> read(
     const Options& options);
 
-}  // namespace JsonSurfacesReader
-
-}  // namespace ActsExamples
+}  // namespace ActsExamples::JsonSurfacesReader

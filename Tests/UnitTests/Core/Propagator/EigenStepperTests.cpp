@@ -17,7 +17,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -49,6 +49,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -71,12 +72,10 @@ class ISurfaceMaterial;
 class Logger;
 }  // namespace Acts
 
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
@@ -98,7 +97,7 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double tolerance = 1e-4;
+    double stepTolerance = 1e-4;
     double stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
     Direction direction = Direction::Forward;
@@ -135,7 +134,7 @@ struct EndOfWorld {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
-    const double tolerance = state.options.targetTolerance;
+    const double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
         std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
@@ -266,11 +265,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, -1337.);
+  es.updateStepSize(esState, -1337., ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
-  es.releaseStepSize(esState);
+  es.releaseStepSize(esState, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
@@ -342,7 +341,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
   double stepSize2 = -2. * stepSize;
@@ -362,9 +361,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            state.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        state.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = state.geoContext;
     copy.extension = state.extension;
@@ -458,25 +457,28 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  es.updateSurfaceStatus(esState, *targetSurface, navDir, BoundaryCheck(false));
+  es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
+                         BoundaryCheck(false));
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
   // Test the step size modification in the context of a surface
-  es.updateStepSize(esState,
-                    targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
-                        .closest(),
-                    navDir, false);
+  es.updateStepSize(
+      esState,
+      targetSurface
+          ->intersect(esState.geoContext, es.position(esState),
+                      navDir * es.direction(esState), BoundaryCheck(false))
+          .closest(),
+      navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setUser(navDir * stepSize);
-  es.updateStepSize(esState,
-                    targetSurface
-                        ->intersect(esState.geoContext, es.position(esState),
-                                    navDir * es.direction(esState), false)
-                        .closest(),
-                    navDir, true);
+  es.updateStepSize(
+      esState,
+      targetSurface
+          ->intersect(esState.geoContext, es.position(esState),
+                      navDir * es.direction(esState), BoundaryCheck(false))
+          .closest(),
+      navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
@@ -500,23 +502,20 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
-      bp.referenceSurface(), tgContext, bp.parameters());
-  freeParams.segment<3>(eFreePos0) *= 2;
-  freeParams[eFreeTime] *= 2;
-  freeParams[eFreeQOverP] *= -0.5;
+  freeParams = transformBoundToFreeParameters(bp.referenceSurface(), tgContext,
+                                              bp.parameters());
 
   es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
             *plane);
-  CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(es.position(esState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
-  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
-  CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), absMom, eps);
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  CHECK_CLOSE_OR_SMALL(es.time(esState), time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
-  ps.options.tolerance = 2. * 4.4258e+09;
+  ps.options.stepTolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
   es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
@@ -528,7 +527,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                  stepSize);
   PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
-  nps.options.tolerance = 1e-21;
+  nps.options.stepTolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
   auto res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
@@ -682,7 +681,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       tgb.trackingGeometry(tgContext);
 
   // Build navigator
-  Navigator naviMat({material, true, true, true});
+  Navigator naviMat(
+      {material, true, true, true},
+      Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
@@ -714,7 +715,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
                                                DenseEnvironmentExtension>,
                           detail::HighestValidAuctioneer>,
              Navigator>
-      prop(es, naviMat);
+      prop(es, naviMat,
+           Acts::getDefaultLogger("Propagator", Acts::Logging::VERBOSE));
 
   // Launch and collect results
   const auto& result = prop.propagate(sbtp, propOpts).value();
@@ -1152,5 +1154,4 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
     }
   }
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

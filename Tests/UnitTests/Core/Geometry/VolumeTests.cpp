@@ -21,11 +21,7 @@
 #include <memory>
 #include <utility>
 
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(VolumeTest) {
   using namespace Acts::UnitLiterals;
@@ -51,7 +47,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   CuboidVolumeBounds bounds(4_mm, 5_mm, 6_mm);
 
   // Build and test the volume
-  Volume volume(transform, std::make_shared<const CuboidVolumeBounds>(bounds));
+  Volume volume(transform, std::make_shared<CuboidVolumeBounds>(bounds));
   BOOST_CHECK_EQUAL(volume.transform().matrix(), transform.matrix());
   CHECK_CLOSE_ABS(volume.itransform().matrix(), transform.inverse().matrix(),
                   eps);
@@ -78,5 +74,5 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   GeometryContext gctx;
   BOOST_CHECK_EQUAL(volume.binningPosition(gctx, binX), volume.center());
 }
-}  // namespace Test
-}  // namespace Acts
+
+}  // namespace Acts::Test

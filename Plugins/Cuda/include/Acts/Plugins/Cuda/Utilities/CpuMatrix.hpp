@@ -21,7 +21,7 @@ template <typename var_t>
 class CpuMatrix {
  public:
   CpuMatrix() = delete;
-  CpuMatrix(size_t nRows, size_t nCols, bool pinned = false) {
+  CpuMatrix(std::size_t nRows, std::size_t nCols, bool pinned = false) {
     m_setSize(nRows, nCols);
     m_pinned = pinned;
     if (!pinned) {
@@ -31,7 +31,7 @@ class CpuMatrix {
     }
   }
 
-  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<var_t>* cuMat,
+  CpuMatrix(std::size_t nRows, std::size_t nCols, CudaMatrix<var_t>* cuMat,
             bool pinned = false) {
     m_setSize(nRows, nCols);
     m_pinned = pinned;
@@ -52,22 +52,23 @@ class CpuMatrix {
     }
   }
 
-  var_t* get(size_t row = 0, size_t col = 0) {
-    size_t offset = row + col * m_nRows;
+  var_t* get(std::size_t row = 0, std::size_t col = 0) {
+    std::size_t offset = row + col * m_nRows;
     return m_hostPtr + offset;
   }
 
-  void set(size_t row, size_t col, var_t val) {
-    size_t offset = row + col * m_nRows;
+  void set(std::size_t row, std::size_t col, var_t val) {
+    std::size_t offset = row + col * m_nRows;
     m_hostPtr[offset] = val;
   }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset) {
+  void copyD2H(var_t* devPtr, std::size_t len, std::size_t offset) {
     cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
+  void copyD2H(var_t* devPtr, std::size_t len, std::size_t offset,
+               cudaStream_t* stream) {
     cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                     cudaMemcpyDeviceToHost, *stream);
   }
@@ -76,12 +77,12 @@ class CpuMatrix {
 
  private:
   var_t* m_hostPtr = nullptr;
-  size_t m_nCols;
-  size_t m_nRows;
-  size_t m_size;
+  std::size_t m_nCols;
+  std::size_t m_nRows;
+  std::size_t m_size;
   bool m_pinned;
 
-  void m_setSize(size_t row, size_t col) {
+  void m_setSize(std::size_t row, std::size_t col) {
     m_nRows = row;
     m_nCols = col;
     m_size = m_nRows * m_nCols;

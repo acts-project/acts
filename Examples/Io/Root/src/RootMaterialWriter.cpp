@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -24,6 +25,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
@@ -55,7 +57,7 @@ ActsExamples::RootMaterialWriter::RootMaterialWriter(
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath + "'");
   }
 }
 
@@ -90,7 +92,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 
     ACTS_VERBOSE("Writing out map at " << tdName);
 
-    size_t bins0 = 1, bins1 = 1;
+    std::size_t bins0 = 1, bins1 = 1;
     // understand what sort of material you have in mind
     const Acts::BinnedSurfaceMaterial* bsm =
         dynamic_cast<const Acts::BinnedSurfaceMaterial*>(sMaterial);
@@ -102,7 +104,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       // Get the binning data
       auto& binningData = bsm->binUtility().binningData();
       // 1-D or 2-D maps
-      size_t binningBins = binningData.size();
+      std::size_t binningBins = binningData.size();
 
       // The bin number information
       TH1F* n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
@@ -125,7 +127,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
                            binningBins - 0.5);
 
       // Now fill the histogram content
-      size_t b = 1;
+      std::size_t b = 1;
       for (auto bData : binningData) {
         // Fill: nbins, value, option, min, max
         n->SetBinContent(b, int(binningData[b - 1].bins()));
@@ -156,11 +158,10 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
                          -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
 
     // loop over the material and fill
-    for (size_t b0 = 0; b0 < bins0; ++b0) {
-      for (size_t b1 = 0; b1 < bins1; ++b1) {
-        // get the material for the bin
-        auto& mat = sMaterial->materialSlab(b0, b1);
-        if (mat) {
+    if (bsm != nullptr) {
+      const auto& materialMatrix = bsm->fullMaterial();
+      for (auto [b1, materialVector] : Acts::enumerate(materialMatrix)) {
+        for (auto [b0, mat] : Acts::enumerate(materialVector)) {
           t->SetBinContent(b0 + 1, b1 + 1, mat.thickness());
           x0->SetBinContent(b0 + 1, b1 + 1, mat.material().X0());
           l0->SetBinContent(b0 + 1, b1 + 1, mat.material().L0());
@@ -169,6 +170,15 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
           rho->SetBinContent(b0 + 1, b1 + 1, mat.material().massDensity());
         }
       }
+    } else if (bins1 == 1 && bins0 == 1) {
+      // homogeneous surface
+      auto mat = sMaterial->materialSlab(Acts::Vector3{0, 0, 0});
+      t->SetBinContent(1, 1, mat.thickness());
+      x0->SetBinContent(1, 1, mat.material().X0());
+      l0->SetBinContent(1, 1, mat.material().L0());
+      A->SetBinContent(1, 1, mat.material().Ar());
+      Z->SetBinContent(1, 1, mat.material().Z());
+      rho->SetBinContent(1, 1, mat.material().massDensity());
     }
     t->Write();
     x0->Write();
@@ -204,7 +214,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
     auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
         Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
 
-    size_t points = 1;
+    std::size_t points = 1;
     if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {
       // Get the binning data
       std::vector<Acts::BinningData> binningData;
@@ -219,7 +229,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       }
 
       // 2-D or 3-D maps
-      size_t binningBins = binningData.size();
+      std::size_t binningBins = binningData.size();
 
       // The bin number information
       TH1F* n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
@@ -242,7 +252,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
                            binningBins - 0.5);
 
       // Now fill the histogram content
-      size_t b = 1;
+      std::size_t b = 1;
       for (auto bData : binningData) {
         // Fill: nbins, value, option, min, max
         n->SetBinContent(b, int(binningData[b - 1].bins()));
@@ -281,7 +291,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       // 3d grid volume
       if (bvMaterial3D != nullptr) {
         Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
-        for (size_t point = 0; point < points; point++) {
+        for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
           if (mat) {
             x0->SetBinContent(point + 1, mat.X0());
@@ -295,7 +305,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       // 2d grid volume
       else if (bvMaterial2D != nullptr) {
         Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
-        for (size_t point = 0; point < points; point++) {
+        for (std::size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
           if (mat) {
             x0->SetBinContent(point + 1, mat.X0());
@@ -337,12 +347,14 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
     Acts::DetectorMaterialMaps& detMatMap) {
   // If the volume has volume material, write that
-  if (tVolume.volumeMaterialSharedPtr() != nullptr and m_cfg.processVolumes) {
+  if (tVolume.volumeMaterialSharedPtr() != nullptr && m_cfg.processVolumes) {
     detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialSharedPtr();
   }
 
   // If confined layers exist, loop over them and collect the layer material
   if (tVolume.confinedLayers() != nullptr) {
+    ACTS_VERBOSE("Collecting material for " << tVolume.volumeName()
+                                            << " layers");
     for (auto& lay : tVolume.confinedLayers()->arrayObjects()) {
       collectMaterial(*lay, detMatMap);
     }
@@ -371,14 +383,14 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::Layer& tLayer, Acts::DetectorMaterialMaps& detMatMap) {
   // If the representing surface has material, collect it
   const auto& rSurface = tLayer.surfaceRepresentation();
-  if (rSurface.surfaceMaterialSharedPtr() != nullptr and
+  if (rSurface.surfaceMaterialSharedPtr() != nullptr &&
       m_cfg.processRepresenting) {
     detMatMap.first[rSurface.geometryId()] =
         rSurface.surfaceMaterialSharedPtr();
   }
 
   // Check the approach surfaces
-  if (tLayer.approachDescriptor() != nullptr and m_cfg.processApproaches) {
+  if (tLayer.approachDescriptor() != nullptr && m_cfg.processApproaches) {
     for (auto& aSurface : tLayer.approachDescriptor()->containedSurfaces()) {
       if (aSurface->surfaceMaterialSharedPtr() != nullptr) {
         detMatMap.first[aSurface->geometryId()] =
@@ -388,7 +400,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   }
 
   // Check the sensitive surfaces
-  if (tLayer.surfaceArray() != nullptr and m_cfg.processSensitives) {
+  if (tLayer.surfaceArray() != nullptr && m_cfg.processSensitives) {
     // sensitive surface loop
     for (auto& sSurface : tLayer.surfaceArray()->surfaces()) {
       if (sSurface->surfaceMaterialSharedPtr() != nullptr) {

@@ -28,8 +28,8 @@ class IGeometryIdGenerator {
 
   virtual ~IGeometryIdGenerator() = default;
 
-  /// @brief  Virtual interface method to generata a geometry id cache
-  /// @return a geometry id cache decorated in a std::any object
+  /// @brief  Virtual interface method to generate a geometry id cache
+  /// @return a geometry id cache wrapped in a std::any object
   virtual GeoIdCache generateCache() const = 0;
 
   /// The virtual interface definition for assigning a geometry id to

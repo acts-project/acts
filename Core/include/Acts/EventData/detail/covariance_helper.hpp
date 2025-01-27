@@ -12,8 +12,7 @@
 
 #include <type_traits>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 /// @brief check and correct covariance matrix
 ///
 /// @tparam CovMatrix_t The type of covariance matrix
@@ -33,7 +32,7 @@ struct covariance_helper {
     if (covariance.hasNaN()) {
       return false;
     }
-    size_t nIteration = 0;
+    std::size_t nIteration = 0;
     while (nIteration < NumIter) {
       if (isSemiPositive(covariance)) {
         return true;
@@ -70,5 +69,4 @@ struct covariance_helper {
   }
 };
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

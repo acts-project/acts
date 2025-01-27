@@ -14,14 +14,13 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <stdexcept>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 struct NoopFinder : public INavigationDelegate {
   inline void update(const GeometryContext& /*gctx*/,
@@ -40,7 +39,7 @@ struct RootVolumeFinder : public INavigationDelegate {
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
-        v->detectorVolumeUpdator()(gctx, nState);
+        v->detectorVolumeUpdater()(gctx, nState);
         return;
       }
     }
@@ -60,7 +59,7 @@ struct TrialAndErrorVolumeFinder : public INavigationDelegate {
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
-        v->detectorVolumeUpdator()(gctx, nState);
+        v->detectorVolumeUpdater()(gctx, nState);
         return;
       }
     }
@@ -68,24 +67,24 @@ struct TrialAndErrorVolumeFinder : public INavigationDelegate {
 };
 
 /// Generate a delegate to try the root volumes
-inline static DetectorVolumeUpdator tryRootVolumes() {
-  DetectorVolumeUpdator vFinder;
+inline static DetectorVolumeUpdater tryRootVolumes() {
+  DetectorVolumeUpdater vFinder;
   vFinder.connect<&RootVolumeFinder::update>(
       std::make_unique<const RootVolumeFinder>());
   return vFinder;
 }
 
 /// Generate a delegate to try all sub volumes
-inline static DetectorVolumeUpdator tryAllSubVolumes() {
-  DetectorVolumeUpdator vFinder;
+inline static DetectorVolumeUpdater tryAllSubVolumes() {
+  DetectorVolumeUpdater vFinder;
   vFinder.connect<&TrialAndErrorVolumeFinder::update>(
       std::make_unique<const TrialAndErrorVolumeFinder>());
   return vFinder;
 }
 
 /// Generate a delegate to try no volume
-inline static DetectorVolumeUpdator tryNoVolumes() {
-  DetectorVolumeUpdator vFinder;
+inline static DetectorVolumeUpdater tryNoVolumes() {
+  DetectorVolumeUpdater vFinder;
   vFinder.connect<&NoopFinder::update>(std::make_unique<const NoopFinder>());
   return vFinder;
 }
@@ -102,7 +101,7 @@ struct IndexedDetectorVolumeExtractor {
   /// @return a raw DetectorVolume pointer
   inline static const DetectorVolume* extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, size_t index) noexcept(false) {
+      const NavigationState& nState, std::size_t index) noexcept(false) {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error("IndexedVolumeExtractor: no detector given.");
     }
@@ -116,9 +115,8 @@ struct IndexedDetectorVolumeExtractor {
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
-using IndexedDetectorVolumeImpl =
-    IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
+using IndexedDetectorVolumesImpl =
+    IndexedUpdaterImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

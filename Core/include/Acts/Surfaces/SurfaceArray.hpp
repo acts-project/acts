@@ -11,9 +11,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -47,8 +47,8 @@ class SurfaceArray {
 
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
-    virtual size_t completeBinning(const GeometryContext& gctx,
-                                   const SurfaceVector& surfaces) = 0;
+    virtual std::size_t completeBinning(const GeometryContext& gctx,
+                                        const SurfaceVector& surfaces) = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
     /// @param position Lookup position
@@ -65,13 +65,13 @@ class SurfaceArray {
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    virtual SurfaceVector& lookup(size_t bin) = 0;
+    virtual SurfaceVector& lookup(std::size_t bin) = 0;
 
     /// @brief Performs lookup at global bin and returns bin content as const
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    virtual const SurfaceVector& lookup(size_t bin) const = 0;
+    virtual const SurfaceVector& lookup(std::size_t bin) const = 0;
 
     /// @brief Performs a lookup at @c pos, but returns neighbors as well
     ///
@@ -82,12 +82,12 @@ class SurfaceArray {
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
     /// @return Size of the grid data structure
-    virtual size_t size() const = 0;
+    virtual std::size_t size() const = 0;
 
     /// @brief Gets the center position of bin @c bin in global coordinates
     /// @param bin the global bin index
     /// @return The bin center
-    virtual Vector3 getBinCenter(size_t bin) const = 0;
+    virtual Vector3 getBinCenter(std::size_t bin) const = 0;
 
     /// @brief Returns copies of the axes used in the grid as @c AnyAxis
     /// @return The axes
@@ -96,14 +96,14 @@ class SurfaceArray {
 
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
-    virtual size_t dimensions() const = 0;
+    virtual std::size_t dimensions() const = 0;
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
     /// @return bool if the bin is valid
     /// @note Valid means that the index points to a bin which is not a under
     ///       or overflow bin or out of range in any axis.
-    virtual bool isValidBin(size_t bin) const = 0;
+    virtual bool isValidBin(std::size_t bin) const = 0;
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes (optional) and empty for eingle lookups
@@ -117,7 +117,7 @@ class SurfaceArray {
   /// @tparam Axes The axes used for the grid
   template <class... Axes>
   struct SurfaceGridLookup : ISurfaceGridLookup {
-    static constexpr size_t DIM = sizeof...(Axes);
+    static constexpr std::size_t DIM = sizeof...(Axes);
 
    public:
     /// @brief Specifies the local coordinate type.
@@ -125,7 +125,7 @@ class SurfaceArray {
     /// std::array<double, 1>
     using point_t =
         std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
-    using Grid_t = detail::Grid<SurfaceVector, Axes...>;
+    using Grid_t = Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
     ///
@@ -173,15 +173,15 @@ class SurfaceArray {
     /// @param gctx The current geometry context object, e.g. alignment
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
-    size_t completeBinning(const GeometryContext& gctx,
-                           const SurfaceVector& surfaces) override {
-      size_t binCompleted = 0;
-      size_t nBins = size();
+    std::size_t completeBinning(const GeometryContext& gctx,
+                                const SurfaceVector& surfaces) override {
+      std::size_t binCompleted = 0;
+      std::size_t nBins = size();
       double minPath = 0;
       double curPath = 0;
       const Surface* minSrf = nullptr;
 
-      for (size_t b = 0; b < nBins; ++b) {
+      for (std::size_t b = 0; b < nBins; ++b) {
         if (!isValidBin(b)) {
           continue;
         }
@@ -230,13 +230,13 @@ class SurfaceArray {
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    SurfaceVector& lookup(size_t bin) override { return m_grid.at(bin); }
+    SurfaceVector& lookup(std::size_t bin) override { return m_grid.at(bin); }
 
     /// @brief Performs lookup at global bin and returns bin content as const
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    const SurfaceVector& lookup(size_t bin) const override {
+    const SurfaceVector& lookup(std::size_t bin) const override {
       return m_grid.at(bin);
     }
 
@@ -252,7 +252,7 @@ class SurfaceArray {
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
     /// @return Size of the grid data structure
-    size_t size() const override { return m_grid.size(); }
+    std::size_t size() const override { return m_grid.size(); }
 
     /// @brief The binning values described by this surface grid lookup
     /// They are in order of the axes
@@ -263,7 +263,7 @@ class SurfaceArray {
     /// @brief Gets the center position of bin @c bin in global coordinates
     /// @param bin the global bin index
     /// @return The bin center
-    Vector3 getBinCenter(size_t bin) const override {
+    Vector3 getBinCenter(std::size_t bin) const override {
       return getBinCenterImpl(bin);
     }
 
@@ -277,18 +277,18 @@ class SurfaceArray {
 
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
-    size_t dimensions() const override { return DIM; }
+    std::size_t dimensions() const override { return DIM; }
 
     /// @brief Checks if global bin is valid
     /// @param bin the global bin index
     /// @return bool if the bin is valid
     /// @note Valid means that the index points to a bin which is not a under
     ///       or overflow bin or out of range in any axis.
-    bool isValidBin(size_t bin) const override {
-      std::array<size_t, DIM> indices = m_grid.localBinsFromGlobalBin(bin);
-      std::array<size_t, DIM> nBins = m_grid.numLocalBins();
-      for (size_t i = 0; i < indices.size(); ++i) {
-        size_t idx = indices.at(i);
+    bool isValidBin(std::size_t bin) const override {
+      std::array<std::size_t, DIM> indices = m_grid.localBinsFromGlobalBin(bin);
+      std::array<std::size_t, DIM> nBins = m_grid.numLocalBins();
+      for (std::size_t i = 0; i < indices.size(); ++i) {
+        std::size_t idx = indices.at(i);
         if (idx <= 0 || idx >= nBins.at(i) + 1) {
           return false;
         }
@@ -300,7 +300,7 @@ class SurfaceArray {
    private:
     void populateNeighborCache() {
       // calculate neighbors for every bin and store in map
-      for (size_t i = 0; i < m_grid.size(); i++) {
+      for (std::size_t i = 0; i < m_grid.size(); i++) {
         if (!isValidBin(i)) {
           continue;
         }
@@ -327,16 +327,16 @@ class SurfaceArray {
     /// interface stays the same, since we don't care what happens
     /// here on the callers end
     /// This is the version for DIM>1
-    template <size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
-    Vector3 getBinCenterImpl(size_t bin) const {
+    template <std::size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
+    Vector3 getBinCenterImpl(std::size_t bin) const {
       return m_localToGlobal(ActsVector<DIM>(
           m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
     /// Internal method, see above.
     /// This is the version for DIM==1
-    template <size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
-    Vector3 getBinCenterImpl(size_t bin) const {
+    template <std::size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
+    Vector3 getBinCenterImpl(std::size_t bin) const {
       point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
       return m_localToGlobal(pos);
     }
@@ -379,7 +379,7 @@ class SurfaceArray {
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(size_t bin) override {
+    SurfaceVector& lookup(std::size_t bin) override {
       (void)bin;
       return m_element;
     }
@@ -387,7 +387,7 @@ class SurfaceArray {
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(size_t bin) const override {
+    const SurfaceVector& lookup(std::size_t bin) const override {
       (void)bin;
       return m_element;
     }
@@ -402,12 +402,12 @@ class SurfaceArray {
 
     /// @brief returns 1
     /// @return 1
-    size_t size() const override { return 1; }
+    std::size_t size() const override { return 1; }
 
     /// @brief Gets the bin center, but always returns (0, 0, 0)
     /// @param bin is ignored
     /// @return (0, 0, 0)
-    Vector3 getBinCenter(size_t bin) const override {
+    Vector3 getBinCenter(std::size_t bin) const override {
       (void)bin;
       return Vector3(0, 0, 0);
     }
@@ -418,7 +418,7 @@ class SurfaceArray {
 
     /// @brief Get the number of dimensions
     /// @return always 0
-    size_t dimensions() const override { return 0; }
+    std::size_t dimensions() const override { return 0; }
 
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
@@ -427,15 +427,15 @@ class SurfaceArray {
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
-    size_t completeBinning(const GeometryContext& /*gctx*/,
-                           const SurfaceVector& /*surfaces*/) override {
+    std::size_t completeBinning(const GeometryContext& /*gctx*/,
+                                const SurfaceVector& /*surfaces*/) override {
       return 0;
     }
 
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    bool isValidBin(size_t bin) const override {
+    bool isValidBin(std::size_t bin) const override {
       (void)bin;
       return true;
     }
@@ -477,12 +477,12 @@ class SurfaceArray {
   /// @brief Get all surfaces in bin given by global bin index @p bin.
   /// @param bin the global bin index
   /// @return reference to @c SurfaceVector contained in bin
-  SurfaceVector& at(size_t bin) { return p_gridLookup->lookup(bin); }
+  SurfaceVector& at(std::size_t bin) { return p_gridLookup->lookup(bin); }
 
   /// @brief Get all surfaces in bin given by global bin index.
   /// @param bin the global bin index
   /// @return const reference to @c SurfaceVector contained in bin
-  const SurfaceVector& at(size_t bin) const {
+  const SurfaceVector& at(std::size_t bin) const {
     return p_gridLookup->lookup(bin);
   }
 
@@ -499,12 +499,14 @@ class SurfaceArray {
   /// @brief Get the size of the underlying grid structure including
   /// under/overflow bins
   /// @return the size
-  size_t size() const { return p_gridLookup->size(); }
+  std::size_t size() const { return p_gridLookup->size(); }
 
   /// @brief Get the center of the bin identified by global bin index @p bin
   /// @param bin the global bin index
   /// @return Center position of the bin in global coordinates
-  Vector3 getBinCenter(size_t bin) { return p_gridLookup->getBinCenter(bin); }
+  Vector3 getBinCenter(std::size_t bin) {
+    return p_gridLookup->getBinCenter(bin);
+  }
 
   /// @brief Get all surfaces attached to this @c SurfaceArray
   /// @return Reference to @c SurfaceVector containing all surfaces
@@ -524,7 +526,9 @@ class SurfaceArray {
   /// @return bool if the bin is valid
   /// @note Valid means that the index points to a bin which is not a under
   ///       or overflow bin or out of range in any axis.
-  bool isValidBin(size_t bin) const { return p_gridLookup->isValidBin(bin); }
+  bool isValidBin(std::size_t bin) const {
+    return p_gridLookup->isValidBin(bin);
+  }
 
   const Transform3& transform() const { return m_transform; }
 

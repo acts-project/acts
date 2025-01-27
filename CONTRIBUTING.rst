@@ -154,7 +154,7 @@ familiar with development process in the Acts project.
 #. **Prefer git pull --rebase!**
 
    If you work with a colleague on a new
-   development, you may want to include his latest changes. This is
+   development, you may want to include their latest changes. This is
    usually done by calling ``git pull`` which will synchronise your
    local working copy with the remote repository (which may have been
    updated by your colleague). By default, this action creates a merge

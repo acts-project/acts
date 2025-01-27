@@ -10,17 +10,18 @@
 
 #include "ActsExamples/Utilities/Paths.hpp"
 
-ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
-                                                   Acts::Logging::Level level)
+namespace ActsExamples {
+
+HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
+                                     Acts::Logging::Level level)
     : WriterT(config.inputEvents, "HepMC3EventWriter", level), m_cfg(config) {
   if (m_cfg.outputStem.empty()) {
     throw std::invalid_argument("Missing output stem file name");
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
-    const ActsExamples::AlgorithmContext& ctx,
-    const std::vector<HepMC3::GenEvent>& events) {
+ProcessCode HepMC3AsciiWriter::writeT(
+    const AlgorithmContext& ctx, const std::vector<HepMC3::GenEvent>& events) {
   auto path = perEventFilepath(m_cfg.outputDir, m_cfg.outputStem + ".hepmc3",
                                ctx.eventNumber);
 
@@ -30,10 +31,12 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
   for (const auto& event : events) {
     writer.write_event(event);
     if (writer.failed()) {
-      return ActsExamples::ProcessCode::ABORT;
+      return ProcessCode::ABORT;
     }
   }
 
   writer.close();
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

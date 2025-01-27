@@ -82,11 +82,15 @@ authors:
   family-names: Swatman
   given-names: Stephen Nicholas
   orcid: https://orcid.org/0000-0002-3747-3229
+- affiliation: CERN / TU Wien
+  family-names: Russo
+  given-names: Felix
+  orcid: https://orcid.org/0009-0005-8975-2245
 cff-version: 1.1.0
-date-released: '2023-10-25'
+date-released: '2024-04-15'
 doi: 10.5281/zenodo.5141419
 license: MPL-2.0
 message: If you use this software, please cite it using these metadata.
 repository-code: https://github.com/acts-project/acts
 title: A Common Tracking Software Project
-version: v30.3.0
+version: v34.0.0

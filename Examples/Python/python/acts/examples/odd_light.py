@@ -32,7 +32,6 @@ def necBarrelPec(
     containerIds=[],
     llevel=acts.logging.INFO,
 ):
-
     # Negative Endcap
     necEndcapExtent = Extent([[Binning.r, rRange], [Binning.z, zDivisions[0:2]]])
 
@@ -170,7 +169,6 @@ def necBarrelPec(
 
 
 def get_detector(geoContext, ssurfaces, psurfaces, llevel=acts.logging.DEBUG):
-
     # Build the geometry context & a kdtree for the surfaces
     sensitivesKdt = KdtSurfaces2D(geoContext, ssurfaces, [Binning.z, Binning.r])
     passivesKdt = KdtSurfaces2D(geoContext, psurfaces, [Binning.z, Binning.r])

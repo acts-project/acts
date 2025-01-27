@@ -14,9 +14,9 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -29,6 +29,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 
 using ParametersVector = Acts::BoundVector;
 using CovarianceMatrix = Acts::BoundSquareMatrix;

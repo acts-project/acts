@@ -20,16 +20,14 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// @brief A wrapper class around a KDTree of surfaces
 ///
 /// It also deals with the conversion from global query to
 /// KDTree lookup positions
 ///
-template <size_t kDIM = 2u, size_t bSize = 100u,
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfaces {
@@ -93,7 +91,7 @@ class KdtSurfaces {
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
     std::for_each(surfaceQuery.begin(), surfaceQuery.end(),
-                  [&](auto& s) { surfacePtrs.push_back(s.second); });
+                  [&](auto& surf) { surfacePtrs.push_back(surf.second); });
     return surfacePtrs;
   }
 
@@ -161,7 +159,7 @@ class KdtSurfaces {
 ///
 /// This allows to create small region based callable structs at
 /// configuration level that are then connected to an InternalStructureBuilder
-template <size_t kDIM = 2u, size_t bSize = 100u,
+template <std::size_t kDIM = 2u, std::size_t bSize = 100u,
           typename reference_generator =
               detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfacesProvider : public ISurfacesProvider {
@@ -195,6 +193,4 @@ class KdtSurfacesProvider : public ISurfacesProvider {
   Extent m_region;
 };
 
-}  // namespace Experimental
-
-}  // namespace Acts
+}  // namespace Acts::Experimental

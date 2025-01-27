@@ -46,8 +46,8 @@ class NeuralCalibrator : public MeasurementCalibrator {
   /// @param [in] nComponent The number of components in the gaussian mixture
   /// @param [in] volumes The volume ids for which to apply the calibration
   NeuralCalibrator(const std::filesystem::path& modelPath,
-                   size_t nComponents = 1,
-                   std::vector<size_t> volumeIds = {7, 8, 9});
+                   std::size_t nComponents = 1,
+                   std::vector<std::size_t> volumeIds = {7, 8, 9});
 
   /// The MeasurementCalibrator interface methods
   void calibrate(
@@ -62,13 +62,13 @@ class NeuralCalibrator : public MeasurementCalibrator {
  private:
   Ort::Env m_env;
   Acts::OnnxRuntimeBase m_model;
-  size_t m_nComponents;
-  size_t m_nInputs =
+  std::size_t m_nComponents;
+  std::size_t m_nInputs =
       57;  // TODO make this configurable? e.g. for changing matrix size?
 
   // TODO: this should probably be handled outside of the calibrator,
   // by setting up a GeometryHierarchyMap<MeasurementCalibrator>
-  std::vector<size_t> m_volumeIds;
+  std::vector<std::size_t> m_volumeIds;
   PassThroughCalibrator m_fallback;
 };
 

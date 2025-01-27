@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,7 +27,6 @@
 class TChain;
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootParticleReader
 ///
@@ -36,15 +35,12 @@ class RootParticleReader : public IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
-    std::string particleCollection =
-        "particleCollection";             ///< particle collection to read
-    std::string vertexPrimaryCollection;  ///< primary vertex collection to read
-    std::string
-        vertexSecondaryCollection;  ///< secondary vertex collection to read
-    std::string treeName = "particles";  ///< name of the output tree
-    std::string filePath;                ///< The name of the input file
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
+    /// particle collection to read
+    std::string outputParticles = "particleCollection";
+    /// name of the output tree
+    std::string treeName = "particles";
+    /// The name of the input file
+    std::string filePath;
   };
 
   /// Constructor
@@ -58,7 +54,7 @@ class RootParticleReader : public IReader {
   std::string name() const override { return "RootParticleReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const override;
+  std::pair<std::size_t, std::size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
@@ -78,32 +74,27 @@ class RootParticleReader : public IReader {
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
 
-  WriteDataHandle<std::vector<uint32_t>> m_outputPrimaryVertices{
-      this, "OutputPrimaryVertices"};
-  WriteDataHandle<std::vector<uint32_t>> m_outputSecondaryVertices{
-      this, "OutputSecondaryVertices"};
-
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;
 
   /// The number of events
-  size_t m_events = 0;
+  std::size_t m_events = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId = 0;
+  std::uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  std::vector<uint64_t>* m_particleId = new std::vector<uint64_t>;
+  std::vector<std::uint64_t>* m_particleId = new std::vector<std::uint64_t>;
   std::vector<int32_t>* m_particleType = new std::vector<int32_t>;
-  std::vector<uint32_t>* m_process = new std::vector<uint32_t>;
+  std::vector<std::uint32_t>* m_process = new std::vector<std::uint32_t>;
   std::vector<float>* m_vx = new std::vector<float>;
   std::vector<float>* m_vy = new std::vector<float>;
   std::vector<float>* m_vz = new std::vector<float>;
@@ -117,11 +108,12 @@ class RootParticleReader : public IReader {
   std::vector<float>* m_phi = new std::vector<float>;
   std::vector<float>* m_pt = new std::vector<float>;
   std::vector<float>* m_p = new std::vector<float>;
-  std::vector<uint32_t>* m_vertexPrimary = new std::vector<uint32_t>;
-  std::vector<uint32_t>* m_vertexSecondary = new std::vector<uint32_t>;
-  std::vector<uint32_t>* m_particle = new std::vector<uint32_t>;
-  std::vector<uint32_t>* m_generation = new std::vector<uint32_t>;
-  std::vector<uint32_t>* m_subParticle = new std::vector<uint32_t>;
+  std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_vertexSecondary =
+      new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
+  std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
 };
 
 }  // namespace ActsExamples

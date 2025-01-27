@@ -1,7 +1,7 @@
 File formats
 ============
 
-Acts supports various file formats to handle configuration and event data.
+ACTS supports various file formats to handle configuration and event data.
 
 .. toctree::
    :maxdepth: 1

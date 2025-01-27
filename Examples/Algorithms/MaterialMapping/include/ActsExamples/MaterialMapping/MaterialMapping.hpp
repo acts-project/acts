@@ -32,11 +32,6 @@
 #include <utility>
 #include <vector>
 
-namespace ActsExamples {
-class IMaterialWriter;
-struct AlgorithmContext;
-}  // namespace ActsExamples
-
 namespace Acts {
 
 class TrackingGeometry;
@@ -81,7 +76,7 @@ class MaterialMapping : public IAlgorithm {
     std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
 
     /// Input collection
-    std::string collection = "material_tracks";
+    std::string inputMaterialTracks = "material_tracks";
 
     /// The material collection to be stored
     std::string mappingMaterialCollection = "mapped_material_tracks";
@@ -134,9 +129,9 @@ class MaterialMapping : public IAlgorithm {
       m_mappingStateVol;  //!< Material mapping state
                           //
 
-  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  ReadDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_inputMaterialTracks{this, "InputMaterialTracks"};
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import tempfile
 from pathlib import Path
 import shutil
@@ -22,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderOptionsArg,
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
+    CkfConfig,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -43,9 +45,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
-            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
-                Path(__file__).parent.parent / "fpe_masks.yml"
-            ),
         )
 
         tp = Path(temp)
@@ -115,6 +114,15 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else SeedingAlgorithm.Default
             if label == "seeded"
             else SeedingAlgorithm.Orthogonal,
+            initialSigmas=[
+                1 * u.mm,
+                1 * u.mm,
+                1 * u.degree,
+                1 * u.degree,
+                0.1 / u.GeV,
+                1 * u.ns,
+            ],
+            initialVarInflation=[1.0] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
@@ -129,20 +137,40 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
             ),
+            CkfConfig(
+                seedDeduplication=False if truthSmearedSeeded else True,
+            ),
             outputDirRoot=tp,
         )
 
         if label in ["seeded", "orthogonal"]:
             addAmbiguityResolution(
                 s,
-                AmbiguityResolutionConfig(maximumSharedHits=3),
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3,
+                    maximumIterations=10000,
+                    nMeasurementsMin=6,
+                ),
                 outputDirRoot=tp,
             )
 
+        s.addAlgorithm(
+            acts.examples.TracksToParameters(
+                level=acts.logging.INFO,
+                inputTracks="tracks",
+                outputTrackParameters="trackParameters",
+            )
+        )
+
+        # Choosing a seeder only has an effect on VertexFinder.AMVF. For
+        # VertexFinder.IVF we always use acts.VertexSeedFinder.GaussianSeeder
+        # (Python binding is not implemented).
+        # Setting useTime also only has an effect on VertexFinder.AMVF due to
+        # the same reason.
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianSeeder,
+            trackParameters="trackParameters",
             outputProtoVertices="ivf_protovertices",
             outputVertices="ivf_fittedVertices",
             vertexFinder=VertexFinder.Iterative,
@@ -152,22 +180,27 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianSeeder,
+            trackParameters="trackParameters",
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
+            useTime=False,  # Time seeding not implemented for the Gaussian seeder
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
 
         # Use the adaptive grid vertex seeder in combination with the AMVF
-        # To avoid having too many physmon cases, we only do this for the label "seeded"
+        # To avoid having too many physmon cases, we only do this for the label
+        # "seeded"
         if label == "seeded":
             addVertexFitting(
                 s,
                 setup.field,
-                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+                trackParameters="trackParameters",
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",
+                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+                useTime=True,
                 vertexFinder=VertexFinder.AMVF,
                 outputDirRoot=tp / "amvf_gridseeder",
             )

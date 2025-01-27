@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
                                   ParticleHypothesis::pion());
 
   double totalPathLength = 0;
-  size_t num_iters = 0;
+  std::size_t num_iters = 0;
   const auto propagation_bench_result = Acts::Test::microBenchmark(
       [&] {
         auto r = propagator.propagate(pars, options).value();

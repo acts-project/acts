@@ -282,17 +282,17 @@ BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
 }
 
 struct D3 {
-  size_t* destroyed{nullptr};
+  std::size_t* destroyed{nullptr};
   std::array<char, 512> blob{};
 
-  D3(size_t* d) : destroyed{d} {}
+  D3(std::size_t* d) : destroyed{d} {}
 
   ~D3() { (*destroyed)++; }
 };
 
 BOOST_AUTO_TEST_CASE(LeakCheck) {
-  size_t destroyed = 0;
-  for (size_t i = 0; i < 10000; i++) {
+  std::size_t destroyed = 0;
+  for (std::size_t i = 0; i < 10000; i++) {
     {
       BOOST_CHECK_EQUAL(destroyed, i);
       Any a;
@@ -306,14 +306,14 @@ BOOST_AUTO_TEST_CASE(LeakCheck) {
 }
 
 struct LifecycleCounters {
-  size_t nDestroy = 0;
-  size_t nCopyConstruct = 0;
-  size_t nCopy = 0;
-  size_t nMoveConstruct = 0;
-  size_t nMove = 0;
+  std::size_t nDestroy = 0;
+  std::size_t nCopyConstruct = 0;
+  std::size_t nCopy = 0;
+  std::size_t nMoveConstruct = 0;
+  std::size_t nMove = 0;
 };
 
-template <size_t PADDING>
+template <std::size_t PADDING>
 struct Lifecycle;
 
 template <>
@@ -347,14 +347,14 @@ struct Lifecycle<0> {
   ~Lifecycle() { counters->nDestroy++; }
 };
 
-template <size_t PADDING>
+template <std::size_t PADDING>
 struct Lifecycle : public Lifecycle<0> {
   std::array<char, PADDING> m_padding{};
 
   Lifecycle(LifecycleCounters* _counters) : Lifecycle<0>(_counters) {}
 };
 
-template <size_t PADDING>
+template <std::size_t PADDING>
 struct LifecycleHandle {
   LifecycleCounters counters;
   Lifecycle<PADDING> inner;

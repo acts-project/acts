@@ -28,23 +28,25 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/TypeList.hpp"
 #include "ActsPodioEdm/Surface.h"
 
 #include <limits>
 #include <memory>
 
-namespace Acts::PodioUtil {
+namespace Acts {
+namespace PodioUtil {
 
 namespace {
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> createBounds(
     const ActsPodioEdm::Surface& surface) {
-  constexpr size_t S = bounds_t::eSize;
+  constexpr std::size_t S = bounds_t::eSize;
   throw_assert(surface.boundValuesSize == S,
                "Unexpected number of bound values");
 
   std::array<double, S> values{};
-  for (size_t i = 0; i < S; i++) {
+  for (std::size_t i = 0; i < S; i++) {
     values.at(i) = surface.boundValues.at(i);
   }
   return std::make_shared<bounds_t>(values);
@@ -73,7 +75,7 @@ ActsPodioEdm::Surface convertSurfaceToPodio(const ConversionHelper& helper,
       throw std::runtime_error{"Too many bound values to store"};
     }
 
-    for (size_t i = 0; i < values.size(); i++) {
+    for (std::size_t i = 0; i < values.size(); i++) {
       result.boundValues.at(i) = values.at(i);
     }
     result.boundValuesSize = values.size();
@@ -174,8 +176,8 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
           break;
         case B::eConvexPolygon:
           template_switch_lambda<6, 32>(surface.boundValuesSize, [&](auto N) {
-            constexpr size_t nValues = decltype(N)::value;
-            constexpr size_t nVertices = nValues / 2;
+            constexpr std::size_t nValues = decltype(N)::value;
+            constexpr std::size_t nVertices = nValues / 2;
             pBounds = createBounds<ConvexPolygonBounds<nVertices>>(surface);
           });
           // @TODO: Maybe handle dynamic convex polygons?
@@ -203,4 +205,69 @@ std::shared_ptr<const Surface> convertSurfaceFromPodio(
   return result;
 }
 
-}  // namespace Acts::PodioUtil
+}  // namespace PodioUtil
+namespace podio_detail {
+
+template <typename F, typename... Args>
+void apply(F&& f, TypeList<Args...> /*unused*/) {
+  f(Args{}...);
+}
+
+void recoverDynamicColumns(
+    const podio::Frame& frame, const std::string& stem,
+    std::unordered_map<HashedString,
+                       std::unique_ptr<podio_detail::ConstDynamicColumnBase>>&
+        dynamic) {
+  using load_type = std::unique_ptr<podio_detail::DynamicColumnBase> (*)(
+      const podio::CollectionBase*);
+
+  // See
+  // https://github.com/AIDASoft/podio/blob/858c0ff0b841705d1b18aafd57569fcbd1beda91/include/podio/UserDataCollection.h#L30-L31
+  using types = TypeList<float, double, int8_t, int16_t, int32_t, int64_t,
+                         uint8_t, uint16_t, uint32_t, uint64_t>;
+
+  std::vector<std::string> available = frame.getAvailableCollections();
+
+  for (const auto& col : available) {
+    std::string prefix = stem + "_extra__";
+    std::size_t p = col.find(prefix);
+    if (p == std::string::npos) {
+      continue;
+    }
+    std::string dynName = col.substr(prefix.size());
+    const podio::CollectionBase* coll = frame.get(col);
+
+    std::unique_ptr<podio_detail::ConstDynamicColumnBase> up;
+
+    apply(
+        [&](auto... args) {
+          auto inner = [&](auto arg) {
+            if (up) {
+              return;
+            }
+            using T = decltype(arg);
+            const auto* dyn =
+                dynamic_cast<const podio::UserDataCollection<T>*>(coll);
+            if (dyn == nullptr) {
+              return;
+            }
+            up = std::make_unique<podio_detail::ConstDynamicColumn<T>>(dynName,
+                                                                       *dyn);
+          };
+
+          ((inner(args)), ...);
+        },
+        types{});
+
+    if (!up) {
+      throw std::runtime_error{"Dynamic column '" + dynName +
+                               "' is not of allowed type"};
+    }
+
+    HashedString hashedKey = hashString(dynName);
+    dynamic.insert({hashedKey, std::move(up)});
+  }
+}
+
+}  // namespace podio_detail
+}  // namespace Acts

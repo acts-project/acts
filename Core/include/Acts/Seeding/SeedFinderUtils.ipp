@@ -156,7 +156,7 @@ inline bool xyzCoordinateCheck(
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
   bool hasValueStored = spacePointData.hasDynamicVariable();
-  if (not hasValueStored) {
+  if (!hasValueStored) {
     return false;
   }
 

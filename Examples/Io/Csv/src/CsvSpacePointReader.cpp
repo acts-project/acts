@@ -16,6 +16,7 @@
 
 #include <array>
 #include <fstream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -45,8 +46,8 @@ std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
   return "CsvSpacePointReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::CsvSpacePointReader::availableEvents()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::CsvSpacePointReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -85,13 +86,16 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
                                              data.sp_topStripCenterPosition[1],
                                              data.sp_topStripCenterPosition[2]);
 
-        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks,
-                                 data.sp_topHalfStripLength,
-                                 data.sp_bottomHalfStripLength,
-                                 topStripDirection, bottomStripDirection,
-                                 stripCenterDistance, topStripCenterPosition);
+        // TODO time
+        spacePoints.emplace_back(
+            globalPos, std::nullopt, data.sp_covr, data.sp_covz, std::nullopt,
+            sLinks, data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
+            topStripDirection, bottomStripDirection, stripCenterDistance,
+            topStripCenterPosition);
       } else {
-        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks);
+        // TODO time
+        spacePoints.emplace_back(globalPos, std::nullopt, data.sp_covr,
+                                 data.sp_covz, std::nullopt, sLinks);
       }
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);

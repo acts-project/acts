@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
 
   cudaProfilerStop();
 
-  BOOST_REQUIRE(inMat_cpu[0] == *outMat_cpu.get(0));
+  BOOST_REQUIRE_EQUAL(inMat_cpu[0], *outMat_cpu.get(0));
 }
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -19,7 +19,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -48,8 +48,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
@@ -66,7 +65,7 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    double tolerance = 10_um;
+    double stepTolerance = 10_um;
     Direction direction = Direction::Backward;
   } options;
 };
@@ -372,7 +371,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
                                 newCharge / newAbsMom, newCov,
                                 particleHypothesis);
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   Direction navDir = Direction::Forward;
   double stepSize = -256.;
@@ -402,9 +401,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
     copy.previousStepSize = other.previousStepSize;
     copy.tolerance = other.tolerance;
 
-    copy.fieldCache =
-        MagneticFieldProvider::Cache::make<typename field_t::Cache>(
-            other.fieldCache.template get<typename field_t::Cache>());
+    copy.fieldCache = MagneticFieldProvider::Cache(
+        std::in_place_type<typename field_t::Cache>,
+        other.fieldCache.template as<typename field_t::Cache>());
 
     copy.geoContext = other.geoContext;
     copy.debug = other.debug;
@@ -561,11 +560,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, -5_cm);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state);
+  stepper.releaseStepSize(state, ConstrainedStep::actor);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -582,7 +581,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   auto target = Surface::makeShared<PlaneSurface>(
       pos + navDir * distance * unitDir, unitDir);
 
-  stepper.updateSurfaceStatus(state, *target, navDir, BoundaryCheck(false));
+  stepper.updateSurfaceStatus(state, *target, 0, navDir, BoundaryCheck(false));
   BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
@@ -590,7 +589,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state), BoundaryCheck(false))
           .closest(),
       navDir, false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
@@ -601,7 +600,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       state,
       target
           ->intersect(state.geoContext, stepper.position(state),
-                      navDir * stepper.direction(state), false)
+                      navDir * stepper.direction(state), BoundaryCheck(false))
           .closest(),
       navDir, true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
@@ -609,5 +608,4 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

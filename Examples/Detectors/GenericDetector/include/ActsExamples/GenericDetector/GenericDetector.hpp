@@ -24,11 +24,9 @@ namespace ActsExamples {
 class IContextDecorator;
 }  // namespace ActsExamples
 
-namespace ActsExamples {
-namespace Generic {
+namespace ActsExamples::Generic {
 class GenericDetectorElement;
-}
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Generic
 
 struct GenericDetector {
   using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
@@ -40,7 +38,7 @@ struct GenericDetector {
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
-    size_t buildLevel{3};
+    std::size_t buildLevel{3};
     Acts::Logging::Level surfaceLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level layerLogLevel{Acts::Logging::INFO};
     Acts::Logging::Level volumeLogLevel{Acts::Logging::INFO};

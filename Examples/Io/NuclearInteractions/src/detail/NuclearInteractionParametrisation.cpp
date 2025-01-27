@@ -22,9 +22,7 @@
 #include <TVectorF.h>
 #include <TVectorT.h>
 
-namespace ActsExamples {
-namespace detail {
-namespace NuclearInteractionParametrisation {
+namespace ActsExamples::detail::NuclearInteractionParametrisation {
 namespace {
 
 /// @brief Evaluate the location in a standard normal distribution for a value
@@ -377,6 +375,4 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   return histo;  // TODO: in this case the normalisation is not taking into
                  // account
 }
-}  // namespace NuclearInteractionParametrisation
-}  // namespace detail
-}  // namespace ActsExamples
+}  // namespace ActsExamples::detail::NuclearInteractionParametrisation

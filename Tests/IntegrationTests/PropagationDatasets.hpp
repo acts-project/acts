@@ -12,8 +12,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 
-namespace ActsTests {
-namespace PropagationDatasets {
+namespace ActsTests::PropagationDatasets {
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -47,5 +46,4 @@ const auto pathLength = bdata::make({1_cm, 10_cm});
 // magnetic field strength
 const auto magneticField = bdata::make({0.5_T, 2_T, 4_T});
 
-}  // namespace PropagationDatasets
-}  // namespace ActsTests
+}  // namespace ActsTests::PropagationDatasets

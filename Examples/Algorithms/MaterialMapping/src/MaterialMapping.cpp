@@ -17,13 +17,10 @@
 #include <unordered_map>
 
 namespace ActsExamples {
-struct AlgorithmContext;
-}  // namespace ActsExamples
 
-ActsExamples::MaterialMapping::MaterialMapping(
-    const ActsExamples::MaterialMapping::Config& cfg,
-    Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("MaterialMapping", level),
+MaterialMapping::MaterialMapping(const MaterialMapping::Config& cfg,
+                                 Acts::Logging::Level level)
+    : IAlgorithm("MaterialMapping", level),
       m_cfg(cfg),
       m_mappingState(cfg.geoContext, cfg.magFieldContext),
       m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
@@ -33,7 +30,7 @@ ActsExamples::MaterialMapping::MaterialMapping(
     throw std::invalid_argument("Missing tracking geometry");
   }
 
-  m_inputMaterialTracks.initialize(m_cfg.collection);
+  m_inputMaterialTracks.initialize(m_cfg.inputMaterialTracks);
   m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
 
   ACTS_INFO("This algorithm requires inter-event information, "
@@ -51,7 +48,7 @@ ActsExamples::MaterialMapping::MaterialMapping(
   }
 }
 
-ActsExamples::MaterialMapping::~MaterialMapping() {
+MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
@@ -98,11 +95,10 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
-    const ActsExamples::AlgorithmContext& context) const {
+ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   // Take the collection from the EventStore
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
-      m_inputMaterialTracks(context);
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
+      mtrackCollection = m_inputMaterialTracks(context);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
@@ -125,11 +121,11 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
   }
   // Write take the collection to the EventStore
   m_outputMaterialTracks(context, std::move(mtrackCollection));
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
 
-std::vector<std::pair<double, int>>
-ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
+std::vector<std::pair<double, int>> MaterialMapping::scoringParameters(
+    uint64_t surfaceID) {
   std::vector<std::pair<double, int>> scoringParameters;
 
   if (m_cfg.materialSurfaceMapper) {
@@ -151,3 +147,5 @@ ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
   }
   return scoringParameters;
 }
+
+}  // namespace ActsExamples

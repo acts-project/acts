@@ -5,7 +5,7 @@ gperftools is a software profiling package. It contains a CPU profiler, thread-c
 
 ## Install gperftools
 
-It is strongly recommended to install [libunwind](http://download.savannah.gnu.org/releases/libunwind/libunwind-0.99-beta.tar.gz) before trying to configure or install gperftools.
+It is strongly recommended to install [libunwind](https://github.com/libunwind/libunwind) before trying to configure or install gperftools.
 
 ### Ubuntu
 
@@ -19,7 +19,7 @@ apt install google-perftools libgoogle-perftools-dev
 
 Alternatively, you can use the following commands to install it:
 
-```console 
+```console
 $ git clone https://github.com/gperftools/gperftools
 $ cd gperftools
 $ git tag -l # checkout the latest release version
@@ -53,7 +53,7 @@ $ go install github.com/google/pprof@latest
 
 ## Link gperftools Libraries When Compiling
 
-The library needed to run the CPU profilier should be linked into the ACTS project using the following build option:
+The library needed to run the CPU profiler should be linked into the ACTS project using the following build option:
 
 ```
 -DACTS_ENABLE_CPU_PROFILING=ON
@@ -67,7 +67,7 @@ Similarly, to enable the memory profiler the following build option should be us
 
 ## Alternative to Recompiling
 
-Alternatively, you can avoid rebuiding the project by pointing the `LD_PRELOAD` environment variable to the profiler library for CPU profiling:
+Alternatively, you can avoid rebuilding the project by pointing the `LD_PRELOAD` environment variable to the profiler library for CPU profiling:
 
 ```
 LD_PRELOAD="<path/to/libprofiler.so>" <other_options> <path/to/binary> <binary_flags>

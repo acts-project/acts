@@ -81,7 +81,7 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
              double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
-  phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
+  phi = ((0 < theta) && (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
@@ -105,7 +105,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion0());
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
 
     // reassign w/ covariance
     params =
@@ -126,7 +126,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
 
     // reassign w/ covariance
     params =
@@ -147,7 +147,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pion());
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
 
     // reassign w/ covariance
     params =
@@ -168,7 +168,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     BoundTrackParameters params(surface, vector, std::nullopt,
                                 ParticleHypothesis::pionLike(2_e));
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
 
     // reassign w/ covariance
     params = BoundTrackParameters(surface, vector, cov,
@@ -184,7 +184,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
   // negative charged parameters from global information
   {
@@ -193,7 +193,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
   // positive charged parameters from global information
   {
@@ -202,7 +202,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
   // neutral any parameters from global information
   {
@@ -211,7 +211,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
   // double-negative any parameters from global information
   {
@@ -220,7 +220,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                       ParticleHypothesis::pionLike(2_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
   // triple-positive any parameters from global information
   {
@@ -229,7 +229,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
                       ParticleHypothesis::pionLike(3_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
-    BOOST_CHECK(not params.covariance());
+    BOOST_CHECK(!params.covariance());
   }
 }
 

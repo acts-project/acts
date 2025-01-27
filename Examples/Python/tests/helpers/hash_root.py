@@ -29,7 +29,6 @@ def hash_root_file(path: Path, ordering_invariant: bool = True) -> str:
         branches = tree.arrays(library="ak")
 
         if not ordering_invariant:
-
             h = hashlib.sha256()
             for name in keys:
                 h.update(name.encode("utf8"))

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@
 namespace Acts {
 
 /// Symbolic values for commonly used PDG particle numbers.
-enum PdgParticle : int32_t {
+enum PdgParticle : std::int32_t {
   eInvalid = 0,
   eElectron = 11,
   eAntiElectron = -eElectron,
@@ -26,6 +26,8 @@ enum PdgParticle : int32_t {
   ePionZero = 111,
   ePionPlus = 211,
   ePionMinus = -ePionPlus,
+  eKaonPlus = 321,
+  eKaonMinus = -eKaonPlus,
   eNeutron = 2112,
   eAntiNeutron = -eNeutron,
   eProton = 2212,

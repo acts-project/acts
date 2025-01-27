@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -28,8 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 GeometryContext gctx = GeometryContext();
 
@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 
   auto surfaces = cubo.orientedSurfaces(Transform3::Identity());
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.surface->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3 glob = srf.first->localToGlobal(gctx, vtx, {});
+      Vector3 glob = srf.surface->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 
   surfaces = cubo.orientedSurfaces(Transform3::Identity());
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.surface->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3 glob = srf.first->localToGlobal(gctx, vtx, {});
+      Vector3 glob = srf.surface->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -116,9 +116,9 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 
   surfaces = cubo.orientedSurfaces(trf);
   for (const auto& srf : surfaces) {
-    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
+    auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.surface->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3 glob = srf.first->localToGlobal(gctx, vtx, {});
+      Vector3 glob = srf.surface->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(trf.inverse() * glob, vertices));
     }
@@ -188,13 +188,13 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 
   // Check recreation from bound values
   const auto boundValues = gcvb.values();
-  BOOST_CHECK(boundValues.size() == 24u);
+  BOOST_CHECK_EQUAL(boundValues.size(), 24u);
 
   auto bValueArrray =
       to_array<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
           boundValues);
   GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
-  BOOST_CHECK(gcvbCopy.values().size() == 24u);
+  BOOST_CHECK_EQUAL(gcvbCopy.values().size(), 24u);
 
   // Redo the check from above
   rot = AngleAxis3(0.542, Vector3::UnitZ()) *
@@ -224,16 +224,19 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
 
   for (auto& os : gcvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();
-    auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx);
+    auto osCenter = os.surface->center(geoCtx);
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.surface.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
-    Vector3 insideGcvb = osCenter + os.second * osNormal;
-    Vector3 outsideGcvb = osCenter - os.second * osNormal;
+    Vector3 insideGcvb = osCenter + os.direction * osNormal;
+    Vector3 outsideGcvb = osCenter - os.direction * osNormal;
     BOOST_CHECK(cubo.inside(insideGcvb));
     BOOST_CHECK(!cubo.inside(outsideGcvb));
   }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

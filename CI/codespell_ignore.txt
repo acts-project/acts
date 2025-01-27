@@ -20,3 +20,5 @@ boxs
 ans
 dthe
 dthe
+vart
+pixelx

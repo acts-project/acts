@@ -60,7 +60,6 @@ def check_include_guards(file):
 
     if valid_global or len(match_local) > 1:
         for m in match_local:
-
             lineno = text[: m.start()].count("\n") + 1
 
             valid_local = False

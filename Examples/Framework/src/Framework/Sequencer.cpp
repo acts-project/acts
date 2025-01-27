@@ -70,8 +70,8 @@ std::string_view getAlgorithmType(const SequenceElement& element) {
 // Saturated addition that does not overflow and exceed SIZE_MAX.
 //
 // From http://locklessinc.com/articles/sat_arithmetic/
-size_t saturatedAdd(size_t a, size_t b) {
-  size_t res = a + b;
+std::size_t saturatedAdd(std::size_t a, std::size_t b) {
+  std::size_t res = a + b;
   res |= -static_cast<int>(res < a);
   return res;
 }
@@ -130,15 +130,15 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
 
 void Sequencer::addContextDecorator(
     std::shared_ptr<IContextDecorator> decorator) {
-  if (not decorator) {
+  if (!decorator) {
     throw std::invalid_argument("Can not add empty/NULL context decorator");
   }
   m_decorators.push_back(std::move(decorator));
-  ACTS_INFO("Added context decarator '" << m_decorators.back()->name() << "'");
+  ACTS_INFO("Added context decorator '" << m_decorators.back()->name() << "'");
 }
 
 void Sequencer::addReader(std::shared_ptr<IReader> reader) {
-  if (not reader) {
+  if (!reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
   m_readers.push_back(reader);
@@ -146,7 +146,7 @@ void Sequencer::addReader(std::shared_ptr<IReader> reader) {
 }
 
 void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
-  if (not algorithm) {
+  if (!algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
 
@@ -154,14 +154,14 @@ void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
 }
 
 void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
-  if (not writer) {
+  if (!writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
   addElement(std::move(writer));
 }
 
 void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
-  if (not element) {
+  if (!element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
@@ -178,7 +178,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
   auto symbol = [&](const char* in) {
     std::string s = demangleAndShorten(in);
-    size_t pos = 0;
+    std::size_t pos = 0;
     while (pos + 80 < s.size()) {
       ACTS_INFO("   " + s.substr(pos, pos + 80));
       pos += 80;
@@ -302,8 +302,8 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
   // a few specific events in a simulation setup.
 
   // determine intersection of event ranges available from readers
-  size_t beg = 0u;
-  size_t end = SIZE_MAX;
+  std::size_t beg = 0u;
+  std::size_t end = SIZE_MAX;
   for (const auto& reader : m_readers) {
     auto available = reader->availableEvents();
     beg = std::max(beg, available.first);
@@ -328,7 +328,7 @@ std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
     return kInvalidEventsRange;
   }
   // events range was not defined by either the readers or user command line.
-  if ((beg == 0u) and (end == SIZE_MAX) and (!m_cfg.events.has_value())) {
+  if ((beg == 0u) && (end == SIZE_MAX) && (!m_cfg.events.has_value())) {
     ACTS_ERROR("Could not determine number of events");
     return kInvalidEventsRange;
   }
@@ -381,7 +381,7 @@ inline std::string asString(D duration) {
 
 // Convert duration scaled to one event to a printable string.
 template <typename D>
-inline std::string perEvent(D duration, size_t numEvents) {
+inline std::string perEvent(D duration, std::size_t numEvents) {
   return asString(duration / numEvents) + "/event";
 }
 
@@ -398,7 +398,7 @@ void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  const std::string& path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
-  for (size_t i = 0; i < identifiers.size(); ++i) {
+  for (std::size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
     info.identifier = identifiers[i];
     info.time_total_s =
@@ -419,8 +419,8 @@ int Sequencer::run() {
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
-  std::pair<size_t, size_t> eventsRange = determineEventsRange();
-  if ((eventsRange.first == SIZE_MAX) and (eventsRange.second == SIZE_MAX)) {
+  std::pair<std::size_t, std::size_t> eventsRange = determineEventsRange();
+  if ((eventsRange.first == SIZE_MAX) && (eventsRange.second == SIZE_MAX)) {
     return EXIT_FAILURE;
   }
 
@@ -430,9 +430,9 @@ int Sequencer::run() {
   ACTS_INFO("  " << m_decorators.size() << " context decorators");
   ACTS_INFO("  " << m_sequenceElements.size() << " sequence elements");
 
-  size_t nWriters = 0;
-  size_t nReaders = 0;
-  size_t nAlgorithms = 0;
+  std::size_t nWriters = 0;
+  std::size_t nReaders = 0;
+  std::size_t nAlgorithms = 0;
   for (const auto& [alg, fpe] : m_sequenceElements) {
     if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
       nWriters++;
@@ -461,16 +461,16 @@ int Sequencer::run() {
   }
 
   // execute the parallel event loop
-  std::atomic<size_t> nProcessedEvents = 0;
-  size_t nTotalEvents = eventsRange.second - eventsRange.first;
+  std::atomic<std::size_t> nProcessedEvents = 0;
+  std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
-        tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
-        [&](const tbb::blocked_range<size_t>& r) {
+        tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
+        [&](const tbb::blocked_range<std::size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
 
-          for (size_t event = r.begin(); event != r.end(); ++event) {
+          for (std::size_t event = r.begin(); event != r.end(); ++event) {
             ACTS_DEBUG("start processing event " << event);
             m_cfg.iterationCallback();
             // Use per-event store
@@ -481,7 +481,7 @@ int Sequencer::run() {
             // If we ever wanted to run algorithms in parallel, this needs to
             // be changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
-            size_t ialgo = 0;
+            std::size_t ialgo = 0;
 
             /// Decorate the context
             for (auto& cdr : m_decorators) {
@@ -556,7 +556,7 @@ int Sequencer::run() {
           // add timing info to global information
           {
             tbbWrap::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
-            for (size_t i = 0; i < clocksAlgorithms.size(); ++i) {
+            for (std::size_t i = 0; i < clocksAlgorithms.size(); ++i) {
               clocksAlgorithms[i] += localClocksAlgorithms[i];
             }
           }
@@ -579,12 +579,12 @@ int Sequencer::run() {
   Duration totalWall = Clock::now() - clockWallStart;
   Duration totalReal = std::accumulate(
       clocksAlgorithms.begin(), clocksAlgorithms.end(), Duration::zero());
-  size_t numEvents = eventsRange.second - eventsRange.first;
+  std::size_t numEvents = eventsRange.second - eventsRange.first;
   ACTS_INFO("Processed " << numEvents << " events in " << asString(totalWall)
                          << " (wall clock)");
   ACTS_INFO("Average time per event: " << perEvent(totalReal, numEvents));
   ACTS_DEBUG("Average time per algorithm:");
-  for (size_t i = 0; i < names.size(); ++i) {
+  for (std::size_t i = 0; i < names.size(); ++i) {
     ACTS_DEBUG("  " << names[i] << ": "
                     << perEvent(clocksAlgorithms[i], numEvents));
   }

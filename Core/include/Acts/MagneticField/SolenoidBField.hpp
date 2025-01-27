@@ -84,7 +84,7 @@ class SolenoidBField final : public MagneticFieldProvider {
     /// -length/2 to +length/2 by convention
     double length;
     /// The number of coils that make up the solenoid
-    size_t nCoils;
+    std::size_t nCoils;
     /// The target magnetic field strength at the center.
     /// This will be used to scale coefficients
     double bMagCenter;

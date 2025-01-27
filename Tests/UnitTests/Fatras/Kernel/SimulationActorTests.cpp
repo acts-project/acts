@@ -15,6 +15,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -63,8 +64,8 @@ struct MockInteractionList {
   struct Selection {
     double x0Limit = std::numeric_limits<double>::infinity();
     double l0Limit = std::numeric_limits<double>::infinity();
-    size_t x0Process = SIZE_MAX;
-    size_t l0Process = SIZE_MAX;
+    std::size_t x0Process = SIZE_MAX;
+    std::size_t l0Process = SIZE_MAX;
   };
 
   double energyLoss = 0;
@@ -86,7 +87,7 @@ struct MockInteractionList {
   }
 
   template <typename generator_t>
-  bool runPointLike(generator_t & /*generator*/, size_t /*processIndex*/,
+  bool runPointLike(generator_t & /*generator*/, std::size_t /*processIndex*/,
                     Particle & /*particle*/,
                     std::vector<Particle> & /*generated*/) const {
     return false;
@@ -119,8 +120,8 @@ struct MockStepper {
     state.dir = dir;
     state.p = 1 / qop;
   }
-  void setStepSize(State & /*state*/, double /*stepSize*/,
-                   Acts::ConstrainedStep::Type /*stype*/) const {}
+  void updateStepSize(State & /*state*/, double /*stepSize*/,
+                      Acts::ConstrainedStep::Type /*stype*/) const {}
 };
 
 struct MockNavigatorState {
@@ -134,6 +135,10 @@ struct MockNavigator {
     return state.targetReached;
   }
 
+  void targetReached(MockNavigatorState &state, bool reached) const {
+    state.targetReached = reached;
+  }
+
   const Acts::Surface *startSurface(const MockNavigatorState &state) const {
     return state.startSurface;
   }
@@ -141,12 +146,17 @@ struct MockNavigator {
   const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
     return state.currentSurface;
   }
+
+  bool endOfWorldReached(const MockNavigatorState & /*state*/) const {
+    return false;
+  }
 };
 
 struct MockPropagatorState {
   MockNavigatorState navigation;
   MockStepperState stepping;
   Acts::GeometryContext geoContext;
+  Acts::PropagatorStage stage = Acts::PropagatorStage::invalid;
 };
 
 template <typename SurfaceSelector>
@@ -182,6 +192,7 @@ struct Fixture {
     actor.generator = &generator;
     actor.interactions.energyLoss = energyLoss;
     actor.initialParticle = particle;
+    state.stage = Acts::PropagatorStage::postStep;
     state.navigation.currentSurface = surface.get();
     state.stepping.pos = particle.position();
     state.stepping.time = particle.time();
@@ -503,7 +514,7 @@ BOOST_AUTO_TEST_CASE(Decay) {
   f.state.stepping.time += 1_ns;
   f.result.properTimeLimit = f.result.particle.properTime() + gammaInv * 0.5_ns;
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
-  BOOST_CHECK(not f.result.isAlive);
+  BOOST_CHECK(!f.result.isAlive);
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
   BOOST_CHECK_EQUAL(f.result.particle.process(), f.proc);
   BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.pdg);

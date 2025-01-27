@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
 from multiprocessing import Pool
 from functools import partial
@@ -27,13 +28,10 @@ def runGeant4EventRange(beginEvent, endEvent, outputDir):
     import acts.examples
     from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
     from acts.examples.odd import getOpenDataDetector
-    from common import getOpenDataDetectorDirectory
 
     u = acts.UnitConstants
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
-    )
+    detector, trackingGeometry, decorators = getOpenDataDetector()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)

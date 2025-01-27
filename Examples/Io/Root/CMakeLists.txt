@@ -13,11 +13,13 @@ add_library(
   src/RootSimHitReader.cpp
   src/RootSpacepointWriter.cpp
   src/RootTrackParameterWriter.cpp
-  src/RootTrajectoryStatesWriter.cpp
-  src/RootTrajectorySummaryReader.cpp
-  src/RootTrajectorySummaryWriter.cpp
+  src/RootTrackStatesWriter.cpp
+  src/RootTrackSummaryReader.cpp
+  src/RootTrackSummaryWriter.cpp
   src/RootBFieldWriter.cpp
   src/RootAthenaNTupleReader.cpp
+  src/RootVertexReader.cpp
+  src/RootVertexWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -26,9 +28,16 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesMaterialMapping
+    ActsExamplesFramework ActsExamplesPropagation
+    ActsExamplesTruthTracking ActsExamplesMaterialMapping
     Threads::Threads
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+  PRIVATE
+    ROOT::Core ROOT::Hist ROOT::Tree)
+
+ROOT_GENERATE_DICTIONARY(
+  ActsExamplesIoRootDict MODULE ActsExamplesIoRoot LINKDEF LinkDef.hpp)
+set_target_properties(
+  ActsExamplesIoRootDict PROPERTIES CXX_CLANG_TIDY "")
 
 install(
   TARGETS ActsExamplesIoRoot

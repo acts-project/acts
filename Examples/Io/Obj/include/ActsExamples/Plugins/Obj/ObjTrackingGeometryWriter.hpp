@@ -39,8 +39,8 @@ class ObjTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    double outputScalor = 1.0;        ///< scale output values
+    std::size_t outputPrecision = 6;  ///< floating point precision
     std::string outputDir = ".";
 
     Acts::ViewConfig containerView = Acts::ViewConfig({220, 220, 220});

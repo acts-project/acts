@@ -67,13 +67,13 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
  public:
   /// Expose number of vertices given as template parameter.
   ///
-  static constexpr size_t num_vertices = N;
+  static constexpr std::size_t num_vertices = N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using vertex_array = std::array<Vector2, num_vertices>;
   /// Expose number of parameters as a template parameter
   ///
-  static constexpr size_t eSize = 2 * N;
+  static constexpr std::size_t eSize = 2 * N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using value_array = std::array<double, eSize>;

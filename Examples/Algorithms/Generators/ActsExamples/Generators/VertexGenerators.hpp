@@ -20,7 +20,8 @@
 
 namespace ActsExamples {
 
-struct FixedVertexGenerator : public EventGenerator::VertexGenerator {
+struct FixedPrimaryVertexPositionGenerator
+    : public EventGenerator::PrimaryVertexPositionGenerator {
   /// The fixed vertex position and time.
   Acts::Vector4 fixed = Acts::Vector4::Zero();
 
@@ -29,7 +30,8 @@ struct FixedVertexGenerator : public EventGenerator::VertexGenerator {
   }
 };
 
-struct GaussianVertexGenerator : public EventGenerator::VertexGenerator {
+struct GaussianPrimaryVertexPositionGenerator
+    : public EventGenerator::PrimaryVertexPositionGenerator {
   // standard deviation comes first, since it is more likely to be modified
   /// Vertex position and time standard deviation.
   Acts::Vector4 stddev = {0.0, 0.0, 0.0, 0.0};
