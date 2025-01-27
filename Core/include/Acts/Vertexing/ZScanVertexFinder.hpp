@@ -37,7 +37,7 @@ class ZScanVertexFinder final : public IVertexFinder {
     /// @brief Finder configuration
     ///
     /// @param ipEst ImpactPointEstimator
-    Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
+    explicit Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
 
     // ImpactPointEstimator
     ImpactPointEstimator ipEstimator;

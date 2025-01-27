@@ -69,7 +69,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  TrackDensityVertexFinder finder{{{densityCfg}}};
+  TrackDensityVertexFinder finder{
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)}};
   auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
@@ -148,7 +149,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext, constraint);
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  TrackDensityVertexFinder finder{{{densityCfg}}};
+  TrackDensityVertexFinder finder{
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)}};
   auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
@@ -225,7 +227,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
-  TrackDensityVertexFinder finder{{{densityCfg}}};
+  TrackDensityVertexFinder finder{
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)}};
   auto state = finder.makeState(magFieldContext);
 
   int mySeed = 31415;
@@ -325,7 +328,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
-  TrackDensityVertexFinder finder{{{densityCfg}}};
+  TrackDensityVertexFinder finder{
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)}};
   auto state = finder.makeState(magFieldContext);
 
   // Start creating some track parameters
