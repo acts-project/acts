@@ -72,9 +72,10 @@ class GenericBoundTrackParameters {
   template <typename other_particle_hypothesis_t>
   explicit GenericBoundTrackParameters(
       const GenericBoundTrackParameters<other_particle_hypothesis_t>& other)
-      : GenericBoundTrackParameters(other.referenceSurface().getSharedPtr(),
-                                    other.parameters(), other.covariance(),
-                                    other.particleHypothesis()) {}
+      : GenericBoundTrackParameters(
+            other.referenceSurface().getSharedPtr(), other.parameters(),
+            other.covariance(),
+            ParticleHypothesis{other.particleHypothesis()}) {}
 
   /// Convert this track parameter object to the general type-erased one
   GenericBoundTrackParameters<Acts::ParticleHypothesis> toBound() const {

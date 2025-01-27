@@ -32,7 +32,7 @@ class SinglyChargedParticleHypothesis
       : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
-  constexpr SinglyChargedParticleHypothesis(
+  explicit constexpr SinglyChargedParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
@@ -75,7 +75,7 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
       : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
-  constexpr NeutralParticleHypothesis(
+  explicit constexpr NeutralParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
@@ -107,24 +107,29 @@ class NonNeutralChargedParticleHypothesis
       : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
-  constexpr NonNeutralChargedParticleHypothesis(
+  explicit constexpr NonNeutralChargedParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
   static NonNeutralChargedParticleHypothesis muon() {
-    return SinglyChargedParticleHypothesis::muon();
+    return NonNeutralChargedParticleHypothesis{
+        SinglyChargedParticleHypothesis::muon()};
   }
   static NonNeutralChargedParticleHypothesis pion() {
-    return SinglyChargedParticleHypothesis::pion();
+    return NonNeutralChargedParticleHypothesis{
+        SinglyChargedParticleHypothesis::pion()};
   }
   static NonNeutralChargedParticleHypothesis electron() {
-    return SinglyChargedParticleHypothesis::electron();
+    return NonNeutralChargedParticleHypothesis{
+        SinglyChargedParticleHypothesis::electron()};
   }
   static NonNeutralChargedParticleHypothesis kaon() {
-    return SinglyChargedParticleHypothesis::kaon();
+    return NonNeutralChargedParticleHypothesis{
+        SinglyChargedParticleHypothesis::kaon()};
   }
   static NonNeutralChargedParticleHypothesis proton() {
-    return SinglyChargedParticleHypothesis::proton();
+    return NonNeutralChargedParticleHypothesis{
+        SinglyChargedParticleHypothesis::proton()};
   }
 
   static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
@@ -154,31 +159,31 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
       : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
-  constexpr ParticleHypothesis(
+  explicit constexpr ParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
   static ParticleHypothesis muon() {
-    return SinglyChargedParticleHypothesis::muon();
+    return ParticleHypothesis{SinglyChargedParticleHypothesis::muon()};
   }
   static ParticleHypothesis pion() {
-    return SinglyChargedParticleHypothesis::pion();
+    return ParticleHypothesis{SinglyChargedParticleHypothesis::pion()};
   }
   static ParticleHypothesis electron() {
-    return SinglyChargedParticleHypothesis::electron();
+    return ParticleHypothesis{SinglyChargedParticleHypothesis::electron()};
   }
   static ParticleHypothesis kaon() {
-    return SinglyChargedParticleHypothesis::kaon();
+    return ParticleHypothesis{SinglyChargedParticleHypothesis::kaon()};
   }
   static ParticleHypothesis proton() {
-    return SinglyChargedParticleHypothesis::proton();
+    return ParticleHypothesis{SinglyChargedParticleHypothesis::proton()};
   }
 
   static ParticleHypothesis photon() {
-    return NeutralParticleHypothesis::photon();
+    return ParticleHypothesis{NeutralParticleHypothesis::photon()};
   }
   static ParticleHypothesis pion0() {
-    return NeutralParticleHypothesis::pion0();
+    return ParticleHypothesis{NeutralParticleHypothesis::pion0()};
   }
 
   static ParticleHypothesis pionLike(float absQ) {
@@ -187,7 +192,7 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   }
 
   static ParticleHypothesis geantino() {
-    return NeutralParticleHypothesis::geantino();
+    return ParticleHypothesis{NeutralParticleHypothesis::geantino()};
   }
   static ParticleHypothesis chargedGeantino() {
     static const auto cache = chargedGeantino(Acts::UnitConstants::e);
