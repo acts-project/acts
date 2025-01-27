@@ -196,20 +196,16 @@ class DirectNavigator {
       ACTS_VERBOSE("Current surface set to nullptr");
     }
 
-    // Find initial index. Because the list of surfaces has the same order
-    // regardless the direction, we need to increment the surfaceIndex manually
-    // instead of calling nextSurface
-    bool foundStartSurface = false;
-    state.surfaceIndex = 0;
-    for (const Surface* surface : state.options.surfaces) {
-      if (surface == state.currentSurface) {
-        foundStartSurface = true;
-        break;
-      }
-      state.surfaceIndex++;
-    }
-    ACTS_VERBOSE("Initial surface index set to " << state.surfaceIndex);
-    if (!foundStartSurface) {
+    // Find initial index.
+    auto found =
+        std::ranges::find(state.options.surfaces, state.options.startSurface);
+
+    if (found != state.options.surfaces.end()) {
+      // The index should be the index before the start surface, depending on
+      // the direction
+      state.surfaceIndex = std::distance(state.options.surfaces.begin(), found);
+      state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
+    } else {
       ACTS_DEBUG(
           "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
