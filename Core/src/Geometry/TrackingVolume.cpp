@@ -9,7 +9,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -20,53 +19,48 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Ray.hpp"
+#include "Acts/Utilities/TransformRange.hpp"
 
 #include <algorithm>
-#include <array>
-#include <functional>
 #include <ostream>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 namespace Acts {
 class ISurfaceMaterial;
 
-TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<VolumeBounds> volbounds,
-    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string& volumeName)
-    : Volume(transform, std::move(volbounds)),
-      m_volumeMaterial(nullptr),
-      m_boundarySurfaces(),
-      m_confinedLayers(nullptr),
-      m_confinedVolumes(containedVolumeArray),
-      m_name(volumeName) {
-  createBoundarySurfaces();
-  interlinkLayers();
-}
-
 // constructor for arguments
 TrackingVolume::TrackingVolume(
-    const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
+    const Transform3& transform,
+    std::shared_ptr<const VolumeBounds> volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     MutableTrackingVolumeVector denseVolumeVector,
     const std::string& volumeName)
     : Volume(transform, std::move(volumeBounds)),
-      m_volumeMaterial(std::move(volumeMaterial)),
       m_confinedLayers(std::move(staticLayerArray)),
       m_confinedVolumes(std::move(containedVolumeArray)),
       m_confinedDenseVolumes({}),
+      m_volumeMaterial(std::move(volumeMaterial)),
       m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
 }
+
+TrackingVolume::TrackingVolume(const Volume& volume,
+                               const std::string& volumeName)
+    : TrackingVolume(volume.transform(), volume.volumeBoundsPtr(), nullptr,
+                     volumeName) {}
+
+TrackingVolume::TrackingVolume(
+    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds,
+    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
+    const std::string& volumeName)
+    : TrackingVolume(transform, std::move(volbounds), nullptr, nullptr,
+                     containedVolumeArray, {}, volumeName) {}
 
 TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
@@ -645,4 +639,24 @@ const Acts::Layer* TrackingVolume::associatedLayer(
   // return the null pointer
   return nullptr;
 }
+
+TrackingVolume::VolumeRange TrackingVolume::volumes() const {
+  return VolumeRange{m_volumes};
+}
+
+TrackingVolume::MutableVolumeRange TrackingVolume::volumes() {
+  return MutableVolumeRange{m_volumes};
+}
+
+TrackingVolume& TrackingVolume::addVolume(
+    std::unique_ptr<TrackingVolume> volume) {
+  if (volume->motherVolume() != nullptr) {
+    throw std::invalid_argument("Volume already has a mother volume");
+  }
+
+  volume->setMotherVolume(this);
+  m_volumes.push_back(std::move(volume));
+  return *m_volumes.back();
+}
+
 }  // namespace Acts

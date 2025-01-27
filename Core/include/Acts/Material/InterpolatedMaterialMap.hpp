@@ -292,32 +292,26 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @brief Retrieve material value & its "gradient"
   ///
   /// @param [in]  position   Global 3D position
-  /// @param [out] derivative "Gradient" of material as (5x5) matrix
   /// @return Material
   ///
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& derivative) const {
-    (void)derivative;
+                               ActsMatrix<5, 5>& /*derivative*/) const {
     return m_mapper.getMaterial(position);
   }
 
   /// @brief Retrieve material value & its "gradient"
   ///
   /// @param [in]  position   Global 3D position
-  /// @param [out] derivative "Gradient" of material as (5x5) matrix
-  /// @param [in,out] cache Cache object. Contains cell used for
   /// @return Material
   ///
   /// @note Currently the derivative is not calculated
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3& position,
-                               ActsMatrix<5, 5>& derivative,
-                               Cache& cache) const {
-    (void)derivative;
-    (void)cache;
+                               ActsMatrix<5, 5>& /*derivative*/,
+                               Cache& /*cache*/) const {
     return m_mapper.getMaterial(position);
   }
 

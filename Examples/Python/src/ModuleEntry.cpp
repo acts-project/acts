@@ -91,6 +91,17 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   m.attr("__version__") =
       std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
 
+  {
+    auto mv = m.def_submodule("version");
+
+    mv.attr("major") = Acts::VersionMajor;
+    mv.attr("minor") = Acts::VersionMinor;
+    mv.attr("patch") = Acts::VersionPatch;
+
+    mv.attr("commit_hash") = Acts::CommitHash;
+    mv.attr("commit_hash_short") = Acts::CommitHashShort;
+  }
+
   addUnits(ctx);
   addFramework(ctx);
   addLogging(ctx);

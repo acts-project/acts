@@ -288,7 +288,6 @@ BOOST_AUTO_TEST_CASE(CopyBehaviour) {
 }
 
 Result<void> void_res_func(int b) {
-  (void)b;
   if (b > 5) {
     return MyError::SomethingElse;
   }

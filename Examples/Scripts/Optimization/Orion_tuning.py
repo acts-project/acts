@@ -1,38 +1,14 @@
 #!/usr/bin/env python3
-import sys
-
-import sys
 import os
-import yaml
-import pprint
-import time
-import datetime
-import warnings
-
-import logging
-import uproot
-
-import pathlib
 import matplotlib
-
-matplotlib.use("pdf")
-import matplotlib.pyplot as plt
-import random
 import subprocess
-import multiprocessing
-import numpy as np
-import json
-import array
-import sys
-import argparse
-import pandas as pd
-
-from typing import Optional, Union
 from pathlib import Path
 
 from orion.client import build_experiment
 
 from Optuna_tuning import get_tracking_perf, run_ckf
+
+matplotlib.use("pdf")
 
 srcDir = Path(__file__).resolve().parent
 

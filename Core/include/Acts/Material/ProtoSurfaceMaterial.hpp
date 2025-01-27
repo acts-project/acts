@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -68,7 +69,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operator - dummy implementation
   ///
-  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*unused*/) final {
+  ProtoSurfaceMaterialT<BinningType>& operator*=(double /*scale*/) final {
     return (*this);
   }
 
@@ -79,7 +80,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector2& /*unused*/) const final {
+  const MaterialSlab& materialSlab(const Vector2& /*lp*/) const final {
     return (m_materialSlab);
   }
 
@@ -87,7 +88,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   /// global coordinates
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(const Vector3& /*unused*/) const final {
+  const MaterialSlab& materialSlab(const Vector3& /*gp*/) const final {
     return (m_materialSlab);
   }
 
@@ -109,5 +110,8 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 };
 
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
+
+using ProtoGridSurfaceMaterial =
+    ProtoSurfaceMaterialT<Acts::Experimental::BinningDescription>;
 
 }  // namespace Acts

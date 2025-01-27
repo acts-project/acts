@@ -118,6 +118,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Whether to use seed deduplication
     /// This is only available if `inputSeeds` is set.
     bool seedDeduplication = false;
+    /// Whether to stick on the seed measurements during track finding.
+    /// This is only available if `inputSeeds` is set.
+    bool stayOnSeed = false;
     /// Compute shared hit information
     bool computeSharedHits = false;
   };
@@ -164,6 +167,9 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_nFailedSeeds{0};
   mutable std::atomic<std::size_t> m_nFailedSmoothing{0};
   mutable std::atomic<std::size_t> m_nFailedExtrapolation{0};
+  mutable std::atomic<std::size_t> m_nFoundTracks{0};
+  mutable std::atomic<std::size_t> m_nSelectedTracks{0};
+  mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {

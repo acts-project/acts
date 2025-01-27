@@ -50,8 +50,6 @@ Result<BoundState> detail::boundState(
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
-    // Initialize the jacobian from start local to final local
-    fullTransportJacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
@@ -59,8 +57,6 @@ Result<BoundState> detail::boundState(
                                fullTransportJacobian, freeTransportJacobian,
                                freeToPathDerivatives, boundToFreeJacobian,
                                freeParameters, freeToBoundCorrection);
-  }
-  if (boundCovariance != BoundSquareMatrix::Zero()) {
     cov = boundCovariance;
   }
 
@@ -82,16 +78,12 @@ CurvilinearState detail::curvilinearState(
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
-    // Initialize the jacobian from start local to final local
-    fullTransportJacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
     // boundToFreeJacobian
     transportCovarianceToCurvilinear(
         boundCovariance, fullTransportJacobian, freeTransportJacobian,
         freeToPathDerivatives, boundToFreeJacobian, direction);
-  }
-  if (boundCovariance != BoundSquareMatrix::Zero()) {
     cov = boundCovariance;
   }
 

@@ -106,7 +106,6 @@ BOOST_DATA_TEST_CASE(
                                                                   M_PI))) ^
         bdata::xrange(ntests),
     z, r, phi, index) {
-  (void)index;
   if (index % 1000 == 0) {
     std::cout << index << std::endl;
   }

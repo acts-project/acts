@@ -120,7 +120,7 @@ struct PlyElement {
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,
-                                                     bool triMesh = false) {
+                                                     bool /*triMesh*/ = false) {
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid ply : ";
 
@@ -218,8 +218,6 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
       }
     }
   }
-
-  (void)triMesh;
 
   return errorStrings;
 }

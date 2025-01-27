@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
-from headwind.spec import CollectorResult, Run, Metric
+from headwind.spec import CollectorResult, Metric
 
 import pandas as pd
 

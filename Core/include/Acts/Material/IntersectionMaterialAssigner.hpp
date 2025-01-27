@@ -44,7 +44,14 @@ class IntersectionMaterialAssigner final : public IAssignmentFinder {
   };
 
   /// @brief Construct with the configuration
-  IntersectionMaterialAssigner(const Config& cfg) : m_cfg(cfg) {}
+  ///
+  /// @param cfg is the configuration struct
+  /// @param mlogger is the logger
+  IntersectionMaterialAssigner(
+      const Config& cfg,
+      std::unique_ptr<const Logger> mlogger =
+          getDefaultLogger("IntersectionMaterialAssigner", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
   /// @brief Method for generating assignment candidates for the
   /// material interaction assignment to surfaces or volumes
@@ -63,8 +70,14 @@ class IntersectionMaterialAssigner final : public IAssignmentFinder {
                        const Vector3& direction) const final;
 
  private:
+  /// Access method to the logger
+  const Logger& logger() const { return *m_logger; }
+
   /// The configuration
   Config m_cfg;
+
+  /// The logger
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

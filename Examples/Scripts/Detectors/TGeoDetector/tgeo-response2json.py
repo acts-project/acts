@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # tgeo-response2json.py - convert TGeo response file options to ACTS v13.0.0 JSON format
 
-
-from __future__ import print_function
-
-import sys, os, re, getopt, json, subprocess
+import sys
+import os
+import re
+import getopt
+import json
+import subprocess
 from collections import OrderedDict
 
 

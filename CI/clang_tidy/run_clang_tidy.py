@@ -5,7 +5,6 @@ from multiprocessing import cpu_count
 import subprocess
 from subprocess import check_call, check_output, CalledProcessError
 from pathlib import Path
-import json
 import re
 import sys
 import os
@@ -57,9 +56,6 @@ def main():
     assert (
         args.source.exists() and args.source.is_dir()
     ), f"{args.source} is not a directory"
-
-    with (args.build / "compile_commands.json").open() as f:
-        compilation_database = json.load(f)
 
     futures = []
     files = []

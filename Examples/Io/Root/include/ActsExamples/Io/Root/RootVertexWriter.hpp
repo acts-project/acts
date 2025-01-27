@@ -88,7 +88,7 @@ class RootVertexWriter final : public WriterT<SimVertexContainer> {
   std::vector<float> m_vz;
   std::vector<float> m_vt;
   /// Outgoing particles from the vertex.
-  std::vector<std::vector<double>> m_outgoingParticles;
+  std::vector<std::vector<std::uint64_t>> m_outgoingParticles;
   // Decoded vertex identifier; see Barcode definition for details.
   std::vector<std::uint32_t> m_vertexPrimary;
   std::vector<std::uint32_t> m_vertexSecondary;

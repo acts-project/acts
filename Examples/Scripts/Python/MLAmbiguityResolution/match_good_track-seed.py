@@ -1,7 +1,6 @@
 import glob
 
 import pandas as pd
-import numpy as np
 
 
 def matchGood(seed_files: list[str], ckf_files: list[str]):

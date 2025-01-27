@@ -107,8 +107,9 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));
   ///  create the container volume
-  auto hVolume = std::make_shared<TrackingVolume>(Transform3::Identity(),
-                                                  hVolumeBounds, vArray, name);
+  auto hVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), hVolumeBounds, nullptr, nullptr, vArray,
+      MutableTrackingVolumeVector{}, name);
   // return the container
   return hVolume;
 }

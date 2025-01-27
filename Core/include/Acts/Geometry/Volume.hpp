@@ -16,6 +16,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 
@@ -23,13 +24,12 @@ class VolumeBounds;
 
 /// @class Volume
 ///
-/// It inhertis of GeometryObject for TDD identification
+/// It inherits from GeometryObject for geometry identification
 ///
-/// Base class for all volumes inside the tracking realm, it defines
-/// the interface for inherited Volume classes
-/// regarding the geometrical information.
-
-class Volume : public virtual GeometryObject {
+/// Base class for all volumes inside the tracking realm, it defines the
+/// interface for inherited Volume classes regarding the geometrical
+/// information.
+class Volume : public GeometryObject {
  public:
   using BoundingBox = AxisAlignedBoundingBox<Volume, ActsScalar, 3>;
 
@@ -60,14 +60,26 @@ class Volume : public virtual GeometryObject {
   /// Returns the inverted transform of this volume.
   const Transform3& itransform() const;
 
+  void setTransform(const Transform3& transform);
+
   /// returns the center of the volume
   const Vector3& center() const;
 
   /// Returns const reference to the volume bounds
   const VolumeBounds& volumeBounds() const;
 
+  /// Returns shared pointer to the volume bounds
+  std::shared_ptr<const VolumeBounds> volumeBoundsPtr() const;
+
   /// Set volume bounds and update volume bounding boxes implicitly
-  void assignVolumeBounds(std::shared_ptr<VolumeBounds> volbounds);
+  /// @param volbounds The volume bounds to be assigned
+  void assignVolumeBounds(std::shared_ptr<const VolumeBounds> volbounds);
+
+  /// Set the volume bounds and optionally also update the volume transform
+  /// @param volbounds The volume bounds to be assigned
+  /// @param transform The transform to be assigned, can be optional
+  virtual void update(std::shared_ptr<const VolumeBounds> volbounds,
+                      std::optional<Transform3> transform = std::nullopt);
 
   /// Construct bounding box for this shape
   /// @param envelope Optional envelope to add / subtract from min/max
@@ -97,6 +109,9 @@ class Volume : public virtual GeometryObject {
   /// @return vector 3D that can be used for the binning
   Vector3 binningPosition(const GeometryContext& gctx,
                           BinningValue bValue) const override;
+
+  bool operator==(const Volume& other) const;
+  bool operator!=(const Volume& other) const;
 
  protected:
   Transform3 m_transform;

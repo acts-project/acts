@@ -76,8 +76,7 @@ void detail::boundToCurvilinearTransportJacobian(
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
   // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
   fullTransportJacobian =
-      blockedMult(freeToBoundJacobian,
-                  blockedMult(freeTransportJacobian, boundToFreeJacobian));
+      freeToBoundJacobian * freeTransportJacobian * boundToFreeJacobian;
 }
 
 BoundToFreeMatrix detail::boundToFreeTransportJacobian(

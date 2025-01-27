@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 namespace {
 
@@ -50,6 +51,9 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
   std::pair<std::vector<Acts::IAssignmentFinder::SurfaceAssignment>,
             std::vector<Acts::IAssignmentFinder::VolumeAssignment>>
       candidates;
+
+  ACTS_DEBUG("Finding material assignment from position "
+             << toString(position) << " and direction " << toString(direction));
 
   // Try the surfaces first
   auto sIntersections =
@@ -101,6 +105,9 @@ Acts::IntersectionMaterialAssigner::assignmentCandidates(
       }
     }
   }
+
+  ACTS_DEBUG("Found " << candidates.first.size() << " surface candidates and "
+                      << candidates.second.size() << " volume candidates");
 
   // Return the result
   return candidates;

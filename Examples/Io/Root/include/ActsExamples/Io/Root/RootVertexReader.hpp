@@ -41,8 +41,6 @@ class RootVertexReader : public IReader {
     std::string treeName = "vertices";
     /// The name of the input file
     std::string filePath;
-    /// Whether the events are ordered or not
-    bool orderedEvents = true;
   };
 
   /// Constructor
@@ -99,12 +97,13 @@ class RootVertexReader : public IReader {
   std::vector<float>* m_vy = new std::vector<float>;
   std::vector<float>* m_vz = new std::vector<float>;
   std::vector<float>* m_vt = new std::vector<float>;
+  std::vector<std::vector<std::uint64_t>>* m_outgoingParticles =
+      new std::vector<std::vector<std::uint64_t>>;
+  // Decoded vertex identifier; see Barcode definition for details.
   std::vector<std::uint32_t>* m_vertexPrimary = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_vertexSecondary =
       new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
-  std::vector<std::vector<double>>* m_outgoingParticles =
-      new std::vector<std::vector<double>>;
 };
 
 }  // namespace ActsExamples

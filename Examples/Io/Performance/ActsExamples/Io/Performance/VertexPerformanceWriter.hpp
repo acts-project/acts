@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -68,6 +69,7 @@ class VertexPerformanceWriter final
     std::string treeName = "vertextree";
     /// File access mode.
     std::string fileMode = "RECREATE";
+
     /// Minimum fraction of track weight matched between truth
     /// and reco vertices to consider as truth matched.
     double vertexMatchThreshold = 0.7;
@@ -76,8 +78,12 @@ class VertexPerformanceWriter final
     double trackMatchThreshold = 0.5;
     /// Whether information about tracks is available
     bool useTracks = true;
-    /// minimum track weight for track to be considered as part of the fit
+    /// Minimum track weight for track to be considered as part of the fit
     double minTrkWeight = 0.1;
+    /// Spatial window for vertex density calculation.
+    /// @note This is a Z-window
+    /// @note This is a half-window around the reconstructed vertex
+    double vertexDensityWindow = 1 * Acts::UnitConstants::mm;
   };
 
   /// Constructor
@@ -126,6 +132,7 @@ class VertexPerformanceWriter final
   /// Number of tracks associated with the reconstructed vertex
   std::vector<int> m_nTracksOnRecoVertex;
 
+  /// Sum of the track weights associated with the reconstructed vertex
   std::vector<double> m_recoVertexTrackWeights;
 
   // Sum pT^2 of all tracks associated with the vertex
@@ -160,11 +167,18 @@ class VertexPerformanceWriter final
   std::vector<int> m_vertexPrimary;
   std::vector<int> m_vertexSecondary;
 
-  std::vector<double> m_truthVertexTrackWeights;
-  std::vector<double> m_truthVertexMatchRatio;
-
   /// Number of tracks associated with the truth vertex
   std::vector<int> m_nTracksOnTruthVertex;
+
+  /// Truth-based primary vertex density for the reconstructed vertex
+  std::vector<double> m_truthPrimaryVertexDensity;
+
+  /// Sum of the track weights associated with the truth vertex
+  std::vector<double> m_truthVertexTrackWeights;
+  /// Fraction of track weight matched between truth and reco vertices
+  std::vector<double> m_truthVertexMatchRatio;
+  /// Fraction of incorrectly assigned track weight to the reco vertex
+  std::vector<double> m_recoVertexContamination;
 
   /// Classification of the reconstructed vertex see RecoVertexClassification
   std::vector<int> m_recoVertexClassification;

@@ -389,7 +389,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
   }
   // we have the bounds and the volume array, create the volume
   std::shared_ptr<TrackingVolume> topVolume = std::make_shared<TrackingVolume>(
-      topVolumeTransform, topVolumeBounds, volumeArray, volumeName);
+      topVolumeTransform, topVolumeBounds, nullptr, nullptr, volumeArray,
+      MutableTrackingVolumeVector{}, volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
   if (!interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,

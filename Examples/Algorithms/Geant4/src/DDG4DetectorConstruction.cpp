@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include <memory>
-#include <stdexcept>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
@@ -23,8 +23,11 @@
 class G4VPhysicalVolume;
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : G4VUserDetectorConstruction(), m_detector(std::move(detector)) {}
+    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : G4VUserDetectorConstruction(),
+      m_detector(std::move(detector)),
+      m_regionCreators(std::move(regionCreators)) {}
 
 ActsExamples::DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
 
@@ -46,18 +49,26 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
     m_world = geo_info->world();
     // Create Geant4 volume manager
     g4map.volumeManager();
+
+    // Create regions
+    for (const auto& regionCreator : m_regionCreators) {
+      regionCreator->Construct();
+    }
   }
   return m_world;
 }
 
 ActsExamples::DDG4DetectorConstructionFactory::DDG4DetectorConstructionFactory(
-    std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : m_detector(std::move(detector)) {}
+    std::shared_ptr<DD4hep::DD4hepDetector> detector,
+    std::vector<std::shared_ptr<RegionCreator>> regionCreators)
+    : m_detector(std::move(detector)),
+      m_regionCreators(std::move(regionCreators)) {}
 
 ActsExamples::DDG4DetectorConstructionFactory::
     ~DDG4DetectorConstructionFactory() = default;
 
 std::unique_ptr<G4VUserDetectorConstruction>
 ActsExamples::DDG4DetectorConstructionFactory::factorize() const {
-  return std::make_unique<DDG4DetectorConstruction>(m_detector);
+  return std::make_unique<DDG4DetectorConstruction>(m_detector,
+                                                    m_regionCreators);
 }

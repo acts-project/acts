@@ -521,6 +521,7 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
         auto sumCovZTInverse = safeInverse(sumCovZT);
         if (!sumCovZTInverse) {
           ACTS_ERROR("Vertex z-t covariance matrix is singular.");
+          ACTS_ERROR("sumCovZT:\n" << sumCovZT);
           return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaZT.dot(*sumCovZTInverse * deltaZT));
@@ -529,6 +530,7 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
         const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
         if (sumVarZ <= 0) {
           ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
+          ACTS_ERROR("sumVarZ:\n" << sumVarZ);
           return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         // Use only z significance
@@ -542,6 +544,7 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
           ACTS_ERROR("Vertex 4D covariance matrix is singular.");
+          ACTS_ERROR("sumCov:\n" << sumCov);
           return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
@@ -553,6 +556,7 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
         auto sumCovInverse = safeInverse(sumCov);
         if (!sumCovInverse) {
           ACTS_ERROR("Vertex 3D covariance matrix is singular.");
+          ACTS_ERROR("sumCov:\n" << sumCov);
           return Result<bool>::failure(VertexingError::SingularMatrix);
         }
         significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));

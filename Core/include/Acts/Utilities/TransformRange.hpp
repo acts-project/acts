@@ -66,8 +66,12 @@ struct TransformRange {
   /// Construct a transforming range from a container. The first argument is
   /// only used for type-deduction
   /// @param container The container to wrap
-  explicit TransformRange(Callable&& /*callable*/, container_t& container)
+  TransformRange(Callable&& /*callable*/, container_t& container)
       : m_container(&container) {}
+
+  /// Construct a transforming range from a construct
+  /// @param container The container to wrap
+  explicit TransformRange(container_t& container) : m_container(&container) {}
 
   /// Access the i-th element of the underlying container, applying the
   /// callable
