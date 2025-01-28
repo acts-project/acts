@@ -65,14 +65,14 @@ class SeedFinderGbts {
 
   // inner
   template <typename output_container_t>
-  void createSeeds(const Acts::Experimental::RoiDescriptor & /*roi*/,
-                   const Acts::Experimental::GbtsGeometry<external_spacepoint_t>
+  void createSeeds(const RoiDescriptor & /*roi*/,
+                   const GbtsGeometry<external_spacepoint_t>
                        & /*gbtsgeo*/,
                    output_container_t & /*out_cont*/);
   // outer
   std::vector<seed_t> createSeeds(
-      const Acts::Experimental::RoiDescriptor & /*roi*/,
-      const Acts::Experimental::GbtsGeometry<external_spacepoint_t>
+      const RoiDescriptor & /*roi*/,
+      const GbtsGeometry<external_spacepoint_t>
           & /*gbtsgeo*/);
 
  private:
@@ -83,8 +83,8 @@ class SeedFinderGbts {
 
   void runGbts_TrackFinder(
       std::vector<GbtsTrigTracklet<external_spacepoint_t>> &vTracks,
-      const Acts::Experimental::RoiDescriptor &roi,
-      const Acts::Experimental::GbtsGeometry<external_spacepoint_t> &gbtsgeo);
+      const RoiDescriptor &roi,
+      const GbtsGeometry<external_spacepoint_t> &gbtsgeo);
 
   // needs to be member of class so can accessed by all member functions
   std::unique_ptr<GbtsDataStorage<external_spacepoint_t>> m_storage{nullptr};

@@ -264,7 +264,7 @@ template <typename space_point_t>
 class GbtsGeometry {
  public:
   GbtsGeometry(const std::vector<TrigInDetSiLayer> &layers,
-               std::unique_ptr<Acts::Experimental::GbtsConnector> &conn)
+               std::unique_ptr<GbtsConnector> &conn)
 
       : m_connector(std::move(conn)) {
     const float min_z0 = -168.0;
@@ -334,7 +334,7 @@ class GbtsGeometry {
 
   int num_bins() const { return m_nEtaBins; }
 
-  Acts::Experimental::GbtsConnector *connector() const {
+  GbtsConnector *connector() const {
     return m_connector.get();
   }
 
@@ -360,7 +360,7 @@ class GbtsGeometry {
 
   int m_nEtaBins{0};
 
-  std::unique_ptr<Acts::Experimental::GbtsConnector> m_connector;
+  std::unique_ptr<GbtsConnector> m_connector;
 };
 
 }  // namespace Acts::Experimental
