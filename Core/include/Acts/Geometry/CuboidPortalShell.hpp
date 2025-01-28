@@ -140,7 +140,7 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   }
 
   /// @copydoc PortalShellBase::isValid
-  bool isValid() const override;
+  bool isValid() const final;
 
   /// @copydoc PortalShellBase::label
   std::string label() const final;
