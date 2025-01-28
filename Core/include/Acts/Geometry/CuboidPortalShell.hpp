@@ -161,10 +161,13 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// Shell stacking direction in local stack coordinates
   AxisDirection m_axis;
 
-  ///
-  CuboidVolumeBounds::Face m_frontFace;
-  CuboidVolumeBounds::Face m_backFace;
-  std::array<CuboidVolumeBounds::Face, 4> m_sideFaces;
+  /// The cuboid face positioned first along the stacking direction
+  CuboidVolumeBounds::Face m_frontFace = negativeYZPlane;
+  /// The cuboid face positioned last along the stacking direction
+  CuboidVolumeBounds::Face m_backFace = positiveYZPlane;
+  /// The cuboid faces parallel to the stacking direction
+  std::array<CuboidVolumeBounds::Face, 4> m_sideFaces{
+      negativeXYPlane, positiveXYPlane, negativeZXPlane, positiveZXPlane};
 
   std::vector<CuboidPortalShell*> m_shells;
 };
