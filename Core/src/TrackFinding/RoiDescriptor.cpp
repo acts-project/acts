@@ -14,7 +14,7 @@
 
 namespace Acts::Experimental {
 
-Acts::Experimental::RoiDescriptor::RoiDescriptor(
+RoiDescriptor::RoiDescriptor(
     double eta, double etaMinus, double etaPlus, double phi, double phiMinus,
     double phiPlus, double zed, double zedMinus, double zedPlus)
     : m_phi(phi),
@@ -38,6 +38,6 @@ Acts::Experimental::RoiDescriptor::RoiDescriptor(
   m_dzdrPlus = 1 / m_drdzPlus;    // 45
 }
 
-Acts::Experimental::RoiDescriptor::~RoiDescriptor() = default;
+RoiDescriptor::~RoiDescriptor() = default;
 
 }  // namespace Acts::Experimental
