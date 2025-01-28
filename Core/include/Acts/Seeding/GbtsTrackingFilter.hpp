@@ -19,6 +19,8 @@
 #include <list>
 #include <vector>
 
+namespace Acts::Experimental {
+
 template <typename external_spacepoint_t>
 struct GbtsEdgeState {
  public:
@@ -392,3 +394,5 @@ class GbtsTrackingFilter {
   const Acts::Logger& logger() const { return *m_logger; }
   std::unique_ptr<const Acts::Logger> m_logger{nullptr};
 };
+
+}  // namespace Acts::Experimental

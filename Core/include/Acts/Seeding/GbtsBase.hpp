@@ -18,6 +18,8 @@
 #define OffsetBarrelSCT 3
 #define OffsetEndcapSCT 10
 
+namespace Acts::Experimental {
+
 template <typename space_point_t>
 class TrigInDetTriplet {
  public:
@@ -43,3 +45,5 @@ class TrigInDetTriplet {
   Acts::Experimental::GbtsSP<space_point_t> m_s3;
   float m_Q;  // Quality
 };
+
+}  // namespace Acts::Experimental
