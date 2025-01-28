@@ -87,7 +87,7 @@ using AngleAxis3 = Eigen::AngleAxis<double>;
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
 using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
-using Transform3 = Eigen::Transform<double, 3, Eigen::Affine>;
+using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 
 constexpr double s_transformEquivalentTolerance = 1e-9;
 

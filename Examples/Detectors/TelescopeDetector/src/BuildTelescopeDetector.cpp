@@ -83,7 +83,8 @@ ActsExamples::buildTelescopeDetector(
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
-    Acts::Transform3 trafo(rotation * trans);
+    Acts::Transform3 trafo(Eigen::Isometry3d(rotation) * trans);
+    
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -123,7 +124,7 @@ ActsExamples::buildTelescopeDetector(
   // The volume transform
   Acts::Translation3 transVol(offsets[0], offsets[1],
                               (positions.front() + positions.back()) * 0.5);
-  Acts::Transform3 trafoVol(rotation * transVol);
+  Acts::Transform3 trafoVol(Eigen::Isometry3d(rotation) * transVol);
 
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs

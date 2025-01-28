@@ -148,6 +148,7 @@ struct CylindricalTrackingGeometry {
                                 longitudinalOverlap, binningSchema);
 
     for (auto& mCenter : moduleCenters) {
+
       // The association transform
       double modulePhi = VectorHelpers::phi(mCenter);
       // Local z axis is the normal vector
@@ -165,7 +166,8 @@ struct CylindricalTrackingGeometry {
       moduleRotation.col(2) = moduleLocalZ;
       // Get the moduleTransform
       auto mModuleTransform =
-          Transform3(Translation3(mCenter) * moduleRotation);
+	Transform3(Translation3(mCenter) * Eigen::Isometry3d(moduleRotation));
+
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
