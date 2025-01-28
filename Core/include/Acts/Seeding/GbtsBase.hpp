@@ -25,8 +25,7 @@ class TrigInDetTriplet {
  public:
   TrigInDetTriplet() = delete;  // to prevent creation w/o initialization
 
-  TrigInDetTriplet(GbtsSP<space_point_t> s1,
-                   GbtsSP<space_point_t> s2,
+  TrigInDetTriplet(GbtsSP<space_point_t> s1, GbtsSP<space_point_t> s2,
                    GbtsSP<space_point_t> s3, float Q)
       : m_s1(std::move(s1)), m_s2(std::move(s2)), m_s3(std::move(s3)), m_Q(Q) {}
 
