@@ -201,6 +201,9 @@ struct NavigationBreakAborter {
   }
 };
 
+// According to stackoverflow, clang before version 16 cannot handle
+// std::ranges::subrange See
+// https://stackoverflow.com/questions/64300832/why-does-clang-think-gccs-subrange-does-not-satisfy-gccs-ranges-begin-functi
 #if defined(__clang__) && __clang_major__ < 16
 #define CLANG_RANGE_BUG_WORKAROUND
 #endif
