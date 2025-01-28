@@ -201,16 +201,35 @@ struct NavigationBreakAborter {
   }
 };
 
+// According to stackoverflow, clang before version 16 cannot handle
+// std::ranges::subrange See
+// https://stackoverflow.com/questions/64300832/why-does-clang-think-gccs-subrange-does-not-satisfy-gccs-ranges-begin-functi
+#if defined(__clang__) && __clang_major__ < 16
+#define CLANG_RANGE_BUG_WORKAROUND
+#endif
+
+#ifdef CLANG_RANGE_BUG_WORKAROUND
+template <typename It>
+struct Subrange {
+  It b, e;
+  Subrange(It b_, It e_) : b(b_), e(e_) {}
+  auto begin() const { return b; }
+  auto end() const { return e; }
+};
+#endif
+
 /// Run a simple test with a sequence of surfaces to check if fwd and backward
 /// navigation works
+#ifdef CLANG_RANGE_BUG_WORKAROUND
+template <typename ref_surfaces_t>
+#else
 template <std::ranges::range ref_surfaces_t>
+#endif
 void runSimpleTest(const std::vector<const Surface*>& surfaces,
                    Direction direction, const Surface* startSurface,
                    ref_surfaces_t expectedSurfaces) {
-  DirectNavigator dnav;
-  StraightLineStepper stepper;
-  Propagator<StraightLineStepper, DirectNavigator> prop(std::move(stepper), std::move(
-                                                                                dnav) /*, Acts::getDefaultLogger("DirectNavigatorTest", Acts::Logging::VERBOSE)*/);
+  Propagator<StraightLineStepper, DirectNavigator> prop(StraightLineStepper{},
+                                                        DirectNavigator{});
 
   using DirectActorList = ActorList<SurfaceCollector<>, NavigationBreakAborter>;
   using DirectOptions =
@@ -273,11 +292,19 @@ BOOST_AUTO_TEST_CASE(test_direct_navigator_fwd_bwd) {
 
   for (auto it = surfacePointers.begin(); it != surfacePointers.end(); ++it) {
     runSimpleTest(surfacePointers, Direction::Forward(), *it,
+#ifndef CLANG_RANGE_BUG_WORKAROUND
                   std::ranges::subrange{it, surfacePointers.end()});
+#else
+                  Subrange{it, surfacePointers.end()});
+#endif
   }
   for (auto it = surfacePointers.rbegin(); it != surfacePointers.rend(); ++it) {
     runSimpleTest(surfacePointers, Direction::Backward(), *it,
+#ifndef CLANG_RANGE_BUG_WORKAROUND
                   std::ranges::subrange{it, surfacePointers.rend()});
+#else
+                  Subrange{it, surfacePointers.rend()});
+#endif
   }
 }
 
