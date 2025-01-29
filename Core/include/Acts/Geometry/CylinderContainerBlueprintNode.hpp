@@ -11,7 +11,9 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -36,11 +38,10 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   /// @note The parameters are passed through to @ref CylinderVolumeStack,
   ///       see documentation of that class for more information
   CylinderContainerBlueprintNode(
-      const std::string& name, BinningValue direction,
-      CylinderVolumeStack::AttachmentStrategy attachmentStrategy =
-          CylinderVolumeStack::AttachmentStrategy::Midpoint,
-      CylinderVolumeStack::ResizeStrategy resizeStrategy =
-          CylinderVolumeStack::ResizeStrategy::Expand);
+      const std::string& name, AxisDirection direction,
+      VolumeAttachmentStrategy attachmentStrategy =
+          VolumeAttachmentStrategy::Midpoint,
+      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand);
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -95,31 +96,31 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   /// Setter for the stacking direction
   /// @param direction The stacking direction
   /// @return This node for chaining
-  CylinderContainerBlueprintNode& setDirection(BinningValue direction);
+  CylinderContainerBlueprintNode& setDirection(AxisDirection direction);
 
   /// Setter for the attachment strategy
   /// @param attachmentStrategy The attachment strategy
   /// @return This node for chaining
   CylinderContainerBlueprintNode& setAttachmentStrategy(
-      CylinderVolumeStack::AttachmentStrategy attachmentStrategy);
+      VolumeAttachmentStrategy attachmentStrategy);
 
   /// Setter for the resize strategy
   /// @param resizeStrategy The resize strategy
   /// @return This node for chaining
   CylinderContainerBlueprintNode& setResizeStrategy(
-      CylinderVolumeStack::ResizeStrategy resizeStrategy);
+      VolumeResizeStrategy resizeStrategy);
 
   /// Accessor to the stacking direction
   /// @return The stacking direction
-  BinningValue direction() const;
+  AxisDirection direction() const;
 
   /// Accessor to the attachment strategy
   /// @return The attachment strategy
-  CylinderVolumeStack::AttachmentStrategy attachmentStrategy() const;
+  VolumeAttachmentStrategy attachmentStrategy() const;
 
   /// Accessor to the resize strategy
   /// @return The resize strategy
-  CylinderVolumeStack::ResizeStrategy resizeStrategy() const;
+  VolumeResizeStrategy resizeStrategy() const;
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz
@@ -136,13 +137,12 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
 
   std::string m_name;
 
-  BinningValue m_direction = BinningValue::binZ;
+  AxisDirection m_direction = AxisDirection::AxisZ;
 
-  CylinderVolumeStack::AttachmentStrategy m_attachmentStrategy{
-      CylinderVolumeStack::AttachmentStrategy::Midpoint};
+  VolumeAttachmentStrategy m_attachmentStrategy{
+      VolumeAttachmentStrategy::Midpoint};
 
-  CylinderVolumeStack::ResizeStrategy m_resizeStrategy{
-      CylinderVolumeStack::ResizeStrategy::Expand};
+  VolumeResizeStrategy m_resizeStrategy{VolumeResizeStrategy::Expand};
 
   // Is only initialized during `build`
   std::vector<Volume*> m_childVolumes;

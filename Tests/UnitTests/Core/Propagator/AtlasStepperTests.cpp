@@ -64,7 +64,7 @@ struct MockPropagatorState {
   Stepper::State stepping;
   /// Propagator options with only the relevant components.
   struct {
-    Direction direction = Direction::Backward;
+    Direction direction = Direction::Backward();
     struct {
       double stepTolerance = 10_um;
     } stepping;
@@ -80,7 +80,7 @@ static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 
 // propagation settings
 static constexpr auto stepSize = 10_mm;
-static constexpr Direction navDir = Direction::Backward;
+static constexpr Direction navDir = Direction::Backward();
 static auto magneticField =
     std::make_shared<ConstantBField>(Vector3(0.1_T, -0.2_T, 2_T));
 
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                   particleHypothesis);
   FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  Direction navDir = Direction::Forward;
+  Direction navDir = Direction::Forward();
   double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
@@ -585,11 +585,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 
   Stepper::State state = stepper.makeState(options, cp);
 
-  stepper.updateStepSize(state, -5_cm, ConstrainedStep::actor, true);
+  stepper.updateStepSize(state, -5_cm, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
   BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
-  stepper.releaseStepSize(state, ConstrainedStep::actor);
+  stepper.releaseStepSize(state, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
@@ -609,10 +609,11 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   auto target = CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
                     .planeSurface();
 
-  stepper.updateSurfaceStatus(state, *target, 0, navDir,
-                              BoundaryTolerance::Infinite(),
-                              s_onSurfaceTolerance);
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
+  stepper.updateSurfaceStatus(
+      state, *target, 0, navDir, BoundaryTolerance::Infinite(),
+      s_onSurfaceTolerance, ConstrainedStep::Type::Navigator);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::Type::Navigator),
+                    distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(state,
@@ -621,18 +622,19 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
                              .closest(),
-                         navDir, false);
+                         navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
   state.stepSize.setUser(navDir * stepSize);
+  stepper.releaseStepSize(state, ConstrainedStep::Type::Navigator);
   stepper.updateStepSize(state,
                          target
                              ->intersect(geoCtx, stepper.position(state),
                                          navDir * stepper.direction(state),
                                          BoundaryTolerance::Infinite())
                              .closest(),
-                         navDir, true);
+                         navDir, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 

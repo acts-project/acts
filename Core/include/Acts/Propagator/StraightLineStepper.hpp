@@ -13,11 +13,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorTraits.hpp"
@@ -111,9 +109,6 @@ class StraightLineStepper {
 
     // Previous step size for overstep estimation (ignored for SL stepper)
     double previousStepSize = 0.;
-
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
 
     /// Statistics of the stepper
     StepperStatistics statistics;
@@ -233,15 +228,16 @@ class StraightLineStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
   /// @param [in] logger A logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        surfaceTolerance, stype, logger);
   }
 
   /// Update step size
@@ -251,12 +247,14 @@ class StraightLineStepper {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param release [in] boolean to trigger step size release
+  /// @param direction [in] The propagation direction
+  /// @param stype [in] The step size type to be set
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
-                                                      release);
+                      Direction direction, ConstrainedStep::Type stype) const {
+    (void)direction;
+    double stepSize = oIntersection.pathLength();
+    updateStepSize(state, stepSize, stype);
   }
 
   /// Update step size - explicitly with a double
@@ -264,12 +262,10 @@ class StraightLineStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype = ConstrainedStep::actor,
-                      bool release = true) const {
+                      ConstrainedStep::Type stype) const {
     state.previousStepSize = state.stepSize.value();
-    state.stepSize.update(stepSize, stype, release);
+    state.stepSize.update(stepSize, stype);
   }
 
   /// Get the step size

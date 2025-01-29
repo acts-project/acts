@@ -22,6 +22,7 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -168,8 +169,8 @@ BOOST_AUTO_TEST_CASE(Depth) {
 
 BOOST_AUTO_TEST_CASE(Static) {
   Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {1_mm, 2_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
   double hlZ = 30_mm;
@@ -209,12 +210,12 @@ BOOST_AUTO_TEST_CASE(Static) {
 
 BOOST_AUTO_TEST_CASE(CylinderContainer) {
   Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {2_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
   auto root = std::make_unique<Blueprint>(cfg);
 
-  auto& cyl = root->addCylinderContainer("Container", BinningValue::binZ);
-  cyl.setAttachmentStrategy(CylinderVolumeStack::AttachmentStrategy::Gap);
+  auto& cyl = root->addCylinderContainer("Container", AxisDirection::AxisZ);
+  cyl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
   double z0 = -200_mm;
   double hlZ = 30_mm;
@@ -262,8 +263,8 @@ BOOST_AUTO_TEST_CASE(Confined) {
   Transform3 base{Transform3::Identity()};
 
   Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {2_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {2_mm, 20_mm};
   auto root = std::make_unique<Blueprint>(cfg);
 
   root->addStaticVolume(
@@ -472,8 +473,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
 
 BOOST_AUTO_TEST_CASE(Material) {
   Blueprint::Config cfg;
-  cfg.envelope[BinningValue::binZ] = {20_mm, 20_mm};
-  cfg.envelope[BinningValue::binR] = {1_mm, 2_mm};
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
   double hlZ = 30_mm;
@@ -481,17 +482,17 @@ BOOST_AUTO_TEST_CASE(Material) {
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
                                               "child");
 
-  using enum BinningValue;
+  using enum AxisDirection;
   using enum CylinderVolumeBounds::Face;
   using enum AxisBoundaryType;
 
   root.addMaterial("Material", [&](auto& mat) {
     // @TODO: This API is not great
     mat.setBinning(std::vector{
-        std::tuple{NegativeDisc, Experimental::ProtoBinning{binR, Bound, 5},
-                   Experimental::ProtoBinning{binPhi, Bound, 10}},
-        std::tuple{PositiveDisc, Experimental::ProtoBinning{binR, Bound, 15},
-                   Experimental::ProtoBinning{binPhi, Bound, 20}},
+        std::tuple{NegativeDisc, Experimental::ProtoBinning{AxisR, Bound, 5},
+                   Experimental::ProtoBinning{AxisPhi, Bound, 10}},
+        std::tuple{PositiveDisc, Experimental::ProtoBinning{AxisR, Bound, 15},
+                   Experimental::ProtoBinning{AxisPhi, Bound, 20}},
     });
 
     mat.addStaticVolume(std::move(cyl));
