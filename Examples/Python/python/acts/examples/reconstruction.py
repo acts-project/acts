@@ -1304,6 +1304,7 @@ def addKalmanTracks(
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
+        "chi2Cut": float("inf"),
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(

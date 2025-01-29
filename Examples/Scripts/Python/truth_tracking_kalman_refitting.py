@@ -34,6 +34,7 @@ def runRefittingKf(
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
+        "chi2Cut": float("inf"),
     }
 
     s.addAlgorithm(
