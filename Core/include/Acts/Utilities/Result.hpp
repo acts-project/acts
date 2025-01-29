@@ -66,8 +66,8 @@ class Result {
   /// @param value The potential value, could be an actual valid value or an
   /// error.
   template <typename T2>
-  Result(T2 value) noexcept  // NOLINT <- suppress clang-tidy warning.
-                             // Conversion here is crucial for ergonomics
+  Result(T2 value) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
     requires(!std::same_as<T, E> && !std::constructible_from<T, E> &&
              !std::convertible_to<T, E> && !std::constructible_from<E, T> &&
              !std::convertible_to<E, T> &&
@@ -372,8 +372,8 @@ class Result<void, E> {
   /// @tparam E2 The type of the actual error
   /// @param error The instance of the actual error
   template <typename E2>
-  Result(E2 error) noexcept  // NOLINT <- suppress clang-tidy warning.
-                             // Conversion here is crucial for ergonomics
+  Result(E2 error) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
       : m_opt(std::move(error)) {}
 
   /// Assignment operator from an error.
