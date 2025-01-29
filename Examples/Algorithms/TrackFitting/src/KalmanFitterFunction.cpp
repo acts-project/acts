@@ -67,56 +67,12 @@ struct SimpleReverseFilteringLogic {
   }
 };
 
-template <typename PredictedPars, typename PredictedCov>
-double calculateChi2(const double* fullCalibrated,
-                     const double* fullCalibratedCovariance,
-                     PredictedPars predicted, PredictedCov predictedCovariance,
-                     Acts::BoundSubspaceIndices projector,
-                     unsigned int calibratedSize) {
-  using namespace Acts;
-  return visit_measurement(
-      calibratedSize,
-      [&fullCalibrated, &fullCalibratedCovariance, &predicted,
-       &predictedCovariance, &projector](auto N) -> double {
-        constexpr std::size_t kMeasurementSize = decltype(N)::value;
-
-        typename TrackStateTraits<kMeasurementSize, true>::Calibrated
-            calibrated{fullCalibrated};
-
-        typename TrackStateTraits<kMeasurementSize, true>::CalibratedCovariance
-            calibratedCovariance{fullCalibratedCovariance};
-
-        using ParametersVector = ActsVector<kMeasurementSize>;
-
-        std::span<std::uint8_t, kMeasurementSize> validSubspaceIndices(
-            projector.begin(), projector.begin() + kMeasurementSize);
-        FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
-            validSubspaceIndices);
-
-        // Get the residuals
-        ParametersVector res =
-            calibrated - subspaceHelper.projectVector(predicted);
-
-        // Get the chi2
-        return (res.transpose() *
-                (calibratedCovariance +
-                 subspaceHelper.projectMatrix(predictedCovariance))
-                    .inverse() *
-                res)
-            .eval()(0, 0);
-      });
-}
-
 struct SimpleOutlierFinder {
   double chi2Cut = std::numeric_limits<double>::infinity();
 
   bool isOutlier(
       Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
-    double chi2 = calculateChi2(
-        trackState.effectiveCalibrated().data(),
-        trackState.effectiveCalibratedCovariance().data(),
-        trackState.predicted(), trackState.predictedCovariance(),
-        trackState.projectorSubspaceIndices(), trackState.calibratedSize());
+    double chi2 = Acts::calculatePredictedChi2(trackState);
     return chi2 > chi2Cut;
   }
 };
