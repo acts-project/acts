@@ -147,7 +147,7 @@ struct ProtoLayerT : public ProtoLayerBase {
   ProtoLayerT(const GeometryContext& gctx,
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const Transform3& transformIn = Transform3::Identity())
-    requires(IsConst)
+    requires IsConst
   {
     transform = transformIn;
     m_surfaces.reserve(surfaces.size());
