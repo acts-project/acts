@@ -67,19 +67,22 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     }
 
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
-    initializeEtaVector(detectorConfig.minHitsPerEta, minHitsPerEta);
+    initializeEtaVector(detectorConfig.minHitsPerEta, minHitsPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
-    initializeEtaVector(detectorConfig.maxHolesPerEta, maxHolesPerEta);
+    initializeEtaVector(detectorConfig.maxHolesPerEta, maxHolesPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxOutliersPerEta =
         value["maxOutliersPerEta"];
-    initializeEtaVector(detectorConfig.maxOutliersPerEta, maxOutliersPerEta);
+    initializeEtaVector(detectorConfig.maxOutliersPerEta, maxOutliersPerEta,
+                        detectorConfig.etaBins.size());
 
     const std::vector<std::size_t>& maxSharedHitsPerEta =
         value["maxSharedHitsPerEta"];
-    initializeEtaVector(detectorConfig.maxSharedHitsPerEta,
-                        maxSharedHitsPerEta);
+    initializeEtaVector(detectorConfig.maxSharedHitsPerEta, maxSharedHitsPerEta,
+                        detectorConfig.etaBins.size());
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
