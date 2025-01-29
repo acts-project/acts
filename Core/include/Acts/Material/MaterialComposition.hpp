@@ -125,7 +125,7 @@ class MaterialComposition {
   auto end() const { return m_elements.end(); }
 
   /// Check if the composed material is valid, i.e. it is not vacuum.
-  operator bool() const { return !m_elements.empty(); }
+  explicit operator bool() const { return !m_elements.empty(); }
   /// Return the number of elements.
   std::size_t size() const { return m_elements.size(); }
 

@@ -50,7 +50,7 @@ struct FreeToBoundCorrection {
   explicit FreeToBoundCorrection(bool apply_);
 
   /// Return boolean for applying correction or not
-  operator bool() const;
+  explicit operator bool() const;
 };
 
 namespace detail {

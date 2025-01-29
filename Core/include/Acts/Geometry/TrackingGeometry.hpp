@@ -48,10 +48,11 @@ class TrackingGeometry {
   ///        surface or volume based material to the TrackingVolume
   /// @param hook Identifier hook to be applied to surfaces
   /// @param logger instance of a logger (defaulting to the "silent" one)
-  TrackingGeometry(const std::shared_ptr<TrackingVolume>& highestVolume,
-                   const IMaterialDecorator* materialDecorator = nullptr,
-                   const GeometryIdentifierHook& hook = {},
-                   const Logger& logger = getDummyLogger());
+  explicit TrackingGeometry(
+      const std::shared_ptr<TrackingVolume>& highestVolume,
+      const IMaterialDecorator* materialDecorator = nullptr,
+      const GeometryIdentifierHook& hook = {},
+      const Logger& logger = getDummyLogger());
 
   /// Destructor
   ~TrackingGeometry();

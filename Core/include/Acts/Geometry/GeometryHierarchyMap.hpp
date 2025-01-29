@@ -69,7 +69,7 @@ class GeometryHierarchyMap {
   /// Construct the container from the given elements.
   ///
   /// @param elements input elements (must be unique with respect to identifier)
-  GeometryHierarchyMap(std::vector<InputElement> elements);
+  explicit GeometryHierarchyMap(std::vector<InputElement> elements);
 
   /// Construct the container from an initializer list.
   ///
