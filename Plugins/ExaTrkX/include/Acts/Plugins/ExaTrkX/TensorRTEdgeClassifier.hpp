@@ -25,11 +25,11 @@ class IExecutionContext;
 
 namespace Acts {
 
-class TensorRTEdgeClassifier final : public Acts::EdgeClassificationBase {
+class TensorRTEdgeClassifier final : public EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    std::vector<int> selectedFeatures = {};
+    std::vector<int> selectedFeatures;
     float cut = 0.5;
 
     std::size_t numExecutionContexts = 1;
