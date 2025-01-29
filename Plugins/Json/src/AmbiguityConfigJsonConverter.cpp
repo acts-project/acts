@@ -13,7 +13,7 @@
 
 void initializeEtaVector(std::vector<std::size_t>& target,
                          const std::vector<std::size_t>& source,
-                         int etaBinSize) {
+                         std::size_t etaBinSize) {
   if (source.size() == etaBinSize - 1) {
     target = source;  // Directly copy if sizes match
   } else if (source.size() == 1) {
