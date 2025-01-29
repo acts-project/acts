@@ -101,8 +101,8 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
     }
   }
 
-  std::size_t freeMem, totalMem;
-  cudaMemGetInfo(&freeMem, &totalMem);
+  std::size_t freeMem{}, totalMem{};
+  ACTS_CUDA_CHECK(cudaMemGetInfo(&freeMem, &totalMem));
   ACTS_DEBUG("Used CUDA memory after TensorRT initialization: "
              << (totalMem - freeMem) * 1e-9 << " / " << totalMem * 1e-9
              << " GB");
