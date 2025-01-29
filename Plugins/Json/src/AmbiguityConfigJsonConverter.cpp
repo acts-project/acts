@@ -12,10 +12,18 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 void initializeEtaVector(std::vector<std::size_t>& target,
-                         const std::vector<std::size_t>& source) {
-  target = {};
-  for (auto value : source) {
-    target.push_back(value);
+                         const std::vector<std::size_t>& source,
+                         int etaBinSize) {
+  if (source.size() == etaBinSize - 1) {
+    target = source;  // Directly copy if sizes match
+  } else if (source.size() == 1) {
+    target.resize(etaBinSize - 1);  // Resize target to the required size
+    std::fill(target.begin(), target.end(),
+              source[0]);  // Fill with the single value from source
+  } else {
+    throw std::invalid_argument("Invalid cuts size. Expected 1 or " +
+                                std::to_string(etaBinSize - 1) + ", got " +
+                                std::to_string(source.size()));
   }
 }
 namespace Acts {

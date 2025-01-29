@@ -237,16 +237,6 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
-  /// Get the value at a specific eta bin.
-  ///
-  /// @param cuts is the input vector of cuts
-  /// @param etaBinSize is the size of the eta bin
-  /// @param binIndex is the index of the bin
-  /// @return the value of cut at the specific eta bin
-  static std::size_t getValueAtEta(std::vector<std::size_t> cuts,
-                                   std::size_t etaBinSize,
-                                   std::size_t binIndex);
-
  private:
   Config m_cfg;
 
