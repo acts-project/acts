@@ -174,44 +174,10 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
   std::vector<float> inputFeatures(3);
 
   ACTS_DEBUG("Collect information from " << tracks.size() << " tracks");
-  std::size_t unmatched = 0, missingRefSurface = 0, filled = 0;
+  std::size_t unmatched = 0, missingRefSurface = 0;
   for (const auto& track : tracks) {
     // Counting number of total trajectories
     m_nTotalTracks++;
-
-    // Check if the reco track has fitted track parameters
-    if (!track.hasReferenceSurface()) {
-      ACTS_WARNING("No fitted track parameters for track, index = "
-                   << track.index() << " tip index = " << track.tipIndex());
-      continue;
-    }
-
-    Acts::BoundTrackParameters fittedParameters =
-        track.createParametersAtReference();
-
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                track.nTrackStates(), track.nMeasurements(),
-                                track.nOutliers(), track.nHoles(),
-                                track.nSharedHits());
-
-    // Get the truth matching information
-    auto imatched = trackParticleMatching.find(track.index());
-    if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth matching information for this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
-      continue;
-    }
-
-    const auto& particleMatch = imatched->second;
-
-    if (particleMatch.classification == TrackMatchClassification::Fake) {
-      m_nTotalFakeTracks++;
-    }
-
-    if (particleMatch.classification == TrackMatchClassification::Duplicate) {
-      m_nTotalDuplicateTracks++;
-    }
 
     // Check if the reco track has fitted track parameters
     if (!track.hasReferenceSurface()) {
@@ -256,6 +222,25 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
                                   nOutliers, nHoles, nSharedHits);
     }
 
+    // Get the truth matching information
+    auto imatched = trackParticleMatching.find(track.index());
+    if (imatched == trackParticleMatching.end()) {
+      ACTS_DEBUG("No truth matching information for this track, index = "
+                 << track.index() << " tip index = " << track.tipIndex());
+      unmatched++;
+      continue;
+    }
+
+    const auto& particleMatch = imatched->second;
+
+    if (particleMatch.classification == TrackMatchClassification::Fake) {
+      m_nTotalFakeTracks++;
+    }
+
+    if (particleMatch.classification == TrackMatchClassification::Duplicate) {
+      m_nTotalDuplicateTracks++;
+    }
+
     // Fill fake rate plots
     m_fakeRatePlotTool.fill(
         m_fakeRatePlotCache, fittedParameters,
@@ -265,11 +250,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
-
-    filled++;
   }
 
-  ACTS_DEBUG("Filled track plots for " << filled << " tracks");
   if (unmatched > 0) {
     ACTS_DEBUG("No matching information found for " << unmatched << " tracks");
   }
