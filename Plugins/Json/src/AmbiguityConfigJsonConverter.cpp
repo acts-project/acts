@@ -60,10 +60,7 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
             "Eta bins must be monotonically increasing");
       }
 
-      detectorConfig.etaBins = {};
-      for (auto etaBin : etaBins) {
-        detectorConfig.etaBins.push_back(etaBin);
-      }
+      detectorConfig.etaBins = etaBins;
     }
 
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
