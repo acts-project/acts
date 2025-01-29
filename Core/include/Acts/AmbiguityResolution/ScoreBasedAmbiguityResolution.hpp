@@ -193,7 +193,7 @@ class ScoreBasedAmbiguityResolution {
 
   /// Rejects Tracks based on eta dependent cuts.
   ///
-  /// @param track is the input track
+  /// @param detector is the detector configuration object
   /// @param trackFeatures is the trackFeatures object for a specific detector
   /// @param eta is the eta of the track
   /// @return true if the track is rejected, false otherwise
