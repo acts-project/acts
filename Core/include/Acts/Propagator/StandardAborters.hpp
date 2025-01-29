@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -18,9 +16,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
-#include <optional>
-#include <sstream>
-#include <string>
 
 namespace Acts {
 
@@ -55,8 +50,8 @@ struct PathLimitReached {
                                           << distance);
       return true;
     }
-    stepper.updateStepSize(state.stepping, distance, ConstrainedStep::aborter,
-                           false);
+    stepper.updateStepSize(state.stepping, distance,
+                           ConstrainedStep::Type::Actor);
     ACTS_VERBOSE("PathLimit aborter | "
                  << "Target stepSize (path limit) updated to "
                  << stepper.outputStepSize(state.stepping));
@@ -134,7 +129,7 @@ struct SurfaceReached {
           detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
         stepper.updateStepSize(state.stepping, intersection.pathLength(),
-                               ConstrainedStep::aborter, false);
+                               ConstrainedStep::Type::Actor);
         ACTS_VERBOSE(
             "SurfaceReached aborter | "
             "Target stepSize (surface) updated to "

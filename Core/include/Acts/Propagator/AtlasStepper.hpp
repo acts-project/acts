@@ -28,10 +28,11 @@
 
 #include <cmath>
 
-// This is based original stepper code from the ATLAS RungeKuttaPropagator
 namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
+///
+/// This is based original stepper code from the ATLAS RungeKuttaPropagator
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
@@ -78,7 +79,7 @@ class AtlasStepper {
     bool needgradient = false;
     bool newfield = true;
     // internal parameters to be used
-    Vector3 field;
+    Vector3 field = Vector3::Zero();
     std::array<double, 60> pVector{};
 
     /// Storage pattern of pVector
@@ -115,9 +116,6 @@ class AtlasStepper {
     // Previous step size for overstep estimation
     double previousStepSize = 0.;
 
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
-
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
     MagneticFieldProvider::Cache fieldCache;
@@ -143,11 +141,13 @@ class AtlasStepper {
                   const BoundTrackParameters& par) const {
     State state{options, m_bField->makeCache(options.magFieldContext)};
 
+    state.particleHypothesis = par.particleHypothesis();
+
     // The rest of this constructor is copy&paste of AtlasStepper::update() -
     // this is a nasty but working solution for the stepper state without
     // functions
 
-    const auto pos = par.position(state.options.geoContext);
+    const auto pos = par.position(options.geoContext);
     const auto Vp = par.parameters();
 
     double Sf = std::sin(Vp[eBoundPhi]);
@@ -179,7 +179,7 @@ class AtlasStepper {
       state.covTransport = true;
       state.useJacobian = true;
       const auto transform = par.referenceSurface().referenceFrame(
-          state.options.geoContext, pos, par.direction());
+          options.geoContext, pos, par.direction());
 
       pVector[8] = transform(0, eBoundLoc0);
       pVector[16] = transform(0, eBoundLoc1);
@@ -407,15 +407,16 @@ class AtlasStepper {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
   /// @param [in] logger Logger instance to use
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
-        surfaceTolerance, logger);
+        surfaceTolerance, stype, logger);
   }
 
   /// Update step size
@@ -425,11 +426,14 @@ class AtlasStepper {
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param release [in] boolean to trigger step size release
+  /// @param direction [in] The propagation direction
+  /// @param stype [in] The step size type to be set
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction /*direction*/, bool release = true) const {
-    detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
+                      Direction direction, ConstrainedStep::Type stype) const {
+    (void)direction;
+    double stepSize = oIntersection.pathLength();
+    updateStepSize(state, stepSize, stype);
   }
 
   /// Update step size - explicitly with a double
@@ -437,19 +441,10 @@ class AtlasStepper {
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value
   /// @param [in] stype The step size type to be set
-  /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release = true) const {
+                      ConstrainedStep::Type stype) const {
     state.previousStepSize = state.stepSize.value();
-    state.stepSize.update(stepSize, stype, release);
-  }
-
-  /// Get the step size
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  /// @param stype [in] The step size type to be returned
-  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
-    return state.stepSize.value(stype);
+    state.stepSize.update(stepSize, stype);
   }
 
   /// Release the Step size
@@ -458,6 +453,14 @@ class AtlasStepper {
   /// @param [in] stype The step size type to be released
   void releaseStepSize(State& state, ConstrainedStep::Type stype) const {
     state.stepSize.release(stype);
+  }
+
+  /// Get the step size
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @param stype [in] The step size type to be returned
+  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
   }
 
   /// Output the Step Size - single component
