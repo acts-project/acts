@@ -221,12 +221,7 @@ class TrackStateProxy {
   /// Copy assignment operator: const to const or mutable to mutable
   /// @param other The other TrackStateProxy to assign from
   /// @return Reference to this TrackStateProxy
-  TrackStateProxy& operator=(const TrackStateProxy& other) {
-    m_traj = other.m_traj;
-    m_istate = other.m_istate;
-
-    return *this;
-  }
+  TrackStateProxy& operator=(const TrackStateProxy& other) = default;
 
   /// Constructor from mutable TrackStateProxy
   /// @note Only available if the track state proxy is read-only
@@ -237,6 +232,7 @@ class TrackStateProxy {
 
   /// Assignment operator to from mutable @c TrackStateProxy
   /// @param other The other TrackStateProxy to assign from
+  /// @note Only available if the track state proxy is read-only
   /// @return Reference to this TrackStateProxy
   TrackStateProxy& operator=(const TrackStateProxy<Trajectory, M, false>& other)
     requires(ReadOnly)
