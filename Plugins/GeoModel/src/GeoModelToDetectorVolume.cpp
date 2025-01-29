@@ -126,7 +126,7 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    return convertVolume(newTrf, *shapeOp);
+    return convertVolume(Eigen::Isometry3d(newTrf), *shapeOp);
   } else {
     throw std::runtime_error("FATAL: Unsupported GeoModel shape: " +
                              shape.type());

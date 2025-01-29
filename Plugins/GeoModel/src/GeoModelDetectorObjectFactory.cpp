@@ -163,7 +163,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
 
   for (const auto &surface : surfaces) {
     const Transform3 &transform =
-        fpv->getAbsoluteTransform() * surface.transform;
+      fpv->getAbsoluteTransform() * Eigen::Isometry3d(surface.transform);
     convertSensitive(surface.volume, transform, sensitives);
   }
   cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
