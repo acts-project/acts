@@ -394,14 +394,9 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
       auto detector = m_cfg.detectorConfigs.at(detectorId);
 
       std::vector<double> etaBins = detector.etaBins;
-      int etaBin = 0;
 
-      for (std::size_t i = 0; i < detector.etaBins.size() - 1; ++i) {
-        if (eta >= etaBins[i] && eta < detector.etaBins[i + 1]) {
-          etaBin = i;
-          break;
-        }
-      }
+      auto it = std::upper_bound(etaBins.begin(), etaBins.end(), eta);
+      std::size_t etaBin = std::distance(etaBins.begin(), it) - 1;
 
       if (trackFeaturesVector[detectorId].nSharedHits >
           detector.maxSharedHitsPerEta[etaBin]) {
