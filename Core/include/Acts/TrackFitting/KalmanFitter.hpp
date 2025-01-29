@@ -268,9 +268,9 @@ class KalmanFitter {
       std::is_same_v<KalmanNavigator, DirectNavigator>;
 
  public:
-  KalmanFitter(propagator_t pPropagator,
-               std::unique_ptr<const Logger> _logger =
-                   getDefaultLogger("KalmanFitter", Logging::INFO))
+  explicit KalmanFitter(propagator_t pPropagator,
+                        std::unique_ptr<const Logger> _logger =
+                            getDefaultLogger("KalmanFitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}

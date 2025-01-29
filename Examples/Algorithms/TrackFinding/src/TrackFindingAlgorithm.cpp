@@ -286,7 +286,7 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
-          return {cfg};
+          return std::optional<Acts::TrackSelector>(Acts::TrackSelector(cfg));
         },
         m_cfg.trackSelectorCfg.value());
   }

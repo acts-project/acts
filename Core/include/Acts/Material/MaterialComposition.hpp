@@ -98,7 +98,7 @@ class MaterialComposition {
   /// Constructor from element fractions.
   ///
   /// Rescales the fractions so they all add up to unity within the accuracy.
-  MaterialComposition(std::vector<ElementFraction> elements)
+  explicit MaterialComposition(std::vector<ElementFraction> elements)
       : m_elements(std::move(elements)) {
     std::ranges::sort(m_elements, std::less<ElementFraction>{});
     // compute the total weight first
