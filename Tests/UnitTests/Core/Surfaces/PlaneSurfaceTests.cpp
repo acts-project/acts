@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 
   auto pTransform = Transform3{translation * Eigen::Isometry3d(rotationMat)};
-  
+
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
 

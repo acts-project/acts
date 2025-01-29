@@ -262,8 +262,9 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
         std::shared_ptr<Acts::Transform3> mutableModuleTransform =
-	  std::make_shared<Acts::Transform3>(
-					     Acts::Translation3(moduleCenter) * Eigen::Isometry3d(moduleRotation));
+            std::make_shared<Acts::Transform3>(
+                Acts::Translation3(moduleCenter) *
+                Eigen::Isometry3d(moduleRotation));
         // stereo angle if necessary
         if (!m_cfg.centralModuleFrontsideStereo.empty() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
@@ -299,7 +300,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
           mutableModuleTransform = std::make_shared<Acts::Transform3>(
-								      Acts::Translation3(bsModuleCenter) * Eigen::Isometry3d(moduleRotation));
+              Acts::Translation3(bsModuleCenter) *
+              Eigen::Isometry3d(moduleRotation));
           // apply the stereo
           if (!m_cfg.centralModuleBacksideStereo.empty()) {
             // twist by the stereo angle
@@ -449,7 +451,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // the transforms for the two modules
           std::shared_ptr<const Acts::Transform3> moduleTransform =
               std::make_shared<const Acts::Transform3>(
-						       Acts::Translation3(moduleCenter) * Eigen::Isometry3d(moduleRotation));
+                  Acts::Translation3(moduleCenter) *
+                  Eigen::Isometry3d(moduleRotation));
 
           // create the modules identifier
           GenericDetectorElement::Identifier moduleIdentifier =
@@ -472,7 +475,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
             // the new transforms
             auto mutableModuleTransform = std::make_shared<Acts::Transform3>(
-									     Acts::Translation3(moduleCenter) * Eigen::Isometry3d(moduleRotation));
+                Acts::Translation3(moduleCenter) *
+                Eigen::Isometry3d(moduleRotation));
             // apply the stereo
             if (!m_cfg.posnegModuleBacksideStereo.empty()) {
               // twist by the stereo angle

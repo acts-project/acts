@@ -84,7 +84,6 @@ ActsExamples::buildTelescopeDetector(
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
     Acts::Transform3 trafo(Eigen::Isometry3d(rotation) * trans);
-    
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];

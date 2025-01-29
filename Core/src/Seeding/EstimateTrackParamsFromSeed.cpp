@@ -36,7 +36,7 @@ Acts::FreeVector Acts::estimateTrackParamsFromSeed(const Vector3& sp0,
 
   // The transform which constructs the new frame
   Transform3 transform(trans * Eigen::Isometry3d(rotation));
-  
+
   // The coordinate of the middle and top space point in the new frame
   Vector3 local1 = transform.inverse() * sp1;
   Vector3 local2 = transform.inverse() * sp2;
