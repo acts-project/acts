@@ -12,7 +12,7 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 void initializeEtaVector(std::vector<std::size_t>& target,
-                      const std::vector<std::size_t>& source) {
+                         const std::vector<std::size_t>& source) {
   target = {};
   for (auto value : source) {
     target.push_back(value);
@@ -70,7 +70,8 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
 
     const std::vector<std::size_t>& maxSharedHitsPerEta =
         value["maxSharedHitsPerEta"];
-    initializeEtaVector(detectorConfig.maxSharedHitsPerEta, maxSharedHitsPerEta);
+    initializeEtaVector(detectorConfig.maxSharedHitsPerEta,
+                        maxSharedHitsPerEta);
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
