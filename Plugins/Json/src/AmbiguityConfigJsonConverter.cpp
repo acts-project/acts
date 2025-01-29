@@ -11,6 +11,13 @@
 #include "Acts/AmbiguityResolution/ScoreBasedAmbiguityResolution.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
+void initializeEtaVector(std::vector<std::size_t>& target,
+                      const std::vector<std::size_t>& source) {
+  target = {};
+  for (auto value : source) {
+    target.push_back(value);
+  }
+}
 namespace Acts {
 
 void from_json(const nlohmann::json& j, ConfigPair& p) {
@@ -50,32 +57,20 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
         detectorConfig.etaBins.push_back(etaBin);
       }
     }
-    
+
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
-    detectorConfig.minHitsPerEta = {};
-    for (auto minHit : minHitsPerEta) {
-      detectorConfig.minHitsPerEta.push_back(minHit);
-    }
+    initializeEtaVector(detectorConfig.minHitsPerEta, minHitsPerEta);
 
     const std::vector<std::size_t>& maxHolesPerEta = value["maxHolesPerEta"];
-    detectorConfig.maxHolesPerEta = {};
-    for (auto maxHole : maxHolesPerEta) {
-      detectorConfig.maxHolesPerEta.push_back(maxHole);
-    }
+    initializeEtaVector(detectorConfig.maxHolesPerEta, maxHolesPerEta);
 
     const std::vector<std::size_t>& maxOutliersPerEta =
         value["maxOutliersPerEta"];
-    detectorConfig.maxOutliersPerEta = {};
-    for (auto maxOutlier : maxOutliersPerEta) {
-      detectorConfig.maxOutliersPerEta.push_back(maxOutlier);
-    }
+    initializeEtaVector(detectorConfig.maxOutliersPerEta, maxOutliersPerEta);
 
     const std::vector<std::size_t>& maxSharedHitsPerEta =
         value["maxSharedHitsPerEta"];
-    detectorConfig.maxSharedHitsPerEta = {};
-    for (auto maxSharedHit : maxSharedHitsPerEta) {
-      detectorConfig.maxSharedHitsPerEta.push_back(maxSharedHit);
-    }
+    initializeEtaVector(detectorConfig.maxSharedHitsPerEta, maxSharedHitsPerEta);
 
     if (goodHits.size() != fakeHits.size()) {
       throw std::invalid_argument("goodHits and FakeHits size mismatch");
