@@ -36,11 +36,21 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
     const std::vector<double>& fakeHoles = value["fakeHoles"];
 
     const std::vector<double>& etaBins = value["etaBins"];
-    detectorConfig.etaBins = {};
-    for (auto etaBin : etaBins) {
-      detectorConfig.etaBins.push_back(etaBin);
-    }
 
+    // Validate eta bins
+    if (!etaBins.empty()) {
+      // Verify monotonically increasing eta bins
+      if (!std::is_sorted(etaBins.begin(), etaBins.end())) {
+        throw std::invalid_argument(
+            "Eta bins must be monotonically increasing");
+      }
+
+      detectorConfig.etaBins = {};
+      for (auto etaBin : etaBins) {
+        detectorConfig.etaBins.push_back(etaBin);
+      }
+    }
+    
     const std::vector<std::size_t>& minHitsPerEta = value["minHitsPerEta"];
     detectorConfig.minHitsPerEta = {};
     for (auto minHit : minHitsPerEta) {

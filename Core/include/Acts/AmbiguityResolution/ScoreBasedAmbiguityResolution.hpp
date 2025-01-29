@@ -51,12 +51,19 @@ class ScoreBasedAmbiguityResolution {
     int outliersScoreWeight = 0;
     int otherScoreWeight = 0;
 
-    // the minimum number of hits for each detector for each eta bin
+    // the eta bins for the detector
     std::vector<double> etaBins = {-5, 5};
 
+    // the minimum number of hits for each detector for each eta bin
     std::vector<std::size_t> minHitsPerEta = {0};
+
+    // the maximum number of holes for each detector for each eta bin
     std::vector<std::size_t> maxHolesPerEta = {0};
+
+    // the maximum number of outliers for each detector for each eta bin
     std::vector<std::size_t> maxOutliersPerEta = {0};
+
+    // the maximum number of shared hits for each detector for each eta bin
     std::vector<std::size_t> maxSharedHitsPerEta = {0};
 
     std::size_t maxHits = 0;
@@ -184,6 +191,12 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
+  /// Rejects Tracks based on eta dependent cuts.
+  ///
+  /// @param track is the input track
+  /// @param trackFeatures is the trackFeatures object for a specific detector
+  /// @param eta is the eta of the track
+  /// @return true if the track is rejected, false otherwise
   bool etaBasedCuts(const DetectorConfig& detector,
                     const TrackFeatures& trackFeatures,
                     const double& eta) const;
@@ -224,6 +237,12 @@ class ScoreBasedAmbiguityResolution {
       const OptionalCuts<typename track_container_t::ConstTrackProxy>&
           optionalCuts = {}) const;
 
+  /// Get the value at a specific eta bin.
+  ///
+  /// @param cuts is the input vector of cuts
+  /// @param etaBinSize is the size of the eta bin
+  /// @param binIndex is the index of the bin
+  /// @return the value of cut at the specific eta bin
   static std::size_t getValueAtEta(std::vector<std::size_t> cuts,
                                    std::size_t etaBinSize,
                                    std::size_t binIndex);

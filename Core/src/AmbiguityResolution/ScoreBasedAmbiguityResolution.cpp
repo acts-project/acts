@@ -20,10 +20,9 @@ std::size_t Acts::ScoreBasedAmbiguityResolution::getValueAtEta(
   }
 
   else {
-    std::cerr << "The size of cuts is not equal to 1 or the number of eta bins"
-              << " size of cuts: " << cuts.size()
-              << " number of eta bins: " << etaBinSize << std::endl;
-    return 0;
+    throw std::invalid_argument("Invalid cuts size. Expected 1 or " +
+                                std::to_string(etaBinSize - 1) + ", got " +
+                                std::to_string(cuts.size()));
   }
 }
 
@@ -31,29 +30,16 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
     const double& eta) const {
   std::vector<double> etaBins = detector.etaBins;
-  int etaBin = 0;
 
-  bool cutApplied = false;
-
-  for (std::size_t i = 0; i < etaBins.size() - 1; ++i) {
-    if (eta >= etaBins[i] && eta < etaBins[i + 1]) {
-      etaBin = i;
-      break;
-    }
+  auto it = std::upper_bound(etaBins.begin(), etaBins.end(), eta);
+  if (it == etaBins.begin() || it == etaBins.end()) {
+    return false;  // eta out of range
   }
-
-  cutApplied = (trackFeatures.nHits < getValueAtEta(detector.minHitsPerEta,
-                                                    etaBins.size(), etaBin)) ||
-               cutApplied;
-
-  cutApplied = (trackFeatures.nHoles > getValueAtEta(detector.maxHolesPerEta,
-                                                     etaBins.size(), etaBin)) ||
-               cutApplied;
-
-  cutApplied =
-      (trackFeatures.nOutliers >
-       getValueAtEta(detector.maxOutliersPerEta, etaBins.size(), etaBin)) ||
-      cutApplied;
-
-  return cutApplied;
+  std::size_t etaBin = std::distance(etaBins.begin(), it) - 1;
+  return (trackFeatures.nHits <
+          getValueAtEta(detector.minHitsPerEta, etaBins.size(), etaBin)) ||
+         (trackFeatures.nHoles >
+          getValueAtEta(detector.maxHolesPerEta, etaBins.size(), etaBin)) ||
+         (trackFeatures.nOutliers >
+          getValueAtEta(detector.maxOutliersPerEta, etaBins.size(), etaBin));
 }
