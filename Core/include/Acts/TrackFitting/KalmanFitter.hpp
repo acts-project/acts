@@ -545,10 +545,10 @@ class KalmanFitter {
       auto st = result.fittedStates->getTrackState(result.lastMeasurementIndex);
 
       // Update the stepping state
-      stepper.resetState(
+      stepper.initialize(
           state.stepping, st.filtered(),
           reversedFilteringCovarianceScaling * st.filteredCovariance(),
-          st.referenceSurface(), state.options.stepping.maxStepSize);
+          stepper.particleHypothesis(state.stepping), st.referenceSurface());
 
       // For the last measurement state, smoothed is filtered
       st.smoothed() = st.filtered();
@@ -558,10 +558,8 @@ class KalmanFitter {
       // Reset navigation state
       // We do not need to specify a target here since this will be handled
       // separately in the KF actor
-      auto navigationOptions = state.navigation.options;
-      navigationOptions.startSurface = &st.referenceSurface();
-      navigationOptions.targetSurface = nullptr;
-      state.navigation = navigator.makeState(navigationOptions);
+      state.navigation.options.startSurface = &st.referenceSurface();
+      state.navigation.options.targetSurface = nullptr;
       navigator.initialize(state.navigation, stepper.position(state.stepping),
                            stepper.direction(state.stepping),
                            state.options.direction);
@@ -1011,16 +1009,16 @@ class KalmanFitter {
       }
       bool reverseDirection = false;
       if (useFirstTrackState) {
-        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+        stepper.initialize(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
-                           firstCreatedState.referenceSurface(),
-                           state.options.stepping.maxStepSize);
+                           stepper.particleHypothesis(state.stepping),
+                           firstCreatedState.referenceSurface());
         reverseDirection = firstIntersection.pathLength() < 0;
       } else {
-        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+        stepper.initialize(state.stepping, lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
-                           lastCreatedMeasurement.referenceSurface(),
-                           state.options.stepping.maxStepSize);
+                           stepper.particleHypothesis(state.stepping),
+                           lastCreatedMeasurement.referenceSurface());
         reverseDirection = lastIntersection.pathLength() < 0;
       }
       // Reverse the navigation direction if necessary
@@ -1236,10 +1234,10 @@ class KalmanFitter {
                 const propagator_options_t& propagatorOptions,
                 track_container_t& trackContainer) const
       -> Result<typename track_container_t::TrackProxy> {
-    auto propagatorState =
-        m_propagator.makeState(sParameters, propagatorOptions);
+    auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-    auto propagatorInitResult = m_propagator.initialize(propagatorState);
+    auto propagatorInitResult =
+        m_propagator.initialize(propagatorState, sParameters);
     if (!propagatorInitResult.ok()) {
       ACTS_ERROR("Propagation initialization failed: "
                  << propagatorInitResult.error());

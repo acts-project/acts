@@ -22,14 +22,21 @@ SympyStepper::SympyStepper(std::shared_ptr<const MagneticFieldProvider> bField)
 
 SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
-SympyStepper::State SympyStepper::makeState(
-    const Options& options, const BoundTrackParameters& par) const {
+SympyStepper::State SympyStepper::makeState(const Options& options) const {
   State state{options, m_bField->makeCache(options.magFieldContext)};
+
+  state.stepSize = ConstrainedStep(options.maxStepSize);
+
+  return state;
+}
+
+void SympyStepper::initialize(State& state,
+                              const BoundTrackParameters& par) const {
+  Vector3 position = par.position(state.options.geoContext);
+  Vector3 direction = par.direction();
 
   state.particleHypothesis = par.particleHypothesis();
 
-  Vector3 position = par.position(options.geoContext);
-  Vector3 direction = par.direction();
   state.pars.template segment<3>(eFreePos0) = position;
   state.pars.template segment<3>(eFreeDir0) = direction;
   state.pars[eFreeTime] = par.time();
@@ -42,35 +49,41 @@ SympyStepper::State SympyStepper::makeState(
     // set the covariance transport flag to true and copy
     state.covTransport = true;
     state.cov = BoundSquareMatrix(*par.covariance());
-    state.jacToGlobal =
-        surface.boundToFreeJacobian(options.geoContext, position, direction);
+    state.jacToGlobal = surface.boundToFreeJacobian(state.options.geoContext,
+                                                    position, direction);
+    state.jacobian = BoundMatrix::Identity();
+    state.jacTransport = FreeMatrix::Identity();
+    state.derivative = FreeVector::Zero();
   }
 
-  state.stepSize = ConstrainedStep(options.maxStepSize);
+  state.stepSize = ConstrainedStep(state.options.maxStepSize);
 
-  return state;
+  state.pathAccumulated = 0.;
 }
 
-void SympyStepper::resetState(State& state, const BoundVector& boundParams,
-                              const BoundSquareMatrix& cov,
-                              const Surface& surface,
-                              const double stepSize) const {
+void SympyStepper::initialize(State& state, const BoundVector& boundParams,
+                              const BoundMatrix& cov,
+                              ParticleHypothesis particleHypothesis,
+                              const Surface& surface) const {
   FreeVector freeParams = transformBoundToFreeParameters(
       surface, state.options.geoContext, boundParams);
 
-  // Update the stepping state
-  state.pars = freeParams;
-  state.cov = cov;
-  state.stepSize = ConstrainedStep(stepSize);
-  state.pathAccumulated = 0.;
+  state.particleHypothesis = particleHypothesis;
 
-  // Reinitialize the stepping jacobian
+  state.pars = freeParams;
+
+  state.covTransport = true;
+  state.cov = cov;
   state.jacToGlobal = surface.boundToFreeJacobian(
       state.options.geoContext, freeParams.template segment<3>(eFreePos0),
       freeParams.template segment<3>(eFreeDir0));
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
+
+  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+
+  state.pathAccumulated = 0.;
 }
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>

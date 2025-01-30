@@ -672,17 +672,15 @@ class CombinatorialKalmanFilter {
                    << currentBranch.tipIndex());
 
       // Reset the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(),
+      stepper.initialize(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(),
-                         state.options.stepping.maxStepSize);
+                         stepper.particleHypothesis(state.stepping),
+                         currentState.referenceSurface());
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering
-      auto navigationOptions = state.navigation.options;
-      navigationOptions.startSurface = &currentState.referenceSurface();
-      navigationOptions.targetSurface = nullptr;
-      state.navigation = navigator.makeState(navigationOptions);
+      state.navigation.options.startSurface = &currentState.referenceSurface();
+      state.navigation.options.targetSurface = nullptr;
       navigator.initialize(state.navigation, stepper.position(state.stepping),
                            stepper.direction(state.stepping),
                            state.options.direction);
@@ -1223,14 +1221,13 @@ class CombinatorialKalmanFilter {
     }
 
     auto propState =
-        m_propagator.template makeState<start_parameters_t, PropagatorOptions,
-                                        StubPathLimitReached>(initialParameters,
-                                                              propOptions);
-
-    auto initResult =
         m_propagator
-            .template initialize<decltype(propState), StubPathLimitReached>(
-                propState);
+            .template makeState<PropagatorOptions, StubPathLimitReached>(
+                propOptions);
+
+    auto initResult = m_propagator.template initialize<
+        decltype(propState), start_parameters_t, StubPathLimitReached>(
+        propState, initialParameters);
     if (!initResult.ok()) {
       ACTS_ERROR("Propagation initialization failed: " << initResult.error());
       return initResult.error();

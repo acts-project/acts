@@ -240,8 +240,13 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
                             getDefaultLogger("GSF", Logging::INFO))
       : EigenStepper<extension_t>(config), m_logger(std::move(logger)) {}
 
-  /// Construct and initialize a state
-  State makeState(const Options& options,
+  State makeState(const Options& options) const {
+    State state(options);
+
+    return state;
+  }
+
+  void initialize(State& state,
                   const MultiComponentBoundTrackParameters& par) const {
     if (par.components().empty()) {
       throw std::invalid_argument(
@@ -249,23 +254,21 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
           "multi-component parameters");
     }
 
-    State state(options);
-
     state.particleHypothesis = par.particleHypothesis();
 
     const auto surface = par.referenceSurface().getSharedPtr();
 
     for (auto i = 0ul; i < par.components().size(); ++i) {
       const auto& [weight, singlePars] = par[i];
-      state.components.push_back({SingleStepper::makeState(options, singlePars),
-                                  weight, IntersectionStatus::onSurface});
+      auto& cmp =
+          state.components.emplace_back(SingleStepper::makeState(state.options),
+                                        weight, IntersectionStatus::onSurface);
+      SingleStepper::initialize(cmp.state, singlePars);
     }
 
     if (std::get<2>(par.components().front())) {
       state.covTransport = true;
     }
-
-    return state;
   }
 
   /// @brief Resets the state
@@ -420,8 +423,10 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   Result<ComponentProxy> addComponent(State& state,
                                       const BoundTrackParameters& pars,
                                       double weight) const {
-    state.components.push_back({SingleStepper::makeState(state.options, pars),
-                                weight, IntersectionStatus::onSurface});
+    auto& cmp =
+        state.components.emplace_back(SingleStepper::makeState(state.options),
+                                      weight, IntersectionStatus::onSurface);
+    SingleStepper::initialize(cmp.state, pars);
 
     return ComponentProxy{state.components.back(), state};
   }

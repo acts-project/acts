@@ -117,20 +117,13 @@ class SympyStepper {
   /// @param config The configuration of the stepper
   explicit SympyStepper(const Config& config);
 
-  State makeState(const Options& options,
-                  const BoundTrackParameters& par) const;
+  State makeState(const Options& options) const;
 
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const;
+  void initialize(State& state, const BoundTrackParameters& par) const;
+
+  void initialize(State& state, const BoundVector& boundParams,
+                  const BoundMatrix& cov, ParticleHypothesis particleHypothesis,
+                  const Surface& surface) const;
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.

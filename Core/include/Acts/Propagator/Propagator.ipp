@@ -196,10 +196,10 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
   static_assert(std::copy_constructible<StepperCurvilinearTrackParameters>,
                 "return track parameter type must be copy-constructible");
 
-  auto state = makeState<parameters_t, propagator_options_t, path_aborter_t>(
-      start, options);
+  auto state = makeState<propagator_options_t, path_aborter_t>(options);
 
-  auto initRes = initialize<decltype(state), path_aborter_t>(state);
+  auto initRes =
+      initialize<decltype(state), parameters_t, path_aborter_t>(state, start);
   if (!initRes.ok()) {
     return initRes.error();
   }
@@ -223,10 +223,12 @@ auto Acts::Propagator<S, N>::propagate(
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
-  auto state = makeState<parameters_t, propagator_options_t, target_aborter_t,
-                         path_aborter_t>(start, target, options);
+  auto state =
+      makeState<propagator_options_t, target_aborter_t, path_aborter_t>(
+          target, options);
 
-  auto initRes = initialize<decltype(state), path_aborter_t>(state);
+  auto initRes =
+      initialize<decltype(state), parameters_t, path_aborter_t>(state, start);
   if (!initRes.ok()) {
     return initRes.error();
   }
@@ -238,13 +240,9 @@ auto Acts::Propagator<S, N>::propagate(
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename path_aborter_t>
+template <typename propagator_options_t, typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
-    const parameters_t& start, const propagator_options_t& options) const {
-  static_assert(BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-
+    const propagator_options_t& options) const {
   // Type of track parameters produced by the propagation
   using ReturnParameterType = StepperCurvilinearTrackParameters;
 
@@ -259,8 +257,6 @@ auto Acts::Propagator<S, N>::makeState(
 
   // Create the extended options and declare their type
   auto eOptions = options.extend(actorList);
-  eOptions.navigation.startSurface = &start.referenceSurface();
-  eOptions.navigation.targetSurface = nullptr;
 
   using OptionsType = decltype(eOptions);
   using StateType =
@@ -273,21 +269,17 @@ auto Acts::Propagator<S, N>::makeState(
       "state");
 
   // Initialize the internal propagator state
-  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
   return state;
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename target_aborter_t, typename path_aborter_t>
+template <typename propagator_options_t, typename target_aborter_t,
+          typename path_aborter_t>
 auto Acts::Propagator<S, N>::makeState(
-    const parameters_t& start, const Acts::Surface& target,
-    const propagator_options_t& options) const {
-  static_assert(BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-
+    const Surface& target, const propagator_options_t& options) const {
   // Expand the actor list with a target and path aborter
   target_aborter_t targetAborter;
   targetAborter.surface = &target;
@@ -298,7 +290,6 @@ auto Acts::Propagator<S, N>::makeState(
 
   // Create the extended options and declare their type
   auto eOptions = options.extend(actorList);
-  eOptions.navigation.startSurface = &start.referenceSurface();
   eOptions.navigation.targetSurface = &target;
 
   using OptionsType = decltype(eOptions);
@@ -312,16 +303,48 @@ auto Acts::Propagator<S, N>::makeState(
       "state");
 
   // Initialize the internal propagator state
-  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
   return state;
 }
 
 template <typename S, typename N>
+template <typename propagator_state_t, typename parameters_t,
+          typename path_aborter_t>
+Acts::Result<void> Acts::Propagator<S, N>::initialize(
+    propagator_state_t& state, const parameters_t& start) const {
+  static_assert(BoundTrackParametersConcept<parameters_t>,
+                "Parameters do not fulfill bound parameters concept.");
+
+  m_stepper.initialize(state.stepping, start);
+
+  state.position = m_stepper.position(state.stepping);
+  state.direction =
+      state.options.direction * m_stepper.direction(state.stepping);
+
+  state.navigation.options.startSurface = &start.referenceSurface();
+
+  // Navigator initialize state call
+  auto navInitRes =
+      m_navigator.initialize(state.navigation, state.position, state.direction,
+                             state.options.direction);
+  if (!navInitRes.ok()) {
+    return navInitRes.error();
+  }
+
+  // Apply the loop protection - it resets the internal path limit
+  detail::setupLoopProtection(
+      state, m_stepper, state.options.actorList.template get<path_aborter_t>(),
+      false, logger());
+
+  return Result<void>::success();
+}
+
+template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
-                                        Acts::Result<void> propagationResult,
+                                        Result<void> propagationResult,
                                         const propagator_options_t& /*options*/,
                                         bool makeCurvilinear) const
     -> Result<
@@ -367,7 +390,7 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
 template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(
-    propagator_state_t state, Acts::Result<void> propagationResult,
+    propagator_state_t state, Result<void> propagationResult,
     const Acts::Surface& target, const propagator_options_t& /*options*/) const
     -> Result<
         actor_list_t_result_t<StepperBoundTrackParameters,
@@ -404,30 +427,6 @@ auto Acts::Propagator<S, N>::makeResult(
     result.transportJacobian = std::get<Jacobian>(bs);
   }
   return Result<ResultType>::success(std::move(result));
-}
-
-template <typename S, typename N>
-template <typename propagator_state_t, typename path_aborter_t>
-Acts::Result<void> Acts::Propagator<S, N>::initialize(
-    propagator_state_t& state) const {
-  state.position = m_stepper.position(state.stepping);
-  state.direction =
-      state.options.direction * m_stepper.direction(state.stepping);
-
-  // Navigator initialize state call
-  auto navInitRes =
-      m_navigator.initialize(state.navigation, state.position, state.direction,
-                             state.options.direction);
-  if (!navInitRes.ok()) {
-    return navInitRes.error();
-  }
-
-  // Apply the loop protection - it resets the internal path limit
-  detail::setupLoopProtection(
-      state, m_stepper, state.options.actorList.template get<path_aborter_t>(),
-      false, logger());
-
-  return Result<void>::success();
 }
 
 template <typename S, typename N>
