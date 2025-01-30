@@ -198,6 +198,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   protoTracks.reserve(trackCandidates.size());
 
   int nShortTracks = 0;
+  std::size_t largestCandidate = 0;
 
   /// TODO the whole conversion back to meas idxs should be pulled out of the
   /// track trackBuilder
@@ -217,11 +218,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     }
 
     protoTracks.push_back(std::move(onetrack));
+    largestCandidate = std::max(protoTracks.back().size(), largestCandidate);
   }
 
-  ACTS_INFO("Removed " << nShortTracks << " with less then "
-                       << m_cfg.minMeasurementsPerTrack << " hits");
-  ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
+  ACTS_DEBUG("Removed " << nShortTracks << " with less then "
+                        << m_cfg.minMeasurementsPerTrack << " hits");
+  ACTS_DEBUG("Created " << protoTracks.size() << " proto tracks");
+  ACTS_DEBUG("Largest prototrack: " << largestCandidate);
+
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
   if (m_outputGraph.isInitialized()) {
@@ -235,6 +239,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   {
     std::lock_guard<std::mutex> lock(m_mutex);
+
+    m_timing.count++;
+    if (m_timing.count <= 3) {
+      return ActsExamples::ProcessCode::SUCCESS;
+    }
+
     m_timing.preprocessingTime(Duration(t1 - t0).count());
     m_timing.graphBuildingTime(timing.graphBuildingTime.count());
 
@@ -246,6 +256,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     m_timing.trackBuildingTime(timing.trackBuildingTime.count());
     m_timing.postprocessingTime(Duration(t3 - t2).count());
+    m_timing.fullTime(Duration(t3 - t0).count());
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
@@ -271,6 +282,7 @@ ActsExamples::ProcessCode TrackFindingAlgorithmExaTrkX::finalize() {
   // clang-format on
   ACTS_INFO("- track building: " << print(m_timing.trackBuildingTime));
   ACTS_INFO("- postprocessing: " << print(m_timing.postprocessingTime));
+  ACTS_INFO("- full timing:    " << print(m_timing.fullTime));
 
   return {};
 }
