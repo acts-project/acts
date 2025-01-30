@@ -168,7 +168,7 @@ class Particle {
   /// Particle hypothesis.
   Acts::ParticleHypothesis hypothesis() const {
     return Acts::ParticleHypothesis(
-        absolutePdg(), mass(),
+        absolutePdg(), static_cast<float>(mass()),
         Acts::AnyCharge{static_cast<float>(absoluteCharge())});
   }
   /// Particl qOverP.

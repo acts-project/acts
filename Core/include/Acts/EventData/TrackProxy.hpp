@@ -124,7 +124,7 @@ class TrackProxy {
   /// @note Only available if the track proxy is read-only
   /// @param other the other track proxy
   explicit TrackProxy(const MutableTrackProxy& other)
-    requires(ReadOnly)
+    requires ReadOnly
       : m_container{other.m_container}, m_index{other.m_index} {}
 
   /// Copy assignment operator from mutable track proxy
@@ -132,7 +132,7 @@ class TrackProxy {
   /// @param other the other track proxy
   /// @return reference to this track proxy
   TrackProxy& operator=(const MutableTrackProxy& other)
-    requires(ReadOnly)
+    requires ReadOnly
   {
     m_container = other.m_container;
     m_index = other.m_index;

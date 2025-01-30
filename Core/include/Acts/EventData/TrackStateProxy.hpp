@@ -227,7 +227,7 @@ class TrackStateProxy {
   /// @note Only available if the track state proxy is read-only
   /// @param other The other TrackStateProxy to construct from
   explicit TrackStateProxy(const TrackStateProxy<Trajectory, M, false>& other)
-    requires(ReadOnly)
+    requires ReadOnly
       : m_traj{other.m_traj}, m_istate{other.m_istate} {}
 
   /// Assignment operator to from mutable @c TrackStateProxy
@@ -235,7 +235,7 @@ class TrackStateProxy {
   /// @note Only available if the track state proxy is read-only
   /// @return Reference to this TrackStateProxy
   TrackStateProxy& operator=(const TrackStateProxy<Trajectory, M, false>& other)
-    requires(ReadOnly)
+    requires ReadOnly
   {
     m_traj = other.m_traj;
     m_istate = other.m_istate;
