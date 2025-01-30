@@ -320,6 +320,7 @@ RootAthenaDumpReader::readMeasurements(
 
   // We cannot use im for the index since we might skip measurements
   std::unordered_map<int, std::size_t> imIdxMap;
+  imIdxMap.reserve(nCL);
 
   for (int im = 0; im < nCL; im++) {
     if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
@@ -332,8 +333,6 @@ RootAthenaDumpReader::readMeasurements(
 
     // Make cluster
     // TODO refactor Cluster class so it is not so tedious
-    Cluster cluster;
-
     const auto& etas = CLetas->at(im);
     const auto& phis = CLetas->at(im);
     const auto& tots = CLtots->at(im);
@@ -342,6 +341,9 @@ RootAthenaDumpReader::readMeasurements(
 
     const auto [minEta, maxEta] = std::minmax_element(etas.begin(), etas.end());
     const auto [minPhi, maxPhi] = std::minmax_element(phis.begin(), phis.end());
+
+    Cluster cluster;
+    cluster.channels.reserve(etas.size());
 
     cluster.sizeLoc0 = *maxEta - *minEta;
     cluster.sizeLoc1 = *maxPhi - *minPhi;
@@ -428,8 +430,8 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      const double tol = (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
-      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
+      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {},
+                                        Acts::s_onSurfaceTolerance);
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
@@ -500,7 +502,8 @@ RootAthenaDumpReader::readMeasurements(
                              << " clusters have zero time-over-threshold");
   }
 
-  return {clusters, measurements, measPartMap, imIdxMap};
+  return {std::move(clusters), std::move(measurements), std::move(measPartMap),
+          std::move(imIdxMap)};
 }
 
 std::tuple<SimSpacePointContainer, SimSpacePointContainer,
@@ -645,7 +648,8 @@ RootAthenaDumpReader::readSpacepoints(
   ACTS_DEBUG("Created " << pixelSpacePoints.size() << " "
                         << " pixel space points");
 
-  return {spacePoints, pixelSpacePoints, stripSpacePoints};
+  return {std::move(spacePoints), std::move(pixelSpacePoints),
+          std::move(stripSpacePoints)};
 }
 
 std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
@@ -655,6 +659,7 @@ RootAthenaDumpReader::reprocessParticles(
   std::vector<ActsExamples::SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
+  newMeasPartMap.reserve(measPartMap.size());
 
   const auto partMeasMap = invertIndexMultimap(measPartMap);
 
@@ -701,7 +706,7 @@ RootAthenaDumpReader::reprocessParticles(
 
   ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of "
                                              << particles.size() << " remain");
-  return {particleVectorToSet(newParticles), newMeasPartMap};
+  return {particleVectorToSet(newParticles), std::move(newMeasPartMap)};
 }
 
 ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
