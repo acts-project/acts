@@ -67,6 +67,16 @@ struct SimpleReverseFilteringLogic {
   }
 };
 
+struct SimpleOutlierFinder {
+  double chi2Cut = std::numeric_limits<double>::infinity();
+
+  bool isOutlier(
+      Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
+    double chi2 = Acts::calculatePredictedChi2(trackState);
+    return chi2 > chi2Cut;
+  }
+};
+
 using namespace ActsExamples;
 
 struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
@@ -77,6 +87,8 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
   double reverseFilteringCovarianceScaling = 1.0;
+  SimpleOutlierFinder outlierFinder;
+
   bool multipleScattering = false;
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
@@ -102,6 +114,8 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.reverseFilteringLogic
         .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
             &reverseFilteringLogic);
+    extensions.outlierFinder.connect<&SimpleOutlierFinder::isOutlier>(
+        &outlierFinder);
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
@@ -162,7 +176,7 @@ ActsExamples::makeKalmanFitterFunction(
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold,
     double reverseFilteringCovarianceScaling,
-    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
     const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
@@ -196,6 +210,7 @@ ActsExamples::makeKalmanFitterFunction(
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
   fitterFunction->reverseFilteringCovarianceScaling =
       reverseFilteringCovarianceScaling;
+  fitterFunction->outlierFinder.chi2Cut = chi2Cut;
 
   return fitterFunction;
 }

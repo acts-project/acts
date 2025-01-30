@@ -80,7 +80,7 @@ def runRefittingGsf(
     s.addWriter(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf_refit.root"),
@@ -90,9 +90,9 @@ def runRefittingGsf(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="gsf_refit_tracks",
             inputParticles="particles_selected",
-            inputTrackParticleMatching="track_particle_matching",
+            inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "performance_gsf_refit.root"),
         )
     )

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -17,9 +16,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <iosfwd>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -38,8 +35,6 @@ class DiamondBounds : public PlanarBounds {
     eHalfLengthYpos = 4,
     eSize = 5
   };
-
-  DiamondBounds() = delete;
 
   /// Constructor for convex hexagon symmetric about the y axis
   ///
@@ -71,9 +66,7 @@ class DiamondBounds : public PlanarBounds {
             Vector2{*std::max_element(values.begin(), values.begin() + 2),
                     values[eHalfLengthYpos]}) {}
 
-  ~DiamondBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eDiamond; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -118,21 +111,5 @@ class DiamondBounds : public PlanarBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> DiamondBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void DiamondBounds::checkConsistency() noexcept(false) {
-  if (std::ranges::any_of(m_values, [](auto v) { return v <= 0.; })) {
-    throw std::invalid_argument("DiamondBounds: negative half length.");
-  }
-  if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) ||
-      get(eHalfLengthXposY) > get(eHalfLengthXzeroY)) {
-    throw std::invalid_argument("DiamondBounds: not a diamond shape.");
-  }
-}
 
 }  // namespace Acts

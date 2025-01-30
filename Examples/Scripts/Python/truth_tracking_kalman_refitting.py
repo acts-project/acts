@@ -38,6 +38,7 @@ def runRefittingKf(
         "reverseFilteringCovarianceScaling": reverseFilteringCovarianceScaling,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
+        "chi2Cut": float("inf"),
     }
 
     s.addAlgorithm(
@@ -78,7 +79,7 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf_refit.root"),
@@ -88,9 +89,9 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
-            inputTrackParticleMatching="track_particle_matching",
+            inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "performance_kf_refit.root"),
         )
     )

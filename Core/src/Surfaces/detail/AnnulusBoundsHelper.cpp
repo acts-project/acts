@@ -11,13 +11,13 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <iostream>
 #include <numbers>
 
-std::tuple<std::shared_ptr<Acts::AnnulusBounds>, Acts::Transform3>
-Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
-                                          double rMin, double rMax,
-                                          std::vector<Vector2> vertices) {
+namespace Acts::detail {
+
+std::tuple<std::shared_ptr<AnnulusBounds>, Transform3>
+AnnulusBoundsHelper::create(const Transform3& transform, double rMin,
+                            double rMax, std::vector<Vector2> vertices) {
   using Line2D = Eigen::Hyperplane<double, 2>;
 
   // Construct the bound lines
@@ -65,3 +65,5 @@ Acts::detail::AnnulusBoundsHelper::create(const Transform3& transform,
 
   return {annulusBounds, boundsTransform};
 }
+
+}  // namespace Acts::detail

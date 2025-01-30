@@ -54,7 +54,7 @@ void addTrackFitting(Context& ctx) {
            bool multipleScattering, bool energyLoss,
            double reverseFilteringMomThreshold,
            double reverseFilteringCovarianceScaling,
-           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
            Logging::Level level) {
           return ActsExamples::makeKalmanFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
@@ -64,7 +64,7 @@ void addTrackFitting(Context& ctx) {
         "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
         "energyLoss"_a, "reverseFilteringMomThreshold"_a,
         "reverseFilteringCovarianceScaling"_a, "freeToBoundCorrection"_a,
-        "level"_a);
+        "chi2Cut"_a, "level"_a);
 
     py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
         mex, "MeasurementCalibrator");

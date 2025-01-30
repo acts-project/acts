@@ -23,9 +23,9 @@
 namespace Acts {
 
 CylinderContainerBlueprintNode::CylinderContainerBlueprintNode(
-    const std::string& name, BinningValue direction,
-    CylinderVolumeStack::AttachmentStrategy attachmentStrategy,
-    CylinderVolumeStack::ResizeStrategy resizeStrategy)
+    const std::string& name, AxisDirection direction,
+    VolumeAttachmentStrategy attachmentStrategy,
+    VolumeResizeStrategy resizeStrategy)
     : m_name(name),
       m_direction(direction),
       m_attachmentStrategy(attachmentStrategy),
@@ -197,7 +197,7 @@ bool CylinderContainerBlueprintNode::isGapVolume(const Volume& volume) const {
 }
 
 CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
-    BinningValue direction) {
+    AxisDirection direction) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
@@ -207,7 +207,7 @@ CylinderContainerBlueprintNode& CylinderContainerBlueprintNode::setDirection(
 
 CylinderContainerBlueprintNode&
 CylinderContainerBlueprintNode::setAttachmentStrategy(
-    CylinderVolumeStack::AttachmentStrategy attachmentStrategy) {
+    VolumeAttachmentStrategy attachmentStrategy) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
@@ -217,7 +217,7 @@ CylinderContainerBlueprintNode::setAttachmentStrategy(
 
 CylinderContainerBlueprintNode&
 CylinderContainerBlueprintNode::setResizeStrategy(
-    CylinderVolumeStack::ResizeStrategy resizeStrategy) {
+    VolumeResizeStrategy resizeStrategy) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
   }
@@ -240,17 +240,16 @@ void CylinderContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
   }
 }
 
-BinningValue CylinderContainerBlueprintNode::direction() const {
+AxisDirection CylinderContainerBlueprintNode::direction() const {
   return m_direction;
 }
 
-CylinderVolumeStack::AttachmentStrategy
-CylinderContainerBlueprintNode::attachmentStrategy() const {
+VolumeAttachmentStrategy CylinderContainerBlueprintNode::attachmentStrategy()
+    const {
   return m_attachmentStrategy;
 }
 
-CylinderVolumeStack::ResizeStrategy
-CylinderContainerBlueprintNode::resizeStrategy() const {
+VolumeResizeStrategy CylinderContainerBlueprintNode::resizeStrategy() const {
   return m_resizeStrategy;
 }
 

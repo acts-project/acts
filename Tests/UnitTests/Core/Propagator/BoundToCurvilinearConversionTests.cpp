@@ -137,7 +137,7 @@ T_Matrix matrixRatio(const T_Matrix &a, const T_Matrix &b) {
 
 struct TestData {
   enum ESurfaceType { kPlane, kPolarDisk, kCylinder };
-  TestData(Vector3 &&a_surface_center, ActsMatrix<3, 3> &&a_surface_rot,
+  TestData(Vector3 &&a_surface_center, SquareMatrix3 &&a_surface_rot,
            ESurfaceType a_surface_type, BoundVector &&a_param_vec,
            BoundSquareMatrix &&a_param_cov, Vector3 &&a_bfield)
       : surface_center(std::move(a_surface_center)),
@@ -148,7 +148,7 @@ struct TestData {
         bfield(std::move(a_bfield)) {}
 
   Vector3 surface_center;
-  ActsMatrix<3, 3> surface_rot;
+  SquareMatrix3 surface_rot;
   ESurfaceType surface_type;
   BoundVector param_vec;
   BoundSquareMatrix param_cov;
@@ -169,7 +169,7 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
     // create bound parameters from test data
     const Vector3 &surface_center = test_data.surface_center;
-    const ActsMatrix<3, 3> &surface_rot = test_data.surface_rot;
+    const SquareMatrix3 &surface_rot = test_data.surface_rot;
     const BoundVector &param_vec = test_data.param_vec;
     const BoundSquareMatrix &cov = test_data.param_cov;
 
