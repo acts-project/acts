@@ -87,7 +87,7 @@ ProcessCode PrototracksToParameters::execute(
 
   // Some counters for statistics
   std::size_t shortSeeds = 0, stripOnlySeeds = 0, estimationFailed = 0,
-              highMomentum = 0;
+              highMomentum = 0, invalidParams = 0;
 
   for (const auto &track : prototracks) {
     ACTS_VERBOSE("Try to get seed from prototrack with " << track.size()
@@ -211,6 +211,12 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
+    if (!Acts::isBoundVectorValid(*parsResult, true)) {
+      ACTS_WARNING("Skipped seed because bound params not valid");
+      invalidParams++;
+      continue;
+    }
+
     auto params =
         Acts::BoundTrackParameters(surface.getSharedPtr(), *parsResult,
                                    m_covariance, m_cfg.particleHypothesis);
@@ -232,6 +238,7 @@ ProcessCode PrototracksToParameters::execute(
                << prototracks.size() - seededTracks.size());
     ACTS_DEBUG("- short seeds: " << shortSeeds);
     ACTS_DEBUG("- seeds with bottom SP in strips: " << stripOnlySeeds);
+    ACTS_DEBUG("- invalid params: " << invalidParams);
     ACTS_DEBUG("- high momentum seeds: " << highMomentum);
   }
 
