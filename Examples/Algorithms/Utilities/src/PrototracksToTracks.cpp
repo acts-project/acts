@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -61,6 +62,10 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
           track.appendTrackState(Acts::TrackStatePropMask::None);
       trackStateProxy.typeFlags().set(Acts::TrackStateFlag::MeasurementFlag);
       trackStateProxy.setUncalibratedSourceLink(Acts::SourceLink(sourceLink));
+      auto dummySurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+          Acts::Transform3::Identity());
+      dummySurface->assignGeometryId(measurement.geometryId());
+      trackStateProxy.setReferenceSurface(dummySurface->getSharedPtr());
     }
 
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
