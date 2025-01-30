@@ -26,11 +26,11 @@ Portal::Portal(std::shared_ptr<RegularSurface> surface)
 }
 
 const Acts::RegularSurface& Portal::surface() const {
-  return *m_surface;
+  return *m_surface.get();
 }
 
 Acts::RegularSurface& Portal::surface() {
-  return *m_surface;
+  return *m_surface.get();
 }
 
 const std::array<Acts::Experimental::ExternalNavigationDelegate, 2u>&

@@ -145,7 +145,7 @@ std::string DiscSurface::name() const {
 
 const SurfaceBounds& DiscSurface::bounds() const {
   if (m_bounds) {
-    return *m_bounds;
+    return (*(m_bounds.get()));
   }
   return s_noBounds;
 }

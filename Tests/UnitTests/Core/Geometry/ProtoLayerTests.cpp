@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto addSurface =
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rB);
 
-  pLayerSf.add(tgContext, *addSurface);
+  pLayerSf.add(tgContext, *addSurface.get());
   // CHECK That if you now have 5 surfaces
   BOOST_CHECK_EQUAL(pLayerSf.surfaces().size(), 5);
 
