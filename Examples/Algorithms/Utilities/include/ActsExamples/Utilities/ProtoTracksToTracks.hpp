@@ -22,6 +22,7 @@ class PrototracksToTracks final : public IAlgorithm {
   struct Config {
     std::string inputProtoTracks;
     std::string inputMeasurements;
+    std::string inputParameters;  // optional
     std::string outputTracks = "tracks_from_prototracks";
   };
 
@@ -48,6 +49,8 @@ class PrototracksToTracks final : public IAlgorithm {
                                                            "InputMeasurements"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
+  ReadDataHandle<TrackParametersContainer> m_inputParameters{this,
+                                                             "InputParameters"};
 };
 
 }  // namespace ActsExamples

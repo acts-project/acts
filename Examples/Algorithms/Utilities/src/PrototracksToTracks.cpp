@@ -25,6 +25,7 @@ PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputParameters.maybeInitialize(m_cfg.inputParameters);
 }
 
 ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
@@ -65,6 +66,17 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
     track.nHoles() = 0;
     track.nOutliers() = 0;
+  }
+
+  if (m_inputParameters.isInitialized()) {
+    const auto& parameters = m_inputParameters(ctx);
+    std::size_t i = 0;
+    for (auto track : tracks) {
+      track.setReferenceSurface(
+          parameters.at(i).referenceSurface().getSharedPtr());
+      track.parameters() = parameters.at(i).parameters();
+      ++i;
+    }
   }
 
   ConstTrackContainer constTracks{

@@ -54,9 +54,9 @@ void addUtilities(Context& ctx) {
       inputMeasurements, inputMeasurementParticleMap,
       outputMeasurementParticleMap, geometrySelection);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::PrototracksToTracks, mex,
-                                "PrototracksToTracks", inputMeasurements,
-                                inputProtoTracks, outputTracks);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PrototracksToTracks, mex, "PrototracksToTracks",
+      inputMeasurements, inputProtoTracks, outputTracks, inputParameters);
 }
 
 }  // namespace Acts::Python
