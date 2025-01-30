@@ -32,28 +32,36 @@ Vi checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
                          1;
 
   int *cudaSrc, *cudaTgt;
-  cudaMalloc(&cudaSrc, src.size() * sizeof(int));
-  cudaMalloc(&cudaTgt, tgt.size() * sizeof(int));
-  cudaMemcpy(cudaSrc, src.data(), src.size() * sizeof(int),
-             cudaMemcpyHostToDevice);
-  cudaMemcpy(cudaTgt, tgt.data(), src.size() * sizeof(int),
-             cudaMemcpyHostToDevice);
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaSrc, src.size() * sizeof(int)),
+                      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaTgt, tgt.size() * sizeof(int)),
+                      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaMemcpy(cudaSrc, src.data(), src.size() * sizeof(int),
+                                 cudaMemcpyHostToDevice),
+                      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaMemcpy(cudaTgt, tgt.data(), src.size() * sizeof(int),
+                                 cudaMemcpyHostToDevice),
+                      cudaSuccess);
 
   int *cudaLabels;
-  cudaMalloc(&cudaLabels, numNodes * sizeof(int));
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaLabels, numNodes * sizeof(int)),
+                      cudaSuccess);
   int *cudaLabelsNext;
-  cudaMalloc(&cudaLabelsNext, numNodes * sizeof(int));
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaLabelsNext, numNodes * sizeof(int)),
+                      cudaSuccess);
 
   labelConnectedComponents<<<1, 1024>>>(src.size(), cudaSrc, cudaTgt, numNodes,
                                         cudaLabels, cudaLabelsNext);
 
   std::vector<int> labelsFromCuda(numNodes);
-  cudaMemcpy(labelsFromCuda.data(), cudaLabels, numNodes * sizeof(int),
-             cudaMemcpyDeviceToHost);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpy(labelsFromCuda.data(), cudaLabels, numNodes * sizeof(int),
+                 cudaMemcpyDeviceToHost),
+      cudaSuccess);
 
   BoostGraph G(numNodes);
 
-  for (int i = 0; i < src.size(); ++i) {
+  for (auto i = 0ul; i < src.size(); ++i) {
     boost::add_edge(src[i], tgt[i], G);
   }
 
@@ -62,20 +70,20 @@ Vi checkLabeling(const std::vector<int> &src, const std::vector<int> &tgt) {
 
   // print
   std::cout << "cpu labels:     ";
-  for (int i = 0; i < numNodes; ++i) {
+  for (auto i = 0ul; i < numNodes; ++i) {
     std::cout << cpuLabels[i] << " ";
   }
   std::cout << std::endl;
 
   std::cout << "my CUDA labels: ";
-  for (int i = 0; i < numNodes; ++i) {
+  for (auto i = 0ul; i < numNodes; ++i) {
     std::cout << labelsFromCuda[i] << " ";
   }
   std::cout << std::endl;
 
   // check systematically
   std::map<int, int> boostToCuda;
-  for (int i = 0; i < numNodes; ++i) {
+  for (auto i = 0ul; i < numNodes; ++i) {
     if (boostToCuda.contains(cpuLabels[i])) {
       BOOST_CHECK_EQUAL(labelsFromCuda[i], boostToCuda.at(cpuLabels[i]));
     } else {
@@ -113,44 +121,56 @@ void testRelabeling(const Vi &labels, const Vi &refLabelMask,
 
   // Copy labels to device
   int *cudaLabels;
-  cudaMalloc(&cudaLabels, labels.size() * sizeof(int));
-  cudaMemcpy(cudaLabels, labels.data(), labels.size() * sizeof(int),
-             cudaMemcpyHostToDevice);
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaLabels, labels.size() * sizeof(int)),
+                      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpy(cudaLabels, labels.data(), labels.size() * sizeof(int),
+                 cudaMemcpyHostToDevice),
+      cudaSuccess);
 
   // Init label mask
   int *cudaLabelMask;
-  cudaMalloc(&cudaLabelMask, labels.size() * sizeof(int));
-  cudaMemset(cudaLabelMask, 0, labels.size() * sizeof(int));
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaLabelMask, labels.size() * sizeof(int)),
+                      cudaSuccess);
+  BOOST_REQUIRE_EQUAL(cudaMemset(cudaLabelMask, 0, labels.size() * sizeof(int)),
+                      cudaSuccess);
 
   makeLabelMask<<<1, 256>>>(labels.size(), cudaLabels, cudaLabelMask);
-  cudaDeviceSynchronize();
+  BOOST_REQUIRE_EQUAL(cudaDeviceSynchronize(), cudaSuccess);
 
   std::vector<int> labelMask(labels.size());
-  cudaMemcpy(labelMask.data(), cudaLabelMask, labelMask.size() * sizeof(int),
-             cudaMemcpyDeviceToHost);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpy(labelMask.data(), cudaLabelMask,
+                 labelMask.size() * sizeof(int), cudaMemcpyDeviceToHost),
+      cudaSuccess);
 
   BOOST_CHECK_EQUAL_COLLECTIONS(labelMask.begin(), labelMask.end(),
                                 refLabelMask.begin(), refLabelMask.end());
 
   // Prefix sum
   int *cudaPrefixSum;
-  cudaMalloc(&cudaPrefixSum, labels.size() * sizeof(int));
+  BOOST_REQUIRE_EQUAL(cudaMalloc(&cudaPrefixSum, labels.size() * sizeof(int)),
+                      cudaSuccess);
   thrust::exclusive_scan(thrust::device.on(0), cudaLabelMask,
                          cudaLabelMask + labels.size(), cudaPrefixSum);
 
   Vi prefixSum(labels.size());
-  cudaMemcpy(prefixSum.data(), cudaPrefixSum, labels.size() * sizeof(int),
-             cudaMemcpyDeviceToHost);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpy(prefixSum.data(), cudaPrefixSum, labels.size() * sizeof(int),
+                 cudaMemcpyDeviceToHost),
+      cudaSuccess);
   BOOST_CHECK_EQUAL_COLLECTIONS(prefixSum.begin(), prefixSum.end(),
                                 refPrefixSum.begin(), refPrefixSum.end());
 
   // Relabel
   mapEdgeLabels<<<1, 256>>>(labels.size(), cudaLabels, cudaPrefixSum);
-  cudaDeviceSynchronize();
+  BOOST_REQUIRE_EQUAL(cudaDeviceSynchronize(), cudaSuccess);
 
   std::vector<int> labelsFromCuda(labels.size());
-  cudaMemcpy(labelsFromCuda.data(), cudaLabels, labels.size() * sizeof(int),
-             cudaMemcpyDeviceToHost);
+  BOOST_REQUIRE_EQUAL(
+      cudaMemcpy(labelsFromCuda.data(), cudaLabels, labels.size() * sizeof(int),
+                 cudaMemcpyDeviceToHost),
+      cudaSuccess);
 
   BOOST_CHECK_EQUAL_COLLECTIONS(labelsFromCuda.begin(), labelsFromCuda.end(),
                                 refLabels.begin(), refLabels.end());
@@ -183,7 +203,7 @@ auto makeRandomGraph(std::size_t nodes, std::size_t edges) {
   std::uniform_int_distribution<> dist(0, nodes);
   std::set<std::pair<int, int>> set;
   Vi src(edges), tgt(edges);
-  for (int n = 0; n < edges; ++n) {
+  for (auto n = 0ul; n < edges; ++n) {
     auto a = dist(rng);
     auto b = dist(rng);
     if (a == b) {
@@ -210,7 +230,6 @@ void testFullConnectedComponents(const Vi &src, const Vi &tgt) {
   const auto nNodes = std::max(*std::max_element(src.begin(), src.end()),
                                *std::max_element(tgt.begin(), tgt.end())) +
                       1;
-  const auto nEdges = src.size();
 
   // print src and tgt
   /*
@@ -285,7 +304,7 @@ void testFullConnectedComponents(const Vi &src, const Vi &tgt) {
 
   BoostGraph G(nNodes);
 
-  for (int i = 0; i < src.size(); ++i) {
+  for (auto i = 0ul; i < src.size(); ++i) {
     boost::add_edge(src[i], tgt[i], G);
   }
 

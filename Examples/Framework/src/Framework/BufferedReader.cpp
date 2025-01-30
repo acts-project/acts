@@ -19,21 +19,21 @@ namespace ActsExamples {
 
 BufferedReader::BufferedReader(const Config &config, Acts::Logging::Level level)
     : m_cfg(config), m_logger(Acts::getDefaultLogger(name(), level)) {
-  if (!m_cfg.downstreamReader) {
-    throw std::invalid_argument("No downstream reader provided!");
+  if (!m_cfg.upstreamReader) {
+    throw std::invalid_argument("No upstream reader provided!");
   }
 
-  // Register write and read handles of the downstream reader
-  for (auto rh : m_cfg.downstreamReader->readHandles()) {
+  // Register write and read handles of the upstream reader
+  for (auto rh : m_cfg.upstreamReader->readHandles()) {
     registerReadHandle(*rh);
   }
 
-  for (auto wh : m_cfg.downstreamReader->writeHandles()) {
+  for (auto wh : m_cfg.upstreamReader->writeHandles()) {
     registerWriteHandle(*wh);
   }
 
   // Read the events
-  auto [ebegin, eend] = m_cfg.downstreamReader->availableEvents();
+  auto [ebegin, eend] = m_cfg.upstreamReader->availableEvents();
   if (eend - ebegin < m_cfg.bufferSize) {
     throw std::runtime_error("Reader does not provide enough events");
   }
@@ -46,7 +46,7 @@ BufferedReader::BufferedReader(const Config &config, Acts::Logging::Level level)
     ActsExamples::AlgorithmContext ctx(0, i, *board);
 
     ACTS_DEBUG("Read event " << i << " into buffer");
-    m_cfg.downstreamReader->read(ctx);
+    m_cfg.upstreamReader->read(ctx);
     m_buffer.emplace_back(std::move(board));
   }
 
@@ -65,7 +65,7 @@ ProcessCode BufferedReader::read(const AlgorithmContext &ctx) {
   std::uniform_int_distribution<std::size_t> dist(0, m_cfg.bufferSize - 1);
 
   const auto entry = dist(rng);
-  m_buffer.at(entry)->shareDataWith(ctx.eventStore);
+  ctx.eventStore.copyFrom(*m_buffer.at(entry));
 
   ACTS_DEBUG("Use buffer entry " << entry << " for event " << ctx.eventNumber);
 

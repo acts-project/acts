@@ -13,6 +13,7 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
@@ -107,14 +108,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
-  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
-      &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select<
-      typename TrackContainer::TrackStateContainerBackend>>(&measSel);
-
   // The source link accessor
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
   sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
@@ -122,15 +115,30 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       m_cfg.onlyPrototrackMeasurements;
   sourceLinkAccessor.container = &measurements.orderedIndices();
 
-  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
-      slAccessorDelegate;
-  slAccessorDelegate.connect<&ProtoTrackSourceLinkAccessor::range>(
-      &sourceLinkAccessor);
+  using TrackStateCreatorType =
+      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
+                              TrackContainer>;
+  TrackStateCreatorType trackStateCreator;
+  trackStateCreator.sourceLinkAccessor
+      .template connect<&ProtoTrackSourceLinkAccessor::range>(
+          &sourceLinkAccessor);
+  trackStateCreator.calibrator
+      .connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
+  trackStateCreator.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<
+          typename TrackContainer::TrackStateContainerBackend>>(&measSel);
+
+  Acts::CombinatorialKalmanFilterExtensions<TrackContainer> extensions;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.createTrackStates
+      .template connect<&TrackStateCreatorType ::createTrackStates>(
+          &trackStateCreator);
 
   // Set the CombinatorialKalmanFilter options
   TrackFindingAlgorithm::TrackFinderOptions options(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, &(*pSurface));
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
+      pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()

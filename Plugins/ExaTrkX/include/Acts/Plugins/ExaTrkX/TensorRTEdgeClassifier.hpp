@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <vector>
 
 #include <torch/torch.h>
 
@@ -24,15 +25,12 @@ class IExecutionContext;
 
 namespace Acts {
 
-class TensorRTEdgeClassifier final : public Acts::EdgeClassificationBase {
+class TensorRTEdgeClassifier final : public EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    std::vector<int> selectedFeatures = {};
-    float cut = 0.21;
-    int deviceID = 0;
-    bool useEdgeFeatures = false;
-    bool doSigmoid = true;
+    std::vector<int> selectedFeatures;
+    float cut = 0.5;
 
     std::size_t numExecutionContexts = 1;
   };

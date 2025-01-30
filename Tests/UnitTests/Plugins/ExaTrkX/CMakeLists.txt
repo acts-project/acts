@@ -6,8 +6,6 @@ add_unittest(ExaTrkXEdgeBuilding ExaTrkXEdgeBuildingTest.cpp)
 add_unittest(ExaTrkXMetricHookTests ExaTrkXMetricHookTests.cpp)
 add_unittest(Walkthrough WalkThroughTests.cpp)
 add_unittest(ModuleMap ModuleMapTests.cpp)
-add_unittest(ConnectedComponentsCuda ConnectedComponentCudaTests.cu)
-set_target_properties(
-    ActsUnitTestConnectedComponentsCuda
-    PROPERTIES CUDA_STANDARD 20 CUDA_STANDARD_REQUIRED ON
-)
+if(ACTS_EXATRKX_ENABLE_CUDA)
+    add_unittest(ConnectedComponentsCuda ConnectedComponentCudaTests.cu)
+endif()

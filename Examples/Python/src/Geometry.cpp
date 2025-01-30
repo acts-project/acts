@@ -33,12 +33,14 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -97,7 +99,6 @@ void addBlueprint(Context& ctx);
 
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
-
   {
     py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
@@ -246,33 +247,33 @@ void addGeometry(Context& ctx) {
       .def(py::init<>())
       .def(py::init<const Envelope&>())
       .def(py::init([](Envelope x, Envelope y, Envelope z, Envelope r,
-                       Envelope phi, Envelope rPhi, Envelope h, Envelope eta,
-                       Envelope mag) {
+                       Envelope phi, Envelope rPhi, Envelope theta,
+                       Envelope eta, Envelope mag) {
              return ExtentEnvelope({.x = x,
                                     .y = y,
                                     .z = z,
                                     .r = r,
                                     .phi = phi,
                                     .rPhi = rPhi,
-                                    .h = h,
+                                    .theta = theta,
                                     .eta = eta,
                                     .mag = mag});
            }),
            py::arg("x") = zeroEnvelope, py::arg("y") = zeroEnvelope,
            py::arg("z") = zeroEnvelope, py::arg("r") = zeroEnvelope,
            py::arg("phi") = zeroEnvelope, py::arg("rPhi") = zeroEnvelope,
-           py::arg("h") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
+           py::arg("theta") = zeroEnvelope, py::arg("eta") = zeroEnvelope,
            py::arg("mag") = zeroEnvelope)
       .def_static("Zero", &ExtentEnvelope::Zero)
       .def("__getitem__", [](ExtentEnvelope& self,
-                             BinningValue bValue) { return self[bValue]; })
-      .def("__setitem__", [](ExtentEnvelope& self, BinningValue bValue,
+                             AxisDirection bValue) { return self[bValue]; })
+      .def("__setitem__", [](ExtentEnvelope& self, AxisDirection bValue,
                              const Envelope& value) { self[bValue] = value; })
       .def("__str__", [](const ExtentEnvelope& self) {
-        std::array<std::string, numBinningValues()> values;
+        std::array<std::string, numAxisDirections()> values;
 
         std::stringstream ss;
-        for (BinningValue val : allBinningValues()) {
+        for (AxisDirection val : allAxisDirections()) {
           ss << val << "=(" << self[val][0] << ", " << self[val][1] << ")";
           values.at(toUnderlying(val)) = ss.str();
           ss.str("");
@@ -290,24 +291,26 @@ void addGeometry(Context& ctx) {
            py::arg("envelope") = ExtentEnvelope::Zero())
       .def("range",
            [](const Acts::Extent& self,
-              Acts::BinningValue bval) -> std::array<double, 2> {
+              Acts::AxisDirection bval) -> std::array<double, 2> {
              return {self.min(bval), self.max(bval)};
+           })
+      .def("setRange",
+           [](Extent& self, Acts::AxisDirection bval,
+              const std::array<double, 2>& range) {
+             self.set(bval, range[0], range[1]);
            })
       .def("__str__", &Extent::toString);
 
   {
-    auto cylStack = py::class_<CylinderVolumeStack>(m, "CylinderVolumeStack");
+    py::enum_<VolumeAttachmentStrategy>(m, "VolumeAttachmentStrategy")
+        .value("Gap", VolumeAttachmentStrategy::Gap)
+        .value("First", VolumeAttachmentStrategy::First)
+        .value("Second", VolumeAttachmentStrategy::Second)
+        .value("Midpoint", VolumeAttachmentStrategy::Midpoint);
 
-    py::enum_<CylinderVolumeStack::AttachmentStrategy>(cylStack,
-                                                       "AttachmentStrategy")
-        .value("Gap", CylinderVolumeStack::AttachmentStrategy::Gap)
-        .value("First", CylinderVolumeStack::AttachmentStrategy::First)
-        .value("Second", CylinderVolumeStack::AttachmentStrategy::Second)
-        .value("Midpoint", CylinderVolumeStack::AttachmentStrategy::Midpoint);
-
-    py::enum_<CylinderVolumeStack::ResizeStrategy>(cylStack, "ResizeStrategy")
-        .value("Gap", CylinderVolumeStack::ResizeStrategy::Gap)
-        .value("Expand", CylinderVolumeStack::ResizeStrategy::Expand);
+    py::enum_<VolumeResizeStrategy>(m, "VolumeResizeStrategy")
+        .value("Gap", VolumeResizeStrategy::Gap)
+        .value("Expand", VolumeResizeStrategy::Expand);
   }
 
   addBlueprint(ctx);
@@ -350,8 +353,8 @@ void addExperimentalGeometry(Context& ctx) {
                extent.extend(volume->extent(gctx));
              }
              auto bounds = std::make_shared<Acts::CylinderVolumeBounds>(
-                 0., extent.max(Acts::BinningValue::binR),
-                 extent.max(Acts::BinningValue::binZ));
+                 0., extent.max(Acts::AxisDirection::AxisR),
+                 extent.max(Acts::AxisDirection::AxisZ));
 
              return std::make_shared<Acts::Volume>(Transform3::Identity(),
                                                    std::move(bounds));
@@ -391,13 +394,13 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Be able to construct a proto binning
     py::class_<ProtoBinning>(m, "ProtoBinning")
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType,
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
                       const std::vector<double>&, std::size_t>(),
              "bValue"_a, "bType"_a, "e"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, double,
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, double,
                       double, std::size_t, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a, "exp"_a = 0u)
-        .def(py::init<Acts::BinningValue, Acts::AxisBoundaryType, std::size_t,
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, std::size_t,
                       std::size_t>(),
              "bValue"_a, "bType"_a, "nbins"_a, "exp"_a = 0u);
   }
@@ -461,7 +464,7 @@ void addExperimentalGeometry(Context& ctx) {
         m, "KdtSurfacesDim1Bin100")
         .def(py::init<const GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
-                      const std::array<Acts::BinningValue, 1u>&>())
+                      const std::array<Acts::AxisDirection, 1u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim1&>(
                              &KdtSurfacesDim1Bin100::surfaces, py::const_));
 
@@ -491,7 +494,7 @@ void addExperimentalGeometry(Context& ctx) {
         m, "KdtSurfacesDim2Bin100")
         .def(py::init<const GeometryContext&,
                       const std::vector<std::shared_ptr<Acts::Surface>>&,
-                      const std::array<Acts::BinningValue, 2u>&>())
+                      const std::array<Acts::AxisDirection, 2u>&>())
         .def("surfaces", py::overload_cast<const RangeXDDim2&>(
                              &KdtSurfacesDim2Bin100::surfaces, py::const_));
 
@@ -623,7 +626,7 @@ void addExperimentalGeometry(Context& ctx) {
                    std::shared_ptr<
                        Acts::Experimental::IndexedRootVolumeFinderBuilder>>(
             m, "IndexedRootVolumeFinderBuilder")
-            .def(py::init<std::vector<Acts::BinningValue>>());
+            .def(py::init<std::vector<Acts::AxisDirection>>());
   }
 
   {

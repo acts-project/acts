@@ -23,4 +23,5 @@ inline void cudaAssert(cudaError_t code, const char *file, int line,
     if (abort)
       exit(code);
   }
+  cudaDeviceSynchronize();
 }

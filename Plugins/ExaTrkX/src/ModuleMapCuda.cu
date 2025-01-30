@@ -103,7 +103,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   // Get stream if available, otherwise use default stream
   cudaStream_t stream;
 #if 0
-  CUDA_CHECK(cudaStreamCreate(&stream));
+  ACTS_CUDA_CHECK(cudaStreamCreate(&stream));
 #else
   assert(execContext.stream);
   std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
@@ -120,19 +120,19 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
 
   // Full node features to device
   float *cudaNodeFeatures{};
-  CUDA_CHECK(cudaMallocAsync(&cudaNodeFeatures, features.size() * sizeof(float),
-                             stream));
-  CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeatures, features.data(),
-                             features.size() * sizeof(float),
-                             cudaMemcpyHostToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cudaNodeFeatures,
+                                  features.size() * sizeof(float), stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeatures, features.data(),
+                                  features.size() * sizeof(float),
+                                  cudaMemcpyHostToDevice, stream));
 
   // Module IDs to device
   std::uint64_t *cudaModuleIds;
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cudaModuleIds, nHits * sizeof(std::uint64_t), stream));
-  CUDA_CHECK(cudaMemcpyAsync(cudaModuleIds, moduleIds.data(),
-                             nHits * sizeof(std::uint64_t),
-                             cudaMemcpyHostToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaModuleIds, moduleIds.data(),
+                                  nHits * sizeof(std::uint64_t),
+                                  cudaMemcpyHostToDevice, stream));
 
   // Node features for module map graph
   constexpr std::size_t rOffset = 0;
@@ -148,114 +148,114 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   Acts::detail::CUDA_hit_data<float> inputData;
   inputData.m_size = nHits;
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_x, nHits * sizeof(float), stream));
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_y, nHits * sizeof(float), stream));
 
-  CUDA_CHECK(cudaMallocAsync(&inputData.m_cuda_hit_id,
-                             nHits * sizeof(std::uint64_t), stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&inputData.m_cuda_hit_id,
+                                  nHits * sizeof(std::uint64_t), stream));
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_R, nHits * sizeof(float), stream));
-  CUDA_CHECK(cudaMemcpy2DAsync(inputData.m_cuda_R, dstStride,
-                               cudaNodeFeatures + rOffset, srcStride, width,
-                               height, cudaMemcpyDeviceToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMemcpy2DAsync(
+      inputData.m_cuda_R, dstStride, cudaNodeFeatures + rOffset, srcStride,
+      width, height, cudaMemcpyDeviceToDevice, stream));
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_phi, nHits * sizeof(float), stream));
-  CUDA_CHECK(cudaMemcpy2DAsync(inputData.m_cuda_phi, dstStride,
-                               cudaNodeFeatures + phiOffset, srcStride, width,
-                               height, cudaMemcpyDeviceToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMemcpy2DAsync(
+      inputData.m_cuda_phi, dstStride, cudaNodeFeatures + phiOffset, srcStride,
+      width, height, cudaMemcpyDeviceToDevice, stream));
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_z, nHits * sizeof(float), stream));
-  CUDA_CHECK(cudaMemcpy2DAsync(inputData.m_cuda_z, dstStride,
-                               cudaNodeFeatures + zOffset, srcStride, width,
-                               height, cudaMemcpyDeviceToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMemcpy2DAsync(
+      inputData.m_cuda_z, dstStride, cudaNodeFeatures + zOffset, srcStride,
+      width, height, cudaMemcpyDeviceToDevice, stream));
 
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&inputData.m_cuda_eta, nHits * sizeof(float), stream));
-  CUDA_CHECK(cudaMemcpy2DAsync(inputData.m_cuda_eta, dstStride,
-                               cudaNodeFeatures + etaOffset, srcStride, width,
-                               height, cudaMemcpyDeviceToDevice, stream));
+  ACTS_CUDA_CHECK(cudaMemcpy2DAsync(
+      inputData.m_cuda_eta, dstStride, cudaNodeFeatures + etaOffset, srcStride,
+      width, height, cudaMemcpyDeviceToDevice, stream));
 
   // Allocate helper nb hits memory
   int *cudaNbHits;
-  CUDA_CHECK(cudaMallocAsync(&cudaNbHits,
-                             (m_cudaModuleMapSize + 1) * sizeof(int), stream));
-  CUDA_CHECK(cudaMemsetAsync(cudaNbHits, 0,
-                             (m_cudaModuleMapSize + 1) * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(
+      &cudaNbHits, (m_cudaModuleMapSize + 1) * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaMemsetAsync(
+      cudaNbHits, 0, (m_cudaModuleMapSize + 1) * sizeof(int), stream));
 
   // Synchronize to ensure memory is there (TODO is this not garantueed?)
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // Preprocess features
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
       nHits, inputData.m_cuda_z, 1000.f);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
       nHits, inputData.m_cuda_R, 1000.f);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
   detail::rescaleFeature<<<gridDimHits, blockDim, 0, stream>>>(
       nHits, inputData.m_cuda_phi, 3.14159f);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::computeXandY<<<gridDimHits, blockDim, 0, stream>>>(
       nHits, inputData.m_cuda_x, inputData.m_cuda_y, inputData.m_cuda_R,
       inputData.m_cuda_phi);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::setHitId<<<gridDimHits, blockDim, 0, stream>>>(
       nHits, inputData.m_cuda_hit_id);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::mapModuleIdsToNbHits<<<gridDimHits, blockDim, 0, stream>>>(
       cudaNbHits, nHits, cudaModuleIds, m_cudaModuleMapSize,
       m_cudaModuleMapKeys, m_cudaModuleMapVals);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   thrust::exclusive_scan(thrust::device.on(stream), cudaNbHits,
                          cudaNbHits + m_cudaModuleMapSize + 1, cudaNbHits);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
   int *cudaHitIndice = cudaNbHits;
 
   ///////////////////////////////////
   // Perform module map inference
   ////////////////////////////////////
   const auto edgeData = makeEdges(inputData, cudaHitIndice, stream);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_R(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_phi(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_z(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_eta(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_x(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_y(), stream));
-  CUDA_CHECK(cudaFreeAsync(inputData.cuda_hit_id(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_R(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_phi(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_z(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_eta(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_x(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_y(), stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_hit_id(), stream));
 
   dim3 gridDimEdges = (edgeData.nEdges + blockDim.x - 1) / blockDim.x;
 
   // Make edge features
   float *edgeFeaturePtr{};
-  CUDA_CHECK(cudaMallocAsync(&edgeFeaturePtr,
-                             6 * edgeData.nEdges * sizeof(float), stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&edgeFeaturePtr,
+                                  6 * edgeData.nEdges * sizeof(float), stream));
 
   detail::makeEdgeFeatures<<<gridDimEdges, blockDim, 0, stream>>>(
       edgeData.nEdges, edgeData.cudaEdgePtr,
       edgeData.cudaEdgePtr + edgeData.nEdges, nFeatures, cudaNodeFeatures,
       edgeFeaturePtr);
-  CUDA_CHECK(cudaStreamSynchronize(stream));
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   //  Make torch tensors
   auto edgeFeatures = torch::from_blob(
       edgeFeaturePtr, 6 * static_cast<long>(edgeData.nEdges),
-      [stream](void *ptr) { CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
+      [stream](void *ptr) { ACTS_CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
       at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
   edgeFeatures = edgeFeatures.reshape({static_cast<long>(edgeData.nEdges), 6});
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   ACTS_VERBOSE("edge features:\n"
                << edgeFeatures.index({Slice(None, 5), Slice()}));
@@ -266,15 +266,15 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
                        {2, static_cast<long>(edgeData.nEdges)},
                        at::TensorOptions().device(at::kCUDA).dtype(at::kInt))
           .to(torch::kLong);
-  CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(edgeData.cudaEdgePtr, stream));
   ACTS_VERBOSE("edge index:\n" << edgeIndex.index({Slice(), Slice(0, 10)}));
 
   auto nodeFeatures = torch::from_blob(
       cudaNodeFeatures, inputValues.size(),
-      [stream](void *ptr) { CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
+      [stream](void *ptr) { ACTS_CUDA_CHECK(cudaFreeAsync(ptr, stream)); },
       at::TensorOptions().device(at::kCUDA).dtype(at::kFloat));
   nodeFeatures = nodeFeatures.reshape({(long)nHits, (long)nFeatures});
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   return {nodeFeatures, edgeIndex, edgeFeatures};
 }
@@ -304,11 +304,11 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
 
   // count the edges per doublet
   int *cuda_nb_edges_per_doublet;
-  CUDA_CHECK(cudaMallocAsync(&cuda_nb_edges_per_doublet,
-                             (nb_doublets + 1) * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_nb_edges_per_doublet,
+                                  (nb_doublets + 1) * sizeof(int), stream));
 
   int *cuda_edge_sum;
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cuda_edge_sum, (nb_doublets + 1) * sizeof(int), stream));
 
   int nb_doublet_edges{};
@@ -320,10 +320,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
                                                    << " edges per doublet");
 
     int *cuda_M1_hits, *cuda_M2_hits;
-    CUDA_CHECK(cudaMallocAsync(
+    ACTS_CUDA_CHECK(cudaMallocAsync(
         &cuda_M1_hits, nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
         stream));
-    CUDA_CHECK(cudaMallocAsync(
+    ACTS_CUDA_CHECK(cudaMallocAsync(
         &cuda_M2_hits, nb_doublets * m_cfg.maxEdgesAllocate * sizeof(int),
         stream));
     ACTS_DEBUG("Allocate " << (2ul * nb_doublets *
@@ -348,39 +348,40 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
         std::numeric_limits<float>::max(), cuda_M1_hits, cuda_M2_hits,
         cuda_nb_edges_per_doublet, m_cfg.maxEdgesAllocate);
-    CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaGetLastError());
 
     //----------------
     // sum nb of edges
     //----------------
 
-    CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
     thrust::exclusive_scan(thrust::device.on(stream), cuda_nb_edges_per_doublet,
                            cuda_nb_edges_per_doublet + (nb_doublets + 1),
                            cuda_edge_sum);
     // scan(cuda_edge_sum, cuda_nb_edges, m_cfg.gpuBlocks, nb_doublets);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, &(cuda_edge_sum[nb_doublets]),
-                               sizeof(int), cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges,
+                                    &(cuda_edge_sum[nb_doublets]), sizeof(int),
+                                    cudaMemcpyDeviceToHost, stream));
+    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
     ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
 
-    CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M1_hits,
-                               nb_doublet_edges * sizeof(int), stream));
-    CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M2_hits,
-                               nb_doublet_edges * sizeof(int), stream));
+    ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M1_hits,
+                                    nb_doublet_edges * sizeof(int), stream));
+    ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_reduced_M2_hits,
+                                    nb_doublet_edges * sizeof(int), stream));
 
     compact_stream<<<grid_dim, block_dim, 0, stream>>>(
         cuda_reduced_M1_hits, cuda_M1_hits, cuda_edge_sum,
         m_cfg.maxEdgesAllocate, nb_doublets);
-    CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaGetLastError());
     compact_stream<<<grid_dim, block_dim, 0, stream>>>(
         cuda_reduced_M2_hits, cuda_M2_hits, cuda_edge_sum,
         m_cfg.maxEdgesAllocate, nb_doublets);
-    CUDA_CHECK(cudaGetLastError());
-    CUDA_CHECK(cudaFreeAsync(cuda_M2_hits, stream));
-    CUDA_CHECK(cudaFreeAsync(cuda_M1_hits, stream));
+    ACTS_CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaFreeAsync(cuda_M2_hits, stream));
+    ACTS_CUDA_CHECK(cudaFreeAsync(cuda_M1_hits, stream));
   }
   // ---------------------------------------------
   // B: Allocate memory for edges dynamically
@@ -390,10 +391,12 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
 
     // Allocate one integer on device and set it to 0
     int *cuda_nb_doublet_edges;
-    CUDA_CHECK(cudaMallocAsync(&cuda_nb_doublet_edges, sizeof(int), stream));
-    CUDA_CHECK(cudaMemsetAsync(cuda_nb_doublet_edges, 0, sizeof(int), stream));
+    ACTS_CUDA_CHECK(
+        cudaMallocAsync(&cuda_nb_doublet_edges, sizeof(int), stream));
+    ACTS_CUDA_CHECK(
+        cudaMemsetAsync(cuda_nb_doublet_edges, 0, sizeof(int), stream));
 
-    detail::count_doublet_edges<float><<<grid_dim, block_dim>>>(
+    detail::count_doublet_edges<float><<<grid_dim, block_dim, 0, stream>>>(
         nb_doublets, m_cudaModuleMapDoublet->cuda_module1(),
         m_cudaModuleMapDoublet->cuda_module2(), cuda_TThits.cuda_R(),
         cuda_TThits.cuda_z(), cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(),
@@ -407,20 +410,21 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
         std::numeric_limits<float>::max(), cuda_nb_doublet_edges,
         cuda_edge_sum);
-    CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaGetLastError());
 
     // Copy the number of edges to the host, synchronize and allocate
-    CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, cuda_nb_doublet_edges,
-                               sizeof(int), cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaFreeAsync(cuda_nb_doublet_edges, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
+    ACTS_CUDA_CHECK(cudaMemcpyAsync(&nb_doublet_edges, cuda_nb_doublet_edges,
+                                    sizeof(int), cudaMemcpyDeviceToHost,
+                                    stream));
+    ACTS_CUDA_CHECK(cudaFreeAsync(cuda_nb_doublet_edges, stream));
+    ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
     ACTS_DEBUG("nb_doublet_edges: " << nb_doublet_edges);
     ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
                            << " MB for edges");
-    CUDA_CHECK(cudaMallocAsync(
+    ACTS_CUDA_CHECK(cudaMallocAsync(
         &cuda_reduced_M1_hits,
         static_cast<std::size_t>(nb_doublet_edges) * sizeof(int), stream));
-    CUDA_CHECK(cudaMallocAsync(
+    ACTS_CUDA_CHECK(cudaMallocAsync(
         &cuda_reduced_M2_hits,
         static_cast<std::size_t>(nb_doublet_edges) * sizeof(int), stream));
 
@@ -442,7 +446,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         m_cudaModuleMapDoublet->cuda_dphi_max(), cuda_hit_indice, TMath::Pi(),
         std::numeric_limits<float>::max(), cuda_reduced_M1_hits,
         cuda_reduced_M2_hits, cuda_edge_sum);
-    CUDA_CHECK(cudaGetLastError());
+    ACTS_CUDA_CHECK(cudaGetLastError());
   }
 
   //---------------------------------------------
@@ -450,50 +454,51 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   //---------------------------------------------
 
   int *cuda_sorted_M2_hits;
-  CUDA_CHECK(cudaMallocAsync(&cuda_sorted_M2_hits,
-                             nb_doublet_edges * sizeof(int), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_sorted_M2_hits,
+                                  nb_doublet_edges * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   grid_dim = ((nb_doublet_edges + block_dim.x - 1) / block_dim.x);
   init_vector<<<grid_dim, block_dim, 0, stream>>>(cuda_sorted_M2_hits,
                                                   nb_doublet_edges);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   grid_dim = ((nb_doublets + block_dim.x - 1) / block_dim.x);
   partial_quick_sort<<<grid_dim, block_dim, 0, stream>>>(
       cuda_sorted_M2_hits, cuda_reduced_M2_hits, cuda_edge_sum, nb_doublets);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   // -----------------------------
   // build doublets geometric cuts
   // -----------------------------
 
   float *cuda_z0, *cuda_phi_slope, *cuda_deta, *cuda_dphi;
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cuda_z0, nb_doublet_edges * sizeof(float), stream));
-  CUDA_CHECK(cudaMallocAsync(&cuda_phi_slope, nb_doublet_edges * sizeof(float),
-                             stream));
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_phi_slope,
+                                  nb_doublet_edges * sizeof(float), stream));
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cuda_deta, nb_doublet_edges * sizeof(float), stream));
-  CUDA_CHECK(
+  ACTS_CUDA_CHECK(
       cudaMallocAsync(&cuda_dphi, nb_doublet_edges * sizeof(float), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   grid_dim = ((nb_doublet_edges + block_dim.x - 1) / block_dim.x);
   hits_geometric_cuts<<<grid_dim, block_dim, 0, stream>>>(
       cuda_z0, cuda_phi_slope, cuda_deta, cuda_dphi, cuda_reduced_M1_hits,
       cuda_reduced_M2_hits, cuda_TThits.cuda_R(), cuda_TThits.cuda_z(),
       cuda_TThits.cuda_eta(), cuda_TThits.cuda_phi(), TMath::Pi(),
       std::numeric_limits<float>::max(), nb_doublet_edges);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
   // free mem at the end
 
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // CUDA_mask cuda_edge_tag(nb_doublet_edges);
   bool *cuda_mask;
-  CUDA_CHECK(cudaMallocAsync(&cuda_mask, (nb_doublet_edges + 1) * sizeof(bool),
-                             stream));
-  CUDA_CHECK(cudaMemset(cuda_mask, 0, (nb_doublet_edges + 1) * sizeof(bool)));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(
+      &cuda_mask, (nb_doublet_edges + 1) * sizeof(bool), stream));
+  ACTS_CUDA_CHECK(
+      cudaMemset(cuda_mask, 0, (nb_doublet_edges + 1) * sizeof(bool)));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // -------------------------
   // loop over module triplets
@@ -502,11 +507,11 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   grid_dim = ((nb_triplets + block_dim.x - 1) / block_dim.x);
 
   int *cuda_vertices;
-  CUDA_CHECK(cudaMallocAsync(&cuda_vertices, cuda_TThits.size() * sizeof(int),
-                             stream));
-  CUDA_CHECK(cudaMemsetAsync(cuda_vertices, 0, cuda_TThits.size() * sizeof(int),
-                             stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_vertices,
+                                  cuda_TThits.size() * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaMemsetAsync(cuda_vertices, 0,
+                                  cuda_TThits.size() * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   triplet_cuts<float><<<grid_dim, block_dim, 0, stream>>>(
       nb_triplets, m_cudaModuleMapTriplet->cuda_module12_map(),
@@ -536,22 +541,23 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
       std::numeric_limits<float>::max(), cuda_reduced_M1_hits,
       cuda_reduced_M2_hits, cuda_sorted_M2_hits, cuda_edge_sum, cuda_vertices,
       cuda_mask);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
   //----------------
   // edges reduction
   //----------------
   int *cuda_mask_sum;
-  CUDA_CHECK(cudaMallocAsync(&cuda_mask_sum,
-                             (nb_doublet_edges + 1) * sizeof(int), stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaMallocAsync(
+      &cuda_mask_sum, (nb_doublet_edges + 1) * sizeof(int), stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   thrust::transform_exclusive_scan(
       thrust::device.on(stream), cuda_mask, cuda_mask + (nb_doublet_edges + 1),
       cuda_mask_sum, CastBoolToInt{}, 0, thrust::plus<int>());
   int nb_graph_edges;
-  CUDA_CHECK(cudaMemcpyAsync(&nb_graph_edges, &cuda_mask_sum[nb_doublet_edges],
-                             sizeof(int), cudaMemcpyDeviceToHost, stream));
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaMemcpyAsync(&nb_graph_edges,
+                                  &cuda_mask_sum[nb_doublet_edges], sizeof(int),
+                                  cudaMemcpyDeviceToHost, stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   ACTS_VERBOSE("nb_graph_edges: " << nb_graph_edges);
 
@@ -562,27 +568,27 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   int *cuda_graph_M2_hits = cuda_graph_edge_ptr + nb_graph_edges;
 
   grid_dim = ((nb_doublet_edges + block_dim.x - 1) / block_dim.x);
-  CUDA_CHECK(cudaStreamSynchronize(stream));
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   compact_stream<<<grid_dim, block_dim, 0, stream>>>(
       cuda_graph_M1_hits, cuda_reduced_M1_hits, cuda_mask, cuda_mask_sum,
       nb_doublet_edges);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
   compact_stream<<<grid_dim, block_dim, 0, stream>>>(
       cuda_graph_M2_hits, cuda_reduced_M2_hits, cuda_mask, cuda_mask_sum,
       nb_doublet_edges);
-  CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaGetLastError());
 
-  CUDA_CHECK(cudaFreeAsync(cuda_mask, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_mask_sum, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_dphi, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_deta, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_phi_slope, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_z0, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_sorted_M2_hits, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_reduced_M2_hits, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_reduced_M1_hits, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_edge_sum, stream));
-  CUDA_CHECK(cudaFreeAsync(cuda_nb_edges_per_doublet, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_mask, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_mask_sum, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_dphi, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_deta, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_phi_slope, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_z0, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_sorted_M2_hits, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_reduced_M2_hits, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_reduced_M1_hits, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_edge_sum, stream));
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_nb_edges_per_doublet, stream));
 
   detail::CUDA_edge_data<float> edge_data;
   edge_data.nEdges = nb_graph_edges;
