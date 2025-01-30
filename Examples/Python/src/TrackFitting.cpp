@@ -59,7 +59,8 @@ void addTrackFitting(Context& ctx) {
           return ActsExamples::makeKalmanFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
               reverseFilteringMomThreshold, reverseFilteringCovarianceScaling,
-              freeToBoundCorrection, *Acts::getDefaultLogger("Kalman", level));
+              freeToBoundCorrection, chi2Cut,
+              *Acts::getDefaultLogger("Kalman", level));
         },
         "trackingGeometry"_a, "magneticField"_a, "multipleScattering"_a,
         "energyLoss"_a, "reverseFilteringMomThreshold"_a,
