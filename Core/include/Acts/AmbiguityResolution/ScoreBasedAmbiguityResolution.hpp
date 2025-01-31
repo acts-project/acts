@@ -76,12 +76,12 @@ class ScoreBasedAmbiguityResolution {
 
     /// a list of values from  0 to 1, the higher number of hits, higher value
     /// in the list is multiplied to ambuiguity score applied only if
-    /// useAmbiguityFunction is true
+    /// useAmbiguityScoring is true
     std::vector<double> factorHits = {1.0};
 
     /// a list of values from  0 to 1, the higher number of holes, lower value
     /// in the list is multiplied to ambuiguity score applied only if
-    /// useAmbiguityFunction is true
+    /// useAmbiguityScoring is true
     std::vector<double> factorHoles = {1.0};
   };
 
@@ -124,16 +124,16 @@ class ScoreBasedAmbiguityResolution {
     std::size_t minUnshared = 5;
 
     // if true, the ambiguity score is computed based on a different function.
-    bool useAmbiguityFunction = false;
+    bool useAmbiguityScoring = false;
   };
 
-  /// @brief OptionalCuts struct : contains the optional cuts to be applied.
+  /// @brief Optionals struct : contains the optional cuts,weights and score to be applied.
   ///
-  /// The optional cuts,weights and score are used to remove tracks that are not
-  /// good enough, based on some criteria. Users are free to add their own cuts
-  /// with the help of this struct.
+  /// The default cuts and scoring has only a basic set of cuts and
+  /// score-modifiers. For more flexibility users can define custom cuts and
+  /// scores using this structure.
   template <TrackProxyConcept track_proxy_t>
-  struct OptionalCuts {
+  struct Optionals {
     using OptionalFilter = std::function<bool(const track_proxy_t&)>;
 
     using OptionalScoreModifier =
@@ -146,7 +146,7 @@ class ScoreBasedAmbiguityResolution {
     std::vector<OptionalFilter> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
 
-    /// applied only if useAmbiguityFunction is true
+    /// applied only if useAmbiguityScoring is true
     std::vector<OptionalScoreModifier> scores = {};
     std::vector<OptionalHitSelection> hitSelections = {};
   };
@@ -169,27 +169,27 @@ class ScoreBasedAmbiguityResolution {
   ///
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
-  /// @param optionalCuts is the user defined optional cuts to be applied.
+  /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> simpleScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const OptionalCuts<typename track_container_t::ConstTrackProxy>&
-          optionalCuts = {}) const;
+      const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
+          {}) const;
 
   /// Compute the score of each track based on the ambiguity function.
   ///
   /// @param tracks is the input track container
   /// @param trackFeaturesVectors is the trackFeatures map from detector ID to trackFeatures
-  /// @param optionalCuts is the user defined optional cuts to be applied.
+  /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
   std::vector<double> ambiguityScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
-      const OptionalCuts<typename track_container_t::ConstTrackProxy>&
-          optionalCuts = {}) const;
+      const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
+          {}) const;
 
   /// Rejects Tracks based on eta dependent cuts.
   ///
@@ -227,15 +227,15 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
-  /// @param optionalCuts is the optional cuts to be applied
+  /// @param optionals is the optional cuts and score modifiers to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
             typename source_link_hash_t, typename source_link_equality_t>
   std::vector<int> solveAmbiguity(
       const track_container_t& tracks, source_link_hash_t sourceLinkHash,
       source_link_equality_t sourceLinkEquality,
-      const OptionalCuts<typename track_container_t::ConstTrackProxy>&
-          optionalCuts = {}) const;
+      const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
+          {}) const;
 
  private:
   Config m_cfg;

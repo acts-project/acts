@@ -57,7 +57,7 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     // minimum number of unshared hits per track
     std::size_t minUnshared = 5;
 
-    bool useAmbiguityFunction = false;
+    bool useAmbiguityScoring = false;
   };
 
   /// Construct the ambiguity resolution algorithm.

@@ -729,7 +729,7 @@ def full_chain(args):
                 maxShared=2,
                 minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             ambiVolumeFile=args.ambi_config,
             **writeCovMat,

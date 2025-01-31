@@ -45,7 +45,7 @@ Acts::ScoreBasedAmbiguityResolution::Config transformConfig(
   result.maxSharedTracksPerMeasurement = cfg.maxSharedTracksPerMeasurement;
   result.maxShared = cfg.maxShared;
   result.minUnshared = cfg.minUnshared;
-  result.useAmbiguityFunction = cfg.useAmbiguityFunction;
+  result.useAmbiguityScoring = cfg.useAmbiguityScoring;
   return result;
 }
 
@@ -111,7 +111,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
-  Acts::ScoreBasedAmbiguityResolution::OptionalCuts<ConstTrackProxy>
+  Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy>
       optionalCuts;
   optionalCuts.cuts.push_back(doubleHolesFilter);
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
