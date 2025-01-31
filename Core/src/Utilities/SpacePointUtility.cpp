@@ -82,10 +82,9 @@ SpacePointUtility::globalCoords(
   jacXyzToRhoZ(0, ePos1) = scale * y;
   jacXyzToRhoZ(1, ePos2) = 1;
   // compute Jacobian from local coordinates to rho/z
-  ActsMatrix<2, 2> jac =
-      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
+  SquareMatrix2 jac = jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
   // compute rho/z variance
-  ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
+  Vector2 var = (jac * localCov * jac.transpose()).diagonal();
 
   auto gcov = Vector2(var[0], var[1]);
 
@@ -145,10 +144,9 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
   jacXyzToRhoZ(0, ePos1) = scale * y;
   jacXyzToRhoZ(1, ePos2) = 1;
   // compute Jacobian from local coordinates to rho/z
-  ActsMatrix<2, 2> jac =
-      jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
+  SquareMatrix2 jac = jacXyzToRhoZ * rotLocalToGlobal.block<3, 2>(ePos0, ePos0);
   // compute rho/z variance
-  ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
+  Vector2 var = (jac * localCov * jac.transpose()).diagonal();
 
   auto gcov = Vector2(var[0], var[1]);
 

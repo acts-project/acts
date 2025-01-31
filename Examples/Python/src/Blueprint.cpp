@@ -15,9 +15,11 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
@@ -338,14 +340,11 @@ void addBlueprint(Context& ctx) {
       py::class_<Acts::CylinderContainerBlueprintNode, Acts::BlueprintNode,
                  std::shared_ptr<Acts::CylinderContainerBlueprintNode>>(
           m, "CylinderContainerBlueprintNode")
-          .def(py::init<const std::string&, BinningValue,
-                        CylinderVolumeStack::AttachmentStrategy,
-                        CylinderVolumeStack::ResizeStrategy>(),
+          .def(py::init<const std::string&, AxisDirection,
+                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
                py::arg("name"), py::arg("direction"),
-               py::arg("attachmentStrategy") =
-                   CylinderVolumeStack::AttachmentStrategy::Gap,
-               py::arg("resizeStrategy") =
-                   CylinderVolumeStack::ResizeStrategy::Gap)
+               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
           .def_property(
               "attachmentStrategy",
               &Acts::CylinderContainerBlueprintNode::attachmentStrategy,
@@ -362,7 +361,8 @@ void addBlueprint(Context& ctx) {
 
   addNodeMethods(
       "CylinderContainer",
-      [](BlueprintNode& self, const std::string& name, BinningValue direction) {
+      [](BlueprintNode& self, const std::string& name,
+         AxisDirection direction) {
         auto cylinder =
             std::make_shared<CylinderContainerBlueprintNode>(name, direction);
         self.addChild(cylinder);

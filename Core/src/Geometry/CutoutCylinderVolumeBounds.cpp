@@ -23,11 +23,30 @@
 
 #include <memory>
 #include <ostream>
-#include <type_traits>
+#include <stdexcept>
 #include <utility>
 
-bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
-                                              double tol) const {
+namespace Acts {
+
+std::vector<double> CutoutCylinderVolumeBounds::values() const {
+  return {m_values.begin(), m_values.end()};
+}
+
+void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
+  if (get(eMinR) < 0. || get(eMedR) <= 0. || get(eMaxR) <= 0. ||
+      get(eMinR) >= get(eMedR) || get(eMinR) >= get(eMaxR) ||
+      get(eMedR) >= get(eMaxR)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid radial input.");
+  }
+  if (get(eHalfLengthZ) <= 0 || get(eHalfLengthZcutout) <= 0. ||
+      get(eHalfLengthZcutout) > get(eHalfLengthZ)) {
+    throw std::invalid_argument(
+        "CutoutCylinderVolumeBounds: invalid longitudinal input.");
+  }
+}
+
+bool CutoutCylinderVolumeBounds::inside(const Vector3& gpos, double tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -48,8 +67,7 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
   return !insideRInner || !insideZInner;  // we are not, inside bounds
 }
 
-std::vector<Acts::OrientedSurface>
-Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
+std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
   std::vector<OrientedSurface> oSurfaces;
 
@@ -63,13 +81,13 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   auto outer =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
   oSurfaces.at(tubeOuterCover) =
-      OrientedSurface{std::move(outer), Direction::OppositeNormal};
+      OrientedSurface{std::move(outer), Direction::OppositeNormal()};
 
   // Inner (cutout) cylinder envelope
   auto cutoutInner =
       Surface::makeShared<CylinderSurface>(transform, m_cutoutCylinderBounds);
   oSurfaces.at(tubeInnerCover) =
-      OrientedSurface{std::move(cutoutInner), Direction::AlongNormal};
+      OrientedSurface{std::move(cutoutInner), Direction::AlongNormal()};
 
   // z position of the pos and neg choke points
   double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
@@ -80,13 +98,13 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
     auto posInner = Surface::makeShared<CylinderSurface>(posChokeTrf,
                                                          m_innerCylinderBounds);
     oSurfaces.at(index7) =
-        OrientedSurface{std::move(posInner), Direction::AlongNormal};
+        OrientedSurface{std::move(posInner), Direction::AlongNormal()};
 
     auto negChokeTrf = transform * Translation3(Vector3(0, 0, -zChoke));
     auto negInner = Surface::makeShared<CylinderSurface>(negChokeTrf,
                                                          m_innerCylinderBounds);
     oSurfaces.at(index6) =
-        OrientedSurface{std::move(negInner), Direction::AlongNormal};
+        OrientedSurface{std::move(negInner), Direction::AlongNormal()};
   }
 
   // Two Outer disks
@@ -95,14 +113,14 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   auto posOutDisc =
       Surface::makeShared<DiscSurface>(posOutDiscTrf, m_outerDiscBounds);
   oSurfaces.at(positiveFaceXY) =
-      OrientedSurface{std::move(posOutDisc), Direction::OppositeNormal};
+      OrientedSurface{std::move(posOutDisc), Direction::OppositeNormal()};
 
   auto negOutDiscTrf =
       transform * Translation3(Vector3(0, 0, -get(eHalfLengthZ)));
   auto negOutDisc =
       Surface::makeShared<DiscSurface>(negOutDiscTrf, m_outerDiscBounds);
   oSurfaces.at(negativeFaceXY) =
-      OrientedSurface{std::move(negOutDisc), Direction::AlongNormal};
+      OrientedSurface{std::move(negOutDisc), Direction::AlongNormal()};
 
   // Two Inner disks
   auto posInDiscTrf =
@@ -110,21 +128,21 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   auto posInDisc =
       Surface::makeShared<DiscSurface>(posInDiscTrf, m_innerDiscBounds);
   oSurfaces.at(index5) =
-      OrientedSurface{std::move(posInDisc), Direction::AlongNormal};
+      OrientedSurface{std::move(posInDisc), Direction::AlongNormal()};
 
   auto negInDiscTrf =
       transform * Translation3(Vector3(0, 0, -get(eHalfLengthZcutout)));
   auto negInDisc =
       Surface::makeShared<DiscSurface>(negInDiscTrf, m_innerDiscBounds);
   oSurfaces.at(index4) =
-      OrientedSurface{std::move(negInDisc), Direction::OppositeNormal};
+      OrientedSurface{std::move(negInDisc), Direction::OppositeNormal()};
 
   return oSurfaces;
 }
 
-Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
-    const Acts::Transform3* trf, const Acts::Vector3& envelope,
-    const Acts::Volume* entity) const {
+Volume::BoundingBox CutoutCylinderVolumeBounds::boundingBox(
+    const Transform3* trf, const Vector3& envelope,
+    const Volume* entity) const {
   Vector3 vmin, vmax;
 
   // no phi sector is possible, so this is just the outer size of
@@ -133,21 +151,20 @@ Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
   vmax = {get(eMaxR), get(eMaxR), get(eHalfLengthZ)};
   vmin = {-get(eMaxR), -get(eMaxR), -get(eHalfLengthZ)};
 
-  Acts::Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
+  Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
   // transform at the very end, if required
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
-    std::ostream& sl) const {
-  sl << "Acts::CutoutCylinderVolumeBounds(\n";
+std::ostream& CutoutCylinderVolumeBounds::toStream(std::ostream& sl) const {
+  sl << "CutoutCylinderVolumeBounds(\n";
   sl << "rmin = " << get(eMinR) << " rmed = " << get(eMedR)
      << " rmax = " << get(eMaxR) << "\n";
   sl << "dz1 = " << get(eHalfLengthZ) << " dz2 = " << get(eHalfLengthZcutout);
   return sl;
 }
 
-void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
+void CutoutCylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
     m_innerCylinderBounds =
@@ -164,3 +181,5 @@ void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
 
   m_outerDiscBounds = std::make_shared<RadialBounds>(get(eMinR), get(eMaxR));
 }
+
+}  // namespace Acts

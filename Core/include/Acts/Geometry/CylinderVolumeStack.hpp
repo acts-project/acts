@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
@@ -32,29 +34,6 @@ namespace Acts {
 ///       result in overlaps of the resulting volumes bounds.
 class CylinderVolumeStack : public Volume {
  public:
-  /// The attachment strategy defines how the volumes are attached
-  /// Attachment always happens pair-wise
-  enum class AttachmentStrategy {
-    /// Given two volumes, the *left* one, i.e. the one with the lower **local**
-    /// z or r value is extended
-    First,
-    /// Given two volumes, the *right* one, i.e. the one with the higher
-    /// **local** z or r value is extended
-    Second,
-    /// Given two volumes, the *midpoint* between the two volumes is found
-    Midpoint,
-    /// A gap volume is created to fit between the two volumes
-    Gap,
-  };
-
-  /// The resize strategy defines how the volumes are resized
-  enum class ResizeStrategy {
-    /// Extend the volume connected to the respective edge to fit the new bounds
-    Expand,
-    /// Create a gap volume at the respective edge to fit the new bounds
-    Gap,
-  };
-
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
   /// @param direction is the binning direction
@@ -73,9 +52,9 @@ class CylinderVolumeStack : public Volume {
   ///      and cannot have a @f$\phi@f$ sector or bevels.
   /// @note Preconditions are checked on construction
   CylinderVolumeStack(
-      std::vector<Volume*>& volumes, BinningValue direction,
-      AttachmentStrategy strategy = AttachmentStrategy::Midpoint,
-      ResizeStrategy resizeStrategy = ResizeStrategy::Expand,
+      std::vector<Volume*>& volumes, AxisDirection direction,
+      VolumeAttachmentStrategy strategy = VolumeAttachmentStrategy::Midpoint,
+      VolumeResizeStrategy resizeStrategy = VolumeResizeStrategy::Expand,
       const Logger& logger = Acts::getDummyLogger());
 
   /// Update the volume bounds and transform. This
@@ -108,8 +87,9 @@ class CylinderVolumeStack : public Volume {
   /// @param direction is the binning direction
   /// @param strategy is the attachment strategy
   /// @param logger is the logger
-  void initializeOuterVolume(BinningValue direction,
-                             AttachmentStrategy strategy, const Logger& logger);
+  void initializeOuterVolume(AxisDirection direction,
+                             VolumeAttachmentStrategy strategy,
+                             const Logger& logger);
 
   struct VolumeTuple;
 
@@ -126,7 +106,7 @@ class CylinderVolumeStack : public Volume {
   /// @param a is the first volume
   /// @param b is the second volume
   /// @param logger is the logger
-  static void overlapPrint(BinningValue direction, const VolumeTuple& a,
+  static void overlapPrint(AxisDirection direction, const VolumeTuple& a,
                            const VolumeTuple& b, const Logger& logger);
 
   /// Helper function that checks if volumes are properly aligned
@@ -142,7 +122,7 @@ class CylinderVolumeStack : public Volume {
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttachInZ(
-      std::vector<VolumeTuple>& volumes, AttachmentStrategy strategy,
+      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
       const Logger& logger);
 
   /// Helper function to synchronize the r bounds of the volumes
@@ -158,7 +138,7 @@ class CylinderVolumeStack : public Volume {
   /// @param logger is the logger
   /// @return vector of gap volumes. Can be empty if none were created.
   std::vector<VolumeTuple> checkOverlapAndAttachInR(
-      std::vector<VolumeTuple>& volumes, AttachmentStrategy strategy,
+      std::vector<VolumeTuple>& volumes, VolumeAttachmentStrategy strategy,
       const Logger& logger);
 
   /// Helper function to synchronize the z bounds of the volumes
@@ -182,25 +162,11 @@ class CylinderVolumeStack : public Volume {
   std::shared_ptr<Volume> addGapVolume(
       const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
 
-  BinningValue m_direction{};
-  ResizeStrategy m_resizeStrategy{};
+  AxisDirection m_direction{};
+  VolumeResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
   std::vector<std::shared_ptr<Volume>> m_gaps{};
   std::vector<Volume*>& m_volumes;
 };
-
-/// Output operator for the attachment strategy
-/// @param os is the output stream
-/// @param strategy is the attachment strategy
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os,
-                         CylinderVolumeStack::AttachmentStrategy strategy);
-
-/// Output operator for the resize strategy
-/// @param os is the output stream
-/// @param strategy is the resize strategy
-/// @return the output stream
-std::ostream& operator<<(std::ostream& os,
-                         CylinderVolumeStack::ResizeStrategy strategy);
 
 }  // namespace Acts
