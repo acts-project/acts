@@ -20,5 +20,6 @@ bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
   std::size_t etaBin = std::distance(etaBins.begin(), it) - 1;
   return (trackFeatures.nHits < detector.minHitsPerEta[etaBin] ||
           trackFeatures.nHoles > detector.maxHolesPerEta[etaBin] ||
-          trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin]);
+          trackFeatures.nOutliers > detector.maxOutliersPerEta[etaBin] ||
+          trackFeatures.nSharedHits > detector.maxSharedHitsPerEta[etaBin]);
 }

@@ -134,7 +134,7 @@ class ScoreBasedAmbiguityResolution {
   /// scores using this structure.
   template <TrackProxyConcept track_proxy_t>
   struct Optionals {
-    using OptionalFilter = std::function<bool(const track_proxy_t&)>;
+    using OptionalCuts = std::function<bool(const track_proxy_t&)>;
 
     using OptionalScoreModifier =
         std::function<void(const track_proxy_t&, double&)>;
@@ -143,7 +143,7 @@ class ScoreBasedAmbiguityResolution {
         const track_proxy_t&,
         const typename track_proxy_t::ConstTrackStateProxy&, TrackStateTypes&)>;
 
-    std::vector<OptionalFilter> cuts = {};
+    std::vector<OptionalCuts> cuts = {};
     std::vector<OptionalScoreModifier> weights = {};
 
     /// applied only if useAmbiguityScoring is true

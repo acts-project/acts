@@ -380,39 +380,12 @@ std::vector<int> Acts::ScoreBasedAmbiguityResolution::solveAmbiguity(
 
   // Loop over all the tracks in the container
   // For each track, check if the track has too many shared hits to be accepted.
-  // If the track is accepted, remove bad hits and check if the track has a
-  // score higher than the minimum score for shared tracks.
-  // If the track is good, add it to the goodTracks vector.
+  // If the track is good, add it to the goodTracks
   for (std::size_t iTrack = 0; const auto& track : tracks) {
     // Check if the track has too many shared hits to be accepted.
-    auto trackFeaturesVector = trackFeaturesVectors.at(iTrack);
-    bool trkCouldBeAccepted = true;
-    double eta = Acts::VectorHelpers::eta(track.momentum());
-
-    for (std::size_t detectorId = 0; detectorId < m_cfg.detectorConfigs.size();
-         detectorId++) {
-      auto detector = m_cfg.detectorConfigs.at(detectorId);
-
-      std::vector<double> etaBins = detector.etaBins;
-
-      auto it = std::upper_bound(etaBins.begin(), etaBins.end(), eta);
-      std::size_t etaBin = std::distance(etaBins.begin(), it) - 1;
-
-      if (trackFeaturesVector[detectorId].nSharedHits >
-          detector.maxSharedHitsPerEta[etaBin]) {
-        trkCouldBeAccepted = false;
-        break;
-      }
-    }
-    if (!trkCouldBeAccepted) {
-      iTrack++;
-      continue;
-    }
-
-    trkCouldBeAccepted = getCleanedOutTracks(
-        track, trackScore[iTrack], measurementsPerTrackVector[iTrack],
-        nTracksPerMeasurement, optionalHitSelections);
-    if (trkCouldBeAccepted) {
+    if (getCleanedOutTracks(track, trackScore[iTrack],
+                            measurementsPerTrackVector[iTrack],
+                            nTracksPerMeasurement, optionalHitSelections)) {
       cleanTrackIndex++;
       if (trackScore[iTrack] > m_cfg.minScore) {
         goodTracks.push_back(track.index());
