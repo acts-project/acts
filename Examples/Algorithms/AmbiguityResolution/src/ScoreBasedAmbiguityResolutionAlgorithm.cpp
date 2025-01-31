@@ -111,8 +111,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   const auto& tracks = m_inputTracks(ctx);  // Read input data
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
-  Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy>
-      optionalCuts;
+  Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionalCuts;
   optionalCuts.cuts.push_back(doubleHolesFilter);
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
       tracks, &sourceLinkHash, &sourceLinkEquality, optionalCuts);
