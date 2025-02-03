@@ -21,6 +21,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
@@ -1046,6 +1047,17 @@ class KalmanFitter {
       navigationOptions.startSurface = &surface;
       navigationOptions.targetSurface = nullptr;
       state.navigation = navigator.makeState(navigationOptions);
+
+      if constexpr (std::is_same_v<navigator_t, Acts::Navigator>) {
+        auto lay = surface.associatedLayer();
+        auto vol = lay ? lay->trackingVolume() : nullptr;
+        if (vol && !vol->inside(stepper.position(state.stepping),
+                                state.options.surfaceTolerance)) {
+          ACTS_ERROR("State is outside volume after smoothing");
+          return KalmanFitterError::SmoothFailed;
+        }
+      }
+
       navigator.initialize(state.navigation, stepper.position(state.stepping),
                            stepper.direction(state.stepping),
                            state.options.direction);
