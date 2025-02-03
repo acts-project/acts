@@ -18,9 +18,10 @@
 
 #include <detray/navigation/navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
+#include <detray/propagator/propagation_config.hpp>
 #include <detray/propagator/propagator.hpp>
 #include <detray/test/utils/inspectors.hpp>
-#include <detray/test/utils/material_validation_utils.hpp>
+#include <detray/test/validation/material_validation_utils.hpp>
 
 namespace ActsExamples {
 
@@ -110,10 +111,16 @@ class DetrayPropagator : public PropagatorInterface {
           stepper_t, DetrayNavigator,
           detray::actor_chain<detray::dtuple, MaterialTracer>>;
 
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
+      // Context & Config
+      using Context = Propagator::state::context_type;
+      Context dCtx{};
+      using Config = detray::propagation::config;
+      Config dCfg{};
 
-      Propagator propagator;
+      typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
+                                             dCtx);
+
+      Propagator propagator(dCfg);
 
       MaterialTracer::state materialTracerState{
           *m_cfg.detrayStore->memoryResource};
@@ -159,10 +166,16 @@ class DetrayPropagator : public PropagatorInterface {
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
 
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
+      // Context & Config
+      using Context = Propagator::state::context_type;
+      Context dCtx{};
+      using Config = detray::propagation::config;
+      Config dCfg{};
 
-      Propagator propagator;
+      typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
+                                             dCtx);
+
+      Propagator propagator(dCfg);
       // Run the actual propagation
       propagator.propagate(propagation);
     }
