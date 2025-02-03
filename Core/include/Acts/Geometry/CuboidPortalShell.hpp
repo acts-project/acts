@@ -105,11 +105,11 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// @param gctx The geometry context
   /// @param shells The shells to stack
   /// @note The shells must be ordered in the given direction
-  /// @param axis The stacking direction (along x/y/z axis) in local stack coordinates
+  /// @param direction The stacking direction (along x/y/z axis) in local stack coordinates
   /// @param logger A logging instance for debugging
   CuboidStackPortalShell(const GeometryContext& gctx,
                          std::vector<CuboidPortalShell*> shells,
-                         AxisDirection axis,
+                         AxisDirection direction,
                          const Logger& logger = getDummyLogger());
 
   /// @copydoc PortalShellBase::size
@@ -138,13 +138,8 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   const Transform3& transform() const override;
 
  private:
-  void stackShell(const GeometryContext& gctx, const Logger& logger);
-
-  /// Shell stacking direction in global coordinates
-  Vector3 m_direction;
-
   /// Shell stacking direction in local stack coordinates
-  AxisDirection m_axis;
+  AxisDirection m_direction;
 
   /// The cuboid face positioned first along the stacking direction
   CuboidVolumeBounds::Face m_frontFace = NegativeYZPlane;

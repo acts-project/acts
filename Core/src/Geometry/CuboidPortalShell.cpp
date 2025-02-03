@@ -114,30 +114,27 @@ std::string SingleCuboidPortalShell::label() const {
 
 CuboidStackPortalShell::CuboidStackPortalShell(
     const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
-    AxisDirection axis, const Logger& logger)
-    : m_axis(axis), m_shells{std::move(shells)} {
-  switch (axis) {
+    AxisDirection direction, const Logger& logger)
+    : m_direction(direction), m_shells{std::move(shells)} {
+  std::tie(m_frontFace, m_backFace, m_sideFaces) =
+      CuboidVolumeBounds::facesFromAxisDirection(m_direction);
+
+  Vector3 dirVector{};
+  switch (m_direction) {
     case AxisDirection::AxisX:
-      m_direction = Vector3::UnitX();
+      dirVector = Vector3::UnitX();
       break;
     case AxisDirection::AxisY:
-      m_direction = Vector3::UnitY();
+      dirVector = Vector3::UnitY();
       break;
     case AxisDirection::AxisZ:
-      m_direction = Vector3::UnitZ();
+      dirVector = Vector3::UnitZ();
       break;
     default:
-      throw std::invalid_argument(axisDirectionName(axis) +
-                                  " is not supported ");
+      throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
   }
-  std::tie(m_frontFace, m_backFace, m_sideFaces) =
-      CuboidVolumeBounds::facesFromAxisDirection(m_axis);
-  stackShell(gctx, logger);
-}
 
-void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
-                                        const Logger& logger) {
-  ACTS_VERBOSE("Making cuboid stack shell in " << m_axis << " direction");
+  ACTS_VERBOSE("Making cuboid stack shell in " << m_direction << " direction");
   if (std::ranges::any_of(m_shells,
                           [](const auto* shell) { return shell == nullptr; })) {
     ACTS_ERROR("Invalid shell pointer");
@@ -156,7 +153,7 @@ void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
     const auto& portalAtFace = m_shells.front()->portalPtr(face);
     Vector3 onSurfaceDirection =
         portalAtFace->surface().transform(gctx).rotation().inverse() *
-        m_direction;
+        dirVector;
     if ((onSurfaceDirection - Vector3::UnitX()).norm() < 1e-4) {
       onSurfaceDirs[face] = AxisDirection::AxisX;
     } else if ((onSurfaceDirection - Vector3::UnitY()).norm() < 1e-4) {
@@ -171,9 +168,9 @@ void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
 
   std::sort(
       m_shells.begin(), m_shells.end(),
-      [this](const auto& shellA, const auto& shellB) {
-        return (shellA->transform().translation().matrix().dot(m_direction) <
-                shellB->transform().translation().matrix().dot(m_direction));
+      [&dirVector](const auto& shellA, const auto& shellB) {
+        return (shellA->transform().translation().matrix().dot(dirVector) <
+                shellB->transform().translation().matrix().dot(dirVector));
       });
 
   auto merge = [&](Face face) {
@@ -275,7 +272,7 @@ const Transform3& CuboidStackPortalShell::transform() const {
 
 std::string CuboidStackPortalShell::label() const {
   std::stringstream ss;
-  ss << "CuboidStackShell(dir=" << m_axis << ", children=";
+  ss << "CuboidStackShell(dir=" << m_direction << ", children=";
 
   std::vector<std::string> labels;
   std::ranges::transform(m_shells, std::back_inserter(labels),
