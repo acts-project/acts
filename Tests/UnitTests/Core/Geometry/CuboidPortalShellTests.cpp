@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   using enum CuboidVolumeBounds::Face;
 
   // XY plane
-  const auto* pXY = shell1.portal(positiveXYPlane);
+  const auto* pXY = shell1.portal(PositiveXYPlane);
   BOOST_REQUIRE_NE(pXY, nullptr);
   BOOST_CHECK_EQUAL(
       pXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, 50_mm}, -Vector3::UnitZ())
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nXY = shell1.portal(negativeXYPlane);
+  const auto* nXY = shell1.portal(NegativeXYPlane);
   BOOST_REQUIRE_NE(nXY, nullptr);
   BOOST_CHECK_EQUAL(
       nXY->resolveVolume(gctx, Vector3{25_mm, 20_mm, -50_mm}, -Vector3::UnitZ())
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // YZ plane
-  const auto* pYZ = shell1.portal(positiveYZPlane);
+  const auto* pYZ = shell1.portal(PositiveYZPlane);
   BOOST_REQUIRE_NE(pYZ, nullptr);
   BOOST_CHECK_EQUAL(
       pYZ->resolveVolume(gctx, Vector3{30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nYZ = shell1.portal(negativeYZPlane);
+  const auto* nYZ = shell1.portal(NegativeYZPlane);
   BOOST_REQUIRE_NE(nYZ, nullptr);
   BOOST_CHECK_EQUAL(
       nYZ->resolveVolume(gctx, Vector3{-30_mm, 10_mm, 30_mm}, -Vector3::UnitX())
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
       &cube);
 
   // ZX plane
-  const auto* pZX = shell1.portal(positiveZXPlane);
+  const auto* pZX = shell1.portal(PositiveZXPlane);
   BOOST_REQUIRE_NE(pZX, nullptr);
   BOOST_CHECK_EQUAL(
       pZX->resolveVolume(gctx, Vector3{15_mm, 40_mm, -10_mm}, -Vector3::UnitY())
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  const auto* nZX = shell1.portal(negativeZXPlane);
+  const auto* nZX = shell1.portal(NegativeZXPlane);
   BOOST_REQUIRE_NE(nZX, nullptr);
   BOOST_CHECK_EQUAL(nZX->resolveVolume(gctx, Vector3{15_mm, -40_mm, -10_mm},
                                        -Vector3::UnitY())
@@ -143,12 +143,12 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   SingleCuboidPortalShell shell{vol};
 
-  const auto* pXY = shell.portal(positiveXYPlane);
-  const auto* nXY = shell.portal(negativeXYPlane);
-  const auto* nYZ = shell.portal(negativeYZPlane);
-  const auto* pZX = shell.portal(positiveZXPlane);
-  auto* pYZ = shell.portal(positiveYZPlane);
-  auto* nZX = shell.portal(negativeZXPlane);
+  const auto* pXY = shell.portal(PositiveXYPlane);
+  const auto* nXY = shell.portal(NegativeXYPlane);
+  const auto* nYZ = shell.portal(NegativeYZPlane);
+  const auto* pZX = shell.portal(PositiveZXPlane);
+  auto* pYZ = shell.portal(PositiveYZPlane);
+  auto* nZX = shell.portal(NegativeZXPlane);
 
   // Setting new pYZ
   BOOST_REQUIRE_NE(pYZ, nullptr);
@@ -160,15 +160,15 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   auto portal2 =
       std::make_shared<Portal>(Direction::OppositeNormal(), std::move(grid));
-  shell.setPortal(portal2, positiveYZPlane);
-  BOOST_CHECK_EQUAL(shell.portal(positiveYZPlane), portal2.get());
+  shell.setPortal(portal2, PositiveYZPlane);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveYZPlane), portal2.get());
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portal(positiveXYPlane), pXY);
-  BOOST_CHECK_EQUAL(shell.portal(negativeXYPlane), nXY);
-  BOOST_CHECK_EQUAL(shell.portal(negativeYZPlane), nYZ);
-  BOOST_CHECK_EQUAL(shell.portal(positiveZXPlane), pZX);
-  BOOST_CHECK_EQUAL(shell.portal(negativeZXPlane), nZX);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXYPlane), pXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeXYPlane), nXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeYZPlane), nYZ);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveZXPlane), pZX);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeZXPlane), nZX);
 
   // Setting new nZX
   BOOST_REQUIRE_NE(nZX, nullptr);
@@ -180,15 +180,15 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 
   auto portal3 =
       std::make_shared<Portal>(Direction::AlongNormal(), std::move(grid));
-  shell.setPortal(portal3, negativeZXPlane);
-  BOOST_CHECK_EQUAL(shell.portal(negativeZXPlane), portal3.get());
+  shell.setPortal(portal3, NegativeZXPlane);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeZXPlane), portal3.get());
 
   // Other portals should stay the same
-  BOOST_CHECK_EQUAL(shell.portal(positiveXYPlane), pXY);
-  BOOST_CHECK_EQUAL(shell.portal(negativeXYPlane), nXY);
-  BOOST_CHECK_EQUAL(shell.portal(negativeYZPlane), nYZ);
-  BOOST_CHECK_EQUAL(shell.portal(positiveZXPlane), pZX);
-  BOOST_CHECK_EQUAL(shell.portal(positiveYZPlane), portal2.get());
+  BOOST_CHECK_EQUAL(shell.portal(PositiveXYPlane), pXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeXYPlane), nXY);
+  BOOST_CHECK_EQUAL(shell.portal(NegativeYZPlane), nYZ);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveZXPlane), pZX);
+  BOOST_CHECK_EQUAL(shell.portal(PositiveYZPlane), portal2.get());
 }
 
 BOOST_AUTO_TEST_SUITE(CuboidStack)
@@ -247,64 +247,6 @@ BOOST_DATA_TEST_CASE(XYZDirectionLocal,
   BOOST_CHECK_NE(shell1.portal(backFace), shell2.portal(frontFace));
 
   CuboidStackPortalShell stack(gctx, {&shell1, &shell2}, dir, *logger);
-  BOOST_CHECK_EQUAL(stack.size(), 6);
-
-  BOOST_CHECK_EQUAL(shell1.portal(frontFace), stack.portal(frontFace));
-  BOOST_CHECK_EQUAL(shell1.portal(backFace), shell2.portal(frontFace));
-  BOOST_CHECK_EQUAL(shell2.portal(backFace), stack.portal(backFace));
-
-  for (const auto& face : sideFaces) {
-    BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
-    BOOST_CHECK_EQUAL(shell2.portal(face), stack.portal(face));
-  }
-
-  shell1 = SingleCuboidPortalShell{vol1};
-  shell2 = SingleCuboidPortalShell{vol2};
-
-  BOOST_CHECK_THROW(
-      CuboidStackPortalShell(gctx, {&shell1, &shell2}, AxisDirection::AxisR),
-      std::invalid_argument);
-}
-
-BOOST_DATA_TEST_CASE(XYZDirectionGlobal,
-                     boost::unit_test::data::xrange(-135, 180, 45), angle) {
-  AngleAxis3 baseRotation = AngleAxis3(angle, Vector3::UnitX());
-  Vector3 orientation = baseRotation * Vector3::UnitZ();
-
-  auto dir = Acts::AxisDirection::AxisZ;
-  auto dirOrth1 = Acts::AxisDirection::AxisX;
-  auto dirOrth2 = Acts::AxisDirection::AxisY;
-  std::size_t dirIdx = 2;
-
-  auto boundDir = CuboidVolumeBounds::boundsFromAxisDirection(dir);
-  auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth1);
-  auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(dirOrth2);
-
-  auto [frontFace, backFace, sideFaces] =
-      CuboidVolumeBounds::facesFromAxisDirection(dir);
-
-  using enum CuboidVolumeBounds::Face;
-  auto bounds1 = std::make_shared<CuboidVolumeBounds>(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
-
-  auto bounds2 = std::make_shared<CuboidVolumeBounds>(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
-
-  Transform3 tranform1 =
-      baseRotation * Translation3(Vector3::Unit(dirIdx) * -100_mm);
-  TrackingVolume vol1(tranform1, bounds1);
-  Transform3 tranform2 =
-      baseRotation * Translation3(Vector3::Unit(dirIdx) * 100_mm);
-  TrackingVolume vol2(tranform2, bounds2);
-
-  SingleCuboidPortalShell shell1{vol1};
-  SingleCuboidPortalShell shell2{vol2};
-
-  BOOST_CHECK_NE(shell1.portal(backFace), shell2.portal(frontFace));
-
-  CuboidStackPortalShell stack(gctx, {&shell1, &shell2}, orientation, *logger);
   BOOST_CHECK_EQUAL(stack.size(), 6);
 
   BOOST_CHECK_EQUAL(shell1.portal(frontFace), stack.portal(frontFace));
@@ -396,320 +338,320 @@ BOOST_AUTO_TEST_CASE(NestedStacks) {
   };
 
   // Volume 1
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), Vector3::UnitZ()),
                     &vol1);
 
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 200_mm), -Vector3::UnitZ()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 200_mm), Vector3::UnitZ()),
                     &vol2);
 
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 20_mm), -Vector3::UnitX()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 20_mm), Vector3::UnitX()),
                     &vol1);
 
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 20_mm), -Vector3::UnitX()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 20_mm), Vector3::UnitX()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 20_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell1, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 20_mm), Vector3::UnitY()),
                     &vol1);
 
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 20_mm), -Vector3::UnitY()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(shell1, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell1, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 20_mm), Vector3::UnitY()),
                     nullptr);
 
   // Volume 2
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, 200_mm), -Vector3::UnitZ()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, 200_mm), Vector3::UnitZ()),
                     &vol2);
 
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 400_mm), -Vector3::UnitZ()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 400_mm), Vector3::UnitZ()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 220_mm), -Vector3::UnitX()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 220_mm), Vector3::UnitX()),
                     &vol2);
 
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 220_mm), -Vector3::UnitX()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 220_mm), Vector3::UnitX()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 220_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 220_mm), Vector3::UnitY()),
                     &vol2);
 
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 220_mm), -Vector3::UnitY()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(shell2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 220_mm), Vector3::UnitY()),
                     nullptr);
 
   // Volume 3
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, 400_mm), -Vector3::UnitZ()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, 400_mm), Vector3::UnitZ()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), -Vector3::UnitZ()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), Vector3::UnitZ()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 420_mm), -Vector3::UnitX()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 420_mm), Vector3::UnitX()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 420_mm), -Vector3::UnitX()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 420_mm), Vector3::UnitX()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 420_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell3, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 420_mm), Vector3::UnitY()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 420_mm), -Vector3::UnitY()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(shell3, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell3, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 420_mm), Vector3::UnitY()),
                     nullptr);
 
   // Volume 4
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeXYPlane,
                            Vector3(50_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeXYPlane,
                            Vector3(50_mm, 20_mm, -200_mm), Vector3::UnitZ()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveXYPlane,
                            Vector3(50_mm, 20_mm, 800_mm), -Vector3::UnitZ()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveXYPlane,
                            Vector3(50_mm, 20_mm, 800_mm), Vector3::UnitZ()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeYZPlane, Vector3(30_mm, 10_mm, 0_mm),
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeYZPlane, Vector3(30_mm, 10_mm, 0_mm),
                            -Vector3::UnitX()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeYZPlane,
                            Vector3(30_mm, 10_mm, 220_mm), -Vector3::UnitX()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeYZPlane,
                            Vector3(30_mm, 10_mm, 420_mm), -Vector3::UnitX()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeYZPlane,
                            Vector3(30_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveYZPlane,
                            Vector3(90_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveYZPlane,
                            Vector3(90_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeZXPlane,
                            Vector3(50_mm, -100_mm, 300_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(shell4, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, NegativeZXPlane,
                            Vector3(50_mm, -100_mm, 300_mm), Vector3::UnitY()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveZXPlane,
                            Vector3(50_mm, 100_mm, 300_mm), -Vector3::UnitY()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveZXPlane,
                            Vector3(50_mm, 100_mm, 300_mm), Vector3::UnitY()),
                     nullptr);
 
   // Stack
-  BOOST_CHECK_EQUAL(lookup(stack, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), Vector3::UnitZ()),
                     &vol1);
 
-  BOOST_CHECK_EQUAL(lookup(stack, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), -Vector3::UnitZ()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), Vector3::UnitZ()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(stack, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeYZPlane, Vector3(-30_mm, 10_mm, 0_mm),
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeYZPlane, Vector3(-30_mm, 10_mm, 0_mm),
                            Vector3::UnitX()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 220_mm), Vector3::UnitX()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 420_mm), Vector3::UnitX()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(stack, positiveYZPlane, Vector3(30_mm, 10_mm, 0_mm),
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveYZPlane, Vector3(30_mm, 10_mm, 0_mm),
                            -Vector3::UnitX()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 220_mm), -Vector3::UnitX()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 420_mm), -Vector3::UnitX()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveYZPlane,
                            Vector3(30_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(stack, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 300_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 0_mm), Vector3::UnitY()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 220_mm), Vector3::UnitY()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 420_mm), Vector3::UnitY()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(stack, positiveZXPlane, Vector3(10_mm, 100_mm, 0_mm),
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveZXPlane, Vector3(10_mm, 100_mm, 0_mm),
                            -Vector3::UnitY()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 220_mm), -Vector3::UnitY()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 420_mm), -Vector3::UnitY()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 300_mm), Vector3::UnitY()),
                     nullptr);
 
   // Stack 2
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), -Vector3::UnitZ()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeXYPlane,
                            Vector3(10_mm, 20_mm, -200_mm), Vector3::UnitZ()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeXYPlane,
                            Vector3(50_mm, 20_mm, -200_mm), Vector3::UnitZ()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), -Vector3::UnitZ()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveXYPlane,
                            Vector3(50_mm, 20_mm, 800_mm), -Vector3::UnitZ()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveXYPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveXYPlane,
                            Vector3(10_mm, 20_mm, 800_mm), Vector3::UnitZ()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 0_mm), Vector3::UnitX()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 220_mm), Vector3::UnitX()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeYZPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeYZPlane,
                            Vector3(-30_mm, 10_mm, 420_mm), Vector3::UnitX()),
                     &vol3);
 
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveYZPlane,
                            Vector3(90_mm, 10_mm, 300_mm), -Vector3::UnitX()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(shell4, positiveYZPlane,
+  BOOST_CHECK_EQUAL(lookup(shell4, PositiveYZPlane,
                            Vector3(90_mm, 10_mm, 300_mm), Vector3::UnitX()),
                     nullptr);
 
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 300_mm), -Vector3::UnitY()),
                     nullptr);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 0_mm), Vector3::UnitY()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 220_mm), Vector3::UnitY()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeZXPlane,
                            Vector3(10_mm, -100_mm, 420_mm), Vector3::UnitY()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack2, negativeZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, NegativeZXPlane,
                            Vector3(50_mm, -100_mm, 420_mm), Vector3::UnitY()),
                     &vol4);
 
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 0_mm), -Vector3::UnitY()),
                     &vol1);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 220_mm), -Vector3::UnitY()),
                     &vol2);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 420_mm), -Vector3::UnitY()),
                     &vol3);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveZXPlane,
                            Vector3(50_mm, 100_mm, 420_mm), -Vector3::UnitY()),
                     &vol4);
-  BOOST_CHECK_EQUAL(lookup(stack2, positiveZXPlane,
+  BOOST_CHECK_EQUAL(lookup(stack2, PositiveZXPlane,
                            Vector3(10_mm, 100_mm, 300_mm), Vector3::UnitY()),
                     nullptr);
 }
@@ -730,13 +672,13 @@ BOOST_AUTO_TEST_CASE(Fill) {
   using enum CuboidVolumeBounds::Face;
 
   BOOST_CHECK_EQUAL(
-      shell.portal(positiveXYPlane)->getLink(Direction::AlongNormal()),
+      shell.portal(PositiveXYPlane)->getLink(Direction::AlongNormal()),
       nullptr);
 
   shell.fill(vol2);
 
   BOOST_CHECK_NE(
-      shell.portal(positiveXYPlane)->getLink(Direction::AlongNormal()),
+      shell.portal(PositiveXYPlane)->getLink(Direction::AlongNormal()),
       nullptr);
 }
 

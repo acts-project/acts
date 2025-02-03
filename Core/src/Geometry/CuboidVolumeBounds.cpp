@@ -191,19 +191,19 @@ CuboidVolumeBounds::facesFromAxisDirection(AxisDirection direction) {
   using enum CuboidVolumeBounds::Face;
   if (direction == AxisX) {
     return {
-        negativeYZPlane,
-        positiveYZPlane,
-        {negativeXYPlane, positiveXYPlane, negativeZXPlane, positiveZXPlane}};
+        NegativeYZPlane,
+        PositiveYZPlane,
+        {NegativeXYPlane, PositiveXYPlane, NegativeZXPlane, PositiveZXPlane}};
   } else if (direction == AxisY) {
     return {
-        negativeZXPlane,
-        positiveZXPlane,
-        {negativeXYPlane, positiveXYPlane, negativeYZPlane, positiveYZPlane}};
+        NegativeZXPlane,
+        PositiveZXPlane,
+        {NegativeXYPlane, PositiveXYPlane, NegativeYZPlane, PositiveYZPlane}};
   } else if (direction == AxisZ) {
     return {
-        negativeXYPlane,
-        positiveXYPlane,
-        {negativeYZPlane, positiveYZPlane, negativeZXPlane, positiveZXPlane}};
+        NegativeXYPlane,
+        PositiveXYPlane,
+        {NegativeYZPlane, PositiveYZPlane, NegativeZXPlane, PositiveZXPlane}};
   } else {
     throw std::invalid_argument("Invalid binnig value");
   }

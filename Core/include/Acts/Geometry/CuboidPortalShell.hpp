@@ -112,17 +112,6 @@ class CuboidStackPortalShell : public CuboidPortalShell {
                          AxisDirection axis,
                          const Logger& logger = getDummyLogger());
 
-  /// Construct the portal shell stack from the given shells
-  /// @param gctx The geometry context
-  /// @param shells The shells to stack
-  /// @note The shells must be ordered in the given direction
-  /// @param direction The stacking direction in global coordinates
-  /// @param logger A logging instance for debugging
-  CuboidStackPortalShell(const GeometryContext& gctx,
-                         std::vector<CuboidPortalShell*> shells,
-                         const Vector3& direction,
-                         const Logger& logger = getDummyLogger());
-
   /// @copydoc PortalShellBase::size
   std::size_t size() const final;
 
@@ -148,10 +137,6 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   /// Return the stack's group transform
   const Transform3& transform() const override;
 
-  /// Convert a global vector to an axis direction in local stack coordinates
-  /// @param dir is the global direction to convert
-  static AxisDirection directionToAxis(const Vector3& dir);
-
  private:
   void stackShell(const GeometryContext& gctx, const Logger& logger);
 
@@ -162,12 +147,12 @@ class CuboidStackPortalShell : public CuboidPortalShell {
   AxisDirection m_axis;
 
   /// The cuboid face positioned first along the stacking direction
-  CuboidVolumeBounds::Face m_frontFace = negativeYZPlane;
+  CuboidVolumeBounds::Face m_frontFace = NegativeYZPlane;
   /// The cuboid face positioned last along the stacking direction
-  CuboidVolumeBounds::Face m_backFace = positiveYZPlane;
+  CuboidVolumeBounds::Face m_backFace = PositiveYZPlane;
   /// The cuboid faces parallel to the stacking direction
   std::array<CuboidVolumeBounds::Face, 4> m_sideFaces{
-      negativeXYPlane, positiveXYPlane, negativeZXPlane, positiveZXPlane};
+      NegativeXYPlane, PositiveXYPlane, NegativeZXPlane, PositiveZXPlane};
 
   std::vector<CuboidPortalShell*> m_shells;
 };

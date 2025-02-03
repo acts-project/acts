@@ -27,8 +27,8 @@
 namespace Acts {
 
 void CuboidPortalShell::fill(TrackingVolume& volume) {
-  for (Face face : {negativeXYPlane, positiveXYPlane, negativeYZPlane,
-                    positiveYZPlane, negativeZXPlane, positiveZXPlane}) {
+  for (Face face : {NegativeXYPlane, PositiveXYPlane, NegativeYZPlane,
+                    PositiveYZPlane, NegativeZXPlane, PositiveZXPlane}) {
     const auto& portalAtFace = portalPtr(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
@@ -55,12 +55,12 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
         std::make_shared<Portal>(source.direction, source.surface, *m_volume);
   };
 
-  handle(negativeXYPlane, negativeFaceXY);
-  handle(positiveXYPlane, positiveFaceXY);
-  handle(negativeYZPlane, negativeFaceYZ);
-  handle(positiveYZPlane, positiveFaceYZ);
-  handle(negativeZXPlane, negativeFaceZX);
-  handle(positiveZXPlane, positiveFaceZX);
+  handle(NegativeXYPlane, negativeFaceXY);
+  handle(PositiveXYPlane, positiveFaceXY);
+  handle(NegativeYZPlane, negativeFaceYZ);
+  handle(PositiveYZPlane, positiveFaceYZ);
+  handle(NegativeZXPlane, negativeFaceZX);
+  handle(PositiveZXPlane, positiveFaceZX);
 }
 
 Portal* SingleCuboidPortalShell::portal(Face face) {
@@ -135,31 +135,6 @@ CuboidStackPortalShell::CuboidStackPortalShell(
   stackShell(gctx, logger);
 }
 
-CuboidStackPortalShell::CuboidStackPortalShell(
-    const GeometryContext& gctx, std::vector<CuboidPortalShell*> shells,
-    const Vector3& direction, const Logger& logger)
-    : m_direction{direction}, m_shells{std::move(shells)} {
-  Vector3 stackDirection = transform().rotation().inverse() * m_direction;
-  m_axis = directionToAxis(stackDirection);
-  std::tie(m_frontFace, m_backFace, m_sideFaces) =
-      CuboidVolumeBounds::facesFromAxisDirection(m_axis);
-  stackShell(gctx, logger);
-}
-
-AxisDirection CuboidStackPortalShell::directionToAxis(
-    const Vector3& direction) {
-  if ((direction - Vector3::UnitX()).norm() < 1e-4) {
-    return AxisDirection::AxisX;
-  } else if ((direction - Vector3::UnitY()).norm() < 1e-4) {
-    return AxisDirection::AxisY;
-  } else if ((direction - Vector3::UnitZ()).norm() < 1e-4) {
-    return AxisDirection::AxisZ;
-  } else {
-    throw std::invalid_argument(
-        "CuboidStackPortalShell: Direction does not coincide with axes");
-  }
-}
-
 void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
                                         const Logger& logger) {
   ACTS_VERBOSE("Making cuboid stack shell in " << m_axis << " direction");
@@ -182,7 +157,16 @@ void CuboidStackPortalShell::stackShell(const GeometryContext& gctx,
     Vector3 onSurfaceDirection =
         portalAtFace->surface().transform(gctx).rotation().inverse() *
         m_direction;
-    onSurfaceDirs[face] = directionToAxis(onSurfaceDirection);
+    if ((onSurfaceDirection - Vector3::UnitX()).norm() < 1e-4) {
+      onSurfaceDirs[face] = AxisDirection::AxisX;
+    } else if ((onSurfaceDirection - Vector3::UnitY()).norm() < 1e-4) {
+      onSurfaceDirs[face] = AxisDirection::AxisY;
+    } else if ((onSurfaceDirection - Vector3::UnitZ()).norm() < 1e-4) {
+      onSurfaceDirs[face] = AxisDirection::AxisZ;
+    } else {
+      throw std::invalid_argument(
+          "CuboidStackPortalShell: Direction does not coincide with axes");
+    }
   }
 
   std::sort(
@@ -304,17 +288,17 @@ std::string CuboidStackPortalShell::label() const {
 std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face) {
   switch (face) {
     using enum CuboidVolumeBounds::Face;
-    case positiveXYPlane:
+    case PositiveXYPlane:
       return os << "positiveXYPlane";
-    case negativeXYPlane:
+    case NegativeXYPlane:
       return os << "negativeXYPlane";
-    case positiveYZPlane:
+    case PositiveYZPlane:
       return os << "positiveYZPlane";
-    case negativeYZPlane:
+    case NegativeYZPlane:
       return os << "negativeYZPlane";
-    case positiveZXPlane:
+    case PositiveZXPlane:
       return os << "positiveZXPlane";
-    case negativeZXPlane:
+    case NegativeZXPlane:
       return os << "negativeZXPlane";
     default:
       return os << "Invalid face";

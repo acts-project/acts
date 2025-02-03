@@ -63,12 +63,12 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @note These values are synchronized with the BoundarySurfaceFace enum.
   ///       Once Gen1 is removed, this can be changed.
   enum class Face : unsigned int {
-    negativeXYPlane = BoundarySurfaceFace::negativeFaceXY,
-    positiveXYPlane = BoundarySurfaceFace::positiveFaceXY,
-    negativeYZPlane = BoundarySurfaceFace::negativeFaceYZ,
-    positiveYZPlane = BoundarySurfaceFace::positiveFaceYZ,
-    negativeZXPlane = BoundarySurfaceFace::negativeFaceZX,
-    positiveZXPlane = BoundarySurfaceFace::positiveFaceZX
+    NegativeXYPlane = BoundarySurfaceFace::negativeFaceXY,
+    PositiveXYPlane = BoundarySurfaceFace::positiveFaceXY,
+    NegativeYZPlane = BoundarySurfaceFace::negativeFaceYZ,
+    PositiveYZPlane = BoundarySurfaceFace::positiveFaceYZ,
+    NegativeZXPlane = BoundarySurfaceFace::negativeFaceZX,
+    PositiveZXPlane = BoundarySurfaceFace::positiveFaceZX
   };
 
   CuboidVolumeBounds() = delete;
