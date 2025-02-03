@@ -391,7 +391,7 @@ template <typename S, typename N>
 template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(
     propagator_state_t state, Result<void> propagationResult,
-    const Acts::Surface& target, const propagator_options_t& /*options*/) const
+    const Surface& target, const propagator_options_t& /*options*/) const
     -> Result<
         actor_list_t_result_t<StepperBoundTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
