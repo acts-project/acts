@@ -9,7 +9,6 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -26,9 +25,7 @@
 #include <atomic>
 #include <cctype>
 #include <chrono>
-#include <cstdint>
 #include <cstdlib>
-#include <exception>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -104,6 +101,12 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
+  if (m_cfg.numThreads < -1 || m_cfg.numThreads == 0) {
+    ACTS_ERROR("Number of threads must be -1 (automatic) or positive");
+    throw std::invalid_argument(
+        "Number of threads must be -1 (automatic) or positive");
+  }
+
   if (m_cfg.numThreads == 1) {
     ACTS_INFO("Create Sequencer (single-threaded)");
   } else {
@@ -256,20 +259,26 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
 void Sequencer::addWhiteboardAlias(const std::string& aliasName,
                                    const std::string& objectName) {
-  auto [it, success] =
-      m_whiteboardObjectAliases.insert({objectName, aliasName});
-  if (!success) {
-    ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName
-                      << "' already set");
+  const auto range = m_whiteboardObjectAliases.equal_range(objectName);
+  for (auto it = range.first; it != range.second; ++it) {
+    const auto& [key, value] = *it;
+    if (value == aliasName) {
+      ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName
+                        << "' already set");
+      return;
+    }
+  }
+
+  m_whiteboardObjectAliases.insert({objectName, aliasName});
+
+  auto oit = m_whiteBoardState.find(objectName);
+  if (oit == m_whiteBoardState.end()) {
+    ACTS_ERROR("Key '" << objectName << "' does not exist");
     return;
   }
 
   ACTS_INFO("Key '" << objectName << "' aliased to '" << aliasName << "'");
-
-  if (auto oit = m_whiteBoardState.find(objectName);
-      oit != m_whiteBoardState.end()) {
-    m_whiteBoardState[aliasName] = oit->second;
-  }
+  m_whiteBoardState[aliasName] = oit->second;
 }
 
 std::vector<std::string> Sequencer::listAlgorithmNames() const {
@@ -384,6 +393,9 @@ inline std::string asString(D duration) {
 // Convert duration scaled to one event to a printable string.
 template <typename D>
 inline std::string perEvent(D duration, std::size_t numEvents) {
+  if (numEvents == 0) {
+    return "undef/event";
+  }
   return asString(duration / numEvents) + "/event";
 }
 
