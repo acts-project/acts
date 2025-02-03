@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(PortalAssignment) {
 }
 
 BOOST_AUTO_TEST_SUITE(CuboidStack)
-BOOST_DATA_TEST_CASE(XYZDirectionLocal,
+BOOST_DATA_TEST_CASE(XYZDirection,
                      boost::unit_test::data::make(Acts::AxisDirection::AxisX,
                                                   Acts::AxisDirection::AxisY,
                                                   Acts::AxisDirection::AxisZ),
