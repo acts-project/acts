@@ -111,15 +111,13 @@ class DetrayPropagator : public PropagatorInterface {
           stepper_t, DetrayNavigator,
           detray::actor_chain<detray::dtuple, MaterialTracer>>;
 
-      // Context & Config
-      using DetrayContext = Propagator::state::context_type;
+      using DetrayContext = typename Propagator::state::context_type;
       DetrayContext dCtx{};
       using DetrayConfig = detray::propagation::config;
       DetrayConfig dCfg{};
-
+      // Add common configuration here
       typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
                                              dCtx);
-
       Propagator propagator(dCfg);
 
       MaterialTracer::state materialTracerState{
@@ -166,16 +164,15 @@ class DetrayPropagator : public PropagatorInterface {
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
 
-      // Context & Config
-      using DetrayContext = Propagator::state::context_type;
+      using DetrayContext = typename Propagator::state::context_type;
       DetrayContext dCtx{};
       using DetrayConfig = detray::propagation::config;
       DetrayConfig dCfg{};
-
+      // Add common configuration here
       typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
                                              dCtx);
-
       Propagator propagator(dCfg);
+
       // Run the actual propagation
       propagator.propagate(propagation);
     }
