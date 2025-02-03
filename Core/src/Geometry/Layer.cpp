@@ -19,7 +19,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <iostream>
 #include <iterator>
 #include <vector>
 
@@ -159,10 +158,8 @@ Acts::Layer::compatibleSurfaces(
       return;
     }
     BoundaryTolerance boundaryTolerance = options.boundaryTolerance;
-    bool extSurf = false;
     if (rangeContainsValue(options.externalSurfaces, sf.geometryId())) {
       boundaryTolerance = BoundaryTolerance::Infinite();
-      extSurf = true;
     }
     // the surface intersection
     SurfaceIntersection sfi =
@@ -170,23 +167,7 @@ Acts::Layer::compatibleSurfaces(
     if (sfi.isValid() &&
         detail::checkPathLength(sfi.pathLength(), nearLimit, farLimit) &&
         isUnique(sfi)) {
-      if (extSurf) {
-        std::cout << "VERBOSE   Accept external surface intersection for "
-                  << sf.geometryId() << std::endl;
-      }
       sIntersections.push_back(sfi);
-    } else {
-      if (extSurf) {
-        std::cout
-            << "VERBOSE   Do NOT accept external surface intersection for "
-            << sf.geometryId() << std::endl;
-        std::cout << "  - isValid: " << std::boolalpha << sfi.isValid() << "\n"
-                  << "  - path length: " << sfi.pathLength() << " / "
-                  << detail::checkPathLength(sfi.pathLength(), nearLimit,
-                                             farLimit)
-                  << "\n"
-                  << "  - is unique: " << isUnique(sfi) << std::endl;
-      }
     }
   };
 
