@@ -198,6 +198,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
       SingleState state;
       double weight;
       IntersectionStatus status;
+
+      Component(SingleState state_, double weight_, IntersectionStatus status_)
+          : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
     Options options;
@@ -259,9 +262,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
     for (auto i = 0ul; i < par.components().size(); ++i) {
       const auto& [weight, singlePars] = par[i];
-      auto singleState = SingleStepper::makeState(state.options);
-      auto& cmp = state.components.emplace_back(std::move(singleState), weight,
-                                                IntersectionStatus::onSurface);
+      auto& cmp =
+          state.components.emplace_back(SingleStepper::makeState(state.options),
+                                        weight, IntersectionStatus::onSurface);
       SingleStepper::initialize(cmp.state, singlePars);
     }
 
