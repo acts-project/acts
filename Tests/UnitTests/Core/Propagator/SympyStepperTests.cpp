@@ -315,7 +315,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward();
-  double stepSize2 = -2. * stepSize;
 
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
@@ -342,29 +341,6 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Reset all possible parameters
   SympyStepper::State esStateCopy = copyState(*bField, ps.stepping);
   BOOST_CHECK(cp2.covariance().has_value());
-  es.initialize(esState, cp2.parameters(), *cp2.covariance(),
-                cp2.particleHypothesis(), cp2.referenceSurface());
-  // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(es.position(esStateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
-  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), navDir * stepSize2);
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-
-  // Reset all possible parameters except the step size
-  esStateCopy = copyState(*bField, ps.stepping);
   es.initialize(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.particleHypothesis(), cp2.referenceSurface());
   // Test all components
@@ -383,32 +359,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-
-  // Reset the least amount of parameters
-  esStateCopy = copyState(*bField, ps.stepping);
-  es.initialize(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.particleHypothesis(), cp2.referenceSurface());
-  // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
-  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
-  BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(es.position(esStateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
-  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
 
   /// Repeat with surface related methods

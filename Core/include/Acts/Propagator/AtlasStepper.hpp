@@ -148,7 +148,7 @@ class AtlasStepper {
   }
 
   void initialize(State& state, const BoundTrackParameters& par) const {
-    initialize(state, par.parameters(), *par.covariance(),
+    initialize(state, par.parameters(), par.covariance(),
                par.particleHypothesis(), par.referenceSurface());
   }
 
@@ -157,6 +157,13 @@ class AtlasStepper {
                   ParticleHypothesis particleHypothesis,
                   const Surface& surface) const {
     state.particleHypothesis = particleHypothesis;
+
+    state.pathAccumulated = 0;
+    state.nSteps = 0;
+    state.nStepTrials = 0;
+    state.stepSize = ConstrainedStep(state.options.maxStepSize);
+    state.previousStepSize = 0;
+    state.statistics = StepperStatistics();
 
     // The rest of this constructor is copy&paste of AtlasStepper::update() -
     // this is a nasty but working solution for the stepper state without

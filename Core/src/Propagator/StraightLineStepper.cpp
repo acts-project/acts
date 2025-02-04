@@ -39,6 +39,13 @@ void StraightLineStepper::initialize(State& state,
 
   state.particleHypothesis = particleHypothesis;
 
+  state.pathAccumulated = 0;
+  state.nSteps = 0;
+  state.nStepTrials = 0;
+  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+  state.previousStepSize = 0;
+  state.statistics = StepperStatistics();
+
   state.pars = freeParams;
 
   // Init the jacobian matrix if needed
@@ -52,10 +59,6 @@ void StraightLineStepper::initialize(State& state,
     state.jacTransport = FreeMatrix::Identity();
     state.derivative = FreeVector::Zero();
   }
-
-  state.stepSize = ConstrainedStep(state.options.maxStepSize);
-
-  state.pathAccumulated = 0.;
 }
 
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>

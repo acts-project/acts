@@ -414,8 +414,6 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                   particleHypothesis);
   FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  Direction navDir = Direction::Forward();
-  double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
     using field_t = std::decay_t<decltype(field)>;
@@ -470,49 +468,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
-                    state.stepping.previousStepSize);
-
-  // Reset all possible parameters except the step size
-  stateCopy = copyState(*magneticField, state.stepping);
-  stepper.initialize(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.particleHypothesis(), cp.referenceSurface());
-  // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
-  BOOST_CHECK_EQUAL(stepper.position(stateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
-  BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
-                    state.stepping.previousStepSize);
-
-  // Reset the least amount of parameters
-  stateCopy = copyState(*magneticField, state.stepping);
-  stepper.initialize(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.particleHypothesis(), cp.referenceSurface());
-  // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
-  BOOST_CHECK_EQUAL(stepper.position(stateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
-  BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
 

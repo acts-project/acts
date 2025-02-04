@@ -122,7 +122,8 @@ class SympyStepper {
   void initialize(State& state, const BoundTrackParameters& par) const;
 
   void initialize(State& state, const BoundVector& boundParams,
-                  const BoundMatrix& cov, ParticleHypothesis particleHypothesis,
+                  const std::optional<BoundMatrix>& cov,
+                  ParticleHypothesis particleHypothesis,
                   const Surface& surface) const;
 
   /// Get the field for the stepping, it checks first if the access is still
