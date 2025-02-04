@@ -227,8 +227,6 @@ class Navigator {
 
   State makeState(const Options& options) const {
     State state(options);
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
     return state;
   }
 
@@ -281,6 +279,9 @@ class Navigator {
     ACTS_VERBOSE(volInfo(state) << "Initialization.");
 
     state.reset();
+
+    state.startSurface = state.options.startSurface;
+    state.targetSurface = state.options.targetSurface;
 
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the

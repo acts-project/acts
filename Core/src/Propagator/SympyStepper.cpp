@@ -25,9 +25,6 @@ SympyStepper::SympyStepper(const Config& config) : m_bField(config.bField) {}
 
 SympyStepper::State SympyStepper::makeState(const Options& options) const {
   State state{options, m_bField->makeCache(options.magFieldContext)};
-
-  state.stepSize = ConstrainedStep(options.maxStepSize);
-
   return state;
 }
 

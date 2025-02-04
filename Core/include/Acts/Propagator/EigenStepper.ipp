@@ -22,9 +22,6 @@ Acts::EigenStepper<E>::EigenStepper(
 template <typename E>
 auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
   State state{options, m_bField->makeCache(options.magFieldContext)};
-
-  state.stepSize = ConstrainedStep(options.maxStepSize);
-
   return state;
 }
 

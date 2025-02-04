@@ -161,6 +161,9 @@ class TryAllNavigatorBase {
 
     ACTS_VERBOSE("initialize");
 
+    state.startSurface = state.options.startSurface;
+    state.targetSurface = state.options.targetSurface;
+
     const TrackingVolume* startVolume = nullptr;
 
     if (state.startSurface != nullptr &&
@@ -263,9 +266,6 @@ class TryAllNavigator : public TryAllNavigatorBase {
 
   State makeState(const Options& options) const {
     State state(options);
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-
     return state;
   }
 
@@ -591,9 +591,6 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
 
   State makeState(const Options& options) const {
     State state(options);
-    state.startSurface = options.startSurface;
-    state.targetSurface = options.targetSurface;
-
     return state;
   }
 

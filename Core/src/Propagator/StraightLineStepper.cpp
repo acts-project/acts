@@ -17,9 +17,6 @@ namespace Acts {
 StraightLineStepper::State StraightLineStepper::makeState(
     const Options& options) const {
   State state{options};
-
-  state.stepSize = ConstrainedStep(options.maxStepSize);
-
   return state;
 }
 

@@ -141,9 +141,6 @@ class AtlasStepper {
 
   State makeState(const Options& options) const {
     State state{options, m_bField->makeCache(options.magFieldContext)};
-
-    state.stepSize = ConstrainedStep(options.maxStepSize);
-
     return state;
   }
 

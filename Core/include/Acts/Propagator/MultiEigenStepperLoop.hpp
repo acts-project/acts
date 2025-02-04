@@ -242,7 +242,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
   State makeState(const Options& options) const {
     State state(options);
-
     return state;
   }
 
