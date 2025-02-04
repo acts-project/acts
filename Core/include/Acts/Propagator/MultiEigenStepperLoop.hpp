@@ -259,9 +259,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
     for (auto i = 0ul; i < par.components().size(); ++i) {
       const auto& [weight, singlePars] = par[i];
-      auto& cmp =
-          state.components.emplace_back(SingleStepper::makeState(state.options),
-                                        weight, IntersectionStatus::onSurface);
+      auto singleState = SingleStepper::makeState(state.options);
+      auto& cmp = state.components.emplace_back(std::move(singleState), weight,
+                                                IntersectionStatus::onSurface);
       SingleStepper::initialize(cmp.state, singlePars);
     }
 
