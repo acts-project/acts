@@ -397,9 +397,11 @@ void test_components_modifying_accessors() {
   MultiStepper multi_stepper(defaultBField);
 
   MultiState mutable_multi_state = multi_stepper.makeState(options);
-  const MultiState &const_multi_state = mutable_multi_state;
+  MultiState const_multi_state_backend = multi_stepper.makeState(options);
+  const MultiState &const_multi_state = const_multi_state_backend;
 
   multi_stepper.initialize(mutable_multi_state, multi_pars);
+  multi_stepper.initialize(const_multi_state_backend, multi_pars);
 
   auto modify = [&](const auto &projector) {
     // Here test the mutable overloads of the mutable iterable

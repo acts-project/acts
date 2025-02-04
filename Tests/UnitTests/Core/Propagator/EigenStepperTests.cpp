@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), stepSize);
-  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
   auto plane = CurvilinearSurface(pos, dir.normalized()).planeSurface();
