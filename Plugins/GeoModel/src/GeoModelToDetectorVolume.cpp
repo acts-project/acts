@@ -126,12 +126,14 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    return convertVolume(Eigen::Isometry3d(newTrf), *shapeOp);
+    //This assumes, without checking, that newTrf is an isometry
+    return convertVolume(Eigen::Isometry3d(newTrf.matrix()), *shapeOp);
   } else {
     throw std::runtime_error("FATAL: Unsupported GeoModel shape: " +
                              shape.type());
   }
-  return Volume(newTrf, bounds);
+  // This assumes newTrk is an isometry
+  return Volume(Eigen::Isometry3d(newTrf.matrix()), bounds);
 }
 
 std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
@@ -146,7 +148,8 @@ std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
                    return std::get<1>(t);
                  });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
-  Volume vol = convertVolume(transform, shape);
+  // This directly assumes that the transform is an isometry and doesn't check for it
+  Volume vol = convertVolume(Eigen::Isometry3d(transform.matrix()), shape);
   return Experimental::DetectorVolumeFactory::construct(
       portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
       sensSurfaces,

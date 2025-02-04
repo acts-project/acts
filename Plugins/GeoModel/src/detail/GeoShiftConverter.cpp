@@ -36,7 +36,8 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
     ;
   }
 
-  const Transform3& shift = geoShift.getX();
+  // Warning: This doesn't check if geoShift.getX() is really an isometry.
+  const Transform3& shift = Eigen::Isometry3d(geoShift.getX().matrix());
 
   const auto& conversionRes =
       Converter{}(geoPV, *trd, absTransform * shift, sensitive);
