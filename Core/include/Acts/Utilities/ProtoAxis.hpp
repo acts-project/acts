@@ -62,6 +62,7 @@ class ProtoAxis {
   /// @note that auto-range is only supported for equidistant binning
   ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins,
             std::size_t fillExpansion = 0);
+
   /// Custom copy constructor
   /// @param other is the right hand side ProtoAxis
   ProtoAxis(const ProtoAxis& other);

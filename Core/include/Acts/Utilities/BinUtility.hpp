@@ -105,7 +105,7 @@ class BinUtility {
   /// Create from ProtoAxis
   ///
   /// @param pAxis the ProtoAxis to be used
-  BinUtility(const ProtoAxis& pAxis)
+  explicit BinUtility(const ProtoAxis& pAxis)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
