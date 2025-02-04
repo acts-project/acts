@@ -1580,9 +1580,10 @@ class Gx2Fitter {
       gx2fActor.scatteringMap = &scatteringMap;
       gx2fActor.parametersWithHypothesis = &params;
 
-      auto propagatorState = m_propagator.makeState(params, propagatorOptions);
+      auto propagatorState = m_propagator.makeState(propagatorOptions);
 
-      auto propagatorInitResult = m_propagator.initialize(propagatorState);
+      auto propagatorInitResult =
+          m_propagator.initialize(propagatorState, params);
       if (!propagatorInitResult.ok()) {
         ACTS_ERROR("Propagation initialization failed: "
                    << propagatorInitResult.error());

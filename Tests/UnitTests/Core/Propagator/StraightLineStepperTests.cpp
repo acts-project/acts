@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
@@ -81,7 +80,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                 std::nullopt, ParticleHypothesis::pion());
 
   StraightLineStepper sls;
-  StraightLineStepper::State slsState = sls.makeState(slsOptions, cp);
+  StraightLineStepper::State slsState = sls.makeState(slsOptions);
+  sls.initialize(slsState, cp);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -101,13 +101,13 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   // Test without charge and covariance matrix
   CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
                                  std::nullopt, ParticleHypothesis::pion0());
-  slsState = sls.makeState(slsOptions, ncp);
+  sls.initialize(slsState, ncp);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
                                    ParticleHypothesis::pion0());
-  slsState = sls.makeState(slsOptions, ncp);
+  sls.initialize(slsState, ncp);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(slsState.covTransport);
   BOOST_CHECK_EQUAL(slsState.cov, cov);
@@ -137,7 +137,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Build the stepper and the state
   StraightLineStepper sls;
-  StraightLineStepper::State slsState = sls.makeState(options, cp);
+  StraightLineStepper::State slsState = sls.makeState(options);
+  sls.initialize(slsState, cp);
 
   // Test the getters
   CHECK_CLOSE_ABS(sls.position(slsState), pos, 1e-6);
@@ -239,8 +240,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset all possible parameters
   StraightLineStepper::State slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
-                 cp2.referenceSurface(), stepSize2);
+  sls.initialize(slsStateCopy, cp2.parameters(), cp2.covariance(),
+                 cp2.particleHypothesis(), cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
@@ -263,8 +264,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset all possible parameters except the step size
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
-                 cp2.referenceSurface());
+  sls.initialize(slsStateCopy, cp2.parameters(), cp2.covariance(),
+                 cp2.particleHypothesis(), cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
@@ -288,8 +289,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset the least amount of parameters
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
-                 cp2.referenceSurface());
+  sls.initialize(slsStateCopy, cp2.parameters(), cp2.covariance(),
+                 cp2.particleHypothesis(), cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
@@ -317,7 +318,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                 plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
-  slsState = sls.makeState(options, bp);
+  slsState = sls.makeState(options);
+  sls.initialize(slsState, bp);
 
   // Test the intersection in the context of a surface
   auto targetSurface =

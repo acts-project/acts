@@ -30,7 +30,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
-#include <limits>
 #include <string>
 #include <tuple>
 
@@ -119,7 +118,8 @@ class StraightLineStepper {
   void initialize(State& state, const BoundTrackParameters& par) const;
 
   void initialize(State& state, const BoundVector& boundParams,
-                  const BoundMatrix& cov, ParticleHypothesis particleHypothesis,
+                  const std::optional<BoundMatrix>& cov,
+                  ParticleHypothesis particleHypothesis,
                   const Surface& surface) const;
 
   /// Get the field for the stepping, this gives back a zero field

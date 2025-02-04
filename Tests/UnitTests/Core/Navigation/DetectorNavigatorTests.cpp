@@ -97,9 +97,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     Propagator propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(options);
 
-    BOOST_CHECK_THROW(propagator.initialize(state), std::invalid_argument);
+    BOOST_CHECK_THROW(propagator.initialize(state, start),
+                      std::invalid_argument);
   }
 
   // Run with geometry but without resolving
@@ -116,7 +117,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(options);
+
+    stepper.initialize(state.stepping, start);
 
     navigator.initialize(state.navigation, stepper.position(state.stepping),
                          stepper.direction(state.stepping),
@@ -148,9 +151,10 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(startEoW, options);
+    auto state = propagator.makeState(options);
 
-    BOOST_CHECK_THROW(propagator.initialize(state), std::invalid_argument);
+    BOOST_CHECK_THROW(propagator.initialize(state, startEoW),
+                      std::invalid_argument);
   }
 
   // Initialize properly
@@ -164,7 +168,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(options);
+
+    stepper.initialize(state.stepping, start);
 
     navigator.initialize(state.navigation, stepper.position(state.stepping),
                          stepper.direction(state.stepping),
