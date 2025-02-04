@@ -80,7 +80,7 @@ class DetrayConverter {
     }
 
     // (2b) material grids
-    if constexpr (detray::concepts::has_material_rods<detector_t>) {
+    if constexpr (detray::concepts::has_material_maps<detector_t>) {
       if (options.convertMaterial) {
         detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                            detray::io::material_id>
