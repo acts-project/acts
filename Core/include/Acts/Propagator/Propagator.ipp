@@ -255,7 +255,7 @@ auto Acts::Propagator<S, N>::makeState(
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
   // Initialize the internal propagator state
-  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
@@ -263,7 +263,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  initialize<StateType, path_aborter_t>(state);
+  initialize<StateType, parameters_t, path_aborter_t>(state, start);
 
   return state;
 }
@@ -294,7 +294,7 @@ auto Acts::Propagator<S, N>::makeState(
   using StateType =
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
-  StateType state{eOptions, m_stepper.makeState(eOptions.stepping, start),
+  StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
   static_assert(
@@ -302,7 +302,7 @@ auto Acts::Propagator<S, N>::makeState(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  initialize<StateType, path_aborter_t>(state);
+  initialize<StateType, parameters_t, path_aborter_t>(state, start);
 
   return state;
 }
@@ -396,8 +396,12 @@ auto Acts::Propagator<S, N>::makeResult(
 }
 
 template <typename S, typename N>
-template <typename propagator_state_t, typename path_aborter_t>
-void Acts::Propagator<S, N>::initialize(propagator_state_t& state) const {
+template <typename propagator_state_t, typename parameters_t,
+          typename path_aborter_t>
+void Acts::Propagator<S, N>::initialize(propagator_state_t& state,
+                                        const parameters_t& start) const {
+  m_stepper.initialize(state.stepping, start);
+
   state.position = m_stepper.position(state.stepping);
   state.direction =
       state.options.direction * m_stepper.direction(state.stepping);
