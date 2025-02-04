@@ -114,10 +114,12 @@ void Acts::ProtoAxis::setRange(double minE, double maxE) {
   } else {
     std::vector<double> edges = m_axis->getBinEdges();
     // Clip it to min/max
-    auto [first, last] = std::ranges::remove_if(
-        edges,
-        [minE, maxE](double e) -> bool { return (e < minE || e > maxE); });
-    edges.erase(first, last);
+    edges.erase(std::remove_if(edges.begin(), edges.end(),
+                               [minE, maxE](double e) -> bool {
+                                 return (e < minE || e > maxE);
+                               }),
+                edges.end());
+    // Add the min and max
     edges.emplace_back(minE);
     edges.emplace_back(maxE);
     std::ranges::sort(edges);
