@@ -179,20 +179,19 @@ class BinningData {
   ///
   /// @param pAxis is the ProtoAxis object
   ///
-  explicit BinningData(const ProtoAxis& pAxis) {
+  explicit BinningData(const ProtoAxis& pAxis)
+      : binvalue(pAxis.getAxisDirection()), subBinningData(nullptr) {
     const auto& axis = pAxis.getAxis();
     type = axis.getType() == AxisType::Equidistant ? equidistant : arbitrary;
     option = axis.getBoundaryType() == AxisBoundaryType::Closed ? closed : open;
-    binvalue = pAxis.getAxisDirection();
-    min = axis.getMin();
-    max = axis.getMax();
+    min = static_cast<float>(axis.getMin());
+    max = static_cast<float>(axis.getMax());
     m_bins = axis.getNBins();
-    step = (max - min) / m_bins;
+    step = (max - min) / (1. * m_bins);
     zdim = (m_bins == 1);
-    subBinningData = nullptr;
     m_boundaries.reserve(axis.getBinEdges().size());
-    for (auto& edge : axis.getBinEdges()) {
-      m_boundaries.push_back(edge);
+    for (const auto& edge : axis.getBinEdges()) {
+      m_boundaries.push_back(static_cast<float>(edge));
     }
     m_totalBins = m_bins;
     m_totalBoundaries = m_boundaries;

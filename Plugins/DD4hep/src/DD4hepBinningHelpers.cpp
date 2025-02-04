@@ -33,7 +33,7 @@ std::vector<Acts::ProtoAxis> Acts::DD4hepBinningHelpers::convertBinning(
       // Equidistant binning
       if (aType == AxisType::Equidistant) {
         if (autoRange) {
-          protoBinnings.push_back(ProtoAxis(bVal, bType, nBins, nExpansion));
+          protoBinnings.emplace_back(ProtoAxis(bVal, bType, nBins, nExpansion));
         } else {
           // Equidistant binning
           double minDefault =
@@ -49,7 +49,7 @@ std::vector<Acts::ProtoAxis> Acts::DD4hepBinningHelpers::convertBinning(
               (max - min) > 1.9 * std::numbers::pi) {
             bType = Acts::AxisBoundaryType::Closed;
           }
-          protoBinnings.push_back(
+          protoBinnings.emplace_back(
               ProtoAxis(bVal, bType, min, max, nBins, nExpansion));
         }
       } else {
@@ -64,7 +64,7 @@ std::vector<Acts::ProtoAxis> Acts::DD4hepBinningHelpers::convertBinning(
             (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
           bType = Acts::AxisBoundaryType::Closed;
         }
-        protoBinnings.push_back(ProtoAxis(bVal, bType, edges, nExpansion));
+        protoBinnings.emplace_back(ProtoAxis(bVal, bType, edges, nExpansion));
       }
     }
   }

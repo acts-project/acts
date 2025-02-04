@@ -54,7 +54,6 @@ Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
 
 Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
     : m_axisDir(other.m_axisDir),
-      m_axis(nullptr),
       m_autorange(other.m_autorange),
       m_fillExpansion(other.m_fillExpansion) {
   const auto& axis = other.getAxis();
@@ -169,7 +168,6 @@ std::ostream& Acts::operator<<(std::ostream& os,
                                const std::vector<ProtoAxis>& as) {
   for (const auto& a : as) {
     os << a.toString() << '\n';
-    ;
   }
   return os;
 }

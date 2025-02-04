@@ -36,8 +36,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axis create the grid
-  return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis)
-                                   -> Experimental::InternalNavigationDelegate {
+  return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis) {
     Grid<std::vector<std::size_t>, AxisTypeA> grid(axis);
 
     // Prepare the indexed updator
@@ -89,47 +88,42 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     const ProtoAxis& pAxisB, const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axes create the grid
-  return pAxisA.getAxis().visit(
-      [&]<typename AxisTypeA>(
-          const AxisTypeA& axisA) -> Experimental::InternalNavigationDelegate {
-        return pAxisB.getAxis().visit(
-            [&]<typename AxisTypeB>(const AxisTypeB& axisB)
-                -> Experimental::InternalNavigationDelegate {
-              Grid<std::vector<std::size_t>, AxisTypeA, AxisTypeB> grid(axisA,
-                                                                        axisB);
-              Experimental::InternalNavigationDelegate nStateUpdater;
+  return pAxisA.getAxis().visit([&]<typename AxisTypeA>(
+                                    const AxisTypeA& axisA) {
+    return pAxisB.getAxis().visit([&]<typename AxisTypeB>(
+                                      const AxisTypeB& axisB) {
+      Grid<std::vector<std::size_t>, AxisTypeA, AxisTypeB> grid(axisA, axisB);
+      Experimental::InternalNavigationDelegate nStateUpdater;
 
-              // Prepare the indexed updator
-              std::array<AxisDirection, 2u> axisDirs = {
-                  pAxisA.getAxisDirection(), pAxisB.getAxisDirection()};
-              indexed_updator<decltype(grid)> indexedSurfaces(
-                  std::move(grid), axisDirs, transform);
+      // Prepare the indexed updator
+      std::array<AxisDirection, 2u> axisDirs = {pAxisA.getAxisDirection(),
+                                                pAxisB.getAxisDirection()};
+      indexed_updator<decltype(grid)> indexedSurfaces(std::move(grid), axisDirs,
+                                                      transform);
 
-              std::vector<std::size_t> fillExpansion = {
-                  pAxisA.getFillExpansion(), pAxisB.getFillExpansion()};
+      std::vector<std::size_t> fillExpansion = {pAxisA.getFillExpansion(),
+                                                pAxisB.getFillExpansion()};
 
-              Experimental::detail::IndexedGridFiller filler{fillExpansion};
-              filler.fill(gctx, indexedSurfaces, surfaces, rGenerator,
-                          assignToAll);
+      Experimental::detail::IndexedGridFiller filler{fillExpansion};
+      filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
-              // The portal delegate
-              Experimental::AllPortalsNavigation allPortals;
+      // The portal delegate
+      Experimental::AllPortalsNavigation allPortals;
 
-              // The chained delegate: indexed surfaces and all portals
-              using DelegateType =
-                  Experimental::IndexedSurfacesAllPortalsNavigation<
-                      decltype(grid), indexed_updator>;
-              auto indexedSurfacesAllPortals =
-                  std::make_unique<const DelegateType>(
-                      std::tie(allPortals, indexedSurfaces));
+      // The chained delegate: indexed surfaces and all portals
+      using DelegateType =
+          Experimental::IndexedSurfacesAllPortalsNavigation<decltype(grid),
+                                                            indexed_updator>;
+      auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
+          std::tie(allPortals, indexedSurfaces));
 
-              // Create the delegate and connect it
-              nStateUpdater.connect<&DelegateType::update>(
-                  std::move(indexedSurfacesAllPortals));
+      // Create the delegate and connect it
+      nStateUpdater.connect<&DelegateType::update>(
+          std::move(indexedSurfacesAllPortals));
 
-              return nStateUpdater;
-            });
-      });
+      return nStateUpdater;
+    });
+  });
 }
 
 }  // namespace Acts::detail::IndexedSurfacesGenerator

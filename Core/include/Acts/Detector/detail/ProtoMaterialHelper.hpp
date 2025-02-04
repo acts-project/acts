@@ -15,9 +15,7 @@ namespace Acts {
 
 class Surface;
 
-namespace Experimental {
-
-namespace detail::ProtoMaterialHelper {
+namespace Experimental::detail::ProtoMaterialHelper {
 
 /// @brief Method that attaches proto material to a surface given
 /// a proto binning description
@@ -32,6 +30,5 @@ std::vector<ProtoAxis> attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
     const std::vector<ProtoAxis>& bDescription);
 
-}  // namespace detail::ProtoMaterialHelper
-}  // namespace Experimental
+}  // namespace Experimental::detail::ProtoMaterialHelper
 }  // namespace Acts
