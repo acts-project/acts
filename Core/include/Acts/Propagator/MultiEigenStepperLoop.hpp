@@ -271,23 +271,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     }
   }
 
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const {
-    for (auto& component : state.components) {
-      SingleStepper::resetState(component.state, boundParams, cov, surface,
-                                stepSize);
-    }
-  }
-
   /// A proxy struct which allows access to a single component of the
   /// multi-component state. It has the semantics of a const reference, i.e.
   /// it requires a const reference of the single-component state it

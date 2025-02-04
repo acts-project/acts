@@ -191,10 +191,10 @@ class AtlasStepper {
     }
 
     // prepare the jacobian if we have a covariance
-    if (cov.has_value()) {
+    state.covTransport = cov.has_value();
+    if (state.covTransport) {
       // copy the covariance matrix
       state.covariance = new BoundSquareMatrix(*cov);
-      state.covTransport = true;
       state.useJacobian = true;
       const auto transform =
           surface.referenceFrame(state.options.geoContext, pos, dir);
@@ -324,28 +324,6 @@ class AtlasStepper {
 
     // now declare the state as ready
     state.state_ready = true;
-  }
-
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface Reset state will be on this surface
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const {
-    // Update the stepping state
-    update(state,
-           transformBoundToFreeParameters(surface, state.options.geoContext,
-                                          boundParams),
-           boundParams, cov, surface);
-    state.stepSize = ConstrainedStep(stepSize);
-    state.pathAccumulated = 0.;
-
-    setIdentityJacobian(state);
   }
 
   /// Get the field for the stepping
