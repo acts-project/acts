@@ -110,7 +110,8 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   BOOST_CHECK(!state.covTransport);
   BOOST_CHECK_EQUAL(state.covariance, nullptr);
@@ -137,7 +138,8 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   BOOST_CHECK(state.covTransport);
   BOOST_CHECK_EQUAL(*state.covariance, cov);
@@ -164,7 +166,8 @@ BOOST_AUTO_TEST_CASE(Getters) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), time, eps);
@@ -183,7 +186,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   auto newPos4 = (pos4 + Vector4(1_mm, 2_mm, 3_mm, 20_ns)).eval();
   auto newPos = newPos4.segment<3>(ePos0);
@@ -230,7 +234,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   auto newPos = (pos + Vector3(1_mm, 2_mm, 3_mm)).eval();
   auto newTime = time + 20_ns;
@@ -255,7 +260,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   // example surface at the current state position
   auto plane = CurvilinearSurface(pos, unitDir).planeSurface();
@@ -284,7 +290,8 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
   // check parameters
@@ -310,7 +317,8 @@ BOOST_AUTO_TEST_CASE(Step) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  MockPropagatorState state(stepper.makeState(options, cp));
+  MockPropagatorState state(stepper.makeState(options));
+  stepper.initialize(state.stepping, cp);
   state.stepping.covTransport = false;
 
   // ensure step does not result in an error
@@ -347,7 +355,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  MockPropagatorState state(stepper.makeState(options, cp));
+  MockPropagatorState state(stepper.makeState(options));
+  stepper.initialize(state.stepping, cp);
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
@@ -387,7 +396,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  MockPropagatorState state(stepper.makeState(options, cp));
+  MockPropagatorState state(stepper.makeState(options));
+  stepper.initialize(state.stepping, cp);
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
@@ -404,12 +414,11 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                   particleHypothesis);
   FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  Direction navDir = Direction::Forward();
-  double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
     using field_t = std::decay_t<decltype(field)>;
-    std::decay_t<decltype(other)> copy = stepper.makeState(options, cp);
+    std::decay_t<decltype(other)> copy = stepper.makeState(options);
+    stepper.initialize(state.stepping, cp);
 
     copy.state_ready = other.state_ready;
     copy.useJacobian = other.useJacobian;
@@ -445,8 +454,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset all possible parameters
   Stepper::State stateCopy = copyState(*magneticField, state.stepping);
   BOOST_CHECK(cp.covariance().has_value());
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.referenceSurface(), stepSize);
+  stepper.initialize(stateCopy, cp.parameters(), *cp.covariance(),
+                     cp.particleHypothesis(), cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
   BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
@@ -459,49 +468,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
-                    state.stepping.previousStepSize);
-
-  // Reset all possible parameters except the step size
-  stateCopy = copyState(*magneticField, state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.referenceSurface());
-  // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
-  BOOST_CHECK_EQUAL(stepper.position(stateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
-  BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
-                    state.stepping.previousStepSize);
-
-  // Reset the least amount of parameters
-  stateCopy = copyState(*magneticField, state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
-                     cp.referenceSurface());
-  // Test all components
-  BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, newCov);
-  BOOST_CHECK_EQUAL(stepper.position(stateCopy),
-                    freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
-                    freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
-  BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
-                    std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
 
@@ -523,8 +490,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset the state and test
   Stepper::State stateDisc = copyState(*magneticField, state.stepping);
   BOOST_CHECK(boundDisc.covariance().has_value());
-  stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),
-                     boundDisc.referenceSurface());
+  stepper.initialize(stateDisc, boundDisc.parameters(), *boundDisc.covariance(),
+                     cp.particleHypothesis(), boundDisc.referenceSurface());
 
   CHECK_NE_COLLECTIONS(stateDisc.pVector, stateCopy.pVector);
   CHECK_NE_COLLECTIONS(stateDisc.pVector, state.stepping.pVector);
@@ -546,8 +513,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset the state and test
   Stepper::State statePerigee = copyState(*magneticField, state.stepping);
   BOOST_CHECK(boundPerigee.covariance().has_value());
-  stepper.resetState(statePerigee, boundPerigee.parameters(),
-                     *boundPerigee.covariance(),
+  stepper.initialize(statePerigee, boundPerigee.parameters(),
+                     *boundPerigee.covariance(), cp.particleHypothesis(),
                      boundPerigee.referenceSurface());
   CHECK_NE_COLLECTIONS(statePerigee.pVector, stateCopy.pVector);
   CHECK_NE_COLLECTIONS(statePerigee.pVector, state.stepping.pVector);
@@ -564,8 +531,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset the state and test
   Stepper::State stateStraw = copyState(*magneticField, state.stepping);
   BOOST_CHECK(boundStraw.covariance().has_value());
-  stepper.resetState(stateStraw, boundStraw.parameters(),
-                     *boundStraw.covariance(), boundStraw.referenceSurface());
+  stepper.initialize(stateStraw, boundStraw.parameters(),
+                     *boundStraw.covariance(), cp.particleHypothesis(),
+                     boundStraw.referenceSurface());
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateCopy.pVector);
   CHECK_NE_COLLECTIONS(stateStraw.pVector, state.stepping.pVector);
   CHECK_NE_COLLECTIONS(stateStraw.pVector, stateDisc.pVector);
@@ -583,7 +551,8 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   stepper.updateStepSize(state, -5_cm, ConstrainedStep::Type::Navigator);
   BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
@@ -603,7 +572,8 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   Stepper::Options options(geoCtx, magCtx);
   options.maxStepSize = stepSize;
 
-  Stepper::State state = stepper.makeState(options, cp);
+  Stepper::State state = stepper.makeState(options);
+  stepper.initialize(state, cp);
 
   auto distance = 10_mm;
   auto target = CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
