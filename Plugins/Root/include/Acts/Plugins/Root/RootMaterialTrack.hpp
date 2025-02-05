@@ -176,12 +176,12 @@ class RootMaterialTrack {
   /// @param cfg The configuration struct
   RootMaterialTrack(const Config& cfg);
 
-  /// This mehtod initializes for TTree writing
+  /// This method initializes for TTree writing
   ///
   /// @param chain The TChain to wread from
   void initializeRead(TChain& tree);
 
-  /// This mehtod initializes for TTree writing
+  /// This method initializes for TTree writing
   ///
   /// @param tree The TTree to write to
   void initializeWrite(TTree& tree);
@@ -196,7 +196,8 @@ class RootMaterialTrack {
   /// @param gctx The geometry context
   /// @param rmTrack The recorded material track to fill
   /// @param aux The auxiliary information to fill
-  void fill(const GeometryContext& gctx, const RecordedMaterialTrack& rmTrack, const Auxiliaries& aux);
+  void fill(const GeometryContext& gctx, const RecordedMaterialTrack& rmTrack,
+            const Auxiliaries& aux);
 
   /// Create a RecordedMaterialTrack from the current payload
   /// @note It is up to the caller to move/update the payload in the reader
@@ -206,8 +207,8 @@ class RootMaterialTrack {
   /// Clear the payload
   void clear();
 
-  Config m_cfg; // Configuration struct
-  Payload m_payload; // Paylod object
+  Config m_cfg;       // Configuration struct
+  Payload m_payload;  // Paylod object
 };
 
 }  // namespace Acts

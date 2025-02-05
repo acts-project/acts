@@ -14,10 +14,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RField.hxx>
-#include <TTree.h>
+#include <ROOT/RNTupleModel.hxx>
 #include <TChain.h>
+#include <TTree.h>
 
 Acts::RootMaterialTrack::RootMaterialTrack(const Config& cfg) : m_cfg(cfg) {}
 
@@ -110,7 +110,8 @@ void Acts::RootMaterialTrack::initializeRead(TChain& chain) {
     chain.SetBranchAddress("sur_x", &m_payload.surfaceX);
     chain.SetBranchAddress("sur_y", &m_payload.surfaceY);
     chain.SetBranchAddress("sur_z", &m_payload.surfaceZ);
-    chain.SetBranchAddress("sur_pathCorrection", &m_payload.surfacePathCorrection);
+    chain.SetBranchAddress("sur_pathCorrection",
+                           &m_payload.surfacePathCorrection);
   }
 }
 
@@ -205,7 +206,6 @@ void Acts::RootMaterialTrack::clear() {
 void Acts::RootMaterialTrack::fill(const GeometryContext& gctx,
                                    const RecordedMaterialTrack& rmTrack,
                                    const Auxiliaries& aux) {
-
   clear();
   // Prepare in case we want to collapse single interactions per surface to one
   auto materialInteractions = rmTrack.second.materialInteractions;
@@ -415,57 +415,57 @@ void Acts::RootMaterialTrack::fill(const GeometryContext& gctx,
 }
 
 Acts::RecordedMaterialTrack Acts::RootMaterialTrack::read() const {
+  RecordedMaterialTrack rmTrack;
+  // Fill the position and momentum
+  rmTrack.first.first = Vector3(*m_payload.vX, *m_payload.vY, *m_payload.vZ);
+  rmTrack.first.second =
+      Vector3(*m_payload.vPX, *m_payload.vPY, *m_payload.vPZ);
 
-    RecordedMaterialTrack rmTrack;
-    // Fill the position and momentum
-    rmTrack.first.first = Vector3(*m_payload.vX, *m_payload.vY, *m_payload.vZ);
-    rmTrack.first.second = Vector3(*m_payload.vPX, *m_payload.vPY, *m_payload.vPZ);
+  // Fill the individual steps
+  std::size_t msteps = m_payload.stepLength->size();
 
-    // Fill the individual steps
-    std::size_t msteps = m_payload.stepLength->size();
+  rmTrack.second.materialInteractions.reserve(msteps);
+  rmTrack.second.materialInX0 = 0.;
+  rmTrack.second.materialInL0 = 0.;
 
-    rmTrack.second.materialInteractions.reserve(msteps);
-    rmTrack.second.materialInX0 = 0.;
-    rmTrack.second.materialInL0 = 0.;
-
-    for (std::size_t is = 0; is < msteps; ++is) {
-
-      double s = m_payload.stepLength->at(is);
-      if (s == 0) {
-        continue;
-      }
-
-      double mX0 = m_payload.matX0->at(is);
-      double mL0 = m_payload.matL0->at(is);
-      rmTrack.second.materialInX0 += s / mX0;
-      rmTrack.second.materialInL0 += s / mL0;
-
-      /// Fill the position & the material
-      MaterialInteraction mInteraction;
-      mInteraction.position =
-          Vector3(m_payload.stepX->at(is), m_payload.stepY->at(is),
-                  m_payload.stepZ->at(is));
-      mInteraction.direction =
-          Vector3(m_payload.stepDX->at(is), m_payload.stepDY->at(is),
-                  m_payload.stepDZ->at(is));
-      mInteraction.materialSlab = MaterialSlab(
-          Material::fromMassDensity(mX0, mL0, m_payload.matA->at(is),
-                                    m_payload.matZ->at(is),
-                                    m_payload.matRho->at(is)),s);
-      if (m_cfg.readCachedSurfaceInformation) {
-        // add the surface information to the interaction this allows the
-        // mapping to be speed up
-        mInteraction.intersectionID = GeometryIdentifier(m_payload.surfaceId->at(is));
-        mInteraction.intersection =
-            Vector3(m_payload.surfaceX->at(is), m_payload.surfaceY->at(is),
-                    m_payload.surfaceZ->at(is));
-        mInteraction.pathCorrection = m_payload.surfacePathCorrection->at(is);
-      } else {
-        mInteraction.intersectionID = GeometryIdentifier();
-        mInteraction.intersection = Vector3(0, 0, 0);
-      }
-      rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
+  for (std::size_t is = 0; is < msteps; ++is) {
+    double s = m_payload.stepLength->at(is);
+    if (s == 0) {
+      continue;
     }
+
+    double mX0 = m_payload.matX0->at(is);
+    double mL0 = m_payload.matL0->at(is);
+    rmTrack.second.materialInX0 += s / mX0;
+    rmTrack.second.materialInL0 += s / mL0;
+
+    /// Fill the position & the material
+    MaterialInteraction mInteraction;
+    mInteraction.position =
+        Vector3(m_payload.stepX->at(is), m_payload.stepY->at(is),
+                m_payload.stepZ->at(is));
+    mInteraction.direction =
+        Vector3(m_payload.stepDX->at(is), m_payload.stepDY->at(is),
+                m_payload.stepDZ->at(is));
+    mInteraction.materialSlab =
+        MaterialSlab(Material::fromMassDensity(mX0, mL0, m_payload.matA->at(is),
+                                               m_payload.matZ->at(is),
+                                               m_payload.matRho->at(is)),
+                     s);
+    if (m_cfg.readCachedSurfaceInformation) {
+      // add the surface information to the interaction this allows the
+      // mapping to be speed up
+      mInteraction.intersectionID =
+          GeometryIdentifier(m_payload.surfaceId->at(is));
+      mInteraction.intersection =
+          Vector3(m_payload.surfaceX->at(is), m_payload.surfaceY->at(is),
+                  m_payload.surfaceZ->at(is));
+      mInteraction.pathCorrection = m_payload.surfacePathCorrection->at(is);
+    } else {
+      mInteraction.intersectionID = GeometryIdentifier();
+      mInteraction.intersection = Vector3(0, 0, 0);
+    }
+    rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
+  }
   return rmTrack;
 }
-

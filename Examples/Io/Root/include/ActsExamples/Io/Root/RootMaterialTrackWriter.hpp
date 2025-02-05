@@ -59,13 +59,13 @@ class RootMaterialTrackWriter
  public:
   struct Config : public Acts::RootMaterialTrack::Config {
     /// material collection to write
-    std::string inputMaterialTracks = "material-tracks";
+    std::string inputMaterialTracks = "material_tracks";
     /// path of the output file
     std::string filePath = "";
     /// file access mode
     std::string fileMode = "RECREATE";
     /// name of the output tree
-    std::string treeName = "material-tracks";
+    std::string treeName = "material_tracks";
     /// Write as RNTuple
     bool rnTuple = false;
   };

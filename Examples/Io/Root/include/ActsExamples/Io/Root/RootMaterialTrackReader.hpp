@@ -40,9 +40,9 @@ class RootMaterialTrackReader : public IReader {
   /// @brief The nested configuration struct
   struct Config : public Acts::RootMaterialTrack::Config {
     /// material collection to read
-    std::string outputMaterialTracks = "material-tracks";
+    std::string outputMaterialTracks = "material_tracks";
     /// name of the output tree
-    std::string treeName = "material-tracks";
+    std::string treeName = "material_tracks";
     /// List of input files
     std::vector<std::string> fileList;
   };
