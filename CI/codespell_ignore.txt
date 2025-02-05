@@ -19,4 +19,4 @@ strack
 te
 vart
 writet
-matA
+mata
