@@ -38,8 +38,9 @@ ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
   ClusterContainer clusters;
 
-  edm4hep::TrackerHitPlaneCollection hitsPlane;
-  edm4hep::TrackerHit3DCollection hits;
+  podio::Frame frame;
+
+  edm4hep::TrackerHitLocalCollection hits;
 
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
@@ -54,15 +55,12 @@ ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
   for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
     ConstVariableBoundMeasurementProxy from =
         measurements.getMeasurement(hitIdx);
-    const Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
-    auto to = hitsPlane.create();
+    auto to = hits.create();
     EDM4hepUtil::writeMeasurement(
-        from, to, fromCluster, hits,
-        [](Acts::GeometryIdentifier id) { return id.value(); });
+        from, to, [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
-  m_outputTrackerHitsPlane(ctx, std::move(hitsPlane));
   m_outputTrackerHitsRaw(ctx, std::move(hits));
 
   return ActsExamples::ProcessCode::SUCCESS;
