@@ -99,7 +99,7 @@ class SingleCuboidPortalShell : public CuboidPortalShell {
 
 /// @class CuboidStackPortalShell
 /// This class describes a cuboid shell containing multiple volumes.
-class CuboidStackPortalShell : public CuboidPortalShell {
+class CuboidStackPortalShell final : public CuboidPortalShell {
  public:
   /// Construct the portal shell stack from the given shells
   /// @param gctx The geometry context
@@ -113,26 +113,26 @@ class CuboidStackPortalShell : public CuboidPortalShell {
                          const Logger& logger = getDummyLogger());
 
   /// @copydoc PortalShellBase::size
-  std::size_t size() const final;
+  std::size_t size() const override;
 
   /// @copydoc CuboidPortalShell::portal
-  Portal* portal(Face face) final;
+  Portal* portal(Face face) override;
 
   /// @copydoc CuboidPortalShell::portalPtr
-  std::shared_ptr<Portal> portalPtr(Face face) final;
+  std::shared_ptr<Portal> portalPtr(Face face) override;
 
   /// @copydoc CuboidPortalShell::setPortal
-  void setPortal(std::shared_ptr<Portal> portal, Face face) final;
+  void setPortal(std::shared_ptr<Portal> portal, Face face) override;
 
   void applyToVolume() override {
     // No-op, because it's a composite portal shell
   }
 
   /// @copydoc PortalShellBase::isValid
-  bool isValid() const final;
+  bool isValid() const override;
 
   /// @copydoc PortalShellBase::label
-  std::string label() const final;
+  std::string label() const override;
 
   /// Return the stack's group transform
   const Transform3& transform() const override;
