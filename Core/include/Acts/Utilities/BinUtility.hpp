@@ -62,7 +62,7 @@ class BinUtility {
                       const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(bData);
+    m_binningData.emplace_back(bData);
   }
 
   /// Constructor for equidistant
@@ -78,7 +78,7 @@ class BinUtility {
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bins, min, max));
+    m_binningData.emplace_back(BinningData(opt, value, bins, min, max));
   }
 
   /// Constructor for arbitrary
@@ -92,7 +92,7 @@ class BinUtility {
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(opt, value, bValues));
+    m_binningData.emplace_back(BinningData(opt, value, bValues));
   }
 
   /// Copy constructor
@@ -110,19 +110,19 @@ class BinUtility {
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.push_back(BinningData(pAxis));
+    m_binningData.emplace_back(BinningData(pAxis));
   }
 
   /// Create from ProtoAxis
   ///
   /// @param pAxes the ProtoAxes to be used
-  BinUtility(const std::vector<ProtoAxis>& pAxes)
+  explicit BinUtility(const std::vector<ProtoAxis>& pAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
     for (const auto& pAxis : pAxes) {
-      m_binningData.push_back(BinningData(pAxis));
+      m_binningData.emplace_back(BinningData(pAxis));
     }
   }
 

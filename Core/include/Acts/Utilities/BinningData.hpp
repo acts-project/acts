@@ -187,7 +187,7 @@ class BinningData {
     min = static_cast<float>(axis.getMin());
     max = static_cast<float>(axis.getMax());
     m_bins = axis.getNBins();
-    step = (max - min) / (1. * m_bins);
+    step = (max - min) / static_cast<float>(m_bins);
     zdim = (m_bins == 1);
     m_boundaries.reserve(axis.getBinEdges().size());
     for (const auto& edge : axis.getBinEdges()) {
