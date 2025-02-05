@@ -156,9 +156,11 @@ CuboidStackPortalShell::CuboidStackPortalShell(
         dirVector;
     if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitX()).norm() < 1e-4) {
       onSurfaceDirs[face] = AxisDirection::AxisX;
-    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitY()).norm() < 1e-4) {
+    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitY()).norm() <
+               1e-4) {
       onSurfaceDirs[face] = AxisDirection::AxisY;
-    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitZ()).norm() < 1e-4) {
+    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitZ()).norm() <
+               1e-4) {
       onSurfaceDirs[face] = AxisDirection::AxisZ;
     } else {
       throw std::invalid_argument(
