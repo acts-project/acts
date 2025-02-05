@@ -26,10 +26,6 @@
 class TFile;
 class TTree;
 
-namespace ROOT::Experimental {
-class RNTupleWriter;
-}  // namespace ROOT::Experimental
-
 namespace ActsExamples {
 struct AlgorithmContext;
 }  // namespace ActsExamples
@@ -66,8 +62,6 @@ class RootMaterialTrackWriter
     std::string fileMode = "RECREATE";
     /// name of the output tree
     std::string treeName = "material_tracks";
-    /// Write as RNTuple
-    bool rnTuple = false;
   };
 
   /// Constructor with
@@ -105,8 +99,6 @@ class RootMaterialTrackWriter
   TFile* m_outputFile = nullptr;
   /// The output tree name
   TTree* m_outputTree = nullptr;
-  /// Experimental RNTuple writer
-  std::unique_ptr<ROOT::Experimental::RNTupleWriter> m_rntWriter = nullptr;
   /// The root material track object
   Acts::RootMaterialTrack m_rootMaterialTrack;
 };

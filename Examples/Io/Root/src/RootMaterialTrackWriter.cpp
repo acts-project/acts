@@ -26,8 +26,6 @@
 #include <ios>
 #include <stdexcept>
 
-#include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleWriter.hxx>
 #include <TFile.h>
 #include <TTree.h>
 
@@ -56,22 +54,11 @@ RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
   m_outputFile->cd();
 
-  if (m_cfg.rnTuple) {
-    auto model = ROOT::Experimental::RNTupleModel::Create();
-    /// Initialize the RDataFrame
-    m_rootMaterialTrack.initializeWrite(*model);
-
-    ACTS_INFO("Writing as ROOT::Experimental::RNTupleModel");
-    // Move to a writer
-    m_rntWriter = ROOT::Experimental::RNTupleWriter::Recreate(
-        std::move(model), m_cfg.treeName, m_cfg.filePath);
-  } else {
-    m_outputTree =
-        new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
-    // Initialize the Tree
-    m_rootMaterialTrack.initializeWrite(*m_outputTree);
-    ACTS_INFO("Writing as ROOT::TTree");
-  }
+  m_outputTree =
+      new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
+  // Initialize the Tree
+  m_rootMaterialTrack.initializeWrite(*m_outputTree);
+  ACTS_INFO("Writing as ROOT::TTree");
 }
 
 RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
@@ -79,13 +66,9 @@ RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
 ProcessCode RootMaterialTrackWriter::finalize() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
-
-  if (!m_cfg.rnTuple) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    m_outputFile->Close();
-  }
-
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
   return ProcessCode::SUCCESS;
 }
 
@@ -102,11 +85,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
   for (auto& [idTrack, mtrack] : materialTracks) {
     // Fill the material track
     m_rootMaterialTrack.fill(ctx.geoContext, mtrack, aux);
-    if (m_cfg.rnTuple) {
-      m_rntWriter->Fill();
-    } else {
-      m_outputTree->Fill();
-    }
+    m_outputTree->Fill();
   }
 
   // return success
