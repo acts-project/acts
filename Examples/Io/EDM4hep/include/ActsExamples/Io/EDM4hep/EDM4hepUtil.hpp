@@ -106,9 +106,7 @@ VariableBoundMeasurementProxy readMeasurement(
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
 void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
-                      edm4hep::MutableTrackerHitPlane to,
-                      const Cluster* fromCluster,
-                      edm4hep::TrackerHit3DCollection& toClusters,
+                      edm4hep::MutableTrackerHitLocal to,
                       const MapGeometryIdTo& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.

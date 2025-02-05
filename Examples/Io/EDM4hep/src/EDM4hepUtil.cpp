@@ -177,9 +177,7 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
 
 void EDM4hepUtil::writeMeasurement(
     const ConstVariableBoundMeasurementProxy& from,
-    edm4hep::MutableTrackerHitPlane to, const Cluster* /*fromCluster*/,
-    edm4hep::TrackerHit3DCollection& /*toClusters*/,
-    const MapGeometryIdTo& geometryMapper) {
+    edm4hep::MutableTrackerHitLocal to, const MapGeometryIdTo& geometryMapper) {
   Acts::GeometryIdentifier geoId = from.geometryId();
 
   if (geometryMapper) {
@@ -197,14 +195,30 @@ void EDM4hepUtil::writeMeasurement(
   to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
                   parameters[Acts::eBoundTime]});
 
-  to.setCovMatrix({
-      static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-      0,
-      0,
-      0,
-  });
+  for (double value : std::span<const double>{
+           covariance.data(),
+           static_cast<std::size_t>(covariance.size() * covariance.size())}) {
+    to.addToCovariance(value);
+  }
+
+  // to.addToCovariance
+
+  // std::span<double,
+  //
+  // for() {
+  //   to.addToCovMatrix(entry);
+  // }
+
+  // to.covariance_begin
+
+  // to.setCovMatrix({
+  //     static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
+  //     static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
+  //     static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
+  //     0,
+  //     0,
+  //     0,
+  // });
 
   // @TODO: Check if we can write cell info
 }
