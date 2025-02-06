@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
@@ -27,10 +28,6 @@ namespace dd4hep {
 class Detector;
 class DetElement;
 }  // namespace dd4hep
-
-namespace Acts {
-class DD4hepFieldAdapter;
-}
 
 namespace ActsExamples {
 
