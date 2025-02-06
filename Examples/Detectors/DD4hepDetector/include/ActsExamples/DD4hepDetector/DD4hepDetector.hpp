@@ -28,6 +28,10 @@ class Detector;
 class DetElement;
 }  // namespace dd4hep
 
+namespace Acts {
+class DD4hepFieldAdapter;
+}
+
 namespace ActsExamples {
 
 void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
@@ -83,6 +87,10 @@ class DD4hepDetector : public Detector {
 
   /// Interface method to access to the DD4hep geometry
   dd4hep::Detector& dd4hepDetector();
+
+  /// @brief Access to the DD4hep field
+  /// @return a shared pointer to the DD4hep field
+  std::shared_ptr<Acts::DD4hepFieldAdapter> field() const;
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)

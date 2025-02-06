@@ -47,6 +47,10 @@ dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
   return *m_detector;
 }
 
+std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
+  return std::make_shared<Acts::DD4hepFieldAdapter>(m_detector->field());
+}
+
 TGeoNode& DD4hepDetector::tgeoGeometry() {
   return *m_detector->world().placement().ptr();
 }
