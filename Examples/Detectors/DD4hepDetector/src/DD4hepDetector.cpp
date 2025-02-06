@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -48,6 +49,7 @@ dd4hep::Detector& DD4hepDetector::dd4hepDetector() {
 }
 
 std::shared_ptr<Acts::DD4hepFieldAdapter> DD4hepDetector::field() const {
+  throw_assert(m_detector != nullptr, "Detector not initialized");
   return std::make_shared<Acts::DD4hepFieldAdapter>(m_detector->field());
 }
 
