@@ -20,57 +20,49 @@ Acts::EigenStepper<E>::EigenStepper(
     : m_bField(std::move(bField)) {}
 
 template <typename E>
-auto Acts::EigenStepper<E>::makeState(
-    const Options& options, const BoundTrackParameters& par) const -> State {
+auto Acts::EigenStepper<E>::makeState(const Options& options) const -> State {
   State state{options, m_bField->makeCache(options.magFieldContext)};
-
-  state.particleHypothesis = par.particleHypothesis();
-
-  Vector3 position = par.position(options.geoContext);
-  Vector3 direction = par.direction();
-  state.pars.template segment<3>(eFreePos0) = position;
-  state.pars.template segment<3>(eFreeDir0) = direction;
-  state.pars[eFreeTime] = par.time();
-  state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
-
-  // Init the jacobian matrix if needed
-  if (par.covariance()) {
-    // Get the reference surface for navigation
-    const auto& surface = par.referenceSurface();
-    // set the covariance transport flag to true and copy
-    state.covTransport = true;
-    state.cov = BoundSquareMatrix(*par.covariance());
-    state.jacToGlobal =
-        surface.boundToFreeJacobian(options.geoContext, position, direction);
-  }
-
-  state.stepSize = ConstrainedStep(options.maxStepSize);
-
   return state;
 }
 
 template <typename E>
-void Acts::EigenStepper<E>::resetState(State& state,
+void Acts::EigenStepper<E>::initialize(State& state,
+                                       const BoundTrackParameters& par) const {
+  initialize(state, par.parameters(), par.covariance(),
+             par.particleHypothesis(), par.referenceSurface());
+}
+
+template <typename E>
+void Acts::EigenStepper<E>::initialize(State& state,
                                        const BoundVector& boundParams,
-                                       const BoundSquareMatrix& cov,
-                                       const Surface& surface,
-                                       const double stepSize) const {
+                                       const std::optional<BoundMatrix>& cov,
+                                       ParticleHypothesis particleHypothesis,
+                                       const Surface& surface) const {
   FreeVector freeParams = transformBoundToFreeParameters(
       surface, state.options.geoContext, boundParams);
 
-  // Update the stepping state
-  state.pars = freeParams;
-  state.cov = cov;
-  state.stepSize = ConstrainedStep(stepSize);
-  state.pathAccumulated = 0.;
+  state.particleHypothesis = particleHypothesis;
 
-  // Reinitialize the stepping jacobian
-  state.jacToGlobal = surface.boundToFreeJacobian(
-      state.options.geoContext, freeParams.template segment<3>(eFreePos0),
-      freeParams.template segment<3>(eFreeDir0));
-  state.jacobian = BoundMatrix::Identity();
-  state.jacTransport = FreeMatrix::Identity();
-  state.derivative = FreeVector::Zero();
+  state.pathAccumulated = 0;
+  state.nSteps = 0;
+  state.nStepTrials = 0;
+  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+  state.previousStepSize = 0;
+  state.statistics = StepperStatistics();
+
+  state.pars = freeParams;
+
+  // Init the jacobian matrix if needed
+  state.covTransport = cov.has_value();
+  if (state.covTransport) {
+    state.cov = *cov;
+    state.jacToGlobal = surface.boundToFreeJacobian(
+        state.options.geoContext, freeParams.segment<3>(eFreePos0),
+        freeParams.segment<3>(eFreeDir0));
+    state.jacobian = BoundMatrix::Identity();
+    state.jacTransport = FreeMatrix::Identity();
+    state.derivative = FreeVector::Zero();
+  }
 }
 
 template <typename E>

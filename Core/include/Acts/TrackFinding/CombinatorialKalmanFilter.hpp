@@ -21,13 +21,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterExtensions.hpp"
-#include "Acts/TrackFinding/TrackStateCreator.hpp"
-#include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -35,7 +34,6 @@
 #include <functional>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -372,10 +370,10 @@ class CombinatorialKalmanFilter {
                    << currentBranch.tipIndex());
 
       // Reset the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(),
+      stepper.initialize(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(),
-                         state.options.stepping.maxStepSize);
+                         stepper.particleHypothesis(state.stepping),
+                         currentState.referenceSurface());
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering
