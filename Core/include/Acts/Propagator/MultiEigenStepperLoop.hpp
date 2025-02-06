@@ -198,6 +198,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
       SingleState state;
       double weight;
       IntersectionStatus status;
+
+      Component(SingleState state_, double weight_, IntersectionStatus status_)
+          : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
     Options options;
