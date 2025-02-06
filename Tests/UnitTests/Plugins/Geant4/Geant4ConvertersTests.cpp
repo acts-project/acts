@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrd) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
-  // x value changes
+  // x value changes, y is the symmetric side, z is the thickness
   G4Trap trapXY("trapXY", 10., 15., 20., 20., 0.125);
   auto [boundsXY, axesXY, thicknessZ] =
       Acts::Geant4ShapeConverter{}.trapezoidBounds(trapXY);
@@ -231,6 +231,7 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
   BOOST_CHECK(axesXY == refXY);
   CHECK_CLOSE_ABS(thicknessZ, 0.25, 10e-10);
 
+  // y value changes, x is the symmetric side, z is the thickness
   G4Trap trapYx("trapYx", 22., 22., 11., 16., 0.250);
   auto [boundsYx, axesYx, thicknessYx] =
       Acts::Geant4ShapeConverter{}.trapezoidBounds(trapYx);
@@ -246,6 +247,23 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversionTrap) {
   auto refYx = std::array<int, 2u>{-1, 0};
   BOOST_CHECK(axesYx == refYx);
   CHECK_CLOSE_ABS(thicknessYx, 0.5, 10e-10);
+
+  // x is the thickness, y changes, z is symmetric
+  G4Trap trapXz("trapXz", 0.5, 0.5, 8., 16., 10.);
+  auto [boundsYZ, axesYZ, thicknessXZ] =
+      Acts::Geant4ShapeConverter{}.trapezoidBounds(trapXz);
+  CHECK_CLOSE_ABS(
+      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXnegY), 8,
+      10e-10);
+  CHECK_CLOSE_ABS(
+      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthXposY), 16,
+      10e-10);
+  CHECK_CLOSE_ABS(
+      boundsYZ->get(Acts::TrapezoidBounds::BoundValues::eHalfLengthY), 10.,
+      10e-10);
+  auto refYZ = std::array<int, 2u>{1, 2};
+  BOOST_CHECK(axesYZ == refYZ);
+  CHECK_CLOSE_ABS(thicknessXZ, 1., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {

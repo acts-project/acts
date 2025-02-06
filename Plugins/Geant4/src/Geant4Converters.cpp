@@ -233,15 +233,15 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
 std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
 Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   // primary parameters
-  double y1 = static_cast<double>(g4Trap.GetYHalfLength1());
-  double y2 = static_cast<double>(g4Trap.GetYHalfLength2());
-  double x1 = static_cast<double>(g4Trap.GetXHalfLength1());
-  double x2 = static_cast<double>(g4Trap.GetXHalfLength2());
-  double x3 = static_cast<double>(g4Trap.GetXHalfLength3());
-  double x4 = static_cast<double>(g4Trap.GetXHalfLength4());
-  double phi = static_cast<double>(g4Trap.GetPhi());
-  double theta = static_cast<double>(g4Trap.GetTheta());
-  double z = static_cast<double>(g4Trap.GetZHalfLength());
+  auto y1 = static_cast<double>(g4Trap.GetYHalfLength1());
+  auto y2 = static_cast<double>(g4Trap.GetYHalfLength2());
+  auto x1 = static_cast<double>(g4Trap.GetXHalfLength1());
+  auto x2 = static_cast<double>(g4Trap.GetXHalfLength2());
+  auto x3 = static_cast<double>(g4Trap.GetXHalfLength3());
+  auto x4 = static_cast<double>(g4Trap.GetXHalfLength4());
+  auto phi = static_cast<double>(g4Trap.GetPhi());
+  auto theta = static_cast<double>(g4Trap.GetTheta());
+  auto z = static_cast<double>(g4Trap.GetZHalfLength());
 
   double hlX0 = (x1 + x2) * 0.5;
   double hlX1 = 2 * z * tan(theta) * cos(phi) + (x3 + x4) * 0.5;
@@ -251,7 +251,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
 
   std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
 
-  auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
+  auto minAt = std::ranges::min_element(dXYZ);
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
   double thickness = 2. * dXYZ[minPos];
 
@@ -286,6 +286,9 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
         rAxes = {-1, 0};
       }
     } break;
+    default: {
+      throw std::runtime_error("Geant4Converters: could not convert G4Trap.");
+    }
   }
 
   auto tBounds = std::make_shared<TrapezoidBounds>(
