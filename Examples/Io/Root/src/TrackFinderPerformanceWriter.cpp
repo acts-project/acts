@@ -206,16 +206,18 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
             !volumes.contains(state.referenceSurface().geometryId().volume())) {
           continue;
         }
-
+        const auto& typeFlags = state.typeFlags();
+        if (typeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
+          nHoles++;
+        } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
+          nOutliers++;
+        } else if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+          if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
+            nSharedHits++;
+          }
+          nMeasurements++;
+        }
         nTrackStates++;
-        nMeasurements += static_cast<std::size_t>(
-            state.typeFlags().test(Acts::MeasurementFlag));
-        nOutliers +=
-            static_cast<std::size_t>(state.typeFlags().test(Acts::OutlierFlag));
-        nHoles +=
-            static_cast<std::size_t>(state.typeFlags().test(Acts::HoleFlag));
-        nSharedHits += static_cast<std::size_t>(
-            state.typeFlags().test(Acts::SharedHitFlag));
       }
       m_trackSummaryPlotTool.fill(m_subDetectorSummaryCaches.at(key),
                                   fittedParameters, nTrackStates, nMeasurements,
