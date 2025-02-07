@@ -130,11 +130,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     trackSourceLinks.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
+    ACTS_VERBOSE("Collect source links from proto track");
     for (auto measIndex : protoTrack) {
       ConstVariableBoundMeasurementProxy measurement =
           measurements.getMeasurement(measIndex);
       IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
       trackSourceLinks.push_back(Acts::SourceLink(sourceLink));
+      ACTS_VERBOSE("- " << measIndex << " | " << measurement.geometryId());
     }
 
     ACTS_VERBOSE("Invoke fitter for track " << itrack);
@@ -149,6 +151,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_VERBOSE("  " << track.parameters().transpose());
         ACTS_VERBOSE("Measurements: (prototrack->track): "
                      << protoTrack.size() << " -> " << track.nMeasurements());
+        if (track.nMeasurements() < protoTrack.size()) {
+          for (auto mid : protoTrack) {
+            auto geoId = measurements.getMeasurement(mid).geometryId();
+            auto found = std::find_if(
+                track.trackStatesReversed().cbegin(),
+                track.trackStatesReversed().cend(), [&](auto ts) {
+                  return ts.hasReferenceSurface()
+                             ? ts.referenceSurface().geometryId() == geoId
+                             : false;
+                });
+            if (found == track.trackStatesReversed().cend()) {
+              ACTS_VERBOSE(" - " << geoId);
+            } else {
+              ACTS_VERBOSE(" + " << geoId);
+            }
+          }
+        }
       } else {
         ACTS_VERBOSE("No fitted parameters for track " << itrack);
       }

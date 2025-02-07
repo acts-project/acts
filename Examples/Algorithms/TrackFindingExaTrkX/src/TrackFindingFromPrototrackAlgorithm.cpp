@@ -37,6 +37,8 @@ struct ProtoTrackSourceLinkAccessor
   std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
     const auto& logger = *loggerPtr;
 
+    ACTS_VERBOSE("Prototrack only mode? " << std::boolalpha
+                                          << onlyPrototrackMeasurements);
     if (protoTrackSourceLinks.contains(surface.geometryId())) {
       auto [begin, end] =
           protoTrackSourceLinks.equal_range(surface.geometryId());
@@ -44,16 +46,20 @@ struct ProtoTrackSourceLinkAccessor
                              << " source-links from prototrack on "
                              << surface.geometryId());
       return {Iterator{begin}, Iterator{end}};
+    } else {
+      ACTS_VERBOSE("No source-links found on " << surface.geometryId());
     }
 
     assert(container != nullptr);
     auto [begin, end] = container->equal_range(surface.geometryId());
-    ACTS_VERBOSE("Select " << std::distance(begin, end)
-                           << " source-links from collection on "
-                           << surface.geometryId());
+
     if (onlyPrototrackMeasurements) {
+      ACTS_VERBOSE("Return empty range");
       return {Iterator{begin}, Iterator{begin}};
     } else {
+      ACTS_VERBOSE("Select " << std::distance(begin, end)
+                             << " source-links from collection on "
+                             << surface.geometryId());
       return {Iterator{begin}, Iterator{end}};
     }
   }
@@ -105,7 +111,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   // The source link accessor
@@ -138,7 +143,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      pOptions, &(*pSurface));
+      pOptions, pSurface.get());
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
@@ -153,7 +158,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   std::size_t nSeed = 0;
-  std::size_t nFailed = 0;
+  std::size_t nFailedFit = 0, nFailedSmoothing = 0, nFailedExtrapolation = 0;
 
   std::size_t nMeasurementIncrease = 0;
   std::size_t nMeasurementConstant = 0;
@@ -163,18 +168,19 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   nTracksPerSeeds.reserve(initialParameters.size());
 
   for (auto i = 0ul; i < initialParameters.size(); ++i) {
+    if (m_cfg.pickSeed != -1 && static_cast<int>(i) != m_cfg.pickSeed) {
+      continue;
+    }
     sourceLinkAccessor.protoTrackSourceLinks.clear();
 
     // Fill the source links via their indices from the container
-    for (const auto hitIndex : protoTracks.at(i)) {
-      if (auto it = measurements.orderedIndices().nth(hitIndex);
-          it != measurements.orderedIndices().end()) {
-        sourceLinkAccessor.protoTrackSourceLinks.insert(*it);
-      } else {
-        ACTS_FATAL("Proto track " << i << " contains invalid hit index"
-                                  << hitIndex);
-        return ProcessCode::ABORT;
-      }
+    ACTS_VERBOSE("Collect source links from proto track");
+    for (const auto measIndex : protoTracks.at(i)) {
+      ConstVariableBoundMeasurementProxy measurement =
+          measurements.getMeasurement(measIndex);
+      IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
+      sourceLinkAccessor.protoTrackSourceLinks.insert(sourceLink);
+      ACTS_VERBOSE("- " << measIndex << " | " << measurement.geometryId());
     }
 
     auto rootBranch = tracks.makeTrack();
@@ -183,9 +189,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     nSeed++;
 
     if (!result.ok()) {
-      nFailed++;
-      ACTS_WARNING("Track finding failed for proto track " << i << " with error"
-                                                           << result.error());
+      nFailedFit++;
+      ACTS_ERROR("Track finding failed for proto track " << i << " with error"
+                                                         << result.error());
       continue;
     }
 
@@ -193,23 +199,17 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
 
     nTracksPerSeeds.push_back(tracksForSeed.size());
 
+    bool anySmoothFailed = false, anyExtrapolationFailed = false;
     for (auto& track : tracksForSeed) {
       // Set the seed number, this number decrease by 1 since the seed number
       // has already been updated
       seedNumber(track) = nSeed - 1;
 
-#if 1
-      track.parameters() = initialParameters.at(i).parameters();
-      if (initialParameters.at(i).covariance()) {
-        track.covariance() = *initialParameters.at(i).covariance();
-      }
-      track.setReferenceSurface(
-          initialParameters.at(i).referenceSurface().getSharedPtr());
-#else
       auto smoothingResult = Acts::smoothTrack(ctx.geoContext, track, logger());
       if (!smoothingResult.ok()) {
         ACTS_ERROR("Smoothing for seed " << i << " failed with error "
                                          << smoothingResult.error().message());
+        anySmoothFailed = true;
         continue;
       }
 
@@ -217,13 +217,13 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
           track, *pSurface, extrapolator, extrapolationOptions,
           Acts::TrackExtrapolationStrategy::firstOrLast, logger());
       if (!extrapolationResult.ok()) {
-        ACTS_WARNING("Extrapolation for seed "
-                     << i << " failed with error "
-                     << extrapolationResult.error().message());
-        ACTS_WARNING("Assign start parameters instead");
+        ACTS_ERROR("Extrapolation for seed "
+                   << i << " failed with error "
+                   << extrapolationResult.error().message());
+        ACTS_DEBUG("Assign start parameters instead");
+        anyExtrapolationFailed = true;
         continue;
       }
-#endif
       ACTS_VERBOSE("Prototrack extension through fit: "
                    << protoTracks.at(i).size() << " -> "
                    << track.nMeasurements());
@@ -234,7 +234,26 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
       } else {
         nMeasurementDecrease++;
       }
+      if (track.nMeasurements() < protoTracks.at(i).size()) {
+        for (auto mid : protoTracks.at(i)) {
+          auto geoId = measurements.getMeasurement(mid).geometryId();
+          auto found = std::find_if(
+              track.trackStatesReversed().cbegin(),
+              track.trackStatesReversed().cend(), [&](auto ts) {
+                return ts.hasReferenceSurface()
+                           ? ts.referenceSurface().geometryId() == geoId
+                           : false;
+              });
+          if (found == track.trackStatesReversed().cend()) {
+            ACTS_VERBOSE(" - " << geoId);
+          } else {
+            ACTS_VERBOSE(" + " << geoId);
+          }
+        }
+      }
     }
+    nFailedSmoothing += static_cast<std::size_t>(anySmoothFailed);
+    nFailedExtrapolation += static_cast<std::size_t>(anyExtrapolationFailed);
   }
 
   ACTS_DEBUG("Tracks with measurement increase: "
@@ -256,8 +275,12 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   //   computeSharedHits(measurements, tracks);
   // }
 
-  ACTS_INFO("Event " << ctx.eventNumber << ": " << nFailed << " / " << nSeed
-                     << " failed (" << ((100.f * nFailed) / nSeed) << "%)");
+  auto nFailed = nFailedFit + nFailedExtrapolation + nFailedSmoothing;
+  ACTS_DEBUG("Event " << ctx.eventNumber << ": " << nFailed << " / " << nSeed
+                      << " failed (" << ((100.f * nFailed) / nSeed) << "%)");
+  ACTS_DEBUG("- fit failed: " << nFailedFit);
+  ACTS_DEBUG("- smoothing failed: " << nFailedSmoothing);
+  ACTS_DEBUG("- extrapolation failed: " << nFailedExtrapolation);
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
   auto constTrackStateContainer =

@@ -64,6 +64,9 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
     /// Additional tag to distinguish loggers
     std::string tag = "";
 
+    /// pick seed (-1 == all)
+    int pickSeed = -1;
+
     /// Only forward prototrack spacepoints, which resembles a Kalman Fitter.
     /// For debugging purposes
     bool onlyPrototrackMeasurements = false;
