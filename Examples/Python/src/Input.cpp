@@ -100,7 +100,7 @@ void addInput(Context& ctx) {
       ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
       inputfile, outputMeasurements, outputPixelSpacePoints,
       outputStripSpacePoints, outputSpacePoints, outputClusters,
-      outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
+      outputMeasurementParticlesMap, outputParticles, onlySpacepoints, onlyPassedParticles,
       skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
       absBoundaryTolerance);
 
