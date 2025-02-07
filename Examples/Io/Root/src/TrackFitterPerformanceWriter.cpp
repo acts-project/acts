@@ -112,10 +112,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // Loop over all tracks
+  std::size_t missingParameters = 0;
   for (const auto& track : tracks) {
     // Select reco track with fitted parameters
     if (!track.hasReferenceSurface()) {
-      ACTS_WARNING("No fitted track parameters.");
+      ACTS_DEBUG("No fitted track parameters.");
+      missingParameters++;
       continue;
     }
     Acts::BoundTrackParameters fittedParameters =
@@ -124,14 +126,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Get the truth-matched particle
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth particle associated with this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
+      ACTS_VERBOSE("No truth particle associated with this track, index = "
+                   << track.index() << " tip index = " << track.tipIndex());
       continue;
     }
     const auto& particleMatch = imatched->second;
 
     if (!particleMatch.particle.has_value()) {
-      ACTS_DEBUG("No truth particle associated with this track.");
+      ACTS_VERBOSE("No truth particle associated with this track.");
       continue;
     }
 
@@ -155,6 +157,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
                                 track.nTrackStates(), track.nMeasurements(),
                                 track.nOutliers(), track.nHoles(),
                                 track.nSharedHits());
+  }
+
+  if (missingParameters > 0) {
+    ACTS_WARNING("Parameters are missing for " << missingParameters
+                                               << " tracks");
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with

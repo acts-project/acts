@@ -227,8 +227,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     // Get the truth matching information
     auto imatched = trackParticleMatching.find(track.index());
     if (imatched == trackParticleMatching.end()) {
-      ACTS_DEBUG("No truth matching information for this track, index = "
-                 << track.index() << " tip index = " << track.tipIndex());
+      ACTS_VERBOSE("No truth matching information for this track, index = "
+                   << track.index() << " tip index = " << track.tipIndex());
       unmatched++;
       continue;
     }
