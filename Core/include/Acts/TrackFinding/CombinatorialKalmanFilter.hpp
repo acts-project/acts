@@ -379,9 +379,13 @@ class CombinatorialKalmanFilter {
       // Set targetSurface to nullptr for forward filtering
       state.navigation.options.startSurface = &currentState.referenceSurface();
       state.navigation.options.targetSurface = nullptr;
-      navigator.initialize(state.navigation, stepper.position(state.stepping),
-                           stepper.direction(state.stepping),
-                           state.options.direction);
+      auto navInitRes = navigator.initialize(
+          state.navigation, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.options.direction);
+      if (!navInitRes.ok()) {
+        ACTS_ERROR("Navigation initialization failed: " << navInitRes.error());
+        result.lastError = navInitRes.error();
+      }
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here

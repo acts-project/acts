@@ -321,8 +321,8 @@ class Propagator final
   /// @return Indication if the initialization was successful
   template <typename propagator_state_t, typename parameters_t,
             typename path_aborter_t = PathLimitReached>
-  Result<void> initialize(propagator_state_t& state,
-                          const parameters_t& start) const;
+  [[nodiscard]] Result<void> initialize(propagator_state_t& state,
+                                        const parameters_t& start) const;
 
   /// @brief Propagate track parameters
   ///

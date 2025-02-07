@@ -116,9 +116,9 @@ class DetectorNavigator {
     return state.navigationBreak;
   }
 
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)propagationDirection;
 
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position) << "initialize");

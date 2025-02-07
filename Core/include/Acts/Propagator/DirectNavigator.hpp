@@ -172,9 +172,9 @@ class DirectNavigator {
   /// @param position The start position
   /// @param direction The start direction
   /// @param propagationDirection The propagation direction
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)position;
     (void)direction;
 

@@ -63,9 +63,9 @@ class VoidNavigator {
 
   bool navigationBreak(const State& /*state*/) const { return true; }
 
-  Result<void> initialize(State& /*state*/, const Vector3& /*position*/,
-                          const Vector3& /*direction*/,
-                          Direction /*propagationDirection*/) const {
+  [[nodiscard]] Result<void> initialize(
+      State& /*state*/, const Vector3& /*position*/,
+      const Vector3& /*direction*/, Direction /*propagationDirection*/) const {
     return Result<void>::success();
   }
 

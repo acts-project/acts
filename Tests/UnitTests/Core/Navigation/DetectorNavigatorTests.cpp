@@ -121,9 +121,12 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     stepper.initialize(state.stepping, start);
 
-    navigator.initialize(state.navigation, stepper.position(state.stepping),
-                         stepper.direction(state.stepping),
-                         state.options.direction);
+    BOOST_CHECK(navigator
+                    .initialize(state.navigation,
+                                stepper.position(state.stepping),
+                                stepper.direction(state.stepping),
+                                state.options.direction)
+                    .ok());
 
     navigator.nextTarget(state.navigation, stepper.position(state.stepping),
                          stepper.direction(state.stepping));
@@ -172,9 +175,12 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     stepper.initialize(state.stepping, start);
 
-    navigator.initialize(state.navigation, stepper.position(state.stepping),
-                         stepper.direction(state.stepping),
-                         state.options.direction);
+    BOOST_CHECK(navigator
+                    .initialize(state.navigation,
+                                stepper.position(state.stepping),
+                                stepper.direction(state.stepping),
+                                state.options.direction)
+                    .ok());
 
     auto initState = state.navigation;
     BOOST_CHECK_EQUAL(initState.currentDetector, detector.get());

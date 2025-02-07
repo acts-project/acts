@@ -271,9 +271,9 @@ class Navigator {
   /// @param propagationDirection The propagation direction
   ///
   /// @return Indication if the initialization was successful
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)propagationDirection;
 
     ACTS_VERBOSE(volInfo(state) << "Initialization.");

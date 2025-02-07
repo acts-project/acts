@@ -154,9 +154,9 @@ class TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)propagationDirection;
 
     ACTS_VERBOSE("initialize");
@@ -286,9 +286,9 @@ class TryAllNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
                                                    propagationDirection);
     if (!baseRes.ok()) {
@@ -611,9 +611,9 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
   /// @param position The starting position
   /// @param direction The starting direction
   /// @param propagationDirection The propagation direction
-  Result<void> initialize(State& state, const Vector3& position,
-                          const Vector3& direction,
-                          Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     auto baseRes = TryAllNavigatorBase::initialize(state, position, direction,
                                                    propagationDirection);
     if (!baseRes.ok()) {
