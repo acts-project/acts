@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(options);
 
-    BOOST_CHECK_THROW(propagator.initialize(state, start),
+    BOOST_CHECK_THROW(propagator.initialize(state, start).ok(),
                       std::invalid_argument);
   }
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     auto state = propagator.makeState(options);
 
-    BOOST_CHECK_THROW(propagator.initialize(state, startEoW),
+    BOOST_CHECK_THROW(propagator.initialize(state, startEoW).ok(),
                       std::invalid_argument);
   }
 
