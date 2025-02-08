@@ -252,11 +252,6 @@ auto Acts::Propagator<S, N>::makeState(
   StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
-  static_assert(
-      detail::propagator_stepper_compatible_with<S, StateType, N>,
-      "Step method of the Stepper is not compatible with the propagator "
-      "state");
-
   initialize<StateType, parameters_t, path_aborter_t>(state, start);
 
   return state;
@@ -290,11 +285,6 @@ auto Acts::Propagator<S, N>::makeState(
                            typename propagator_options_t::actor_list_type>;
   StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
-
-  static_assert(
-      detail::propagator_stepper_compatible_with<S, StateType, N>,
-      "Step method of the Stepper is not compatible with the propagator "
-      "state");
 
   initialize<StateType, parameters_t, path_aborter_t>(state, start);
 
