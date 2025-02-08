@@ -12,6 +12,8 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
@@ -139,33 +141,53 @@ class AtlasStepper {
 
   explicit AtlasStepper(const Config& config) : m_bField(config.bField) {}
 
-  State makeState(const Options& options,
-                  const BoundTrackParameters& par) const {
+  State makeState(const Options& options) const {
     State state{options, m_bField->makeCache(options.magFieldContext)};
+    return state;
+  }
 
-    state.particleHypothesis = par.particleHypothesis();
+  void initialize(State& state, const BoundTrackParameters& par) const {
+    initialize(state, par.parameters(), par.covariance(),
+               par.particleHypothesis(), par.referenceSurface());
+  }
+
+  void initialize(State& state, const BoundVector& boundParams,
+                  const std::optional<BoundMatrix>& cov,
+                  ParticleHypothesis particleHypothesis,
+                  const Surface& surface) const {
+    state.particleHypothesis = particleHypothesis;
+
+    state.pathAccumulated = 0;
+    state.nSteps = 0;
+    state.nStepTrials = 0;
+    state.stepSize = ConstrainedStep(state.options.maxStepSize);
+    state.previousStepSize = 0;
+    state.statistics = StepperStatistics();
 
     // The rest of this constructor is copy&paste of AtlasStepper::update() -
     // this is a nasty but working solution for the stepper state without
     // functions
 
-    const auto pos = par.position(options.geoContext);
-    const auto Vp = par.parameters();
+    const auto& Vp = boundParams;
 
     double Sf = std::sin(Vp[eBoundPhi]);
     double Cf = std::cos(Vp[eBoundPhi]);
     double Se = std::sin(Vp[eBoundTheta]);
     double Ce = std::cos(Vp[eBoundTheta]);
 
+    const Vector3 dir = {Cf * Se, Sf * Se, Ce};
+    const auto pos = surface.localToGlobal(
+        state.options.geoContext, boundParams.segment<2>(eBoundLoc0), dir);
+
     double* pVector = state.pVector.data();
 
     pVector[0] = pos[ePos0];
     pVector[1] = pos[ePos1];
     pVector[2] = pos[ePos2];
-    pVector[3] = par.time();
-    pVector[4] = Cf * Se;
-    pVector[5] = Sf * Se;
-    pVector[6] = Ce;
+    pVector[3] = boundParams[eBoundTime];
+    pVector[4] = dir[ePos0];
+    pVector[5] = dir[ePos1];
+    pVector[6] = dir[ePos2];
     pVector[7] = Vp[eBoundQOverP];
 
     // @todo: remove magic numbers - is that the charge ?
@@ -175,13 +197,13 @@ class AtlasStepper {
     }
 
     // prepare the jacobian if we have a covariance
-    if (par.covariance()) {
+    state.covTransport = cov.has_value();
+    if (state.covTransport) {
       // copy the covariance matrix
-      state.covariance = new BoundSquareMatrix(*par.covariance());
-      state.covTransport = true;
+      state.covariance = new BoundSquareMatrix(*cov);
       state.useJacobian = true;
-      const auto transform = par.referenceSurface().referenceFrame(
-          options.geoContext, pos, par.direction());
+      const auto transform =
+          surface.referenceFrame(state.options.geoContext, pos, dir);
 
       pVector[8] = transform(0, eBoundLoc0);
       pVector[16] = transform(0, eBoundLoc1);
@@ -245,7 +267,6 @@ class AtlasStepper {
       pVector[59] = 0.;
 
       // special treatment for surface types
-      const auto& surface = par.referenceSurface();
       // the disc needs polar coordinate adaptations
       if (surface.type() == Surface::Disc) {
         double lCf = std::cos(Vp[1]);
@@ -307,34 +328,8 @@ class AtlasStepper {
       }
     }
 
-    state.stepSize = ConstrainedStep(options.maxStepSize);
-
     // now declare the state as ready
     state.state_ready = true;
-
-    return state;
-  }
-
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface Reset state will be on this surface
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const {
-    // Update the stepping state
-    update(state,
-           transformBoundToFreeParameters(surface, state.options.geoContext,
-                                          boundParams),
-           boundParams, cov, surface);
-    state.stepSize = ConstrainedStep(stepSize);
-    state.pathAccumulated = 0.;
-
-    setIdentityJacobian(state);
   }
 
   /// Get the field for the stepping

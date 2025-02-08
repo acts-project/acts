@@ -30,7 +30,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
-#include <limits>
 #include <string>
 #include <tuple>
 
@@ -116,48 +115,14 @@ class StraightLineStepper {
     StepperStatistics statistics;
   };
 
-  StraightLineStepper() = default;
+  State makeState(const Options& options) const;
 
-  State makeState(const Options& options,
-                  const BoundTrackParameters& par) const {
-    State state{options};
+  void initialize(State& state, const BoundTrackParameters& par) const;
 
-    state.particleHypothesis = par.particleHypothesis();
-
-    Vector3 position = par.position(options.geoContext);
-    Vector3 direction = par.direction();
-    state.pars.template segment<3>(eFreePos0) = position;
-    state.pars.template segment<3>(eFreeDir0) = direction;
-    state.pars[eFreeTime] = par.time();
-    state.pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
-
-    // Init the jacobian matrix if needed
-    if (par.covariance()) {
-      // Get the reference surface for navigation
-      const auto& surface = par.referenceSurface();
-      // set the covariance transport flag to true and copy
-      state.covTransport = true;
-      state.cov = BoundSquareMatrix(*par.covariance());
-      state.jacToGlobal =
-          surface.boundToFreeJacobian(options.geoContext, position, direction);
-    }
-
-    state.stepSize = ConstrainedStep(options.maxStepSize);
-
-    return state;
-  }
-
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reset @c State will be on this surface
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const;
+  void initialize(State& state, const BoundVector& boundParams,
+                  const std::optional<BoundMatrix>& cov,
+                  ParticleHypothesis particleHypothesis,
+                  const Surface& surface) const;
 
   /// Get the field for the stepping, this gives back a zero field
   Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
