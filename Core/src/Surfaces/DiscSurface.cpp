@@ -176,8 +176,8 @@ Polyhedron DiscSurface::polyhedronRepresentation(
       if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
       }
-      auto [faces, triangularMesh] =
-          detail::FacesHelper::convexFaceMesh(vertices, true);
+      auto [faces, triangularMesh] = detail::FacesHelper::convexFaceMesh(
+          vertices, addCentreFromConvexFace);
       return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,

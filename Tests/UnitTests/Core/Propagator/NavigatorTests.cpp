@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
     const TrackingVolume* startVol =
         tGeometry->lowestTrackingVolume(tgContext, position);
     const Layer* startLay = startVol->associatedLayer(tgContext, position);
-    state.startSurface = startSurf;
-    state.targetSurface = startSurf;
+    state.options.startSurface = startSurf;
+    state.options.targetSurface = startSurf;
     navigator.initialize(state, position, direction, Direction::Forward());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, startSurf,
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
 
     ACTS_INFO("    b) Initialise having a start surface");
     state = navigator.makeState(options);
-    state.startSurface = startSurf;
+    state.options.startSurface = startSurf;
     navigator.initialize(state, position, direction, Direction::Forward());
     BOOST_CHECK(testNavigatorStateVectors(state, 0u, 0u, 0u));
     BOOST_CHECK(testNavigatorStatePointers(state, startVol, startLay, startSurf,
