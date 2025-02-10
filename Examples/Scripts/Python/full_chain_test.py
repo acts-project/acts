@@ -81,7 +81,12 @@ interactive testing with one-off configuration specified by command-line options
         "--output-csv",
         action="count",
         default=0,
-        help="Use CSV output instead of ROOT. Specify -cc to output both.",
+        help="Use CSV output instead of ROOT. Specify -cc to output all formats (ROOT, CSV, and obj).",
+    )
+    parser.add_argument(
+        "--output-obj",
+        action="store_true",
+        help="Enable obj output",
     )
     parser.add_argument(
         "-n",
@@ -272,6 +277,11 @@ def full_chain(args):
     outputDirCsv = outputDir if args.output_csv != 0 else None
     outputDirLessCsv = outputDirLess if args.output_csv != 0 else None
     outputDirMoreCsv = outputDirMore if args.output_csv != 0 else None
+    outputDirObj = (
+        outputDirLess
+        if args.output_obj
+        else outputDir if args.output_csv == 2 else None
+    )
 
     # fmt: off
     if args.generic_detector:
@@ -285,7 +295,9 @@ def full_chain(args):
             args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
         seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        detector = acts.examples.GenericDetector()
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.odd:
         import acts.examples.odd
         etaRange = (-3.0, 3.0)
@@ -301,10 +313,12 @@ def full_chain(args):
         if args.material_config is None:
             args.material_config = geo_dir / "data/odd-material-maps.root"
         args.bf_constant = True
-        detector, trackingGeometry, decorators = acts.examples.odd.getOpenDataDetector(
+        detector = getOpenDataDetector(
             odd_dir=geo_dir,
             mdecorator=acts.IMaterialDecorator.fromFile(args.material_config),
         )
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     elif args.itk:
         import acts.examples.itk as itk
         etaRange = (-4.0, 4.0)
@@ -370,7 +384,7 @@ def full_chain(args):
     postSelectParticles = ParticleSelectorConfig(
         pt=(ptMin, None),
         eta=etaRange if not args.generic_detector else (None, None),
-        measurements=(9, None),
+        hits=(9, None),
         removeNeutral=True,
     )
 
@@ -387,9 +401,8 @@ def full_chain(args):
                 "LongStripBarrelReadout",
                 "LongStripEndcapReadout",
             ],
-            outputParticlesGenerator="particles_input",
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
+            outputParticlesGenerator="particles_generated",
+            outputParticlesSimulation="particles_simulated",
             outputSimHits="simhits",
             graphvizOutput="graphviz",
             dd4hepDetector=detector,
@@ -479,6 +492,7 @@ def full_chain(args):
                 postSelectParticles=postSelectParticles,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
         else:
             if s.config.numThreads != 1:
@@ -504,6 +518,7 @@ def full_chain(args):
                 killAfterTime=25 * u.ns,
                 outputDirRoot=outputDirRoot,
                 outputDirCsv=outputDirCsv,
+                outputDirObj=outputDirObj,
             )
 
     addDigitization(

@@ -34,6 +34,7 @@ def runRefittingKf(
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": acts.logging.INFO,
+        "chi2Cut": float("inf"),
     }
 
     s.addAlgorithm(
@@ -73,7 +74,7 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf_refit.root"),
@@ -83,9 +84,9 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="tracks",
+            inputTracks="kf_refit_tracks",
             inputParticles="particles_selected",
-            inputTrackParticleMatching="track_particle_matching",
+            inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "performance_kf_refit.root"),
         )
     )
@@ -100,13 +101,16 @@ if __name__ == "__main__":
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
 
     ## GenericDetector
-    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # detector = acts.examples.GenericDetector()
+    # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
     #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

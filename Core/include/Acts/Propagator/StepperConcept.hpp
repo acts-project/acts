@@ -10,13 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Concepts.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -34,11 +32,6 @@ concept CommonStepper = requires {
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
 
-    requires requires(const BoundVector& bv, const BoundSquareMatrix& bm,
-                      const Surface& sf, const double d) {
-      { s.resetState(t, bv, bm, sf, d) } -> std::same_as<void>;
-    };
-
     requires requires(const Surface& sf, bool b,
                       const FreeToBoundCorrection& corr) {
       {
@@ -54,15 +47,16 @@ concept CommonStepper = requires {
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,
-                      const BoundaryTolerance& bt, double sc, const Logger& l) {
-      { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, l) };
+                      const BoundaryTolerance& bt, double sc,
+                      ConstrainedStep::Type st, const Logger& l) {
+      { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, st, l) };
     };
 
     requires requires(const ConstrainedStep::Type st) {
       { s.releaseStepSize(t, st) } -> std::same_as<void>;
 
-      requires requires(double d, bool b) {
-        { s.updateStepSize(t, d, st, b) } -> std::same_as<void>;
+      requires requires(double d) {
+        { s.updateStepSize(t, d, st) } -> std::same_as<void>;
       };
     };
   };

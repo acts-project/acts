@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -17,9 +16,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 
-#include <array>
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 #include <pybind11/pybind11.h>
@@ -44,14 +41,15 @@ void addGeometryBuildingGen1(Context &ctx) {
                  [](const Acts::LayerCreator &self, const GeometryContext &gctx,
                     SurfacePtrVector surfaces, std::size_t binsPhi,
                     std::size_t binsZ) {
-                   return self.cylinderLayer(gctx, surfaces, binsPhi, binsZ);
+                   return self.cylinderLayer(gctx, std::move(surfaces), binsPhi,
+                                             binsZ);
                  })
-            .def("discLayer",
-                 [](const Acts::LayerCreator &self, const GeometryContext &gctx,
-                    SurfacePtrVector surfaces, std::size_t binsR,
-                    std::size_t binsPhi) {
-                   return self.discLayer(gctx, surfaces, binsR, binsPhi);
-                 });
+            .def("discLayer", [](const Acts::LayerCreator &self,
+                                 const GeometryContext &gctx,
+                                 SurfacePtrVector surfaces, std::size_t binsR,
+                                 std::size_t binsPhi) {
+              return self.discLayer(gctx, std::move(surfaces), binsR, binsPhi);
+            });
 
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
@@ -60,6 +58,8 @@ void addGeometryBuildingGen1(Context &ctx) {
     ACTS_PYTHON_MEMBER(surfaceArrayCreator);
     ACTS_PYTHON_MEMBER(cylinderZtolerance);
     ACTS_PYTHON_MEMBER(cylinderPhiTolerance);
+    ACTS_PYTHON_MEMBER(defaultEnvelopeR);
+    ACTS_PYTHON_MEMBER(defaultEnvelopeZ);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -115,8 +115,9 @@ void addGeometryBuildingGen1(Context &ctx) {
                     GeometryContext gctx, const LayerVector &layers,
                     std::shared_ptr<VolumeBounds> volumeBounds,
                     const Transform3 &trafo, const std::string &name) {
-                   return self.createTrackingVolume(
-                       gctx, layers, {}, volumeBounds, {}, trafo, name);
+                   return self.createTrackingVolume(gctx, layers, {},
+                                                    std::move(volumeBounds), {},
+                                                    trafo, name);
                  })
             .def("createContainerTrackingVolume",
                  &Acts::CylinderVolumeHelper::createContainerTrackingVolume);

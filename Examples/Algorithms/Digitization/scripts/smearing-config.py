@@ -137,7 +137,7 @@ def block_to_json(args):
             data["range"] = ps[1:]
             data["type"] = "GaussClipped"
         elif t in [3, 4]:
-            data["type"] = "Uniform" if t == 3 else "Digitial"
+            data["type"] = "Uniform" if t == 3 else "Digital"
 
             pitch = ps[0]
             low = ps[1]
@@ -145,7 +145,7 @@ def block_to_json(args):
 
             data["bindata"] = [
                 0,  # Acts::Open,
-                0,  # Acts::BinningValue::binX,
+                0,  # Acts::AxisDirection::AxisX,
                 (high - low) / pitch,
                 low,
                 high,

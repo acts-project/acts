@@ -6,12 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-
-#include <concepts>
-#include <optional>
 
 template <typename coll_t>
   requires std::same_as<typename coll_t::value_type, Acts::Vector2>
@@ -94,11 +90,6 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
   }
   makeBoundingBox(m_vertices);
   checkConsistency();
-}
-
-template <int N>
-Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
-  return SurfaceBounds::eConvexPolygon;
 }
 
 template <int N>

@@ -35,6 +35,7 @@ target_sources(
         Volume.cpp
         VolumeBounds.cpp
         CylinderVolumeStack.cpp
+        CuboidVolumeStack.cpp
         Portal.cpp
         GridPortalLink.cpp
         GridPortalLinkMerging.cpp
@@ -43,4 +44,13 @@ target_sources(
         PortalLinkBase.cpp
         PortalError.cpp
         PortalShell.cpp
+        BlueprintNode.cpp
+        Blueprint.cpp
+        BlueprintOptions.cpp
+        CylinderContainerBlueprintNode.cpp
+        StaticBlueprintNode.cpp
+        LayerBlueprintNode.cpp
+        MaterialDesignatorBlueprintNode.cpp
+        VolumeAttachmentStrategy.cpp
+        VolumeResizeStrategy.cpp
 )

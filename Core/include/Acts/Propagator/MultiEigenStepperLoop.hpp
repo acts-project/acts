@@ -30,7 +30,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <functional>
 #include <limits>
 #include <sstream>
 #include <vector>
@@ -156,6 +155,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @brief Typedef to the Single-Component Eigen Stepper
   using SingleStepper = EigenStepper<extension_t>;
 
+  /// @brief Typedef to the Single-Component Stepper Options
+  using SingleOptions = typename SingleStepper::Options;
+
   /// @brief Typedef to the State of the single component Stepper
   using SingleState = typename SingleStepper::State;
 
@@ -181,7 +183,10 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     std::shared_ptr<const MagneticFieldProvider> bField;
   };
 
-  struct Options : public StepperPlainOptions {
+  struct Options : public SingleOptions {
+    Options(const GeometryContext& gctx, const MagneticFieldContext& mctx)
+        : SingleOptions(gctx, mctx) {}
+
     void setPlainOptions(const StepperPlainOptions& options) {
       static_cast<StepperPlainOptions&>(*this) = options;
     }
@@ -193,7 +198,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
       SingleState state;
       double weight;
       IntersectionStatus status;
+
+      Component(SingleState state_, double weight_, IntersectionStatus status_)
+          : state(std::move(state_)), weight(weight_), status(status_) {}
     };
+
+    Options options;
 
     /// Particle hypothesis
     ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
@@ -205,12 +215,6 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
-    /// geoContext
-    std::reference_wrapper<const GeometryContext> geoContext;
-
-    /// MagneticFieldContext
-    std::reference_wrapper<const MagneticFieldContext> magContext;
-
     /// Step-limit counter which limits the number of steps when one component
     /// reached a surface
     std::optional<std::size_t> stepCounterAfterFirstComponentOnSurface;
@@ -218,45 +222,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// The stepper statistics
     StepperStatistics statistics;
 
-    /// No default constructor is provided
-    State() = delete;
-
     /// Constructor from the initial bound track parameters
     ///
-    /// @param [in] gctx is the context object for the geometry
-    /// @param [in] mctx is the context object for the magnetic field
-    /// @param [in] bfield the shared magnetic filed provider
-    /// @param [in] multipars The track multi-component track-parameters at start
-    /// @param [in] ssize is the maximum step size
+    /// @param [in] optionsIn is the options object for the stepper
     ///
     /// @note the covariance matrix is copied when needed
-    explicit State(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
-                   const std::shared_ptr<const MagneticFieldProvider>& bfield,
-                   const MultiComponentBoundTrackParameters& multipars,
-                   double ssize = std::numeric_limits<double>::max())
-        : particleHypothesis(multipars.particleHypothesis()),
-          geoContext(gctx),
-          magContext(mctx) {
-      if (multipars.components().empty()) {
-        throw std::invalid_argument(
-            "Cannot construct MultiEigenStepperLoop::State with empty "
-            "multi-component parameters");
-      }
-
-      const auto surface = multipars.referenceSurface().getSharedPtr();
-
-      for (auto i = 0ul; i < multipars.components().size(); ++i) {
-        const auto& [weight, singlePars] = multipars[i];
-        components.push_back(
-            {SingleState(gctx, bfield->makeCache(mctx), singlePars, ssize),
-             weight, IntersectionStatus::onSurface});
-      }
-
-      if (std::get<2>(multipars.components().front())) {
-        covTransport = true;
-      }
-    }
+    explicit State(const Options& optionsIn) : options(optionsIn) {}
   };
 
   /// Constructor from a magnetic field and a optionally provided Logger
@@ -272,28 +243,33 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
                             getDefaultLogger("GSF", Logging::INFO))
       : EigenStepper<extension_t>(config), m_logger(std::move(logger)) {}
 
-  /// Construct and initialize a state
-  State makeState(std::reference_wrapper<const GeometryContext> gctx,
-                  std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const MultiComponentBoundTrackParameters& par,
-                  double ssize = std::numeric_limits<double>::max()) const {
-    return State(gctx, mctx, SingleStepper::m_bField, par, ssize);
+  State makeState(const Options& options) const {
+    State state(options);
+    return state;
   }
 
-  /// @brief Resets the state
-  ///
-  /// @param [in, out] state State of the stepper
-  /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] cov Covariance matrix
-  /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] stepSize Step size
-  void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSquareMatrix& cov, const Surface& surface,
-      const double stepSize = std::numeric_limits<double>::max()) const {
-    for (auto& component : state.components) {
-      SingleStepper::resetState(component.state, boundParams, cov, surface,
-                                stepSize);
+  void initialize(State& state,
+                  const MultiComponentBoundTrackParameters& par) const {
+    if (par.components().empty()) {
+      throw std::invalid_argument(
+          "Cannot construct MultiEigenStepperLoop::State with empty "
+          "multi-component parameters");
+    }
+
+    state.particleHypothesis = par.particleHypothesis();
+
+    const auto surface = par.referenceSurface().getSharedPtr();
+
+    for (auto i = 0ul; i < par.components().size(); ++i) {
+      const auto& [weight, singlePars] = par[i];
+      auto& cmp =
+          state.components.emplace_back(SingleStepper::makeState(state.options),
+                                        weight, IntersectionStatus::onSurface);
+      SingleStepper::initialize(cmp.state, singlePars);
+    }
+
+    if (std::get<2>(par.components().front())) {
+      state.covTransport = true;
     }
   }
 
@@ -432,11 +408,10 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   Result<ComponentProxy> addComponent(State& state,
                                       const BoundTrackParameters& pars,
                                       double weight) const {
-    state.components.push_back(
-        {SingleState(state.geoContext,
-                     SingleStepper::m_bField->makeCache(state.magContext),
-                     pars),
-         weight, IntersectionStatus::onSurface});
+    auto& cmp =
+        state.components.emplace_back(SingleStepper::makeState(state.options),
+                                      weight, IntersectionStatus::onSurface);
+    SingleStepper::initialize(cmp.state, pars);
 
     return ComponentProxy{state.components.back(), state};
   }
@@ -514,11 +489,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param [in] navDir The navigation direction
   /// @param [in] boundaryTolerance The boundary check for this status update
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] stype The step size type to be set
   /// @param [in] logger A @c Logger instance
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance = s_onSurfaceTolerance,
+      double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     using Status = IntersectionStatus;
 
@@ -527,7 +503,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, index, navDir, boundaryTolerance,
-          surfaceTolerance, logger);
+          surfaceTolerance, stype, logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 
@@ -541,8 +517,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
     ACTS_VERBOSE("Component status wrt "
                  << surface.geometryId() << " at {"
-                 << surface.center(state.geoContext).transpose() << "}:\t"
-                 << [&]() {
+                 << surface.center(state.options.geoContext).transpose()
+                 << "}:\t" << [&]() {
                       std::stringstream ss;
                       for (auto& component : state.components) {
                         ss << component.status << "\t";
@@ -591,20 +567,21 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
   /// @param direction [in] The propagation direction
-  /// @param release [in] boolean to trigger step size release
+  /// @param stype [in] The step size type to be set
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      Direction direction, bool release = true) const {
+                      Direction direction, ConstrainedStep::Type stype) const {
     const Surface& surface = *oIntersection.object();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
-          component.state.geoContext, SingleStepper::position(component.state),
+          component.state.options.geoContext,
+          SingleStepper::position(component.state),
           direction * SingleStepper::direction(component.state),
           BoundaryTolerance::None())[oIntersection.index()];
 
       SingleStepper::updateStepSize(component.state, intersection, direction,
-                                    release);
+                                    stype);
     }
   }
 
@@ -613,11 +590,10 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  /// @param release [in] Do we release the step size?
   void updateStepSize(State& state, double stepSize,
-                      ConstrainedStep::Type stype, bool release = true) const {
+                      ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
-      SingleStepper::updateStepSize(component.state, stepSize, stype, release);
+      SingleStepper::updateStepSize(component.state, stepSize, stype);
     }
   }
 

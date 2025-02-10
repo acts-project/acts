@@ -263,10 +263,10 @@ struct EigenStepperDenseExtension {
     auto dGdT = D.block<3, 3>(4, 4);
     auto dGdL = D.block<3, 1>(4, 7);
 
-    ActsMatrix<3, 3> dk1dT = ActsMatrix<3, 3>::Zero();
-    ActsMatrix<3, 3> dk2dT = ActsMatrix<3, 3>::Identity();
-    ActsMatrix<3, 3> dk3dT = ActsMatrix<3, 3>::Identity();
-    ActsMatrix<3, 3> dk4dT = ActsMatrix<3, 3>::Identity();
+    SquareMatrix3 dk1dT = SquareMatrix3::Zero();
+    SquareMatrix3 dk2dT = SquareMatrix3::Identity();
+    SquareMatrix3 dk3dT = SquareMatrix3::Identity();
+    SquareMatrix3 dk4dT = SquareMatrix3::Identity();
 
     Vector3 dk1dL = Vector3::Zero();
     Vector3 dk2dL = Vector3::Zero();

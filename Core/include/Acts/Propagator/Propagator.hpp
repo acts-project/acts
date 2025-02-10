@@ -13,13 +13,8 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 // clang-format on
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
 #include "Acts/Propagator/PropagatorResult.hpp"
@@ -31,8 +26,6 @@
 #include "Acts/Propagator/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-
-#include <optional>
 
 namespace Acts {
 
@@ -393,8 +386,9 @@ class Propagator final
  private:
   const Logger& logger() const { return *m_logger; }
 
-  template <typename propagator_state_t, typename path_aborter_t>
-  void initialize(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename parameters_t,
+            typename path_aborter_t>
+  void initialize(propagator_state_t& state, const parameters_t& start) const;
 
   template <typename propagator_state_t, typename result_t>
   void moveStateToResult(propagator_state_t& state, result_t& result) const;

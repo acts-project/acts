@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -26,7 +27,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <algorithm>
 #include <array>
@@ -34,6 +34,7 @@
 #include <limits>
 #include <list>
 #include <optional>
+#include <utility>
 
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
@@ -41,7 +42,6 @@
 #include "TGeoManager.h"
 
 namespace ActsExamples {
-using namespace Options;
 
 namespace {
 
@@ -63,14 +63,14 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
-        Acts::numBinningValues(), {0., 0.});
-    binTolerances[toUnderlying(Acts::BinningValue::binR)] = {
+        Acts::numAxisDirections(), {0., 0.});
+    binTolerances[toUnderlying(Acts::AxisDirection::AxisR)] = {
         volume.binToleranceR.lower.value_or(0.),
         volume.binToleranceR.upper.value_or(0.)};
-    binTolerances[toUnderlying(Acts::BinningValue::binZ)] = {
+    binTolerances[toUnderlying(Acts::AxisDirection::AxisZ)] = {
         volume.binToleranceZ.lower.value_or(0.),
         volume.binToleranceZ.upper.value_or(0.)};
-    binTolerances[toUnderlying(Acts::BinningValue::binPhi)] = {
+    binTolerances[toUnderlying(Acts::AxisDirection::AxisPhi)] = {
         volume.binTolerancePhi.lower.value_or(0.),
         volume.binTolerancePhi.upper.value_or(0.)};
 
@@ -101,18 +101,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       auto zMin = zR.lower.value_or(-std::numeric_limits<double>::max());
       auto zMax = zR.upper.value_or(std::numeric_limits<double>::max());
       lConfig.parseRanges = {
-          {Acts::BinningValue::binR, {rMin, rMax}},
-          {Acts::BinningValue::binZ, {zMin, zMax}},
+          {Acts::AxisDirection::AxisR, {rMin, rMax}},
+          {Acts::AxisDirection::AxisZ, {zMin, zMax}},
       };
 
       // Fill the layer splitting parameters in r/z
       auto str = volume.splitTolR.at(ncp);
       auto stz = volume.splitTolZ.at(ncp);
       if (0 < str) {
-        lConfig.splitConfigs.emplace_back(Acts::BinningValue::binR, str);
+        lConfig.splitConfigs.emplace_back(Acts::AxisDirection::AxisR, str);
       }
       if (0 < stz) {
-        lConfig.splitConfigs.emplace_back(Acts::BinningValue::binZ, stz);
+        lConfig.splitConfigs.emplace_back(Acts::AxisDirection::AxisZ, stz);
       }
       lConfig.binning0 = volume.binning0.at(ncp);
       lConfig.binning1 = volume.binning1.at(ncp);
@@ -159,7 +159,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 /// @param vm is the variable map from the options
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
-    std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detElementStore,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
     const Acts::Logger& logger) {
@@ -284,7 +284,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         -> void {
       for (const auto& lcfg : lConfigs) {
         for (const auto& scfg : lcfg.splitConfigs) {
-          if (scfg.first == Acts::BinningValue::binR && scfg.second > 0.) {
+          if (scfg.first == Acts::AxisDirection::AxisR && scfg.second > 0.) {
             volumeConfig.ringTolerance =
                 std::max(volumeConfig.ringTolerance, scfg.second);
             volumeConfig.checkRingLayout = true;
@@ -364,18 +364,14 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
   }
 }
 
-auto TGeoDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  Acts::GeometryContext tGeoContext;
-  auto logger = Acts::getDefaultLogger("TGeoDetector", Acts::Logging::INFO);
-  TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
-      cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
+TGeoDetector::TGeoDetector(const Config& cfg)
+    : Detector(Acts::getDefaultLogger("TGeoDetector", cfg.logLevel)),
+      m_cfg(cfg) {
+  m_nominalGeometryContext = Acts::GeometryContext();
 
-  ContextDecorators tgeoContextDecorators = {};
-  // Return the pair of geometry and empty decorators
-  return {std::move(tgeoTrackingGeometry), std::move(tgeoContextDecorators)};
+  m_trackingGeometry =
+      buildTGeoDetector(m_cfg, m_nominalGeometryContext, m_detectorStore,
+                        m_cfg.materialDecorator, logger());
 }
 
 void TGeoDetector::Config::readJson(const std::string& jsonFile) {

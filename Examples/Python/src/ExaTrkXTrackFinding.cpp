@@ -7,10 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
-#include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
@@ -113,6 +114,50 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 #endif
 
+#ifdef ACTS_EXATRKX_WITH_TENSORRT
+  {
+    using Alg = Acts::TensorRTEdgeClassifier;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
+            mex, "TensorRTEdgeClassifier")
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("EdgeClassifier", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(modelPath);
+    ACTS_PYTHON_MEMBER(selectedFeatures);
+    ACTS_PYTHON_MEMBER(cut);
+    ACTS_PYTHON_MEMBER(deviceID);
+    ACTS_PYTHON_MEMBER(doSigmoid);
+  }
+#endif
+
+#ifdef ACTS_EXATRKX_WITH_CUDA
+  {
+    using Alg = Acts::CudaTrackBuilding;
+    using Config = Alg::Config;
+
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "CudaTrackBuilding")
+                   .def(py::init([](const Config &c, Logging::Level lvl) {
+                          return std::make_shared<Alg>(
+                              c, getDefaultLogger("TrackBuilding", lvl));
+                        }),
+                        "config"_a, "level"_a);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_END();
+  }
+#endif
+
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
   {
     using Alg = Acts::OnnxMetricLearning;
@@ -156,17 +201,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_STRUCT_END();
-  }
-  {
-    using Alg = Acts::CugraphTrackBuilding;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "CugraphTrackBuilding")
-                   .def(py::init([](Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              getDefaultLogger("EdgeClassifier", lvl));
-                        }),
-                        py::arg("level"));
   }
 #endif
 

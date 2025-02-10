@@ -67,6 +67,7 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(inputParticleMeasurementsMap);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -84,6 +85,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(hitsMin);
+    ACTS_PYTHON_MEMBER(hitsMax);
     ACTS_PYTHON_MEMBER(measurementsMin);
     ACTS_PYTHON_MEMBER(measurementsMax);
     ACTS_PYTHON_MEMBER(removeCharged);
@@ -104,6 +107,7 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     pythonRangeProperty(c, "measurements", &Config::measurementsMin,
                         &Config::measurementsMax);
+    pythonRangeProperty(c, "hits", &Config::hitsMin, &Config::hitsMax);
     pythonRangeProperty(c, "primaryVertexId", &Config::minPrimaryVertexId,
                         &Config::maxPrimaryVertexId);
   }

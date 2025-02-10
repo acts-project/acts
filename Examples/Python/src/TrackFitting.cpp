@@ -6,34 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
-namespace Acts {
-class MagneticFieldProvider;
-class TrackingGeometry;
-}  // namespace Acts
-namespace ActsExamples {
-class IAlgorithm;
-}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -45,11 +33,6 @@ namespace Acts::Python {
 
 void addTrackFitting(Context& ctx) {
   auto mex = ctx.get("examples");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SurfaceSortingAlgorithm, mex,
-                                "SurfaceSortingAlgorithm", inputProtoTracks,
-                                inputSimHits, inputMeasurementSimHitsMap,
-                                outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
@@ -70,17 +53,17 @@ void addTrackFitting(Context& ctx) {
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
            double reverseFilteringMomThreshold,
-           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
            Logging::Level level) {
           return ActsExamples::makeKalmanFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
-              reverseFilteringMomThreshold, freeToBoundCorrection,
+              reverseFilteringMomThreshold, freeToBoundCorrection, chi2Cut,
               *Acts::getDefaultLogger("Kalman", level));
         },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),
         py::arg("reverseFilteringMomThreshold"),
-        py::arg("freeToBoundCorrection"), py::arg("level"));
+        py::arg("freeToBoundCorrection"), py::arg("chi2Cut"), py::arg("level"));
 
     py::class_<MeasurementCalibrator, std::shared_ptr<MeasurementCalibrator>>(
         mex, "MeasurementCalibrator");
