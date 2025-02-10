@@ -1147,10 +1147,16 @@ class AtlasStepper {
 
   /// Perform the actual step on the state
   ///
-  /// @param state is the provided stepper state (caller keeps thread locality)
+  /// @param [in,out] state State of the stepper
   /// @param propDir is the direction of propagation
-  /// @param material is the material properties
+  /// @param material is the optional volume material we are stepping through.
+  //         This is simply ignored if `nullptr`.
   /// @return the result of the step
+  ///
+  /// @note The state contains the desired step size. It can be negative during
+  ///       backwards track propagation, and since we're using an adaptive
+  ///       algorithm, it can be modified by the stepper class during
+  ///       propagation.
   Result<double> step(State& state, Direction propDir,
                       const IVolumeMaterial* material) const {
     (void)material;
