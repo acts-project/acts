@@ -84,7 +84,8 @@ ActsExamples::buildTelescopeDetector(
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
     Acts::Transform3 trafo(Eigen::Isometry3d(rotation) * trans);
-    if (!isIsometry(trafo)) {
+
+    if (!Acts::isIsometry(trafo)) {
       throw std::runtime_error(
           "BuildTelescopeDetector::ERROR Transformation is not an isometry");
     }
@@ -129,7 +130,7 @@ ActsExamples::buildTelescopeDetector(
                               (positions.front() + positions.back()) * 0.5);
   Acts::Transform3 trafoVol(Eigen::Isometry3d(rotation) * transVol);
 
-  if (!isIsometry(trafoVol)) {
+  if (!Acts::isIsometry(trafoVol)) {
     throw std::runtime_error(
         "BuildTelescopeDetector::ERROR trafoVol is not an isometry");
   }

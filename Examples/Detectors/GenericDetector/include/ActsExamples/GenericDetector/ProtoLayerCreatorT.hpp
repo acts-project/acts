@@ -261,7 +261,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
 
-        if (!isIsometry(moduleRotation)) {
+        if (!Acts::isIsometry(moduleRotation)) {
           throw std::runtime_error(
               "ProtoLayerCreator::centralProtoLayers ERROR Transformation is "
               "not a valid isometry!");
@@ -456,7 +456,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
 
-          if (!isIsometry(moduleRotation)) {
+          if (!Acts::isIsometry(moduleRotation)) {
             throw std::runtime_error(
                 "ProtoLayerCreator::createProtoLayers ERROR Transformation is "
                 "not a valid isometry!");
