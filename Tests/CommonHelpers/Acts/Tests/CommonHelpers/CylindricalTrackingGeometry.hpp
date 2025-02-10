@@ -167,6 +167,10 @@ struct CylindricalTrackingGeometry {
       auto mModuleTransform =
           Transform3(Translation3(mCenter) * Eigen::Isometry3d(moduleRotation));
 
+      if (!isIsometry(nModuleTransform)) {
+	throw std::runtime_error("CylindricalTrackingGeometry::ERROR nModuleTransform is not an isometry");
+      }
+
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);

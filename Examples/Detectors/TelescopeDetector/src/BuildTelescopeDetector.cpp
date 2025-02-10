@@ -84,6 +84,10 @@ ActsExamples::buildTelescopeDetector(
     // The entire transformation (the coordinate system, whose center is defined
     // by trans, will be rotated as well)
     Acts::Transform3 trafo(Eigen::Isometry3d(rotation) * trans);
+    if (!isIsometry(trafo)) {
+      throw std::runtime_error("BuildTelescopeDetector::ERROR Transformation is not an isometry");
+    }
+      
 
     // rotate around local z axis by stereo angle
     auto stereo = stereoAngles[i];
@@ -124,6 +128,11 @@ ActsExamples::buildTelescopeDetector(
   Acts::Translation3 transVol(offsets[0], offsets[1],
                               (positions.front() + positions.back()) * 0.5);
   Acts::Transform3 trafoVol(Eigen::Isometry3d(rotation) * transVol);
+
+  if (!isIsometry(trafoVol)) {
+    throw std::runtime_error("BuildTelescopeDetector::ERROR trafoVol is not an isometry");
+  }
+			      
 
   // The volume bounds is set to be a bit larger than either cubic with planes
   // or cylinder with discs
