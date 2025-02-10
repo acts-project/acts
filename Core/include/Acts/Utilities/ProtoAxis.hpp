@@ -110,6 +110,11 @@ class ProtoAxis {
   /// @return the string representation
   std::string toString() const;
 
+  friend std::ostream& operator<<(std::ostream& os, const ProtoAxis& a);
+
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const std::vector<ProtoAxis>& a);
+
  private:
   /// Dispatch to the correct stream operator
   /// @param os output stream
@@ -181,10 +186,5 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
     });
   });
 }
-
-// friend output stream operator
-std::ostream& operator<<(std::ostream& os, const ProtoAxis& a);
-
-std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 
 }  // namespace Acts

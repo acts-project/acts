@@ -78,7 +78,7 @@ class BinUtility {
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(BinningData(opt, value, bins, min, max));
+    m_binningData.emplace_back(opt, value, bins, min, max);
   }
 
   /// Constructor for arbitrary
@@ -92,7 +92,7 @@ class BinUtility {
              const Transform3& tForm = Transform3::Identity())
       : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(BinningData(opt, value, bValues));
+    m_binningData.emplace_back(opt, value, bValues);
   }
 
   /// Copy constructor
@@ -110,7 +110,7 @@ class BinUtility {
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(BinningData(pAxis));
+    m_binningData.emplace_back(pAxis);
   }
 
   /// Create from ProtoAxis
@@ -122,7 +122,7 @@ class BinUtility {
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
     for (const auto& pAxis : pAxes) {
-      m_binningData.emplace_back(BinningData(pAxis));
+      m_binningData.emplace_back(pAxis);
     }
   }
 
