@@ -155,12 +155,6 @@ std::string Acts::ProtoAxis::toString() const {
 }
 
 // ostream operator implementation
-std::ostream& Acts::operator<<(std::ostream& os, const ProtoAxis& a) {
-  os << a.toString();
-  return os;
-}
-
-// ostream operator implementation
 std::ostream& Acts::operator<<(std::ostream& os,
                                const std::vector<ProtoAxis>& as) {
   for (const auto& a : as) {
