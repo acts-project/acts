@@ -640,8 +640,8 @@ def addStandardSeeding(
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
-    outputSeeds: str = "seeds",
     logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
 ):
     """adds standard seeding
     For parameters description see addSeeding

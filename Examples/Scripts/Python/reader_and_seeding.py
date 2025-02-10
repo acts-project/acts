@@ -44,8 +44,8 @@ seeding_pixel = addStandardSeeding(s,
                                    *acts.examples.itk.itkSeedingAlgConfig(
                                        InputSpacePointsType.PixelSpacePoints,
                                        highOccupancyConfig = True),
-                                   outputSeeds = "pixel_seeds",
-                                   logLevel=loggingLevel
+                                   logLevel=loggingLevel,
+                                   outputSeeds = "pixel_seeds"
                                    )
 
 
@@ -54,8 +54,8 @@ seeding_strip = addStandardSeeding(s,
                                    "strip_spacepoints",
                                    *acts.examples.itk.itkSeedingAlgConfig(
                                        InputSpacePointsType.StripSpacePoints),
-                                   outputSeeds = "strip_seeds",
-                                   logLevel=acts.logging.DEBUG
+                                   logLevel=acts.logging.DEBUG,
+                                   outputSeeds = "strip_seeds"
                                    )
 
 
