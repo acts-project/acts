@@ -35,10 +35,11 @@ Result<GeoModelSensitiveSurface> impl(PVConstLink geoPV,
     return GeoModelConversionError::WrongShapeForConverter;
     ;
   }
-  
+
   const Transform3& shift = Eigen::Isometry3d(geoShift.getX().matrix());
   if (!isIsometry(shift)) {
-    throw std::runtime_error("GeoShiftConverter::ERROR Transformation is not a valid isometry!");
+    throw std::runtime_error(
+        "GeoShiftConverter::ERROR Transformation is not a valid isometry!");
   }
   const auto& conversionRes =
       Converter{}(geoPV, *trd, absTransform * shift, sensitive);

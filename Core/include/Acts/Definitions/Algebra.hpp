@@ -93,32 +93,33 @@ using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
 using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 
 constexpr double s_transformEquivalentTolerance = 1e-9;
-constexpr double s_isometryEquivalentTolerance  = 1e-6;
+constexpr double s_isometryEquivalentTolerance = 1e-6;
 
 // Check that the linear part of a transform is a pure rotation
 template <typename T>
 inline bool isIsometry(const T& transform) {
-
   bool isDetOne = false;
   bool isOrthogonal = false;
   using BaseT = std::remove_cvref_t<T>;
-  
-  if constexpr (std::same_as<BaseT, Transform3>) {
 
+  if constexpr (std::same_as<BaseT, Transform3>) {
     auto R = transform.linear();
     isDetOne = std::abs(R.determinant() - 1.0) < s_isometryEquivalentTolerance;
-    isOrthogonal =  (R.transpose() * R).isIdentity(s_isometryEquivalentTolerance);
-    
-  } else if constexpr (std::same_as<BaseT, RotationMatrix3>) {
+    isOrthogonal =
+        (R.transpose() * R).isIdentity(s_isometryEquivalentTolerance);
 
-    isDetOne = std::abs(transform.determinant() - 1.0) < s_isometryEquivalentTolerance;
-    isOrthogonal =  (transform.transpose() * transform).isIdentity(s_isometryEquivalentTolerance);
-    
+  } else if constexpr (std::same_as<BaseT, RotationMatrix3>) {
+    isDetOne =
+        std::abs(transform.determinant() - 1.0) < s_isometryEquivalentTolerance;
+    isOrthogonal = (transform.transpose() * transform)
+                       .isIdentity(s_isometryEquivalentTolerance);
+
   } else {
-    static_assert(std::false_type::value, "IsIsometry called on unsupported type!"); // Ensures compile-time error
+    static_assert(std::false_type::value,
+                  "IsIsometry called on unsupported type!");
   }
-  
+
   return (isDetOne && isOrthogonal);
 }
-  
+
 }  // namespace Acts

@@ -57,8 +57,10 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   const Transform3& lTransform = transform(GeometryContext());
   RotationMatrix3 lRotation = lTransform.rotation();
   if (!isIsometry(lRotation))
-    throw std::runtime_error("PlaneLayer::buildApproachDescriptor::ERROR lRotation is not an isometry");
-  
+    throw std::runtime_error(
+        "PlaneLayer::buildApproachDescriptor::ERROR lRotation is not an "
+        "isometry");
+
   const Vector3& lCenter = center(GeometryContext());
   const Vector3& lVector = normal(GeometryContext(), lCenter);
   // create new surfaces
@@ -66,8 +68,8 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   const auto lTrans =
       Translation3(lCenter - 0.5 * Layer::m_layerThickness * lVector);
   const auto rTrans =
-      Translation3(lCenter + 0.5 * Layer::m_layerThickness * lVector); 
-  
+      Translation3(lCenter + 0.5 * Layer::m_layerThickness * lVector);
+
   const Transform3 apnTransform =
       Transform3(lTrans * Eigen::Isometry3d(lRotation));
   const Transform3 appTransform =

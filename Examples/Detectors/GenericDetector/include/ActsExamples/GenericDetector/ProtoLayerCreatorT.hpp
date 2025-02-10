@@ -260,11 +260,13 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         moduleRotation.col(0) = moduleLocalX;
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
-	
-	if (!isIsometry(moduleRotation)) {
-	  throw std::runtime_error("ProtoLayerCreator::centralProtoLayers ERROR Transformation is not a valid isometry!");
+
+        if (!isIsometry(moduleRotation)) {
+          throw std::runtime_error(
+              "ProtoLayerCreator::centralProtoLayers ERROR Transformation is "
+              "not a valid isometry!");
         }
-	
+
         // get the moduleTransform
         std::shared_ptr<Acts::Transform3> mutableModuleTransform =
             std::make_shared<Acts::Transform3>(
@@ -454,10 +456,12 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;
 
-	  if (!isIsometry(moduleRotation)) {
-	    throw std::runtime_error("ProtoLayerCreator::createProtoLayers ERROR Transformation is not a valid isometry!");
+          if (!isIsometry(moduleRotation)) {
+            throw std::runtime_error(
+                "ProtoLayerCreator::createProtoLayers ERROR Transformation is "
+                "not a valid isometry!");
           }
-	  
+
           // the transforms for the two modules
           std::shared_ptr<const Acts::Transform3> moduleTransform =
               std::make_shared<const Acts::Transform3>(
