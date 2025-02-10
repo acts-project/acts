@@ -162,9 +162,15 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   std::vector<GeoModelSensitiveSurface> sensitives;
 
   for (const auto &surface : surfaces) {
-    //Ths assumes that surface.transform returns an isometry as it doesn't check for it
-    const Transform3 &transform =
-      Eigen::Isometry3d(fpv->getAbsoluteTransform().matrix()) * Eigen::Isometry3d(surface.transform.matrix());
+    
+    const Transform3 &absTrans = Eigen::Isometry3d(fpv->getAbsoluteTransform().matrix());
+    const Transform3 &surfTrf = Eigen::Isometry3d(surface.transform.matrix());
+    
+    if (!isIsometry(absTrans) || !isIsometry(surfTrf))
+      throw std::runtime_error("GeoModelDetectorObjectFactory::ERROR Transformation is not a valid isometry!");
+    
+    const Transform3 &transform = absTrans*surfTrf;
+    
     convertSensitive(surface.volume, transform, sensitives);
   }
   cache.sensitiveSurfaces.insert(cache.sensitiveSurfaces.end(),
@@ -173,9 +179,13 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const GeoLogVol *logVol =
         physVol->getLogVol();  // get logVol for the shape of the volume
     const GeoShape *shape = logVol->getShape();  // get shape
-    // Assuming that the return is an isometry without checking for it
+    
     const Acts::Transform3 &fpvtransform = Eigen::Isometry3d((fpv->getAbsoluteTransform(nullptr)).matrix());
-
+    
+    if (!isIsometry(fpvTransform)) {
+      throw std::runtime_error("GeoModelDetectorObjectFactory::ERROR Transformation is not a valid isometry!");
+    }
+    
     // convert bounding boxes with surfaces inside
     std::shared_ptr<Experimental::DetectorVolume> box =
         Acts::GeoModel::convertDetectorVolume(gctx, *shape, name, fpvtransform,
@@ -186,6 +196,9 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   else if (subvolumes.empty()) {
     // convert fpvs to surfaces assuming the transforms are isometries
     const Transform3 &transform = Eigen::Isometry3d((fpv->getAbsoluteTransform()).matrix());
+    if (!isIsometry(transform)) {
+      throw std::runtime_error("GeoModelDetectorObjectFactory::ERROR Transformation is not a valid isometry!");
+    }
     convertSensitive(fpv, transform, cache.sensitiveSurfaces);
   }
 

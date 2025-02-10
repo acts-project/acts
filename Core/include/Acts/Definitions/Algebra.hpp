@@ -90,5 +90,16 @@ using Transform2 = Eigen::Transform<double, 2, Eigen::AffineCompact>;
 using Transform3 = Eigen::Transform<double, 3, Eigen::Isometry>;
 
 constexpr double s_transformEquivalentTolerance = 1e-9;
+constexpr double s_isometryEquivalentTolerance  = 1e-6;
+
+// Check that the linear part of a transform is a pure rotation
+inline bool isIsometry(const RotationMatrix3& R) {
+  
+  bool isDetOne = std::abs(R.determinant() - 1.0) < s_isometryEquivalentTolerance;
+  bool isOrthogonal =  (R.transpose() * R).isIdentity(s_isometryEquivalentTolerance);
+  
+  return (isDetOne || isOrthogonal);
+}
+  
 
 }  // namespace Acts
