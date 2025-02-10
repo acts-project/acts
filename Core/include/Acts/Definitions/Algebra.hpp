@@ -115,8 +115,7 @@ inline bool isIsometry(const T& transform) {
                        .isIdentity(s_isometryEquivalentTolerance);
 
   } else {
-    static_assert(std::false_type::value,
-                  "IsIsometry called on unsupported type!");
+    return false;
   }
 
   return (isDetOne && isOrthogonal);
