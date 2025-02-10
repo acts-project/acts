@@ -50,9 +50,9 @@ Acts::detail::GeoIntersectionAnnulusConverter::operator()(
       const Transform3& shift = Eigen::Isometry3d(shapeShift->getX().matrix());
 
       // Check if this transformation can be treated as isometry
-      if (!isIsometry(shift.rotation())) {
+      if (!isIsometry(shift)) {
 	  throw std::runtime_error("GeoIntersectionAnnulusConverter::ERROR Transformation is not a valid isometry!");
-	}
+      }
       
       const GeoGenericTrap* trap =
           dynamic_cast<const GeoGenericTrap*>(shapeShift->getOp());

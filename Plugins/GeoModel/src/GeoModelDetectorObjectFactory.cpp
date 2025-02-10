@@ -182,7 +182,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     
     const Acts::Transform3 &fpvtransform = Eigen::Isometry3d((fpv->getAbsoluteTransform(nullptr)).matrix());
     
-    if (!isIsometry(fpvTransform)) {
+    if (!isIsometry(fpvtransform)) {
       throw std::runtime_error("GeoModelDetectorObjectFactory::ERROR Transformation is not a valid isometry!");
     }
     

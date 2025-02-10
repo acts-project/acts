@@ -23,6 +23,9 @@
 #include <Eigen/Geometry>
 #endif
 
+#include <concepts>
+#include <type_traits>
+
 namespace Acts {
 
 /// @defgroup acts-algebra-types Vector/matrix types with a common scalar type
@@ -93,13 +96,29 @@ constexpr double s_transformEquivalentTolerance = 1e-9;
 constexpr double s_isometryEquivalentTolerance  = 1e-6;
 
 // Check that the linear part of a transform is a pure rotation
-inline bool isIsometry(const RotationMatrix3& R) {
+template <typename T>
+inline bool isIsometry(const T& transform) {
+
+  bool isDetOne = false;
+  bool isOrthogonal = false;
+  using BaseT = std::remove_cvref_t<T>;
   
-  bool isDetOne = std::abs(R.determinant() - 1.0) < s_isometryEquivalentTolerance;
-  bool isOrthogonal =  (R.transpose() * R).isIdentity(s_isometryEquivalentTolerance);
+  if constexpr (std::same_as<BaseT, Transform3>) {
+
+    auto R = transform.linear();
+    isDetOne = std::abs(R.determinant() - 1.0) < s_isometryEquivalentTolerance;
+    isOrthogonal =  (R.transpose() * R).isIdentity(s_isometryEquivalentTolerance);
+    
+  } else if constexpr (std::same_as<BaseT, RotationMatrix3>) {
+
+    isDetOne = std::abs(transform.determinant() - 1.0) < s_isometryEquivalentTolerance;
+    isOrthogonal =  (transform.transpose() * transform).isIdentity(s_isometryEquivalentTolerance);
+    
+  } else {
+    static_assert(std::false_type::value, "IsIsometry called on unsupported type!"); // Ensures compile-time error
+  }
   
   return (isDetOne || isOrthogonal);
 }
   
-
 }  // namespace Acts

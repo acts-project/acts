@@ -32,6 +32,9 @@
 
 namespace Acts::GeoModel {
 Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
+
+  
+  
   std::shared_ptr<VolumeBounds> bounds;
   GeoTrf::Transform3D newTrf = trf;
   if (shape.typeID() == GeoTube::getClassTypeID()) {
@@ -127,13 +130,20 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
     //This assumes, without checking, that newTrf is an isometry
-    return convertVolume(Eigen::Isometry3d(newTrf.matrix()), *shapeOp);
+    Transform3 newtrf = Eigen::Isometry3d(newTrf.matrix());
+    if (!isIsometry(newtrf)) {
+      throw std::runtime_error("GeoModelToDetectorVolume::convertVolume ERROR Transformation is not a valid isometry!");
+    }
+    return convertVolume(newtrf, *shapeOp);
   } else {
     throw std::runtime_error("FATAL: Unsupported GeoModel shape: " +
                              shape.type());
   }
-  // This assumes newTrk is an isometry
-  return Volume(Eigen::Isometry3d(newTrf.matrix()), bounds);
+  Transform3 newtrf = Eigen::Isometry3d(newTrf.matrix());
+  if (!isIsometry(newtrf)) {
+    throw std::runtime_error("GeoModelToDetectorVolume::convertVolume ERROR Transformation is not a valid isometry!");
+  }
+  return Volume(newtrf, bounds);
 }
 
 std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
@@ -149,7 +159,11 @@ std::shared_ptr<Experimental::DetectorVolume> convertDetectorVolume(
                  });
   auto portalGenerator = Experimental::defaultPortalAndSubPortalGenerator();
   // This directly assumes that the transform is an isometry and doesn't check for it
-  Volume vol = convertVolume(Eigen::Isometry3d(transform.matrix()), shape);
+  Transform3 trf = Eigen::Isometry3d(transform.matrix());
+  if (!isIsometry(trf)) {
+      throw std::runtime_error("GeoModelToDetectorVolume::convertDetectorVolume ERROR is not a valid isometry!");
+    }
+  Volume vol = convertVolume(trf, shape);
   return Experimental::DetectorVolumeFactory::construct(
       portalGenerator, context, name, vol.transform(), vol.volumeBoundsPtr(),
       sensSurfaces,
