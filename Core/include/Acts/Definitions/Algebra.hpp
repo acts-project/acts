@@ -118,7 +118,7 @@ inline bool isIsometry(const T& transform) {
     static_assert(std::false_type::value, "IsIsometry called on unsupported type!"); // Ensures compile-time error
   }
   
-  return (isDetOne || isOrthogonal);
+  return (isDetOne && isOrthogonal);
 }
   
 }  // namespace Acts
