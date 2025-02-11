@@ -581,7 +581,7 @@ def itkSeedingAlgConfig(
         zBinNeighborsTop=zBinNeighborsTop,
         zBinNeighborsBottom=zBinNeighborsBottom,
         numPhiNeighbors=numPhiNeighbors,
-        useExtraCuts = highOccupancyConfig,
+        useExtraCuts=highOccupancyConfig,
     )
 
     return (
