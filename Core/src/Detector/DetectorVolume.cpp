@@ -195,7 +195,7 @@ void Acts::Experimental::DetectorVolume::construct(
     const GeometryContext& gctx, const PortalGenerator& portalGenerator) {
   // Create portals with the given generator
   auto portalSurfaces =
-      portalGenerator(transform(gctx), *(m_bounds), getSharedPtr());
+      portalGenerator(transform(gctx), *m_bounds, getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
   createBoundingBox(gctx);
 }
