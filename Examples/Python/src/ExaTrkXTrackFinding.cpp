@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/DummyEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
@@ -53,6 +54,26 @@ void addExaTrkXTrackFinding(Context &ctx) {
   {
     using C = Acts::TrackBuildingBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
+  }
+
+  {
+    using Alg = Acts::DummyEdgeClassifier;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
+            mex, "DummyEdgeClassifier")
+            .def(py::init([](const Config &c, Logging::Level lvl) {
+                   return std::make_shared<Alg>(
+                       c, getDefaultLogger("DummyEdgeClassifier", lvl));
+                 }),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(keepAll);
+    ACTS_PYTHON_STRUCT_END();
   }
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND

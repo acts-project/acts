@@ -4,6 +4,7 @@ add_library(
     src/buildEdges.cpp
     src/ExaTrkXPipeline.cpp
     src/BoostWalkthrough.cpp
+    src/DummyEdgeClassifier.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
