@@ -18,14 +18,6 @@
 
 #include <concepts>
 
-namespace Acts::detail {
-template <typename Stepper, typename StateType, typename N>
-concept propagator_stepper_compatible_with =
-    requires(const Stepper& s, StateType& st, const N& n) {
-      { s.step(st, n) } -> std::same_as<Result<double>>;
-    };
-}  // namespace Acts::detail
-
 template <typename S, typename N>
 template <typename propagator_state_t>
 Acts::Result<void> Acts::Propagator<S, N>::propagate(
@@ -89,7 +81,9 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
   // Stepping loop
   for (; state.steps < state.options.maxSteps; ++state.steps) {
     // Perform a step
-    Result<double> res = m_stepper.step(state, m_navigator);
+    Result<double> res =
+        m_stepper.step(state.stepping, state.options.direction,
+                       m_navigator.currentVolumeMaterial(state.navigation));
     if (!res.ok()) {
       ACTS_ERROR("Step failed with " << res.error() << ": "
                                      << res.error().message());
@@ -263,12 +257,6 @@ auto Acts::Propagator<S, N>::makeState(
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
 
-  static_assert(
-      detail::propagator_stepper_compatible_with<S, StateType, N>,
-      "Step method of the Stepper is not compatible with the propagator "
-      "state");
-
-  // Initialize the internal propagator state
   StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
@@ -297,12 +285,6 @@ auto Acts::Propagator<S, N>::makeState(
       actor_list_t_state_t<OptionsType,
                            typename propagator_options_t::actor_list_type>;
 
-  static_assert(
-      detail::propagator_stepper_compatible_with<S, StateType, N>,
-      "Step method of the Stepper is not compatible with the propagator "
-      "state");
-
-  // Initialize the internal propagator state
   StateType state{eOptions, m_stepper.makeState(eOptions.stepping),
                   m_navigator.makeState(eOptions.navigation)};
 
@@ -369,7 +351,7 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   moveStateToResult(state, result);
 
   if (makeCurvilinear) {
-    if (!m_stepper.prepareCurvilinearState(state, m_navigator)) {
+    if (!m_stepper.prepareCurvilinearState(state.stepping)) {
       // information to compute curvilinearState is incomplete.
       return propagationResult.error();
     }
