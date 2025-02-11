@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
@@ -49,8 +50,10 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
   try {
     auto t0 = std::chrono::high_resolution_clock::now();
+    ACTS_NVTX_START(graph_construction);
     auto [nodeFeatures, edgeIndex, edgeFeatures] =
         (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
+    ACTS_NVTX_STOP(graph_construction);
     auto t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
@@ -64,9 +67,11 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
     for (auto edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();
+      ACTS_NVTX_START(edge_classifier);
       auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =
           (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeIndex),
                             std::move(edgeFeatures), ctx);
+      ACTS_NVTX_STOP(edge_classifier);
       t1 = std::chrono::high_resolution_clock::now();
 
       if (timing != nullptr) {
@@ -82,8 +87,10 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     }
 
     t0 = std::chrono::high_resolution_clock::now();
+    ACTS_NVTX_START(track_building);
     auto res = (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
                                  std::move(edgeScores), spacepointIDs, ctx);
+    ACTS_NVTX_STOP(track_building);
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {

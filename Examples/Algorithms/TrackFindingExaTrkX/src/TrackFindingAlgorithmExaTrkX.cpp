@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchGraphStoreHook.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/NvtxUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -112,6 +113,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  ACTS_NVTX_START(data_preparation);
+
   using Clock = std::chrono::high_resolution_clock;
   using Duration = std::chrono::duration<double, std::milli>;
   auto t0 = Clock::now();
@@ -184,9 +187,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   auto t1 = Clock::now();
 
   // Run the pipeline
+  ACTS_NVTX_STOP(data_preparation);
   Acts::ExaTrkXTiming timing;
   auto trackCandidates =
       m_pipeline.run(features, moduleIds, idxs, hook, &timing);
+  ACTS_NVTX_START(post_processing);
 
   auto t2 = Clock::now();
 
@@ -259,6 +264,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     m_timing.fullTime(Duration(t3 - t0).count());
   }
 
+  ACTS_NVTX_STOP(post_processing);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

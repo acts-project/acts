@@ -179,6 +179,14 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
     endif()
 endif()
 
+if(ACTS_EXATRKX_ENABLE_NVTX)
+    if(NOT ACTS_EXATRKX_ENABLE_CUDA)
+        message(FATAL_ERROR "Need cuda for nvtx")
+    endif()
+    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::nvToolsExt)
+    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_NVTX)
+endif()
+
 install(
     TARGETS ActsPluginExaTrkX
     EXPORT ActsPluginExaTrkXTargets
