@@ -166,10 +166,11 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
         Eigen::Isometry3d(fpv->getAbsoluteTransform().matrix());
     const Transform3 &surfTrf = Eigen::Isometry3d(surface.transform.matrix());
 
-    if (!isIsometry(absTrans) || !isIsometry(surfTrf))
+    if (!isIsometry(absTrans) || !isIsometry(surfTrf)) {
       throw std::runtime_error(
           "GeoModelDetectorObjectFactory::ERROR Transformation is not a valid "
           "isometry!");
+    }
 
     const Transform3 &transform = absTrans * surfTrf;
 

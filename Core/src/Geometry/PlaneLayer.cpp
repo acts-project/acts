@@ -56,10 +56,11 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   //@todo fix with representing volume
   const Transform3& lTransform = transform(GeometryContext());
   RotationMatrix3 lRotation = lTransform.rotation();
-  if (!isIsometry(lRotation))
+  if (!isIsometry(lRotation)) {
     throw std::runtime_error(
         "PlaneLayer::buildApproachDescriptor::ERROR lRotation is not an "
         "isometry");
+  }
 
   const Vector3& lCenter = center(GeometryContext());
   const Vector3& lVector = normal(GeometryContext(), lCenter);
