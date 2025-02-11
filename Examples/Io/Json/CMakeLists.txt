@@ -20,4 +20,6 @@ target_link_libraries(
         ActsExamplesMaterialMapping
 )
 
+acts_compile_headers(ActsExamplesIoJson GLOB "include/**/*.hpp")
+
 install(TARGETS ActsExamplesIoJson LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
