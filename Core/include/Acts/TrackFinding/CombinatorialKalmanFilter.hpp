@@ -377,13 +377,15 @@ class CombinatorialKalmanFilter {
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering
-      auto navigationOptions = state.navigation.options;
-      navigationOptions.startSurface = &currentState.referenceSurface();
-      navigationOptions.targetSurface = nullptr;
-      state.navigation = navigator.makeState(navigationOptions);
-      navigator.initialize(state.navigation, stepper.position(state.stepping),
-                           stepper.direction(state.stepping),
-                           state.options.direction);
+      state.navigation.options.startSurface = &currentState.referenceSurface();
+      state.navigation.options.targetSurface = nullptr;
+      auto navInitRes = navigator.initialize(
+          state.navigation, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.options.direction);
+      if (!navInitRes.ok()) {
+        ACTS_ERROR("Navigation initialization failed: " << navInitRes.error());
+        result.lastError = navInitRes.error();
+      }
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -871,9 +873,17 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_extensions = tfOptions.extensions;
 
     auto propState =
-        m_propagator.template makeState<start_parameters_t, PropagatorOptions,
-                                        StubPathLimitReached>(initialParameters,
-                                                              propOptions);
+        m_propagator
+            .template makeState<PropagatorOptions, StubPathLimitReached>(
+                propOptions);
+
+    auto initResult = m_propagator.template initialize<
+        decltype(propState), start_parameters_t, StubPathLimitReached>(
+        propState, initialParameters);
+    if (!initResult.ok()) {
+      ACTS_ERROR("Propagation initialization failed: " << initResult.error());
+      return initResult.error();
+    }
 
     auto& r =
         propState
