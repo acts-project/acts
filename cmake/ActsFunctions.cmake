@@ -7,7 +7,7 @@
 function(acts_compile_headers target)
     set(options "")
     set(oneValueArgs GLOB)
-    set(multiValueArgs HEADERS)
+    set(multiValueArgs HEADERS LINK_LIBRARIES)
     cmake_parse_arguments(
         PARSE_ARGV
         0
@@ -69,4 +69,7 @@ function(acts_compile_headers target)
 
     add_library(${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
     target_link_libraries(${target}_HEADERS PRIVATE ${target})
+    foreach(_lib ${ARGS_LINK_LIBRARIES})
+        target_link_libraries(${target}_HEADERS PRIVATE ${_lib})
+    endforeach()
 endfunction()
