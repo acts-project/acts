@@ -55,8 +55,23 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
+  /// @param molarElectronRho is the molar electron density
+  /// @param meanExcitationEnergy is the mean electron excitation energy.
+  ///        If not provided it will be approximated.
+  static Material fromMolarDensity(float x0, float l0, float ar, float z,
+                                   float molarRho, float molarElectronRho,
+                                   std::optional<float> meanExcitationEnergy);
+
+  /// Construct from material parameters using the molar density.
+  ///
+  /// @param x0 is the radiation length
+  /// @param l0 is the nuclear interaction length
+  /// @param ar is the relative atomic mass
+  /// @param z is the nuclear charge number
+  /// @param molarRho is the molar density
   static Material fromMolarDensity(float x0, float l0, float ar, float z,
                                    float molarRho);
+
   /// Construct from material parameters using the mass density.
   ///
   /// @param x0 is the radiation length
@@ -70,6 +85,7 @@ class Material {
   ///   computations with values differing by 20+ orders of magnitude.
   static Material fromMassDensity(float x0, float l0, float ar, float z,
                                   float massRho);
+
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
@@ -95,11 +111,13 @@ class Material {
   /// Return the molar density.
   constexpr float molarDensity() const { return m_molarRho; }
   /// Return the molar electron density.
-  constexpr float molarElectronDensity() const { return m_z * m_molarRho; }
+  constexpr float molarElectronDensity() const { return m_molarElectronRho; }
   /// Return the mass density.
   float massDensity() const;
   /// Return the mean electron excitation energy.
-  float meanExcitationEnergy() const;
+  constexpr float meanExcitationEnergy() const {
+    return m_meanExcitationEnergy;
+  }
 
   /// Encode the properties into an opaque parameters vector.
   ParametersVector parameters() const;
@@ -110,6 +128,8 @@ class Material {
   float m_ar = 0.0f;
   float m_z = 0.0f;
   float m_molarRho = 0.0f;
+  float m_molarElectronRho = 0.0f;
+  float m_meanExcitationEnergy = 0.0f;
 
   /// @brief Check if two materials are exactly equal.
   ///
@@ -123,7 +143,9 @@ class Material {
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&
            (lhs.m_ar == rhs.m_ar) && (lhs.m_z == rhs.m_z) &&
-           (lhs.m_molarRho == rhs.m_molarRho);
+           (lhs.m_molarRho == rhs.m_molarRho) &&
+           (lhs.m_molarElectronRho == rhs.m_molarElectronRho) &&
+           (lhs.m_meanExcitationEnergy == rhs.m_meanExcitationEnergy);
   }
 };
 
