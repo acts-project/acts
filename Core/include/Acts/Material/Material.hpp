@@ -10,6 +10,7 @@
 
 #include <iosfwd>
 #include <limits>
+#include <optional>
 
 #include <Eigen/Dense>
 
