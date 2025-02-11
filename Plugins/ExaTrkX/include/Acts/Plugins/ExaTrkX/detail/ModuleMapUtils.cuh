@@ -205,14 +205,13 @@ __global__ void count_doublet_edges(
 
 /// New kernel that use precounted number of edges
 template <class T>
-__global__ void doublet_cuts_new(int nb_doublets, const int *modules1,
-                                 const int *modules2, const T *R, const T *z,
-                                 const T *eta, const T *phi, T *z0_min,
-                                 T *z0_max, T *deta_min, T *deta_max,
-                                 T *phi_slope_min, T *phi_slope_max,
-                                 T *dphi_min, T *dphi_max, const int *indices,
-                                 T pi, T max, int *M1_SP, int *M2_SP,
-                                 const int *nb_edges) {
+__global__ void __launch_bounds__(512, 2)
+    doublet_cuts_new(int nb_doublets, const int *modules1, const int *modules2,
+                     const T *R, const T *z, const T *eta, const T *phi,
+                     T *z0_min, T *z0_max, T *deta_min, T *deta_max,
+                     T *phi_slope_min, T *phi_slope_max, T *dphi_min,
+                     T *dphi_max, const int *indices, T pi, T max, int *M1_SP,
+                     int *M2_SP, const int *nb_edges) {
   // loop over module1 SP
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nb_doublets)
@@ -241,6 +240,105 @@ __global__ void doublet_cuts_new(int nb_doublets, const int *modules1,
         edges++;
       }
     }
+  }
+}
+
+template <typename T>
+__global__ void __launch_bounds__(512, 2)
+    triplet_cuts_new(int nb_triplets, int *modules12_map, int *modules23_map,
+                     T *x, T *y, T *z, T *R, T *z0, T *phi_slope, T *deta,
+                     T *dphi, T *MD12_z0_min, T *MD12_z0_max, T *MD12_deta_min,
+                     T *MD12_deta_max, T *MD12_phi_slope_min,
+                     T *MD12_phi_slope_max, T *MD12_dphi_min, T *MD12_dphi_max,
+                     T *MD23_z0_min, T *MD23_z0_max, T *MD23_deta_min,
+                     T *MD23_deta_max, T *MD23_phi_slope_min,
+                     T *MD23_phi_slope_max, T *MD23_dphi_min, T *MD23_dphi_max,
+                     T *diff_dydx_min, T *diff_dydx_max, T *diff_dzdr_min,
+                     T *diff_dzdr_max, T pi, T max, int *M1_SP, int *M2_SP,
+                     int *sorted_M2_SP, int *edge_indices, int *vertices,
+                     bool *edge_tag)
+//---------------------------------------------------------------------------------------------------------------------------------------------------
+{
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nb_triplets)
+    return;
+
+  int module12 = modules12_map[i];
+  int module23 = modules23_map[i];
+
+  int nb_hits_M12 = edge_indices[module12 + 1] - edge_indices[module12];
+  int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
+
+  bool hits_on_modules = nb_hits_M12 * nb_hits_M23;
+  if (!hits_on_modules)
+    return;
+
+  int shift12 = edge_indices[module12];
+  int shift23 = edge_indices[module23];
+
+  int last12 = shift12 + nb_hits_M12 - 1;
+  int ind23 = shift23 + nb_hits_M23;
+  for (int k = shift12; k <= last12; k++) {
+    int p = sorted_M2_SP[k];
+    int SP1 = M1_SP[p];
+    int SP2 = M2_SP[p];
+    bool next_ind = false;
+    if (k < last12)
+      next_ind = (SP2 != (M2_SP[sorted_M2_SP[k + 1]]));
+
+    if (!apply_geometric_cuts(i, z0[p], phi_slope[p], deta[p], dphi[p],
+                              MD12_z0_min, MD12_z0_max, MD12_deta_min,
+                              MD12_deta_max, MD12_phi_slope_min,
+                              MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max))
+      continue;
+
+    int l = shift23;
+    // for (; l<ind23 && SP2 != M1_SP[l]; l++); // search first hit indice on
+    // M23_1 = M12_2
+
+    {
+      // replace for loop with binary search based on while loop
+      int left = shift23;
+      int right = ind23 - 1;
+      while (left <= right) {
+        int mid = left + (right - left) / 2;
+        // only terminate search if we found the first index of the hit
+        if (M1_SP[mid] == SP2 && M1_SP[mid - 1] != SP2) {
+          l = mid;
+          break;
+        }
+        if (M1_SP[mid] < SP2) {
+          left = mid + 1;
+        } else {
+          right = mid - 1;
+        }
+      }
+    }
+
+    bool new_elt = false;
+    for (; l < ind23 && SP2 == M1_SP[l]; l++) {
+      int SP3 = M2_SP[l];
+      if (!apply_geometric_cuts(
+              i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min,
+              MD23_z0_max, MD23_deta_min, MD23_deta_max, MD23_phi_slope_min,
+              MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max))
+        continue;
+
+      T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3, max);
+      if (!((diff_dydx >= diff_dydx_min[i]) * (diff_dydx <= diff_dydx_max[i])))
+        continue;
+
+      T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3, max);
+      if (!((diff_dzdr >= diff_dzdr_min[i]) * (diff_dzdr <= diff_dzdr_max[i])))
+        continue;
+
+      vertices[SP3] = edge_tag[l] = true;
+      new_elt = true;
+    }
+    if (new_elt)
+      edge_tag[p] = vertices[SP1] = vertices[SP2] = true;
+    if (next_ind && new_elt)
+      shift23 = l;
   }
 }
 
