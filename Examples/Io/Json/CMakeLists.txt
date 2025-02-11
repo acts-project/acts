@@ -18,6 +18,7 @@ target_link_libraries(
         ActsExamplesDigitization
         ActsExamplesFramework
         ActsExamplesMaterialMapping
+        ActsExamplesTrackFinding
 )
 
 acts_compile_headers(ActsExamplesIoJson GLOB "include/**/*.hpp")

@@ -19,7 +19,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsTestsCommonHelpers
-    PUBLIC ActsCore
+    PUBLIC ActsCore ActsExamplesFramework
     PRIVATE std::filesystem
 )
 
