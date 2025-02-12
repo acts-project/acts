@@ -51,6 +51,8 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
 class INavigationPolicy;
+class TrackingGeometryVisitor;
+class TrackingGeometryMutableVisitor;
 
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
@@ -266,6 +268,9 @@ class TrackingVolume : public Volume {
       volume->visitVolumes(visitor);
     }
   }
+
+  void apply(TrackingGeometryVisitor& visitor) const;
+  void apply(TrackingGeometryMutableVisitor& visitor);
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;

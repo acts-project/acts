@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -94,6 +95,14 @@ void TrackingGeometry::visualize(IVisualization3D& helper,
                                  const ViewConfig& sensitiveViewConfig) const {
   highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
                                      sensitiveViewConfig);
+}
+
+void TrackingGeometry::apply(TrackingGeometryVisitor& visitor) const {
+  highestTrackingVolume()->apply(visitor);
+}
+
+void TrackingGeometry::apply(TrackingGeometryMutableVisitor& visitor) {
+  highestTrackingVolume()->apply(visitor);
 }
 
 }  // namespace Acts

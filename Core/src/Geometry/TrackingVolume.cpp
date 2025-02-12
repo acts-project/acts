@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -770,6 +771,76 @@ void TrackingVolume::initializeNavigationCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   m_navigationDelegate(args, stream, logger);
+}
+
+// @TODO: Unify once Gen1 is removed: should share most code between mutable and const
+void Acts::TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
+  visitor.visitVolume(*this);
+
+  // Visit the boundary surfaces
+  for (const auto& bs : m_boundarySurfaces) {
+    visitor.visitBoundarySurface(*bs);
+    visitor.visitSurface(bs->surfaceRepresentation());
+  }
+
+  for (const auto& portal : portals()) {
+    visitor.visitPortal(portal);
+    visitor.visitSurface(portal.surface());
+  }
+
+  // Internal structure
+  if (m_confinedVolumes == nullptr) {
+    // no sub volumes => loop over the confined layers
+    if (m_confinedLayers != nullptr) {
+      for (const auto& layer : m_confinedLayers->arrayObjects()) {
+        visitor.visitLayer(*layer);
+        // Surfaces contained in the surface array
+        if (layer->surfaceArray() != nullptr) {
+          for (const auto& srf : layer->surfaceArray()->surfaces()) {
+            visitor.visitSurface(*srf);
+            continue;
+          }
+        }
+        // Surfaces of the layer
+        visitor.visitSurface(layer->surfaceRepresentation());
+        // Approach surfaces of the layer
+        if (layer->approachDescriptor() != nullptr) {
+          for (const auto& srf :
+               layer->approachDescriptor()->containedSurfaces()) {
+            visitor.visitSurface(*srf);
+          }
+        }
+      }
+    }
+  } else {
+    // contains sub volumes
+    for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+      volume->apply(visitor);
+    }
+  }
+
+  for (const auto& surface : surfaces()) {
+    visitor.visitSurface(surface);
+  }
+
+  for (const auto& volume : volumes()) {
+    volume.apply(visitor);
+  }
+}
+
+void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  for (auto& portal : portals()) {
+    visitor.visitPortal(portal);
+    visitor.visitSurface(portal.surface());
+  }
+
+  for (auto& surface : surfaces()) {
+    visitor.visitSurface(surface);
+  }
+
+  for (auto& volume : volumes()) {
+    volume.apply(visitor);
+  }
 }
 
 }  // namespace Acts

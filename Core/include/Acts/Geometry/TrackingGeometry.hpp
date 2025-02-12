@@ -27,6 +27,8 @@ class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
 class TrackingVolume;
+class TrackingGeometryVisitor;
+class TrackingGeometryMutableVisitor;
 
 ///  @class TrackingGeometry
 ///
@@ -130,6 +132,9 @@ class TrackingGeometry {
     highestTrackingVolume()->template visitVolumes<visitor_t>(
         std::forward<visitor_t>(visitor));
   }
+
+  void apply(TrackingGeometryVisitor& visitor) const;
+  void apply(TrackingGeometryMutableVisitor& visitor);
 
   /// Search for a volume with the given identifier.
   ///
