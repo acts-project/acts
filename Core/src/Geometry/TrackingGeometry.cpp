@@ -12,28 +12,111 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <cstddef>
 
 namespace Acts {
 
+class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
+ public:
+  Gen1GeometryClosureVisitor(const Logger& logger,
+                             const GeometryIdentifierHook& hook)
+      : m_logger(&logger), m_hook(&hook) {}
+
+  const Logger& logger() const { return *m_logger; }
+
+  void visitVolume(TrackingVolume& volume) override {
+    // std::cout << "Volume: " << volume.volumeName() << std::endl;
+
+    // Increment the volume ID for this volume
+    m_volumeID = GeometryIdentifier().setVolume(m_volumeID.volume() + 1);
+    // Reset boundary id for this volume
+    m_iboundary = 0;
+    // Reset layer id for this volume
+    m_ilayer = 0;
+
+    // std::cout << "volumeID: " << m_volumeID << std::endl;
+
+    // assign the Volume ID to the volume itself
+    volume.assignGeometryId(m_volumeID);
+    ACTS_DEBUG("volumeID: " << m_volumeID << ", name: " << volume.volumeName());
+    // insert the volume into the map
+    m_volumesById[m_volumeID] = &volume;
+
+    // assign the material if you have a decorator
+    if (m_materialDecorator != nullptr) {
+      m_materialDecorator->decorate(volume);
+    }
+    if (volume.volumeMaterial() == nullptr &&
+        volume.motherVolume() != nullptr &&
+        volume.motherVolume()->volumeMaterial() != nullptr) {
+      auto protoMaterial = dynamic_cast<const ProtoVolumeMaterial*>(
+          volume.motherVolume()->volumeMaterial());
+      if (protoMaterial == nullptr) {
+        volume.assignVolumeMaterial(volume.motherVolume()->volumeMaterialPtr());
+      }
+    }
+  }
+
+  void visitBoundarySurface(
+      BoundarySurfaceT<TrackingVolume>& boundary) override {
+    // get the intersection solution
+    auto& bSurface = boundary.surfaceRepresentation();
+    // create the boundary surface id
+    m_iboundary += 1;
+    auto boundaryID = GeometryIdentifier(m_volumeID).setBoundary(m_iboundary);
+    // std::cout << "boundaryID: " << boundaryID << std::endl;
+    // now assign to the boundary surface
+    auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
+    mutableBSurface.assignGeometryId(boundaryID);
+    // Assign material if you have a decorator
+    if (m_materialDecorator != nullptr) {
+      m_materialDecorator->decorate(mutableBSurface);
+    }
+  }
+
+  void visitLayer(Layer& layer) override {
+    // create the layer identification
+    m_ilayer += 1;
+    auto layerID = GeometryIdentifier(m_volumeID).setLayer(m_ilayer);
+    // now close the geometry
+    layer.closeGeometry(m_materialDecorator, layerID, *m_hook, *m_logger);
+  }
+
+  void visitSurface(Surface& surface) override {
+    if (surface.geometryId() == GeometryIdentifier{}) {
+      throw std::invalid_argument("Surface has no geometry ID");
+    }
+    if (surface.geometryId().sensitive() != 0) {
+      m_surfacesById[surface.geometryId()] = &surface;
+    }
+  }
+
+  const Logger* m_logger;
+  GeometryIdentifier m_volumeID;
+  GeometryIdentifier::Value m_iboundary = 0;
+  GeometryIdentifier::Value m_ilayer = 0;
+  const IMaterialDecorator* m_materialDecorator = nullptr;
+  const GeometryIdentifierHook* m_hook = nullptr;
+
+  std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
+  std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+};
+
 TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator,
     const GeometryIdentifierHook& hook, const Logger& logger)
     : m_world(highestVolume) {
-  // Close the geometry: assign geometryID and successively the material
-  std::size_t volumeID = 0;
-  highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
-                               logger);
+  Gen1GeometryClosureVisitor visitor{logger, hook};
+  visitor.m_materialDecorator = materialDecorator;
+  apply(visitor);
+
+  m_volumesById = std::move(visitor.m_volumesById);
+  m_surfacesById = std::move(visitor.m_surfacesById);
   m_volumesById.rehash(0);
-  // fill surface lookup container
-  m_world->visitSurfaces([this](const Acts::Surface* srf) {
-    if (srf != nullptr) {
-      m_surfacesById[srf->geometryId()] = srf;
-    }
-  });
   m_surfacesById.rehash(0);
 }
 

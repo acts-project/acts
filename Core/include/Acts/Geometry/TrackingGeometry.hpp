@@ -30,6 +30,9 @@ class TrackingVolume;
 class TrackingGeometryVisitor;
 class TrackingGeometryMutableVisitor;
 
+// Forward declaration only, the implementation is hidden in the .cpp file.
+class Gen1GeometryClosureVisitor;
+
 ///  @class TrackingGeometry
 ///
 ///  The TrackingGeometry class is the owner of the constructed TrackingVolumes.
