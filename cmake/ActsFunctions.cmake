@@ -67,7 +67,6 @@ function(acts_compile_headers target)
 
         file(WRITE "${_temporary_path}" "#include \"${_header_file}\"")
 
-        # target_sources(ActsCore PRIVATE "${_temporary_path}")
         list(APPEND _sources "${_temporary_path}")
     endforeach()
 
