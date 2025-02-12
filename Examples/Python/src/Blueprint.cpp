@@ -12,6 +12,7 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -462,6 +463,15 @@ void addBlueprint(Context& ctx) {
         return child;
       },
       py::arg("name"));
+
+  auto geoIdNode =
+      py::class_<Acts::GeometryIdentifierBlueprintNode,
+                 std::shared_ptr<Acts::GeometryIdentifierBlueprintNode>>(
+          m, "GeometryIdentifierBlueprintNode")
+          .def(py::init<>())
+          .def("setLayerTo", &GeometryIdentifierBlueprintNode::setLayerTo)
+          .def("incrementLayers",
+               &GeometryIdentifierBlueprintNode::incrementLayers);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
