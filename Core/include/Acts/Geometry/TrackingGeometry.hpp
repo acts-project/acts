@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
@@ -138,7 +139,10 @@ class TrackingGeometry {
   }
 
   void apply(TrackingGeometryVisitor& visitor) const;
+  void apply(TrackingGeometryLambdaVisitor::Config config) const;
+
   void apply(TrackingGeometryMutableVisitor& visitor);
+  void apply(TrackingGeometryLambdaMutableVisitor::Config config);
 
   /// Search for a volume with the given identifier.
   ///

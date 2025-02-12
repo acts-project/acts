@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <functional>
+
 namespace Acts {
 
 class TrackingVolume;
@@ -56,6 +58,33 @@ class TrackingGeometryVisitor {
       const BoundarySurfaceT<TrackingVolume>& boundary);
 };
 
+class TrackingGeometryLambdaVisitor : public TrackingGeometryVisitor {
+ public:
+  struct Config {
+    std::function<void(const TrackingVolume&)> volume{};
+    std::function<void(const Portal&)> portal{};
+    std::function<void(const Surface&)> surface{};
+    std::function<void(const Layer&)> layer{};
+    std::function<void(const BoundarySurfaceT<TrackingVolume>&)> boundary{};
+  };
+
+  explicit TrackingGeometryLambdaVisitor(Config&& config);
+
+  void visitVolume(const TrackingVolume& volume) override;
+
+  void visitPortal(const Portal& portal) override;
+
+  void visitSurface(const Surface& surface) override;
+
+  void visitLayer(const Layer& layer) override;
+
+  void visitBoundarySurface(
+      const BoundarySurfaceT<TrackingVolume>& boundary) override;
+
+ private:
+  Config m_config;
+};
+
 /// @brief Mutable visitor interface for modifying the tracking geometry hierarchy
 ///
 /// This visitor allows for non-const access to traverse and modify the tracking
@@ -90,6 +119,34 @@ class TrackingGeometryMutableVisitor {
   /// @param boundary The boundary surface being visited
   /// @note Called for each boundary surface encountered during geometry traversal
   virtual void visitBoundarySurface(BoundarySurfaceT<TrackingVolume>& boundary);
+};
+
+class TrackingGeometryLambdaMutableVisitor
+    : public TrackingGeometryMutableVisitor {
+ public:
+  struct Config {
+    std::function<void(TrackingVolume&)> volume{};
+    std::function<void(Portal&)> portal{};
+    std::function<void(Surface&)> surface{};
+    std::function<void(Layer&)> layer{};
+    std::function<void(BoundarySurfaceT<TrackingVolume>&)> boundary{};
+  };
+
+  explicit TrackingGeometryLambdaMutableVisitor(Config&& config);
+
+  void visitVolume(TrackingVolume& volume) override;
+
+  void visitPortal(Portal& portal) override;
+
+  void visitSurface(Surface& surface) override;
+
+  void visitLayer(Layer& layer) override;
+
+  void visitBoundarySurface(
+      BoundarySurfaceT<TrackingVolume>& boundary) override;
+
+ private:
+  Config m_config;
 };
 
 }  // namespace Acts

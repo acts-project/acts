@@ -226,8 +226,20 @@ void TrackingGeometry::apply(TrackingGeometryVisitor& visitor) const {
   highestTrackingVolume()->apply(visitor);
 }
 
+void TrackingGeometry::apply(
+    TrackingGeometryLambdaVisitor::Config config) const {
+  TrackingGeometryLambdaVisitor visitor{std::move(config)};
+  apply(visitor);
+}
+
 void TrackingGeometry::apply(TrackingGeometryMutableVisitor& visitor) {
   highestTrackingVolume()->apply(visitor);
+}
+
+void TrackingGeometry::apply(
+    TrackingGeometryLambdaMutableVisitor::Config config) {
+  TrackingGeometryLambdaMutableVisitor visitor{std::move(config)};
+  apply(visitor);
 }
 
 }  // namespace Acts
