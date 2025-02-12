@@ -100,7 +100,7 @@ class ModuleMapCuda : public GraphConstructionBase {
 
  public:
   ModuleMapCuda(const Config &cfg, std::unique_ptr<const Acts::Logger> logger);
-  ~ModuleMapCuda();
+  ~ModuleMapCuda() override;
 
   const auto &config() const { return m_cfg; }
 

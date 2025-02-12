@@ -15,6 +15,8 @@
 
 #include <cuda_runtime_api.h>
 
+#define NEW_OPTIMIZATIONS
+
 namespace Acts::detail {
 
 template <class T>
@@ -164,16 +166,22 @@ inline void __global__ mapModuleIdsToNbHits(int *nbHitsOnModule,
 
 /// Counting kernel to allow counting the edges
 template <class T>
-__global__ void count_doublet_edges(
-    int nb_doublets, const int *modules1, const int *modules2, const T *R,
-    const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max, T *deta_min,
-    T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min, T *dphi_max,
-    const int *indices, T pi, T max, int *nb_edges_total,
-    int *nb_edges_doublet) {
+__global__ void
+#ifdef NEW_OPTIMIZATIONS
+__launch_bounds__(512, 2)
+#endif
+    count_doublet_edges(int nb_doublets, const int *modules1,
+                        const int *modules2, const T *R, const T *z,
+                        const T *eta, const T *phi, T *z0_min, T *z0_max,
+                        T *deta_min, T *deta_max, T *phi_slope_min,
+                        T *phi_slope_max, T *dphi_min, T *dphi_max,
+                        const int *indices, T pi, int *nb_edges_total,
+                        int *nb_edges_doublet) {
   // loop over module1 SP
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_doublets)
+  if (i >= nb_doublets) {
     return;
+  }
 
   int module1 = modules1[i];
   int module2 = modules2[i];
@@ -188,7 +196,7 @@ __global__ void count_doublet_edges(
     for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
       T z0, phi_slope, deta, dphi;
       hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, max, z0, phi_slope, deta, dphi);
+                             phi[l], pi, z0, phi_slope, deta, dphi);
 
       if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
                                deta_min, deta_max, phi_slope_min, phi_slope_max,
@@ -205,17 +213,21 @@ __global__ void count_doublet_edges(
 
 /// New kernel that use precounted number of edges
 template <class T>
-__global__ void __launch_bounds__(512, 2)
+__global__ void
+#ifdef NEW_OPTIMIZATIONS
+__launch_bounds__(512, 2)
+#endif
     doublet_cuts_new(int nb_doublets, const int *modules1, const int *modules2,
                      const T *R, const T *z, const T *eta, const T *phi,
                      T *z0_min, T *z0_max, T *deta_min, T *deta_max,
                      T *phi_slope_min, T *phi_slope_max, T *dphi_min,
-                     T *dphi_max, const int *indices, T pi, T max, int *M1_SP,
+                     T *dphi_max, const int *indices, T pi, int *M1_SP,
                      int *M2_SP, const int *nb_edges) {
   // loop over module1 SP
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_doublets)
+  if (i >= nb_doublets) {
     return;
+  }
 
   int module1 = modules1[i];
   int module2 = modules2[i];
@@ -230,7 +242,7 @@ __global__ void __launch_bounds__(512, 2)
     for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
       T z0, phi_slope, deta, dphi;
       hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
-                             phi[l], pi, max, z0, phi_slope, deta, dphi);
+                             phi[l], pi, z0, phi_slope, deta, dphi);
 
       if (apply_geometric_cuts(i, z0, phi_slope, deta, dphi, z0_min, z0_max,
                                deta_min, deta_max, phi_slope_min, phi_slope_max,
@@ -244,24 +256,28 @@ __global__ void __launch_bounds__(512, 2)
 }
 
 template <typename T>
-__global__ void __launch_bounds__(512, 2)
-    triplet_cuts_new(int nb_triplets, int *modules12_map, int *modules23_map,
-                     T *x, T *y, T *z, T *R, T *z0, T *phi_slope, T *deta,
-                     T *dphi, T *MD12_z0_min, T *MD12_z0_max, T *MD12_deta_min,
-                     T *MD12_deta_max, T *MD12_phi_slope_min,
-                     T *MD12_phi_slope_max, T *MD12_dphi_min, T *MD12_dphi_max,
-                     T *MD23_z0_min, T *MD23_z0_max, T *MD23_deta_min,
-                     T *MD23_deta_max, T *MD23_phi_slope_min,
-                     T *MD23_phi_slope_max, T *MD23_dphi_min, T *MD23_dphi_max,
-                     T *diff_dydx_min, T *diff_dydx_max, T *diff_dzdr_min,
-                     T *diff_dzdr_max, T pi, T max, int *M1_SP, int *M2_SP,
-                     int *sorted_M2_SP, int *edge_indices, int *vertices,
-                     bool *edge_tag)
+__global__ void
+#ifdef NEW_OPTIMIZATIONS
+__launch_bounds__(512, 2)
+#endif
+    triplet_cuts_new(int nb_triplets, const int *modules12_map,
+                     const int *modules23_map, T *x, T *y, T *z, T *R, T *z0,
+                     T *phi_slope, T *deta, T *dphi, T *MD12_z0_min,
+                     T *MD12_z0_max, T *MD12_deta_min, T *MD12_deta_max,
+                     T *MD12_phi_slope_min, T *MD12_phi_slope_max,
+                     T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
+                     T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max,
+                     T *MD23_phi_slope_min, T *MD23_phi_slope_max,
+                     T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
+                     T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi,
+                     int *M1_SP, int *M2_SP, int *sorted_M2_SP,
+                     int *edge_indices, bool *vertices, bool *edge_tag)
 //---------------------------------------------------------------------------------------------------------------------------------------------------
 {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nb_triplets)
+  if (i >= nb_triplets) {
     return;
+  }
 
   int module12 = modules12_map[i];
   int module23 = modules23_map[i];
@@ -270,8 +286,9 @@ __global__ void __launch_bounds__(512, 2)
   int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
 
   bool hits_on_modules = nb_hits_M12 * nb_hits_M23;
-  if (!hits_on_modules)
+  if (!hits_on_modules) {
     return;
+  }
 
   int shift12 = edge_indices[module12];
   int shift23 = edge_indices[module23];
@@ -283,19 +300,22 @@ __global__ void __launch_bounds__(512, 2)
     int SP1 = M1_SP[p];
     int SP2 = M2_SP[p];
     bool next_ind = false;
-    if (k < last12)
+    if (k < last12) {
       next_ind = (SP2 != (M2_SP[sorted_M2_SP[k + 1]]));
+    }
 
-    if (!apply_geometric_cuts(i, z0[p], phi_slope[p], deta[p], dphi[p],
-                              MD12_z0_min, MD12_z0_max, MD12_deta_min,
-                              MD12_deta_max, MD12_phi_slope_min,
-                              MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max))
+    if (!apply_geometric_cuts(
+            i, z0[p], phi_slope[p], deta[p], dphi[p], MD12_z0_min, MD12_z0_max,
+            MD12_deta_min, MD12_deta_max, MD12_phi_slope_min,
+            MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max)) {
       continue;
+    }
 
     int l = shift23;
-    // for (; l<ind23 && SP2 != M1_SP[l]; l++); // search first hit indice on
-    // M23_1 = M12_2
-
+#ifndef NEW_OPTIMIZATIONS
+    for (; l < ind23 && SP2 != M1_SP[l]; l++)
+      ;  // search first hit indice on
+#else
     {
       // replace for loop with binary search based on while loop
       int left = shift23;
@@ -314,6 +334,7 @@ __global__ void __launch_bounds__(512, 2)
         }
       }
     }
+#endif
 
     bool new_elt = false;
     for (; l < ind23 && SP2 == M1_SP[l]; l++) {
@@ -321,24 +342,31 @@ __global__ void __launch_bounds__(512, 2)
       if (!apply_geometric_cuts(
               i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min,
               MD23_z0_max, MD23_deta_min, MD23_deta_max, MD23_phi_slope_min,
-              MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max))
+              MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max)) {
         continue;
+      }
 
-      T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3, max);
-      if (!((diff_dydx >= diff_dydx_min[i]) * (diff_dydx <= diff_dydx_max[i])))
+      T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3);
+      if (!((diff_dydx >= diff_dydx_min[i]) *
+            (diff_dydx <= diff_dydx_max[i]))) {
         continue;
+      }
 
-      T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3, max);
-      if (!((diff_dzdr >= diff_dzdr_min[i]) * (diff_dzdr <= diff_dzdr_max[i])))
+      T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3);
+      if (!((diff_dzdr >= diff_dzdr_min[i]) *
+            (diff_dzdr <= diff_dzdr_max[i]))) {
         continue;
+      }
 
       vertices[SP3] = edge_tag[l] = true;
       new_elt = true;
     }
-    if (new_elt)
+    if (new_elt) {
       edge_tag[p] = vertices[SP1] = vertices[SP2] = true;
-    if (next_ind && new_elt)
+    }
+    if (next_ind && new_elt) {
       shift23 = l;
+    }
   }
 }
 
