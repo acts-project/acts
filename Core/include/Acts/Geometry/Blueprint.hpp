@@ -60,6 +60,7 @@ class Blueprint : public BlueprintNode {
     /// The geometry identifier hook, passed through the `TrackingGeometry`
     /// constructor. This will be superseded by a more integrated approach to
     /// the identification scheme
+    // @TODO: Remove this!
     GeometryIdentifierHook geometryIdentifierHook = {};
   };
 
