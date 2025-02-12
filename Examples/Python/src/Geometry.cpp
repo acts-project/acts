@@ -103,19 +103,20 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
         .def(py::init<Acts::GeometryIdentifier::Value>())
-        .def("setVolume", &Acts::GeometryIdentifier::setVolume)
-        .def("setLayer", &Acts::GeometryIdentifier::setLayer)
-        .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
-        .def("setApproach", &Acts::GeometryIdentifier::setApproach)
-        .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
-        .def("setExtra", &Acts::GeometryIdentifier::setExtra)
-        .def("volume", &Acts::GeometryIdentifier::volume)
-        .def("layer", &Acts::GeometryIdentifier::layer)
-        .def("boundary", &Acts::GeometryIdentifier::boundary)
-        .def("approach", &Acts::GeometryIdentifier::approach)
-        .def("sensitive", &Acts::GeometryIdentifier::sensitive)
-        .def("extra", &Acts::GeometryIdentifier::extra)
-        .def("value", &Acts::GeometryIdentifier::value)
+
+        .def_property("volume", &Acts::GeometryIdentifier::volume,
+                      &Acts::GeometryIdentifier::setVolume)
+        .def_property("layer", &Acts::GeometryIdentifier::layer,
+                      &Acts::GeometryIdentifier::setLayer)
+        .def_property("boundary", &Acts::GeometryIdentifier::boundary,
+                      &Acts::GeometryIdentifier::setBoundary)
+        .def_property("approach", &Acts::GeometryIdentifier::approach,
+                      &Acts::GeometryIdentifier::setApproach)
+        .def_property("sensitive", &Acts::GeometryIdentifier::sensitive,
+                      &Acts::GeometryIdentifier::setSensitive)
+        .def_property("extra", &Acts::GeometryIdentifier::extra,
+                      &Acts::GeometryIdentifier::setExtra)
+        .def_property_readonly("value", &Acts::GeometryIdentifier::value)
         .def("__str__", [](const Acts::GeometryIdentifier& self) {
           std::stringstream ss;
           ss << self;
@@ -126,12 +127,13 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         // Can't bind directly because GeometryObject is virtual base of Surface
-        .def("geometryId",
-             [](const Surface& self) { return self.geometryId(); })
+        .def_property_readonly(
+            "geometryId", [](const Surface& self) { return self.geometryId(); })
         .def("center", &Surface::center)
-        .def("type", &Surface::type)
+        .def_property_readonly("type", &Surface::type)
         .def("visualize", &Surface::visualize)
-        .def("surfaceMaterial", &Acts::Surface::surfaceMaterialSharedPtr);
+        .def_property_readonly("surfaceMaterial",
+                               &Acts::Surface::surfaceMaterialSharedPtr);
   }
 
   {
