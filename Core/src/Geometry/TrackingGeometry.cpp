@@ -22,13 +22,18 @@ namespace Acts {
 class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
  public:
   Gen1GeometryClosureVisitor(const Logger& logger,
+                             const IMaterialDecorator* materialDecorator,
                              const GeometryIdentifierHook& hook)
-      : m_logger(&logger), m_hook(&hook) {}
+      : m_logger(&logger),
+        m_materialDecorator(materialDecorator),
+        m_hook(&hook) {
+    ACTS_VERBOSE("Creating Gen1GeometryClosureVisitor");
+  }
 
   const Logger& logger() const { return *m_logger; }
 
   void visitVolume(TrackingVolume& volume) override {
-    // std::cout << "Volume: " << volume.volumeName() << std::endl;
+    ACTS_DEBUG("Volume: " << volume.volumeName());
 
     // Increment the volume ID for this volume
     m_volumeID = GeometryIdentifier().setVolume(m_volumeID.volume() + 1);
@@ -37,14 +42,14 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     // Reset layer id for this volume
     m_ilayer = 0;
 
-    // std::cout << "volumeID: " << m_volumeID << std::endl;
-
     // assign the Volume ID to the volume itself
     volume.assignGeometryId(m_volumeID);
-    ACTS_DEBUG("volumeID: " << m_volumeID << ", name: " << volume.volumeName());
+    ACTS_VERBOSE("~> volumeID: " << m_volumeID);
 
     // assign the material if you have a decorator
     if (m_materialDecorator != nullptr) {
+      ACTS_VERBOSE("Decorating volume " << volume.volumeName()
+                                        << " with material");
       m_materialDecorator->decorate(volume);
     }
     if (volume.volumeMaterial() == nullptr &&
@@ -60,25 +65,31 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
 
   void visitBoundarySurface(
       BoundarySurfaceT<TrackingVolume>& boundary) override {
+    ACTS_DEBUG("BoundarySurface: " << boundary.surfaceRepresentation().name());
     // get the intersection solution
     auto& bSurface = boundary.surfaceRepresentation();
     // create the boundary surface id
     m_iboundary += 1;
     auto boundaryID = GeometryIdentifier(m_volumeID).setBoundary(m_iboundary);
+    ACTS_VERBOSE("~> boundaryID: " << boundaryID);
     // std::cout << "boundaryID: " << boundaryID << std::endl;
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
     // Assign material if you have a decorator
     if (m_materialDecorator != nullptr) {
+      ACTS_VERBOSE("Decorating boundary surface " << bSurface.name()
+                                                  << " with material");
       m_materialDecorator->decorate(mutableBSurface);
     }
   }
 
   void visitLayer(Layer& layer) override {
+    ACTS_DEBUG("Close Layer");
     // create the layer identification
     m_ilayer += 1;
     auto layerID = GeometryIdentifier(m_volumeID).setLayer(m_ilayer);
+    ACTS_VERBOSE("~> layerID: " << layerID);
     // now close the geometry
     layer.closeGeometry(m_materialDecorator, layerID, *m_hook, *m_logger);
   }
@@ -99,23 +110,54 @@ TrackingGeometry::TrackingGeometry(
     const IMaterialDecorator* materialDecorator,
     const GeometryIdentifierHook& hook, const Logger& logger)
     : m_world(highestVolume) {
-  Gen1GeometryClosureVisitor visitor{logger, hook};
-  visitor.m_materialDecorator = materialDecorator;
+  Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
   apply(visitor);
 
+  buildIdMaps(logger);
+}
+
+TrackingGeometry::TrackingGeometry(
+    const MutableTrackingVolumePtr& highestVolume,
+    TrackingGeometryMutableVisitor* closureVisitor, const Logger& logger)
+    : m_world(highestVolume) {
+  ACTS_DEBUG("Creating TrackingGeometry");
+  ACTS_VERBOSE("~> Applying closure visitor");
+  apply(*closureVisitor);
+
+  buildIdMaps(logger);
+}
+
+void TrackingGeometry::buildIdMaps(const Logger& logger) {
   apply({.volume =
-             [this](const TrackingVolume& volume) {
-               m_volumesById[volume.geometryId()] = &volume;
+             [&, this](const TrackingVolume& volume) {
+               auto [it, inserted] =
+                   m_volumesById.emplace(volume.geometryId(), &volume);
+               if (!inserted) {
+                 std::stringstream ss;
+                 ss << "Duplicate volume ID: " << volume.geometryId();
+                 throw std::invalid_argument(ss.str());
+               }
              },
          .surface =
              [this](const Surface& surface) {
                if (surface.geometryId() == GeometryIdentifier{}) {
                  throw std::invalid_argument("Surface has no geometry ID");
                }
+               //@TODO: Why not use all of them?
                if (surface.geometryId().sensitive() != 0) {
-                 m_surfacesById[surface.geometryId()] = &surface;
+                 auto [it, inserted] =
+                     m_surfacesById.emplace(surface.geometryId(), &surface);
+                 if (!inserted) {
+                   std::stringstream ss;
+                   ss << "Duplicate surface ID: " << surface.geometryId();
+                   throw std::invalid_argument(ss.str());
+                 }
                }
              }});
+
+  ACTS_DEBUG("TrackingGeometry created with "
+             << m_volumesById.size() << " volumes and " << m_surfacesById.size()
+             << " sensitive surfaces");
 
   m_volumesById.rehash(0);
   m_surfacesById.rehash(0);

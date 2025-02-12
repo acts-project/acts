@@ -184,7 +184,7 @@ class TrackingVolume : public Volume {
       std::remove_cv_t<std::remove_reference_t<visitor_t>>* m_visitor{};
       bool m_restrictToSensitives{};
 
-      void visitSurfaces(const Surface& surface) const {
+      void visitSurface(const Surface& surface) override {
         if (m_restrictToSensitives && surface.geometryId().sensitive() == 0) {
           return;
         }
@@ -196,6 +196,8 @@ class TrackingVolume : public Volume {
     Visitor internal;
     internal.m_visitor = &visitor;
     internal.m_restrictToSensitives = restrictToSensitives;
+
+    apply(internal);
   }
 
   /// @brief Visit all sensitive surfaces
@@ -227,13 +229,15 @@ class TrackingVolume : public Volume {
       std::remove_cv_t<std::remove_reference_t<visitor_t>>* m_visitor{};
       bool m_restrictToSensitives{};
 
-      void visitVolumes(const TrackingVolume& volume) const {
+      void visitVolume(const TrackingVolume& volume) override {
         (*m_visitor)(&volume);
       }
     };
 
     Visitor internal;
     internal.m_visitor = &visitor;
+
+    apply(internal);
   }
 
   void apply(TrackingGeometryVisitor& visitor) const;
