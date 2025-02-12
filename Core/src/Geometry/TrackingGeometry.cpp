@@ -42,8 +42,6 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     // assign the Volume ID to the volume itself
     volume.assignGeometryId(m_volumeID);
     ACTS_DEBUG("volumeID: " << m_volumeID << ", name: " << volume.volumeName());
-    // insert the volume into the map
-    m_volumesById[m_volumeID] = &volume;
 
     // assign the material if you have a decorator
     if (m_materialDecorator != nullptr) {
@@ -85,15 +83,6 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     layer.closeGeometry(m_materialDecorator, layerID, *m_hook, *m_logger);
   }
 
-  void visitSurface(Surface& surface) override {
-    if (surface.geometryId() == GeometryIdentifier{}) {
-      throw std::invalid_argument("Surface has no geometry ID");
-    }
-    if (surface.geometryId().sensitive() != 0) {
-      m_surfacesById[surface.geometryId()] = &surface;
-    }
-  }
-
   const Logger* m_logger;
   GeometryIdentifier m_volumeID;
   GeometryIdentifier::Value m_iboundary = 0;
@@ -114,8 +103,20 @@ TrackingGeometry::TrackingGeometry(
   visitor.m_materialDecorator = materialDecorator;
   apply(visitor);
 
-  m_volumesById = std::move(visitor.m_volumesById);
-  m_surfacesById = std::move(visitor.m_surfacesById);
+  apply({.volume =
+             [this](const TrackingVolume& volume) {
+               m_volumesById[volume.geometryId()] = &volume;
+             },
+         .surface =
+             [this](const Surface& surface) {
+               if (surface.geometryId() == GeometryIdentifier{}) {
+                 throw std::invalid_argument("Surface has no geometry ID");
+               }
+               if (surface.geometryId().sensitive() != 0) {
+                 m_surfacesById[surface.geometryId()] = &surface;
+               }
+             }});
+
   m_volumesById.rehash(0);
   m_surfacesById.rehash(0);
 }
