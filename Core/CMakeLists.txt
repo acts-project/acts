@@ -112,8 +112,6 @@ add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
 add_subdirectory(src/AmbiguityResolution)
 
-# Help with compiler flags discovery
-include(ActsFunctions)
 acts_compile_headers(ActsCore GLOB
     include/Acts/**/*.hpp
 )

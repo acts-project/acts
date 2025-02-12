@@ -280,6 +280,9 @@ set(_acts_annoy_version 1.17.3)
 # this version we will try so.
 set(_acts_boost_recommended_version 1.78.0)
 
+# Help with compiler flags discovery
+include(ActsFunctions)
+
 # Include the sources for the external dependencies.
 include(ActsExternSources)
 
