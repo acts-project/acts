@@ -8,7 +8,10 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include <Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp>
+#include <Acts/Propagator/detail/CovarianceEngine.hpp>
+#include <Acts/Surfaces/Surface.hpp>
+#include <Acts/Utilities/Result.hpp>
 
 #include <type_traits>
 
@@ -45,6 +48,7 @@ struct LoopComponentProxyBase {
 
   // These are the const accessors, which are shared between the mutable
   // ComponentProxy and the ConstComponentProxy
+  const auto& state() const { return cmp.state; }
   auto status() const { return cmp.status; }
   auto weight() const { return cmp.weight; }
   auto pathAccumulated() const { return cmp.state.pathAccumulated; }
@@ -96,6 +100,7 @@ struct LoopComponentProxy
   using Base::pathAccumulated;
   using Base::singleState;
   using Base::singleStepper;
+  using Base::state;
   using Base::status;
   using Base::weight;
 
@@ -107,6 +112,7 @@ struct LoopComponentProxy
 
   // These are the mutable accessors, the const ones are inherited from the
   // ComponentProxyBase
+  auto& state() { return cmp.state; }
   auto& status() { return cmp.status; }
   auto& weight() { return cmp.weight; }
   auto& pathAccumulated() { return cmp.state.pathAccumulated; }
