@@ -15,7 +15,9 @@
 
 #include <cstddef>
 
-Acts::TrackingGeometry::TrackingGeometry(
+namespace Acts {
+
+TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator,
     const GeometryIdentifierHook& hook, const Logger& logger)
@@ -34,25 +36,24 @@ Acts::TrackingGeometry::TrackingGeometry(
   m_surfacesById.rehash(0);
 }
 
-Acts::TrackingGeometry::~TrackingGeometry() = default;
+TrackingGeometry::~TrackingGeometry() = default;
 
-const Acts::TrackingVolume* Acts::TrackingGeometry::lowestTrackingVolume(
-    const GeometryContext& gctx, const Acts::Vector3& gp) const {
+const TrackingVolume* TrackingGeometry::lowestTrackingVolume(
+    const GeometryContext& gctx, const Vector3& gp) const {
   return m_world->lowestTrackingVolume(gctx, gp, s_onSurfaceTolerance);
 }
 
-const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
-    const {
+const TrackingVolume* TrackingGeometry::highestTrackingVolume() const {
   return m_world.get();
 }
 
-std::shared_ptr<const Acts::TrackingVolume>
-Acts::TrackingGeometry::highestTrackingVolumePtr() const {
+std::shared_ptr<const TrackingVolume>
+TrackingGeometry::highestTrackingVolumePtr() const {
   return m_world;
 }
 
-const Acts::Layer* Acts::TrackingGeometry::associatedLayer(
-    const GeometryContext& gctx, const Acts::Vector3& gp) const {
+const Layer* TrackingGeometry::associatedLayer(const GeometryContext& gctx,
+                                               const Vector3& gp) const {
   const TrackingVolume* lowestVol = lowestTrackingVolume(gctx, gp);
   if (lowestVol == nullptr) {
     return nullptr;
@@ -60,7 +61,7 @@ const Acts::Layer* Acts::TrackingGeometry::associatedLayer(
   return lowestVol->associatedLayer(gctx, gp);
 }
 
-const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(
+const TrackingVolume* TrackingGeometry::findVolume(
     GeometryIdentifier id) const {
   auto vol = m_volumesById.find(id);
   if (vol == m_volumesById.end()) {
@@ -69,8 +70,7 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(
   return vol->second;
 }
 
-const Acts::Surface* Acts::TrackingGeometry::findSurface(
-    GeometryIdentifier id) const {
+const Surface* TrackingGeometry::findSurface(GeometryIdentifier id) const {
   auto srf = m_surfacesById.find(id);
   if (srf == m_surfacesById.end()) {
     return nullptr;
@@ -78,15 +78,18 @@ const Acts::Surface* Acts::TrackingGeometry::findSurface(
   return srf->second;
 }
 
-const std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>&
-Acts::TrackingGeometry::geoIdSurfaceMap() const {
+const std::unordered_map<GeometryIdentifier, const Surface*>&
+TrackingGeometry::geoIdSurfaceMap() const {
   return m_surfacesById;
 }
 
-void Acts::TrackingGeometry::visualize(
-    IVisualization3D& helper, const GeometryContext& gctx,
-    const ViewConfig& viewConfig, const ViewConfig& portalViewConfig,
-    const ViewConfig& sensitiveViewConfig) const {
+void TrackingGeometry::visualize(IVisualization3D& helper,
+                                 const GeometryContext& gctx,
+                                 const ViewConfig& viewConfig,
+                                 const ViewConfig& portalViewConfig,
+                                 const ViewConfig& sensitiveViewConfig) const {
   highestTrackingVolume()->visualize(helper, gctx, viewConfig, portalViewConfig,
                                      sensitiveViewConfig);
 }
+
+}  // namespace Acts
