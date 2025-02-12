@@ -360,11 +360,18 @@ void TrackingVolume::interlinkLayers() {
   }
 }
 
+#if 0
 void TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
+  Gen1GeometryClosureVisitor visitor{logger, hook};
+  visitor.m_materialDecorator = materialDecorator;
+
+  apply(visitor);
+
+  return;
   if (m_confinedVolumes && !volumes().empty()) {
     ACTS_ERROR(
         "TrackingVolume::closeGeometry: Volume "
@@ -465,9 +472,10 @@ void TrackingVolume::closeGeometry(
   GeometryIdentifier::Value iportal = 0;
   for (auto& portal : portals()) {
     iportal++;
-    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
     assert(portal.isValid() && "Invalid portal encountered during closing");
 
+    auto portalId =
+        GeometryIdentifier{portal.surface().geometryId()}.setBoundary(iportal);
     portal.surface().assignGeometryId(portalId);
   }
 
@@ -478,7 +486,8 @@ void TrackingVolume::closeGeometry(
       continue;
     }
     isensitive++;
-    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
+    auto sensitiveId =
+        GeometryIdentifier{surface.geometryId()}.setSensitive(isensitive);
     surface.assignGeometryId(sensitiveId);
   }
 
@@ -486,6 +495,8 @@ void TrackingVolume::closeGeometry(
     volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
   }
 }
+
+#endif
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 boost::container::small_vector<BoundaryIntersection, 4>
@@ -829,9 +840,56 @@ void Acts::TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
 }
 
 void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
+  visitor.visitVolume(*this);
+
+  // Visit the boundary surfaces
+  // This does const casts because Gen1 substructure does not have transitive
+  // const-ness
+  // @TODO: Remove this when Gen1 is remoeved
+  for (const auto& bs : m_boundarySurfaces) {
+    visitor.visitBoundarySurface(
+        const_cast<BoundarySurfaceT<TrackingVolume>&>(*bs));
+    visitor.visitSurface(
+        const_cast<RegularSurface&>(bs->surfaceRepresentation()));
+  }
+
   for (auto& portal : portals()) {
     visitor.visitPortal(portal);
     visitor.visitSurface(portal.surface());
+  }
+
+  // Internal structure
+  // This does const casts because Gen1 substructure does not have transitive
+  // const-ness
+  // @TODO: Remove this when Gen1 is remoeved
+  if (m_confinedVolumes == nullptr) {
+    // no sub volumes => loop over the confined layers
+    if (m_confinedLayers != nullptr) {
+      for (const auto& layer : m_confinedLayers->arrayObjects()) {
+        visitor.visitLayer(const_cast<Layer&>(*layer));
+        // Surfaces contained in the surface array
+        if (layer->surfaceArray() != nullptr) {
+          for (const auto& srf : layer->surfaceArray()->surfaces()) {
+            visitor.visitSurface(const_cast<Surface&>(*srf));
+          }
+        }
+        // Surfaces of the layer
+        visitor.visitSurface(
+            const_cast<Surface&>(layer->surfaceRepresentation()));
+        // Approach surfaces of the layer
+        if (layer->approachDescriptor() != nullptr) {
+          for (const auto& srf :
+               layer->approachDescriptor()->containedSurfaces()) {
+            visitor.visitSurface(const_cast<Surface&>(*srf));
+          }
+        }
+      }
+    }
+  } else {
+    // contains sub volumes
+    for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+      const_cast<TrackingVolume&>(*volume).apply(visitor);
+    }
   }
 
   for (auto& surface : surfaces()) {
