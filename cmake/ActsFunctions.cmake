@@ -17,6 +17,10 @@ function(acts_compile_headers target)
         "${multiValueArgs}"
     )
 
+    if(NOT ACTS_COMPILE_HEADERS)
+        return()
+    endif()
+
     if(NOT "${ARGS_GLOB}" STREQUAL "")
         if(NOT "${ARGS_HEADERS}" STREQUAL "")
             message(SEND_ERROR "Cannot use HEADERS and GLOB at the same time")
