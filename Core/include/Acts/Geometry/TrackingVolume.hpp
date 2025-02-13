@@ -52,8 +52,6 @@ class TrackingVolume;
 struct GeometryIdentifierHook;
 class Portal;
 class INavigationPolicy;
-class TrackingGeometryVisitor;
-class TrackingGeometryMutableVisitor;
 
 /// Interface types of the Gen1 geometry model
 /// @note This interface is being replaced, and is subject to removal
