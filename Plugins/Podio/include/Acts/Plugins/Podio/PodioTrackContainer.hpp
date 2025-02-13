@@ -63,7 +63,7 @@ class PodioTrackContainerBase {
       typename detail_lt::FixedSizeTypes<eBoundSize, true>::CovarianceMap;
 
  protected:
-  PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
+  explicit PodioTrackContainerBase(const PodioUtil::ConversionHelper& helper)
       : m_helper{helper} {}
 
   template <bool EnsureConst, typename T>
@@ -156,7 +156,7 @@ class PodioTrackContainerBase {
 
 class MutablePodioTrackContainer : public PodioTrackContainerBase {
  public:
-  MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper)
+  explicit MutablePodioTrackContainer(const PodioUtil::ConversionHelper& helper)
       : PodioTrackContainerBase{helper},
         m_collection{std::make_unique<ActsPodioEdm::TrackCollection>()} {
     populateSurfaceBuffer(m_helper, *m_collection, m_surfaces);
@@ -165,7 +165,7 @@ class MutablePodioTrackContainer : public PodioTrackContainerBase {
   MutablePodioTrackContainer(const MutablePodioTrackContainer& other);
   MutablePodioTrackContainer(MutablePodioTrackContainer&& other) = default;
 
-  MutablePodioTrackContainer(const ConstPodioTrackContainer& other);
+  explicit MutablePodioTrackContainer(const ConstPodioTrackContainer& other);
 
   // BEGIN INTERFACE HELPER
 
