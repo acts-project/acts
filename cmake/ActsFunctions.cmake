@@ -7,7 +7,7 @@
 function(acts_compile_headers target)
     set(options "")
     set(oneValueArgs GLOB)
-    set(multiValueArgs HEADERS LINK_LIBRARIES)
+    set(multiValueArgs "")
     cmake_parse_arguments(
         PARSE_ARGV
         0
@@ -22,26 +22,26 @@ function(acts_compile_headers target)
     endif()
 
     if(NOT "${ARGS_GLOB}" STREQUAL "")
-        if(NOT "${ARGS_HEADERS}" STREQUAL "")
+        if(NOT "${_headers}" STREQUAL "")
             message(SEND_ERROR "Cannot use HEADERS and GLOB at the same time")
             return()
         endif()
 
         file(
-            GLOB_RECURSE ARGS_HEADERS
+            GLOB_RECURSE _headers
             RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
             ${ARGS_GLOB}
         )
     endif()
 
-    if("${ARGS_HEADERS}" STREQUAL "")
+    if("${_headers}" STREQUAL "")
         message(SEND_ERROR "No headers specified")
         return()
     endif()
 
     set(_sources "")
 
-    foreach(_file ${ARGS_HEADERS})
+    foreach(_file ${_headers})
         if(IS_ABSOLUTE "${_file}")
             message(SEND_ERROR "Absolute paths are not allowed: ${_file}")
             continue()
@@ -72,7 +72,4 @@ function(acts_compile_headers target)
 
     add_library(${target}_HEADERS SHARED EXCLUDE_FROM_ALL ${_sources})
     target_link_libraries(${target}_HEADERS PRIVATE ${target})
-    foreach(_lib ${ARGS_LINK_LIBRARIES})
-        target_link_libraries(${target}_HEADERS PRIVATE ${_lib})
-    endforeach()
 endfunction()
