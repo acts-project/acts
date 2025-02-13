@@ -120,15 +120,28 @@ CuboidStackPortalShell::CuboidStackPortalShell(
       CuboidVolumeBounds::facesFromAxisDirection(m_direction);
 
   Vector3 dirVector{};
+  std::unordered_map<Face, AxisDirection> onSurfaceDirs;
   switch (m_direction) {
     case AxisDirection::AxisX:
       dirVector = Vector3::UnitX();
+      onSurfaceDirs = {{NegativeXYPlane, AxisDirection::AxisX},
+                       {PositiveXYPlane, AxisDirection::AxisX},
+                       {NegativeZXPlane, AxisDirection::AxisY},
+                       {PositiveZXPlane, AxisDirection::AxisY}};
       break;
     case AxisDirection::AxisY:
       dirVector = Vector3::UnitY();
+      onSurfaceDirs = {{NegativeXYPlane, AxisDirection::AxisY},
+                       {PositiveXYPlane, AxisDirection::AxisY},
+                       {NegativeYZPlane, AxisDirection::AxisX},
+                       {PositiveYZPlane, AxisDirection::AxisX}};
       break;
     case AxisDirection::AxisZ:
       dirVector = Vector3::UnitZ();
+      onSurfaceDirs = {{NegativeYZPlane, AxisDirection::AxisY},
+                       {PositiveYZPlane, AxisDirection::AxisY},
+                       {NegativeZXPlane, AxisDirection::AxisX},
+                       {PositiveZXPlane, AxisDirection::AxisX}};
       break;
     default:
       throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
@@ -147,25 +160,6 @@ CuboidStackPortalShell::CuboidStackPortalShell(
           m_shells, [](const auto* shell) { return shell->isValid(); })) {
     ACTS_ERROR("Invalid shell");
     throw std::invalid_argument("Invalid shell");
-  }
-  std::unordered_map<Face, AxisDirection> onSurfaceDirs;
-  for (Face face : m_sideFaces) {
-    const auto& portalAtFace = m_shells.front()->portalPtr(face);
-    Vector3 onSurfaceDirection =
-        portalAtFace->surface().transform(gctx).rotation().inverse() *
-        dirVector;
-    if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitX()).norm() < 1e-4) {
-      onSurfaceDirs[face] = AxisDirection::AxisX;
-    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitY()).norm() <
-               1e-4) {
-      onSurfaceDirs[face] = AxisDirection::AxisY;
-    } else if ((onSurfaceDirection.cwiseAbs() - Vector3::UnitZ()).norm() <
-               1e-4) {
-      onSurfaceDirs[face] = AxisDirection::AxisZ;
-    } else {
-      throw std::invalid_argument(
-          "CuboidStackPortalShell: Direction does not coincide with axes");
-    }
   }
 
   std::sort(
@@ -288,17 +282,17 @@ std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face) {
   switch (face) {
     using enum CuboidVolumeBounds::Face;
     case PositiveXYPlane:
-      return os << "positiveXYPlane";
+      return os << "PositiveXYPlane";
     case NegativeXYPlane:
-      return os << "negativeXYPlane";
+      return os << "NegativeXYPlane";
     case PositiveYZPlane:
-      return os << "positiveYZPlane";
+      return os << "PositiveYZPlane";
     case NegativeYZPlane:
-      return os << "negativeYZPlane";
+      return os << "NegativeYZPlane";
     case PositiveZXPlane:
-      return os << "positiveZXPlane";
+      return os << "PositiveZXPlane";
     case NegativeZXPlane:
-      return os << "negativeZXPlane";
+      return os << "NegativeZXPlane";
     default:
       return os << "Invalid face";
   }

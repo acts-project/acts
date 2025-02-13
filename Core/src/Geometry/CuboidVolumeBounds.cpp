@@ -205,7 +205,7 @@ CuboidVolumeBounds::facesFromAxisDirection(AxisDirection direction) {
         PositiveXYPlane,
         {NegativeYZPlane, PositiveYZPlane, NegativeZXPlane, PositiveZXPlane}};
   } else {
-    throw std::invalid_argument("Invalid binnig value");
+    throw std::invalid_argument("Invalid axis direction");
   }
 }
 
