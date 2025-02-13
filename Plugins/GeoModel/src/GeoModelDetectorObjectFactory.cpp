@@ -172,7 +172,7 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
           "isometry!");
     }
 
-    const Transform3 &transform = absTrans * surfTrf;
+    Transform3 transform = absTrans * surfTrf;
 
     convertSensitive(surface.volume, transform, sensitives);
   }
