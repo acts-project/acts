@@ -113,21 +113,6 @@ TrackingGeometry::TrackingGeometry(
   Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
   apply(visitor);
 
-  buildIdMaps(logger);
-}
-
-TrackingGeometry::TrackingGeometry(
-    const MutableTrackingVolumePtr& highestVolume,
-    TrackingGeometryMutableVisitor* closureVisitor, const Logger& logger)
-    : m_world(highestVolume) {
-  ACTS_DEBUG("Creating TrackingGeometry");
-  ACTS_VERBOSE("~> Applying closure visitor");
-  apply(*closureVisitor);
-
-  buildIdMaps(logger);
-}
-
-void TrackingGeometry::buildIdMaps(const Logger& logger) {
   class Visitor : public TrackingGeometryVisitor {
    public:
     void visitVolume(const TrackingVolume& volume) override {
@@ -159,10 +144,10 @@ void TrackingGeometry::buildIdMaps(const Logger& logger) {
     std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
   };
 
-  Visitor visitor;
-  apply(visitor);
-  m_volumesById = std::move(visitor.m_volumesById);
-  m_surfacesById = std::move(visitor.m_surfacesById);
+  Visitor mapVisitor;
+  apply(mapVisitor);
+  m_volumesById = std::move(mapVisitor.m_volumesById);
+  m_surfacesById = std::move(mapVisitor.m_surfacesById);
 
   ACTS_DEBUG("TrackingGeometry created with "
              << m_volumesById.size() << " volumes and " << m_surfacesById.size()

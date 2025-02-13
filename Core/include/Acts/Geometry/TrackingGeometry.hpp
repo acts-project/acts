@@ -58,10 +58,6 @@ class TrackingGeometry {
                    const GeometryIdentifierHook& hook = {},
                    const Logger& logger = getDummyLogger());
 
-  TrackingGeometry(const std::shared_ptr<TrackingVolume>& highestVolume,
-                   TrackingGeometryMutableVisitor* closureVisitor,
-                   const Logger& logger = getDummyLogger());
-
   /// Destructor
   ~TrackingGeometry();
 
@@ -173,8 +169,6 @@ class TrackingGeometry {
                  const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
  private:
-  void buildIdMaps(const Logger& logger);
-
   // the known world
   std::shared_ptr<TrackingVolume> m_world;
   // lookup containers

@@ -204,9 +204,10 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   };
 
   Visitor closureVisitor{logger};
+  world->apply(closureVisitor);
 
-  return std::make_unique<TrackingGeometry>(std::move(world), &closureVisitor,
-                                            logger);
+  return std::make_unique<TrackingGeometry>(
+      std::move(world), nullptr, m_cfg.geometryIdentifierHook, logger);
 }
 
 }  // namespace Acts
