@@ -128,32 +128,41 @@ TrackingGeometry::TrackingGeometry(
 }
 
 void TrackingGeometry::buildIdMaps(const Logger& logger) {
-  apply({.volume =
-             [&, this](const TrackingVolume& volume) {
-               auto [it, inserted] =
-                   m_volumesById.emplace(volume.geometryId(), &volume);
-               if (!inserted) {
-                 std::stringstream ss;
-                 ss << "Duplicate volume ID: " << volume.geometryId();
-                 throw std::invalid_argument(ss.str());
-               }
-             },
-         .surface =
-             [this](const Surface& surface) {
-               if (surface.geometryId() == GeometryIdentifier{}) {
-                 throw std::invalid_argument("Surface has no geometry ID");
-               }
-               //@TODO: Why not use all of them?
-               if (surface.geometryId().sensitive() != 0) {
-                 auto [it, inserted] =
-                     m_surfacesById.emplace(surface.geometryId(), &surface);
-                 if (!inserted) {
-                   std::stringstream ss;
-                   ss << "Duplicate surface ID: " << surface.geometryId();
-                   throw std::invalid_argument(ss.str());
-                 }
-               }
-             }});
+  class Visitor : public TrackingGeometryVisitor {
+   public:
+    void visitVolume(const TrackingVolume& volume) override {
+      auto [it, inserted] = m_volumesById.emplace(volume.geometryId(), &volume);
+      if (!inserted) {
+        std::stringstream ss;
+        ss << "Duplicate volume ID: " << volume.geometryId();
+        throw std::invalid_argument(ss.str());
+      }
+    }
+    void visitSurface(const Surface& surface) override {
+      if (surface.geometryId() == GeometryIdentifier{}) {
+        throw std::invalid_argument("Surface has no geometry ID");
+      }
+      //@TODO: Why not use all of them?
+      if (surface.geometryId().sensitive() != 0) {
+        auto [it, inserted] =
+            m_surfacesById.emplace(surface.geometryId(), &surface);
+        if (!inserted) {
+          std::stringstream ss;
+          ss << "Duplicate surface ID: " << surface.geometryId();
+          throw std::invalid_argument(ss.str());
+        }
+      }
+    }
+
+    std::unordered_map<GeometryIdentifier, const TrackingVolume*>
+        m_volumesById{};
+    std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+  };
+
+  Visitor visitor;
+  apply(visitor);
+  m_volumesById = std::move(visitor.m_volumesById);
+  m_surfacesById = std::move(visitor.m_surfacesById);
 
   ACTS_DEBUG("TrackingGeometry created with "
              << m_volumesById.size() << " volumes and " << m_surfacesById.size()
