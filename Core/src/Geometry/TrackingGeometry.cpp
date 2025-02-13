@@ -43,8 +43,13 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     m_ilayer = 0;
 
     // assign the Volume ID to the volume itself
-    volume.assignGeometryId(m_volumeID);
-    ACTS_VERBOSE("~> volumeID: " << m_volumeID);
+    if (volume.geometryId() == GeometryIdentifier{}) {
+      ACTS_VERBOSE("~> volumeID: " << m_volumeID);
+      volume.assignGeometryId(m_volumeID);
+    } else {
+      ACTS_VERBOSE(
+          "~> skipping volume with existing volumeID: " << volume.geometryId());
+    }
 
     // assign the material if you have a decorator
     if (m_materialDecorator != nullptr) {
@@ -72,10 +77,15 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     m_iboundary += 1;
     auto boundaryID = GeometryIdentifier(m_volumeID).setBoundary(m_iboundary);
     ACTS_VERBOSE("~> boundaryID: " << boundaryID);
-    // std::cout << "boundaryID: " << boundaryID << std::endl;
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
-    mutableBSurface.assignGeometryId(boundaryID);
+    if (mutableBSurface.geometryId() == GeometryIdentifier{}) {
+      ACTS_VERBOSE("~> assigning boundaryID: " << boundaryID);
+      mutableBSurface.assignGeometryId(boundaryID);
+    } else {
+      ACTS_VERBOSE("~> skipping boundary surface with existing boundaryID: "
+                   << mutableBSurface.geometryId());
+    }
     // Assign material if you have a decorator
     if (m_materialDecorator != nullptr) {
       ACTS_VERBOSE("Decorating boundary surface " << bSurface.name()
