@@ -255,6 +255,24 @@ __launch_bounds__(512, 2)
   }
 }
 
+__device__ void findFirstWithBisect(int left, int right, int query, int &result,
+                                    const int *array) {
+  while (left <= right) {
+    int mid = left + (right - left) / 2;
+    // only terminate search if we found the first index of the hit
+    // guard against array[mid-1] to be outside of the array
+    if (array[mid] == query && (mid == left || array[mid - 1] != query)) {
+      result = mid;
+      break;
+    }
+    if (array[mid] < query) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+}
+
 template <typename T>
 __global__ void
 #ifdef NEW_OPTIMIZATIONS
@@ -312,28 +330,11 @@ __launch_bounds__(512, 2)
     }
 
     int l = shift23;
-#ifndef NEW_OPTIMIZATIONS
-    for (; l < ind23 && SP2 != M1_SP[l]; l++)
-      ;  // search first hit indice on
+#ifdef NEW_OPTIMIZATIONS
+    findFirstWithBisect(shift23, ind23 - 1, SP2, l, M1_SP);
 #else
-    {
-      // replace for loop with binary search based on while loop
-      int left = shift23;
-      int right = ind23 - 1;
-      while (left <= right) {
-        int mid = left + (right - left) / 2;
-        // only terminate search if we found the first index of the hit
-        if (M1_SP[mid] == SP2 && M1_SP[mid - 1] != SP2) {
-          l = mid;
-          break;
-        }
-        if (M1_SP[mid] < SP2) {
-          left = mid + 1;
-        } else {
-          right = mid - 1;
-        }
-      }
-    }
+    for (; l < ind23 && SP2 != M1_SP[l]; l++) {
+    }  // search first hit indice on
 #endif
 
     bool new_elt = false;
@@ -368,6 +369,148 @@ __launch_bounds__(512, 2)
       shift23 = l;
     }
   }
+}
+
+// ============================
+// Utiles for new doublet edges
+// ============================
+
+__global__ void count_src_hits_per_doublet(int nb_doublets, const int *modules1,
+                                           const int *indices,
+                                           int *nb_src_hits_per_doublet) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nb_doublets) {
+    return;
+  }
+
+  int module1 = modules1[i];
+  nb_src_hits_per_doublet[i] = indices[module1 + 1] - indices[module1];
+}
+
+template <typename T, typename F>
+__device__ void doublet_cut_kernel(int i, int sum_nb_src_hits_per_doublet,
+                                   int nb_doublets, const int *doublet_offsets,
+                                   const int *modules1, const int *modules2,
+                                   const T *R, const T *z, const T *eta,
+                                   const T *phi, T *z0_min, T *z0_max,
+                                   T *deta_min, T *deta_max, T *phi_slope_min,
+                                   T *phi_slope_max, T *dphi_min, T *dphi_max,
+                                   const int *indices, F &&function) {
+  // Since doublet_offsets should be the prefix sum of the
+  // number of space points per doublet, we can construct the doublet index
+  // TODO this is a linear search, can be optimized
+  int doublet_idx = 0;
+#if 0
+  for (; ; doublet_idx++) {
+    if( i < doublet_offsets[doublet_idx+1] ) {
+      break;
+    }
+  }
+#else
+  {
+    // do search with bisection
+    int left = 0;
+    int right = nb_doublets;
+    while (left <= right) {
+      int mid = left + (right - left) / 2;
+      if (i >= doublet_offsets[mid] && i < doublet_offsets[mid + 1]) {
+        doublet_idx = mid;
+        break;
+      }
+      if (i < doublet_offsets[mid]) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    }
+  }
+#endif
+
+  const int module1 = modules1[doublet_idx];
+  const int module2 = modules2[doublet_idx];
+
+  // we can reconstruct the SP1 index from start-index of SPs for module1,
+  // and the difference between the current i and the start of the doublet
+  // Note that several doublets can have the same module1
+  const int k = indices[module1] + (i - doublet_offsets[doublet_idx]);
+
+  T phi_SP1 = phi[k];
+  T eta_SP1 = eta[k];
+  T R_SP1 = R[k];
+  T z_SP1 = z[k];
+
+  for (int l = indices[module2]; l < indices[module2 + 1]; l++) {
+    T z0, phi_slope, deta, dphi;
+    hits_geometric_cuts<T>(R_SP1, R[l], z_SP1, z[l], eta_SP1, eta[l], phi_SP1,
+                           phi[l], detail::g_pi, z0, phi_slope, deta, dphi);
+
+    if (apply_geometric_cuts(doublet_idx, z0, phi_slope, deta, dphi, z0_min,
+                             z0_max, deta_min, deta_max, phi_slope_min,
+                             phi_slope_max, dphi_min, dphi_max)) {
+      function(k, l);
+    }
+  }
+}
+
+template <class T>
+__global__ void count_doublet_edges_new(
+    int sum_nb_src_hits_per_doublet, int nb_doublets,
+    const int *doublet_offsets, const int *modules1, const int *modules2,
+    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
+    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
+    T *dphi_max, const int *indices, int *nb_edges_per_src_hit) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= sum_nb_src_hits_per_doublet) {
+    return;
+  }
+
+  int edges = 0;
+  doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
+                        doublet_offsets, modules1, modules2, R, z, eta, phi,
+                        z0_min, z0_max, deta_min, deta_max, phi_slope_min,
+                        phi_slope_max, dphi_min, dphi_max, indices,
+                        [&] __device__(int, int) { edges++; });
+  nb_edges_per_src_hit[i] = edges;
+}
+
+template <class T>
+__global__ void build_doublet_edges_new(
+    int sum_nb_src_hits_per_doublet, int nb_doublets,
+    const int *doublet_offsets, const int *modules1, const int *modules2,
+    const T *R, const T *z, const T *eta, const T *phi, T *z0_min, T *z0_max,
+    T *deta_min, T *deta_max, T *phi_slope_min, T *phi_slope_max, T *dphi_min,
+    T *dphi_max, const int *indices, int *reduced_M1_hits, int *reduced_M2_hits,
+    int *edge_sum) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= sum_nb_src_hits_per_doublet) {
+    return;
+  }
+
+  int edges = 0;
+  doublet_cut_kernel<T>(i, sum_nb_src_hits_per_doublet, nb_doublets,
+                        doublet_offsets, modules1, modules2, R, z, eta, phi,
+                        z0_min, z0_max, deta_min, deta_max, phi_slope_min,
+                        phi_slope_max, dphi_min, dphi_max, indices,
+                        [&] __device__(int k, int l) {
+                          reduced_M1_hits[edge_sum[i] + edges] = k;
+                          reduced_M2_hits[edge_sum[i] + edges] = l;
+                          edges++;
+                        });
+}
+
+__global__ void computeDoubletEdgeSum(int nb_doublets,
+                                      const int *doublet_offsets,
+                                      const int *nb_edges_per_src_hit,
+                                      int *edge_sum) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  // Note that we want to get the maximum element es well
+  if (i >= nb_doublets + 1) {
+    return;
+  }
+
+  // Since nb_edges_per_src_hit is already a prefix sum, we can just copy the
+  // elements on the boundary positions
+  edge_sum[i] = nb_edges_per_src_hit[doublet_offsets[i]];
 }
 
 }  // namespace Acts::detail

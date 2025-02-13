@@ -74,8 +74,7 @@ class ModuleMapCuda : public GraphConstructionBase {
     float zScale = 1.0;
     float etaScale = 1.0;
 
-    int maxEdgesAllocate = 3000;
-
+    bool moreParallel = true;
     int gpuDevice = 0;
     int gpuBlocks = 512;
   };
