@@ -360,18 +360,11 @@ void TrackingVolume::interlinkLayers() {
   }
 }
 
-#if 0
 void TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     std::size_t& vol, const GeometryIdentifierHook& hook,
     const Logger& logger) {
-  Gen1GeometryClosureVisitor visitor{logger, hook};
-  visitor.m_materialDecorator = materialDecorator;
-
-  apply(visitor);
-
-  return;
   if (m_confinedVolumes && !volumes().empty()) {
     ACTS_ERROR(
         "TrackingVolume::closeGeometry: Volume "
@@ -495,8 +488,6 @@ void TrackingVolume::closeGeometry(
     volume.closeGeometry(materialDecorator, volumeMap, vol, hook, logger);
   }
 }
-
-#endif
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 boost::container::small_vector<BoundaryIntersection, 4>
