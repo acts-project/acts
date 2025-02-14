@@ -108,7 +108,6 @@ struct IdentifierSurfacesCollector {
 class PyTrackingGeometryVisitor : public Acts::TrackingGeometryMutableVisitor {
  public:
   void visitVolume(Acts::TrackingVolume& volume) override {
-    // std::cout << "CPP volume: " << &volume << std::endl;
     _INVOKE(Acts::TrackingGeometryMutableVisitor::visitVolume, "visitVolume",
             volume);
   }
