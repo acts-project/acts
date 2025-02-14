@@ -370,7 +370,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto orientedToGlobal = axesOriented(toGlobal, axes);
       surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
                                                         std::move(bounds));
-      assignMaterial(*surface.get(), original, compressed);
+      assignMaterial(*surface, original, compressed);
       return surface;
     } else {
       throw std::runtime_error("Can not convert 'G4Box' into forced shape.");
@@ -387,7 +387,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto orientedToGlobal = axesOriented(toGlobal, axes);
       surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
                                                         std::move(bounds));
-      assignMaterial(*surface.get(), original, compressed);
+      assignMaterial(*surface, original, compressed);
       return surface;
     } else {
       throw std::runtime_error("Can not convert 'G4Trd' into forced shape.");
@@ -404,7 +404,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       auto orientedToGlobal = axesOriented(toGlobal, axes);
       surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
                                                         std::move(bounds));
-      assignMaterial(*surface.get(), original, compressed);
+      assignMaterial(*surface, original, compressed);
       return surface;
     } else {
       throw std::runtime_error("Can not convert 'G4Trap' into forced shape.");
@@ -438,7 +438,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
     } else {
       throw std::runtime_error("Can not convert 'G4Tubs' into forced shape.");
     }
-    assignMaterial(*surface.get(), original, compressed);
+    assignMaterial(*surface, original, compressed);
     return surface;
   }
 
