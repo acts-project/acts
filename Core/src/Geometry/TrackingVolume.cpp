@@ -775,8 +775,28 @@ void TrackingVolume::initializeNavigationCandidates(
   m_navigationDelegate(args, stream, logger);
 }
 
+namespace {
+
+void visitLayer(const Acts::Layer& layer, TrackingGeometryVisitor& visitor) {
+  visitor.visitLayer(layer);
+  // Surfaces contained in the surface array
+  if (layer.surfaceArray() != nullptr) {
+    for (const auto& srf : layer.surfaceArray()->surfaces()) {
+      visitor.visitSurface(*srf);
+    }
+  }
+  visitor.visitSurface(layer.surfaceRepresentation());
+  if (layer.approachDescriptor() != nullptr) {
+    for (const auto& srf : layer.approachDescriptor()->containedSurfaces()) {
+      visitor.visitSurface(*srf);
+    }
+  }
+}
+
+}  // namespace
+
 // @TODO: Unify once Gen1 is removed: should share most code between mutable and const
-void Acts::TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
+void TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   visitor.visitVolume(*this);
 
   // Visit the boundary surfaces
@@ -791,30 +811,13 @@ void Acts::TrackingVolume::apply(TrackingGeometryVisitor& visitor) const {
   }
 
   // Internal structure
-  if (m_confinedVolumes == nullptr) {
-    // no sub volumes => loop over the confined layers
-    if (m_confinedLayers != nullptr) {
-      for (const auto& layer : m_confinedLayers->arrayObjects()) {
-        visitor.visitLayer(*layer);
-        // Surfaces contained in the surface array
-        if (layer->surfaceArray() != nullptr) {
-          for (const auto& srf : layer->surfaceArray()->surfaces()) {
-            visitor.visitSurface(*srf);
-            continue;
-          }
-        }
-        // Surfaces of the layer
-        visitor.visitSurface(layer->surfaceRepresentation());
-        // Approach surfaces of the layer
-        if (layer->approachDescriptor() != nullptr) {
-          for (const auto& srf :
-               layer->approachDescriptor()->containedSurfaces()) {
-            visitor.visitSurface(*srf);
-          }
-        }
-      }
-    }
-  } else {
+  if (m_confinedLayers != nullptr) {
+    std::ranges::for_each(
+        m_confinedLayers->arrayObjects(),
+        [&](const auto& layer) { visitLayer(*layer, visitor); });
+  }
+
+  if (m_confinedVolumes != nullptr) {
     // contains sub volumes
     for (const auto& volume : m_confinedVolumes->arrayObjects()) {
       volume->apply(visitor);
