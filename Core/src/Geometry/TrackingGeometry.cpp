@@ -43,13 +43,8 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     m_ilayer = 0;
 
     // assign the Volume ID to the volume itself
-    if (volume.geometryId() == GeometryIdentifier{}) {
-      ACTS_VERBOSE("~> volumeID: " << m_volumeID);
-      volume.assignGeometryId(m_volumeID);
-    } else {
-      ACTS_VERBOSE(
-          "~> skipping volume with existing volumeID: " << volume.geometryId());
-    }
+    ACTS_VERBOSE("~> volumeID: " << m_volumeID);
+    volume.assignGeometryId(m_volumeID);
 
     // assign the material if you have a decorator
     if (m_materialDecorator != nullptr) {
@@ -79,13 +74,11 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     ACTS_VERBOSE("~> boundaryID: " << boundaryID);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
-    if (mutableBSurface.geometryId() == GeometryIdentifier{}) {
-      ACTS_VERBOSE("~> assigning boundaryID: " << boundaryID);
-      mutableBSurface.assignGeometryId(boundaryID);
-    } else {
-      ACTS_VERBOSE("~> skipping boundary surface with existing boundaryID: "
-                   << mutableBSurface.geometryId());
-    }
+
+    // assign the boundary ID to the surface
+    ACTS_VERBOSE("~> assigning boundaryID: " << boundaryID);
+    mutableBSurface.assignGeometryId(boundaryID);
+
     // Assign material if you have a decorator
     if (m_materialDecorator != nullptr) {
       ACTS_VERBOSE("Decorating boundary surface " << bSurface.name()
@@ -100,6 +93,7 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
     m_ilayer += 1;
     auto layerID = GeometryIdentifier(m_volumeID).setLayer(m_ilayer);
     ACTS_VERBOSE("~> layerID: " << layerID);
+
     // now close the geometry
     layer.closeGeometry(m_materialDecorator, layerID, *m_hook, *m_logger);
   }
@@ -153,7 +147,6 @@ TrackingGeometry::TrackingGeometry(
         m_volumesById{};
     std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
   };
-
   Visitor mapVisitor;
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
