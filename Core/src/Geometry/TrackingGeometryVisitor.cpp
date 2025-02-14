@@ -13,18 +13,46 @@ namespace Acts {
 TrackingGeometryVisitor::~TrackingGeometryVisitor() = default;
 TrackingGeometryMutableVisitor::~TrackingGeometryMutableVisitor() = default;
 
-void TrackingGeometryVisitor::visitVolume(const TrackingVolume& /*volume*/) {}
-void TrackingGeometryVisitor::visitPortal(const Portal& /*portal*/) {}
-void TrackingGeometryVisitor::visitSurface(const Surface& /*surface*/) {}
-void TrackingGeometryVisitor::visitLayer(const Layer& /*layer*/) {}
-void TrackingGeometryVisitor::visitBoundarySurface(
-    const BoundarySurfaceT<TrackingVolume>& /*boundary*/) {}
+void TrackingGeometryVisitor::visitVolume(const TrackingVolume& /*volume*/) {
+  // Default implementation is a no-op
+}
 
-void TrackingGeometryMutableVisitor::visitVolume(TrackingVolume& /*volume*/) {}
-void TrackingGeometryMutableVisitor::visitPortal(Portal& /*portal*/) {}
-void TrackingGeometryMutableVisitor::visitSurface(Surface& /*surface*/) {}
-void TrackingGeometryMutableVisitor::visitLayer(Layer& /*layer*/) {}
+void TrackingGeometryVisitor::visitPortal(const Portal& /*portal*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryVisitor::visitSurface(const Surface& /*surface*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryVisitor::visitLayer(const Layer& /*layer*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryVisitor::visitBoundarySurface(
+    const BoundarySurfaceT<TrackingVolume>& /*boundary*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryMutableVisitor::visitVolume(TrackingVolume& /*volume*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryMutableVisitor::visitPortal(Portal& /*portal*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryMutableVisitor::visitSurface(Surface& /*surface*/) {
+  // Default implementation is a no-op
+}
+
 void TrackingGeometryMutableVisitor::visitBoundarySurface(
-    BoundarySurfaceT<TrackingVolume>& /*boundary*/) {}
+    BoundarySurfaceT<TrackingVolume>& /*boundary*/) {
+  // Default implementation is a no-op
+}
+
+void TrackingGeometryMutableVisitor::visitLayer(Layer& /*layer*/) {
+  // Default implementation is a no-op
+}
 
 }  // namespace Acts
