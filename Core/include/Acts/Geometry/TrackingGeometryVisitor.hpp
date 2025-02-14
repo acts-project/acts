@@ -20,7 +20,7 @@ class BoundarySurfaceT;
 
 class TrackingGeometryVisitor {
  public:
-  virtual ~TrackingGeometryVisitor();
+  virtual ~TrackingGeometryVisitor() = 0;
 
   virtual void visitVolume(const TrackingVolume& volume);
 
