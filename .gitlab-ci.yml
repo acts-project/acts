@@ -497,3 +497,17 @@ lcg_106a:
           - gcc13
           - gcc14
           - clang16
+
+lcg_107:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+          - clang19
