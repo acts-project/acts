@@ -162,7 +162,6 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   std::vector<GeoModelSensitiveSurface> sensitives;
 
   for (const auto &surface : surfaces) {
-
     Transform3 absTrans{fpv->getAbsoluteTransform().matrix()};
     Transform3 surfTrf{surface.transform.matrix()};
 
