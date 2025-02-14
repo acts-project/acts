@@ -112,10 +112,12 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
 TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator,
-    const GeometryIdentifierHook& hook, const Logger& logger)
+    const GeometryIdentifierHook& hook, const Logger& logger, bool close)
     : m_world(highestVolume) {
-  Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
-  apply(visitor);
+  if (close) {
+    Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
+    apply(visitor);
+  }
 
   class Visitor : public TrackingGeometryVisitor {
    public:
