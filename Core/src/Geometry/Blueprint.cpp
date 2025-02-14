@@ -153,7 +153,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   // @TODO: Refactor this to ignore already set IDs from inside the tree!
   class Visitor : public TrackingGeometryMutableVisitor {
    public:
-    Visitor(const Logger &logger) : m_logger(&logger) {
+    explicit Visitor(const Logger &logger) : m_logger(&logger) {
       ACTS_VERBOSE("Creating Gen3 geometry closure visitor");
     }
 
