@@ -92,13 +92,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
 
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
-  // binningPosition()
+  // referencePosition()
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
   LineSurfaceStub line(transform, 2., 20.);
   Vector3 referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition,
-                  line.binningPosition(tgContext, BinningValue::binX), 1e-6);
+                  line.referencePosition(tgContext, AxisDirection::AxisX),
+                  1e-6);
 
   // bounds()
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.);
@@ -320,7 +321,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
       ParticleHypothesis::pion()};
   {
     PropagatorOptions options(tgContext, {});
-    options.direction = Acts::Direction::Backward;
+    options.direction = Acts::Direction::Backward();
     options.pathLimit = pathLimit;
 
     auto result = propagator.propagate(initialParams, options);
@@ -342,7 +343,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
                                      std::nullopt, ParticleHypothesis::pion()};
   {
     PropagatorOptions options(tgContext, {});
-    options.direction = Acts::Direction::Forward;
+    options.direction = Acts::Direction::Forward();
     options.stepping.maxStepSize = 1_mm;
 
     auto result = propagator.propagate(displacedParameters, *surface, options);

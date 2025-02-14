@@ -43,12 +43,12 @@ class Result {
   Result<T, E>& operator=(const Result<T, E>& other) = delete;
 
   /// Move construction is allowed
-  Result(Result<T, E>&& other) : m_var(std::move(other.m_var)) {}
+  Result(Result<T, E>&& other) noexcept : m_var(std::move(other.m_var)) {}
 
   /// Move assignment is allowed
   /// @param other The other result instance, rvalue reference
   /// @return The assigned instance
-  Result<T, E>& operator=(Result<T, E>&& other) {
+  Result<T, E>& operator=(Result<T, E>&& other) noexcept {
     m_var = std::move(other.m_var);
     return *this;
   }
@@ -357,7 +357,7 @@ class Result<void, E> {
 
   /// Move constructor
   /// @param other The other result object, rvalue ref
-  Result(Result<void, E>&& other) : m_opt(std::move(other.m_opt)) {}
+  Result(Result<void, E>&& other) noexcept : m_opt(std::move(other.m_opt)) {}
 
   /// Move assignment operator
   /// @param other The other result object, rvalue ref
@@ -413,8 +413,24 @@ class Result<void, E> {
   /// @return Reference to the error
   E error() && noexcept { return std::move(m_opt.value()); }
 
+  void value() const { checkValueAccess(); }
+
  private:
   std::optional<E> m_opt;
+
+  void checkValueAccess() const {
+    if (m_opt.has_value()) {
+      if constexpr (std::is_same_v<E, std::error_code>) {
+        std::stringstream ss;
+        const auto& e = m_opt.value();
+        ss << "Value called on error value: " << e.category().name() << ": "
+           << e.message() << " [" << e.value() << "]";
+        throw std::runtime_error(ss.str());
+      } else {
+        throw std::runtime_error("Value called on error value");
+      }
+    }
+  }
 };
 
 }  // namespace Acts
