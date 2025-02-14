@@ -59,8 +59,6 @@ class TrackingGeometry {
                    const GeometryIdentifierHook& hook = {},
                    const Logger& logger = getDummyLogger(), bool close = true);
 
-  TrackingGeometry(const TrackingGeometry&) = delete;
-
   /// Destructor
   ~TrackingGeometry();
 
