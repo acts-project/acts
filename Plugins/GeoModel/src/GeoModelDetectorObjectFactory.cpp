@@ -162,9 +162,9 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
   std::vector<GeoModelSensitiveSurface> sensitives;
 
   for (const auto &surface : surfaces) {
-    const Transform3 &absTrans =
-        Eigen::Isometry3d(fpv->getAbsoluteTransform().matrix());
-    const Transform3 &surfTrf = Eigen::Isometry3d(surface.transform.matrix());
+
+    Transform3 absTrans{fpv->getAbsoluteTransform().matrix()};
+    Transform3 surfTrf{surface.transform.matrix()};
 
     if (!isIsometry(absTrans) || !isIsometry(surfTrf)) {
       throw std::runtime_error(

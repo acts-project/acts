@@ -319,7 +319,6 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
 namespace {
 Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
                               const std::array<int, 2u>& axes) {
-  // auto originalRotation = toGlobalOriginal.rotation();
   auto originalRotation = toGlobalOriginal.linear();
   // make a copy
   Acts::Vector3 colX = originalRotation.col(std::abs(axes[0u])).eval();

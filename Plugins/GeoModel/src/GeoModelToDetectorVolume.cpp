@@ -126,8 +126,7 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
         dynamic_cast<const GeoShapeShift*>(&shape);
     const GeoShape* shapeOp = shiftShape->getOp();
     newTrf = trf * shiftShape->getX();
-    // This assumes, without checking, that newTrf is an isometry
-    Transform3 newtrf = Eigen::Isometry3d(newTrf.matrix());
+    Transform3 newtrf{newTrf.matrix()};
     if (!isIsometry(newtrf)) {
       throw std::runtime_error(
           "GeoModelToDetectorVolume::convertVolume ERROR Transformation is not "
