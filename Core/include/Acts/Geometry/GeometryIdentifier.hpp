@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
+#include <stdexcept>
 
 namespace Acts {
 
