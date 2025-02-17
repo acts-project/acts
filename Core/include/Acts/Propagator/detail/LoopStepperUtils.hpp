@@ -15,8 +15,6 @@
 
 #include <type_traits>
 
-#include <type_traits>
-
 namespace Acts::detail {
 
 /// A helper struct to store a reference to a single-component state and its
