@@ -171,7 +171,6 @@ class GeometryIdentifier {
   static constexpr Value kLayerMask     = 0x0000fff000000000;
   /// (2^8)-1 = 255 approach surfaces
   static constexpr Value kApproachMask  = 0x0000000ff0000000;
-  static constexpr Value kPassiveMask   = kApproachMask;
   /// (2^20)-1 = 1048575 sensitive surfaces
   static constexpr Value kSensitiveMask = 0x000000000fffff00;
   /// (2^8)-1 = 255 extra values
@@ -190,12 +189,22 @@ class GeometryIdentifier {
     return __builtin_ctzll(mask);
   }
 
+  constexpr static Value getMaxValue(Value mask) {
+    return mask >> extractShift(mask);
+  }
+
   /// Extract the masked bits from the encoded value.
   constexpr Value getBits(Value mask) const {
     return (m_value & mask) >> extractShift(mask);
   }
   /// Set the masked bits to id in the encoded value.
   constexpr GeometryIdentifier& setBits(Value mask, Value id) {
+    if (id > getMaxValue(mask)) {
+      throw std::invalid_argument(
+          "Value " + std::to_string(id) + " exceeds maximum value " +
+          std::to_string(getMaxValue(mask)) + " for this field");
+    }
+
     m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
     // return *this here that we need to write fewer lines in the setXXX
     // methods
