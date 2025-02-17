@@ -38,14 +38,14 @@ class TrackingGeometryMutableVisitor {
  public:
   virtual ~TrackingGeometryMutableVisitor();
 
-  virtual void visitVolume(TrackingVolume&);
+  virtual void visitVolume(TrackingVolume& volume);
 
-  virtual void visitPortal(Portal&);
+  virtual void visitPortal(Portal& portal);
 
-  virtual void visitSurface(Surface&);
+  virtual void visitSurface(Surface& surface);
 
   // Gen 1
-  virtual void visitLayer(Layer&);
+  virtual void visitLayer(Layer& layer);
   virtual void visitBoundarySurface(BoundarySurfaceT<TrackingVolume>& boundary);
 };
 
