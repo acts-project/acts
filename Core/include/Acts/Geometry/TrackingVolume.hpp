@@ -22,7 +22,6 @@
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -241,6 +240,9 @@ class TrackingVolume : public Volume {
   void apply(TrackingGeometryVisitor& visitor) const;
   void apply(TrackingGeometryMutableVisitor& visitor);
 
+  void apply(TrackingGeometryLambdaVisitor::Config config) const;
+  void apply(TrackingGeometryLambdaMutableVisitor::Config config);
+
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
 
@@ -452,6 +454,9 @@ class TrackingVolume : public Volume {
   ///
   /// @param gvd register a new GlueVolumeDescriptor
   void registerGlueVolumeDescriptor(std::unique_ptr<GlueVolumesDescriptor> gvd);
+
+  /// Clear boundary surfaces for this tracking volume
+  void clearBoundarySurfaces();
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
