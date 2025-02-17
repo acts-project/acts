@@ -58,33 +58,6 @@ class TrackingGeometryVisitor {
       const BoundarySurfaceT<TrackingVolume>& boundary);
 };
 
-class TrackingGeometryLambdaVisitor : public TrackingGeometryVisitor {
- public:
-  struct Config {
-    std::function<void(const TrackingVolume&)> volume{};
-    std::function<void(const Portal&)> portal{};
-    std::function<void(const Surface&)> surface{};
-    std::function<void(const Layer&)> layer{};
-    std::function<void(const BoundarySurfaceT<TrackingVolume>&)> boundary{};
-  };
-
-  explicit TrackingGeometryLambdaVisitor(Config&& config);
-
-  void visitVolume(const TrackingVolume& volume) override;
-
-  void visitPortal(const Portal& portal) override;
-
-  void visitSurface(const Surface& surface) override;
-
-  void visitLayer(const Layer& layer) override;
-
-  void visitBoundarySurface(
-      const BoundarySurfaceT<TrackingVolume>& boundary) override;
-
- private:
-  Config m_config;
-};
-
 /// @brief Mutable visitor interface for modifying the tracking geometry hierarchy
 ///
 /// This visitor allows for non-const access to traverse and modify the tracking
@@ -121,32 +94,119 @@ class TrackingGeometryMutableVisitor {
   virtual void visitBoundarySurface(BoundarySurfaceT<TrackingVolume>& boundary);
 };
 
+namespace detail {
+
+template <typename Callable>
+consteval bool callableWithAnyMutable() {
+  return std::is_invocable_v<Callable, Surface&> ||
+         std::is_invocable_v<Callable, TrackingVolume&> ||
+         std::is_invocable_v<Callable, BoundarySurfaceT<TrackingVolume>&> ||
+         std::is_invocable_v<Callable, Layer&> ||
+         std::is_invocable_v<Callable, Portal&>;
+}
+
+template <typename Callable>
+consteval bool callableWithAnyConst() {
+  return std::is_invocable_v<Callable, const Surface&> ||
+         std::is_invocable_v<Callable, const TrackingVolume&> ||
+         std::is_invocable_v<Callable,
+                             const BoundarySurfaceT<TrackingVolume>&> ||
+         std::is_invocable_v<Callable, const Layer&> ||
+         std::is_invocable_v<Callable, const Portal&>;
+}
+
+template <typename Callable>
+consteval bool callableWithAny() {
+  return callableWithAnyMutable<Callable>() || callableWithAnyConst<Callable>();
+}
+
+template <typename Callable>
+  requires(callableWithAnyConst<Callable>())
+class TrackingGeometryLambdaVisitor : public TrackingGeometryVisitor {
+ public:
+  explicit TrackingGeometryLambdaVisitor(Callable callable)
+      : m_callable(std::move(callable)) {}
+
+  void visitSurface(const Surface& surface) override {
+    if constexpr (std::is_invocable_v<Callable, const Surface&>) {
+      m_callable(surface);
+    }
+  }
+
+  void visitVolume(const TrackingVolume& volume) override {
+    if constexpr (std::is_invocable_v<Callable, const TrackingVolume&>) {
+      m_callable(volume);
+    }
+  }
+
+  void visitBoundarySurface(
+      const BoundarySurfaceT<TrackingVolume>& boundary) override {
+    if constexpr (std::is_invocable_v<
+                      Callable, const BoundarySurfaceT<TrackingVolume>&>) {
+      m_callable(boundary);
+    }
+  }
+
+  void visitLayer(const Layer& layer) override {
+    if constexpr (std::is_invocable_v<Callable, const Layer&>) {
+      m_callable(layer);
+    }
+  }
+
+  void visitPortal(const Portal& portal) override {
+    if constexpr (std::is_invocable_v<Callable, const Portal&>) {
+      m_callable(portal);
+    }
+  }
+
+ private:
+  Callable m_callable;
+};
+
+template <typename Callable>
+  requires(callableWithAnyMutable<Callable>())
 class TrackingGeometryLambdaMutableVisitor
     : public TrackingGeometryMutableVisitor {
  public:
-  struct Config {
-    std::function<void(TrackingVolume&)> volume{};
-    std::function<void(Portal&)> portal{};
-    std::function<void(Surface&)> surface{};
-    std::function<void(Layer&)> layer{};
-    std::function<void(BoundarySurfaceT<TrackingVolume>&)> boundary{};
-  };
+  explicit TrackingGeometryLambdaMutableVisitor(Callable callable)
+      : m_callable(std::move(callable)) {}
 
-  explicit TrackingGeometryLambdaMutableVisitor(Config&& config);
+  void visitSurface(Surface& surface) override {
+    if constexpr (std::is_invocable_v<Callable, Surface&>) {
+      m_callable(surface);
+    }
+  }
 
-  void visitVolume(TrackingVolume& volume) override;
-
-  void visitPortal(Portal& portal) override;
-
-  void visitSurface(Surface& surface) override;
-
-  void visitLayer(Layer& layer) override;
+  void visitVolume(TrackingVolume& volume) override {
+    if constexpr (std::is_invocable_v<Callable, TrackingVolume&>) {
+      m_callable(volume);
+    }
+  }
 
   void visitBoundarySurface(
-      BoundarySurfaceT<TrackingVolume>& boundary) override;
+      BoundarySurfaceT<TrackingVolume>& boundary) override {
+    if constexpr (std::is_invocable_v<Callable,
+                                      BoundarySurfaceT<TrackingVolume>&>) {
+      m_callable(boundary);
+    }
+  }
+
+  void visitLayer(Layer& layer) override {
+    if constexpr (std::is_invocable_v<Callable, Layer&>) {
+      m_callable(layer);
+    }
+  }
+
+  void visitPortal(Portal& portal) override {
+    if constexpr (std::is_invocable_v<Callable, Portal&>) {
+      m_callable(portal);
+    }
+  }
 
  private:
-  Config m_config;
+  Callable m_callable;
 };
+
+}  // namespace detail
 
 }  // namespace Acts

@@ -766,15 +766,4 @@ void Acts::TrackingVolume::apply(TrackingGeometryMutableVisitor& visitor) {
   }
 }
 
-void TrackingVolume::apply(TrackingGeometryLambdaVisitor::Config config) const {
-  TrackingGeometryLambdaVisitor visitor{std::move(config)};
-  apply(visitor);
-}
-
-void TrackingVolume::apply(
-    TrackingGeometryLambdaMutableVisitor::Config config) {
-  TrackingGeometryLambdaMutableVisitor visitor{std::move(config)};
-  apply(visitor);
-}
-
 }  // namespace Acts

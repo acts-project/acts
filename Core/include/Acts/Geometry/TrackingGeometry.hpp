@@ -139,10 +139,27 @@ class TrackingGeometry {
   }
 
   void apply(TrackingGeometryVisitor& visitor) const;
-  void apply(TrackingGeometryLambdaVisitor::Config config) const;
 
   void apply(TrackingGeometryMutableVisitor& visitor);
-  void apply(TrackingGeometryLambdaMutableVisitor::Config config);
+
+  template <typename Callable>
+  void apply(Callable&& callable)
+    requires(detail::callableWithAnyMutable<Callable>() &&
+             !detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
+
+  template <typename Callable>
+  void apply(Callable&& callable) const
+    requires(detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
 
   /// Search for a volume with the given identifier.
   ///

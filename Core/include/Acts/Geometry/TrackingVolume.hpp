@@ -240,8 +240,24 @@ class TrackingVolume : public Volume {
   void apply(TrackingGeometryVisitor& visitor) const;
   void apply(TrackingGeometryMutableVisitor& visitor);
 
-  void apply(TrackingGeometryLambdaVisitor::Config config) const;
-  void apply(TrackingGeometryLambdaMutableVisitor::Config config);
+  template <typename Callable>
+  void apply(Callable&& callable)
+    requires(detail::callableWithAnyMutable<Callable>() &&
+             !detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
+
+  template <typename Callable>
+  void apply(Callable&& callable) const
+    requires(detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
