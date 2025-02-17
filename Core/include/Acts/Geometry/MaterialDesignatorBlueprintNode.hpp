@@ -82,6 +82,10 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @param binning The binning configuration
   MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning);
 
+  MaterialDesignatorBlueprintNode& addFace(
+      CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+      const Experimental::ProtoBinning& loc1);
+
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -92,6 +96,11 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
           std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
                      Experimental::ProtoBinning>>& binning,
       const Logger& logger);
+
+  void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
+                                  const Experimental::ProtoBinning& loc0,
+                                  const Experimental::ProtoBinning& loc1,
+                                  const Logger& logger = getDummyLogger());
 
   std::string m_name{};
 

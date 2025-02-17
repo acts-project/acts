@@ -45,6 +45,35 @@ Volume& MaterialDesignatorBlueprintNode::build(const BlueprintOptions& options,
   return children().at(0).build(options, gctx, logger);
 }
 
+void MaterialDesignatorBlueprintNode::validateCylinderFaceConfig(
+    CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+    const Experimental::ProtoBinning& loc1, const Logger& logger) {
+  using enum CylinderVolumeBounds::Face;
+
+  if (face == OuterCylinder || face == InnerCylinder) {
+    if (loc0.axisDir != AxisDirection::AxisRPhi) {
+      ACTS_ERROR(prefix() << "Binning is not in RPhi");
+      throw std::runtime_error("Binning is not in RPhi");
+    }
+
+    if (loc1.axisDir != AxisDirection::AxisZ) {
+      ACTS_ERROR(prefix() << "Binning is not in Z");
+      throw std::runtime_error("Binning is not in Z");
+    }
+  }
+
+  if (face == PositiveDisc || face == NegativeDisc) {
+    if (loc0.axisDir != AxisDirection::AxisR) {
+      ACTS_ERROR(prefix() << "Binning is not in R");
+      throw std::runtime_error("Binning is not in R");
+    }
+    if (loc1.axisDir != AxisDirection::AxisPhi) {
+      ACTS_ERROR(prefix() << "Binning is not in Phi");
+      throw std::runtime_error("Binning is not in Phi");
+    }
+  }
+}
+
 void MaterialDesignatorBlueprintNode::handleCylinderBinning(
     CylinderPortalShell& cylShell,
     const std::vector<
@@ -55,28 +84,7 @@ void MaterialDesignatorBlueprintNode::handleCylinderBinning(
   using enum CylinderVolumeBounds::Face;
 
   for (auto& [face, loc0, loc1] : binning) {
-    if (face == OuterCylinder || face == InnerCylinder) {
-      if (loc0.axisDir != AxisDirection::AxisRPhi) {
-        ACTS_ERROR(prefix() << "Binning is not in RPhi");
-        throw std::runtime_error("Binning is not in RPhi");
-      }
-
-      if (loc1.axisDir != AxisDirection::AxisZ) {
-        ACTS_ERROR(prefix() << "Binning is not in Z");
-        throw std::runtime_error("Binning is not in Z");
-      }
-    }
-
-    if (face == PositiveDisc || face == NegativeDisc) {
-      if (loc0.axisDir != AxisDirection::AxisR) {
-        ACTS_ERROR(prefix() << "Binning is not in R");
-        throw std::runtime_error("Binning is not in R");
-      }
-      if (loc1.axisDir != AxisDirection::AxisPhi) {
-        ACTS_ERROR(prefix() << "Binning is not in Phi");
-        throw std::runtime_error("Binning is not in Phi");
-      }
-    }
+    validateCylinderFaceConfig(face, loc0, loc1, logger);
 
     Experimental::BinningDescription desc{.binning = {loc0, loc1}};
     ACTS_DEBUG(prefix() << "~> Assigning proto binning " << desc.toString()
@@ -185,6 +193,24 @@ MaterialDesignatorBlueprintNode::binning() const {
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::setBinning(
     BinningConfig binning) {
   m_binning = std::move(binning);
+  return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::addFace(
+    CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+    const Experimental::ProtoBinning& loc1) {
+  if (!m_binning.has_value()) {
+    validateCylinderFaceConfig(face, loc0, loc1);
+    m_binning = std::vector{std::tuple{face, loc0, loc1}};
+  } else if (auto* binning = std::get_if<std::vector<std::tuple<
+                 CylinderPortalShell::Face, Experimental::ProtoBinning,
+                 Experimental::ProtoBinning>>>(&m_binning.value());
+             binning != nullptr) {
+    validateCylinderFaceConfig(face, loc0, loc1);
+    binning->emplace_back(face, loc0, loc1);
+  } else {
+    throw std::runtime_error("Unknown binning type");
+  }
   return *this;
 }
 

@@ -369,13 +369,12 @@ void addBlueprint(Context& ctx) {
       },
       py::arg("name"), py::arg("direction"));
 
-  auto matNode =
-      py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
-                 std::shared_ptr<MaterialDesignatorBlueprintNode>>(
-          m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<const std::string&>(), "name"_a)
-          .def_property("binning", &MaterialDesignatorBlueprintNode::binning,
-                        &MaterialDesignatorBlueprintNode::setBinning);
+  auto matNode = py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
+                            std::shared_ptr<MaterialDesignatorBlueprintNode>>(
+                     m, "MaterialDesignatorBlueprintNode")
+                     .def(py::init<const std::string&>(), "name"_a)
+                     .def("addFace", &MaterialDesignatorBlueprintNode::addFace,
+                          "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
 
