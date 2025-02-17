@@ -107,7 +107,8 @@
             "displayName": "GitLab-CI LCG",
             "inherits": "ci-common",
             "cacheVariables": {
-"ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON"
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
             }
         },
         {
