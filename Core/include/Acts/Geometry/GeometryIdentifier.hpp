@@ -91,6 +91,76 @@ class GeometryIdentifier {
     return setBits(kExtraMask, extra);
   }
 
+  /// Return a new identifier with the volume set to @p volume
+  /// @param volume the new volume identifier
+  /// @return a new identifier with the volume set to @p volume
+  [[nodiscard]]
+  constexpr GeometryIdentifier withVolume(Value volume) const {
+    GeometryIdentifier id = *this;
+    id.setVolume(volume);
+    return id;
+  }
+
+  /// Return a new identifier with the boundary set to @p boundary
+  /// @param boundary the new boundary identifier
+  /// @return a new identifier with the boundary set to @p boundary
+  [[nodiscard]]
+  constexpr GeometryIdentifier withBoundary(Value boundary) const {
+    GeometryIdentifier id = *this;
+    id.setBoundary(boundary);
+    return id;
+  }
+
+  /// Return a new identifier with the layer set to @p layer
+  /// @param layer the new layer identifier
+  /// @return a new identifier with the layer set to @p layer
+  [[nodiscard]]
+  constexpr GeometryIdentifier withLayer(Value layer) const {
+    GeometryIdentifier id = *this;
+    id.setLayer(layer);
+    return id;
+  }
+
+  /// Return a new identifier with the approach set to @p approach
+  /// @param approach the new approach identifier
+  /// @return a new identifier with the approach set to @p approach
+  [[nodiscard]]
+  constexpr GeometryIdentifier withApproach(Value approach) const {
+    GeometryIdentifier id = *this;
+    id.setApproach(approach);
+    return id;
+  }
+
+  /// Return a new identifier with the passive set to @p passive
+  /// @param passive the new passive identifier
+  /// @return a new identifier with the passive set to @p passive
+  [[nodiscard]]
+  constexpr GeometryIdentifier withPassive(Value passive) const {
+    GeometryIdentifier id = *this;
+    id.setPassive(passive);
+    return id;
+  }
+
+  /// Return a new identifier with the sensitive set to @p sensitive
+  /// @param sensitive the new sensitive identifier
+  /// @return a new identifier with the sensitive set to @p sensitive
+  [[nodiscard]]
+  constexpr GeometryIdentifier withSensitive(Value sensitive) const {
+    GeometryIdentifier id = *this;
+    id.setSensitive(sensitive);
+    return id;
+  }
+
+  /// Return a new identifier with the extra set to @p extra
+  /// @param extra the new extra identifier
+  /// @return a new identifier with the extra set to @p extra
+  [[nodiscard]]
+  constexpr GeometryIdentifier withExtra(Value extra) const {
+    GeometryIdentifier id = *this;
+    id.setExtra(extra);
+    return id;
+  }
+
  private:
   // clang-format off
   /// (2^8)-1 = 255 volumes
@@ -119,6 +189,7 @@ class GeometryIdentifier {
     // WARNING undefined behaviour for mask == 0 which we should not have.
     return __builtin_ctzll(mask);
   }
+
   /// Extract the masked bits from the encoded value.
   constexpr Value getBits(Value mask) const {
     return (m_value & mask) >> extractShift(mask);
@@ -126,7 +197,8 @@ class GeometryIdentifier {
   /// Set the masked bits to id in the encoded value.
   constexpr GeometryIdentifier& setBits(Value mask, Value id) {
     m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
-    // return *this here that we need to write fewer lines in the setXXX methods
+    // return *this here that we need to write fewer lines in the setXXX
+    // methods
     return *this;
   }
 
