@@ -47,45 +47,53 @@ class GeometryIdentifier {
 
   /// Return the volume identifier.
   constexpr Value volume() const { return getBits(kVolumeMask); }
+
   /// Return the boundary identifier.
   constexpr Value boundary() const { return getBits(kBoundaryMask); }
+
   /// Return the layer identifier.
   constexpr Value layer() const { return getBits(kLayerMask); }
+
   /// Return the approach identifier.
   constexpr Value approach() const { return getBits(kApproachMask); }
+
   /// Return the approach identifier.
   constexpr Value passive() const { return getBits(kApproachMask); }
+
   /// Return the sensitive identifier.
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
+
   /// Return the extra identifier
   /// Usage can be experiment-specific, like tagging which kind of detector a
   /// surface object corresponds to, or which subsystem it belongs to
   constexpr Value extra() const { return getBits(kExtraMask); }
 
   /// Set the volume identifier.
-  constexpr GeometryIdentifier& setVolume(Value volume) {
-    return setBits(kVolumeMask, volume);
-  }
+  constexpr void setVolume(Value volume) { setBits(kVolumeMask, volume); }
+
   /// Set the boundary identifier.
-  constexpr GeometryIdentifier& setBoundary(Value boundary) {
-    return setBits(kBoundaryMask, boundary);
+  constexpr void setBoundary(Value boundary) {
+    setBits(kBoundaryMask, boundary);
   }
+
   /// Set the layer identifier.
-  constexpr GeometryIdentifier& setLayer(Value layer) {
-    return setBits(kLayerMask, layer);
-  }
+  constexpr void setLayer(Value layer) { setBits(kLayerMask, layer); }
+
   /// Set the approach identifier.
-  constexpr GeometryIdentifier& setApproach(Value approach) {
-    return setBits(kApproachMask, approach);
+  constexpr void setApproach(Value approach) {
+    setBits(kApproachMask, approach);
   }
+
   /// Set the approach identifier - shared with Passive
-  constexpr GeometryIdentifier& setPassive(Value approach) {
-    return setBits(kApproachMask, approach);
+  constexpr void setPassive(Value approach) {
+    setBits(kApproachMask, approach);
   }
+
   /// Set the sensitive identifier.
-  constexpr GeometryIdentifier& setSensitive(Value sensitive) {
-    return setBits(kSensitiveMask, sensitive);
+  constexpr void setSensitive(Value sensitive) {
+    setBits(kSensitiveMask, sensitive);
   }
+
   /// Set the extra identifier
   constexpr GeometryIdentifier& setExtra(Value extra) {
     return setBits(kExtraMask, extra);
