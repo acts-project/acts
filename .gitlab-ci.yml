@@ -502,7 +502,7 @@ lcg_107:
   extends: .lcg_base_job
 
   variables:
-    LCG_VERSION: "107a"
+    LCG_VERSION: "107"
 
   parallel:
     matrix:
