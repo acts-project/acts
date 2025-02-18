@@ -70,44 +70,51 @@ class GeometryIdentifier {
 
   /// Set the volume identifier.
   [[deprecated("Use withVolume() instead")]]
-  constexpr void setVolume(Value volume) {
+  constexpr GeometryIdentifier& setVolume(Value volume) {
     setBits(kVolumeMask, volume);
+    return *this;
   }
 
   /// Set the boundary identifier.
   [[deprecated("Use withBoundary() instead")]]
-  constexpr void setBoundary(Value boundary) {
+  constexpr GeometryIdentifier& setBoundary(Value boundary) {
     setBits(kBoundaryMask, boundary);
+    return *this;
   }
 
   /// Set the layer identifier.
   [[deprecated("Use withLayer() instead")]]
-  constexpr void setLayer(Value layer) {
+  constexpr GeometryIdentifier& setLayer(Value layer) {
     setBits(kLayerMask, layer);
+    return *this;
   }
 
   /// Set the approach identifier.
   [[deprecated("Use withApproach() instead")]]
-  constexpr void setApproach(Value approach) {
+  constexpr GeometryIdentifier& setApproach(Value approach) {
     setBits(kApproachMask, approach);
+    return *this;
   }
 
   /// Set the approach identifier - shared with Passive
   [[deprecated("Use withPassive() instead")]]
-  constexpr void setPassive(Value approach) {
+  constexpr GeometryIdentifier& setPassive(Value approach) {
     setBits(kApproachMask, approach);
+    return *this;
   }
 
   /// Set the sensitive identifier.
   [[deprecated("Use withSensitive() instead")]]
-  constexpr void setSensitive(Value sensitive) {
+  constexpr GeometryIdentifier& setSensitive(Value sensitive) {
     setBits(kSensitiveMask, sensitive);
+    return *this;
   }
 
   /// Set the extra identifier
   [[deprecated("Use withExtra() instead")]]
   constexpr GeometryIdentifier& setExtra(Value extra) {
     return setBits(kExtraMask, extra);
+    return *this;
   }
 
   /// Return a new identifier with the volume set to @p volume
