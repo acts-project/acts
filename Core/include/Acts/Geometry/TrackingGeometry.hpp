@@ -138,10 +138,13 @@ class TrackingGeometry {
         std::forward<visitor_t>(visitor));
   }
 
+  /// @copydoc TrackingVolume::apply
   void apply(TrackingGeometryVisitor& visitor) const;
 
+  /// @copydoc TrackingVolume::apply
   void apply(TrackingGeometryMutableVisitor& visitor);
 
+  /// @copydoc TrackingVolume::apply
   template <typename Callable>
   void apply(Callable&& callable)
     requires(detail::callableWithAnyMutable<Callable>() &&
@@ -152,6 +155,7 @@ class TrackingGeometry {
     apply(visitor);
   }
 
+  /// @copydoc TrackingVolume::apply
   template <typename Callable>
   void apply(Callable&& callable) const
     requires(detail::callableWithAnyConst<Callable>())

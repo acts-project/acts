@@ -237,9 +237,24 @@ class TrackingVolume : public Volume {
     apply(internal);
   }
 
+  /// @brief Apply a visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
   void apply(TrackingGeometryVisitor& visitor) const;
+
+  /// @brief Apply a mutable visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
   void apply(TrackingGeometryMutableVisitor& visitor);
 
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryVisitor receive.
   template <typename Callable>
   void apply(Callable&& callable)
     requires(detail::callableWithAnyMutable<Callable>() &&
@@ -250,6 +265,12 @@ class TrackingVolume : public Volume {
     apply(visitor);
   }
 
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryMutableVisitor receive.
   template <typename Callable>
   void apply(Callable&& callable) const
     requires(detail::callableWithAnyConst<Callable>())
