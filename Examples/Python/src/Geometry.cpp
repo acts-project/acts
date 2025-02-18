@@ -209,9 +209,9 @@ void addGeometry(Context& ctx) {
                              const GeometryIdentifierHook& hook,
                              Acts::Logging::Level level) {
               auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
-              auto trkGeo = std::make_shared<Acts::TrackingGeometry>(
+              auto obj = std::make_shared<Acts::TrackingGeometry>(
                   volPtr, matDec.get(), hook, *logger);
-              return trkGeo;
+              return obj;
             }))
             .def("visitSurfaces",
                  [](Acts::TrackingGeometry& self, py::function& func) {
