@@ -54,16 +54,16 @@ class ScoreBasedAmbiguityResolution {
     // the eta bins for the detector
     std::vector<double> etaBins = {-5, 5};
 
-    // the minimum number of hits for each detector for each eta bin
+    // the minimum number of hits for each eta bin
     std::vector<std::size_t> minHitsPerEta = {0};
 
-    // the maximum number of holes for each detector for each eta bin
+    // the maximum number of holes for each eta bin
     std::vector<std::size_t> maxHolesPerEta = {0};
 
-    // the maximum number of outliers for each detector for each eta bin
+    // the maximum number of outliers for each eta bin
     std::vector<std::size_t> maxOutliersPerEta = {0};
 
-    // the maximum number of shared hits for each detector for each eta bin
+    // the maximum number of shared hits for each eta bin
     std::vector<std::size_t> maxSharedHitsPerEta = {0};
 
     std::size_t maxHits = 0;
@@ -127,7 +127,7 @@ class ScoreBasedAmbiguityResolution {
     bool useAmbiguityScoring = false;
   };
 
-  /// @brief Optionals struct : contains the optional cuts,weights and score to be applied.
+  /// @brief Optionals struct: contains the optional cuts, weights and score to be applied.
   ///
   /// The default cuts and scoring has only a basic set of cuts and
   /// score-modifiers. For more flexibility users can define custom cuts and
@@ -227,7 +227,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param tracks is the input track container
   /// @param sourceLinkHash is the  source links
   /// @param sourceLinkEquality is the equality function for the source links
-  /// @param optionals is the optional cuts and score modifiers to be applied
+  /// @param optionals are the optional cuts and score modifiers to be applied
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackContainerFrontend track_container_t,
             typename source_link_hash_t, typename source_link_equality_t>

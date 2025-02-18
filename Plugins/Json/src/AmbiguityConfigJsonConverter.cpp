@@ -15,11 +15,13 @@ void initializeEtaVector(std::vector<std::size_t>& target,
                          const std::vector<std::size_t>& source,
                          std::size_t etaBinSize) {
   if (source.size() == etaBinSize - 1) {
-    target = source;  // Directly copy if sizes match
+    // Directly copy if sizes match
+    target = source;
   } else if (source.size() == 1) {
-    target.resize(etaBinSize - 1);  // Resize target to the required size
-    std::fill(target.begin(), target.end(),
-              source[0]);  // Fill with the single value from source
+    // Resize target to the required size
+    target.resize(etaBinSize - 1);
+    // Fill with the single value from source
+    std::fill(target.begin(), target.end(), source[0]);
   } else {
     throw std::invalid_argument("Invalid cuts size. Expected 1 or " +
                                 std::to_string(etaBinSize - 1) + ", got " +

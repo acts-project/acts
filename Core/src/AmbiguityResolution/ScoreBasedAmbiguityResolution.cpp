@@ -11,9 +11,9 @@
 bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
     const double& eta) const {
-  std::vector<double> etaBins = detector.etaBins;
+  const auto& etaBins = detector.etaBins;
 
-  auto it = std::upper_bound(etaBins.begin(), etaBins.end(), eta);
+  auto it = std::ranges::upper_bound(etaBins, eta);
   if (it == etaBins.begin() || it == etaBins.end()) {
     return false;  // eta out of range
   }
