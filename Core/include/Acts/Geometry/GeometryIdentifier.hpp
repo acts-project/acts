@@ -69,32 +69,43 @@ class GeometryIdentifier {
   constexpr Value extra() const { return getBits(kExtraMask); }
 
   /// Set the volume identifier.
-  constexpr void setVolume(Value volume) { setBits(kVolumeMask, volume); }
+  [[deprecated("Use withVolume() instead")]]
+  constexpr void setVolume(Value volume) {
+    setBits(kVolumeMask, volume);
+  }
 
   /// Set the boundary identifier.
+  [[deprecated("Use withBoundary() instead")]]
   constexpr void setBoundary(Value boundary) {
     setBits(kBoundaryMask, boundary);
   }
 
   /// Set the layer identifier.
-  constexpr void setLayer(Value layer) { setBits(kLayerMask, layer); }
+  [[deprecated("Use withLayer() instead")]]
+  constexpr void setLayer(Value layer) {
+    setBits(kLayerMask, layer);
+  }
 
   /// Set the approach identifier.
+  [[deprecated("Use withApproach() instead")]]
   constexpr void setApproach(Value approach) {
     setBits(kApproachMask, approach);
   }
 
   /// Set the approach identifier - shared with Passive
+  [[deprecated("Use withPassive() instead")]]
   constexpr void setPassive(Value approach) {
     setBits(kApproachMask, approach);
   }
 
   /// Set the sensitive identifier.
+  [[deprecated("Use withSensitive() instead")]]
   constexpr void setSensitive(Value sensitive) {
     setBits(kSensitiveMask, sensitive);
   }
 
   /// Set the extra identifier
+  [[deprecated("Use withExtra() instead")]]
   constexpr GeometryIdentifier& setExtra(Value extra) {
     return setBits(kExtraMask, extra);
   }
@@ -105,7 +116,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withVolume(Value volume) const {
     GeometryIdentifier id = *this;
-    id.setVolume(volume);
+    id.setBits(kVolumeMask, volume);
     return id;
   }
 
@@ -115,7 +126,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withBoundary(Value boundary) const {
     GeometryIdentifier id = *this;
-    id.setBoundary(boundary);
+    id.setBits(kBoundaryMask, boundary);
     return id;
   }
 
@@ -125,7 +136,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withLayer(Value layer) const {
     GeometryIdentifier id = *this;
-    id.setLayer(layer);
+    id.setBits(kLayerMask, layer);
     return id;
   }
 
@@ -135,7 +146,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withApproach(Value approach) const {
     GeometryIdentifier id = *this;
-    id.setApproach(approach);
+    id.setBits(kApproachMask, approach);
     return id;
   }
 
@@ -145,7 +156,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withPassive(Value passive) const {
     GeometryIdentifier id = *this;
-    id.setPassive(passive);
+    id.setBits(kApproachMask, passive);
     return id;
   }
 
@@ -155,7 +166,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withSensitive(Value sensitive) const {
     GeometryIdentifier id = *this;
-    id.setSensitive(sensitive);
+    id.setBits(kSensitiveMask, sensitive);
     return id;
   }
 
@@ -165,7 +176,7 @@ class GeometryIdentifier {
   [[nodiscard]]
   constexpr GeometryIdentifier withExtra(Value extra) const {
     GeometryIdentifier id = *this;
-    id.setExtra(extra);
+    id.setBits(kExtraMask, extra);
     return id;
   }
 

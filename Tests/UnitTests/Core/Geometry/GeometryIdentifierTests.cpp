@@ -45,18 +45,24 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
   constexpr GeometryIdentifier ref = 0xdeadaffe01234567;
   // values above the maximum are truncated
   // max+1 has all available bits zeroed
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setVolume(volumeMax + 1),
+  BOOST_CHECK_THROW(
+      static_cast<void>(GeometryIdentifier(ref).withVolume(volumeMax + 1)),
+      std::invalid_argument);
+  BOOST_CHECK_THROW(
+      static_cast<void>(GeometryIdentifier(ref).withBoundary(boundaryMax + 1)),
+      std::invalid_argument);
+  BOOST_CHECK_THROW(
+      static_cast<void>(GeometryIdentifier(ref).withLayer(layerMax + 1)),
+      std::invalid_argument);
+  BOOST_CHECK_THROW(
+      static_cast<void>(GeometryIdentifier(ref).withApproach(approachMax + 1)),
+      std::invalid_argument);
+  BOOST_CHECK_THROW(static_cast<void>(GeometryIdentifier(ref).withSensitive(
+                        sensitiveMax + 1)),
                     std::invalid_argument);
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setBoundary(boundaryMax + 1),
-                    std::invalid_argument);
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setLayer(layerMax + 1),
-                    std::invalid_argument);
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setApproach(approachMax + 1),
-                    std::invalid_argument);
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setSensitive(sensitiveMax + 1),
-                    std::invalid_argument);
-  BOOST_CHECK_THROW(GeometryIdentifier(ref).setExtra(extraMax + 1),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      static_cast<void>(GeometryIdentifier(ref).withExtra(extraMax + 1)),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
