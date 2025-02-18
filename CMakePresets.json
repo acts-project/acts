@@ -51,7 +51,6 @@
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
-                "ACTS_BUILD_NONCOMPILE_TESTS": "ON",
                 "ACTS_BUILD_ANALYSIS_APPS": "ON",
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
