@@ -459,10 +459,8 @@ linux_ubuntu_2204_clang:
   script:
     - >
       cmake -B build -S src
-      --preset=gitlab-ci
+      --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DPython_EXECUTABLE=$(which python3)
-      -DACTS_BUILD_PLUGIN_GEOMODEL=OFF # GeoModel is not in LCG at this point
 
     - ccache -z
     - cmake --build build -- -j6
@@ -497,3 +495,17 @@ lcg_106a:
           - gcc13
           - gcc14
           - clang16
+
+lcg_107:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+          - clang19
