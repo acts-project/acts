@@ -11,6 +11,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
@@ -207,7 +208,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   world->apply(closureVisitor);
 
   return std::make_unique<TrackingGeometry>(
-      std::move(world), nullptr, m_cfg.geometryIdentifierHook, logger, false);
+      std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);
 }
 
 }  // namespace Acts
