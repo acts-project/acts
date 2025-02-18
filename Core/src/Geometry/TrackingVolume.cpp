@@ -381,7 +381,7 @@ void TrackingVolume::closeGeometry(
   }
 
   // we can construct the volume ID from this
-  auto volumeID = GeometryIdentifier().setVolume(++vol);
+  auto volumeID = GeometryIdentifier().withVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
@@ -413,7 +413,7 @@ void TrackingVolume::closeGeometry(
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
     iboundary++;
-    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(iboundary);
+    auto boundaryID = GeometryIdentifier(volumeID).withBoundary(iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -432,7 +432,7 @@ void TrackingVolume::closeGeometry(
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
         ilayer++;
-        auto layerID = GeometryIdentifier(volumeID).setLayer(ilayer);
+        auto layerID = GeometryIdentifier(volumeID).withLayer(ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
@@ -464,7 +464,7 @@ void TrackingVolume::closeGeometry(
   GeometryIdentifier::Value iportal = 0;
   for (auto& portal : portals()) {
     iportal++;
-    auto portalId = GeometryIdentifier(volumeID).setBoundary(iportal);
+    auto portalId = GeometryIdentifier(volumeID).withBoundary(iportal);
     assert(portal.isValid() && "Invalid portal encountered during closing");
 
     portal.surface().assignGeometryId(portalId);
@@ -477,7 +477,7 @@ void TrackingVolume::closeGeometry(
       continue;
     }
     isensitive++;
-    auto sensitiveId = GeometryIdentifier(volumeID).setSensitive(isensitive);
+    auto sensitiveId = GeometryIdentifier(volumeID).withSensitive(isensitive);
     surface.assignGeometryId(sensitiveId);
   }
 
