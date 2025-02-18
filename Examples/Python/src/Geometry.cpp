@@ -103,19 +103,13 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
         .def(py::init<>())
         .def(py::init<Acts::GeometryIdentifier::Value>())
-
-        .def_property("volume", &Acts::GeometryIdentifier::volume,
-                      &Acts::GeometryIdentifier::setVolume)
-        .def_property("layer", &Acts::GeometryIdentifier::layer,
-                      &Acts::GeometryIdentifier::setLayer)
-        .def_property("boundary", &Acts::GeometryIdentifier::boundary,
-                      &Acts::GeometryIdentifier::setBoundary)
-        .def_property("approach", &Acts::GeometryIdentifier::approach,
-                      &Acts::GeometryIdentifier::setApproach)
-        .def_property("sensitive", &Acts::GeometryIdentifier::sensitive,
-                      &Acts::GeometryIdentifier::setSensitive)
-        .def_property("extra", &Acts::GeometryIdentifier::extra,
-                      &Acts::GeometryIdentifier::setExtra)
+        .def_property_readonly("volume", &Acts::GeometryIdentifier::volume)
+        .def_property_readonly("layer", &Acts::GeometryIdentifier::layer)
+        .def_property_readonly("boundary", &Acts::GeometryIdentifier::boundary)
+        .def_property_readonly("approach", &Acts::GeometryIdentifier::approach)
+        .def_property_readonly("sensitive",
+                               &Acts::GeometryIdentifier::sensitive)
+        .def_property_readonly("extra", &Acts::GeometryIdentifier::extra)
         .def_property_readonly("value", &Acts::GeometryIdentifier::value)
         .def("__str__", [](const Acts::GeometryIdentifier& self) {
           std::stringstream ss;

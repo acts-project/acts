@@ -66,35 +66,36 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
-  GeometryIdentifier vol1;
-  vol1.setVolume(1u);
-  vol1.setLayer(14u);
-  vol1.setSensitive(5u);
-  vol1.setExtra(42u);
-  GeometryIdentifier vol2;
-  vol2.setVolume(2u);
-  vol2.setLayer(13u);
-  vol2.setSensitive(3u);
-  vol2.setExtra(43u);
+  auto vol1 = GeometryIdentifier()
+                  .withVolume(1u)
+                  .withLayer(14u)
+                  .withSensitive(5u)
+                  .withExtra(42u);
+  auto vol2 = GeometryIdentifier()
+                  .withVolume(2u)
+                  .withLayer(13u)
+                  .withSensitive(3u)
+                  .withExtra(43u);
+
   // order uses volume first even if other components are larger
   BOOST_CHECK_LT(vol1, vol2);
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withBoundary(64u), vol2);
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withLayer(64u), vol2);
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withApproach(64u), vol2);
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withSensitive(64u), vol2);
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withSensitive(64u), vol2);
+  BOOST_CHECK_LT(vol1.withBoundary(64u), vol2);
+  BOOST_CHECK_LT(vol1.withLayer(64u), vol2);
+  BOOST_CHECK_LT(vol1.withApproach(64u), vol2);
+  BOOST_CHECK_LT(vol1.withSensitive(64u), vol2);
+  BOOST_CHECK_LT(vol1.withSensitive(64u), vol2);
   BOOST_CHECK_LT(vol2, GeometryIdentifier(vol1).withVolume(3u));
   // other components are hierarchical
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withVolume(1u).withBoundary(2u),
-                 GeometryIdentifier(vol1).withVolume(2u).withBoundary(1u));
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withBoundary(1u).withLayer(2u),
-                 GeometryIdentifier(vol1).withBoundary(2u).withLayer(1u));
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withLayer(1u).withApproach(2u),
-                 GeometryIdentifier(vol1).withLayer(2u).withApproach(1u));
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withApproach(1u).withSensitive(2u),
-                 GeometryIdentifier(vol1).withApproach(2u).withSensitive(1u));
-  BOOST_CHECK_LT(GeometryIdentifier(vol1).withSensitive(1u).withExtra(2u),
-                 GeometryIdentifier(vol1).withSensitive(2u).withExtra(1u));
+  BOOST_CHECK_LT(vol1.withVolume(1u).withBoundary(2u),
+                 vol1.withVolume(2u).withBoundary(1u));
+  BOOST_CHECK_LT(vol1.withBoundary(1u).withLayer(2u),
+                 vol1.withBoundary(2u).withLayer(1u));
+  BOOST_CHECK_LT(vol1.withLayer(1u).withApproach(2u),
+                 vol1.withLayer(2u).withApproach(1u));
+  BOOST_CHECK_LT(vol1.withApproach(1u).withSensitive(2u),
+                 vol1.withApproach(2u).withSensitive(1u));
+  BOOST_CHECK_LT(vol1.withSensitive(1u).withExtra(2u),
+                 vol1.withSensitive(2u).withExtra(1u));
 }
 
 }  // namespace Acts::Test
