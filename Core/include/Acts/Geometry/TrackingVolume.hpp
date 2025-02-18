@@ -177,24 +177,12 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    struct Visitor : public TrackingGeometryVisitor {
-      std::remove_cv_t<std::remove_reference_t<visitor_t>>* m_visitor{};
-      bool m_restrictToSensitives{};
-
-      void visitSurface(const Surface& surface) override {
-        if (m_restrictToSensitives && surface.geometryId().sensitive() == 0) {
-          return;
-        }
-        assert(m_visitor != nullptr);
-        (*m_visitor)(&surface);
+    apply([&visitor, restrictToSensitives](const Surface& surface) {
+      if (restrictToSensitives && surface.geometryId().sensitive() == 0) {
+        return;
       }
-    };
-
-    Visitor internal;
-    internal.m_visitor = &visitor;
-    internal.m_restrictToSensitives = restrictToSensitives;
-
-    apply(internal);
+      visitor(&surface);
+    });
   }
 
   /// @brief Visit all sensitive surfaces
@@ -222,19 +210,7 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
-    struct Visitor : public TrackingGeometryVisitor {
-      std::remove_cv_t<std::remove_reference_t<visitor_t>>* m_visitor{};
-      bool m_restrictToSensitives{};
-
-      void visitVolume(const TrackingVolume& volume) override {
-        (*m_visitor)(&volume);
-      }
-    };
-
-    Visitor internal;
-    internal.m_visitor = &visitor;
-
-    apply(internal);
+    apply([&visitor](const TrackingVolume& volume) { visitor(&volume); });
   }
 
   /// @brief Apply a visitor to the tracking volume
