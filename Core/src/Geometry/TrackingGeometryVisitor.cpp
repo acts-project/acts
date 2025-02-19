@@ -11,6 +11,7 @@
 namespace Acts {
 
 TrackingGeometryVisitor::~TrackingGeometryVisitor() = default;
+TrackingGeometryMutableVisitor::~TrackingGeometryMutableVisitor() = default;
 
 void TrackingGeometryVisitor::visitVolume(const TrackingVolume& /*volume*/) {
   // Default implementation is a no-op
@@ -53,7 +54,5 @@ void TrackingGeometryMutableVisitor::visitBoundarySurface(
 void TrackingGeometryMutableVisitor::visitLayer(Layer& /*layer*/) {
   // Default implementation is a no-op
 }
-
-TrackingGeometryMutableVisitor::~TrackingGeometryMutableVisitor() = default;
 
 }  // namespace Acts

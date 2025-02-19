@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include <functional>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 
@@ -60,9 +61,9 @@ class TrackingGeometryVisitor {
 
 /// @brief Mutable visitor interface for modifying the tracking geometry hierarchy
 ///
-/// This visitor allows for non-const access to traverse and modify the tracking
-/// geometry components. It's used for operations like geometry construction,
-/// material decoration, or geometry ID assignment.
+/// This visitor allows for non-const access to traverse and modify the
+/// tracking geometry components. It's used for operations like geometry
+/// construction, material decoration, or geometry ID assignment.
 class TrackingGeometryMutableVisitor {
  public:
   virtual ~TrackingGeometryMutableVisitor();
