@@ -63,6 +63,13 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
   BOOST_CHECK_THROW(
       static_cast<void>(GeometryIdentifier(ref).withExtra(extraMax + 1)),
       std::invalid_argument);
+
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxVolume(), 255);
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxBoundary(), 255);
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxLayer(), 4095);
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxApproach(), 255);
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxSensitive(), 1048575);
+  BOOST_CHECK_EQUAL(GeometryIdentifier::getMaxExtra(), 255);
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
