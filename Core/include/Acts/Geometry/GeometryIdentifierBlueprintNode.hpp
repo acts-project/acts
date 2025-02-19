@@ -12,14 +12,23 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+
 namespace Acts {
 
 class TrackingVolume;
 class PortalShellBase;
 class Volume;
 
+struct GeometryIdentifierBlueprintNodeImpl;
+
 class GeometryIdentifierBlueprintNode : public BlueprintNode {
  public:
+  /// This is not defaulted to it can be pushed to the .cpp file, and we don't
+  /// have to define the configuration class.
+  ~GeometryIdentifierBlueprintNode() override;
+  GeometryIdentifierBlueprintNode();
+
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
@@ -31,19 +40,17 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
                 TrackingVolume& parent,
                 const Logger& logger = Acts::getDummyLogger()) override;
 
-  using AssignmentFunction = std::function<void(TrackingVolume& volume)>;
-
-  //   GeometryIdentifierBlueprintNode& volume(GeometryIdentifier::Volume
-  //   volume);
-  GeometryIdentifierBlueprintNode& setLayerTo(GeometryIdentifier::Value layer);
-  GeometryIdentifierBlueprintNode& incrementLayers();
+  GeometryIdentifierBlueprintNode& setLayerIdTo(
+      GeometryIdentifier::Value layer);
+  GeometryIdentifierBlueprintNode& incrementLayerIds(
+      GeometryIdentifier::Value start = 0);
+  GeometryIdentifierBlueprintNode& setAllVolumeIdsTo(
+      GeometryIdentifier::Value volumeId);
 
   const std::string& name() const override;
 
- protected:
-  AssignmentFunction m_assignment;
-
-  std::string m_name = "DummyGeoId";
+ private:
+  std::unique_ptr<GeometryIdentifierBlueprintNodeImpl> m_impl;
 };
 
 }  // namespace Acts

@@ -465,13 +465,28 @@ void addBlueprint(Context& ctx) {
       py::arg("name"));
 
   auto geoIdNode =
-      py::class_<Acts::GeometryIdentifierBlueprintNode,
+      py::class_<Acts::GeometryIdentifierBlueprintNode, Acts::BlueprintNode,
                  std::shared_ptr<Acts::GeometryIdentifierBlueprintNode>>(
           m, "GeometryIdentifierBlueprintNode")
           .def(py::init<>())
-          .def("setLayerTo", &GeometryIdentifierBlueprintNode::setLayerTo)
-          .def("incrementLayers",
-               &GeometryIdentifierBlueprintNode::incrementLayers);
+          .def("setLayerIdTo", &GeometryIdentifierBlueprintNode::setLayerIdTo,
+               py::arg("value"))
+          .def("incrementLayerIds",
+               &GeometryIdentifierBlueprintNode::incrementLayerIds,
+               py::arg("start") = 0)
+          .def("setAllVolumeIdsTo",
+               &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
+               py::arg("value"));
+
+  auto geoIdFactory = [](BlueprintNode& self) {
+    auto child = std::make_shared<GeometryIdentifierBlueprintNode>();
+    self.addChild(child);
+    return child;
+  };
+
+  blueprintNode.def("GeometryIdentifier", geoIdFactory)
+      .def("withGeometryIdentifier", geoIdFactory);
+  addContextManagerProtocol(blueprintNode);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,

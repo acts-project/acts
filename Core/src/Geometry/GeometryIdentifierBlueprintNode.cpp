@@ -13,19 +13,124 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+
+#include <boost/algorithm/string/join.hpp>
+
 namespace Acts {
+
+namespace {
+class Configuration {
+ public:
+  virtual ~Configuration() = default;
+
+  virtual void apply(const std::string& prefix, TrackingVolume& volume,
+                     const Logger& logger) = 0;
+  virtual const std::string& name() const = 0;
+};
+
+struct FixedLayerConfiguration : public Configuration {
+  FixedLayerConfiguration(GeometryIdentifier::Value layer) : m_layer(layer) {
+    m_name = "GeoIdFixLayer(lay=" + std::to_string(m_layer) + ")";
+  }
+
+  void apply(const std::string& prefix, TrackingVolume& volume,
+             const Logger& logger) override {
+    ACTS_DEBUG(prefix << "~> Setting layer to " << m_layer
+                      << " for volume with ID " << volume.geometryId());
+    volume.assignGeometryId(volume.geometryId().withLayer(m_layer));
+  }
+
+  const std::string& name() const override { return m_name; }
+
+ private:
+  GeometryIdentifier::Value m_layer;
+  std::string m_name;
+};
+
+struct IncrementLayerConfiguration : public Configuration {
+  IncrementLayerConfiguration(GeometryIdentifier::Value start)
+      : m_value(start) {
+    m_name = "GeoIdIncLay(start=" + std::to_string(m_value) + ")";
+  }
+
+  void apply(const std::string& prefix, TrackingVolume& volume,
+             const Logger& logger) override {
+    ACTS_DEBUG(prefix << "Incrementing layer component for volume with ID "
+                      << volume.geometryId());
+    GeometryIdentifier id = volume.geometryId().withLayer(m_value);
+    ACTS_DEBUG(prefix << "~> Setting layer to " << m_value
+                      << " for volume with ID " << id);
+    volume.assignGeometryId(id);
+    m_value++;
+  }
+
+  const std::string& name() const override { return m_name; }
+
+ private:
+  GeometryIdentifier::Value m_value;
+  std::string m_name;
+};
+
+struct FixedVolumeConfiguration : public Configuration {
+  FixedVolumeConfiguration(GeometryIdentifier::Value volumeId)
+      : m_volumeId(volumeId) {
+    m_name = "GeoIdFixVol(vol=" + std::to_string(m_volumeId) + ")";
+  }
+
+  void apply(const std::string& prefix, TrackingVolume& volume,
+             const Logger& logger) override {
+    ACTS_DEBUG(prefix << "~> Setting volume ID to " << m_volumeId
+                      << " for volume " << volume.volumeName()
+                      << " and all descendents");
+    volume.apply([&](TrackingVolume& v) {
+      ACTS_DEBUG(prefix << "~> Setting volume ID to " << m_volumeId
+                        << " for volume " << v.volumeName());
+      v.assignGeometryId(v.geometryId().withVolume(m_volumeId));
+    });
+  }
+
+  const std::string& name() const override { return m_name; }
+
+ private:
+  GeometryIdentifier::Value m_volumeId;
+  std::string m_name;
+};
+
+}  // namespace
+
+struct GeometryIdentifierBlueprintNodeImpl {
+  void add(std::unique_ptr<Configuration> configuration) {
+    m_configurations.push_back(std::move(configuration));
+
+    std::vector<std::string> names;
+    for (auto& conf : m_configurations) {
+      names.push_back(conf->name());
+    }
+
+    m_name = boost::algorithm::join(names, ", ");
+  }
+
+  std::vector<std::unique_ptr<Configuration>> m_configurations;
+  std::string m_name;
+};
+
+GeometryIdentifierBlueprintNode::GeometryIdentifierBlueprintNode()
+    : m_impl(std::make_unique<GeometryIdentifierBlueprintNodeImpl>()) {}
+
+GeometryIdentifierBlueprintNode::~GeometryIdentifierBlueprintNode() = default;
 
 Volume& GeometryIdentifierBlueprintNode::build(const BlueprintOptions& options,
                                                const GeometryContext& gctx,
                                                const Logger& logger) {
   if (children().size() != 1) {
     throw std::invalid_argument(
-        "GeometryIdentifiedBlueprintNode must have exactly one child");
+        "GeometryIdentifierBlueprintNode must have exactly one child");
   }
 
-  if (!m_assignment) {
+  if (m_impl->m_configurations.empty()) {
     throw std::invalid_argument(
-        "GeometryIdentifiedBlueprintNode has no assignment");
+        "GeometryIdentifierBlueprintNode has no configuration");
   }
 
   return children().at(0).build(options, gctx, logger);
@@ -41,55 +146,56 @@ void GeometryIdentifierBlueprintNode::finalize(const BlueprintOptions& options,
                                                const GeometryContext& gctx,
                                                TrackingVolume& parent,
                                                const Logger& logger) {
-  // Run child finalize first!
+  ACTS_DEBUG(prefix() << "Finalizing geo id " << name() << " with parent "
+                      << parent.volumeName());
+  std::set<const TrackingVolume*> previous;
+  std::ranges::for_each(parent.volumes(),
+                        [&](const auto& v) { previous.insert(&v); });
+
   children().at(0).finalize(options, gctx, parent, logger);
+
   for (auto& volume : parent.volumes()) {
-    // apply(volume);
-    m_assignment(volume);
+    // Skip volumes that were already in the parent before the subtree was
+    // processed
+    if (previous.contains(&volume)) {
+      continue;
+    }
+
+    ACTS_VERBOSE(
+        prefix() << " Applying " << m_impl->m_configurations.size()
+                 << " geometry ID configuration(s) on subtree starting from "
+                 << volume.volumeName());
+    for (auto& configuration : m_impl->m_configurations) {
+      ACTS_VERBOSE(prefix()
+                   << "~> Applying configuration " << configuration->name());
+      configuration->apply(prefix(), volume, logger);
+    }
+    ACTS_DEBUG(prefix() << "~> Final volume ID for " << volume.volumeName()
+                        << ": " << volume.geometryId());
   }
 }
 
 const std::string& GeometryIdentifierBlueprintNode::name() const {
-  return m_name;
+  return m_impl->m_name;
 }
 
-GeometryIdentifierBlueprintNode& GeometryIdentifierBlueprintNode::setLayerTo(
+GeometryIdentifierBlueprintNode& GeometryIdentifierBlueprintNode::setLayerIdTo(
     GeometryIdentifier::Value layer) {
-  if (m_assignment) {
-    throw std::invalid_argument(
-        "GeometryIdentifierBlueprintNode already has an assignment");
-  }
-
-  m_assignment = [layer](TrackingVolume& volume) {
-    for (auto& surface : volume.surfaces()) {
-      GeometryIdentifier id = surface.geometryId();
-      id.setLayer(layer);
-      surface.assignGeometryId(id);
-    }
-  };
+  m_impl->add(std::make_unique<FixedLayerConfiguration>(layer));
   return *this;
 }
 
 GeometryIdentifierBlueprintNode&
-GeometryIdentifierBlueprintNode::incrementLayers() {
-  if (m_assignment) {
-    throw std::invalid_argument(
-        "GeometryIdentifierBlueprintNode already has an assignment");
-  }
+GeometryIdentifierBlueprintNode::incrementLayerIds(
+    GeometryIdentifier::Value start) {
+  m_impl->add(std::make_unique<IncrementLayerConfiguration>(start));
+  return *this;
+}
 
-  struct Incrementer {
-    GeometryIdentifier::Value m_value = 0;
-
-    void operator()(TrackingVolume& volume) {
-      m_value++;
-      GeometryIdentifier id = volume.geometryId();
-      id.setLayer(m_value);
-      volume.assignGeometryId(id);
-    }
-  };
-
-  m_assignment = Incrementer();
-
+GeometryIdentifierBlueprintNode&
+GeometryIdentifierBlueprintNode::setAllVolumeIdsTo(
+    GeometryIdentifier::Value volumeId) {
+  m_impl->add(std::make_unique<FixedVolumeConfiguration>(volumeId));
   return *this;
 }
 

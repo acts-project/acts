@@ -9,7 +9,9 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
@@ -120,35 +122,68 @@ TrackingGeometry::TrackingGeometry(
   }
 
   class Visitor : public TrackingGeometryVisitor {
-   public:
-    void visitVolume(const TrackingVolume& volume) override {
-      auto [it, inserted] = m_volumesById.emplace(volume.geometryId(), &volume);
-      if (!inserted) {
+   private:
+    void checkIdentifier(const GeometryObject& obj, std::string_view type) {
+      if (obj.geometryId() == GeometryIdentifier{}) {
         std::stringstream ss;
-        ss << "Duplicate volume ID: " << volume.geometryId();
+        ss << "Encountered " << type << " with no geometry ID";
+        throw std::invalid_argument(ss.str());
+      }
+
+      auto [it, inserted] = m_objectsById.emplace(obj.geometryId(), &obj);
+
+      if (!inserted && it->second != &obj) {
+        std::stringstream ss;
+        ss << "Duplicate " << type << " ID: " << obj.geometryId() << ": & "
+           << it->second << " != " << &obj;
         throw std::invalid_argument(ss.str());
       }
     }
+
+   public:
+    void visitVolume(const TrackingVolume& volume) override {
+      std::string label = "volume(" + volume.volumeName() + ")";
+      checkIdentifier(volume, label);
+
+      m_volumesById.emplace(volume.geometryId(), &volume);
+    }
+
     void visitSurface(const Surface& surface) override {
       if (surface.geometryId() == GeometryIdentifier{}) {
+        std::cout << "Surface has no geometry ID: "
+                  << surface.toStream(GeometryContext()) << std::endl;
         throw std::invalid_argument("Surface has no geometry ID");
       }
+
+      checkIdentifier(surface, "surface");
+
       //@TODO: Why not use all of them?
       if (surface.geometryId().sensitive() != 0) {
-        auto [it, inserted] =
-            m_surfacesById.emplace(surface.geometryId(), &surface);
-        if (!inserted) {
-          std::stringstream ss;
-          ss << "Duplicate surface ID: " << surface.geometryId();
-          throw std::invalid_argument(ss.str());
-        }
+        m_surfacesById.emplace(surface.geometryId(), &surface);
       }
+    }
+
+    void visitLayer(const Layer& layer) override {
+      checkIdentifier(layer, "layer");
+    }
+
+    void visitBoundarySurface(
+        const BoundarySurfaceT<TrackingVolume>& boundary) override {
+      checkIdentifier(boundary.surfaceRepresentation(), "boundary surface");
+    }
+
+    void visitPortal(const Portal& portal) override {
+      checkIdentifier(portal.surface(), "portal");
     }
 
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>
         m_volumesById{};
     std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+
+    std::unordered_map<GeometryIdentifier, const GeometryObject*>
+        m_objectsById{};
   };
+
   Visitor mapVisitor;
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
