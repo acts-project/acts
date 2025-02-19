@@ -106,7 +106,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         Portal& portal) const final {
     auto pgid = portal.surface().geometryId();
-    portal.surface().assignGeometryId(pgid.withVolume(pgid.boundary() + 1));
+    portal.surface().assignGeometryId(pgid.withBoundary(pgid.boundary() + 1));
   }
 
   /// @brief Method for assigning a geometry id to a surface
