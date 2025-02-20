@@ -1,16 +1,14 @@
 include_guard(GLOBAL)
 
-message(STATUS "Configuring codegen: installing uv")
+message(STATUS "Configuring codegen: preparing uv")
 
-# message(STATUS "Found uv: ${uv_exe}")
-find_program(uv_exe uvvvvv)
+find_program(uv_exe uv)
 
 set(_uv_version "0.6.1")
 set(_base_url
     "https://github.com/astral-sh/uv/releases/download/${_uv_version}"
 )
 
-# message(STATUS "Found uv: ${uv_exe}")
 if(uv_exe STREQUAL "uv_exe-NOTFOUND")
     message(STATUS "uv not found, installing it")
 
