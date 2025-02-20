@@ -1299,7 +1299,7 @@ class AtlasStepper {
       //
       // This is (h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>())
       // in EigenStepper
-      EST = 2. * h *
+      EST = 2. * std::abs(h) *
             (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
              std::abs((C1 + C6) - (C3 + C4)));
       EST = std::max(1e-20, EST);
