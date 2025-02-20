@@ -274,6 +274,72 @@ __device__ void findFirstWithBisect(int left, int right, int query, int &result,
 }
 
 template <typename T>
+__device__ void triplet_cuts_inner_loop_body(
+    int i, int k, int last12, int shift23, int ind23, T *x, T *y, T *z, T *R,
+    T *z0, T *phi_slope, T *deta, T *dphi, T *MD12_z0_min, T *MD12_z0_max,
+    T *MD12_deta_min, T *MD12_deta_max, T *MD12_phi_slope_min,
+    T *MD12_phi_slope_max, T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
+    T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max, T *MD23_phi_slope_min,
+    T *MD23_phi_slope_max, T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
+    T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi, int *M1_SP,
+    int *M2_SP, int *sorted_M2_SP, int *edge_indices, bool *vertices,
+    bool *edge_tag) {
+  int p = sorted_M2_SP[k];
+
+  int SP1 = M1_SP[p];
+  int SP2 = M2_SP[p];
+  bool next_ind = false;
+  if (k < last12) {
+    next_ind = (SP2 != (M2_SP[sorted_M2_SP[k + 1]]));
+  }
+
+  if (!apply_geometric_cuts(i, z0[p], phi_slope[p], deta[p], dphi[p],
+                            MD12_z0_min, MD12_z0_max, MD12_deta_min,
+                            MD12_deta_max, MD12_phi_slope_min,
+                            MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max)) {
+    return;
+  }
+
+  int l = shift23;
+#ifdef NEW_OPTIMIZATIONS
+  findFirstWithBisect(shift23, ind23 - 1, SP2, l, M1_SP);
+#else
+  for (; l < ind23 && SP2 != M1_SP[l]; l++) {
+  }  // search first hit indice on
+#endif
+
+  bool new_elt = false;
+  for (; l < ind23 && SP2 == M1_SP[l]; l++) {
+    int SP3 = M2_SP[l];
+    if (!apply_geometric_cuts(
+            i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min, MD23_z0_max,
+            MD23_deta_min, MD23_deta_max, MD23_phi_slope_min,
+            MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max)) {
+      continue;
+    }
+
+    T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3);
+    if (!((diff_dydx >= diff_dydx_min[i]) * (diff_dydx <= diff_dydx_max[i]))) {
+      continue;
+    }
+
+    T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3);
+    if (!((diff_dzdr >= diff_dzdr_min[i]) * (diff_dzdr <= diff_dzdr_max[i]))) {
+      continue;
+    }
+
+    vertices[SP3] = edge_tag[l] = true;
+    new_elt = true;
+  }
+  if (new_elt) {
+    edge_tag[p] = vertices[SP1] = vertices[SP2] = true;
+  }
+  if (next_ind && new_elt) {
+    shift23 = l;
+  }
+}
+
+template <typename T>
 __global__ void
 #ifdef NEW_OPTIMIZATIONS
 __launch_bounds__(512, 2)
@@ -289,9 +355,7 @@ __launch_bounds__(512, 2)
                      T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
                      T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max, T pi,
                      int *M1_SP, int *M2_SP, int *sorted_M2_SP,
-                     int *edge_indices, bool *vertices, bool *edge_tag)
-//---------------------------------------------------------------------------------------------------------------------------------------------------
-{
+                     int *edge_indices, bool *vertices, bool *edge_tag) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nb_triplets) {
     return;
@@ -313,61 +377,16 @@ __launch_bounds__(512, 2)
 
   int last12 = shift12 + nb_hits_M12 - 1;
   int ind23 = shift23 + nb_hits_M23;
+
   for (int k = shift12; k <= last12; k++) {
-    int p = sorted_M2_SP[k];
-    int SP1 = M1_SP[p];
-    int SP2 = M2_SP[p];
-    bool next_ind = false;
-    if (k < last12) {
-      next_ind = (SP2 != (M2_SP[sorted_M2_SP[k + 1]]));
-    }
-
-    if (!apply_geometric_cuts(
-            i, z0[p], phi_slope[p], deta[p], dphi[p], MD12_z0_min, MD12_z0_max,
-            MD12_deta_min, MD12_deta_max, MD12_phi_slope_min,
-            MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max)) {
-      continue;
-    }
-
-    int l = shift23;
-#ifdef NEW_OPTIMIZATIONS
-    findFirstWithBisect(shift23, ind23 - 1, SP2, l, M1_SP);
-#else
-    for (; l < ind23 && SP2 != M1_SP[l]; l++) {
-    }  // search first hit indice on
-#endif
-
-    bool new_elt = false;
-    for (; l < ind23 && SP2 == M1_SP[l]; l++) {
-      int SP3 = M2_SP[l];
-      if (!apply_geometric_cuts(
-              i, z0[l], phi_slope[l], deta[l], dphi[l], MD23_z0_min,
-              MD23_z0_max, MD23_deta_min, MD23_deta_max, MD23_phi_slope_min,
-              MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max)) {
-        continue;
-      }
-
-      T diff_dydx = Diff_dydx(x, y, z, SP1, SP2, SP3);
-      if (!((diff_dydx >= diff_dydx_min[i]) *
-            (diff_dydx <= diff_dydx_max[i]))) {
-        continue;
-      }
-
-      T diff_dzdr = Diff_dzdr(R, z, SP1, SP2, SP3);
-      if (!((diff_dzdr >= diff_dzdr_min[i]) *
-            (diff_dzdr <= diff_dzdr_max[i]))) {
-        continue;
-      }
-
-      vertices[SP3] = edge_tag[l] = true;
-      new_elt = true;
-    }
-    if (new_elt) {
-      edge_tag[p] = vertices[SP1] = vertices[SP2] = true;
-    }
-    if (next_ind && new_elt) {
-      shift23 = l;
-    }
+    triplet_cuts_inner_loop_body(
+        i, k, last12, shift23, ind23, x, y, z, R, z0, phi_slope, deta, dphi,
+        MD12_z0_min, MD12_z0_max, MD12_deta_min, MD12_deta_max,
+        MD12_phi_slope_min, MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max,
+        MD23_z0_min, MD23_z0_max, MD23_deta_min, MD23_deta_max,
+        MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
+        diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
+        M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag);
   }
 }
 
@@ -387,6 +406,26 @@ __global__ void count_src_hits_per_doublet(int nb_doublets, const int *modules1,
   nb_src_hits_per_doublet[i] = indices[module1 + 1] - indices[module1];
 }
 
+/// Assume we have an query value i in the range (left, right),
+/// and a prefix sum, also in this range.
+/// This function finds the lower bound idx of the step in the prefix sum that
+/// contains i
+__device__ void locateInPrefixSumBisect(int left, int right, int i, int &result,
+                                        const int *prefix_sum) {
+  while (left <= right) {
+    int mid = left + (right - left) / 2;
+    if (i >= prefix_sum[mid] && i < prefix_sum[mid + 1]) {
+      result = mid;
+      break;
+    }
+    if (i < prefix_sum[mid]) {
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+}
+
 template <typename T, typename F>
 __device__ void doublet_cut_kernel(int i, int sum_nb_src_hits_per_doublet,
                                    int nb_doublets, const int *doublet_offsets,
@@ -400,31 +439,7 @@ __device__ void doublet_cut_kernel(int i, int sum_nb_src_hits_per_doublet,
   // number of space points per doublet, we can construct the doublet index
   // TODO this is a linear search, can be optimized
   int doublet_idx = 0;
-#if 0
-  for (; ; doublet_idx++) {
-    if( i < doublet_offsets[doublet_idx+1] ) {
-      break;
-    }
-  }
-#else
-  {
-    // do search with bisection
-    int left = 0;
-    int right = nb_doublets;
-    while (left <= right) {
-      int mid = left + (right - left) / 2;
-      if (i >= doublet_offsets[mid] && i < doublet_offsets[mid + 1]) {
-        doublet_idx = mid;
-        break;
-      }
-      if (i < doublet_offsets[mid]) {
-        right = mid - 1;
-      } else {
-        left = mid + 1;
-      }
-    }
-  }
-#endif
+  locateInPrefixSumBisect(0, nb_doublets, i, doublet_idx, doublet_offsets);
 
   const int module1 = modules1[doublet_idx];
   const int module2 = modules2[doublet_idx];
@@ -511,6 +526,133 @@ __global__ void computeDoubletEdgeSum(int nb_doublets,
   // Since nb_edges_per_src_hit is already a prefix sum, we can just copy the
   // elements on the boundary positions
   edge_sum[i] = nb_edges_per_src_hit[doublet_offsets[i]];
+}
+
+// ================================
+// New kernels for the triplet cuts
+// ================================
+
+__global__ void count_triplet_hits(int nb_triplets, const int *modules12_map,
+                                   const int *modules23_map,
+                                   const int *edge_indices,
+                                   int *src_hits_per_triplet) {
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= nb_triplets) {
+    return;
+  }
+  int module12 = modules12_map[i];
+  int module23 = modules23_map[i];
+
+  int nb_hits_M12 = edge_indices[module12 + 1] - edge_indices[module12];
+  int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
+
+  if (nb_hits_M12 == 0 || nb_hits_M23 == 0) {
+    src_hits_per_triplet[i] = 0;
+    return;
+  }
+
+  int shift12 = edge_indices[module12];
+  int last12 = shift12 + nb_hits_M12 - 1;
+
+  src_hits_per_triplet[i] = last12 - shift12 + 1;
+}
+
+template <typename T>
+__global__ void
+#ifdef NEW_OPTIMIZATIONS
+__launch_bounds__(512, 2)
+#endif
+    triplet_cuts_new2(int nb_src_hits_per_triplet_sum, int nb_triplets,
+                      const int *triplet_offsets, const int *modules12_map,
+                      const int *modules23_map, T *x, T *y, T *z, T *R, T *z0,
+                      T *phi_slope, T *deta, T *dphi, T *MD12_z0_min,
+                      T *MD12_z0_max, T *MD12_deta_min, T *MD12_deta_max,
+                      T *MD12_phi_slope_min, T *MD12_phi_slope_max,
+                      T *MD12_dphi_min, T *MD12_dphi_max, T *MD23_z0_min,
+                      T *MD23_z0_max, T *MD23_deta_min, T *MD23_deta_max,
+                      T *MD23_phi_slope_min, T *MD23_phi_slope_max,
+                      T *MD23_dphi_min, T *MD23_dphi_max, T *diff_dydx_min,
+                      T *diff_dydx_max, T *diff_dzdr_min, T *diff_dzdr_max,
+                      T pi, int *M1_SP, int *M2_SP, int *sorted_M2_SP,
+                      int *edge_indices, bool *vertices, bool *edge_tag) {
+  int ii = blockIdx.x * blockDim.x + threadIdx.x;
+  if (ii >= nb_src_hits_per_triplet_sum) {
+    return;
+  }
+
+  // Find triplet index
+  int triplet_index = 0;
+  locateInPrefixSumBisect(0, nb_triplets, ii, triplet_index, triplet_offsets);
+
+  int module12 = modules12_map[triplet_index];
+  int module23 = modules23_map[triplet_index];
+  int nb_hits_M12 = edge_indices[module12 + 1] - edge_indices[module12];
+  int nb_hits_M23 = edge_indices[module23 + 1] - edge_indices[module23];
+
+  bool hits_on_modules = nb_hits_M12 * nb_hits_M23;
+  if (!hits_on_modules) {
+    return;
+  }
+
+  int shift12 = edge_indices[module12];
+  int shift23 = edge_indices[module23];
+
+  int last12 = shift12 + nb_hits_M12 - 1;
+  int ind23 = shift23 + nb_hits_M23;
+
+  // TODO does this work???
+  const int k = shift12 + (ii - triplet_offsets[triplet_index]);
+
+  // From here on starts the original kernel, with the loop over k pulled out of
+  // the kernel
+  triplet_cuts_inner_loop_body(
+      triplet_index, k, last12, shift23, ind23, x, y, z, R, z0, phi_slope, deta,
+      dphi, MD12_z0_min, MD12_z0_max, MD12_deta_min, MD12_deta_max,
+      MD12_phi_slope_min, MD12_phi_slope_max, MD12_dphi_min, MD12_dphi_max,
+      MD23_z0_min, MD23_z0_max, MD23_deta_min, MD23_deta_max,
+      MD23_phi_slope_min, MD23_phi_slope_max, MD23_dphi_min, MD23_dphi_max,
+      diff_dydx_min, diff_dydx_max, diff_dzdr_min, diff_dzdr_max, pi, M1_SP,
+      M2_SP, sorted_M2_SP, edge_indices, vertices, edge_tag);
+}
+
+// =======================
+// New kernels for sorting
+// =======================
+
+__global__ void __launch_bounds__(512, 4)
+    block_odd_even_sort(const int *M2_hits, const int *cuda_edge_sum,
+                        int *M2_idxs) {
+  bool sorted{};
+  auto comparison = thrust::less<int>{};
+
+  const int begin = cuda_edge_sum[blockIdx.x];
+  const int end = cuda_edge_sum[blockIdx.x + 1];
+  if (end - begin == 0) {
+    return;
+  }
+
+  do {
+    sorted = true;
+
+    for (std::uint32_t j =
+             begin + 2 * static_cast<std::uint32_t>(threadIdx.x) + 1;
+         j < end - 1; j += 2 * blockDim.x) {
+      if (comparison(M2_hits[M2_idxs[j + 1]], M2_hits[M2_idxs[j]])) {
+        swap(M2_idxs[j + 1], M2_idxs[j]);
+        sorted = false;
+      }
+    }
+
+    __syncthreads();
+
+    for (std::uint32_t j = begin + 2 * static_cast<std::uint32_t>(threadIdx.x);
+         j < end - 1; j += 2 * blockDim.x) {
+      if (comparison(M2_hits[M2_idxs[j + 1]], M2_hits[M2_idxs[j]])) {
+        swap(M2_idxs[j + 1], M2_idxs[j]);
+        sorted = false;
+      }
+    }
+  } while (__syncthreads_or(!sorted));
 }
 
 }  // namespace Acts::detail
