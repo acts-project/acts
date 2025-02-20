@@ -19,10 +19,14 @@ if(uv_exe STREQUAL "uv_exe-NOTFOUND")
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
         if(APPLE)
             set(UV_NAME "${_base_url}/uv-x86_64-apple-darwin.tar.gz")
-            set(UV_HASH "SHA256=0")
+            set(UV_HASH
+                "SHA256=d8609b53f280d5e784a7586bf7a3fd90c557656af109cee8572b24a0c1443191"
+            )
         elseif(UNIX)
             set(UV_URL "${_base_url}/uv-x86_64-unknown-linux-musl.tar.gz")
-            set(UV_HASH "SHA256=0")
+            set(UV_HASH
+                "SHA256=143dba84867f72107048e1f95be8f894d59f456e018a34276d9d2d6bacdf8f99"
+            )
         endif()
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "(arm)|(ARM)")
         if(APPLE)
@@ -32,7 +36,9 @@ if(uv_exe STREQUAL "uv_exe-NOTFOUND")
             )
         elseif(UNIX)
             set(UV_URL "${_base_url}/uv-aarch64-unknown-linux-musl.tar.gz")
-            set(UV_HASH "SHA256=0")
+            set(UV_HASH
+                "SHA256=6455886f9aef3392df0af630dee9df892787fdffda0f0800245f86a735bd810d"
+            )
         endif()
     else()
         message(
@@ -57,7 +63,11 @@ endif()
 
 message(STATUS "Found uv: ${uv_exe}")
 
-execute_process(COMMAND ${uv_exe} --version OUTPUT_VARIABLE uv_version)
+execute_process(
+    COMMAND ${uv_exe} --version
+    OUTPUT_VARIABLE uv_version
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 message(STATUS "uv version: ${uv_version}")
 
 function(acts_code_generation)
@@ -118,8 +128,9 @@ function(acts_code_generation)
     add_custom_command(
         OUTPUT ${_output_file}
         COMMAND
-            env -i ${uv_exe} run --python ${ARGS_PYTHON_VERSION} --no-project
-            ${_arg_isolated} ${_with_args} ${ARGS_PYTHON} ${_output_file}
+            env -i ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
+            --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
+            ${_output_file}
         DEPENDS ${_depends}
         COMMENT "Generating ${ARGS_OUTPUT}"
         VERBATIM
