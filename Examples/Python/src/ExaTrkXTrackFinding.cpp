@@ -336,7 +336,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(zScale);
     ACTS_PYTHON_MEMBER(gpuDevice);
     ACTS_PYTHON_MEMBER(gpuBlocks);
-    ACTS_PYTHON_MEMBER(maxEdgesAllocate);
+    ACTS_PYTHON_MEMBER(moreParallel);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif
