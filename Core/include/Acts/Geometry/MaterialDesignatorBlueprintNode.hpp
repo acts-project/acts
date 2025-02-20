@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 
 #include <variant>
@@ -26,9 +27,13 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
   // @TODO: This needs cuboid volume storage as well
   // @TODO: I don't love the type
-  using BinningConfig = std::variant<std::vector<
-      std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
-                 Experimental::ProtoBinning>>>;
+  using BinningConfig =
+      std::variant<std::vector<std::tuple<CylinderVolumeBounds::Face,
+                                          Experimental::ProtoBinning,
+                                          Experimental::ProtoBinning>>,
+                   std::vector<std::tuple<CuboidVolumeBounds::Face,
+                                          Experimental::ProtoBinning,
+                                          Experimental::ProtoBinning>>>;
 
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
@@ -74,16 +79,30 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   void finalize(const BlueprintOptions& options, const GeometryContext& gctx,
                 TrackingVolume& parent, const Logger& logger) override;
 
-  /// Retrieve the binning configuration
-  /// @return The binning configuration
-  const std::optional<BinningConfig>& binning() const;
-
-  /// Set the binning configuration
-  /// @param binning The binning configuration
-  MaterialDesignatorBlueprintNode& setBinning(BinningConfig binning);
-
-  MaterialDesignatorBlueprintNode& addFace(
+  /// Configure the designator with a cylinder face and corresponding binning
+  /// information.
+  /// @note This method can be called multiple times to configure different faces.
+  /// @param face The face of the cylinder to configure
+  /// @param loc0 The first binning configuration along local axis 0
+  /// @param loc1 The second binning configuration along local axis 1
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+      const Experimental::ProtoBinning& loc1);
+
+  /// Configure the designator with a cuboid face and corresponding binning
+  /// information.
+  /// @note This method can be called multiple times to configure different faces.
+  /// @param face The face of the cuboid to configure
+  /// @param loc0 The first binning configuration along local axis 0
+  /// @param loc1 The second binning configuration along local axis 1
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      CuboidVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
       const Experimental::ProtoBinning& loc1);
 
  private:
@@ -101,6 +120,10 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
                                   const Experimental::ProtoBinning& loc0,
                                   const Experimental::ProtoBinning& loc1,
                                   const Logger& logger = getDummyLogger());
+
+  void validateCuboidFaceConfig(const Experimental::ProtoBinning& loc0,
+                                const Experimental::ProtoBinning& loc1,
+                                const Logger& logger = getDummyLogger());
 
   std::string m_name{};
 

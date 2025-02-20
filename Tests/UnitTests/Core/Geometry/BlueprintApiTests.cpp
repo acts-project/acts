@@ -262,14 +262,14 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   root->addMaterial("GlobalMaterial", [&](MaterialDesignatorBlueprintNode&
                                               mat) {
-    Experimental::ProtoBinning zBinning{AxisDirection::AxisZ,
-                                        AxisBoundaryType::Bound, 20};
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CylinderVolumeBounds::Face;
 
-    Experimental::ProtoBinning rPhiBinning{AxisDirection::AxisRPhi,
-                                           AxisBoundaryType::Bound, 20};
-
-    mat.setBinning(std::vector{std::tuple{
-        CylinderVolumeBounds::Face::OuterCylinder, rPhiBinning, zBinning}});
+    // Configure cylinder faces with proper binning
+    mat.configureFace(OuterCylinder, {AxisPhi, Bound, 20}, {AxisZ, Bound, 20});
+    mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
+    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
 
     mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
       det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
@@ -400,6 +400,61 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     pseudoNavigation(*trackingGeometry, position, direction, csv, i, 2,
                      *logger->clone(std::nullopt, Logging::DEBUG));
   }
+}
+
+BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
+  Transform3 base{Transform3::Identity()};
+
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {0_mm, 20_mm};
+  auto root = std::make_unique<Blueprint>(cfg);
+
+  root->addMaterial("GlobalMaterial", [&](MaterialDesignatorBlueprintNode&
+                                              mat) {
+    using enum AxisDirection;
+    using enum AxisBoundaryType;
+    using enum CuboidVolumeBounds::Face;
+
+    // Test valid axis combinations for each face type
+    mat.configureFace(NegativeXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
+    mat.configureFace(PositiveXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
+    mat.configureFace(NegativeYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+
+    // Test invalid axis combinations for each face type
+    BOOST_CHECK_THROW(
+        mat.configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisZ, Bound, 10}),
+        std::invalid_argument);
+    BOOST_CHECK_THROW(
+        mat.configureFace(PositiveXFace, {AxisZ, Bound, 5}, {AxisY, Bound, 10}),
+        std::invalid_argument);
+    BOOST_CHECK_THROW(
+        mat.configureFace(NegativeYFace, {AxisY, Bound, 5}, {AxisZ, Bound, 10}),
+        std::invalid_argument);
+    BOOST_CHECK_THROW(
+        mat.configureFace(PositiveYFace, {AxisZ, Bound, 5}, {AxisX, Bound, 10}),
+        std::invalid_argument);
+    BOOST_CHECK_THROW(
+        mat.configureFace(NegativeZFace, {AxisZ, Bound, 5}, {AxisY, Bound, 10}),
+        std::invalid_argument);
+    BOOST_CHECK_THROW(
+        mat.configureFace(PositiveZFace, {AxisY, Bound, 5}, {AxisX, Bound, 10}),
+        std::invalid_argument);
+
+    // Add a cuboid volume - this should throw since cuboid support is not
+    // implemented
+    auto cuboid = std::make_unique<TrackingVolume>(
+        base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 200_mm),
+        "TestCuboid");
+
+    mat.addStaticVolume(std::move(cuboid));
+  });
+
+  // The construct method should throw since cuboid support is not implemented
+  BOOST_CHECK_THROW(root->construct({}, gctx, *logger), std::logic_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

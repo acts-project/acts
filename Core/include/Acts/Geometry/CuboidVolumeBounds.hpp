@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -56,6 +57,22 @@ class CuboidVolumeBounds : public VolumeBounds {
     eHalfLengthY = 1,
     eHalfLengthZ = 2,
     eSize
+  };
+
+  /// Enum describing the possible faces of a cuboid volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  enum Face {
+    NegativeZFace =
+        BoundarySurfaceFace::negativeFaceXY,  ///< Face at negative z
+    PositiveZFace =
+        BoundarySurfaceFace::positiveFaceXY,  ///< Face at positive z
+    NegativeXFace =
+        BoundarySurfaceFace::negativeFaceYZ,  ///< Face at negative x
+    PositiveXFace =
+        BoundarySurfaceFace::positiveFaceYZ,  ///< Face at positive x
+    NegativeYFace =
+        BoundarySurfaceFace::negativeFaceZX,             ///< Face at negative y
+    PositiveYFace = BoundarySurfaceFace::positiveFaceZX  ///< Face at positive y
   };
 
   CuboidVolumeBounds() = delete;

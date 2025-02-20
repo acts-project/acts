@@ -487,13 +487,9 @@ BOOST_AUTO_TEST_CASE(Material) {
   using enum AxisBoundaryType;
 
   root.addMaterial("Material", [&](auto& mat) {
-    // @TODO: This API is not great
-    mat.setBinning(std::vector{
-        std::tuple{NegativeDisc, Experimental::ProtoBinning{AxisR, Bound, 5},
-                   Experimental::ProtoBinning{AxisPhi, Bound, 10}},
-        std::tuple{PositiveDisc, Experimental::ProtoBinning{AxisR, Bound, 15},
-                   Experimental::ProtoBinning{AxisPhi, Bound, 20}},
-    });
+    mat.configureFace(NegativeDisc, {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 20});
+    mat.configureFace(OuterCylinder, {AxisPhi, Bound, 25}, {AxisZ, Bound, 30});
 
     mat.addStaticVolume(std::move(cyl));
   });
@@ -504,25 +500,165 @@ BOOST_AUTO_TEST_CASE(Material) {
   auto lookup = nameLookup(*trackingGeometry);
   auto& child = lookup("child");
 
-  const auto* negDisc = child.portals().at(0).surface().surfaceMaterial();
-  const auto* posDisc = child.portals().at(1).surface().surfaceMaterial();
+  // Check negative disc material
+  const auto* negDisc = child.portals()
+                            .at(static_cast<std::size_t>(NegativeDisc))
+                            .surface()
+                            .surfaceMaterial();
   BOOST_CHECK_NE(negDisc, nullptr);
-  BOOST_CHECK_NE(posDisc, nullptr);
-
   const auto& negDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*negDisc);
-  const auto& posDiscMat =
-      dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
-
   BOOST_CHECK_EQUAL(negDiscMat.binning().binning.at(0).bins(), 5);
   BOOST_CHECK_EQUAL(negDiscMat.binning().binning.at(1).bins(), 10);
+
+  // Check positive disc material
+  const auto* posDisc = child.portals()
+                            .at(static_cast<std::size_t>(PositiveDisc))
+                            .surface()
+                            .surfaceMaterial();
+  BOOST_CHECK_NE(posDisc, nullptr);
+  const auto& posDiscMat =
+      dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
   BOOST_CHECK_EQUAL(posDiscMat.binning().binning.at(0).bins(), 15);
   BOOST_CHECK_EQUAL(posDiscMat.binning().binning.at(1).bins(), 20);
 
-  for (std::size_t i = 2; i < child.portals().size(); i++) {
-    BOOST_CHECK_EQUAL(child.portals().at(i).surface().surfaceMaterial(),
-                      nullptr);
+  // Check outer cylinder material
+  const auto* outerCyl = child.portals()
+                             .at(static_cast<std::size_t>(OuterCylinder))
+                             .surface()
+                             .surfaceMaterial();
+  BOOST_CHECK_NE(outerCyl, nullptr);
+  const auto& outerCylMat =
+      dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().binning.at(0).bins(), 25);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().binning.at(1).bins(), 30);
+
+  // Check that other faces have no material
+  for (std::size_t i = 0; i < child.portals().size(); i++) {
+    if (i != static_cast<std::size_t>(NegativeDisc) &&
+        i != static_cast<std::size_t>(PositiveDisc) &&
+        i != static_cast<std::size_t>(OuterCylinder)) {
+      BOOST_CHECK_EQUAL(child.portals().at(i).surface().surfaceMaterial(),
+                        nullptr);
+    }
   }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+
+  // Test invalid axis direction combinations for cylinder faces
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CylinderVolumeBounds::Face::NegativeDisc,
+                             {AxisZ, Bound, 5}, {AxisPhi, Bound, 10});
+                       }),
+      std::invalid_argument);
+
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CylinderVolumeBounds::Face::OuterCylinder,
+                             {AxisR, Bound, 5}, {AxisR, Bound, 10});
+                       }),
+      std::invalid_argument);
+
+  // Test invalid axis direction combinations for cuboid faces
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CuboidVolumeBounds::Face::NegativeXFace,
+                             {AxisX, Bound, 5}, {AxisZ, Bound, 10});
+                       }),
+      std::invalid_argument);
+
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CuboidVolumeBounds::Face::PositiveYFace,
+                             {AxisY, Bound, 5}, {AxisX, Bound, 10});
+                       }),
+      std::invalid_argument);
+
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CuboidVolumeBounds::Face::NegativeZFace,
+                             {AxisZ, Bound, 5}, {AxisY, Bound, 10});
+                       }),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+
+  // Configure for cylinder first, then try to add cuboid - should throw
+  BOOST_CHECK_THROW(
+      root.addMaterial(
+          "Material",
+          [&](auto& mat) {
+            mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
+                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+            mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
+                              {AxisY, Bound, 5}, {AxisZ, Bound, 10});
+          }),
+      std::invalid_argument);
+
+  // Configure for cuboid first, then try to add cylinder - should throw
+  BOOST_CHECK_THROW(
+      root.addMaterial(
+          "Material",
+          [&](auto& mat) {
+            mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
+                              {AxisY, Bound, 5}, {AxisZ, Bound, 10});
+            mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
+                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+          }),
+      std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(MaterialCuboidNotImplemented) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+
+  double hlX = 30_mm;
+  double hlY = 40_mm;
+  double hlZ = 50_mm;
+  auto cuboidBounds = std::make_shared<CuboidVolumeBounds>(hlX, hlY, hlZ);
+  auto cuboid = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                 cuboidBounds, "child");
+
+  root.addMaterial("Material", [&](auto& mat) {
+    mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
+                      {AxisX, Bound, 5}, {AxisY, Bound, 10});
+    mat.addStaticVolume(std::move(cuboid));
+  });
+
+  // The construct method should throw since cuboid support is not implemented
+  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

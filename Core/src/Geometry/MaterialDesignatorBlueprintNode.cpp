@@ -8,11 +8,14 @@
 
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -49,55 +52,90 @@ void MaterialDesignatorBlueprintNode::validateCylinderFaceConfig(
     CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
     const Experimental::ProtoBinning& loc1, const Logger& logger) {
   using enum CylinderVolumeBounds::Face;
+  using enum AxisDirection;
 
-  if (face == OuterCylinder || face == InnerCylinder) {
-    if (loc0.axisDir != AxisDirection::AxisRPhi) {
-      ACTS_ERROR(prefix() << "Binning is not in RPhi");
-      throw std::runtime_error("Binning is not in RPhi");
-    }
-
-    if (loc1.axisDir != AxisDirection::AxisZ) {
-      ACTS_ERROR(prefix() << "Binning is not in Z");
-      throw std::runtime_error("Binning is not in Z");
-    }
+  // Check if we already have a different volume type configured
+  if (m_binning.has_value() &&
+      !std::holds_alternative<std::vector<
+          std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
+                     Experimental::ProtoBinning>>>(m_binning.value())) {
+    ACTS_ERROR(prefix() << "Cannot mix volume types in material configuration");
+    throw std::invalid_argument(
+        "Cannot mix volume types in material configuration");
   }
 
-  if (face == PositiveDisc || face == NegativeDisc) {
-    if (loc0.axisDir != AxisDirection::AxisR) {
-      ACTS_ERROR(prefix() << "Binning is not in R");
-      throw std::runtime_error("Binning is not in R");
-    }
-    if (loc1.axisDir != AxisDirection::AxisPhi) {
-      ACTS_ERROR(prefix() << "Binning is not in Phi");
-      throw std::runtime_error("Binning is not in Phi");
-    }
+  // Validate axis directions based on face type
+  switch (face) {
+    case NegativeDisc:
+    case PositiveDisc:
+      if (loc0.axisDir != AxisR || loc1.axisDir != AxisPhi) {
+        ACTS_ERROR(prefix() << "Disc faces must use (r, phi) binning");
+        throw std::invalid_argument("Disc faces must use (r, phi) binning");
+      }
+      break;
+    case OuterCylinder:
+    case InnerCylinder:
+      if (loc0.axisDir != AxisPhi || loc1.axisDir != AxisZ) {
+        ACTS_ERROR(prefix() << "Cylinder faces must use (phi, z) binning");
+        throw std::invalid_argument("Cylinder faces must use (phi, z) binning");
+      }
+      break;
+    case NegativePhiPlane:
+    case PositivePhiPlane:
+      if (loc0.axisDir != AxisR || loc1.axisDir != AxisZ) {
+        ACTS_ERROR(prefix() << "Phi plane faces must use (r, z) binning");
+        throw std::invalid_argument("Phi plane faces must use (r, z) binning");
+      }
+      break;
   }
 }
 
 void MaterialDesignatorBlueprintNode::handleCylinderBinning(
     CylinderPortalShell& cylShell,
     const std::vector<
-        std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+        std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
                    Experimental::ProtoBinning>>& binning,
     const Logger& logger) {
   ACTS_DEBUG(prefix() << "Binning is set to compatible type");
   using enum CylinderVolumeBounds::Face;
 
-  for (auto& [face, loc0, loc1] : binning) {
-    validateCylinderFaceConfig(face, loc0, loc1, logger);
-
-    Experimental::BinningDescription desc{.binning = {loc0, loc1}};
-    ACTS_DEBUG(prefix() << "~> Assigning proto binning " << desc.toString()
-                        << " to face " << face);
-
-    auto material = std::make_shared<ProtoGridSurfaceMaterial>(std::move(desc));
-
-    auto portal = cylShell.portal(face);
+  for (const auto& [face, loc0, loc1] : binning) {
+    auto* portal = cylShell.portal(face);
     if (portal == nullptr) {
       ACTS_ERROR(prefix() << "Portal is nullptr");
       throw std::runtime_error("Portal is nullptr");
     }
-    portal->surface().assignSurfaceMaterial(std::move(material));
+
+    Experimental::BinningDescription desc{.binning = {loc0, loc1}};
+
+    ACTS_DEBUG(prefix() << "Assigning material with binning: "
+                        << desc.toString() << " to face " << face);
+
+    portal->surface().assignSurfaceMaterial(
+        std::make_shared<ProtoGridSurfaceMaterial>(desc));
+  }
+}
+
+void MaterialDesignatorBlueprintNode::validateCuboidFaceConfig(
+    const Experimental::ProtoBinning& loc0,
+    const Experimental::ProtoBinning& loc1, const Logger& logger) {
+  using enum CuboidVolumeBounds::Face;
+  using enum AxisDirection;
+
+  // Check if we already have a different volume type configured
+  if (m_binning.has_value() &&
+      !std::holds_alternative<std::vector<
+          std::tuple<CuboidVolumeBounds::Face, Experimental::ProtoBinning,
+                     Experimental::ProtoBinning>>>(m_binning.value())) {
+    ACTS_ERROR(prefix() << "Cannot mix volume types in material configuration");
+    throw std::invalid_argument(
+        "Cannot mix volume types in material configuration");
+  }
+
+  // There is no ambiguity as to which directions are accepted
+  if (loc0.axisDir != AxisX || loc1.axisDir != AxisY) {
+    ACTS_ERROR(prefix() << "Cuboid faces must use (y, z) binning");
+    throw std::invalid_argument("Cuboid faces must use (y, z) binning");
   }
 }
 
@@ -122,14 +160,18 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
   ACTS_DEBUG(prefix() << "Received shell from child "
                       << children().at(0).name());
 
-  if (auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell)) {
-    ACTS_DEBUG(prefix() << "Connecting cylinder shell");
+  if (!m_binning.has_value()) {
+    ACTS_WARNING(
+        prefix() << "Material designator node has no assignment configured");
+    return shell;
+  }
 
-    if (const auto* binning = std::get_if<std::vector<
-            std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
+  if (auto* cylShell = dynamic_cast<CylinderPortalShell*>(&shell)) {
+    if (auto* cylBinning = std::get_if<std::vector<
+            std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
                        Experimental::ProtoBinning>>>(&m_binning.value());
-        binning != nullptr) {
-      handleCylinderBinning(*cylShell, *binning, logger);
+        cylBinning != nullptr) {
+      handleCylinderBinning(*cylShell, *cylBinning, logger);
     } else {
       ACTS_ERROR(prefix() << "Binning is set to unknown type");
       throw std::runtime_error("Unknown binning type");
@@ -150,6 +192,9 @@ void MaterialDesignatorBlueprintNode::finalize(const BlueprintOptions& options,
                                                TrackingVolume& parent,
                                                const Logger& logger) {
   if (children().size() != 1) {
+    ACTS_ERROR(prefix() << "MaterialDesignatorBlueprintNode must have exactly "
+                           "one child, but has "
+                        << children().size());
     throw std::runtime_error(
         "MaterialDesignatorBlueprintNode must have exactly one child");
   }
@@ -185,32 +230,41 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-const std::optional<MaterialDesignatorBlueprintNode::BinningConfig>&
-MaterialDesignatorBlueprintNode::binning() const {
-  return m_binning;
-}
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+    const Experimental::ProtoBinning& loc1) {
+  validateCylinderFaceConfig(face, loc0, loc1);
 
-MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::setBinning(
-    BinningConfig binning) {
-  m_binning = std::move(binning);
+  if (!m_binning.has_value()) {
+    m_binning = std::vector<
+        std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
+                   Experimental::ProtoBinning>>{};
+  }
+
+  auto& binning = std::get<std::vector<
+      std::tuple<CylinderVolumeBounds::Face, Experimental::ProtoBinning,
+                 Experimental::ProtoBinning>>>(m_binning.value());
+  binning.emplace_back(face, loc0, loc1);
+
   return *this;
 }
 
-MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::addFace(
-    CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CuboidVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
     const Experimental::ProtoBinning& loc1) {
+  validateCuboidFaceConfig(loc0, loc1);
+
   if (!m_binning.has_value()) {
-    validateCylinderFaceConfig(face, loc0, loc1);
-    m_binning = std::vector{std::tuple{face, loc0, loc1}};
-  } else if (auto* binning = std::get_if<std::vector<std::tuple<
-                 CylinderPortalShell::Face, Experimental::ProtoBinning,
-                 Experimental::ProtoBinning>>>(&m_binning.value());
-             binning != nullptr) {
-    validateCylinderFaceConfig(face, loc0, loc1);
-    binning->emplace_back(face, loc0, loc1);
-  } else {
-    throw std::runtime_error("Unknown binning type");
+    m_binning = std::vector<
+        std::tuple<CuboidVolumeBounds::Face, Experimental::ProtoBinning,
+                   Experimental::ProtoBinning>>{};
   }
+
+  auto& binning = std::get<std::vector<
+      std::tuple<CuboidVolumeBounds::Face, Experimental::ProtoBinning,
+                 Experimental::ProtoBinning>>>(m_binning.value());
+  binning.emplace_back(face, loc0, loc1);
+
   return *this;
 }
 
