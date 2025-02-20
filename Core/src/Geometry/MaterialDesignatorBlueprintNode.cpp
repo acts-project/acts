@@ -75,17 +75,15 @@ void MaterialDesignatorBlueprintNode::validateCylinderFaceConfig(
       break;
     case OuterCylinder:
     case InnerCylinder:
-      if (loc0.axisDir != AxisPhi || loc1.axisDir != AxisZ) {
+      if (loc0.axisDir != AxisRPhi || loc1.axisDir != AxisZ) {
         ACTS_ERROR(prefix() << "Cylinder faces must use (phi, z) binning");
         throw std::invalid_argument("Cylinder faces must use (phi, z) binning");
       }
       break;
     case NegativePhiPlane:
     case PositivePhiPlane:
-      if (loc0.axisDir != AxisR || loc1.axisDir != AxisZ) {
-        ACTS_ERROR(prefix() << "Phi plane faces must use (r, z) binning");
-        throw std::invalid_argument("Phi plane faces must use (r, z) binning");
-      }
+      ACTS_ERROR(prefix() << "Phi plane faces are not supported");
+      throw std::invalid_argument("Phi plane faces are not supported");
       break;
   }
 }
