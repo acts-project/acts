@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 
 #include <functional>
+#include <limits>
 
 namespace Acts {
 
@@ -36,10 +37,10 @@ struct StepperPlainOptions {
   double stepSizeCutOff = 0.;
 
   /// Initial step size
-  double initialStepSize = 1 * Acts::UnitConstants::m;
+  double initialStepSize = 10 * Acts::UnitConstants::m;
 
   /// Absolute maximum step size
-  double maxStepSize = 10 * Acts::UnitConstants::m;
+  double maxStepSize = std::numeric_limits<double>::max();
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
