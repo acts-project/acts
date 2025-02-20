@@ -35,6 +35,9 @@ struct StepperPlainOptions {
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
 
+  /// Initial step size
+  double initialStepSize = 1 * Acts::UnitConstants::m;
+
   /// Absolute maximum step size
   double maxStepSize = 10 * Acts::UnitConstants::m;
 
