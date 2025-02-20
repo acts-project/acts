@@ -373,7 +373,17 @@ void addBlueprint(Context& ctx) {
                             std::shared_ptr<MaterialDesignatorBlueprintNode>>(
                      m, "MaterialDesignatorBlueprintNode")
                      .def(py::init<const std::string&>(), "name"_a)
-                     .def("addFace", &MaterialDesignatorBlueprintNode::addFace,
+                     .def("configureFace",
+                          py::overload_cast<CylinderVolumeBounds::Face,
+                                            const Experimental::ProtoBinning&,
+                                            const Experimental::ProtoBinning&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a)
+                     .def("configureFace",
+                          py::overload_cast<CuboidVolumeBounds::Face,
+                                            const Experimental::ProtoBinning&,
+                                            const Experimental::ProtoBinning&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
