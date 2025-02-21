@@ -132,8 +132,8 @@ void MaterialDesignatorBlueprintNode::validateCuboidFaceConfig(
 
   // There is no ambiguity as to which directions are accepted
   if (loc0.axisDir != AxisX || loc1.axisDir != AxisY) {
-    ACTS_ERROR(prefix() << "Cuboid faces must use (y, z) binning");
-    throw std::invalid_argument("Cuboid faces must use (y, z) binning");
+    ACTS_ERROR(prefix() << "Cuboid faces must use (x, y) binning");
+    throw std::invalid_argument("Cuboid faces must use (x, y) binning");
   }
 }
 
