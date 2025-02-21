@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   root.addMaterial("Material", [&](auto& mat) {
     mat.configureFace(NegativeDisc, {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
     mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 20});
-    mat.configureFace(OuterCylinder, {AxisPhi, Bound, 25}, {AxisZ, Bound, 30});
+    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 25}, {AxisZ, Bound, 30});
 
     mat.addStaticVolume(std::move(cyl));
   });

@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     using enum CylinderVolumeBounds::Face;
 
     // Configure cylinder faces with proper binning
-    mat.configureFace(OuterCylinder, {AxisPhi, Bound, 20}, {AxisZ, Bound, 20});
+    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
     mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
     mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
 
