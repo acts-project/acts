@@ -111,80 +111,101 @@ class Gen1GeometryClosureVisitor : public TrackingGeometryMutableVisitor {
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
 };
 
+namespace {
+class GeometryIdMapVisitor : public TrackingGeometryVisitor {
+ private:
+  void checkIdentifier(const GeometryObject& obj, std::string_view type) {
+    if (obj.geometryId() == GeometryIdentifier{}) {
+      std::stringstream ss;
+      ss << "Encountered " << type << " with no geometry ID";
+      throw std::invalid_argument(ss.str());
+    }
+
+    ACTS_VERBOSE("Checking identifier for " << type << ": "
+                                            << obj.geometryId());
+
+    auto [it, inserted] = m_objectsById.emplace(obj.geometryId(), &obj);
+
+    if (!inserted && it->second != &obj) {
+      std::stringstream ss;
+      ss << "Duplicate " << type << " ID: " << obj.geometryId() << ": & "
+         << it->second << " != " << &obj;
+      ACTS_ERROR(ss.str());
+      throw std::invalid_argument(ss.str());
+    } else {
+      ACTS_VERBOSE("Inserted " << type << " ID: " << obj.geometryId()
+                               << " pointing at " << &obj);
+    }
+  }
+
+  const Logger& logger() const { return m_logger; }
+  const Logger& m_logger;
+
+ public:
+  GeometryIdMapVisitor(const Logger& logger) : m_logger(logger) {}
+
+  void visitVolume(const TrackingVolume& volume) override {
+    std::string label = "volume(" + volume.volumeName() + ")";
+    checkIdentifier(volume, label);
+
+    m_volumesById.emplace(volume.geometryId(), &volume);
+  }
+
+  void visitSurface(const Surface& surface) override {
+    if (surface.geometryId() == GeometryIdentifier{}) {
+      std::cout << "Surface has no geometry ID: "
+                << surface.toStream(GeometryContext()) << std::endl;
+      throw std::invalid_argument("Surface has no geometry ID");
+    }
+
+    checkIdentifier(surface, "surface");
+
+    //@TODO: Why not use all of them?
+    if (surface.geometryId().sensitive() != 0) {
+      m_surfacesById.emplace(surface.geometryId(), &surface);
+    }
+  }
+
+  void visitLayer(const Layer& layer) override {
+    // Layers ARE also GeometryObjects and have IDs.
+    // Let's check that the layer has the same ID as it's surface
+    // representation. Uniqueness of the surface IDs is checked in the surface
+    if (layer.geometryId() != layer.surfaceRepresentation().geometryId()) {
+      ACTS_ERROR("Layer ID mismatch: "
+                 << layer.geometryId()
+                 << " != " << layer.surfaceRepresentation().geometryId());
+      throw std::invalid_argument("Layer ID mismatch");
+    }
+  }
+
+  void visitBoundarySurface(
+      const BoundarySurfaceT<TrackingVolume>& boundary) override {
+    checkIdentifier(boundary.surfaceRepresentation(), "boundary surface");
+  }
+
+  void visitPortal(const Portal& portal) override {
+    checkIdentifier(portal.surface(), "portal");
+  }
+
+  std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById{};
+  std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
+
+  std::unordered_map<GeometryIdentifier, const GeometryObject*> m_objectsById{};
+};
+
+}  // namespace
 TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator,
     const GeometryIdentifierHook& hook, const Logger& logger, bool close)
     : m_world(highestVolume) {
   if (close) {
+    ACTS_DEBUG("Closing tracking geometry with Gen1 assignment");
     Gen1GeometryClosureVisitor visitor{logger, materialDecorator, hook};
     apply(visitor);
   }
 
-  class Visitor : public TrackingGeometryVisitor {
-   private:
-    void checkIdentifier(const GeometryObject& obj, std::string_view type) {
-      if (obj.geometryId() == GeometryIdentifier{}) {
-        std::stringstream ss;
-        ss << "Encountered " << type << " with no geometry ID";
-        throw std::invalid_argument(ss.str());
-      }
-
-      auto [it, inserted] = m_objectsById.emplace(obj.geometryId(), &obj);
-
-      if (!inserted && it->second != &obj) {
-        std::stringstream ss;
-        ss << "Duplicate " << type << " ID: " << obj.geometryId() << ": & "
-           << it->second << " != " << &obj;
-        throw std::invalid_argument(ss.str());
-      }
-    }
-
-   public:
-    void visitVolume(const TrackingVolume& volume) override {
-      std::string label = "volume(" + volume.volumeName() + ")";
-      checkIdentifier(volume, label);
-
-      m_volumesById.emplace(volume.geometryId(), &volume);
-    }
-
-    void visitSurface(const Surface& surface) override {
-      if (surface.geometryId() == GeometryIdentifier{}) {
-        std::cout << "Surface has no geometry ID: "
-                  << surface.toStream(GeometryContext()) << std::endl;
-        throw std::invalid_argument("Surface has no geometry ID");
-      }
-
-      checkIdentifier(surface, "surface");
-
-      //@TODO: Why not use all of them?
-      if (surface.geometryId().sensitive() != 0) {
-        m_surfacesById.emplace(surface.geometryId(), &surface);
-      }
-    }
-
-    void visitLayer(const Layer& layer) override {
-      checkIdentifier(layer, "layer");
-    }
-
-    void visitBoundarySurface(
-        const BoundarySurfaceT<TrackingVolume>& boundary) override {
-      checkIdentifier(boundary.surfaceRepresentation(), "boundary surface");
-    }
-
-    void visitPortal(const Portal& portal) override {
-      checkIdentifier(portal.surface(), "portal");
-    }
-
-    std::unordered_map<GeometryIdentifier, const TrackingVolume*>
-        m_volumesById{};
-    std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById{};
-
-    std::unordered_map<GeometryIdentifier, const GeometryObject*>
-        m_objectsById{};
-  };
-
-  Visitor mapVisitor;
+  GeometryIdMapVisitor mapVisitor{logger};
   apply(mapVisitor);
   m_volumesById = std::move(mapVisitor.m_volumesById);
   m_surfacesById = std::move(mapVisitor.m_surfacesById);
