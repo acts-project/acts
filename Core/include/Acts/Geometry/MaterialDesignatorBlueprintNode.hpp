@@ -25,8 +25,6 @@ namespace Acts {
 /// @note This currently only supports a cylinder volume child
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  // @TODO: This needs cuboid volume storage as well
-  // @TODO: I don't love the type
   using BinningConfig =
       std::variant<std::vector<std::tuple<CylinderVolumeBounds::Face,
                                           Experimental::ProtoBinning,
