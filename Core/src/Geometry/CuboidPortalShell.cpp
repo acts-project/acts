@@ -27,8 +27,8 @@
 namespace Acts {
 
 void CuboidPortalShell::fill(TrackingVolume& volume) {
-  for (Face face : {NegativeZFace, PositiveZFace, NegativeXFace,
-                    PositiveXFace, NegativeYFace, PositiveYFace}) {
+  for (Face face : {NegativeZFace, PositiveZFace, NegativeXFace, PositiveXFace,
+                    NegativeYFace, PositiveYFace}) {
     const auto& portalAtFace = portalPtr(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
