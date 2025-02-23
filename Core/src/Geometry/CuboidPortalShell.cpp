@@ -27,8 +27,8 @@
 namespace Acts {
 
 void CuboidPortalShell::fill(TrackingVolume& volume) {
-  for (Face face : {NegativeXYPlane, PositiveXYPlane, NegativeYZPlane,
-                    PositiveYZPlane, NegativeZXPlane, PositiveZXPlane}) {
+  for (Face face : {NegativeZFace, PositiveZFace, NegativeXFace,
+                    PositiveXFace, NegativeYFace, PositiveYFace}) {
     const auto& portalAtFace = portalPtr(face);
     if (portalAtFace != nullptr) {
       portalAtFace->fill(volume);
@@ -55,12 +55,12 @@ SingleCuboidPortalShell::SingleCuboidPortalShell(TrackingVolume& volume)
         std::make_shared<Portal>(source.direction, source.surface, *m_volume);
   };
 
-  handle(NegativeXYPlane, negativeFaceXY);
-  handle(PositiveXYPlane, positiveFaceXY);
-  handle(NegativeYZPlane, negativeFaceYZ);
-  handle(PositiveYZPlane, positiveFaceYZ);
-  handle(NegativeZXPlane, negativeFaceZX);
-  handle(PositiveZXPlane, positiveFaceZX);
+  handle(NegativeZFace, negativeFaceXY);
+  handle(PositiveZFace, positiveFaceXY);
+  handle(NegativeXFace, negativeFaceYZ);
+  handle(PositiveXFace, positiveFaceYZ);
+  handle(NegativeYFace, negativeFaceZX);
+  handle(PositiveYFace, positiveFaceZX);
 }
 
 Portal* SingleCuboidPortalShell::portal(Face face) {
@@ -124,27 +124,27 @@ CuboidStackPortalShell::CuboidStackPortalShell(
   switch (m_direction) {
     case AxisDirection::AxisX:
       dirVector = Vector3::UnitX();
-      onSurfaceDirs = {{NegativeXYPlane, AxisDirection::AxisX},
-                       {PositiveXYPlane, AxisDirection::AxisX},
-                       {NegativeZXPlane, AxisDirection::AxisY},
-                       {PositiveZXPlane, AxisDirection::AxisY}};
+      onSurfaceDirs = {{NegativeZFace, AxisDirection::AxisX},
+                       {PositiveZFace, AxisDirection::AxisX},
+                       {NegativeYFace, AxisDirection::AxisY},
+                       {PositiveYFace, AxisDirection::AxisY}};
       break;
     case AxisDirection::AxisY:
       dirVector = Vector3::UnitY();
-      onSurfaceDirs = {{NegativeXYPlane, AxisDirection::AxisY},
-                       {PositiveXYPlane, AxisDirection::AxisY},
-                       {NegativeYZPlane, AxisDirection::AxisX},
-                       {PositiveYZPlane, AxisDirection::AxisX}};
+      onSurfaceDirs = {{NegativeZFace, AxisDirection::AxisY},
+                       {PositiveZFace, AxisDirection::AxisY},
+                       {NegativeXFace, AxisDirection::AxisX},
+                       {PositiveXFace, AxisDirection::AxisX}};
       break;
     case AxisDirection::AxisZ:
       dirVector = Vector3::UnitZ();
-      onSurfaceDirs = {{NegativeYZPlane, AxisDirection::AxisY},
-                       {PositiveYZPlane, AxisDirection::AxisY},
-                       {NegativeZXPlane, AxisDirection::AxisX},
-                       {PositiveZXPlane, AxisDirection::AxisX}};
+      onSurfaceDirs = {{NegativeXFace, AxisDirection::AxisY},
+                       {PositiveXFace, AxisDirection::AxisY},
+                       {NegativeYFace, AxisDirection::AxisX},
+                       {PositiveYFace, AxisDirection::AxisX}};
       break;
     default:
-      throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
+      throw std::invalid_argument("CuboidPortalShell: Invalid axis direction");
   }
 
   ACTS_VERBOSE("Making cuboid stack shell in " << m_direction << " direction");
@@ -281,18 +281,18 @@ std::string CuboidStackPortalShell::label() const {
 std::ostream& operator<<(std::ostream& os, CuboidPortalShell::Face face) {
   switch (face) {
     using enum CuboidVolumeBounds::Face;
-    case PositiveXYPlane:
-      return os << "PositiveXYPlane";
-    case NegativeXYPlane:
-      return os << "NegativeXYPlane";
-    case PositiveYZPlane:
-      return os << "PositiveYZPlane";
-    case NegativeYZPlane:
-      return os << "NegativeYZPlane";
-    case PositiveZXPlane:
-      return os << "PositiveZXPlane";
-    case NegativeZXPlane:
-      return os << "NegativeZXPlane";
+    case PositiveZFace:
+      return os << "PositiveZFace";
+    case NegativeZFace:
+      return os << "NegativeZFace";
+    case PositiveXFace:
+      return os << "PositiveXFace";
+    case NegativeXFace:
+      return os << "NegativeXFace";
+    case PositiveYFace:
+      return os << "PositiveYFace";
+    case NegativeYFace:
+      return os << "NegativeYFace";
     default:
       return os << "Invalid face";
   }

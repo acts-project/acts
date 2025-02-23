@@ -191,19 +191,19 @@ CuboidVolumeBounds::facesFromAxisDirection(AxisDirection direction) {
   using enum CuboidVolumeBounds::Face;
   if (direction == AxisX) {
     return {
-        NegativeYZPlane,
-        PositiveYZPlane,
-        {NegativeXYPlane, PositiveXYPlane, NegativeZXPlane, PositiveZXPlane}};
+        NegativeXFace,
+        PositiveXFace,
+        {NegativeZFace, PositiveZFace, NegativeYFace, PositiveYFace}};
   } else if (direction == AxisY) {
     return {
-        NegativeZXPlane,
-        PositiveZXPlane,
-        {NegativeXYPlane, PositiveXYPlane, NegativeYZPlane, PositiveYZPlane}};
+        NegativeYFace,
+        PositiveYFace,
+        {NegativeZFace, PositiveZFace, NegativeXFace, PositiveXFace}};
   } else if (direction == AxisZ) {
     return {
-        NegativeXYPlane,
-        PositiveXYPlane,
-        {NegativeYZPlane, PositiveYZPlane, NegativeZXPlane, PositiveZXPlane}};
+        NegativeZFace,
+        PositiveZFace,
+        {NegativeXFace, PositiveXFace, NegativeYFace, PositiveYFace}};
   } else {
     throw std::invalid_argument("Invalid axis direction");
   }
