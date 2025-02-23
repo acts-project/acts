@@ -290,6 +290,10 @@ BOOST_DATA_TEST_CASE(XYZDirection,
     const auto& normal1 = shell1.transform().translation() -
                           shell1.portal(face)->surface().center(gctx);
 
+    const auto& center2 = centers2.at(face);
+    const auto& normal2 = shell2.transform().translation() -
+                          shell2.portal(face)->surface().center(gctx);
+
     BOOST_CHECK_EQUAL(
         shell1.portal(face)->resolveVolume(gctx, center1, normal1).value(),
         &vol1);
@@ -298,8 +302,11 @@ BOOST_DATA_TEST_CASE(XYZDirection,
         nullptr);
 
     BOOST_CHECK_EQUAL(
-        shell1.portal(face)->resolveVolume(gctx, center1, normal1).value(),
-        stack.portal(face)->resolveVolume(gctx, center1, normal1).value());
+        shell2.portal(face)->resolveVolume(gctx, center2, normal2).value(),
+        &vol2);
+    BOOST_CHECK_EQUAL(
+        shell2.portal(face)->resolveVolume(gctx, center2, -normal2).value(),
+        nullptr);
   }
 
   shell1 = SingleCuboidPortalShell{vol1};
