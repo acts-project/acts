@@ -133,31 +133,6 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
   initializeOuterVolume(strategy, logger);
 }
 
-CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
-                                     const Vector3& direction,
-                                     VolumeAttachmentStrategy strategy,
-                                     VolumeResizeStrategy resizeStrategy,
-                                     const Logger& logger)
-    : Volume(initialVolume(volumes)),
-      m_resizeStrategy(resizeStrategy),
-      m_volumes(volumes) {
-  Vector3 localDirVector =
-      m_volumes.front()->transform().rotation().inverse() * direction;
-  if ((localDirVector - Vector3::UnitX()).norm() < 1e-4) {
-    m_dir = AxisDirection::AxisX;
-  } else if ((localDirVector - Vector3::UnitY()).norm() < 1e-4) {
-    m_dir = AxisDirection::AxisY;
-  } else if ((localDirVector - Vector3::UnitZ()).norm() < 1e-4) {
-    m_dir = AxisDirection::AxisZ;
-  } else {
-    throw std::invalid_argument("CuboidVolumeStack: Invalid axis direction");
-  }
-
-  std::tie(m_dirOrth1, m_dirOrth2) = getOrthogonalAxes(m_dir);
-
-  initializeOuterVolume(strategy, logger);
-}
-
 Volume& CuboidVolumeStack::initialVolume(const std::vector<Volume*>& volumes) {
   if (volumes.empty()) {
     throw std::invalid_argument(
