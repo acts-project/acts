@@ -343,9 +343,9 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                        << (aMidNew - aHlNew) << " <- " << aMidNew << " -> "
                        << (aMidNew + aHlNew) << "]");
 
-          assert(std::abs(a.min(m_dir) - (aMidNew - aHlNew)) < 1e-9 &&
+          assert(std::abs(a.min(m_direction) - (aMidNew - aHlNew)) < 1e-9 &&
                  "Volume shrunk");
-          assert(aHlNew >= a.halfLength(m_dir) && "Volume shrunk");
+          assert(aHlNew >= a.halfLength(m_direction) && "Volume shrunk");
 
           double bMidNew =
               (b.min(m_direction) + b.max(m_direction)) / 2.0 - gapWidth / 4.0;
@@ -355,8 +355,8 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                        << (bMidNew - bHlNew) << " <- " << bMidNew << " -> "
                        << (bMidNew + bHlNew) << "]");
 
-          assert(bHlNew >= b.halfLength(m_dir) && "Volume shrunk");
-          assert(std::abs(b.max(m_dir) - (bMidNew + bHlNew)) < 1e-9 &&
+          assert(bHlNew >= b.halfLength(m_direction) && "Volume shrunk");
+          assert(std::abs(b.max(m_direction) - (bMidNew + bHlNew)) < 1e-9 &&
                  "Volume shrunk");
 
           Translation3 translationA(Vector3::Unit(dirIdx) * aMidNew);
@@ -378,9 +378,9 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                        << (aMidNew - aHlNew) << " <- " << aMidNew << " -> "
                        << (aMidNew + aHlNew) << "]");
 
-          assert(std::abs(a.min(m_dir) - (aMidNew - aHlNew)) < 1e-9 &&
+          assert(std::abs(a.min(m_direction) - (aMidNew - aHlNew)) < 1e-9 &&
                  "Volume shrunk");
-          assert(aHlNew >= a.halfLength(m_dir) && "Volume shrunk");
+          assert(aHlNew >= a.halfLength(m_direction) && "Volume shrunk");
 
           Translation3 translationA(Vector3::Unit(dirIdx) * aMidNew);
           a.setLocalTransform(Transform3{translationA}, m_groupTransform);
@@ -397,8 +397,8 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                        << (bMidNew - bHlNew) << " <- " << bMidNew << " -> "
                        << (bMidNew + bHlNew) << "]");
 
-          assert(bHlNew >= b.halfLength(m_dir) && "Volume shrunk");
-          assert(std::abs(b.max(m_dir) - (bMidNew + bHlNew)) < 1e-9 &&
+          assert(bHlNew >= b.halfLength(m_direction) && "Volume shrunk");
+          assert(std::abs(b.max(m_direction) - (bMidNew + bHlNew)) < 1e-9 &&
                  "Volume shrunk");
 
           Translation3 translationB(Vector3::Unit(dirIdx) * bMidNew);
