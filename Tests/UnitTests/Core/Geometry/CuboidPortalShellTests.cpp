@@ -246,12 +246,12 @@ BOOST_DATA_TEST_CASE(XYZDirection,
 
   std::map<CuboidVolumeBounds::Face, Vector3> centers1;
   std::map<CuboidVolumeBounds::Face, Vector3> centers2;
-  for (const auto& face : sideFaces) {
-    const auto& center1 = shell1.portal(face)->surface().center(gctx);
+  for (const auto face : sideFaces) {
+    const auto center1 = shell1.portal(face)->surface().center(gctx);
     const auto& normal1 = shell1.transform().translation() -
                           shell1.portal(face)->surface().center(gctx);
 
-    const auto& center2 = shell2.portal(face)->surface().center(gctx);
+    const auto center2 = shell2.portal(face)->surface().center(gctx);
     const auto& normal2 = shell2.transform().translation() -
                           shell2.portal(face)->surface().center(gctx);
 
