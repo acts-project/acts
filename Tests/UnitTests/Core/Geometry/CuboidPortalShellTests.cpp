@@ -247,29 +247,46 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   std::map<CuboidVolumeBounds::Face, Vector3> centers1;
   std::map<CuboidVolumeBounds::Face, Vector3> centers2;
   for (const auto face : sideFaces) {
+    Vector3 normal{};
+    switch (face) {
+        case NegativeZFace:
+            normal = Vector3::UnitZ();
+            break;
+        case PositiveZFace:
+            normal = -Vector3::UnitZ();
+            break;
+        case NegativeYFace:
+            normal = Vector3::UnitY();
+            break;
+        case PositiveYFace:
+            normal = -Vector3::UnitY();
+            break;
+        case NegativeXFace:
+            normal = Vector3::UnitX();
+            break;
+        case PositiveXFace:
+            normal = -Vector3::UnitX();
+            break;
+    }
+    
     const auto center1 = shell1.portal(face)->surface().center(gctx);
-    const auto& normal1 = shell1.transform().translation() -
-                          shell1.portal(face)->surface().center(gctx);
-
     const auto center2 = shell2.portal(face)->surface().center(gctx);
-    const auto& normal2 = shell2.transform().translation() -
-                          shell2.portal(face)->surface().center(gctx);
 
     centers1[face] = center1;
     centers2[face] = center2;
 
     BOOST_CHECK_EQUAL(
-        shell1.portal(face)->resolveVolume(gctx, center1, normal1).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, normal).value(),
         &vol1);
     BOOST_CHECK_EQUAL(
-        shell1.portal(face)->resolveVolume(gctx, center1, -normal1).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, -normal).value(),
         nullptr);
 
     BOOST_CHECK_EQUAL(
-        shell2.portal(face)->resolveVolume(gctx, center2, normal2).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, normal).value(),
         &vol2);
     BOOST_CHECK_EQUAL(
-        shell2.portal(face)->resolveVolume(gctx, center2, -normal2).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, -normal).value(),
         nullptr);
   }
 
@@ -283,29 +300,46 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   BOOST_CHECK_EQUAL(shell2.portal(backFace), stack.portal(backFace));
 
   for (const auto& face : sideFaces) {
+    Vector3 normal{};
+    switch (face) {
+        case NegativeZFace:
+            normal = Vector3::UnitZ();
+            break;
+        case PositiveZFace:
+            normal = -Vector3::UnitZ();
+            break;
+        case NegativeYFace:
+            normal = Vector3::UnitY();
+            break;
+        case PositiveYFace:
+            normal = -Vector3::UnitY();
+            break;
+        case NegativeXFace:
+            normal = Vector3::UnitX();
+            break;
+        case PositiveXFace:
+            normal = -Vector3::UnitX();
+            break;
+    }
+
     BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
     BOOST_CHECK_EQUAL(shell2.portal(face), stack.portal(face));
 
     const auto& center1 = centers1.at(face);
-    const auto& normal1 = shell1.transform().translation() -
-                          shell1.portal(face)->surface().center(gctx);
-
     const auto& center2 = centers2.at(face);
-    const auto& normal2 = shell2.transform().translation() -
-                          shell2.portal(face)->surface().center(gctx);
 
     BOOST_CHECK_EQUAL(
-        shell1.portal(face)->resolveVolume(gctx, center1, normal1).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, normal).value(),
         &vol1);
     BOOST_CHECK_EQUAL(
-        shell1.portal(face)->resolveVolume(gctx, center1, -normal1).value(),
+        shell1.portal(face)->resolveVolume(gctx, center1, -normal).value(),
         nullptr);
 
     BOOST_CHECK_EQUAL(
-        shell2.portal(face)->resolveVolume(gctx, center2, normal2).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, normal).value(),
         &vol2);
     BOOST_CHECK_EQUAL(
-        shell2.portal(face)->resolveVolume(gctx, center2, -normal2).value(),
+        shell2.portal(face)->resolveVolume(gctx, center2, -normal).value(),
         nullptr);
   }
 
