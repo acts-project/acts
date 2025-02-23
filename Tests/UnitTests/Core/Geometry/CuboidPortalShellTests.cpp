@@ -249,26 +249,26 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   for (const auto face : sideFaces) {
     Vector3 normal{};
     switch (face) {
-        case NegativeZFace:
-            normal = Vector3::UnitZ();
-            break;
-        case PositiveZFace:
-            normal = -Vector3::UnitZ();
-            break;
-        case NegativeYFace:
-            normal = Vector3::UnitY();
-            break;
-        case PositiveYFace:
-            normal = -Vector3::UnitY();
-            break;
-        case NegativeXFace:
-            normal = Vector3::UnitX();
-            break;
-        case PositiveXFace:
-            normal = -Vector3::UnitX();
-            break;
+      case NegativeZFace:
+        normal = Vector3::UnitZ();
+        break;
+      case PositiveZFace:
+        normal = -Vector3::UnitZ();
+        break;
+      case NegativeYFace:
+        normal = Vector3::UnitY();
+        break;
+      case PositiveYFace:
+        normal = -Vector3::UnitY();
+        break;
+      case NegativeXFace:
+        normal = Vector3::UnitX();
+        break;
+      case PositiveXFace:
+        normal = -Vector3::UnitX();
+        break;
     }
-    
+
     const auto center1 = shell1.portal(face)->surface().center(gctx);
     const auto center2 = shell2.portal(face)->surface().center(gctx);
 
@@ -302,24 +302,24 @@ BOOST_DATA_TEST_CASE(XYZDirection,
   for (const auto& face : sideFaces) {
     Vector3 normal{};
     switch (face) {
-        case NegativeZFace:
-            normal = Vector3::UnitZ();
-            break;
-        case PositiveZFace:
-            normal = -Vector3::UnitZ();
-            break;
-        case NegativeYFace:
-            normal = Vector3::UnitY();
-            break;
-        case PositiveYFace:
-            normal = -Vector3::UnitY();
-            break;
-        case NegativeXFace:
-            normal = Vector3::UnitX();
-            break;
-        case PositiveXFace:
-            normal = -Vector3::UnitX();
-            break;
+      case NegativeZFace:
+        normal = Vector3::UnitZ();
+        break;
+      case PositiveZFace:
+        normal = -Vector3::UnitZ();
+        break;
+      case NegativeYFace:
+        normal = Vector3::UnitY();
+        break;
+      case PositiveYFace:
+        normal = -Vector3::UnitY();
+        break;
+      case NegativeXFace:
+        normal = Vector3::UnitX();
+        break;
+      case PositiveXFace:
+        normal = -Vector3::UnitX();
+        break;
     }
 
     BOOST_CHECK_EQUAL(shell1.portal(face), stack.portal(face));
