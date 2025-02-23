@@ -148,7 +148,7 @@ class CuboidVolumeStack : public Volume {
 
   /// Merging direction of the stack
   /// in local group coordinates
-  AxisDirection m_dir{};
+  AxisDirection m_direction{};
 
   /// Directions orthogonal to the
   /// merging direction of the stack
