@@ -61,7 +61,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
   /// Enum describing the possible faces of a cuboid volume
   /// @note These values are synchronized with the BoundarySurfaceFace enum.
-  enum Face {
+  enum class Face : unsigned int {
     NegativeZFace =
         BoundarySurfaceFace::negativeFaceXY,  ///< Face at negative z
     PositiveZFace =
