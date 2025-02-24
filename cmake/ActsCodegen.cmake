@@ -125,6 +125,10 @@ function(acts_code_generation)
 
     set(_codegen_root ${CMAKE_CURRENT_BINARY_DIR}/codegen/${ARGS_TARGET})
     set(_output_file ${_codegen_root}/${ARGS_OUTPUT})
+
+    get_filename_component(_output_dir ${_output_file} DIRECTORY)
+    file(MAKE_DIRECTORY ${_output_dir})
+
     add_custom_command(
         OUTPUT ${_output_file}
         COMMAND
