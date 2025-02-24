@@ -36,6 +36,12 @@
 
 using namespace Acts::UnitLiterals;
 
+using Acts::Experimental::Blueprint;
+using Acts::Experimental::BlueprintNode;
+using Acts::Experimental::BlueprintOptions;
+using Acts::Experimental::LayerBlueprintNode;
+using Acts::Experimental::StaticBlueprintNode;
+
 namespace Acts::Test {
 
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::INFO);

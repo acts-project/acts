@@ -16,7 +16,7 @@
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 const std::string& MaterialDesignatorBlueprintNode::name() const {
   return m_name;
@@ -188,4 +188,4 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::setBinning(
   return *this;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

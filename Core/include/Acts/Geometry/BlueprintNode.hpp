@@ -27,6 +27,9 @@ class Volume;
 class TrackingVolume;
 class VolumeBounds;
 class PortalShellBase;
+
+namespace Experimental {
+
 class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
@@ -292,4 +295,5 @@ class BlueprintNode {
   std::vector<std::shared_ptr<BlueprintNode>> m_children{};
 };
 
+}  // namespace Experimental
 }  // namespace Acts

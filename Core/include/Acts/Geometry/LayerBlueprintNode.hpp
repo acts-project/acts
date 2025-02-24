@@ -12,7 +12,7 @@
 
 #include <ostream>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// The layer node is essentially an auto-sizing wrapper around a set of
 /// surfaces.
@@ -138,4 +138,4 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   LayerType m_layerType = LayerType::Cylinder;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

@@ -18,7 +18,7 @@
 
 #include <map>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// This class handles the case of wrapping a set of cylinder-shaped children
 /// and stacking them in a configured direction.
@@ -154,4 +154,4 @@ class CylinderContainerBlueprintNode final : public BlueprintNode {
   std::unique_ptr<CylinderStackPortalShell> m_shell{nullptr};
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
