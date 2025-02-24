@@ -108,6 +108,7 @@ repos:
     hooks:
     - id: codegen_dependencies
       name: codegen_dependencies
-      language: system
+      language: python
       entry: CI/check_codegen_dependencies.sh
+      additional_dependencies: ["uv"]
       files: pyproject.toml$

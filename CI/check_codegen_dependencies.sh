@@ -10,6 +10,6 @@ input_rel=$(basename "$input_abs")
 dir=$(dirname "$input_abs")
 output=requirements.txt
 
-pushd $dir
+pushd "$dir"
 uv pip compile -p $PYTHON_VERSION "$input_rel" -o "$output"
 popd
