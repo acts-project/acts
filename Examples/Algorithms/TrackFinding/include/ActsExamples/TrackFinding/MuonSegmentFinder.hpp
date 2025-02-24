@@ -8,32 +8,21 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/HoughTransformUtils.hpp"
-#include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 #include "ActsExamples/EventData/MuonSegment.hpp"
-#include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
-#include <cstddef>
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "TCanvas.h"
-
-namespace ActsExamples {
-struct AlgorithmContext;
-}
-
 namespace ActsExamples {
 
+class MuonSpacePointCalibrator;
 /// @brief Example implementation of a muon hough transform seeder
 /// Uses the hough tools from the ACTS Core repo
 /// Reads CSV files with muon sim hits (= true trajectories)
@@ -41,21 +30,17 @@ namespace ActsExamples {
 /// a hough transform to the drift circles in each station,
 /// and compares to the true parameters of the sim hit in the
 /// given station.
-class MuonHoughSeeder final : public IAlgorithm {
+class MuonSegmentFinder final : public IAlgorithm {
  public:
   /// config
   struct Config {
-    std::string inTruthSegments{};
-    std::string inSpacePoints{};
-    std::string outHoughMax{};
-
-    /** @brief Extra margin added to both y-sides of the eta-hough accumulator plane */
-    double etaPlaneMarginIcept{10. * Acts::UnitConstants::cm};
-    /** @brief Extra margin added to both y-sides of the phi-hough accumulator plane */
-    double phiPlaneMarginIcept{10. * Acts::UnitConstants::cm};
+    std::string inHoughSeeds{};
+    std::string outSegments{};
   };
 
-  MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
+  MuonSegmentFinder(Config cfg, Acts::Logging::Level lvl);
+
+  ~MuonSegmentFinder();
 
   /// Run the seeding algorithm.
   ///
@@ -63,8 +48,6 @@ class MuonHoughSeeder final : public IAlgorithm {
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
   ProcessCode initialize() final;
-  ProcessCode finalize() final;
-
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
@@ -73,13 +56,8 @@ class MuonHoughSeeder final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger& logger() const { return *m_logger; }
 
-  ReadDataHandle<MuonSegmentContainer> m_inputTruthSegs{this,
-                                                        "InputTruthSegments"};
-  ReadDataHandle<MuonSpacePointContainer> m_inputSpacePoints{
-      this, "InputSpacePoints"};
-  WriteDataHandle<MuonHoughMaxContainer> m_outputMaxima{this, "OutputHoughMax"};
-  /// use ROOT for visualisation
-  std::unique_ptr<TCanvas> m_outCanvas;
+  ReadDataHandle<MuonHoughMaxContainer> m_inputMax{this, "InputMaxima"};
+  WriteDataHandle<MuonSegmentContainer> m_outSegments{this, "OutputSegments"};
+  std::unique_ptr<MuonSpacePointCalibrator> m_calibrator;
 };
-
 }  // namespace ActsExamples
