@@ -472,15 +472,11 @@ class CombinatorialKalmanFilter {
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
-        if (!tsRes.ok()) {
-          ACTS_ERROR("Track state creation failed on surface "
-                     << surface->geometryId() << ": " << tsRes.error());
-          return tsRes.error();
-        }
       }
-      const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
 
-      if (!newTrackStateList.empty()) {
+      if (tsRes.ok() && !(*tsRes).empty()) {
+        const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
+            *tsRes;
         Result<unsigned int> procRes =
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
@@ -503,6 +499,19 @@ class CombinatorialKalmanFilter {
         currentBranch = result.activeBranches.back();
         prevTip = currentBranch.tipIndex();
       } else {
+        if (!tsRes.ok()) {
+          if (static_cast<CombinatorialKalmanFilterError>(
+                  tsRes.error().value()) ==
+              CombinatorialKalmanFilterError::NoMeasurementExpected) {
+            // recoverable error returned by track state creator
+            expectMeasurements = false;
+          } else {
+            ACTS_ERROR("Track state creation failed on surface "
+                       << surface->geometryId() << ": " << tsRes.error());
+            return tsRes.error();
+          }
+        }
+
         if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
