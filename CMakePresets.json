@@ -111,36 +111,36 @@
             }
         },
         {
-          "name": "gitlab-ci-exatrkx",
-          "displayName": "GitLab-CI ExaTrkX",
-          "inherits": "ci-common",
-          "cacheVariables": {
-            "CMAKE_CXX_STANDARD": "20",
-            "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
-            "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-            "CMAKE_BUILD_TYPE": "Release",
-            "CMAKE_CXX_FLAGS": "-w",
-            "CMAKE_CUDA_FLAGS": "-w",
-            "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
-            "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
-            "ACTS_BUILD_UNITTESTS": "ON",
-            "ACTS_EXATRKX_ENABLE_TORCH": "ON",
-            "ACTS_EXATRKX_ENABLE_ONNX": "OFF",
-            "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-            "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
-            "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
-          }
+            "name": "gitlab-ci-exatrkx",
+            "displayName": "GitLab-CI ExaTrkX",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-w",
+                "CMAKE_CUDA_FLAGS": "-w",
+                "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
+                "ACTS_BUILD_UNITTESTS": "ON",
+                "ACTS_EXATRKX_ENABLE_TORCH": "ON",
+                "ACTS_EXATRKX_ENABLE_ONNX": "OFF",
+                "ACTS_EXATRKX_ENABLE_CUDA": "ON",
+                "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
+            }
         },
         {
-          "name": "gitlab-ci-tensorrt",
-          "displayName": "GitLab-CI Tensorrt",
-          "inherits": "ci-common",
-          "cacheVariables": {
-            "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
-            "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
-            "ACTS_EXATRKX_ENABLE_CUDA": "ON",
-            "ACTS_EXATRKX_ENABLE_TENSORRT": "ON"
-          }
+            "name": "gitlab-ci-tensorrt",
+            "displayName": "GitLab-CI Tensorrt",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
+                "ACTS_EXATRKX_ENABLE_CUDA": "ON",
+                "ACTS_EXATRKX_ENABLE_TENSORRT": "ON"
+            }
         }
     ]
 }
