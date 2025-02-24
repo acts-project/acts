@@ -22,7 +22,6 @@ namespace Acts {
 /// mark up, and how do to so.
 /// @note This node can only have a single child. This is not an error during
 ///       tree building, but during geometry construction.
-/// @note This currently only supports a cylinder volume child
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
   using BinningConfig =
