@@ -200,37 +200,43 @@ void addGeometry(Context& ctx) {
   }
 
   {
-    py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
-        m, "TrackingGeometry")
-        .def(py::init([](const MutableTrackingVolumePtr& volPtr,
-                         std::shared_ptr<const IMaterialDecorator> matDec,
-                         const GeometryIdentifierHook& hook,
-                         Acts::Logging::Level level) {
-          auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
-          auto trkGeo = std::make_shared<Acts::TrackingGeometry>(
-              volPtr, matDec.get(), hook, *logger);
-          return trkGeo;
-        }))
-        .def("visitSurfaces",
-             [](Acts::TrackingGeometry& self, py::function& func) {
-               self.visitSurfaces(func);
-             })
-        .def("geoIdSurfaceMap", &Acts::TrackingGeometry::geoIdSurfaceMap)
-        .def("extractMaterialSurfaces",
-             [](Acts::TrackingGeometry& self) {
-               MaterialSurfaceSelector selector;
-               self.visitSurfaces(selector, false);
-               return selector.surfaces;
-             })
-        .def_property_readonly(
-            "highestTrackingVolume",
-            &Acts::TrackingGeometry::highestTrackingVolumePtr)
-        .def("visualize", &Acts::TrackingGeometry::visualize, py::arg("helper"),
-             py::arg("gctx"), py::arg("viewConfig") = s_viewVolume,
-             py::arg("portalViewConfig") = s_viewPortal,
-             py::arg("sensitiveViewConfig") = s_viewSensitive)
-        .def("apply", py::overload_cast<TrackingGeometryMutableVisitor&>(
-                          &TrackingGeometry::apply));
+    auto trkGeo =
+        py::class_<Acts::TrackingGeometry,
+                   std::shared_ptr<Acts::TrackingGeometry>>(m,
+                                                            "TrackingGeometry")
+            .def(py::init([](const MutableTrackingVolumePtr& volPtr,
+                             std::shared_ptr<const IMaterialDecorator> matDec,
+                             const GeometryIdentifierHook& hook,
+                             Acts::Logging::Level level) {
+              auto logger = Acts::getDefaultLogger("TrackingGeometry", level);
+              auto obj = std::make_shared<Acts::TrackingGeometry>(
+                  volPtr, matDec.get(), hook, *logger);
+              return obj;
+            }))
+            .def("visitSurfaces",
+                 [](Acts::TrackingGeometry& self, py::function& func) {
+                   self.visitSurfaces(func);
+                 })
+            .def("geoIdSurfaceMap", &Acts::TrackingGeometry::geoIdSurfaceMap)
+            .def("extractMaterialSurfaces",
+                 [](Acts::TrackingGeometry& self) {
+                   MaterialSurfaceSelector selector;
+                   self.visitSurfaces(selector, false);
+                   return selector.surfaces;
+                 })
+            .def_property_readonly(
+                "highestTrackingVolume",
+                &Acts::TrackingGeometry::highestTrackingVolumePtr)
+            .def("visualize", &Acts::TrackingGeometry::visualize,
+                 py::arg("helper"), py::arg("gctx"),
+                 py::arg("viewConfig") = s_viewVolume,
+                 py::arg("portalViewConfig") = s_viewPortal,
+                 py::arg("sensitiveViewConfig") = s_viewSensitive);
+
+    using apply_ptr_t =
+        void (TrackingGeometry::*)(TrackingGeometryMutableVisitor&);
+
+    trkGeo.def("apply", static_cast<apply_ptr_t>(&TrackingGeometry::apply));
   }
 
   {
