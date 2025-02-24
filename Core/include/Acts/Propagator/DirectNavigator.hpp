@@ -20,6 +20,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <limits>
 #include <memory>
@@ -171,9 +172,9 @@ class DirectNavigator {
   /// @param position The start position
   /// @param direction The start direction
   /// @param propagationDirection The propagation direction
-  void initialize(State& state, const Vector3& position,
-                  const Vector3& direction,
-                  Direction propagationDirection) const {
+  [[nodiscard]] Result<void> initialize(State& state, const Vector3& position,
+                                        const Vector3& direction,
+                                        Direction propagationDirection) const {
     (void)position;
     (void)direction;
 
@@ -185,6 +186,7 @@ class DirectNavigator {
     }
 
     state.direction = propagationDirection;
+    ACTS_VERBOSE("Navigation direction is " << propagationDirection);
 
     // We set the current surface to the start surface
     state.currentSurface = state.options.startSurface;
@@ -195,18 +197,16 @@ class DirectNavigator {
       ACTS_VERBOSE("Current surface set to nullptr");
     }
 
-    // Reset the surface index
-    state.resetSurfaceIndex();
-    bool foundStartSurface = false;
-    for (const Surface* surface : state.options.surfaces) {
-      if (surface == state.currentSurface) {
-        foundStartSurface = true;
-        break;
-      }
-      state.nextSurface();
-    }
-    ACTS_VERBOSE("Initial surface index set to " << state.surfaceIndex);
-    if (!foundStartSurface) {
+    // Find initial index.
+    auto found =
+        std::ranges::find(state.options.surfaces, state.options.startSurface);
+
+    if (found != state.options.surfaces.end()) {
+      // The index should be the index before the start surface, depending on
+      // the direction
+      state.surfaceIndex = std::distance(state.options.surfaces.begin(), found);
+      state.surfaceIndex += state.direction == Direction::Backward() ? 1 : -1;
+    } else {
       ACTS_DEBUG(
           "Did not find the start surface in the sequence. Assuming it is not "
           "part of the sequence. Trusting the correctness of the input "
@@ -215,6 +215,8 @@ class DirectNavigator {
     }
 
     state.navigationBreak = false;
+
+    return Result<void>::success();
   }
 
   /// @brief Get the next target surface

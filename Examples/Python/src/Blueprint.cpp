@@ -15,6 +15,8 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
+#include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -238,7 +240,6 @@ void addBlueprint(Context& ctx) {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
     ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
     ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -339,13 +340,10 @@ void addBlueprint(Context& ctx) {
                  std::shared_ptr<Acts::CylinderContainerBlueprintNode>>(
           m, "CylinderContainerBlueprintNode")
           .def(py::init<const std::string&, AxisDirection,
-                        CylinderVolumeStack::AttachmentStrategy,
-                        CylinderVolumeStack::ResizeStrategy>(),
+                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
                py::arg("name"), py::arg("direction"),
-               py::arg("attachmentStrategy") =
-                   CylinderVolumeStack::AttachmentStrategy::Gap,
-               py::arg("resizeStrategy") =
-                   CylinderVolumeStack::ResizeStrategy::Gap)
+               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
           .def_property(
               "attachmentStrategy",
               &Acts::CylinderContainerBlueprintNode::attachmentStrategy,
