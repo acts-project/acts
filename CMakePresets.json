@@ -136,6 +136,7 @@
             "displayName": "GitLab-CI Tensorrt",
             "inherits": "ci-common",
             "cacheVariables": {
+                "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
