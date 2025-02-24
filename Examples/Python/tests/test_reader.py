@@ -53,13 +53,13 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             RootParticleReader,
             acts.logging.WARNING,
-            outputParticles="particles_input",
+            outputParticles="particles_generated",
             filePath=str(file),
         )
     )
 
     alg = AssertCollectionExistsAlg(
-        "particles_input", "check_alg", acts.logging.WARNING
+        "particles_generated", "check_alg", acts.logging.WARNING
     )
     s2.addAlgorithm(alg)
 
@@ -278,6 +278,7 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     ddsim.gun.distribution = "eta"
     ddsim.numberOfEvents = 10
     ddsim.outputFile = output
+    ddsim.outputConfig.forceEDM4HEP = True
     ddsim.run()
 
 
@@ -317,7 +318,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
                     "LongStripBarrelReadout",
                     "LongStripEndcapReadout",
                 ],
-                outputParticlesGenerator="particles_input",
+                outputParticlesGenerator="particles_generated",
                 outputParticlesSimulation="particles_simulated",
                 outputSimHits="simhits",
                 dd4hepDetector=detector,
@@ -329,7 +330,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
         s.addAlgorithm(alg)
 
         alg = AssertCollectionExistsAlg(
-            "particles_input", "check_alg", acts.logging.WARNING
+            "particles_generated", "check_alg", acts.logging.WARNING
         )
         s.addAlgorithm(alg)
 
