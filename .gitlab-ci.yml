@@ -8,7 +8,7 @@ variables:
 
 .ccache_base:
   cache:
-    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${CLONE_URL}_${HEAD_REF}
+    - key: ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-${REPO_SLUG}_${HEAD_REF}
       fallback_keys:
         - ccache-${CI_JOB_NAME}-${CCACHE_KEY_SUFFIX}-https://github.com/acts-project/acts.git-main
       when: always
@@ -185,6 +185,38 @@ test_exatrkx_python:
     - python3 -c "import acts"
     - pytest -rFsv -k torch --collect-only
     - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
+
+build_gnn_tensorrt:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2404_tensorrt:74
+  variables:
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+
+  cache:
+    - !reference [.ccache_base, cache]
+
+  tags:
+    - docker-gpu-nvidia
+
+  script:
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - source CI/dependencies.sh
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_EXATRKX_ENABLE_TORCH=OFF
+      -DACTS_EXATRKX_ENABLE_CUDA=ON
+      -DACTS_EXATRKX_ENABLE_TENSORRT=ON
+      -DPython_EXECUTABLE=$(which python3)
+      -DCMAKE_CUDA_ARCHITECTURES="75;86"
+    - ccache -z
+    - cmake --build build -- -j6
+    - ccache -s
+
 
 build_linux_ubuntu:
   stage: build
@@ -427,10 +459,8 @@ linux_ubuntu_2204_clang:
   script:
     - >
       cmake -B build -S src
-      --preset=gitlab-ci
+      --preset=gitlab-ci-lcg
       -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-      -DPython_EXECUTABLE=$(which python3)
-      -DACTS_BUILD_PLUGIN_GEOMODEL=OFF # GeoModel is not in LCG at this point
 
     - ccache -z
     - cmake --build build -- -j6
@@ -465,3 +495,17 @@ lcg_106a:
           - gcc13
           - gcc14
           - clang16
+
+lcg_107:
+  extends: .lcg_base_job
+
+  variables:
+    LCG_VERSION: "107"
+
+  parallel:
+    matrix:
+      - OS: [alma9]
+        COMPILER:
+          - gcc13
+          - gcc14
+          - clang19
