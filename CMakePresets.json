@@ -134,9 +134,10 @@
         {
             "name": "gitlab-ci-tensorrt",
             "displayName": "GitLab-CI Tensorrt",
-            "inherits": "ci-common",
+            "generator": "Ninja",
             "cacheVariables": {
-                "ACTS_BUILD_ODD": "OFF",
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
