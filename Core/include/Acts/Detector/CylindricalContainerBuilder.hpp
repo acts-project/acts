@@ -87,7 +87,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @return a cylindrical container builder representing this blueprint
   CylindricalContainerBuilder(
-      const Acts::Experimental::Blueprint::Node& bpNode,
+      const Acts::Experimental::Gen2Blueprint::Node& bpNode,
       Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   /// The final implementation of the cylindrical container builder

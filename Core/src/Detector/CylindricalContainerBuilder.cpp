@@ -120,7 +120,7 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
 }
 
 Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
-    const Acts::Experimental::Blueprint::Node& bpNode,
+    const Acts::Experimental::Gen2Blueprint::Node& bpNode,
     Acts::Logging::Level logLevel)
     : IDetectorComponentBuilder(),
       m_logger(getDefaultLogger(bpNode.name + "_cont", logLevel)) {
