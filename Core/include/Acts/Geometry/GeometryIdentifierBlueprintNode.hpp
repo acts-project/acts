@@ -20,6 +20,8 @@ class TrackingVolume;
 class PortalShellBase;
 class Volume;
 
+namespace Experimental {
+
 struct GeometryIdentifierBlueprintNodeImpl;
 
 class GeometryIdentifierBlueprintNode : public BlueprintNode {
@@ -53,4 +55,5 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   std::unique_ptr<GeometryIdentifierBlueprintNodeImpl> m_impl;
 };
 
+}  // namespace Experimental
 }  // namespace Acts

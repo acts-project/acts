@@ -17,7 +17,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 namespace {
 class Configuration {
@@ -199,4 +199,4 @@ GeometryIdentifierBlueprintNode::setAllVolumeIdsTo(
   return *this;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
