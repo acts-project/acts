@@ -257,9 +257,9 @@ void CuboidVolumeStack::initializeOuterVolume(VolumeAttachmentStrategy strategy,
   m_transform = m_groupTransform * translation;
   auto bounds = std::make_shared<CuboidVolumeBounds>(
       std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
-          {CuboidVolumeBounds::fromAxisDirection(m_direction), hl},
-          {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1), hl1},
-          {CuboidVolumeBounds::fromAxisDirection(m_dirOrth2), hl2}});
+          {CuboidVolumeBounds::boundsFromAxisDirection(m_direction), hl},
+          {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1), hl1},
+          {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2), hl2}});
   Volume::update(bounds, std::nullopt, logger);
   ACTS_DEBUG("Outer bounds are:\n" << volumeBounds());
   ACTS_DEBUG("Outer transform / new group transform is:\n"
@@ -303,7 +303,7 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                                          const Logger& logger) {
   // Preconditions: volumes are sorted along stacking direction
   auto dirIdx = axisToIndex(m_direction);
-  auto dirBoundIdx = CuboidVolumeBounds::fromAxisDirection(m_direction);
+  auto dirBoundIdx = CuboidVolumeBounds::boundsFromAxisDirection(m_direction);
 
   std::vector<VolumeTuple> gapVolumes;
   for (std::size_t i = 0; i < volumes.size() - 1; i++) {
@@ -430,8 +430,9 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
           auto gapBounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
                   std::pair<CuboidVolumeBounds::BoundValues, double>>{
-                  {CuboidVolumeBounds::fromAxisDirection(m_direction), gapHl},
-                  {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1),
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
+                   gapHl},
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
                    (max1 - min1) / 2},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2),
                    (max2 - min2) / 2}});
@@ -683,7 +684,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                  << axisDirectionName(m_direction) << "resize needed");
   } else {
     auto dirIdx = axisToIndex(m_direction);
-    auto boundDirIdx = CuboidVolumeBounds::fromAxisDirection(m_direction);
+    auto boundDirIdx = CuboidVolumeBounds::boundsFromAxisDirection(m_direction);
     if (m_resizeStrategy == VolumeResizeStrategy::Expand) {
       if (newVolume.min(m_direction) < oldVolume.min(m_direction)) {
         ACTS_VERBOSE("Expanding first volume to new "
@@ -749,9 +750,10 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ACTS_VERBOSE("~> Reusing existing gap volume at negative "
                        << axisDirectionName(m_direction));
 
-          gap1Hl = candidate.bounds->get(
-                       CuboidVolumeBounds::fromAxisDirection(m_direction)) +
-                   gap1Hl;
+          gap1Hl =
+              candidate.bounds->get(
+                  CuboidVolumeBounds::boundsFromAxisDirection(m_direction)) +
+              gap1Hl;
           gap1Max = gap1Min + gap1Hl * 2;
           gap1P = (gap1Max + gap1Min) / 2.0;
 
@@ -760,8 +762,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           auto gap1Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
                   std::pair<CuboidVolumeBounds::BoundValues, double>>{
-                  {CuboidVolumeBounds::fromAxisDirection(m_direction), gap1Hl},
-                  {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1),
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
+                   gap1Hl},
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
                    newVolume.halfLength(m_dirOrth1)},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2),
                    newVolume.halfLength(m_dirOrth2)}});
@@ -777,8 +780,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           auto gap1Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
                   std::pair<CuboidVolumeBounds::BoundValues, double>>{
-                  {CuboidVolumeBounds::fromAxisDirection(m_direction), gap1Hl},
-                  {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1),
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
+                   gap1Hl},
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
                    newVolume.halfLength(m_dirOrth1)},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2),
                    newVolume.halfLength(m_dirOrth2)}});
@@ -803,17 +807,19 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         if (isGap(candidate.volume)) {
           ACTS_VERBOSE("~> Reusing existing gap volume at positive ");
 
-          gap2Hl = candidate.bounds->get(
-                       CuboidVolumeBounds::fromAxisDirection(m_direction)) +
-                   gap2Hl;
+          gap2Hl =
+              candidate.bounds->get(
+                  CuboidVolumeBounds::boundsFromAxisDirection(m_direction)) +
+              gap2Hl;
           gap2Min = newVolume.max(m_direction) - gap2Hl * 2;
           gap2P = (gap2Max + gap2Min) / 2.0;
 
           auto gap2Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
                   std::pair<CuboidVolumeBounds::BoundValues, double>>{
-                  {CuboidVolumeBounds::fromAxisDirection(m_direction), gap2Hl},
-                  {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1),
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
+                   gap2Hl},
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
                    newVolume.halfLength(m_dirOrth1)},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2),
                    newVolume.halfLength(m_dirOrth2)}});
@@ -828,8 +834,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           auto gap2Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
                   std::pair<CuboidVolumeBounds::BoundValues, double>>{
-                  {CuboidVolumeBounds::fromAxisDirection(m_direction), gap2Hl},
-                  {CuboidVolumeBounds::fromAxisDirection(m_dirOrth1),
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
+                   gap2Hl},
+                  {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
                    newVolume.halfLength(m_dirOrth1)},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2),
                    newVolume.halfLength(m_dirOrth2)}});
