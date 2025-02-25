@@ -217,6 +217,7 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::BlueprintOptions;
   using Acts::Experimental::CuboidContainerBlueprintNode;
   using Acts::Experimental::CylinderContainerBlueprintNode;
+  using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
@@ -465,8 +466,8 @@ void addBlueprint(Context& ctx) {
       py::arg("name"));
 
   auto geoIdNode =
-      py::class_<Acts::GeometryIdentifierBlueprintNode, Acts::BlueprintNode,
-                 std::shared_ptr<Acts::GeometryIdentifierBlueprintNode>>(
+      py::class_<GeometryIdentifierBlueprintNode, BlueprintNode,
+                 std::shared_ptr<GeometryIdentifierBlueprintNode>>(
           m, "GeometryIdentifierBlueprintNode")
           .def(py::init<>())
           .def("setLayerIdTo", &GeometryIdentifierBlueprintNode::setLayerIdTo,
