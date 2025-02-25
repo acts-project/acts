@@ -15,13 +15,13 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Portal.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -177,56 +177,12 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <SurfaceVisitor visitor_t>
   void visitSurfaces(visitor_t&& visitor, bool restrictToSensitives) const {
-    if (!restrictToSensitives) {
-      // Visit the boundary surfaces
-      for (const auto& bs : m_boundarySurfaces) {
-        visitor(&(bs->surfaceRepresentation()));
+    apply([&visitor, restrictToSensitives](const Surface& surface) {
+      if (restrictToSensitives && surface.geometryId().sensitive() == 0) {
+        return;
       }
-
-      for (const auto& portal : portals()) {
-        visitor(&portal.surface());
-      }
-    }
-
-    // Internal structure
-    if (m_confinedVolumes == nullptr) {
-      // no sub volumes => loop over the confined layers
-      if (m_confinedLayers != nullptr) {
-        for (const auto& layer : m_confinedLayers->arrayObjects()) {
-          // Surfaces contained in the surface array
-          if (layer->surfaceArray() != nullptr) {
-            for (const auto& srf : layer->surfaceArray()->surfaces()) {
-              visitor(srf);
-              continue;
-            }
-          }
-          if (!restrictToSensitives) {
-            // Surfaces of the layer
-            visitor(&layer->surfaceRepresentation());
-            // Approach surfaces of the layer
-            if (layer->approachDescriptor() != nullptr) {
-              for (const auto& srf :
-                   layer->approachDescriptor()->containedSurfaces()) {
-                visitor(srf);
-              }
-            }
-          }
-        }
-      }
-    } else {
-      // contains sub volumes
-      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitSurfaces(visitor, restrictToSensitives);
-      }
-    }
-
-    for (const auto& surface : surfaces()) {
       visitor(&surface);
-    }
-
-    for (const auto& volume : volumes()) {
-      volume.visitSurfaces(visitor, restrictToSensitives);
-    }
+    });
   }
 
   /// @brief Visit all sensitive surfaces
@@ -254,17 +210,50 @@ class TrackingVolume : public Volume {
   /// this, e.g. as a private member
   template <TrackingVolumeVisitor visitor_t>
   void visitVolumes(visitor_t&& visitor) const {
-    visitor(this);
-    if (m_confinedVolumes != nullptr) {
-      // contains sub volumes
-      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
-        volume->visitVolumes(visitor);
-      }
-    }
+    apply([&visitor](const TrackingVolume& volume) { visitor(&volume); });
+  }
 
-    for (const auto& volume : m_volumes) {
-      volume->visitVolumes(visitor);
-    }
+  /// @brief Apply a visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
+  void apply(TrackingGeometryVisitor& visitor) const;
+
+  /// @brief Apply a mutable visitor to the tracking volume
+  ///
+  /// @param visitor The visitor to apply
+  ///
+  void apply(TrackingGeometryMutableVisitor& visitor);
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable)
+    requires(detail::callableWithAnyMutable<Callable>() &&
+             !detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryMutableVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable) const
+    requires(detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
   }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
@@ -479,6 +468,9 @@ class TrackingVolume : public Volume {
   /// @param gvd register a new GlueVolumeDescriptor
   void registerGlueVolumeDescriptor(std::unique_ptr<GlueVolumesDescriptor> gvd);
 
+  /// Clear boundary surfaces for this tracking volume
+  void clearBoundarySurfaces();
+
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
   ///  - negativeFaceXY
@@ -547,22 +539,6 @@ class TrackingVolume : public Volume {
   /// @}
 
  private:
-  /// close the Geometry, i.e. set the GeometryIdentifier and assign material
-  ///
-  /// @param materialDecorator is a dedicated decorator for the
-  ///        material to be assigned (surface, volume based)
-  /// @param volumeMap is a map to find the a volume by identifier
-  /// @param vol is the geometry id of the volume
-  ///        as calculated by the TrackingGeometry
-  /// @param hook Identifier hook to be applied to surfaces
-  /// @param logger A @c Logger instance
-  ///
-  void closeGeometry(
-      const IMaterialDecorator* materialDecorator,
-      std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      std::size_t& vol, const GeometryIdentifierHook& hook,
-      const Logger& logger = getDummyLogger());
-
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
