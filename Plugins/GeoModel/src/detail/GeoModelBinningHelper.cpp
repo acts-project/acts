@@ -12,7 +12,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-Acts::ProtoAxis Acts::detail::GeoModelBinningHelper::toProtoAxis(
+std::tuple<Acts::ProtoAxis, std::size_t>
+Acts::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
@@ -73,8 +74,8 @@ Acts::ProtoAxis Acts::detail::GeoModelBinningHelper::toProtoAxis(
           "GeoModelBinningHelper: Range maximum is not defined.");
     }
   }
-
-  return autoRange ? ProtoAxis(bValue, boundaryType, nBins, nExpansion)
-                   : ProtoAxis(bValue, boundaryType, rangeMin, rangeMax, nBins,
-                               nExpansion);
+  auto pAxis = autoRange
+                   ? ProtoAxis(bValue, boundaryType, nBins)
+                   : ProtoAxis(bValue, boundaryType, rangeMin, rangeMax, nBins);
+  return {pAxis, nExpansion};
 }

@@ -31,11 +31,8 @@ class ProtoAxis {
   /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param edges the bin edges (variable binning)
-  /// @param fillExpansion the number of bins to both sides
-  /// that should also be filled with the content to create
-  /// an enforced bin overlap with objects
   ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-            const std::vector<double>& edges, std::size_t fillExpansion = 0);
+            const std::vector<double>& edges);
 
   /// Convenience constructors - for equidistant binning
   ///
@@ -44,24 +41,17 @@ class ProtoAxis {
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
-  /// @param fillExpansion the number of bins to both sides
-  /// that should also be filled with the content to create
-  /// an enforced bin overlap with objects
   ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, double minE,
-            double maxE, std::size_t nbins, std::size_t fillExpansion = 0);
+            double maxE, std::size_t nbins);
 
   /// Placeholder constructor for auto-range binning
   ///
   /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param nbins the number of bins
-  /// @param fillExpansion the number of bins to both sides
-  /// that should also be filled with the content to create
-  /// an enforced bin overlap with objects
   ///
   /// @note that auto-range is only supported for equidistant binning
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins,
-            std::size_t fillExpansion = 0);
+  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
 
   /// Custom copy constructor
   /// @param other is the right hand side ProtoAxis
@@ -103,9 +93,6 @@ class ProtoAxis {
   /// @brief check if this is an auto-range binning
   bool isAutorange() const;
 
-  /// Return the fill expansion
-  std::size_t getFillExpansion() const;
-
   /// Dump into a string
   /// @return the string representation
   std::string toString() const;
@@ -132,9 +119,6 @@ class ProtoAxis {
 
   /// Indicate if this is a place holder auto-range binning
   bool m_autorange = false;
-
-  /// The Fill expansion parameter
-  std::size_t m_fillExpansion = 0;
 };
 
 /// @brief Helper method to create a 1D grid from a single proto axis

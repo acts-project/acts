@@ -25,6 +25,7 @@ namespace Acts::detail::IndexedSurfacesGenerator {
 /// @param surfaces the surfaces to be indexed
 /// @param rGenerator the reference generator
 /// @param pAxis the proto axis
+/// @param pFillExpansion the fill expansion
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
 /// @return an internal navigation delegate
@@ -33,7 +34,7 @@ template <template <typename> class indexed_updator, typename surface_container,
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
     const reference_generator& rGenerator, const ProtoAxis& pAxis,
-    const std::vector<std::size_t> assignToAll = {},
+    std::size_t pFillExpansion, const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axis create the grid
   return pAxis.getAxis().visit([&]<typename AxisTypeA>(const AxisTypeA& axis) {
@@ -47,7 +48,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
     // Prepare the filling
     Experimental::InternalNavigationDelegate nStateUpdater;
 
-    std::vector<std::size_t> fillExpansion = {pAxis.getFillExpansion()};
+    std::vector<std::size_t> fillExpansion = {pFillExpansion};
     Experimental::detail::IndexedGridFiller filler{fillExpansion};
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
@@ -75,7 +76,9 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
 /// @param surfaces the surfaces to be indexed
 /// @param rGenerator the reference generator
 /// @param pAxisA the first proto axis
+/// @param fillExpansionA the fill expansion of the first axis
 /// @param pAxisB the second proto axis
+/// @param fillExpansionB the fill expansion of the second axis
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
 ///
@@ -85,7 +88,8 @@ template <template <typename> class indexed_updator, typename surface_container,
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
     const reference_generator& rGenerator, const ProtoAxis& pAxisA,
-    const ProtoAxis& pAxisB, const std::vector<std::size_t> assignToAll = {},
+    std::size_t fillExpansionA, const ProtoAxis& pAxisB,
+    std::size_t fillExpansionB, const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axes create the grid
   return pAxisA.getAxis().visit([&]<typename AxisTypeA>(
@@ -101,8 +105,7 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
       indexed_updator<decltype(grid)> indexedSurfaces(std::move(grid), axisDirs,
                                                       transform);
 
-      std::vector<std::size_t> fillExpansion = {pAxisA.getFillExpansion(),
-                                                pAxisB.getFillExpansion()};
+      std::vector<std::size_t> fillExpansion = {fillExpansionA, fillExpansionB};
 
       Experimental::detail::IndexedGridFiller filler{fillExpansion};
       filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);

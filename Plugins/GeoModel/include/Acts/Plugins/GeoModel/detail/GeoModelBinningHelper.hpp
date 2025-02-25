@@ -15,6 +15,7 @@
 #include <exception>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts::detail::GeoModelBinningHelper {
@@ -45,7 +46,8 @@ inline AxisDirection toAxisDirection(const std::string& binning) {
 /// @param extent the extent of the binning
 ///
 /// @return a ProtoAxis object
-Acts::ProtoAxis toProtoAxis(const std::string& binning,
-                            const std::optional<Extent>& extent = std::nullopt);
+std::tuple<Acts::ProtoAxis, std::size_t> toProtoAxis(
+    const std::string& binning,
+    const std::optional<Extent>& extent = std::nullopt);
 
 }  // namespace Acts::detail::GeoModelBinningHelper

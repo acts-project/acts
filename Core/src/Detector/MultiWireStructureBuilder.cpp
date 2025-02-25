@@ -37,7 +37,7 @@ class MultiWireInternalStructureBuilder
     std::vector<std::shared_ptr<Acts::Surface>> iSurfaces;
 
     /// Definition of Binning
-    std::vector<Acts::ProtoAxis> binning;
+    std::vector<std::tuple<Acts::ProtoAxis, std::size_t>> binning;
 
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
@@ -70,8 +70,11 @@ class MultiWireInternalStructureBuilder
           "MultiWireStructureBuilder: At least 2 binning axes required");
     }
 
-    const auto& iaxisA = m_cfg.binning[0].getAxis();
-    const auto& iaxisB = m_cfg.binning[1].getAxis();
+    auto [protoAxisA, expansionA] = m_cfg.binning.at(0);
+    auto [protoAxisB, expansionB] = m_cfg.binning.at(1);
+
+    const auto& iaxisA = protoAxisA.getAxis();
+    const auto& iaxisB = protoAxisB.getAxis();
     // Binning needs to be equidistant
     if (iaxisA.getType() != Acts::AxisType::Equidistant ||
         iaxisB.getType() != Acts::AxisType::Equidistant) {
@@ -92,14 +95,11 @@ class MultiWireInternalStructureBuilder
 
     // Prepare the indexed updator
     std::array<Acts::AxisDirection, 2u> axisDirs = {
-        m_cfg.binning[0].getAxisDirection(),
-        m_cfg.binning[1].getAxisDirection()};
+        protoAxisA.getAxisDirection(), protoAxisB.getAxisDirection()};
     Acts::Experimental::MultiLayerSurfacesNavigation<decltype(grid)>
         indexedSurfaces(std::move(grid), axisDirs, m_cfg.transform);
 
-    std::vector<std::size_t> fillExpansion = {
-        m_cfg.binning[0].getFillExpansion(),
-        m_cfg.binning[1].getFillExpansion()};
+    std::vector<std::size_t> fillExpansion = {expansionA, expansionB};
 
     Acts::Experimental::detail::CenterReferenceGenerator rGenerator;
     Acts::Experimental::detail::IndexedGridFiller filler{fillExpansion};

@@ -26,36 +26,28 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
 }  // namespace
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-                           const std::vector<double>& edges,
-                           std::size_t fillExpansion)
-    : m_axisDir(aDir),
-      m_axis(IAxis::createVariable(abType, edges)),
-      m_fillExpansion(fillExpansion) {
+                           const std::vector<double>& edges)
+    : m_axisDir(aDir), m_axis(IAxis::createVariable(abType, edges)) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           double minE, double maxE, std::size_t nbins,
-                           std::size_t fillExpansion)
+                           double minE, double maxE, std::size_t nbins)
     : m_axisDir(aDir),
-      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)),
-      m_fillExpansion(fillExpansion) {
+      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           std::size_t nbins, std::size_t fillExpansion)
+                           std::size_t nbins)
     : m_axisDir(aDir),
       m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
-      m_autorange(true),
-      m_fillExpansion(fillExpansion) {
+      m_autorange(true) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
-    : m_axisDir(other.m_axisDir),
-      m_autorange(other.m_autorange),
-      m_fillExpansion(other.m_fillExpansion) {
+    : m_axisDir(other.m_axisDir), m_autorange(other.m_autorange) {
   const auto& axis = other.getAxis();
   if (!m_autorange) {
     const auto& edges = axis.getBinEdges();
@@ -75,7 +67,6 @@ Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
   if (this != &other) {
     m_axisDir = other.m_axisDir;
     m_autorange = other.m_autorange;
-    m_fillExpansion = other.m_fillExpansion;
     const auto& axis = other.getAxis();
     if (!m_autorange) {
       const auto& edges = axis.getBinEdges();
@@ -128,10 +119,6 @@ void Acts::ProtoAxis::setRange(double minE, double maxE) {
 
 bool Acts::ProtoAxis::isAutorange() const {
   return m_autorange;
-}
-
-std::size_t Acts::ProtoAxis::getFillExpansion() const {
-  return m_fillExpansion;
 }
 
 void Acts::ProtoAxis::toStream(std::ostream& os) const {

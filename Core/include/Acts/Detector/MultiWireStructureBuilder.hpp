@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -41,7 +42,7 @@ class MultiWireStructureBuilder {
     std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
-    std::vector<ProtoAxis> mlBinning = {};
+    std::vector<std::tuple<ProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
     float toleranceOverlap = 10.;

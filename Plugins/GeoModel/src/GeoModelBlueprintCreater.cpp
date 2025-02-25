@@ -214,8 +214,8 @@ Acts::GeoModelBlueprintCreater::createNode(
         std::vector<ProtoAxis> protoBinnings;
         for (const auto& bToken : binningTokens) {
           ACTS_VERBOSE("   - Binning: " << bToken);
-          protoBinnings.push_back(
-              detail::GeoModelBinningHelper::toProtoAxis(bToken));
+          protoBinnings.push_back(std::get<ProtoAxis>(
+              detail::GeoModelBinningHelper::toProtoAxis(bToken)));
         }
         portalMaterialBinning[portalNumber] =
             std::vector<ProtoAxis>{protoBinnings};

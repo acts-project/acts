@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           IndexedSurfacesNavigation, decltype(rSurfaces), decltype(rGenerator)>(
-          tContext, rSurfaces, rGenerator, pAxis);
+          tContext, rSurfaces, rGenerator, pAxis, 0u);
 
   using GridType =
       Grid<std::vector<std::size_t>,
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, rSurfaces, rGenerator, pAxis, {rSurfaces.size() - 1u});
+          tContext, rSurfaces, rGenerator, pAxis, 0u, {rSurfaces.size() - 1u});
 
   using GridType =
       Grid<std::vector<std::size_t>,
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, rSurfaces, rGenerator, pAxisR, pAxisPhi);
+          tContext, rSurfaces, rGenerator, pAxisR, 1u, pAxisPhi, 1u);
 
   using GridType =
       Grid<std::vector<std::size_t>,
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, rSurfaces, rGenerator, pAxisR, pAxisPhi);
+          tContext, rSurfaces, rGenerator, pAxisR, 0u, pAxisPhi, 0u);
 
   using GridType =
       Grid<std::vector<std::size_t>,
@@ -258,15 +258,14 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
 
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
-  ProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24., 152, 8u,
-                   2u);
+  ProtoAxis pAxisR(AxisDirection::AxisR, AxisBoundaryType::Bound, 24., 152, 8u);
   ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 88u, 4u);
+                     -std::numbers::pi, std::numbers::pi, 88u);
 
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, rSurfaces, rGenerator, pAxisR, pAxisPhi);
+          tContext, rSurfaces, rGenerator, pAxisR, 2u, pAxisPhi, 4u);
 
   using GridType =
       Grid<std::vector<std::size_t>,
@@ -298,15 +297,15 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
                                              116., 3., 2., {52, 14});
 
   ProtoAxis pAxisZ(AxisDirection::AxisZ, AxisBoundaryType::Bound, -500., 500.,
-                   28u, 1u);
+                   28u);
   ProtoAxis pAxisPhi(AxisDirection::AxisPhi, AxisBoundaryType::Closed,
-                     -std::numbers::pi, std::numbers::pi, 52u, 1u);
+                     -std::numbers::pi, std::numbers::pi, 52u);
   PolyhedronReferenceGenerator<1u, true> rGenerator;
 
   auto indexedCylinder =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, surfaces, rGenerator, pAxisZ, pAxisPhi);
+          tContext, surfaces, rGenerator, pAxisZ, 1u, pAxisPhi, 1u);
 
   using GridType =
       Grid<std::vector<std::size_t>,

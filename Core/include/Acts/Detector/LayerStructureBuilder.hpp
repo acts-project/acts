@@ -24,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -82,7 +83,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Definition of Supports
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
-    std::vector<ProtoAxis> binnings = {};
+    std::vector<std::tuple<ProtoAxis, std::size_t>> binnings = {};
     /// Optional extent (if already parsed), will trigger binning autorange
     /// check
     std::optional<Extent> extent = std::nullopt;
