@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   auto indexedRing =
       Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
           Experimental::IndexedSurfacesNavigation>(
-          tContext, rSurfaces, rGenerator, pAxisR, 1u, pAxisPhi, 1u);
+          tContext, rSurfaces, rGenerator, pAxisR, 0u, pAxisPhi, 0u);
 
   using GridType =
       Grid<std::vector<std::size_t>,
