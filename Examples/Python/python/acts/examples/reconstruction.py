@@ -216,16 +216,11 @@ ScoreBasedAmbiguityResolutionConfig = namedtuple(
         "minScore",
         "minScoreSharedTracks",
         "maxShared",
+        "minUnshared",
         "maxSharedTracksPerMeasurement",
-        "pTMax",
-        "pTMin",
-        "phiMax",
-        "phiMin",
-        "etaMax",
-        "etaMin",
-        "useAmbiguityFunction",
+        "useAmbiguityScoring",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 6,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -641,6 +636,7 @@ def addStandardSeeding(
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
 ):
     """adds standard seeding
     For parameters description see addSeeding
@@ -767,7 +763,7 @@ def addStandardSeeding(
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -1923,12 +1919,9 @@ def addScoreBasedAmbiguityResolution(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
             maxShared=config.maxShared,
+            minUnshared=config.minUnshared,
             maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
-            phiMax=config.phiMax,
-            phiMin=config.phiMin,
-            etaMax=config.etaMax,
-            etaMin=config.etaMin,
-            useAmbiguityFunction=config.useAmbiguityFunction,
+            useAmbiguityScoring=config.useAmbiguityScoring,
         ),
     )
     s.addAlgorithm(algScoreBased)
