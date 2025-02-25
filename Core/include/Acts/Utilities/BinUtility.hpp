@@ -105,7 +105,6 @@ class BinUtility {
   /// Create from ProtoAxis
   ///
   /// @param pAxis the ProtoAxis to be used
-  [[deprecated]]
   explicit BinUtility(const ProtoAxis& pAxis)
       : m_binningData(),
         m_transform(Transform3::Identity()),
@@ -117,7 +116,6 @@ class BinUtility {
   /// Create from ProtoAxis
   ///
   /// @param pAxes the ProtoAxes to be used
-  [[deprecated]]
   explicit BinUtility(const std::vector<ProtoAxis>& pAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
