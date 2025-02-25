@@ -27,7 +27,7 @@ Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
       auto range = sExtent.range(b.getAxisDirection());
       fBinning.setRange(range.min(), range.max());
     }
-    fbDescription.emplace_back(fBinning);
+    fbDescription.emplace_back(std::move(fBinning));
   }
   // Create the new proto material description and assign it
   auto protoMaterial =
