@@ -24,14 +24,19 @@
 #include <vector>
 
 namespace Acts {
+
 template <typename T, class... Axes>
 class GridGlobalIterator;
 
 template <typename T, class... Axes>
 class GridLocalIterator;
-}  // namespace Acts
 
-namespace Acts {
+namespace detail {
+
+template <typename T, bool isConst>
+class AnyGridViewBase;
+
+}  // namespace detail
 
 /// Base class for all grid types
 class IGrid {
@@ -113,6 +118,9 @@ class IGrid {
   /// @return The value of the bin: the @c std::any contains a pointer to the
   ///         value
   virtual std::any atLocalBinsAny(AnyIndexType indices) = 0;
+
+  template <typename T, bool isConst>
+  friend class detail::AnyGridViewBase;
 };
 
 /// @brief class for describing a regular multi-dimensional grid
