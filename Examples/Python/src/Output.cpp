@@ -22,6 +22,7 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Json/JsonTrackWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjSimHitWriter.hpp"
 #include "ActsExamples/Io/Obj/ObjTrackingGeometryWriter.hpp"
@@ -440,6 +441,11 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvExaTrkXGraphWriter, mex,
                              "CsvExaTrkXGraphWriter", inputGraph, outputDir,
                              outputStem);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::JsonTrackWriter, mex,
+                             "JsonTrackWriter", inputTracks, inputClusters,
+                             inputMeasurementParticlesMap,
+                             inputTrackParticleMatching, outputDir, outputStem);
 }
 
 }  // namespace Acts::Python

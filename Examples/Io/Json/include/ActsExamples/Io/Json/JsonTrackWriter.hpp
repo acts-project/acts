@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -17,10 +18,10 @@
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
-#include <cstddef>
-#include <limits>
 #include <memory>
 #include <string>
+
+#include <nlohmann/json.hpp>
 
 namespace ActsExamples {
 
@@ -29,7 +30,10 @@ class JsonTrackWriter : public IWriter {
   struct Config {
     std::string inputTracks;
     std::string inputMeasurementParticlesMap;
-    std::string fileStemp;
+    std::string inputClusters;
+    std::string inputTrackParticleMatching;
+
+    std::string outputStem;
     std::string outputDir;
   };
 
@@ -39,13 +43,16 @@ class JsonTrackWriter : public IWriter {
   /// @param level is the logging level
   JsonTrackWriter(const Config& config, Acts::Logging::Level level);
 
+  /// Destructor
+  ~JsonTrackWriter() override;
+
   std::string name() const override;
 
   /// Write geometry using the per-event context (optional).
   ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// Write geometry using the default context.
-  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
+  ProcessCode finalize() override;
 
   /// Readonly access to config
   const Config& config() const { return m_cfg; }
@@ -55,8 +62,11 @@ class JsonTrackWriter : public IWriter {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
