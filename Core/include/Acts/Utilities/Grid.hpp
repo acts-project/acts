@@ -69,7 +69,10 @@ class IGrid {
 /// either by global bin index, local bin indices or position.
 ///
 /// @note @c T must be default-constructible.
+/// @note @c T must not be @c bool, because @c std::vector<bool> is special
+///          and does not return references to its elements.
 template <typename T, class... Axes>
+  requires(std::is_default_constructible_v<T> && !std::is_same_v<T, bool>)
 class Grid final : public IGrid {
  public:
   /// number of dimensions of the grid
