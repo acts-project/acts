@@ -105,7 +105,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
   BinningType m_binning;
 
   /// Dummy material properties
-  MaterialSlab m_materialSlab;
+  MaterialSlab m_materialSlab = MaterialSlab::Nothing();
 };
 
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
