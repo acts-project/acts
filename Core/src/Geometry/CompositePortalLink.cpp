@@ -248,7 +248,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;
@@ -289,7 +289,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;
@@ -338,7 +338,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;
