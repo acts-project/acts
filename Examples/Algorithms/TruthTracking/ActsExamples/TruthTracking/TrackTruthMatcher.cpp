@@ -184,6 +184,9 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
       auto& particleTrackMatch = particleTrackMatching[majorityParticleId];
       ++particleTrackMatch.fakes;
     }
+
+    trackParticleMatching.at(track.index()).majorityMatchingProbability =
+        recoMatchingProb;
   }
 
   ACTS_DEBUG("Matching failed for " << failed << " tracks");

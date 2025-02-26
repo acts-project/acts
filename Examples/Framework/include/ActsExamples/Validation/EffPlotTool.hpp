@@ -47,6 +47,8 @@ class EffPlotTool {
     TEfficiency* trackEff_vs_DeltaR{
         nullptr};  ///< Tracking efficiency vs distance to the closest truth
                    ///< particle
+
+    TH2F* matchProb_vs_eta{nullptr};
   };
 
   /// Constructor
@@ -65,9 +67,9 @@ class EffPlotTool {
   /// @param effPlotCache cache object for efficiency plots
   /// @param truthParticle the truth Particle
   /// @param deltaR the distance to the closest truth particle
-  /// @param status the reconstruction status
+  /// @param matched the reconstruction status
   void fill(EffPlotCache& effPlotCache, const SimParticleState& truthParticle,
-            double deltaR, bool status) const;
+            double deltaR, double matchingProbability, bool matched) const;
 
   /// @brief write the efficiency plots to file
   ///

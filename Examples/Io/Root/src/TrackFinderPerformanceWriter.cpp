@@ -270,6 +270,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
     std::size_t nMatchedTracks = 0;
     std::size_t nFakeTracks = 0;
     bool isReconstructed = false;
+    double matchingProbability = 0.0;
     if (auto imatched = particleTrackMatching.find(particleId);
         imatched != particleTrackMatching.end()) {
       nMatchedTracks = (imatched->second.track.has_value() ? 1 : 0) +
@@ -289,6 +290,11 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       nFakeTracks = imatched->second.fakes;
       if (nFakeTracks > 0) {
         m_nTotalFakeParticles += 1;
+      }
+
+      if (isReconstructed) {
+        matchingProbability = trackParticleMatching.at(*imatched->second.track)
+                                  .majorityMatchingProbability;
       }
     }
 
@@ -311,7 +317,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
 
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
-                       isReconstructed);
+                       matchingProbability, isReconstructed);
     // Fill number of duplicated tracks for this particle
     m_duplicationPlotTool.fill(m_duplicationPlotCache, particle.initial(),
                                nMatchedTracks - 1);

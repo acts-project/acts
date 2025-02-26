@@ -45,6 +45,11 @@ void ActsExamples::EffPlotTool::book(
   effPlotCache.trackEff_vs_DeltaR = PlotHelpers::bookEff(
       "trackeff_vs_DeltaR",
       "Tracking efficiency;Closest track #Delta R;Efficiency", bDeltaR);
+
+  PlotHelpers::Binning bProb("Probability", 50, 0.5, 1.0);
+  effPlotCache.matchProb_vs_eta = PlotHelpers::bookHisto(
+      "matchProb_vs_eta", "Matching probability;Truth #eta;Efficiency", bEta,
+      bProb);
 }
 
 void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
@@ -53,6 +58,7 @@ void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
   delete effPlotCache.trackEff_vs_phi;
   delete effPlotCache.trackEff_vs_z0;
   delete effPlotCache.trackEff_vs_DeltaR;
+  delete effPlotCache.matchProb_vs_eta;
 }
 
 void ActsExamples::EffPlotTool::write(
@@ -63,20 +69,26 @@ void ActsExamples::EffPlotTool::write(
   effPlotCache.trackEff_vs_phi->Write();
   effPlotCache.trackEff_vs_z0->Write();
   effPlotCache.trackEff_vs_DeltaR->Write();
+  effPlotCache.matchProb_vs_eta->Write();
 }
 
 void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
                                      const SimParticleState& truthParticle,
-                                     double deltaR, bool status) const {
+                                     double deltaR, double matchingProbability,
+                                     bool matched) const {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
   const auto t_z0 = truthParticle.position().z();
   const auto t_deltaR = deltaR;
 
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, status);
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, status);
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_phi, t_phi, status);
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_z0, t_z0, status);
-  PlotHelpers::fillEff(effPlotCache.trackEff_vs_DeltaR, t_deltaR, status);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, matched);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_eta, t_eta, matched);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_phi, t_phi, matched);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_z0, t_z0, matched);
+  PlotHelpers::fillEff(effPlotCache.trackEff_vs_DeltaR, t_deltaR, matched);
+  if (matched) {
+    PlotHelpers::fillHisto(effPlotCache.matchProb_vs_eta, t_eta,
+                           matchingProbability);
+  }
 }

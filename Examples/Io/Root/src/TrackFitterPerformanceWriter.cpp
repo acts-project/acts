@@ -189,8 +189,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
         minDeltaR = distance;
       }
     }
+    double dummyMatchingProbability = 1.0;
     m_effPlotTool.fill(m_effPlotCache, particle.initial(), minDeltaR,
-                       isReconstructed);
+                       dummyMatchingProbability, isReconstructed);
   }
 
   return ProcessCode::SUCCESS;
