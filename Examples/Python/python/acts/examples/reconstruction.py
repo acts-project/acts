@@ -140,40 +140,33 @@ TrackSelectorConfig = namedtuple(
 )
 
 
-def trackSelectorDefaultKWArgs(c, overwriteArgs=None):
+def trackSelectorDefaultKWArgs(c):
     """
     Encapsulate this boilerplate code into a function so different uses do not get out of sync
     """
-    if overwriteArgs is None:
-        overwriteArgs = dict()
     return acts.examples.defaultKWArgs(
-        **(
-            dict(
-                loc0Min=c.loc0[0],
-                loc0Max=c.loc0[1],
-                loc1Min=c.loc1[0],
-                loc1Max=c.loc1[1],
-                timeMin=c.time[0],
-                timeMax=c.time[1],
-                phiMin=c.phi[0],
-                phiMax=c.phi[1],
-                etaMin=c.eta[0],
-                etaMax=c.eta[1],
-                absEtaMin=c.absEta[0],
-                absEtaMax=c.absEta[1],
-                ptMin=c.pt[0],
-                ptMax=c.pt[1],
-                minMeasurements=c.nMeasurementsMin,
-                maxHoles=c.maxHoles,
-                maxOutliers=c.maxOutliers,
-                maxHolesAndOutliers=c.maxHolesAndOutliers,
-                maxSharedHits=c.maxSharedHits,
-                maxChi2=c.maxChi2,
-                measurementCounter=c.nMeasurementsGroupMin,
-                requireReferenceSurface=c.requireReferenceSurface,
-            )
-            | overwriteArgs
-        )
+        loc0Min=c.loc0[0],
+        loc0Max=c.loc0[1],
+        loc1Min=c.loc1[0],
+        loc1Max=c.loc1[1],
+        timeMin=c.time[0],
+        timeMax=c.time[1],
+        phiMin=c.phi[0],
+        phiMax=c.phi[1],
+        etaMin=c.eta[0],
+        etaMax=c.eta[1],
+        absEtaMin=c.absEta[0],
+        absEtaMax=c.absEta[1],
+        ptMin=c.pt[0],
+        ptMax=c.pt[1],
+        minMeasurements=c.nMeasurementsMin,
+        maxHoles=c.maxHoles,
+        maxOutliers=c.maxOutliers,
+        maxHolesAndOutliers=c.maxHolesAndOutliers,
+        maxSharedHits=c.maxSharedHits,
+        maxChi2=c.maxChi2,
+        measurementCounter=c.nMeasurementsGroupMin,
+        requireReferenceSurface=c.requireReferenceSurface,
     )
 
 
@@ -1437,11 +1430,18 @@ def addCKFTracks(
         )
     )
 
-    overwriteArgs = dict() if len(tslist) == 1 else dict(absEtaMax=None)
-    cutSets = [
-        acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c, overwriteArgs)))
-        for c in tslist
-    ]
+    if len(tslist) > 1:
+        cutSets = []
+        for c in tslist:
+            defKW = trackSelectorDefaultKWArgs(c)
+            defKW.pop('absEtaMax', None)
+            cutSets+=[acts.TrackSelector.Config(**(defKW))]
+    else:
+        cutSets = [
+            acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c)))
+            for c in tslist
+        ]
+
     if len(tslist) == 0:
         trkSelCfg = None
     elif len(tslist) == 1:
