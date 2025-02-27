@@ -47,7 +47,7 @@ class LayerBlueprintNode;
 /// called recursively. Some nodes, like @ref Acts::Experimental::CylinderContainerBlueprintNode,
 /// will take action on the volumes returns from its children, and perform
 /// sizing to connect them. See the @ref Acts::Experimental::CylinderContainerBlueprintNode
-/// and @ref Acts::Experimental::CylinderVolumeStack documentation for details on how the
+/// and @ref Acts::CylinderVolumeStack documentation for details on how the
 /// sizing is carried out.
 class BlueprintNode {
  public:
