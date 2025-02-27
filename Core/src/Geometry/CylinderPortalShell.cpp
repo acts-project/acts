@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include <algorithm>
+#include <numeric>
 #include <stdexcept>
 
 #include <boost/algorithm/string/join.hpp>
