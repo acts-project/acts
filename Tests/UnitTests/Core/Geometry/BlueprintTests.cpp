@@ -29,6 +29,7 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <fstream>
 #include <stdexcept>
@@ -508,9 +509,6 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_NE(negDisc, nullptr);
   const auto& negDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*negDisc);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().binning.at(0).bins(), 5);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().binning.at(1).bins(), 10);
-
   // Check positive disc material
   const auto* posDisc = child.portals()
                             .at(static_cast<std::size_t>(PositiveDisc))
@@ -519,8 +517,11 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_NE(posDisc, nullptr);
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().binning.at(0).bins(), 15);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().binning.at(1).bins(), 20);
+
+  BOOST_CHECK_EQUAL(negDiscMat.binning().at(0).getAxis().getNBins(), 5);
+  BOOST_CHECK_EQUAL(negDiscMat.binning().at(1).getAxis().getNBins(), 10);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().at(0).getAxis().getNBins(), 15);
+  BOOST_CHECK_EQUAL(posDiscMat.binning().at(1).getAxis().getNBins(), 20);
 
   // Check outer cylinder material
   const auto* outerCyl = child.portals()
@@ -530,8 +531,8 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().binning.at(0).bins(), 25);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().binning.at(1).bins(), 30);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
+  BOOST_CHECK_EQUAL(outerCylMat.binning().at(1).getAxis().getNBins(), 30);
 
   // Check that other faces have no material
   for (std::size_t i = 0; i < child.portals().size(); i++) {

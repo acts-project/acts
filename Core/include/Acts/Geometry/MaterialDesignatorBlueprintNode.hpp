@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <variant>
 
@@ -24,13 +24,9 @@ namespace Acts {
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  using BinningConfig =
-      std::variant<std::vector<std::tuple<CylinderVolumeBounds::Face,
-                                          Experimental::ProtoBinning,
-                                          Experimental::ProtoBinning>>,
-                   std::vector<std::tuple<CuboidVolumeBounds::Face,
-                                          Experimental::ProtoBinning,
-                                          Experimental::ProtoBinning>>>;
+  using BinningConfig = std::variant<
+      std::vector<std::tuple<CylinderVolumeBounds::Face, ProtoAxis, ProtoAxis>>,
+      std::vector<std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>>;
 
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
@@ -86,8 +82,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
-      CylinderVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
-      const Experimental::ProtoBinning& loc1);
+      CylinderVolumeBounds::Face face, const ProtoAxis& loc0,
+      const ProtoAxis& loc1);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
@@ -98,9 +94,9 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
-  MaterialDesignatorBlueprintNode& configureFace(
-      CuboidVolumeBounds::Face face, const Experimental::ProtoBinning& loc0,
-      const Experimental::ProtoBinning& loc1);
+  MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
+                                                 const ProtoAxis& loc0,
+                                                 const ProtoAxis& loc1);
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz
@@ -109,17 +105,14 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   void handleCylinderBinning(
       CylinderPortalShell& cylShell,
       const std::vector<
-          std::tuple<CylinderPortalShell::Face, Experimental::ProtoBinning,
-                     Experimental::ProtoBinning>>& binning,
+          std::tuple<CylinderPortalShell::Face, ProtoAxis, ProtoAxis>>& binning,
       const Logger& logger);
 
   void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
-                                  const Experimental::ProtoBinning& loc0,
-                                  const Experimental::ProtoBinning& loc1,
+                                  const ProtoAxis& loc0, const ProtoAxis& loc1,
                                   const Logger& logger = getDummyLogger());
 
-  void validateCuboidFaceConfig(const Experimental::ProtoBinning& loc0,
-                                const Experimental::ProtoBinning& loc1,
+  void validateCuboidFaceConfig(const ProtoAxis& loc0, const ProtoAxis& loc1,
                                 const Logger& logger = getDummyLogger());
 
   std::string m_name{};
