@@ -58,6 +58,12 @@ struct IncrementLayerConfiguration : public Configuration {
              const Logger& logger) override {
     ACTS_DEBUG(prefix << "Incrementing layer component for volume with ID "
                       << volume.geometryId());
+    if (volume.geometryId().layer() != 0) {
+      ACTS_ERROR("Volume " << volume.volumeName() << " already has layer ID "
+                           << volume.geometryId().layer() << ". Please check "
+                           << "your geometry configuration.");
+      throw std::logic_error("Volume already has a layer ID");
+    }
     GeometryIdentifier id = volume.geometryId().withLayer(m_value);
     ACTS_DEBUG(prefix << "~> Setting layer to " << m_value
                       << " for volume with ID " << id);
@@ -84,6 +90,12 @@ struct FixedVolumeConfiguration : public Configuration {
                       << " for volume " << volume.volumeName()
                       << " and all descendents");
     volume.apply([&](TrackingVolume& v) {
+      if (v.geometryId().volume() != 0) {
+        ACTS_ERROR("Volume " << v.volumeName() << " already has volume ID "
+                             << v.geometryId().volume()
+                             << ". Please check your geometry configuration.");
+        throw std::logic_error("Volume already has a volume ID");
+      }
       ACTS_DEBUG(prefix << "~> Setting volume ID to " << m_volumeId
                         << " for volume " << v.volumeName());
       v.assignGeometryId(v.geometryId().withVolume(m_volumeId));
