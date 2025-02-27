@@ -107,9 +107,11 @@ if "__main__" == __name__:
 
     from acts.examples.itk import buildITkGeometry
 
-    detector, trackingGeometry, decorators = buildITkGeometry(
+    detector = buildITkGeometry(
         geo_example_dir, customMaterialFile=args.material
     )
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
 
