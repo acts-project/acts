@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 CylinderContainerBlueprintNode::CylinderContainerBlueprintNode(
     const std::string& name, AxisDirection direction,
@@ -253,4 +253,4 @@ VolumeResizeStrategy CylinderContainerBlueprintNode::resizeStrategy() const {
   return m_resizeStrategy;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
