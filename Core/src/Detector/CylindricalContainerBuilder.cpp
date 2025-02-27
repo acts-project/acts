@@ -264,7 +264,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
       auto bd = detail::ProtoMaterialHelper::attachProtoMaterial(
           gctx, portalContainer[ip]->surface(), bDescription);
       ACTS_VERBOSE("-> Assigning proto material to portal " << ip << " with "
-                                                            << bd.toString());
+                                                            << bd);
     }
   }
 

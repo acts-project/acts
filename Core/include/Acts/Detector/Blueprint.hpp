@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <map>
@@ -99,7 +99,7 @@ struct Node final {
   std::vector<AxisDirection> binning = {};
 
   /// Portal proto material binning
-  std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
+  std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
 
   /// Auxiliary information
   std::vector<std::string> auxiliary = {};

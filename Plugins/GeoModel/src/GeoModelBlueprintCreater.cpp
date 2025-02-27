@@ -195,8 +195,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   std::string entryType = entryTypeSplit[0u];
 
   // Check if material has to be attached
-  std::map<unsigned int, Experimental::BinningDescription>
-      portalMaterialBinning;
+  std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning;
   if (!entry.materials.empty()) {
     for (const auto& material : entry.materials) {
       std::vector<std::string> materialTokens;
@@ -212,14 +211,14 @@ Acts::GeoModelBlueprintCreater::createNode(
         std::vector<std::string> binningTokens;
         boost::split(binningTokens, materialTokens[1u], boost::is_any_of(";"));
 
-        std::vector<Experimental::ProtoBinning> protoBinnings;
+        std::vector<ProtoAxis> protoBinnings;
         for (const auto& bToken : binningTokens) {
           ACTS_VERBOSE("   - Binning: " << bToken);
-          protoBinnings.push_back(
-              detail::GeoModelBinningHelper::toProtoBinning(bToken));
+          protoBinnings.push_back(std::get<ProtoAxis>(
+              detail::GeoModelBinningHelper::toProtoAxis(bToken)));
         }
         portalMaterialBinning[portalNumber] =
-            Experimental::BinningDescription{protoBinnings};
+            std::vector<ProtoAxis>{protoBinnings};
       }
     }
     ACTS_VERBOSE("Node " << entry.name << " has "
@@ -385,8 +384,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
           if (!binning.empty()) {
             ACTS_VERBOSE("- Adding binning: " << binning);
             lsbCfg.binnings.push_back(
-                detail::GeoModelBinningHelper::toProtoBinning(binning,
-                                                              internalExtent));
+                detail::GeoModelBinningHelper::toProtoAxis(binning,
+                                                           internalExtent));
           }
         }
       } else {
