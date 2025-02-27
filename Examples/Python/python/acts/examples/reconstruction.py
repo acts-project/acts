@@ -1434,12 +1434,11 @@ def addCKFTracks(
         cutSets = []
         for c in tslist:
             defKW = trackSelectorDefaultKWArgs(c)
-            defKW.pop('absEtaMax', None)
-            cutSets+=[acts.TrackSelector.Config(**(defKW))]
+            defKW.pop("absEtaMax", None)
+            cutSets += [acts.TrackSelector.Config(**(defKW))]
     else:
         cutSets = [
-            acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c)))
-            for c in tslist
+            acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c))) for c in tslist
         ]
 
     if len(tslist) == 0:
