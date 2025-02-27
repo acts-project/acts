@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <variant>
