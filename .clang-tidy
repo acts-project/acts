@@ -21,6 +21,7 @@ Checks: >
   readability-inconsistent-declaration-parameter-name,
   readability-named-parameter,
   readability-operators-representation,
+  readability-redundant-smartptr-get
 HeaderFilterRegex: '.*(?<!nlohmann\/json)\.(hpp|cpp|ipp)$'
 CheckOptions:
   readability-operators-representation.BinaryOperators: '&&;&=;&;|;~;!;!=;||;|=;^;^='

@@ -24,6 +24,8 @@
 
 namespace Acts {
 
+class IVolumeMaterial;
+
 class SympyStepper {
  public:
   /// Jacobian, Covariance and State definitions
@@ -291,15 +293,9 @@ class SympyStepper {
   /// Compute path length derivatives in case they have not been computed
   /// yet, which is the case if no step has been executed yet.
   ///
-  /// @param [in, out] prop_state State that will be presented as @c BoundState
-  /// @param [in] navigator the navigator of the propagation
+  /// @param [in, out] state State of the stepper
   /// @return true if nothing is missing after this call, false otherwise.
-  template <typename propagator_state_t, typename navigator_t>
-  bool prepareCurvilinearState(
-      [[maybe_unused]] propagator_state_t& prop_state,
-      [[maybe_unused]] const navigator_t& navigator) const {
-    return true;
-  }
+  bool prepareCurvilinearState(State& state) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -361,15 +357,18 @@ class SympyStepper {
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state the propagation state
-  /// @param [in] navigator the navigator of the propagation
-  /// @note The state contains the desired step size.  It can be negative during
+  /// @param [in,out] state State of the stepper
+  /// @param propDir is the direction of propagation
+  /// @param material is the optional volume material we are stepping through.
+  //         This is simply ignored if `nullptr`.
+  /// @return the result of the step
+  ///
+  /// @note The state contains the desired step size. It can be negative during
   ///       backwards track propagation, and since we're using an adaptive
   ///       algorithm, it can be modified by the stepper class during
   ///       propagation.
-  template <typename propagator_state_t, typename navigator_t>
-  Result<double> step(propagator_state_t& state,
-                      const navigator_t& navigator) const;
+  Result<double> step(State& state, Direction propDir,
+                      const IVolumeMaterial* material) const;
 
   /// Method that reset the Jacobian to the Identity for when no bound state are
   /// available
@@ -380,17 +379,9 @@ class SympyStepper {
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
-
- private:
-  Result<double> stepImpl(State& state, Direction stepDirection,
-                          double stepTolerance, double stepSizeCutOff,
-                          std::size_t maxRungeKuttaStepTrials) const;
 };
 
-template <typename navigator_t>
-struct SupportsBoundParameters<SympyStepper, navigator_t>
-    : public std::true_type {};
+template <>
+struct SupportsBoundParameters<SympyStepper> : public std::true_type {};
 
 }  // namespace Acts
-
-#include "Acts/Propagator/SympyStepper.ipp"
