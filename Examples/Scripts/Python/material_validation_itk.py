@@ -107,9 +107,7 @@ if "__main__" == __name__:
 
     from acts.examples.itk import buildITkGeometry
 
-    detector = buildITkGeometry(
-        geo_example_dir, customMaterialFile=args.material
-    )
+    detector = buildITkGeometry(geo_example_dir, customMaterialFile=args.material)
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 

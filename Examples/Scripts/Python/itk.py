@@ -136,7 +136,7 @@ if "__main__" == __name__:
         material=not args.no_material,
     )
     trackingGeometry = detector.trackingGeometry()
-    decorators = detector.contextDecorators()   
+    decorators = detector.contextDecorators()
 
     runITk(
         trackingGeometry=trackingGeometry,
