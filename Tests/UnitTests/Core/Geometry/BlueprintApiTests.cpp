@@ -24,6 +24,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -420,7 +421,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     using enum AxisBoundaryType;
     using enum CuboidVolumeBounds::Face;
 
-    // Test valid axis combinations for each face type
+    // Configure valid axis combinations for each face type
     mat.configureFace(NegativeXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
     mat.configureFace(PositiveXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
     mat.configureFace(NegativeYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
@@ -428,28 +429,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
     mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
 
-    // Test invalid axis combinations for each face type
-    BOOST_CHECK_THROW(
-        mat.configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisZ, Bound, 10}),
-        std::invalid_argument);
-    BOOST_CHECK_THROW(
-        mat.configureFace(PositiveXFace, {AxisZ, Bound, 5}, {AxisY, Bound, 10}),
-        std::invalid_argument);
-    BOOST_CHECK_THROW(
-        mat.configureFace(NegativeYFace, {AxisY, Bound, 5}, {AxisZ, Bound, 10}),
-        std::invalid_argument);
-    BOOST_CHECK_THROW(
-        mat.configureFace(PositiveYFace, {AxisZ, Bound, 5}, {AxisX, Bound, 10}),
-        std::invalid_argument);
-    BOOST_CHECK_THROW(
-        mat.configureFace(NegativeZFace, {AxisZ, Bound, 5}, {AxisY, Bound, 10}),
-        std::invalid_argument);
-    BOOST_CHECK_THROW(
-        mat.configureFace(PositiveZFace, {AxisY, Bound, 5}, {AxisX, Bound, 10}),
-        std::invalid_argument);
-
-    // Add a cuboid volume - this should throw since cuboid support is not
-    // implemented
+    // Add a cuboid volume
     auto cuboid = std::make_unique<TrackingVolume>(
         base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 200_mm),
         "TestCuboid");
@@ -457,8 +437,29 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     mat.addStaticVolume(std::move(cuboid));
   });
 
-  // The construct method should throw since cuboid support is not implemented
-  BOOST_CHECK_THROW(root->construct({}, gctx, *logger), std::logic_error);
+  auto trackingGeometry = root->construct({}, gctx, *logger);
+
+  BOOST_REQUIRE(trackingGeometry);
+
+  // Verify that the cuboid volume was created
+  bool foundCuboid = false;
+  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
+    if (volume->volumeName() == "TestCuboid") {
+      foundCuboid = true;
+
+      // Check that all faces have material
+      for (const auto& portal : volume->portals()) {
+        BOOST_CHECK_NE(portal.surface().surfaceMaterial(), nullptr);
+
+        // Verify it's a ProtoGridSurfaceMaterial
+        const auto* material = dynamic_cast<const ProtoGridSurfaceMaterial*>(
+            portal.surface().surfaceMaterial());
+        BOOST_CHECK_NE(material, nullptr);
+      }
+    }
+  });
+
+  BOOST_CHECK(foundCuboid);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

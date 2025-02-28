@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
                               {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisY, Bound, 5}, {AxisZ, Bound, 10});
+                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
           }),
       std::invalid_argument);
 
@@ -635,14 +635,14 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisY, Bound, 5}, {AxisZ, Bound, 10});
+                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
                               {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
           }),
       std::invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(MaterialCuboidNotImplemented) {
+BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   Blueprint::Config cfg;
   cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
@@ -650,6 +650,7 @@ BOOST_AUTO_TEST_CASE(MaterialCuboidNotImplemented) {
 
   using enum AxisDirection;
   using enum AxisBoundaryType;
+  using enum CuboidVolumeBounds::Face;
 
   double hlX = 30_mm;
   double hlY = 40_mm;
@@ -659,13 +660,123 @@ BOOST_AUTO_TEST_CASE(MaterialCuboidNotImplemented) {
                                                  cuboidBounds, "child");
 
   root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                      {AxisX, Bound, 5}, {AxisY, Bound, 10});
+    // Configure material for different faces with different binning
+    mat.configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisY, Bound, 10});
+    mat.configureFace(PositiveXFace, {AxisX, Bound, 15}, {AxisY, Bound, 20});
+    mat.configureFace(NegativeYFace, {AxisX, Bound, 25}, {AxisY, Bound, 30});
+    mat.configureFace(PositiveYFace, {AxisX, Bound, 35}, {AxisY, Bound, 40});
+    mat.configureFace(NegativeZFace, {AxisX, Bound, 45}, {AxisY, Bound, 50});
+    mat.configureFace(PositiveZFace, {AxisX, Bound, 55}, {AxisY, Bound, 60});
+
     mat.addStaticVolume(std::move(cuboid));
   });
 
-  // The construct method should throw since cuboid support is not implemented
-  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::logic_error);
+  auto trackingGeometry =
+      root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
+
+  BOOST_REQUIRE(trackingGeometry);
+
+  auto lookup = nameLookup(*trackingGeometry);
+  auto& child = lookup("child");
+
+  // Check that material is attached to all faces
+  for (std::size_t i = 0; i < child.portals().size(); i++) {
+    const auto* material = child.portals().at(i).surface().surfaceMaterial();
+    BOOST_CHECK_NE(material, nullptr);
+
+    const auto& gridMaterial =
+        dynamic_cast<const ProtoGridSurfaceMaterial&>(*material);
+
+    // Check binning based on face
+    CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
+    switch (face) {
+      case NegativeXFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(), 5);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          10);
+        break;
+      case PositiveXFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+                          15);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          20);
+        break;
+      case NegativeYFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+                          25);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          30);
+        break;
+      case PositiveYFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+                          35);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          40);
+        break;
+      case NegativeZFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+                          45);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          50);
+        break;
+      case PositiveZFace:
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+                          55);
+        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+                          60);
+        break;
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MaterialCuboidInvalidAxisCombinations) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum AxisDirection;
+  using enum AxisBoundaryType;
+  using enum CuboidVolumeBounds::Face;
+
+  // Test invalid axis combinations for each face type
+  // For cuboid faces, only (X, Y) is valid
+
+  // Test with (Z, Y) - should throw
+  BOOST_CHECK_THROW(root.addMaterial("Material",
+                                     [&](auto& mat) {
+                                       mat.configureFace(NegativeXFace,
+                                                         {AxisZ, Bound, 5},
+                                                         {AxisY, Bound, 10});
+                                     }),
+                    std::invalid_argument);
+
+  // Test with (X, Z) - should throw
+  BOOST_CHECK_THROW(root.addMaterial("Material",
+                                     [&](auto& mat) {
+                                       mat.configureFace(PositiveXFace,
+                                                         {AxisX, Bound, 5},
+                                                         {AxisZ, Bound, 10});
+                                     }),
+                    std::invalid_argument);
+
+  // Test with (Y, X) - should throw (order matters)
+  BOOST_CHECK_THROW(root.addMaterial("Material",
+                                     [&](auto& mat) {
+                                       mat.configureFace(NegativeYFace,
+                                                         {AxisY, Bound, 5},
+                                                         {AxisX, Bound, 10});
+                                     }),
+                    std::invalid_argument);
+
+  // Test with (R, Phi) - should throw (cylinder axes not valid for cuboid)
+  BOOST_CHECK_THROW(root.addMaterial("Material",
+                                     [&](auto& mat) {
+                                       mat.configureFace(PositiveYFace,
+                                                         {AxisR, Bound, 5},
+                                                         {AxisPhi, Bound, 10});
+                                     }),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
