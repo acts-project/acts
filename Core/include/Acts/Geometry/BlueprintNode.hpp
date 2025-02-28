@@ -48,9 +48,9 @@ class ContainerBlueprintNode;
 ///    structures
 ///
 /// During the *build* phase, the `build` method of all nodes in the tree are
-/// called recursively. Some nodes, like @ref Acts::Experimental::CylinderContainerBlueprintNode,
+/// called recursively. Some nodes, like @ref Acts::Experimental::ContainerBlueprintNode,
 /// will take action on the volumes returns from its children, and perform
-/// sizing to connect them. See the @ref Acts::Experimental::CylinderContainerBlueprintNode
+/// sizing to connect them. See the @ref Acts::Experimental::ContainerBlueprintNode
 /// and @ref Acts::CylinderVolumeStack documentation for details on how the
 /// sizing is carried out.
 class BlueprintNode {
@@ -103,7 +103,7 @@ class BlueprintNode {
   /// Each boundary surface is then turned into a @ref Acts::TrivialPortalLink, which
   /// in turn produces a one-sided portal (see @ref Acts::Portal documentation)
   ///
-  /// Some nodes (like @ref Acts::Experimental::CylinderContainerBlueprintNode) will take action on
+  /// Some nodes (like @ref Acts::Experimental::ContainerBlueprintNode) will take action on
   /// their children, and unify the connected portals.
   ///
   /// After a node's processing has completed, it returns a reference to a @ref
