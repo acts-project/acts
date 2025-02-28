@@ -309,6 +309,7 @@ class Grid final : public IGrid {
   /// @return number of axes spanning the grid
   std::size_t dimensions() const override { return DIM; }
 
+  /// @copydoc IGrid::valueType()
   const std::type_info& valueType() const override { return typeid(T); }
 
   /// @brief get center position of bin with given local bin numbers
