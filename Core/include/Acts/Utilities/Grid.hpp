@@ -262,7 +262,7 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromLocalBins(localBins));
   }
 
-  /// @copydoc IGrid::atLocalBinsAny(AnyIndexType)
+  /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) const override {
     const_reference cref = atLocalBins(toIndexType(indices));
     return &cref;
@@ -280,7 +280,7 @@ class Grid final : public IGrid {
     return m_values.at(globalBinFromLocalBins(localBins));
   }
 
-  /// @copydoc IGrid::atLocalBinsAny(AnyIndexType)
+  /// @copydoc Acts::IGrid::atLocalBinsAny
   std::any atLocalBinsAny(AnyIndexType indices) override {
     reference ref = atLocalBins(toIndexType(indices));
     return &ref;
@@ -308,7 +308,7 @@ class Grid final : public IGrid {
   /// @return number of axes spanning the grid
   std::size_t dimensions() const override { return DIM; }
 
-  /// @copydoc IGrid::valueType()
+  /// @copydoc Acts::IGrid::valueType
   const std::type_info& valueType() const override { return typeid(T); }
 
   /// @brief get center position of bin with given local bin numbers
@@ -433,7 +433,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getLowerLeftBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc IGrid::lowerLeftBinEdgeAny
+  /// @copydoc Acts::IGrid::lowerLeftBinEdgeAny
   AnyPointType lowerLeftBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(lowerLeftBinEdge(toIndexType(indices)));
   }
@@ -449,7 +449,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getUpperRightBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc IGrid::upperRightBinEdgeAny
+  /// @copydoc Acts::IGrid::upperRightBinEdgeAny
   AnyPointType upperRightBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(upperRightBinEdge(toIndexType(indices)));
   }
@@ -466,7 +466,7 @@ class Grid final : public IGrid {
   /// @note Not including under- and overflow bins
   index_t numLocalBins() const { return detail::grid_helper::getNBins(m_axes); }
 
-  /// @copydoc IGrid::numLocalBinsAny
+  /// @copydoc Acts::IGrid::numLocalBinsAny
   AnyIndexType numLocalBinsAny() const override {
     return toAnyIndexType(numLocalBins());
   }
