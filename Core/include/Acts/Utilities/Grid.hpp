@@ -81,7 +81,6 @@ class IGrid {
   virtual AnyPointType binCenterAny(AnyIndexType indices) const = 0;
 
   /// @brief Get the number of local bins for a given set of indices
-  /// @param indices The indices to get the number of local bins for
   /// @return The number of local bins
   virtual AnyIndexType numLocalBinsAny() const = 0;
 
@@ -434,7 +433,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getLowerLeftBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc IGrid::lowerLeftBinEdgeAny(AnyIndexType)
+  /// @copydoc IGrid::lowerLeftBinEdgeAny
   AnyPointType lowerLeftBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(lowerLeftBinEdge(toIndexType(indices)));
   }
@@ -450,7 +449,7 @@ class Grid final : public IGrid {
     return detail::grid_helper::getUpperRightBinEdge(localBins, m_axes);
   }
 
-  /// @copydoc IGrid::upperRightBinEdgeAny(AnyIndexType)
+  /// @copydoc IGrid::upperRightBinEdgeAny
   AnyPointType upperRightBinEdgeAny(AnyIndexType indices) const override {
     return toAnyPointType(upperRightBinEdge(toIndexType(indices)));
   }
@@ -467,7 +466,7 @@ class Grid final : public IGrid {
   /// @note Not including under- and overflow bins
   index_t numLocalBins() const { return detail::grid_helper::getNBins(m_axes); }
 
-  /// @copydoc IGrid::numLocalBinsAny(AnyIndexType)
+  /// @copydoc IGrid::numLocalBinsAny
   AnyIndexType numLocalBinsAny() const override {
     return toAnyIndexType(numLocalBins());
   }
