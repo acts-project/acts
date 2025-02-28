@@ -58,14 +58,14 @@ class ContainerBlueprintNode final : public Experimental::BlueprintNode {
   /// This participates in the construction of the geometry via the blueprint
   /// tree. The steps are approximately as follows:
   /// -# Collect all child volumes
-  /// -# Package them into a VolumeStack, which performs
+  /// -# Package them into a VolumeStack (cuboid or cylinder), which performs
   ///    sizing and/or gap creation
   /// -# Return the VolumeStack as a volume up the tree
   ///
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
-  /// @return The combined @VolumeStack
+  /// @return The combined VolumeStack
   Volume& build(const Experimental::BlueprintOptions& options,
                 const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override {
@@ -103,13 +103,14 @@ class ContainerBlueprintNode final : public Experimental::BlueprintNode {
   ///   - If gap volume: produce a @ref Acts::TrackingVolume, and wrap it in a single use shell
   ///   - If child volume: locate the right child node it came from, call
   ///   ` connect` and collect the returned shell
-  /// -# Produce a combined @ref StackPortalShell from all the shells
+  /// -# Produce a combined StackPortalShell (cuboid or cylinder) from all the
+  /// shells
   /// -# Return that shell representation
   ///
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
-  /// @return The combined @ref StackPortalShell
+  /// @return The combined StackPortalShell (cuboid or cylinder)
   ShellStack& connect(const Experimental::BlueprintOptions& options,
                       const GeometryContext& gctx,
                       const Logger& logger = Acts::getDummyLogger()) override {
