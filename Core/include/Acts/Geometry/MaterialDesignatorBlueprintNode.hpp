@@ -9,12 +9,12 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <variant>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// This node type registers material proxies into its child volume during the
 /// blueprint construction. It is configured ahead of time which volume faces to
@@ -96,4 +96,4 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   std::optional<BinningConfig> m_binning{};
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
