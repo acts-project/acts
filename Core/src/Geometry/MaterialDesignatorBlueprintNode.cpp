@@ -9,6 +9,7 @@
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
@@ -91,7 +92,6 @@ void MaterialDesignatorBlueprintNode::validateCylinderFaceConfig(
 }
 
 void MaterialDesignatorBlueprintNode::handleCylinderBinning(
-
     CylinderPortalShell& cylShell,
     const std::vector<
         std::tuple<CylinderVolumeBounds::Face, ProtoAxis, ProtoAxis>>& binning,
@@ -129,10 +129,33 @@ void MaterialDesignatorBlueprintNode::validateCuboidFaceConfig(
         "Cannot mix volume types in material configuration");
   }
 
-  // There is no ambiguity as to which directions are accepted
+  // For cuboid faces, the valid axes are always X and Y
   if (loc0.getAxisDirection() != AxisX || loc1.getAxisDirection() != AxisY) {
     ACTS_ERROR(prefix() << "Cuboid faces must use (x, y) binning");
     throw std::invalid_argument("Cuboid faces must use (x, y) binning");
+  }
+}
+
+void MaterialDesignatorBlueprintNode::handleCuboidBinning(
+    CuboidPortalShell& cuboidShell,
+    const std::vector<
+        std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>& binning,
+    const Logger& logger) {
+  ACTS_DEBUG(prefix() << "Binning is set to compatible type");
+  using enum CuboidVolumeBounds::Face;
+
+  for (const auto& [face, loc0, loc1] : binning) {
+    auto* portal = cuboidShell.portal(face);
+    if (portal == nullptr) {
+      ACTS_ERROR(prefix() << "Portal is nullptr");
+      throw std::runtime_error("Portal is nullptr");
+    }
+
+    ACTS_DEBUG(prefix() << "Assigning material with binning: " << loc0 << ", "
+                        << loc1 << " to face " << face);
+
+    portal->surface().assignSurfaceMaterial(
+        std::make_shared<ProtoGridSurfaceMaterial>(std::vector{loc0, loc1}));
   }
 }
 
@@ -173,10 +196,17 @@ PortalShellBase& MaterialDesignatorBlueprintNode::connect(
       ACTS_ERROR(prefix() << "Binning is set to unknown type");
       throw std::runtime_error("Unknown binning type");
     }
-
-  }
-  // @TODO: Handle cuboid volume shell here
-  else {
+  } else if (auto* cuboidShell = dynamic_cast<CuboidPortalShell*>(&shell)) {
+    if (auto* cuboidBinning = std::get_if<std::vector<
+            std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>>(
+            &m_binning.value());
+        cuboidBinning != nullptr) {
+      handleCuboidBinning(*cuboidShell, *cuboidBinning, logger);
+    } else {
+      ACTS_ERROR(prefix() << "Binning is set to unknown type");
+      throw std::runtime_error("Unknown binning type");
+    }
+  } else {
     ACTS_ERROR(prefix() << "Shell is not supported");
     throw std::runtime_error("Shell is not supported");
   }
@@ -205,12 +235,24 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 
   std::stringstream ss;
   ss << "" + name() + "";
-  ss << "<br/><i>CylinderContainer</i>";
+  ss << "<br/><i>MaterialDesignator</i>";
 
   std::visit(
       overloaded{
           [&](const std::vector<std::tuple<CylinderPortalShell::Face, ProtoAxis,
                                            ProtoAxis>>& binning) {
+            ss << "<br/><i>Cylinder Binning</i>";
+            for (const auto& [face, loc0, loc1] : binning) {
+              ss << "<br/>" << face;
+              ss << ": " << loc0.getAxisDirection() << "="
+                 << loc0.getAxis().getNBins();
+              ss << ", " << loc1.getAxisDirection() << "="
+                 << loc1.getAxis().getNBins();
+            }
+          },
+          [&](const std::vector<std::tuple<CuboidVolumeBounds::Face, ProtoAxis,
+                                           ProtoAxis>>& binning) {
+            ss << "<br/><i>Cuboid Binning</i>";
             for (const auto& [face, loc0, loc1] : binning) {
               ss << "<br/>" << face;
               ss << ": " << loc0.getAxisDirection() << "="

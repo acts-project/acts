@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
@@ -106,6 +107,12 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
       CylinderPortalShell& cylShell,
       const std::vector<
           std::tuple<CylinderPortalShell::Face, ProtoAxis, ProtoAxis>>& binning,
+      const Logger& logger);
+
+  void handleCuboidBinning(
+      CuboidPortalShell& cuboidShell,
+      const std::vector<
+          std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>& binning,
       const Logger& logger);
 
   void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
