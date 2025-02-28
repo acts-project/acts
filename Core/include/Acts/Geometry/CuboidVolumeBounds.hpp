@@ -202,11 +202,6 @@ class CuboidVolumeBounds : public VolumeBounds {
   void checkConsistency() noexcept(false);
 };
 
-/// Stream operator for CuboidVolumeBounds::Face
-///
-/// @param os The output stream
-/// @param face The face to be streamed
-/// @return The updated output stream
 std::ostream& operator<<(std::ostream& os, CuboidVolumeBounds::Face face);
 
 }  // namespace Acts
