@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
@@ -214,7 +216,7 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::Blueprint;
   using Acts::Experimental::BlueprintNode;
   using Acts::Experimental::BlueprintOptions;
-  using Acts::Experimental::CylinderContainerBlueprintNode;
+  using Acts::Experimental::ContainerBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
@@ -342,8 +344,9 @@ void addBlueprint(Context& ctx) {
       py::arg("transform"), py::arg("bounds"), py::arg("name") = "undefined");
 
   auto cylNode =
-      py::class_<CylinderContainerBlueprintNode, BlueprintNode,
-                 std::shared_ptr<CylinderContainerBlueprintNode>>(
+      py::class_<
+          BlueprintNode::CylinderContainerBlueprintNode, BlueprintNode,
+          std::shared_ptr<BlueprintNode::CylinderContainerBlueprintNode>>(
           m, "CylinderContainerBlueprintNode")
           .def(py::init<const std::string&, AxisDirection,
                         VolumeAttachmentStrategy, VolumeResizeStrategy>(),
@@ -351,13 +354,18 @@ void addBlueprint(Context& ctx) {
                py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
                py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
           .def_property("attachmentStrategy",
-                        &CylinderContainerBlueprintNode::attachmentStrategy,
-                        &CylinderContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CylinderContainerBlueprintNode::resizeStrategy,
-                        &CylinderContainerBlueprintNode::setResizeStrategy)
-          .def_property("direction", &CylinderContainerBlueprintNode::direction,
-                        &CylinderContainerBlueprintNode::setDirection);
+                        &BlueprintNode::CylinderContainerBlueprintNode::
+                            attachmentStrategy,
+                        &ContainerBlueprintNode<
+                            CylinderVolumeBounds>::setAttachmentStrategy)
+          .def_property(
+              "resizeStrategy",
+              &BlueprintNode::CylinderContainerBlueprintNode::resizeStrategy,
+              &BlueprintNode::CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property(
+              "direction",
+              &BlueprintNode::CylinderContainerBlueprintNode::direction,
+              &BlueprintNode::CylinderContainerBlueprintNode::setDirection);
 
   addContextManagerProtocol(cylNode);
 
@@ -365,10 +373,48 @@ void addBlueprint(Context& ctx) {
       "CylinderContainer",
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
-        auto cylinder =
-            std::make_shared<CylinderContainerBlueprintNode>(name, direction);
-        self.addChild(cylinder);
-        return cylinder;
+        auto geometry =
+            std::make_shared<BlueprintNode::CylinderContainerBlueprintNode>(
+                name, direction);
+        self.addChild(geometry);
+        return geometry;
+      },
+      py::arg("name"), py::arg("direction"));
+
+  auto cubeNode =
+      py::class_<BlueprintNode::CuboidContainerBlueprintNode, BlueprintNode,
+                 std::shared_ptr<BlueprintNode::CuboidContainerBlueprintNode>>(
+          m, "CuboidContainerBlueprintNode")
+          .def(py::init<const std::string&, AxisDirection,
+                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
+               py::arg("name"), py::arg("direction"),
+               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
+          .def_property(
+              "attachmentStrategy",
+              &BlueprintNode::CuboidContainerBlueprintNode::attachmentStrategy,
+              &BlueprintNode::CuboidContainerBlueprintNode::
+                  setAttachmentStrategy)
+          .def_property(
+              "resizeStrategy",
+              &BlueprintNode::CuboidContainerBlueprintNode::resizeStrategy,
+              &BlueprintNode::CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property(
+              "direction",
+              &BlueprintNode::CuboidContainerBlueprintNode::direction,
+              &BlueprintNode::CuboidContainerBlueprintNode::setDirection);
+
+  addContextManagerProtocol(cubeNode);
+
+  addNodeMethods(
+      "CuboidContainer",
+      [](BlueprintNode& self, const std::string& name,
+         AxisDirection direction) {
+        auto geometry =
+            std::make_shared<BlueprintNode::CuboidContainerBlueprintNode>(
+                name, direction);
+        self.addChild(geometry);
+        return geometry;
       },
       py::arg("name"), py::arg("direction"));
 

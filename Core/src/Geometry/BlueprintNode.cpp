@@ -9,7 +9,9 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 
 #include "Acts/Geometry/Blueprint.hpp"
-#include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -107,23 +109,38 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
 StaticBlueprintNode& BlueprintNode::addStaticVolume(
     const Transform3& transform, std::shared_ptr<VolumeBounds> volumeBounds,
     const std::string& volumeName,
-    const std::function<void(StaticBlueprintNode& cylinder)>& callback) {
+    const std::function<void(StaticBlueprintNode& node)>& callback) {
   return addStaticVolume(std::make_unique<TrackingVolume>(
                              transform, std::move(volumeBounds), volumeName),
                          callback);
 }
 
-CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(
+BlueprintNode::CylinderContainerBlueprintNode&
+BlueprintNode::addCylinderContainer(
     const std::string& name, AxisDirection direction,
-    const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
-        callback) {
+    const std::function<void(
+        BlueprintNode::CylinderContainerBlueprintNode& cylinder)>& callback) {
   auto cylinder =
-      std::make_shared<CylinderContainerBlueprintNode>(name, direction);
+      std::make_shared<BlueprintNode::CylinderContainerBlueprintNode>(
+          name, direction);
   addChild(cylinder);
   if (callback) {
     callback(*cylinder);
   }
   return *cylinder;
+}
+
+BlueprintNode::CuboidContainerBlueprintNode& BlueprintNode::addCuboidContainer(
+    const std::string& name, AxisDirection direction,
+    const std::function<void(BlueprintNode::CuboidContainerBlueprintNode& box)>&
+        callback) {
+  auto box = std::make_shared<BlueprintNode::CuboidContainerBlueprintNode>(
+      name, direction);
+  addChild(box);
+  if (callback) {
+    callback(*box);
+  }
+  return *box;
 }
 
 MaterialDesignatorBlueprintNode& BlueprintNode::addMaterial(

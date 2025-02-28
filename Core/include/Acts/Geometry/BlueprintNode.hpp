@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -30,10 +32,12 @@ class PortalShellBase;
 
 namespace Experimental {
 
-class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
+
+template <class Bounds>
+class ContainerBlueprintNode;
 
 /// Base class for all nodes in the blueprint tree. This class defines the
 /// three-phase construction process. The three phases are
@@ -51,6 +55,13 @@ class LayerBlueprintNode;
 /// sizing is carried out.
 class BlueprintNode {
  public:
+  /// Shorthand specialization for the cylinder-shaped containers
+  using CylinderContainerBlueprintNode =
+      ContainerBlueprintNode<CylinderVolumeBounds>;
+  /// Shorthand specialization for the cuboid-shaped containers
+  using CuboidContainerBlueprintNode =
+      ContainerBlueprintNode<CuboidVolumeBounds>;
+
   /// Virtual destructor to ensure correct cleanup
   virtual ~BlueprintNode() = default;
 
@@ -187,7 +198,7 @@ class BlueprintNode {
       const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::CylinderContainerBlueprintNode.
+  /// Convenience method for creating a cylinder specialization of @ref Acts::Experimental::ContainerBlueprintNode.
   /// @param name The name of the container node. This name is only reflected
   ///             in the node tree for debugging, as no extra volumes is created
   ///             for the container.
@@ -197,6 +208,18 @@ class BlueprintNode {
   CylinderContainerBlueprintNode& addCylinderContainer(
       const std::string& name, AxisDirection direction,
       const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
+          callback = {});
+
+  /// Convenience method for creating a cuboid specialization of @ref Acts::Experimental::ContainerBlueprintNode.
+  /// @param name The name of the container node. This name is only reflected
+  ///             in the node tree for debugging, as no extra volumes is created
+  ///             for the container.
+  /// @param direction The direction of the stack configuration. See
+  ///                  @ref Acts::CuboidVolumeStack for details.
+  /// @param callback An optional callback that receives the node as an argument
+  CuboidContainerBlueprintNode& addCuboidContainer(
+      const std::string& name, AxisDirection direction,
+      const std::function<void(CuboidContainerBlueprintNode& cylinder)>&
           callback = {});
 
   /// Convenience method for creating a @ref Acts::Experimental::MaterialDesignatorBlueprintNode.
