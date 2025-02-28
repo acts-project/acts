@@ -89,7 +89,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
 
  private:
   /// The five different MaterialSlab
-  MaterialSlab m_fullMaterial;
+  MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 
   /// @brief Check if two materials are exactly equal.
   ///
