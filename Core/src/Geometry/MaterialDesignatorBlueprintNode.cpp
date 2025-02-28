@@ -19,7 +19,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 const std::string& MaterialDesignatorBlueprintNode::name() const {
   return m_name;
@@ -264,4 +264,4 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   return *this;
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
