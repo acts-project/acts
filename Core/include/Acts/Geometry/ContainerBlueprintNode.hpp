@@ -31,11 +31,13 @@ namespace Acts::Experimental {
 template <class Bounds>
 class ContainerBlueprintNode final : public Experimental::BlueprintNode {
  public:
-  using VolumeStack = ContainerBlueprintNodeTraits<Bounds>::VolumeStack;
+  using VolumeStack =
+      typename ContainerBlueprintNodeTraits<Bounds>::VolumeStack;
 
-  using BaseShell = ContainerBlueprintNodeTraits<Bounds>::BaseShell;
-  using SingleShell = ContainerBlueprintNodeTraits<Bounds>::SingleShell;
-  using ShellStack = ContainerBlueprintNodeTraits<Bounds>::ShellStack;
+  using BaseShell = typename ContainerBlueprintNodeTraits<Bounds>::BaseShell;
+  using SingleShell =
+      typename ContainerBlueprintNodeTraits<Bounds>::SingleShell;
+  using ShellStack = typename ContainerBlueprintNodeTraits<Bounds>::ShellStack;
 
   /// Main constructor for the container node.
   /// @param name The name of the node (for debug only)

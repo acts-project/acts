@@ -14,7 +14,7 @@ Not complete yet
 
 ### Container nodes
 
-:::{doxygenclass} Acts::Experimental::CylinderContainerBlueprintNode
+:::{doxygenclass} Acts::Experimental::ContainerBlueprintNode
 :::
 
 ### Material nodes
