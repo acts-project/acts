@@ -755,15 +755,6 @@ class Grid final : public IGrid {
     std::ranges::copy(indices, concrete.begin());
     return concrete;
   }
-
-  static point_t toPointType(const AnyPointType& point) {
-    if (point.size() != DIM) {
-      throw std::invalid_argument("Invalid number of points");
-    }
-    point_t concrete;
-    std::ranges::copy(point, concrete.begin());
-    return concrete;
-  }
 };
 
 template <typename T, class... Axes>
