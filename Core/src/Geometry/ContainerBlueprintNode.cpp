@@ -193,7 +193,7 @@ std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
 }
 
 template <typename BaseShell, typename SingleShell, typename ShellStack>
-std::unique_ptr<ShellStack> ContainerBlueprintNode::connectImpl(
+PortalShellBase& ContainerBlueprintNode::connectImpl(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack* stack, const std::string& prefix, const Logger& logger) {
   ACTS_DEBUG(prefix << "Container connect");
@@ -225,21 +225,20 @@ std::unique_ptr<ShellStack> ContainerBlueprintNode::connectImpl(
 
   ACTS_DEBUG(prefix << "Producing merged stack shell in " << direction()
                     << " direction from " << shells.size() << " shells");
-  auto shell = std::make_unique<ShellStack>(gctx, std::move(shells),
-                                            direction(), logger);
+  m_shell = std::make_unique<ShellStack>(gctx, std::move(shells), direction(),
+                                         logger);
 
-  assert(shell != nullptr && "No shell was built at the end of connect");
-  assert(shell->isValid() && "Shell is not valid at the end of connect");
-  return shell;
+  assert(m_shell != nullptr && "No shell was built at the end of connect");
+  assert(m_shell->isValid() && "Shell is not valid at the end of connect");
+  return *m_shell;
 }
 
 PortalShellBase& CylinderContainerBlueprintNode::connect(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
-  m_shell = connectImpl<CylinderPortalShell, SingleCylinderPortalShell,
-                        CylinderStackPortalShell>(options, gctx, m_stack.get(),
-                                                  prefix(), logger);
-  return *m_shell;
+  return connectImpl<CylinderPortalShell, SingleCylinderPortalShell,
+                     CylinderStackPortalShell>(options, gctx, m_stack.get(),
+                                               prefix(), logger);
 }
 
 const std::string& CylinderContainerBlueprintNode::typeName() const {
@@ -256,10 +255,9 @@ std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
 PortalShellBase& CuboidContainerBlueprintNode::connect(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
-  m_shell = connectImpl<CuboidPortalShell, SingleCuboidPortalShell,
-                        CuboidStackPortalShell>(options, gctx, m_stack.get(),
-                                                prefix(), logger);
-  return *m_shell;
+  return connectImpl<CuboidPortalShell, SingleCuboidPortalShell,
+                     CuboidStackPortalShell>(options, gctx, m_stack.get(),
+                                             prefix(), logger);
 }
 
 const std::string& CuboidContainerBlueprintNode::typeName() const {

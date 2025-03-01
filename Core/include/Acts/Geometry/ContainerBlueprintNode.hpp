@@ -121,10 +121,9 @@ class ContainerBlueprintNode : public BlueprintNode {
       const std::string& prefix, const Logger& logger);
 
   template <typename BaseShell, typename SingleShell, typename ShellStack>
-  std::unique_ptr<ShellStack> connectImpl(
-      const Experimental::BlueprintOptions& options,
-      const GeometryContext& gctx, VolumeStack* stack,
-      const std::string& prefix, const Logger& logger);
+  PortalShellBase& connectImpl(const Experimental::BlueprintOptions& options,
+                               const GeometryContext& gctx, VolumeStack* stack,
+                               const std::string& prefix, const Logger& logger);
 
   std::string m_name;
   AxisDirection m_direction = AxisDirection::AxisZ;
