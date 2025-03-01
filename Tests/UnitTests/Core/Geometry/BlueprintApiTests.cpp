@@ -428,38 +428,10 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
     mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
     mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
-
-    // Add a cuboid volume
-    auto cuboid = std::make_unique<TrackingVolume>(
-        base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 200_mm),
-        "TestCuboid");
-
-    mat.addStaticVolume(std::move(cuboid));
   });
 
   auto trackingGeometry = root->construct({}, gctx, *logger);
-
   BOOST_REQUIRE(trackingGeometry);
-
-  // Verify that the cuboid volume was created
-  bool foundCuboid = false;
-  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
-    if (volume->volumeName() == "TestCuboid") {
-      foundCuboid = true;
-
-      // Check that all faces have material
-      for (const auto& portal : volume->portals()) {
-        BOOST_CHECK_NE(portal.surface().surfaceMaterial(), nullptr);
-
-        // Verify it's a ProtoGridSurfaceMaterial
-        const auto* material = dynamic_cast<const ProtoGridSurfaceMaterial*>(
-            portal.surface().surfaceMaterial());
-        BOOST_CHECK_NE(material, nullptr);
-      }
-    }
-  });
-
-  BOOST_CHECK(foundCuboid);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

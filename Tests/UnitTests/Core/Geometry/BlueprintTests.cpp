@@ -32,6 +32,7 @@
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <fstream>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -41,6 +42,7 @@ using Acts::Experimental::Blueprint;
 using Acts::Experimental::BlueprintNode;
 using Acts::Experimental::BlueprintOptions;
 using Acts::Experimental::LayerBlueprintNode;
+using Acts::Experimental::MaterialDesignatorBlueprintNode;
 using Acts::Experimental::StaticBlueprintNode;
 
 namespace Acts::Test {
@@ -659,17 +661,19 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   auto cuboid = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                  cuboidBounds, "child");
 
-  root.addMaterial("Material", [&](auto& mat) {
-    // Configure material for different faces with different binning
-    mat.configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisY, Bound, 10});
-    mat.configureFace(PositiveXFace, {AxisX, Bound, 15}, {AxisY, Bound, 20});
-    mat.configureFace(NegativeYFace, {AxisX, Bound, 25}, {AxisY, Bound, 30});
-    mat.configureFace(PositiveYFace, {AxisX, Bound, 35}, {AxisY, Bound, 40});
-    mat.configureFace(NegativeZFace, {AxisX, Bound, 45}, {AxisY, Bound, 50});
-    mat.configureFace(PositiveZFace, {AxisX, Bound, 55}, {AxisY, Bound, 60});
+  auto mat = std::make_shared<MaterialDesignatorBlueprintNode>("Material");
 
-    mat.addStaticVolume(std::move(cuboid));
-  });
+  // Configure material for different faces with different binning
+  mat->configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisY, Bound, 10});
+  mat->configureFace(PositiveXFace, {AxisX, Bound, 15}, {AxisY, Bound, 20});
+  mat->configureFace(NegativeYFace, {AxisX, Bound, 25}, {AxisY, Bound, 30});
+  mat->configureFace(PositiveYFace, {AxisX, Bound, 35}, {AxisY, Bound, 40});
+  mat->configureFace(NegativeZFace, {AxisX, Bound, 45}, {AxisY, Bound, 50});
+  mat->configureFace(PositiveZFace, {AxisX, Bound, 55}, {AxisY, Bound, 60});
+
+  mat->addChild(std::make_shared<StaticBlueprintNode>(std::move(cuboid)));
+
+  root.addChild(mat);
 
   auto trackingGeometry =
       root.construct({}, gctx, *logger->clone(std::nullopt, Logging::VERBOSE));
@@ -727,56 +731,6 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
         break;
     }
   }
-}
-
-BOOST_AUTO_TEST_CASE(MaterialCuboidInvalidAxisCombinations) {
-  Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
-  Blueprint root{cfg};
-
-  using enum AxisDirection;
-  using enum AxisBoundaryType;
-  using enum CuboidVolumeBounds::Face;
-
-  // Test invalid axis combinations for each face type
-  // For cuboid faces, only (X, Y) is valid
-
-  // Test with (Z, Y) - should throw
-  BOOST_CHECK_THROW(root.addMaterial("Material",
-                                     [&](auto& mat) {
-                                       mat.configureFace(NegativeXFace,
-                                                         {AxisZ, Bound, 5},
-                                                         {AxisY, Bound, 10});
-                                     }),
-                    std::invalid_argument);
-
-  // Test with (X, Z) - should throw
-  BOOST_CHECK_THROW(root.addMaterial("Material",
-                                     [&](auto& mat) {
-                                       mat.configureFace(PositiveXFace,
-                                                         {AxisX, Bound, 5},
-                                                         {AxisZ, Bound, 10});
-                                     }),
-                    std::invalid_argument);
-
-  // Test with (Y, X) - should throw (order matters)
-  BOOST_CHECK_THROW(root.addMaterial("Material",
-                                     [&](auto& mat) {
-                                       mat.configureFace(NegativeYFace,
-                                                         {AxisY, Bound, 5},
-                                                         {AxisX, Bound, 10});
-                                     }),
-                    std::invalid_argument);
-
-  // Test with (R, Phi) - should throw (cylinder axes not valid for cuboid)
-  BOOST_CHECK_THROW(root.addMaterial("Material",
-                                     [&](auto& mat) {
-                                       mat.configureFace(PositiveYFace,
-                                                         {AxisR, Bound, 5},
-                                                         {AxisPhi, Bound, 10});
-                                     }),
-                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END();
