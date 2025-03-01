@@ -28,14 +28,14 @@ namespace Acts::Experimental {
 /// The container does not result in an extra volume in the hierarchy, as all
 /// input volumes and any gap volumes produced are directly registered in the
 /// volume of the parent of this node.
-class ContainerBlueprintNodeBase : public BlueprintNode {
+class ContainerBlueprintNode : public BlueprintNode {
  public:
   /// Main constructor for the container node.
   /// @param name The name of the node (for debug only)
   /// @param axis The stacking axis direction in local reference frame
   /// @param attachmentStrategy The attachment strategy for the stack
   /// @param resizeStrategy The resize strategy
-  ContainerBlueprintNodeBase(
+  ContainerBlueprintNode(
       const std::string& name, AxisDirection axis,
       VolumeAttachmentStrategy attachmentStrategy =
           VolumeAttachmentStrategy::Midpoint,
@@ -78,18 +78,18 @@ class ContainerBlueprintNodeBase : public BlueprintNode {
   /// Setter for the stacking direction
   /// @param direction The stacking direction
   /// @return This node for chaining
-  ContainerBlueprintNodeBase& setDirection(AxisDirection direction);
+  ContainerBlueprintNode& setDirection(AxisDirection direction);
 
   /// Setter for the attachment strategy
   /// @param attachmentStrategy The attachment strategy
   /// @return This node for chaining
-  ContainerBlueprintNodeBase& setAttachmentStrategy(
+  ContainerBlueprintNode& setAttachmentStrategy(
       VolumeAttachmentStrategy attachmentStrategy);
 
   /// Setter for the resize strategy
   /// @param resizeStrategy The resize strategy
   /// @return This node for chaining
-  ContainerBlueprintNodeBase& setResizeStrategy(
+  ContainerBlueprintNode& setResizeStrategy(
       VolumeResizeStrategy resizeStrategy);
 
   /// Accessor to the stacking direction
@@ -144,9 +144,9 @@ class ContainerBlueprintNodeBase : public BlueprintNode {
       m_gaps;
 };
 
-class CylinderContainerBlueprintNode final : public ContainerBlueprintNodeBase {
+class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
-  using ContainerBlueprintNodeBase::ContainerBlueprintNodeBase;
+  using ContainerBlueprintNode::ContainerBlueprintNode;
 
   /// This participates in the construction of the geometry via the blueprint
   /// tree. The steps are approximately as follows:
@@ -175,9 +175,9 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNodeBase {
   const std::string& typeName() const override;
 };
 
-class CuboidContainerBlueprintNode final : public ContainerBlueprintNodeBase {
+class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
  public:
-  using ContainerBlueprintNodeBase::ContainerBlueprintNodeBase;
+  using ContainerBlueprintNode::ContainerBlueprintNode;
 
   /// This participates in the construction of the geometry via the blueprint
   /// tree. The steps are approximately as follows:

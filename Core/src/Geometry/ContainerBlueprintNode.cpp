@@ -15,7 +15,7 @@
 
 namespace Acts::Experimental {
 
-ContainerBlueprintNodeBase::ContainerBlueprintNodeBase(
+ContainerBlueprintNode::ContainerBlueprintNode(
     const std::string& name, AxisDirection axis,
     VolumeAttachmentStrategy attachmentStrategy,
     VolumeResizeStrategy resizeStrategy)
@@ -24,11 +24,11 @@ ContainerBlueprintNodeBase::ContainerBlueprintNodeBase(
       m_attachmentStrategy(attachmentStrategy),
       m_resizeStrategy(resizeStrategy) {}
 
-const std::string& ContainerBlueprintNodeBase::name() const {
+const std::string& ContainerBlueprintNode::name() const {
   return m_name;
 }
 
-Volume& ContainerBlueprintNodeBase::build(
+Volume& ContainerBlueprintNode::build(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     const Logger& logger) {
   ACTS_DEBUG(prefix() << "container build (dir=" << m_direction << ")");
@@ -56,7 +56,7 @@ Volume& ContainerBlueprintNodeBase::build(
   return *m_stack;
 }
 
-void ContainerBlueprintNodeBase::finalize(
+void ContainerBlueprintNode::finalize(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     TrackingVolume& parent, const Logger& logger) {
   ACTS_DEBUG(prefix() << "Finalizing container");
@@ -90,7 +90,7 @@ void ContainerBlueprintNodeBase::finalize(
   }
 }
 
-ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setDirection(
+ContainerBlueprintNode& ContainerBlueprintNode::setDirection(
     AxisDirection direction) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
@@ -99,7 +99,7 @@ ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setDirection(
   return *this;
 }
 
-ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setAttachmentStrategy(
+ContainerBlueprintNode& ContainerBlueprintNode::setAttachmentStrategy(
     VolumeAttachmentStrategy attachmentStrategy) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
@@ -108,7 +108,7 @@ ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setAttachmentStrategy(
   return *this;
 }
 
-ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setResizeStrategy(
+ContainerBlueprintNode& ContainerBlueprintNode::setResizeStrategy(
     VolumeResizeStrategy resizeStrategy) {
   if (m_stack != nullptr) {
     throw std::runtime_error("Cannot change direction after build");
@@ -117,20 +117,19 @@ ContainerBlueprintNodeBase& ContainerBlueprintNodeBase::setResizeStrategy(
   return *this;
 }
 
-AxisDirection ContainerBlueprintNodeBase::direction() const {
+AxisDirection ContainerBlueprintNode::direction() const {
   return m_direction;
 }
 
-VolumeAttachmentStrategy ContainerBlueprintNodeBase::attachmentStrategy()
-    const {
+VolumeAttachmentStrategy ContainerBlueprintNode::attachmentStrategy() const {
   return m_attachmentStrategy;
 }
 
-VolumeResizeStrategy ContainerBlueprintNodeBase::resizeStrategy() const {
+VolumeResizeStrategy ContainerBlueprintNode::resizeStrategy() const {
   return m_resizeStrategy;
 }
 
-void ContainerBlueprintNodeBase::addToGraphviz(std::ostream& os) const {
+void ContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
   ss << "<b>" + name() + "</b>";
   ss << "<br/>" << typeName() << "Container";
@@ -146,7 +145,7 @@ void ContainerBlueprintNodeBase::addToGraphviz(std::ostream& os) const {
 }
 
 template <typename BaseShell, typename SingleShell>
-std::vector<BaseShell*> ContainerBlueprintNodeBase::collectChildShells(
+std::vector<BaseShell*> ContainerBlueprintNode::collectChildShells(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack& stack, const std::string& prefix, const Logger& logger) {
   std::vector<BaseShell*> shells;
@@ -194,7 +193,7 @@ std::vector<BaseShell*> ContainerBlueprintNodeBase::collectChildShells(
 }
 
 template <typename BaseShell, typename SingleShell, typename ShellStack>
-std::unique_ptr<ShellStack> ContainerBlueprintNodeBase::connectImpl(
+std::unique_ptr<ShellStack> ContainerBlueprintNode::connectImpl(
     const Experimental::BlueprintOptions& options, const GeometryContext& gctx,
     VolumeStack* stack, const std::string& prefix, const Logger& logger) {
   ACTS_DEBUG(prefix << "Container connect");

@@ -15,8 +15,15 @@
 #include <vector>
 
 namespace Acts {
+
+/// @class VolumeStack
+/// @brief A stack of volumes
+/// @note This is a base class for the different types of volume stacks
 class VolumeStack : public Volume {
  public:
+  /// @param volumes is the vector of volumes
+  /// @param direction is the direction of the stack
+  /// @param resizeStrategy is the resize strategy
   VolumeStack(std::vector<Volume*>& volumes, AxisDirection direction,
               VolumeResizeStrategy resizeStrategy);
 
@@ -24,6 +31,9 @@ class VolumeStack : public Volume {
   /// @return the vector of gap volumes
   const std::vector<std::shared_ptr<Volume>>& gaps() const;
 
+  /// Check if a volume is a gap volume
+  /// @param volume is the volume to check
+  /// @return true if the volume is a gap volume, false otherwise
   bool isGapVolume(const Volume& volume) const;
 
  private:
