@@ -115,14 +115,12 @@ StaticBlueprintNode& BlueprintNode::addStaticVolume(
                          callback);
 }
 
-BlueprintNode::CylinderContainerBlueprintNode&
-BlueprintNode::addCylinderContainer(
+CylinderContainerBlueprintNode& BlueprintNode::addCylinderContainer(
     const std::string& name, AxisDirection direction,
-    const std::function<void(
-        BlueprintNode::CylinderContainerBlueprintNode& cylinder)>& callback) {
+    const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
+        callback) {
   auto cylinder =
-      std::make_shared<BlueprintNode::CylinderContainerBlueprintNode>(
-          name, direction);
+      std::make_shared<CylinderContainerBlueprintNode>(name, direction);
   addChild(cylinder);
   if (callback) {
     callback(*cylinder);
@@ -130,12 +128,10 @@ BlueprintNode::addCylinderContainer(
   return *cylinder;
 }
 
-BlueprintNode::CuboidContainerBlueprintNode& BlueprintNode::addCuboidContainer(
+CuboidContainerBlueprintNode& BlueprintNode::addCuboidContainer(
     const std::string& name, AxisDirection direction,
-    const std::function<void(BlueprintNode::CuboidContainerBlueprintNode& box)>&
-        callback) {
-  auto box = std::make_shared<BlueprintNode::CuboidContainerBlueprintNode>(
-      name, direction);
+    const std::function<void(CuboidContainerBlueprintNode& box)>& callback) {
+  auto box = std::make_shared<CuboidContainerBlueprintNode>(name, direction);
   addChild(box);
   if (callback) {
     callback(*box);

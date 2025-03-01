@@ -36,8 +36,8 @@ class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
 
-template <class Bounds>
-class ContainerBlueprintNode;
+class CylinderContainerBlueprintNode;
+class CuboidContainerBlueprintNode;
 
 /// Base class for all nodes in the blueprint tree. This class defines the
 /// three-phase construction process. The three phases are
@@ -55,13 +55,6 @@ class ContainerBlueprintNode;
 /// sizing is carried out.
 class BlueprintNode {
  public:
-  /// Shorthand specialization for the cylinder-shaped containers
-  using CylinderContainerBlueprintNode =
-      ContainerBlueprintNode<CylinderVolumeBounds>;
-  /// Shorthand specialization for the cuboid-shaped containers
-  using CuboidContainerBlueprintNode =
-      ContainerBlueprintNode<CuboidVolumeBounds>;
-
   /// Virtual destructor to ensure correct cleanup
   virtual ~BlueprintNode() = default;
 
