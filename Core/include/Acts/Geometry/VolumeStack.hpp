@@ -12,6 +12,7 @@
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 
+#include <span>
 #include <vector>
 
 namespace Acts {
@@ -41,7 +42,7 @@ class VolumeStack : public Volume {
   /// there is not one.
   /// @param volumes is the vector of volumes
   /// @return the first volume
-  static Volume& initialVolume(const std::vector<Volume*>& volumes);
+  static Volume& initialVolume(std::span<Volume*> volumes);
 
  protected:
   /// @param transform is the transform of the gap volume

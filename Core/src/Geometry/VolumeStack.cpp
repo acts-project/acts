@@ -17,7 +17,7 @@ VolumeStack::VolumeStack(std::vector<Volume*>& volumes, AxisDirection direction,
       m_resizeStrategy(resizeStrategy),
       m_volumes(volumes) {}
 
-Volume& VolumeStack::initialVolume(const std::vector<Volume*>& volumes) {
+Volume& VolumeStack::initialVolume(std::span<Volume*> volumes) {
   if (volumes.empty()) {
     throw std::invalid_argument("VolumeStack requires at least one volume");
   }

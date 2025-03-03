@@ -242,8 +242,7 @@ PortalShellBase& CylinderContainerBlueprintNode::connect(
 }
 
 const std::string& CylinderContainerBlueprintNode::typeName() const {
-  static const std::string name = "Cylinder";
-  return name;
+  return s_typeName;
 }
 
 std::unique_ptr<VolumeStack> CylinderContainerBlueprintNode::makeStack(
@@ -261,8 +260,7 @@ PortalShellBase& CuboidContainerBlueprintNode::connect(
 }
 
 const std::string& CuboidContainerBlueprintNode::typeName() const {
-  static const std::string name = "Cuboid";
-  return name;
+  return s_typeName;
 }
 
 std::unique_ptr<VolumeStack> CuboidContainerBlueprintNode::makeStack(

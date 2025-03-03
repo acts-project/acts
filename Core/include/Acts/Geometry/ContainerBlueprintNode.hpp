@@ -238,6 +238,7 @@ class CylinderContainerBlueprintNode final : public ContainerBlueprintNode {
                                          const Logger& logger) override;
 
  protected:
+  inline static const std::string s_typeName = "Cylinder";
   const std::string& typeName() const override;
 };
 
@@ -269,6 +270,7 @@ class CuboidContainerBlueprintNode final : public ContainerBlueprintNode {
                                          const Logger& logger) override;
 
  protected:
+  inline static const std::string s_typeName = "Cuboid";
   const std::string& typeName() const override;
 };
 
