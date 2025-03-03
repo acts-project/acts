@@ -394,7 +394,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(boxNode);
 
   addNodeMethods(
-      "CylinderContainer",
+      "CuboidContainer",
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
