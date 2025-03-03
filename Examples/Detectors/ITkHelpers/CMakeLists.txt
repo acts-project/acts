@@ -7,4 +7,7 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    TARGETS ActsExamplesITkHelpers
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
