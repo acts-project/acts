@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
   BOOST_CHECK(trapShell.isValid());
   BOOST_CHECK_EQUAL(trapShell.size(), 6);
 
-  // check if the protals are consistent with their orientation in the shell and
+  // check if the portals are consistent with their orientation in the shell and
   // find the linked volume
   using enum TrapezoidVolumeBounds::Face;
 
