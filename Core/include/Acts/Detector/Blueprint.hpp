@@ -38,7 +38,7 @@ class IRootVolumeFinderBuilder;
 ///
 /// Leaf nodes can have internal builders attached, while all the external
 /// builders will be created when the blueprint is interpreted.
-namespace Blueprint {
+namespace Gen2Blueprint {
 
 struct Node final {
   /// Branch constructor
@@ -129,5 +129,5 @@ struct Node final {
   }
 };
 
-}  // namespace Blueprint
+}  // namespace Gen2Blueprint
 }  // namespace Acts::Experimental

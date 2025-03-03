@@ -143,7 +143,7 @@ Acts::GeoModelBlueprintCreater::create(const GeometryContext& gctx,
   return blueprint;
 }
 
-std::unique_ptr<Acts::Experimental::Blueprint::Node>
+std::unique_ptr<Acts::Experimental::Gen2Blueprint::Node>
 Acts::GeoModelBlueprintCreater::createNode(
     Cache& cache, const GeometryContext& gctx, const TableEntry& entry,
     const std::map<std::string, TableEntry>& tableEntryMap,
@@ -229,7 +229,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   // Block for branch or container nodes that have children
   if (entryType == "branch" || entryType == "container" ||
       entryType == "root") {
-    std::vector<std::unique_ptr<Experimental::Blueprint::Node>> children;
+    std::vector<std::unique_ptr<Experimental::Gen2Blueprint::Node>> children;
     // Check for gap filling
     bool gapFilling = false;
     // Check if the entry has children
@@ -270,7 +270,7 @@ Acts::GeoModelBlueprintCreater::createNode(
         });
 
     // Complete the children
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, binnings,
         std::move(children), extent);
     node->portalMaterialBinning = portalMaterialBinning;
@@ -298,7 +298,7 @@ Acts::GeoModelBlueprintCreater::createNode(
     return node;
 
   } else if (entryType == "leaf") {
-    auto node = std::make_unique<Experimental::Blueprint::Node>(
+    auto node = std::make_unique<Experimental::Gen2Blueprint::Node>(
         entry.name, transform, boundsType, boundValues, internalsBuilder,
         extent);
     node->portalMaterialBinning = portalMaterialBinning;
