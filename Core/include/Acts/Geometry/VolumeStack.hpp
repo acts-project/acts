@@ -44,6 +44,7 @@ class VolumeStack : public Volume {
   static Volume& initialVolume(const std::vector<Volume*>& volumes);
 
  protected:
+  /// @param transform is the transform of the gap volume
   /// @param bounds is the bounds of the gap volume
   /// @return the shared pointer to the gap volume
   std::shared_ptr<Volume> addGapVolume(
