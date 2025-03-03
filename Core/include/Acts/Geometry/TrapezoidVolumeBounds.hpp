@@ -48,6 +48,51 @@ class TrapezoidBounds;
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
+
+///                                                                     PositiveYFaceZX
+///                                      PositiveZFaceXY |
+///                                               | | | | | v |
+///                                               +------------------------------------------------------+
+///                                               v  | |
+///                                            +-----+------------------------------------------------+
+///                                            |
+///                                           /      | +-     |
+///                                  +       /       | +-+      |
+///                                 /|      /        | +-+        |     +
+///                                / |     /
+///                                +-----------------------------------------+-+----------+
+///                                ++
+///                               /  |    / +-+               +-+|
+///                              /   |   /
+///                              +--------------------------------------------+-+-------+
+///                              +-+  |
+///                             /    |  /    / +-+        +-     +-+    |
+///                            /     + /    / +-+        +-+    +-+      |
+/// TrapezoidFaceAlpha------> /     / /    / +-+        +-+    +-+        +
+///                          /     / /    / +-+        +-+    +-+         +-
+///                         /     / /    / +-+        +-+    +-+         +-+
+///                        /     / /    / +-+        +-+    +-+         +-+
+///                       /     / +----X---------------------------------------+
+///                       +-+    +-+         +-+
+///                      /     /      / +-+    +-+         +-+
+///                     /     /      / +-+    +-+         +-+
+///                    +     / +----X--------------------------------------+ +-+
+///                    -+         +-+ ^ |    /  |   / |    +-+      + +-+   | |
+///                    /   |  /                                        |  +-+ |
+///                    +-+     | |  /    |
+///                    +-----------------------------------------+--+  ^       |
+///                    +-+       | | /     | |     |       |   +-+         |
+///        z ^   ^ y   |/      |                                           | |
+///        | +-+           |
+///          |  /      +       +-------------------------------------------+ |
+///          |-+             | | /                                     ^ | + |
+///          |/                                      | | TrapezoidFaceBeta
+///          X------> x                              | |
+///                        NegativeYFaceZX   --------+ |
+///                                                                              |
+///                                                                              |
+///                                                                              |
+///                                                                       NegativeZFaceXY
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
@@ -68,8 +113,10 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
     NegativeZFaceXY = BoundarySurfaceFace::negativeFaceXY,
     PositiveZFaceXY = BoundarySurfaceFace::positiveFaceXY,
-    TrapezoidFaceAlpha = BoundarySurfaceFace::trapezoidFaceAlpha,
-    TrapezoidFaceBeta = BoundarySurfaceFace::trapezoidFaceBeta,
+    TrapezoidFaceAlpha = BoundarySurfaceFace::
+        trapezoidFaceAlpha,  // Acts::PlaneSurface attached to [0] and [1] at negative \f$x\f$
+    TrapezoidFaceBeta = BoundarySurfaceFace::
+        trapezoidFaceBeta,  // Acts::PlaneSurface attached to [0] and [1] at positive \f$x\f$
     NegativeYFaceZX = BoundarySurfaceFace::negativeFaceZX,
     PositiveYFaceZX = BoundarySurfaceFace::positiveFaceZX
 
