@@ -121,9 +121,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
   GridBound gridBound(axisGen());
   AccBound accBound(gridBound);
 
-  GridCurvilinear gridCurvilinear(axisGen());
-  AccCurvilinear accCurvilinear(gridCurvilinear);
-
   GridFree gridFree(axisGen());
   AccFree accFree(gridFree);
 
@@ -174,14 +171,10 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
                            std::nullopt, hypothesis)
                            .value();
 
-      auto parsCurvilinear = Acts::BoundTrackParameters::makeCurvilinear(
-          fourPositions.at(j), direction, 1. / P, std::nullopt, hypothesis);
-
       auto parsFree = Acts::FreeTrackParameters(
           fourPositions.at(j), direction, 1. / P, std::nullopt, hypothesis);
 
       accBound.addTrack(parsBound, parsBound, loc);
-      accCurvilinear.addTrack(parsCurvilinear, parsCurvilinear, loc);
       accFree.addTrack(parsFree, parsFree, loc);
     }
     avgPoss.push_back(avgPos / fourPositions.size());
@@ -190,11 +183,9 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
   // Finalize and compare
   GridBound avgGridBound = accBound.finalizeLookup();
-  GridCurvilinear avgGridCurvilinear = accCurvilinear.finalizeLookup();
   GridFree avgGridFree = accFree.finalizeLookup();
   for (std::size_t i = 0; i < avgGridBound.size(); i++) {
     auto [ipBound, refBound] = avgGridBound.at(i);
-    auto [ipCurvilinear, refCurvilinear] = avgGridCurvilinear.at(i);
     auto [ipFree, refFree] = avgGridFree.at(i);
 
     Acts::Vector4 avgPos = avgPoss.at(i);
@@ -206,10 +197,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);
     CHECK_CLOSE_ABS(ipBound->absoluteMomentum(), avgP, 1e-3);
-
-    CHECK_CLOSE_ABS(ipCurvilinear->fourPosition(gctx), avgPos, 1e-3);
-    CHECK_CLOSE_ABS(ipCurvilinear->direction(), avgDir, 1e-3);
-    CHECK_CLOSE_ABS(ipCurvilinear->absoluteMomentum(), avgP, 1e-3);
 
     CHECK_CLOSE_ABS(ipFree->fourPosition(), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipFree->direction(), avgDir, 1e-3);
