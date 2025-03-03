@@ -428,6 +428,10 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
     mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
     mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+
+    mat.addStaticVolume(
+        base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),
+        "TestVolume");
   });
 
   auto trackingGeometry = root->construct({}, gctx, *logger);
