@@ -136,22 +136,26 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
     missed.erase(ret.begin(), ret.end());
   }
 
-  std::ofstream missedFile("missed_surfaces.csv");
-  missedFile << "hardware,bec,lw,em,pm,side\n";
-  for (const auto& m : missed) {
-    missedFile << m.hardware() << "," << m.barrelEndcap() << ","
-               << m.layerWheel() << "," << m.etaModule() << "," << m.phiModule()
-               << "," << m.side() << "\n";
-  }
+  if (m_cfg.writeDebugFiles) {
+    std::ofstream missedFile("missed_surfaces_ev" +
+                             std::to_string(ctx.eventNumber) + ".csv");
+    missedFile << "hardware,bec,lw,em,pm,side\n";
+    for (const auto& m : missed) {
+      missedFile << m.hardware() << "," << m.barrelEndcap() << ","
+                 << m.layerWheel() << "," << m.etaModule() << ","
+                 << m.phiModule() << "," << m.side() << "\n";
+    }
 
-  std::ofstream matchedFile("matched_surfaces.csv");
-  matchedFile << "acts_geoid,hardware,bec,lw,em,pm,side\n";
-  for (auto d : matched) {
-    const auto& m = d->identifier();
-    matchedFile << d->surface().geometryId().value() << ",";
-    matchedFile << m.hardware() << "," << m.barrelEndcap() << ","
-                << m.layerWheel() << "," << m.etaModule() << ","
-                << m.phiModule() << "," << m.side() << "\n";
+    std::ofstream matchedFile("matched_surfaces_ev" +
+                              std::to_string(ctx.eventNumber) + ".csv");
+    matchedFile << "acts_geoid,hardware,bec,lw,em,pm,side\n";
+    for (auto d : matched) {
+      const auto& m = d->identifier();
+      matchedFile << d->surface().geometryId().value() << ",";
+      matchedFile << m.hardware() << "," << m.barrelEndcap() << ","
+                  << m.layerWheel() << "," << m.etaModule() << ","
+                  << m.phiModule() << "," << m.side() << "\n";
+    }
   }
 
   ACTS_DEBUG("Added " << athenaToActsGeoId.size() - prev << " entries");

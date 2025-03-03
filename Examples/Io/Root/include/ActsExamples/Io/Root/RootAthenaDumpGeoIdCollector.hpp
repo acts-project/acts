@@ -50,6 +50,9 @@ class RootAthenaDumpGeoIdCollector : public IReader {
 
     /// The tracking geometry the algorithm uses to match the
     std::shared_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
+
+    /// Whether to write some file with detailed debug information
+    bool writeDebugFiles = false;
   };
 
   // Constructor
