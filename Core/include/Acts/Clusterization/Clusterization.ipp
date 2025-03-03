@@ -145,6 +145,7 @@ ClusterCollection mergeClustersImpl(CellCollection& cells) {
 
   // Accumulate clusters into the output collection
   ClusterCollection outv;
+  outv.reserve(cells.size() + 1);
   Cluster cl;
   int lbl = getCellLabel(cells.front());
   for (auto& cell : cells) {
