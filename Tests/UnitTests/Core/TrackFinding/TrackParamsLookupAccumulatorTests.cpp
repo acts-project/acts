@@ -44,12 +44,6 @@ using CellBound = std::pair<std::shared_ptr<Acts::BoundTrackParameters>,
 using GridBound = Acts::Grid<CellBound, Axis, Axis>;
 using AccBound = Acts::TrackParamsLookupAccumulator<GridBound>;
 
-using CellCurvilinear = std::pair<std::shared_ptr<Acts::BoundTrackParameters>,
-                                  std::shared_ptr<Acts::BoundTrackParameters>>;
-
-using GridCurvilinear = Acts::Grid<CellCurvilinear, Axis, Axis>;
-using AccCurvilinear = Acts::TrackParamsLookupAccumulator<GridCurvilinear>;
-
 using CellFree = std::pair<std::shared_ptr<Acts::FreeTrackParameters>,
                            std::shared_ptr<Acts::FreeTrackParameters>>;
 
