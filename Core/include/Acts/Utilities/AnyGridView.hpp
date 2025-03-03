@@ -39,7 +39,7 @@ class AnyGridViewBase {
   /// @param grid The grid to view
   /// @note This constructor is only available for const views (isConst=true)
   explicit AnyGridViewBase(const IGrid& grid)
-    requires(isConst)
+    requires isConst
       : m_grid(&grid) {
     checkType();
   }
@@ -53,7 +53,7 @@ class AnyGridViewBase {
   /// @param grid The concrete grid to view
   /// @note This constructor is only available for non-const views (isConst=false)
   template <typename... Axes>
-  AnyGridViewBase(Grid<T, Axes...>& grid)
+  explicit AnyGridViewBase(Grid<T, Axes...>& grid)
     requires(!isConst)
       : m_grid(&grid) {
     checkType();
@@ -64,8 +64,8 @@ class AnyGridViewBase {
   /// @param grid The concrete grid to view
   /// @note This constructor is only available for const views (isConst=true)
   template <typename... Axes>
-  AnyGridViewBase(const Grid<T, Axes...>& grid)
-    requires(isConst)
+  explicit AnyGridViewBase(const Grid<T, Axes...>& grid)
+    requires isConst
       : m_grid(&grid) {
     checkType();
   }
