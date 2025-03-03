@@ -23,11 +23,23 @@
 
 namespace Acts::Experimental {
 
-/// This class handles the case of wrapping a set of children
-/// and stacking them in a configured direction.
-/// The container does not result in an extra volume in the hierarchy, as all
-/// input volumes and any gap volumes produced are directly registered in the
-/// volume of the parent of this node.
+/// @class ContainerBlueprintNode
+///
+/// A blueprint node that can contain multiple child volumes. It is responsible
+/// for managing the child volumes and their shells. The child volumes can be
+/// either gap volumes or volumes from child nodes.
+///
+/// The container node is responsible for:
+/// 1. Managing the child volumes and their shells
+/// 2. Creating gap volumes between child volumes
+/// 3. Collecting shells from child nodes and gap volumes
+/// 4. Building the volume stack
+///
+/// The container node is an abstract base class. Derived classes must
+/// implement:
+/// 1. makeStack - to create the appropriate volume stack
+/// 2. typeName - to provide the type name for debug output
+///
 class ContainerBlueprintNode : public BlueprintNode {
  public:
   /// Main constructor for the container node.
@@ -104,22 +116,77 @@ class ContainerBlueprintNode : public BlueprintNode {
   /// @return The resize strategy
   VolumeResizeStrategy resizeStrategy() const;
 
- private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
  protected:
+  /// Make the volume stack for the container. This is called by the build
+  /// method and is implemented by the derived classes.
+  /// @param volumes The volumes to stack
+  /// @param logger The logger to use
+  /// @return The volume stack
   virtual std::unique_ptr<VolumeStack> makeStack(std::vector<Volume*>& volumes,
                                                  const Logger& logger) = 0;
 
+  /// Get the type name of the container. This is used for the debug output
+  /// of the container and encoding the volume shape in the dot graph.
+  /// @return The type name
   virtual const std::string& typeName() const = 0;
 
+  /// Collect shells from child nodes and gap volumes
+  ///
+  /// This function is responsible for collecting shells from child nodes and
+  /// creating shells for gap volumes. It is used by the connect method to
+  /// prepare the shells for the volume stack.
+  ///
+  /// The function processes each volume in m_childVolumes in two ways:
+  /// 1. For gap volumes:
+  ///    - Creates a TrackingVolume from the gap volume
+  ///    - Assigns a unique name (ContainerName::GapN)
+  ///    - Creates a single shell for the gap volume
+  ///    - Stores both the shell and gap volume in m_gaps for later use
+  ///
+  /// 2. For child volumes:
+  ///    - Looks up the corresponding child node in m_volumeToNode
+  ///    - Calls connect() on the child node to get its shell
+  ///    - Validates that the shell type matches the expected type
+  ///    - Ensures the shell is valid
+  ///
+  /// The function maintains the order of volumes as they appear in
+  /// m_childVolumes, which is important for the final stack shell construction.
+  ///
+  /// @tparam BaseShell The base shell type (e.g. CylinderPortalShell)
+  /// @tparam SingleShell The single shell type (e.g. SingleCylinderPortalShell)
+  /// @param options The blueprint options
+  /// @param gctx The geometry context
+  /// @param stack The volume stack
+  /// @param prefix The prefix for debug output
+  /// @param logger The logger to use
+  /// @return A vector of shells in the same order as m_childVolumes
   template <typename BaseShell, typename SingleShell>
   std::vector<BaseShell*> collectChildShells(
       const Experimental::BlueprintOptions& options,
       const GeometryContext& gctx, VolumeStack& stack,
       const std::string& prefix, const Logger& logger);
 
+  /// Implementation of the connect method for container nodes
+  ///
+  /// This method is responsible for:
+  /// 1. Collecting shells from child nodes and gap volumes
+  /// 2. Validating that the number of shells matches the number of child
+  /// volumes
+  /// 3. Ensuring all shells are valid
+  /// 4. Creating a merged stack shell from all collected shells
+  ///
+  /// @tparam BaseShell The base shell type (e.g. CylinderPortalShell)
+  /// @tparam SingleShell The single shell type (e.g. SingleCylinderPortalShell)
+  /// @tparam ShellStack The stack shell type (e.g. StackCylinderPortalShell)
+  /// @param options The blueprint options
+  /// @param gctx The geometry context
+  /// @param stack The volume stack
+  /// @param prefix The prefix for debug output
+  /// @param logger The logger to use
+  /// @return The merged stack shell
   template <typename BaseShell, typename SingleShell, typename ShellStack>
   PortalShellBase& connectImpl(const Experimental::BlueprintOptions& options,
                                const GeometryContext& gctx, VolumeStack* stack,
