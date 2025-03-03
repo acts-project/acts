@@ -39,7 +39,7 @@ class AnyGridViewBase {
   /// @param grid The grid to view
   /// @note This constructor is only available for const views (isConst=true)
   explicit AnyGridViewBase(const IGrid& grid)
-    requires isConst
+    requires(isConst)
       : m_grid(&grid) {
     checkType();
   }
@@ -65,7 +65,7 @@ class AnyGridViewBase {
   /// @note This constructor is only available for const views (isConst=true)
   template <typename... Axes>
   explicit AnyGridViewBase(const Grid<T, Axes...>& grid)
-    requires isConst
+    requires(isConst)
       : m_grid(&grid) {
     checkType();
   }
