@@ -48,45 +48,40 @@ class TrapezoidBounds;
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
-// clang-format off
-///                                                                     PositiveYFaceZX
-///                                      PositiveZFaceXY                         |
-///                                               |                              |
-///                                               |                              |
-///                                               |                              v
-///                                               |  +------------------------------------------------------+
-///                                               v  |                                                      |
-///                                            +-----+------------------------------------------------+     |
-///                                           /      |                                               +-     |
-///                                  +       /       |                                             +-+      |
-///                                 /|      /        |                                           +-+        |     +
-///                                / |     /         +-----------------------------------------+-+----------+    ++
-///                               /  |    /                                                  +-+               +-+|
-///                              /   |   /    +--------------------------------------------+-+-------+       +-+  |
-///                             /    |  /    /                                           +-+        +-     +-+    |
-///                            /     + /    /                                          +-+        +-+    +-+      |
-/// TrapezoidFaceAlpha------> /     / /    /                                         +-+        +-+    +-+        +
-///                          /     / /    /                                        +-+        +-+    +-+         +-
-///                         /     / /    /                                       +-+        +-+    +-+         +-+
-///                        /     / /    /                                      +-+        +-+    +-+         +-+
-///                       /     / +----X---------------------------------------+        +-+    +-+         +-+
-///                      /     /      /                                               +-+    +-+         +-+
-///                     /     /      /                                              +-+    +-+         +-+
-///                    +     / +----X--------------------------------------+      +-+     -+         +-+ ^
-///                    |    /  |   /                                       |    +-+      +         +-+   |
-///                    |   /   |  /                                        |  +-+        |       +-+     |
-///                    |  /    | +-----------------------------------------+--+  ^       |     +-+       |
-///                    | /     |                                           |     |       |   +-+         |
-///        z ^   ^ y   |/      |                                           |     |       | +-+           |
-///          |  /      +       +-------------------------------------------+     |       |-+             |
-///          | /                                     ^                           |       +               |
-///          |/                                      |                           |              TrapezoidFaceBeta
-///          X------> x                              |                           |
-///                        NegativeYFaceZX   --------+                           |
-///                                                                              |
-///                                                                              |
-///                                                                              |
-///                                                                       NegativeZFaceXY
+/// ````
+/// PositiveZFaceXY--------+          PositiveYFaceZX
+///                        |                   |
+/// TrapezoidFaceAlpha     |                   v
+///          |             | +----------------------------------+
+///          |             v |                                  |
+///          |    +       +--+------------------------------++  |
+///          |   /|      /   |                            +-+   |
+///          |  / |     /    |                          +-+     |           +
+///      +---+ /  |    /     |                        +-+       |          ++
+///      |    /   |   /      +----------------------+-+---------+        +-+|
+///      |   /    |  /                            +-+                  +-+  |
+///      |  /     + /                           +-+                  +-+    |
+///      | /     / /                          +-+                  +-+      |
+///      v/     / /                         +-+                  +-+        +
+///      /     / /                        +-+                  +-+         +-
+///     /     / /    +------------------+-+------------++    +-+         +-+
+///    /     / /    /                 +-+            +-+   +-+         +-+
+///   /     / /    /                +-+            +-+   +-+         +-+
+///  /     / +----X-----------------+            +-+   +-+         +-+
+/// +     /      /                             +-+   +-+         +-+
+/// | +--X------X------------+               +-+    -+         +-+
+/// | | /      /             |             +-+     +         +-+
+/// | |/      /              |           +-+       |       +-+  ^
+/// | X      /               |         +-+         |     +-+    |
+/// |/|     /                |       +-+           |   +-+      |
+/// + |    /                 |     +-+             | +-+        |  z ^   ^ y
+///   +---X------------------+   +-+  ^            |-+    +-----+    |  /
+///      /        ^            +-+    |            +      |          | /
+///     +---------++-----------+      |                   |          |/
+///                |                  |                   |          X------> x
+///       NegativeYFaceZX      NegativeZFaceXY            |
+///                                              TrapezoidFaceBeta
+/// ````
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
@@ -107,10 +102,13 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
     NegativeZFaceXY = BoundarySurfaceFace::negativeFaceXY,
     PositiveZFaceXY = BoundarySurfaceFace::positiveFaceXY,
-    TrapezoidFaceAlpha = BoundarySurfaceFace::
-        trapezoidFaceAlpha,  //Acts::PlaneSurface attached to [0] and [1] at negative x
-    TrapezoidFaceBeta = BoundarySurfaceFace::
-        trapezoidFaceBeta,  //Acts::PlaneSurface attached to [0] and [1] at positive x
+    TrapezoidFaceAlpha =
+        BoundarySurfaceFace::trapezoidFaceAlpha,  // Acts::PlaneSurface attached
+                                                  // to [0] and [1] at negative
+                                                  // x
+    TrapezoidFaceBeta =
+        BoundarySurfaceFace::trapezoidFaceBeta,  // Acts::PlaneSurface attached
+                                                 // to [0] and [1] at positive x
     NegativeYFaceZX = BoundarySurfaceFace::negativeFaceZX,
     PositiveYFaceZX = BoundarySurfaceFace::positiveFaceZX
 
