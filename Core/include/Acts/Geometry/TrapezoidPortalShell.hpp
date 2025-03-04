@@ -46,7 +46,7 @@ class TrapezoidPortalShell : public PortalShellBase {
   virtual const Transform3& transform() const = 0;
 };
 
-/// Output stream operator for the CuboidPortalShell::Face enum
+/// Output stream operator for the TrapezoidPortalShell::Face enum
 /// @param os The output stream
 /// @param face The face to output
 /// @return The output stream
