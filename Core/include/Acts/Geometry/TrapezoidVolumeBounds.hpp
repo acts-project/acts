@@ -81,7 +81,7 @@ class TrapezoidBounds;
 ///                |                  |                   |          X------> x
 ///       NegativeYFaceZX      NegativeZFaceXY            |
 ///                                              TrapezoidFaceBeta
-/// ````
+/// ```
 class TrapezoidVolumeBounds : public VolumeBounds {
  public:
   /// @enum BoundValues for access / streaming
