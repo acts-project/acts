@@ -49,7 +49,6 @@ class TrapezoidBounds;
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
 // clang-format off
-// clang-format touches the drawing 
 ///                                                                     PositiveYFaceZX
 ///                                      PositiveZFaceXY                         |
 ///                                               |                              |
