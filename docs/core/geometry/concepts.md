@@ -63,6 +63,12 @@ Not complete yet
 :::{doxygenclass} Acts::CuboidStackPortalShell
 :::
 
+:::{doxygenclass} Acts::TrapezoidPortalShell
+:::
+
+:::{doxygenclass} Acts::SingleTrapezoidPortalShell
+:::
+
 ### Navigation policy
 
 :::{doxygenclass} Acts::INavigationPolicy
