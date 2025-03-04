@@ -104,13 +104,11 @@ void addInput(Context& ctx) {
       outputMeasurementParticlesMap, outputParticleMeasurementsMap,
       outputParticles, onlyPassedParticles, skipOverlapSPsPhi,
       skipOverlapSPsEta, geometryIdMap, trackingGeometry, absBoundaryTolerance,
-      onlySpacepoints, noTruth);
+      onlySpacepoints, noTruth, readCellData);
 
-#ifdef WITH_GEOMODEL_PLUGIN
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
                              "RootAthenaDumpGeoIdCollector", treename,
                              inputfile, trackingGeometry, geometryIdMap);
-#endif
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
