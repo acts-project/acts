@@ -9,6 +9,7 @@
 #include "Acts/Geometry/Blueprint.hpp"
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -21,7 +22,7 @@ namespace {
 const std::string s_rootName = "Root";
 }
 
-namespace Acts {
+namespace Acts::Experimental {
 
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
@@ -164,7 +165,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
       ACTS_VERBOSE("Volume: " << volume.volumeName());
 
       // Increment the volume ID for this volume
-      m_volumeID = GeometryIdentifier().setVolume(m_volumeID.volume() + 1);
+      m_volumeID = GeometryIdentifier().withVolume(m_volumeID.volume() + 1);
       // Reset portal id for this volume
       m_iportal = 0;
       // Reset sensitive id for this volume
@@ -175,11 +176,11 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
       ACTS_VERBOSE("~> Volume ID: " << m_volumeID);
     }
 
-    void visitPortal(Portal &portal) override {
+    void visitPortal(::Acts::Portal &portal) override {
       // Increment the portal ID for this portal
       m_iportal += 1;
       // create the portal ID
-      auto portalID = GeometryIdentifier(m_volumeID).setBoundary(m_iportal);
+      auto portalID = GeometryIdentifier(m_volumeID).withBoundary(m_iportal);
       ACTS_VERBOSE("~> Portal ID: " << portalID);
 
       portal.surface().assignGeometryId(portalID);
@@ -191,7 +192,7 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
 
         m_isensitive += 1;
         auto surfaceID =
-            GeometryIdentifier(m_volumeID).setSensitive(m_isensitive);
+            GeometryIdentifier(m_volumeID).withSensitive(m_isensitive);
         ACTS_VERBOSE("~> Surface ID: " << surfaceID);
 
         surface.assignGeometryId(surfaceID);
@@ -211,4 +212,4 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
       std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental
