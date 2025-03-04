@@ -48,7 +48,7 @@ class TrapezoidBounds;
 ///  - positiveFaceZX     [5] : Rectangular  Acts::PlaneSurface,
 ///                             parallel to \f$ zx \f$ plane at positive \f$y\f$
 ///
-/// ````
+/// ```
 /// PositiveZFaceXY--------+          PositiveYFaceZX
 ///                        |                   |
 /// TrapezoidFaceAlpha     |                   v
