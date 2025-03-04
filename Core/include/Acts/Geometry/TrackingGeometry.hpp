@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometryVisitor.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeVisitorConcept.hpp"
 #include "Acts/Surfaces/SurfaceVisitorConcept.hpp"
@@ -27,6 +28,11 @@ class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
 class TrackingVolume;
+class TrackingGeometryVisitor;
+class TrackingGeometryMutableVisitor;
+
+// Forward declaration only, the implementation is hidden in the .cpp file.
+class Gen1GeometryClosureVisitor;
 
 ///  @class TrackingGeometry
 ///
@@ -48,10 +54,11 @@ class TrackingGeometry {
   ///        surface or volume based material to the TrackingVolume
   /// @param hook Identifier hook to be applied to surfaces
   /// @param logger instance of a logger (defaulting to the "silent" one)
+  /// @param close If true, run the Gen1 geometry closure
   TrackingGeometry(const std::shared_ptr<TrackingVolume>& highestVolume,
                    const IMaterialDecorator* materialDecorator = nullptr,
                    const GeometryIdentifierHook& hook = {},
-                   const Logger& logger = getDummyLogger());
+                   const Logger& logger = getDummyLogger(), bool close = true);
 
   /// Destructor
   ~TrackingGeometry();
@@ -59,6 +66,10 @@ class TrackingGeometry {
   /// Access to the world volume
   /// @return plain pointer to the world volume
   const TrackingVolume* highestTrackingVolume() const;
+
+  /// Access to the world volume
+  /// @return plain pointer to the world volume
+  TrackingVolume* highestTrackingVolume();
 
   /// Access to the world volume
   /// @return shared pointer to the world volume
@@ -125,6 +136,43 @@ class TrackingGeometry {
   void visitVolumes(visitor_t&& visitor) const {
     highestTrackingVolume()->template visitVolumes<visitor_t>(
         std::forward<visitor_t>(visitor));
+  }
+
+  /// @copydoc TrackingVolume::apply
+  void apply(TrackingGeometryVisitor& visitor) const;
+
+  /// @copydoc TrackingVolume::apply
+  void apply(TrackingGeometryMutableVisitor& visitor);
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable)
+    requires(detail::callableWithAnyMutable<Callable>() &&
+             !detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
+  }
+
+  /// @brief Apply an arbitrary callable as a visitor to the tracking volume
+  ///
+  /// @param callable The callable to apply
+  ///
+  /// @note The visitor can be overloaded on any of the arguments that
+  ///       the methods in @c TrackingGeometryMutableVisitor receive.
+  template <typename Callable>
+  void apply(Callable&& callable) const
+    requires(detail::callableWithAnyConst<Callable>())
+  {
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
+        std::forward<Callable>(callable)};
+    apply(visitor);
   }
 
   /// Search for a volume with the given identifier.
