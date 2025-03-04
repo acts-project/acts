@@ -16,8 +16,10 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
-//@class for Trapezoid portal shells, e.g shells for trapezoid volumes
 
+/// @class TrapezoidPortalShell
+/// Base class for trapezoid shaped portal shells, e.g. shells for trapezoid
+/// volumes
 class TrapezoidPortalShell : public PortalShellBase {
  public:
   using Face = TrapezoidVolumeBounds::Face;
