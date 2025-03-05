@@ -17,6 +17,12 @@ Not complete yet
 :::{doxygenclass} Acts::Experimental::CylinderContainerBlueprintNode
 :::
 
+:::{doxygenclass} Acts::Experimental::CuboidContainerBlueprintNode
+:::
+
+:::{doxygenclass} Acts::Experimental::ContainerBlueprintNode
+:::
+
 ### Material nodes
 
 :::{doxygenclass} Acts::Experimental::MaterialDesignatorBlueprintNode

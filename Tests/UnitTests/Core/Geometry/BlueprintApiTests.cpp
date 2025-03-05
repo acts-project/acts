@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Blueprint.hpp"
-#include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
