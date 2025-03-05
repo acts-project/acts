@@ -48,7 +48,6 @@ target_sources(
         BlueprintNode.cpp
         Blueprint.cpp
         BlueprintOptions.cpp
-        CylinderContainerBlueprintNode.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
         MaterialDesignatorBlueprintNode.cpp
@@ -56,4 +55,7 @@ target_sources(
         VolumeResizeStrategy.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
+        VolumeStack.cpp
+        ContainerBlueprintNode.cpp
+
 )
