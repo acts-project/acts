@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
-#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include <ActsPodioEdm/MutableTrackerHitLocal.h>
 
 #include <functional>
 
@@ -105,9 +105,10 @@ VariableBoundMeasurementProxy readMeasurement(
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
-                      edm4hep::MutableTrackerHitLocal to,
-                      const MapGeometryIdTo& geometryMapper);
+void writeMeasurement(const Acts::GeometryContext& gctx,
+                      const ConstVariableBoundMeasurementProxy& from,
+                      ActsPodioEdm::MutableTrackerHitLocal to,
+                      const Acts::Surface& surface);
 
 /// Writes a trajectory to EDM4hep.
 ///

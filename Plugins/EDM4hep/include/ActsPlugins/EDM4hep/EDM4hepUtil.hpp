@@ -19,7 +19,14 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Vertexing/Vertex.hpp>
+<<<<<<< conflict 1 of 2 % % % % % % % diff from : zvmxkwyn e48722ef "WIP"(parents of rebased revision)
+\\\\\\\ to
+    : zvmxkwyn 063a5a37 "WIP"(rebase destination) +
+#include <Acts / Vertexing / Vertex.hpp> ++ ++ ++ +xqlwmkrn
+      2f9d577c "(wip) refactoring of edm4hep writer to wip TrackerHitLocal"(
+          rebased revision)
+#include <ActsPodioEdm/MutableTrackerHitLocal.h>
+    >>>>>>> conflict 1 of 2 ends
 
 #include <stdexcept>
 
@@ -36,8 +43,8 @@
 #if podio_VERSION_MAJOR == 0 || \
     (podio_VERSION_MAJOR == 1 && podio_VERSION_MINOR <= 2)
 
-template <>
-struct std::hash<podio::ObjectID> {
+    template <>
+    struct std::hash<podio::ObjectID> {
   std::size_t operator()(const podio::ObjectID& id) const noexcept {
     auto hash_collectionID = std::hash<std::uint32_t>{}(id.collectionID);
     auto hash_index = std::hash<int>{}(id.index);
@@ -335,5 +342,42 @@ constexpr bool kEdm4hepVertexHasTime =
 }  // namespace detail
 
 void writeVertex(const Acts::Vertex& vertex, edm4hep::MutableVertex to);
+
+namespace detail {
+// These functions are exposed here so they can be used from the unit tests
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
+boost::container::static_vector<std::uint8_t, Acts::eBoundSize> decodeIndices(
+    std::uint32_t type);
+}  // namespace detail
+
+/// Write a measurement to an EDM4hep tracker hit
+///
+/// This function converts an ACTS measurement into the EDM4hep format. It
+/// handles:
+/// - Position conversion from local to global coordinates (in mm)
+/// - Time storage (in ns)
+/// - Measurement values and covariance matrix storage
+/// - Encoding of measurement indices into a 32-bit integer:
+///   - First 4 bits: number of indices (max 6)
+///   - Next 4 bits per index: which parameter is being measured (0-6)
+///
+/// The function will throw if:
+/// - The number of indices exceeds 6
+/// - Any index is larger than 6
+/// - There's a size mismatch between parameters and covariance matrix
+///
+/// @param gctx The geometry context
+/// @param parameters The parameters of the measurement
+/// @param covariance The covariance of the measurement
+/// @param indices The indices of the measurement
+/// @param cellId The cell ID of the measurement
+/// @param surface The surface of the measurement
+/// @param to The EDM4hep tracker hit to write to
+void writeMeasurement(
+    const Acts::GeometryContext& gctx,
+    const Eigen::Map<const Acts::ActsDynamicVector>& parameters,
+    const Eigen::Map<const Acts::ActsDynamicMatrix>& covariance,
+    std::span<const std::uint8_t> indices, std::uint64_t cellId,
+    const Acts::Surface& surface, ActsPodioEdm::MutableTrackerHitLocal to);
 
 }  // namespace ActsPlugins::EDM4hepUtil

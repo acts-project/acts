@@ -121,3 +121,23 @@ datatypes:
         std::size_t size() const {
           return indices_size();
         }
+
+  ActsPodioEdm::TrackerHitLocal:
+    Description: "Sensor-local tracker hit"
+    Author: "Paul Gessinger, CERN"
+    Members:
+    # These are chosen to be compatible with the `edm4hep::TrackerHit` interface
+    # (https://github.com/key4hep/EDM4hep/blob/c877c7fadf412db3c1126e7b410d8074a78014f2/edm4hep.yaml#L652-L666V)
+    # to allow for potential upstreaming
+    - uint64_t cellID                    // ID of the sensor that created this hit
+    - int32_t type                       // type of raw data hit, use depends on writer
+    - int32_t quality                    // quality bit flag of the hit
+    - float time [ns]                    // time of the hit (depends on measurement type)
+    - float eDep [GeV]                   // energy deposited on the hit (optional)
+    - float eDepError [GeV]              // error measured on EDep (optional)
+    - edm4hep::Vector3d position [mm]    // global hit position (depends on measurement type)
+
+    VectorMembers:
+      - float measurement // Entries in the measurement value vector
+      - float covariance // Entries in the measurement covariance vector. Order is column major
+

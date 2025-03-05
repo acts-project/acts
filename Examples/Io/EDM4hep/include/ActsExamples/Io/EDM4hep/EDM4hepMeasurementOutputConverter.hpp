@@ -33,12 +33,12 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
-    /// Which cluster collection to write (optional)
-    std::string inputClusters;
-    /// Name of the output tracker hit plane collection.
-    std::string outputTrackerHitsPlane = "ActsTrackerHitsPlane";
     /// Name of the output tracker hit raw collection.
-    std::string outputTrackerHitsRaw = "ActsTrackerHitsRaw";
+    std::string outputTrackerHitsLocal = "ActsTrackerHitsLocal";
+
+    /// Map of surface by identifier to allow local - to global
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
   };
 
   /// Constructor with
@@ -64,12 +64,8 @@ class EDM4hepMeasurementOutputConverter final : public PodioOutputConverter {
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
 
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
-
-  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
-                                                     "OutputTrackerHitsPlane"};
-  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
-                                                   "OutputTrackerHitsRaw"};
+  CollectionBaseWriteHandle m_outputTrackerHitsLocal{this,
+                                                     "OutputTrackerHitsLocal"};
 };
 
 }  // namespace ActsExamples

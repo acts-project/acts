@@ -111,8 +111,7 @@ PYBIND11_MODULE(ActsExamplesPythonBindingsEDM4hep, m) {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,
                                           PodioOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
-    ACTS_PYTHON_STRUCT(config, inputMeasurements, inputClusters,
-                       outputTrackerHitsPlane, outputTrackerHitsRaw);
+    ACTS_PYTHON_STRUCT(config, inputMeasurements, outputTrackerHitsLocal);
   }
 
   {

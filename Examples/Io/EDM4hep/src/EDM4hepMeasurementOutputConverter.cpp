@@ -11,6 +11,10 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
+#include "ActsPlugins/EDM4hep/TrackerHitCompatibility.hpp"
+#include <ActsPodioEdm/TrackerHitLocalCollection.h>
+
+#include <stdexcept>
 
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
@@ -25,23 +29,14 @@ EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
                            std::move(logger)),
       m_cfg(config) {
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
-  m_outputTrackerHitsPlane.initialize(m_cfg.outputTrackerHitsPlane);
-  m_outputTrackerHitsRaw.initialize(m_cfg.outputTrackerHitsRaw);
+  m_outputTrackerHitsLocal.initialize(m_cfg.outputTrackerHitsLocal);
 }
 
 ProcessCode EDM4hepMeasurementOutputConverter::execute(
     const AlgorithmContext& ctx) const {
   ClusterContainer clusters;
 
-  podio::Frame frame;
-
-  edm4hep::TrackerHitLocalCollection hits;
-
-  if (!m_cfg.inputClusters.empty()) {
-    ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
-    clusters = m_inputClusters(ctx);
-  }
+  ActsPodioEdm::TrackerHitLocalCollection hits;
 
   const auto measurements = m_inputMeasurements(ctx);
 
@@ -54,17 +49,18 @@ ProcessCode EDM4hepMeasurementOutputConverter::execute(
 
     auto to = hits.create();
     EDM4hepUtil::writeMeasurement(
-        from, to, [](Acts::GeometryIdentifier id) { return id.value(); });
+        ctx.geoContext, from, to,
+        *m_cfg.surfaceByIdentifier.at(from.geometryId()));
   }
 
-  m_outputTrackerHitsRaw(ctx, std::move(hits));
+  m_outputTrackerHitsLocal(ctx, std::move(hits));
 
   return ProcessCode::SUCCESS;
 }
 
 std::vector<std::string> EDM4hepMeasurementOutputConverter::collections()
     const {
-  return {m_cfg.outputTrackerHitsPlane, m_cfg.outputTrackerHitsRaw};
+  return {m_cfg.outputTrackerHitsLocal};
 }
 
 }  // namespace ActsExamples
