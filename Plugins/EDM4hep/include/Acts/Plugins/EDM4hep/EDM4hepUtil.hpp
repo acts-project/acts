@@ -18,7 +18,6 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -29,6 +28,7 @@
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
+#include <edm4hep/MutableTrackerHitLocal.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
@@ -247,5 +247,18 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.nDoF() = from.getNdf();
   track.nMeasurements() = track.nTrackStates();
 }
+
+namespace detail {
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
+boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
+    std::uint32_t type);
+}  // namespace detail
+
+void writeMeasurement(const GeometryContext& gctx,
+                      const Eigen::Map<const ActsDynamicVector>& parameters,
+                      const Eigen::Map<const ActsDynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      edm4hep::MutableTrackerHitLocal to);
 
 }  // namespace Acts::EDM4hepUtil
