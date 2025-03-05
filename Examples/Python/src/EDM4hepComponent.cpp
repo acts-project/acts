@@ -59,15 +59,6 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
       .def_property_readonly("collections",
                              &EDM4hepOutputConverter::collections);
 
-  {
-    auto [alg, config] =
-        declareAlgorithm<EDM4hepSimHitOutputConverter, EDM4hepOutputConverter>(
-            m, "EDM4hepSimHitOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepSimHitOutputConverter::Config,
-                       inputSimHits, inputParticles, outputParticles,
-                       outputSimTrackerHits);
-  }
-
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepMeasurementInputConverter,
                                 m, "EDM4hepMeasurementInputConverter",
                                 inputFrame, outputMeasurements,
@@ -78,8 +69,8 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
                                           EDM4hepOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
     ACTS_PYTHON_STRUCT(config, EDM4hepMeasurementOutputConverter::Config,
-                       inputMeasurements, inputClusters, outputTrackerHitsPlane,
-                       outputTrackerHitsRaw);
+                       inputMeasurements, outputTrackerHitsLocal,
+                       surfaceByIdentifier);
   }
 
   {

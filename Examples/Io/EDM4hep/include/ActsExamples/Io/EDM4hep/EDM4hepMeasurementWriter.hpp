@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -33,10 +34,12 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
-    /// Which cluster collection to write (optional)
-    std::string inputClusters;
     /// Where to the write the file to.
     std::string outputPath;
+
+    /// Map of surface by identifier to allow local - to global
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
   };
 
   /// Constructor with
@@ -64,8 +67,6 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   Acts::PodioUtil::ROOTWriter m_writer;
 
   std::mutex m_writeMutex;
-
-  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples
