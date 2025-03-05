@@ -12,11 +12,14 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+
+#include <cstdint>
 
 #include "edm4hep/TrackState.h"
 
@@ -178,37 +181,30 @@ VariableBoundMeasurementProxy EDM4hepUtil::readMeasurement(
 }
 
 void EDM4hepUtil::writeMeasurement(
+    const Acts::GeometryContext& gctx,
     const ConstVariableBoundMeasurementProxy& from,
-    edm4hep::MutableTrackerHitPlane to, const Cluster* /*fromCluster*/,
-    edm4hep::TrackerHit3DCollection& /*toClusters*/,
-    const MapGeometryIdTo& geometryMapper) {
-  Acts::GeometryIdentifier geoId = from.geometryId();
+    edm4hep::MutableTrackerHitLocal to, const Acts::Surface& surface) {
+  long dim = from.size();
 
-  if (geometryMapper) {
-    // no need for digitization as we only want to identify the sensor
-    to.setCellID(geometryMapper(geoId));
+  const auto* detectorElement = surface.associatedDetectorElement();
+  if (detectorElement == nullptr) {
+    throw std::runtime_error("Detector element not found");
   }
 
-  const auto& parameters = from.fullParameters();
-  const auto& covariance = from.fullCovariance();
+  const auto* dd4hepDetector =
+      dynamic_cast<const Acts::DD4hepDetectorElement*>(detectorElement);
+  if (dd4hepDetector == nullptr) {
+    throw std::runtime_error(
+        "Detector element is not a DD4hepDetectorElement, cellID is only valid "
+        "for DD4hep");
+  }
 
-  to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
+  std::uint64_t cellId = dd4hepDetector->sourceElement().volumeID();
 
-  to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
-  // TODO set uv (which are in global spherical coordinates with r=1)
-  to.setPosition({parameters[Acts::eBoundLoc0], parameters[Acts::eBoundLoc1],
-                  parameters[Acts::eBoundTime]});
-
-  to.setCovMatrix({
-      static_cast<float>(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc0)),
-      static_cast<float>(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)),
-      0,
-      0,
-      0,
-  });
-
-  // @TODO: Check if we can write cell info
+  Acts::EDM4hepUtil::writeMeasurement(gctx, {from.parameters().data(), dim},
+                                      {from.covariance().data(), dim, dim},
+                                      from.subspaceHelper().indices(), cellId,
+                                      surface, to);
 }
 
 void EDM4hepUtil::writeTrajectory(
