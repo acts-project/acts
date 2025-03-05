@@ -247,12 +247,13 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     Axis axis{AxisBound, edges};
 
-    auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
+    auto gridPortalLink =
+        GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      gridPortalLink->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
-    return grid;
+    return gridPortalLink;
 
   } else if (surface().type() == Surface::SurfaceType::Disc) {
     ACTS_VERBOSE("Combining composite into disc grid");
@@ -290,7 +291,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;
@@ -339,7 +340,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     auto grid = GridPortalLink::make(m_surface, m_direction, std::move(axis));
     for (const auto& [i, child] : enumerate(trivialLinks)) {
-      grid->atLocalBins({i + 1}) = &child->volume();
+      grid->grid().atLocalBins({i + 1}) = &child->volume();
     }
 
     return grid;

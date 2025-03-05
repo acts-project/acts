@@ -48,11 +48,12 @@ target_sources(
         BlueprintNode.cpp
         Blueprint.cpp
         BlueprintOptions.cpp
-        CylinderContainerBlueprintNode.cpp
         StaticBlueprintNode.cpp
         LayerBlueprintNode.cpp
         MaterialDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
         TrackingGeometryVisitor.cpp
+        VolumeStack.cpp
+        ContainerBlueprintNode.cpp
 )
