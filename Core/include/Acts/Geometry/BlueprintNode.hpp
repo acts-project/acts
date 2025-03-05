@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BlueprintOptions.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -30,10 +32,12 @@ class PortalShellBase;
 
 namespace Experimental {
 
-class CylinderContainerBlueprintNode;
 class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
+
+class CylinderContainerBlueprintNode;
+class CuboidContainerBlueprintNode;
 
 /// Base class for all nodes in the blueprint tree. This class defines the
 /// three-phase construction process. The three phases are
@@ -44,9 +48,9 @@ class LayerBlueprintNode;
 ///    structures
 ///
 /// During the *build* phase, the `build` method of all nodes in the tree are
-/// called recursively. Some nodes, like @ref Acts::Experimental::CylinderContainerBlueprintNode,
+/// called recursively. Some nodes, like @ref Acts::Experimental::ContainerBlueprintNode,
 /// will take action on the volumes returns from its children, and perform
-/// sizing to connect them. See the @ref Acts::Experimental::CylinderContainerBlueprintNode
+/// sizing to connect them. See the @ref Acts::Experimental::ContainerBlueprintNode
 /// and @ref Acts::CylinderVolumeStack documentation for details on how the
 /// sizing is carried out.
 class BlueprintNode {
@@ -92,7 +96,7 @@ class BlueprintNode {
   /// Each boundary surface is then turned into a @ref Acts::TrivialPortalLink, which
   /// in turn produces a one-sided portal (see @ref Acts::Portal documentation)
   ///
-  /// Some nodes (like @ref Acts::Experimental::CylinderContainerBlueprintNode) will take action on
+  /// Some nodes (like @ref Acts::Experimental::ContainerBlueprintNode) will take action on
   /// their children, and unify the connected portals.
   ///
   /// After a node's processing has completed, it returns a reference to a @ref
@@ -187,7 +191,7 @@ class BlueprintNode {
       const std::string& volumeName = "undefined",
       const std::function<void(StaticBlueprintNode& cylinder)>& callback = {});
 
-  /// Convenience method for creating a @ref Acts::Experimental::CylinderContainerBlueprintNode.
+  /// Convenience method for creating a cylinder specialization of @ref Acts::Experimental::ContainerBlueprintNode.
   /// @param name The name of the container node. This name is only reflected
   ///             in the node tree for debugging, as no extra volumes is created
   ///             for the container.
@@ -197,6 +201,18 @@ class BlueprintNode {
   CylinderContainerBlueprintNode& addCylinderContainer(
       const std::string& name, AxisDirection direction,
       const std::function<void(CylinderContainerBlueprintNode& cylinder)>&
+          callback = {});
+
+  /// Convenience method for creating a cuboid specialization of @ref Acts::Experimental::ContainerBlueprintNode.
+  /// @param name The name of the container node. This name is only reflected
+  ///             in the node tree for debugging, as no extra volumes is created
+  ///             for the container.
+  /// @param direction The direction of the stack configuration. See
+  ///                  @ref Acts::CuboidVolumeStack for details.
+  /// @param callback An optional callback that receives the node as an argument
+  CuboidContainerBlueprintNode& addCuboidContainer(
+      const std::string& name, AxisDirection direction,
+      const std::function<void(CuboidContainerBlueprintNode& cylinder)>&
           callback = {});
 
   /// Convenience method for creating a @ref Acts::Experimental::MaterialDesignatorBlueprintNode.
