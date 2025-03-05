@@ -141,8 +141,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   SympyStepper es(bField);
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                std::nullopt, ParticleHypothesis::pion());
+  BoundTrackParameters cp = BoundTrackParameters::makeCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, std::nullopt,
+      ParticleHypothesis::pion());
   SympyStepper::State esState = es.makeState(esOptions);
   es.initialize(esState, cp);
 
@@ -156,15 +157,17 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
-  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
-                                 std::nullopt, ParticleHypothesis::pion0());
+  BoundTrackParameters ncp = BoundTrackParameters::makeCurvilinear(
+      makeVector4(pos, time), dir, 1 / absMom, std::nullopt,
+      ParticleHypothesis::pion0());
   es.initialize(esState, ncp);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
-                                   ParticleHypothesis::pion0());
+  ncp = BoundTrackParameters::makeCurvilinear(makeVector4(pos, time), dir,
+                                              1 / absMom, cov,
+                                              ParticleHypothesis::pion0());
   es.initialize(esState, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
@@ -187,8 +190,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   double absMom = 8.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov, ParticleHypothesis::pion());
+  BoundTrackParameters cp = BoundTrackParameters::makeCurvilinear(
+      makeVector4(pos, time), dir, charge / absMom, cov,
+      ParticleHypothesis::pion());
 
   SympyStepper::Options esOptions(tgContext, mfContext);
   esOptions.maxStepSize = stepSize;
@@ -283,9 +287,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
-                                 charge2 / absMom2, cov2,
-                                 ParticleHypothesis::pion());
+  BoundTrackParameters cp2 = BoundTrackParameters::makeCurvilinear(
+      makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
+      ParticleHypothesis::pion());
   FreeVector freeParams = transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward();
