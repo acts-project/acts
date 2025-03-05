@@ -17,6 +17,7 @@
 
 #include <stdexcept>
 
+#include <edm4hep/TrackerHitLocalCollection.h>
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
 #include <podio/Frame.h>
@@ -29,9 +30,6 @@ EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
       m_cfg(config),
       m_writer(config.outputPath) {
   ACTS_VERBOSE("Created output file " << config.outputPath);
-
-  // Input container for measurements is already checked by base constructor
-  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 }
 
 ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
@@ -42,16 +40,9 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
 
 ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  ClusterContainer clusters;
-
   podio::Frame frame;
 
   edm4hep::TrackerHitLocalCollection hits;
-
-  if (!m_cfg.inputClusters.empty()) {
-    ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
-    clusters = m_inputClusters(ctx);
-  }
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
@@ -62,7 +53,8 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
 
     auto to = hits.create();
     EDM4hepUtil::writeMeasurement(
-        from, to, [](Acts::GeometryIdentifier id) { return id.value(); });
+        ctx.geoContext, from, to,
+        *m_cfg.surfaceByIdentifier.at(from.geometryId()));
   }
 
   frame.put(std::move(hits), "ActsTrackerHitsRaw");

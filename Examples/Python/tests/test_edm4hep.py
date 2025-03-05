@@ -23,31 +23,6 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_measurement_writer(tmp_path, fatras):
-    from acts.examples.edm4hep import EDM4hepMeasurementWriter
-
-    s = Sequencer(numThreads=1, events=10)
-    _, simAlg, digiAlg = fatras(s)
-
-    out = tmp_path / "measurements_edm4hep.root"
-
-    s.addWriter(
-        EDM4hepMeasurementWriter(
-            level=acts.logging.VERBOSE,
-            inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=digiAlg.config.outputClusters,
-            outputPath=str(out),
-        )
-    )
-
-    s.run()
-
-    assert os.path.isfile(out)
-    assert os.stat(out).st_size > 10
-
-
-@pytest.mark.edm4hep
-@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
     from acts.examples.edm4hep import EDM4hepSimHitWriter
 
@@ -234,6 +209,46 @@ def test_edm4hep_tracks_writer(tmp_path):
             assert rp.z == 0.0
             assert abs(perigee.D0) < 1e0
             assert abs(perigee.Z0) < 1e1
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_measurement_writer(tmp_path):
+    from acts.examples.edm4hep import EDM4hepMeasurementWriter
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    geoDir = getOpenDataDetectorDirectory()
+    oddDigiConfig = geoDir / "config/odd-digi-smearing-config.json"
+
+    with getOpenDataDetector() as detector:
+        trackingGeometry = detector.trackingGeometry()
+
+        s = Sequencer(numThreads=1, events=10)
+        runTruthTrackingKalman(
+            trackingGeometry,
+            field,
+            digiConfigFile=oddDigiConfig,
+            outputDir=tmp_path,
+            s=s,
+        )
+
+        out = tmp_path / "measurements_edm4hep.root"
+
+        s.addWriter(
+            EDM4hepMeasurementWriter(
+                level=acts.logging.VERBOSE,
+                inputMeasurements="measurements",
+                surfaceByIdentifier=trackingGeometry.geoIdSurfaceMap(),
+                outputPath=str(out),
+            )
+        )
+
+        s.run()
+
+    assert out.exists()
+    assert os.stat(out).st_size > 200
 
 
 def generate_input_test_edm4hep_simhit_reader(input, output):

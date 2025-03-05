@@ -44,7 +44,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, m,
                              "EDM4hepMeasurementWriter", inputMeasurements,
-                             inputClusters, outputPath);
+                             outputPath, surfaceByIdentifier);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepParticleWriter, m,
                              "EDM4hepParticleWriter", inputParticles,
