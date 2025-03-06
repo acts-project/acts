@@ -138,9 +138,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
 
-  std::optional<ClusterContainer> clusters;
+  const ClusterContainer* clusters = nullptr;
   if (m_inputClusters.isInitialized()) {
-    clusters = m_inputClusters(ctx);
+    clusters = &m_inputClusters(ctx);
   }
 
   // Convert Input data to a list of size [num_measurements x
@@ -149,6 +149,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   const std::size_t numFeatures = m_cfg.nodeFeatures.size();
   ACTS_DEBUG("Received " << numSpacepoints << " spacepoints");
   ACTS_DEBUG("Construct " << numFeatures << " node features");
+
+  auto t01 = Clock::now();
 
   std::vector<std::uint64_t> moduleIds;
   moduleIds.reserve(spacepoints.size());
@@ -169,6 +171,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     }
   }
 
+  auto t02 = Clock::now();
+
   // Sort the spacepoints by module ide. Required by module map
   std::vector<int> idxs(numSpacepoints);
   std::iota(idxs.begin(), idxs.end(), 0);
@@ -181,10 +185,20 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   std::ranges::transform(idxs, std::back_inserter(sortedSpacepoints),
                          [&](auto i) { return spacepoints[i]; });
 
+  auto t03 = Clock::now();
+
   auto features = createFeatures(sortedSpacepoints, clusters,
                                  m_cfg.nodeFeatures, m_cfg.featureScales);
 
   auto t1 = Clock::now();
+
+  auto ms = [](auto a, auto b) {
+    return std::chrono::duration<double, std::milli>(b - a).count();
+  };
+  ACTS_DEBUG("Setup time:              " << ms(t0, t01));
+  ACTS_DEBUG("ModuleId mapping & copy: " << ms(t01, t02));
+  ACTS_DEBUG("Spacepoint sort:         " << ms(t02, t03));
+  ACTS_DEBUG("Feature creation:        " << ms(t03, t1));
 
   // Run the pipeline
   ACTS_NVTX_STOP(data_preparation);

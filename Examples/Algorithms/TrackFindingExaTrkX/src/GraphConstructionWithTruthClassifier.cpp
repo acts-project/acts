@@ -65,9 +65,9 @@ ActsExamples::ProcessCode
 ActsExamples::GraphConstructionWithTruthClassifier::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  auto spacepoints = m_inputSpacePoints(ctx);
-  auto measParticlesMap = m_inputMeasurementParticlesMap(ctx);
-  auto clusters = m_inputClusters(ctx);
+  const auto& spacepoints = m_inputSpacePoints(ctx);
+  const auto& measParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& clusters = m_inputClusters(ctx);
 
   // Build spacepoint particles map
   std::multimap<std::size_t, ActsFatras::Barcode> spacepointParticlesMap;
@@ -116,7 +116,7 @@ ActsExamples::GraphConstructionWithTruthClassifier::execute(
     }
   }
 
-  auto features = createFeatures(spacepoints, clusters, m_cfg.nodeFeatures,
+  auto features = createFeatures(spacepoints, &clusters, m_cfg.nodeFeatures,
                                  m_cfg.featureScales);
 
   auto [nodeFeaturesAny, edgeIndexAny, edgeFeaturesAny] =
