@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
@@ -140,11 +141,17 @@ class GenericBoundTrackParameters {
 
   /// Converts a bound track parameter with a different hypothesis.
   template <typename other_particle_hypothesis_t>
-  GenericBoundTrackParameters(
+  explicit GenericBoundTrackParameters(
       const GenericBoundTrackParameters<other_particle_hypothesis_t>& other)
-      : GenericBoundTrackParameters(other.referenceSurface().getSharedPtr(),
-                                    other.parameters(), other.covariance(),
-                                    other.particleHypothesis()) {}
+      : GenericBoundTrackParameters(
+            other.referenceSurface().getSharedPtr(), other.parameters(),
+            other.covariance(),
+            ParticleHypothesis{other.particleHypothesis()}) {}
+
+  /// Convert this track parameter object to the general type-erased one
+  GenericBoundTrackParameters<Acts::ParticleHypothesis> toBound() const {
+    return GenericBoundTrackParameters<Acts::ParticleHypothesis>{*this};
+  }
 
   /// Parameters vector.
   ParametersVector& parameters() { return m_params; }

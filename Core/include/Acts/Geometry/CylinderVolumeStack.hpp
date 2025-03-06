@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Geometry/VolumeStack.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -32,7 +33,7 @@ namespace Acts {
 ///
 /// @note The volumes are never shrunk, because this would potentially
 ///       result in overlaps of the resulting volumes bounds.
-class CylinderVolumeStack : public Volume {
+class CylinderVolumeStack : public VolumeStack {
  public:
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
@@ -71,17 +72,7 @@ class CylinderVolumeStack : public Volume {
               std::optional<Transform3> transform = std::nullopt,
               const Logger& logger = getDummyLogger()) override;
 
-  /// Access the gap volume that were created during attachment or resizing.
-  /// @return the vector of gap volumes
-  const std::vector<std::shared_ptr<Volume>>& gaps() const;
-
  private:
-  /// Helper to get the first volume in the input, and throw an exception if
-  /// there is not one.
-  /// @param volumes is the vector of volumes
-  /// @return the first volume
-  static Volume& initialVolume(const std::vector<Volume*>& volumes);
-
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
   /// @param direction is the binning direction
@@ -155,18 +146,7 @@ class CylinderVolumeStack : public Volume {
   static void checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
                                 const Logger& logger);
 
-  /// Helper function to create a gap volume with given bounds and register it.
-  /// @param transform is the transform of the gap volume
-  /// @param bounds is the bounds of the gap volume
-  /// @return the shared pointer to the gap volume
-  std::shared_ptr<Volume> addGapVolume(
-      const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
-
-  AxisDirection m_direction{};
-  VolumeResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
-  std::vector<std::shared_ptr<Volume>> m_gaps{};
-  std::vector<Volume*>& m_volumes;
 };
 
 }  // namespace Acts

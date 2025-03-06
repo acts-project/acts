@@ -95,7 +95,10 @@ class PathSeeder {
   };
 
   /// @brief Constructor
-  PathSeeder(const Config& config) : m_cfg(config) {}
+  explicit PathSeeder(const Config& config) : m_cfg(config) {};
+
+  /// @brief Destructor
+  ~PathSeeder() = default;
 
   /// @brief Extract the IP parameters and
   /// sort the source links into the seeds

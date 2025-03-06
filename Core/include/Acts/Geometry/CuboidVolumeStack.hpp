@@ -12,6 +12,7 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
+#include "Acts/Geometry/VolumeStack.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -31,7 +32,7 @@ namespace Acts {
 /// the input volumes are either extended or gap volumes are created.
 ///
 /// @note The size adjustment convention is that volumes are never shrunk
-class CuboidVolumeStack : public Volume {
+class CuboidVolumeStack : public VolumeStack {
  public:
   /// Constructor from a vector of volumes and direction
   /// @param volumes is the vector of volumes
@@ -69,10 +70,6 @@ class CuboidVolumeStack : public Volume {
               std::optional<Transform3> transform = std::nullopt,
               const Logger& logger = getDummyLogger()) override;
 
-  /// Access the gap volume that were created during attachment or resizing.
-  /// @return the vector of gap volumes
-  const std::vector<std::shared_ptr<Volume>>& gaps() const;
-
   /// Convert axis direction to an array index according to
   /// stack convention. For example, AxisX --> 0
   /// @param direction is the axis direction to convert
@@ -85,12 +82,6 @@ class CuboidVolumeStack : public Volume {
       AxisDirection direction);
 
  private:
-  /// Helper to get the first volume in the input, and throw an exception if
-  /// there is not one.
-  /// @param volumes is the vector of volumes
-  /// @return the first volume
-  static Volume& initialVolume(const std::vector<Volume*>& volumes);
-
   /// Helper function called during construction that performs the
   /// internal attachment and produces the overall outer volume bounds.
   /// @param strategy is the attachment strategy
@@ -139,27 +130,13 @@ class CuboidVolumeStack : public Volume {
   std::pair<double, double> synchronizeBounds(std::vector<VolumeTuple>& volumes,
                                               const Logger& logger);
 
-  /// Helper function to create a gap volume with given bounds and register it.
-  /// @param transform is the transform of the gap volume
-  /// @param bounds is the bounds of the gap volume
-  /// @return the shared pointer to the gap volume
-  std::shared_ptr<Volume> addGapVolume(
-      const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds);
-
-  /// Merging direction of the stack
-  /// in local group coordinates
-  AxisDirection m_direction{};
-
   /// Directions orthogonal to the
   /// merging direction of the stack
   /// in local group coordinates
   AxisDirection m_dirOrth1{};
   AxisDirection m_dirOrth2{};
 
-  VolumeResizeStrategy m_resizeStrategy{};
   Transform3 m_groupTransform{};
-  std::vector<std::shared_ptr<Volume>> m_gaps{};
-  std::vector<Volume*>& m_volumes;
 };
 
 }  // namespace Acts

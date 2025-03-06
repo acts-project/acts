@@ -125,21 +125,10 @@ CuboidVolumeStack::CuboidVolumeStack(std::vector<Volume*>& volumes,
                                      VolumeAttachmentStrategy strategy,
                                      VolumeResizeStrategy resizeStrategy,
                                      const Logger& logger)
-    : Volume(initialVolume(volumes)),
-      m_direction(direction),
-      m_resizeStrategy(resizeStrategy),
-      m_volumes(volumes) {
+    : VolumeStack(volumes, direction, resizeStrategy) {
   std::tie(m_dirOrth1, m_dirOrth2) = getOrthogonalAxes(m_direction);
 
   initializeOuterVolume(strategy, logger);
-}
-
-Volume& CuboidVolumeStack::initialVolume(const std::vector<Volume*>& volumes) {
-  if (volumes.empty()) {
-    throw std::invalid_argument(
-        "CuboidVolumeStack requires at least one volume");
-  }
-  return *volumes.front();
 }
 
 void CuboidVolumeStack::initializeOuterVolume(VolumeAttachmentStrategy strategy,
@@ -865,17 +854,6 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
   // @TODO: We probably can reuse m_transform
   m_groupTransform = m_transform;
   Volume::update(std::move(bounds), std::nullopt, logger);
-}
-
-std::shared_ptr<Volume> CuboidVolumeStack::addGapVolume(
-    const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds) {
-  auto gapVolume = std::make_shared<Volume>(transform, bounds);
-  m_gaps.push_back(gapVolume);
-  return gapVolume;
-}
-
-const std::vector<std::shared_ptr<Volume>>& CuboidVolumeStack::gaps() const {
-  return m_gaps;
 }
 
 }  // namespace Acts
