@@ -25,8 +25,11 @@ class SequenceElement {
  public:
   virtual ~SequenceElement() = default;
 
-  /// The algorithm name.
+  /// The sequence element name.
   virtual std::string name() const = 0;
+
+  /// The sequence element type name, used for debug output
+  virtual std::string_view typeName() const = 0;
 
   /// Initialize the algorithm
   virtual ProcessCode initialize() = 0;

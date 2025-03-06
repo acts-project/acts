@@ -24,6 +24,7 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
     return {};
   };
   std::string name() const override { return {}; };
+  std::string_view typeName() const override { return "Dummy"; };
 };
 
 template <typename T>

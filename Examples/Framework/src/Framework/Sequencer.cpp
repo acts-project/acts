@@ -69,31 +69,6 @@ std::size_t saturatedAdd(std::size_t a, std::size_t b) {
   return res;
 }
 
-/// Shorten some common but lengthy C++ constructs
-std::string demangleAndShorten(std::string name) {
-  name = boost::core::demangle(name.c_str());
-
-  // Remove std::allocator from vector
-  const static std::regex vector_pattern(
-      R"??(std::vector<(.*), std::allocator<(\1\s*)>\s*>)??");
-  name = std::regex_replace(name, vector_pattern, "std::vector<$1>");
-
-  // Shorten Acts::BoundVariantMeasurement
-  const static std::regex variant_pattern(
-      R"??(std::variant<(Acts::Measurement<Acts::BoundIndices, [0-9]ul>(,|)\s+)+>)??");
-  name = std::regex_replace(name, variant_pattern,
-                            "Acts::BoundVariantMeasurement");
-
-  // strip namespaces
-  boost::algorithm::replace_all(name, "std::", "");
-  boost::algorithm::replace_all(name, "boost::container::", "");
-  boost::algorithm::replace_all(name, "Acts::", "");
-  boost::algorithm::replace_all(name, "ActsExamples::", "");
-  boost::algorithm::replace_all(name, "ActsFatras::", "");
-
-  return name;
-}
-
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -169,11 +144,6 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
   m_sequenceElements.push_back({element});
 
-  std::string elementType{getAlgorithmType(*element)};
-  std::string elementTypeCapitalized = elementType;
-  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
-  ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
-
   auto symbol = [&](const char* in) {
     std::string s = demangleAndShorten(in);
     std::size_t pos = 0;
@@ -183,6 +153,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     }
     ACTS_INFO("   " + s.substr(pos));
   };
+  ACTS_INFO("Add " << element->typeName() << " '" << element->name() << "'");
 
   bool valid = true;
 
@@ -289,7 +260,7 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
     names.push_back("Decorator:" + decorator->name());
   }
   for (const auto& [algorithm, fpe] : m_sequenceElements) {
-    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+    names.push_back(std::string(algorithm->typeName()) + ":" +
                     algorithm->name());
   }
 
@@ -459,10 +430,9 @@ int Sequencer::run() {
 
   ACTS_VERBOSE("Initialize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
-    ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
-                               << alg->name());
+    ACTS_VERBOSE("Initialize " << alg->typeName() << ": " << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize " << getAlgorithmType(*alg) << ": "
+      ACTS_FATAL("Failed to initialize " << alg->typeName() << ": "
                                          << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
@@ -509,11 +479,11 @@ int Sequencer::run() {
                 context.fpeMonitor = &mon.value();
               }
               StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
+              ACTS_VERBOSE("Execute " << alg->typeName() << ": "
                                       << alg->name());
               if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute " << getAlgorithmType(*alg)
-                                                << ": " << alg->name());
+                ACTS_FATAL("Failed to execute " << alg->typeName() << ": "
+                                                << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
 
@@ -573,9 +543,9 @@ int Sequencer::run() {
 
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
-    ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
+    ACTS_VERBOSE("Finalize " << alg->typeName() << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
+      ACTS_FATAL("Failed to finalize " << alg->typeName() << ": "
                                        << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
@@ -623,8 +593,7 @@ void Sequencer::fpeReport() const {
       continue;
     }
     ACTS_INFO("-----------------------------------");
-    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
-                                 << alg->name());
+    ACTS_INFO("FPE summary for " << alg->typeName() << ": " << alg->name());
     ACTS_INFO("-----------------------------------");
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
