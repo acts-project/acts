@@ -6,3 +6,9 @@ target_link_libraries(
     ActsUnitTestEDM4HepMeasurementWriterTest
     PUBLIC ActsPluginEDM4hep
 )
+
+add_unittest(EDM4HepVertexWriteTest EDM4HepVertexWriteTests.cpp)
+target_link_libraries(
+    ActsUnitTestEDM4HepVertexWriteTest
+    PUBLIC ActsPluginEDM4hep
+)
