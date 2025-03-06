@@ -40,11 +40,7 @@ class DataHandleBase {
 
   const std::string& name() const { return m_name; }
 
-  void maybeInitialize(const std::string& key) {
-    if (!key.empty()) {
-      m_key = key;
-    }
-  }
+  void maybeInitialize(const std::string& key);
 
   virtual bool isCompatible(const DataHandleBase& other) const = 0;
 

@@ -66,6 +66,12 @@ void WriteDataHandleBase::initialize(const std::string& key) {
   m_key = key;
 }
 
+void DataHandleBase::maybeInitialize(const std::string& key) {
+  if (!key.empty()) {
+    m_key = key;
+  }
+}
+
 bool WriteDataHandleBase::isCompatible(const DataHandleBase& other) const {
   return dynamic_cast<const ReadDataHandleBase*>(&other) != nullptr &&
          typeInfo() == other.typeInfo();
