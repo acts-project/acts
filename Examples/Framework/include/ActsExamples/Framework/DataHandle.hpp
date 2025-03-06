@@ -14,6 +14,10 @@
 #include <stdexcept>
 #include <typeinfo>
 
+namespace Acts {
+class Logger;
+}
+
 namespace ActsExamples {
 
 class DataHandleBase {
@@ -44,6 +48,11 @@ class DataHandleBase {
 
   virtual bool isCompatible(const DataHandleBase& other) const = 0;
 
+  virtual void emulate(
+      std::unordered_map<std::string, const DataHandleBase*>& state,
+      std::unordered_multimap<std::string, std::string>& aliases,
+      const Acts::Logger& logger) const = 0;
+
   std::string fullName() const { return m_parent->name() + "." + name(); }
 
  protected:
@@ -61,6 +70,10 @@ class WriteDataHandleBase : public DataHandleBase {
   void initialize(const std::string& key);
 
   bool isCompatible(const DataHandleBase& other) const final;
+
+  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
+               std::unordered_multimap<std::string, std::string>& aliases,
+               const Acts::Logger& logger) const final;
 };
 
 class ReadDataHandleBase : public DataHandleBase {
@@ -72,6 +85,10 @@ class ReadDataHandleBase : public DataHandleBase {
   void initialize(const std::string& key);
 
   bool isCompatible(const DataHandleBase& other) const final;
+
+  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
+               std::unordered_multimap<std::string, std::string>& aliases,
+               const Acts::Logger& logger) const final;
 };
 
 template <typename T>

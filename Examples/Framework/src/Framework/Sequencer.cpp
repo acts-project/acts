@@ -33,7 +33,6 @@
 #include <numeric>
 #include <ostream>
 #include <ratio>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -42,22 +41,11 @@
 #include <TROOT.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/core/demangle.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 
 namespace ActsExamples {
 
 namespace {
-
-std::string_view getAlgorithmType(const SequenceElement& element) {
-  if (dynamic_cast<const IWriter*>(&element) != nullptr) {
-    return "Writer";
-  }
-  if (dynamic_cast<const IReader*>(&element) != nullptr) {
-    return "Reader";
-  }
-  return "Algorithm";
-}
 
 // Saturated addition that does not overflow and exceed
 // std::numeric_limits<std::size_t>::max().
@@ -144,87 +132,18 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
   m_sequenceElements.push_back({element});
 
-  auto symbol = [&](const char* in) {
-    std::string s = demangleAndShorten(in);
-    std::size_t pos = 0;
-    while (pos + 80 < s.size()) {
-      ACTS_INFO("   " + s.substr(pos, pos + 80));
-      pos += 80;
-    }
-    ACTS_INFO("   " + s.substr(pos));
-  };
   ACTS_INFO("Add " << element->typeName() << " '" << element->name() << "'");
 
   bool valid = true;
 
   for (const auto* handle : element->readHandles()) {
-    if (!handle->isInitialized()) {
-      continue;
-    }
-
-    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
-    symbol(handle->typeInfo().name());
-
-    if (auto it = m_whiteBoardState.find(handle->key());
-        it != m_whiteBoardState.end()) {
-      const auto& source = *it->second;
-      if (!source.isCompatible(*handle)) {
-        ACTS_ERROR("Adding "
-                   << elementType << " " << element->name() << ":"
-                   << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence (source: "
-                   << source.fullName() << "),"
-                   << "\nbut the type will be\n"
-                   << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
-                   << "\nand not\n"
-                   << "'" << demangleAndShorten(handle->typeInfo().name())
-                   << "'");
-        valid = false;
-      }
-    } else {
-      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << " '" << handle->key()
-                           << "' at this point in the sequence."
-                           << "\n   Needed for read data handle '"
-                           << handle->name() << "'");
-      valid = false;
-    }
+    handle->emulate(m_whiteBoardState, m_whiteboardObjectAliases, *m_logger);
   }
 
   if (valid) {  // only record outputs this if we're valid until here
     for (const auto* handle : element->writeHandles()) {
-      if (!handle->isInitialized()) {
-        continue;
-      }
-
-      ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
-      symbol(handle->typeInfo().name());
-
-      if (auto it = m_whiteBoardState.find(handle->key());
-          it != m_whiteBoardState.end()) {
-        const auto& source = *it->second;
-        ACTS_ERROR("White board will already contain key '"
-                   << handle->key() << "'. Source: '" << source.fullName()
-                   << "' (cannot overwrite)");
-        valid = false;
-        break;
-      }
-
-      m_whiteBoardState.emplace(std::pair{handle->key(), handle});
-
-      if (auto it = m_whiteboardObjectAliases.find(handle->key());
-          it != m_whiteboardObjectAliases.end()) {
-        ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
-                           << "'");
-        m_whiteBoardState[it->second] = handle;
-      }
+      handle->emulate(m_whiteBoardState, m_whiteboardObjectAliases, *m_logger);
     }
-  }
-
-  if (!valid) {
-    throw SequenceConfigurationException{};
   }
 }
 
