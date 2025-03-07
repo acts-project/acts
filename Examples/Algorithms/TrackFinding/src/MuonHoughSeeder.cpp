@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/MuonSimHit.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -22,23 +23,12 @@
 #include "TLatex.h"
 #include "TLegend.h"
 
-namespace {
-/// map the station name integers in the CSV to the ATLAS station names
-static const std::map<int, std::string> stationDict{
-    {0, "BIL"},  {1, "BIS"},  {7, "BIR"},  {2, "BML"},  {3, "BMS"},
-    {8, "BMF"},  {53, "BME"}, {54, "BMG"}, {52, "BIM"}, {4, "BOL"},
-    {5, "BOS"},  {9, "BOF"},  {10, "BOG"}, {6, "BEE"},  {14, "EEL"},
-    {15, "EES"}, {13, "EIL"}, {49, "EIS"}, {17, "EML"}, {18, "EMS"},
-    {20, "EOL"}, {21, "EOS"}};
-
-}  // namespace
-
 ActsExamples::MuonHoughSeeder::MuonHoughSeeder(
     ActsExamples::MuonHoughSeeder::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("MuonHoughSeeder", lvl),
       m_cfg(std::move(cfg)),
       m_logger(Acts::getDefaultLogger("MuonHoughSeeder", lvl)) {
-  if (m_cfg.inDriftCircles.empty()) {
+  if (m_cfg.inSpacePoints.empty()) {
     throw std::invalid_argument(
         "MuonHoughSeeder: Missing drift circle collection");
   }
@@ -46,8 +36,9 @@ ActsExamples::MuonHoughSeeder::MuonHoughSeeder(
     throw std::invalid_argument("MuonHoughSeeder: Missing sim hit collection");
   }
 
-  m_inputDriftCircles.initialize(m_cfg.inDriftCircles);
+  m_inputSpacePoints.initialize(m_cfg.inSpacePoints);
   m_inputSimHits.initialize(m_cfg.inSimHits);
+  m_outputMaxima.initialize(m_cfg.outHoughMax);
 }
 
 using PatternSeed = std::pair<double, double>;  // y0, tan theta
@@ -55,8 +46,8 @@ using PatternSeed = std::pair<double, double>;  // y0, tan theta
 ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     const AlgorithmContext& ctx) const {
   // read the hits and circles
-  auto gotSH = m_inputSimHits(ctx);
-  auto gotDC = m_inputDriftCircles(ctx);
+  const auto& gotSH = m_inputSimHits(ctx);
+  const MuonSpacePointCont& gotSpacePoints = m_inputSpacePoints(ctx);
 
   // configure the binning of the hough plane
   Acts::HoughTransformUtils::HoughPlaneConfig planeCfg;
@@ -77,34 +68,55 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParam_fromDC_left = [](double tanTheta, const DriftCircle& DC) {
-    return DC.y() - tanTheta * DC.z() -
-           DC.rDrift() / std::cos(std::atan(tanTheta));
+  auto houghParam_fromDC_left = [](double tanAlpha, const MuonSpacePoint& DC) {
+    return DC.localPosition().y() - tanAlpha * DC.localPosition().z() -
+           DC.driftRadius() * std::sqrt(1.+tanAlpha*tanAlpha);
   };
   // right solution
-  auto houghParam_fromDC_right = [](double tanTheta, const DriftCircle& DC) {
-    return DC.y() - tanTheta * DC.z() +
-           DC.rDrift() / std::cos(std::atan(tanTheta));
+  auto houghParam_fromDC_right = [](double tanAlpha, const MuonSpacePoint& DC) {
+    return DC.localPosition().y() - tanAlpha * DC.localPosition().z() +
+          DC.driftRadius() *  std::sqrt(1.+tanAlpha*tanAlpha);
+  };
+  /// strip solution
+  auto houghParam_fromStrip = [](double tanAlpha, const MuonSpacePoint& strip) {
+    return strip.localPosition().y() - tanAlpha * strip.localPosition().z();
   };
 
   // create the function parametrising the drift radius uncertainty
-  auto houghWidth_fromDC = [](double, const DriftCircle& DC) {
+  auto houghWidth_fromDC = [](double, const MuonSpacePoint& DC) {
     // scale reported errors up to at least 1mm or 3 times the reported error as
     // drift circle calib not fully reliable at this stage
-    return std::min(DC.rDriftError() * 3., 1.0);
+    return std::min(std::sqrt(DC.covariance()(Acts::eY, Acts::eY)) * 3., 1.0);
   };
-
+  auto houghWidth_fromStrip = [](double , const MuonSpacePoint& strip) {
+    return std::sqrt(strip.covariance()(Acts::eY, Acts::eY)) * 3.;
+  }
   // store the true parameters
   std::vector<PatternSeed> truePatterns;
 
+  using Plane_t = const MuonSpacePoint*;
   // instantiate the hough plane
-  Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
-      houghPlane(planeCfg);
+  Acts::HoughTransformUtils::HoughPlane<Plane_t> houghPlane(planeCfg);
   // also instantiate the peak finder
-  Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
-      Acts::GeometryIdentifier::Value>
-      peakFinder(peakFinderCfg);
+  Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<Plane_t> peakFinder(peakFinderCfg);
 
+  for (const MuonSpacePointCont::value_type&  bucket :  gotSpacePoints){
+      houghPlane.reset();
+      for (const MuonSpacePoint& sp : bucket) {
+          if (sp.id().technology() == MuonSpacePoint::MuonId::TechField::Mdt) {
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromDC_left,
+                                           houghWidth_fromDC, &sp, sp.id().detLayer());
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromDC_right,
+                                            houghWidth_fromDC, &sp, sp.id().detLayer());
+          } else {
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromStrip,
+                                            houghWidth_fromStrip, &sp, sp.id().detLayer());
+          }
+      }
+
+  }
+ 
+ /*
   // loop over true hits
   for (auto& SH : gotSH) {
     // read the identifier
@@ -116,12 +128,12 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     // ACTS_VERBOSE("station name=" << static_cast<int>(SH.stationName));
     ACTS_VERBOSE("direction = " << SH.direction().y());
     ACTS_VERBOSE("fourposition y = " << SH.fourPosition().y());
-    std::cin.ignore();
+
     // reset the hough plane
     houghPlane.reset();
     int foundDC = 0;
     // loop over drift circles
-    for (DriftCircle& DC : gotDC) {
+    for (MuonSpacePoint& DC : gotDC) {
       if (DC.stationEta() == detailedInfo.stationEta &&
           DC.stationPhi() == detailedInfo.stationPhi &&
           DC.stationName() == detailedInfo.stationName) {
@@ -137,10 +149,10 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
         auto effectiveLayer = 3 * (DC.multilayer() - 1) + (DC.tubeLayer() - 1);
         ++foundDC;
         // populate the hough plane with both solutions.
-        houghPlane.fill<DriftCircle>(DC, axisRanges, houghParam_fromDC_left,
+        houghPlane.fill<MuonSpacePoint>(DC, axisRanges, houghParam_fromDC_left,
                                      houghWidth_fromDC, identifier,
                                      effectiveLayer, 1.0);
-        houghPlane.fill<DriftCircle>(DC, axisRanges, houghParam_fromDC_right,
+        houghPlane.fill<MuonSpacePoint>(DC, axisRanges, houghParam_fromDC_right,
                                      houghWidth_fromDC, identifier,
                                      effectiveLayer, 1.0);
       }
@@ -223,6 +235,7 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
   ACTS_VERBOSE("SH: " << gotSH.size());
   ACTS_VERBOSE("DC: " << gotDC.size());
+  */
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
