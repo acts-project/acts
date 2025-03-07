@@ -57,14 +57,41 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
 
   NamedTupleCsvReader<MuonSpacePointData> reader(path);
 
-  MuonSpacePointData data;
+  MuonSpacePointData data{};
 
-  SpacePointContainer spacePoints{};
+  MuonSpacePointCont spacePoints{};
 
+  using MuonId = MuonSpacePoint::MuonId;
+  int lastBucketId{-1};
   while (reader.read(data)) {
-    // unordered.push_back(SimHit(compressId(f), data.pdgId, pos, mom, mom, -1));
+      /// Decode the stationName, sector & side of the chamber
+      MuonId::StationName stName{static_cast<MuonId::StationName>(data.sectorId >>24)};
+      MuonId::DetSide side{static_cast<MuonId::DetSide>(0x0FF && (data.sectorId >>16))};
+      const int sector = static_cast<int>( 0x0FF &&(data.sectorId >>8) );
+      MuonId::TechField tech{static_cast<MuonId::TechField>(0x0FF&&(data.sectorId))};
+      MuonId id{};
+      id.setChamber(stName, side, sector, tech);
+      id.setLayAndCh(data.gasGap, data.primaryCh);
+      /// Start a new bucket if the sector id or the bucket Id are different
+      if (spacePoints.empty() || !spacePoints.back().back().id().sameStation(id) || lastBucketId != data.bucketId) {
+        spacePoints.emplace_back();
+        lastBucketId = data.bucketId;
+      }
+      MuonSpacePoint& newSpacePoint{spacePoints.back().emplace_back()};
+      
+      newSpacePoint.setId(id);
+
+      newSpacePoint.defineCoordinates(Acts::Vector3{data.locPositionX, data.locPositionY, data.locPositionZ},
+                                      Acts::Vector3{data.locSensorDirX, data.locSensorDirY, data.locSensorDirZ});
+      
+      newSpacePoint.defineNormal(Acts::Vector3{data.locPlaneNormX, data.locPlaneNormY, data.locPlaneNormZ});
+      newSpacePoint.setRadius(data.driftR);
+
+      newSpacePoint.setSpatialCov(data.covXX, data.covXY, data.covYX, data.covYY);
+
+
+
   }
-//   simHits.insert(unordered.begin(), unordered.end());
 
   // write the ordered data to the EventStore (according to geometry_id).
   m_outputSpacePoints(ctx, std::move(spacePoints));
