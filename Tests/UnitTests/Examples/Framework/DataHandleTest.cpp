@@ -330,4 +330,126 @@ BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
+  WhiteBoard wb;
+  DummySequenceElement dummyElement;
+
+  BOOST_TEST_CHECKPOINT("Test basic consume functionality");
+  {
+    WriteDataHandle<int> writeHandle(&dummyElement, "test");
+    writeHandle.initialize("consume_key");
+    writeHandle(wb, 42);
+
+    ConsumeDataHandle<int> consumeHandle(&dummyElement, "test");
+    consumeHandle.initialize("consume_key");
+    BOOST_CHECK_EQUAL(consumeHandle(wb), 42);
+
+    // Verify data is removed after consumption
+    BOOST_CHECK(!wb.exists("consume_key"));
+    ReadDataHandle<int> readHandle(&dummyElement, "test");
+    readHandle.initialize("consume_key");
+    BOOST_CHECK_THROW(readHandle(wb), std::out_of_range);
+  }
+
+  BOOST_TEST_CHECKPOINT("Test consume handle emulation");
+  {
+    std::unordered_map<std::string, const DataHandleBase*> state;
+    std::unordered_multimap<std::string, std::string> aliases;
+    std::vector<std::unique_ptr<WriteDataHandleBase>> writeHandles;
+    std::vector<std::unique_ptr<ReadDataHandleBase>> readHandles;
+
+    // Add write handle to state
+    auto& writeHandle = *writeHandles.emplace_back(
+        std::make_unique<WriteDataHandle<int>>(&dummyElement, "test"));
+    writeHandle.initialize("consume_key");
+    writeHandle.emulate(state, aliases, logger());
+
+    // Verify consume handle removes key from state
+    auto& consumeHandle = *readHandles.emplace_back(
+        std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test"));
+    consumeHandle.initialize("consume_key");
+    consumeHandle.emulate(state, aliases, logger());
+    BOOST_CHECK(!state.contains("consume_key"));
+
+    // Verify another consume handle fails
+    auto& consumeHandle2 = *readHandles.emplace_back(
+        std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test2"));
+    consumeHandle2.initialize("consume_key");
+    ScopedFailureThreshold st(Acts::Logging::Level::FATAL);
+    BOOST_CHECK_THROW(consumeHandle2.emulate(state, aliases, logger()),
+                      SequenceConfigurationException);
+  }
+
+  BOOST_TEST_CHECKPOINT("Test consume handle with incompatible type");
+  {
+    WriteDataHandle<std::string> writeHandle(&dummyElement, "test");
+    writeHandle.initialize("type_key");
+    writeHandle(wb, "test string");
+
+    ConsumeDataHandle<int> consumeHandle(&dummyElement, "test");
+    consumeHandle.initialize("type_key");
+    BOOST_CHECK_THROW(consumeHandle(wb), std::out_of_range);
+  }
+
+  BOOST_TEST_CHECKPOINT("Test consume handle with missing data");
+  {
+    ConsumeDataHandle<int> consumeHandle(&dummyElement, "test");
+    consumeHandle.initialize("missing_key");
+    BOOST_CHECK_THROW(consumeHandle(wb), std::out_of_range);
+  }
+
+  BOOST_TEST_CHECKPOINT("Test consume handle with uninitialized key");
+  {
+    ConsumeDataHandle<int> consumeHandle(&dummyElement, "test");
+    BOOST_CHECK_THROW(consumeHandle(wb), std::runtime_error);
+  }
+}
+
+// Custom type with destructor counter for testing
+struct DestructorCounter {
+  static int count;
+  int value;
+  DestructorCounter(int v) : value(v) {}
+  ~DestructorCounter() { count++; }
+};
+int DestructorCounter::count = 0;
+
+BOOST_AUTO_TEST_CASE(ConsumeDataHandleDestructor) {
+  WhiteBoard wb;
+  DummySequenceElement dummyElement;
+
+  BOOST_TEST_CHECKPOINT("Test value destructor is not called when popping");
+  {
+    // Reset counter
+    DestructorCounter::count = 0;
+
+    // Write value to store
+    WriteDataHandle<std::unique_ptr<DestructorCounter>> writeHandle(
+        &dummyElement, "test");
+    writeHandle.initialize("destructor_key");
+    writeHandle(wb, std::make_unique<DestructorCounter>(42));
+
+    // Verify initial state
+    BOOST_CHECK_EQUAL(DestructorCounter::count, 0);
+
+    // Consume value
+    ConsumeDataHandle<std::unique_ptr<DestructorCounter>> consumeHandle(
+        &dummyElement, "test");
+    consumeHandle.initialize("destructor_key");
+    auto value = consumeHandle(wb);
+
+    // Verify value was moved correctly
+    BOOST_CHECK_EQUAL(value->value, 42);
+    // Verify destructor was not called during pop
+    BOOST_CHECK_EQUAL(DestructorCounter::count, 0);
+
+    // Verify value is removed from store
+    BOOST_CHECK(!wb.exists("destructor_key"));
+
+    // Value destructor will be called when unique_ptr is destroyed
+    value.reset();
+    BOOST_CHECK_EQUAL(DestructorCounter::count, 1);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

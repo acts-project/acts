@@ -31,6 +31,7 @@ class DataHandleBase {
 
  public:
   virtual ~DataHandleBase() = default;
+
   const std::string& key() const { return m_key.value(); }
 
   virtual const std::type_info& typeInfo() const = 0;
@@ -83,7 +84,18 @@ class ReadDataHandleBase : public DataHandleBase {
 
   void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
                std::unordered_multimap<std::string, std::string>& aliases,
-               const Acts::Logger& logger) const final;
+               const Acts::Logger& logger) const override;
+};
+
+class ConsumeDataHandleBase : public ReadDataHandleBase {
+ protected:
+  ConsumeDataHandleBase(SequenceElement* parent, const std::string& name)
+      : ReadDataHandleBase{parent, name} {}
+
+ public:
+  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
+               std::unordered_multimap<std::string, std::string>& aliases,
+               const Acts::Logger& logger) const override;
 };
 
 template <typename T>
@@ -127,6 +139,29 @@ class ReadDataHandle final : public ReadDataHandleBase {
                                "' not initialized"};
     }
     return wb.get<T>(m_key.value());
+  }
+
+  const std::type_info& typeInfo() const override { return typeid(T); };
+};
+
+template <typename T>
+class ConsumeDataHandle final : public ConsumeDataHandleBase {
+ public:
+  ConsumeDataHandle(SequenceElement* parent, const std::string& name)
+      : ConsumeDataHandleBase{parent, name} {
+    m_parent->registerReadHandle(*this);
+  }
+
+  T operator()(const AlgorithmContext& ctx) const {
+    return (*this)(ctx.eventStore);
+  }
+
+  T operator()(WhiteBoard& wb) const {
+    if (!isInitialized()) {
+      throw std::runtime_error{"ConsumeDataHandle '" + fullName() +
+                               "' not initialized"};
+    }
+    return wb.pop<T>(m_key.value());
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };

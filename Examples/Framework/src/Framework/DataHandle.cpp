@@ -158,4 +158,52 @@ void ReadDataHandleBase::emulate(
   }
 }
 
+void ConsumeDataHandleBase::emulate(
+    std::unordered_map<std::string, const DataHandleBase*>& state,
+    std::unordered_multimap<std::string, std::string>& aliases,
+    const Acts::Logger& logger) const {
+  if (!isInitialized()) {
+    return;
+  }
+
+  ACTS_INFO("<< " << name() << " '" << key() << "':");
+  symbol(typeInfo().name());
+
+  if (auto it = state.find(key()); it != state.end()) {
+    const auto& source = *it->second;
+    if (!source.isCompatible(*this)) {
+      ACTS_ERROR(
+          "Adding " << m_parent->typeName() << " " << m_parent->name() << ":"
+                    << "\n-> white board will contain key '" << key() << "'"
+                    << "\nat this point in the sequence (source: "
+                    << source.fullName() << "),"
+                    << "\nbut the type will be\n"
+                    << "'" << demangleAndShorten(source.typeInfo().name())
+                    << "'"
+                    << "\nand not\n"
+                    << "'" << demangleAndShorten(typeInfo().name()) << "'");
+      throw SequenceConfigurationException{
+          "Incompatible data handle type for key '" + key() +
+          "': " + source.fullName()};
+    }
+    // Remove the key from state since it will be consumed
+    ACTS_VERBOSE("Removing key '" << key() << "' from state");
+    state.erase(it);
+    for (auto ait = aliases.begin(); ait != aliases.end(); ait++) {
+      if (ait->second == key()) {
+        ACTS_VERBOSE("Removing alias '" << ait->second << "' from aliases");
+        aliases.erase(ait);
+      }
+    }
+  } else {
+    ACTS_ERROR(
+        "Adding " << m_parent->typeName() << " " << m_parent->name() << ":"
+                  << "\n-> white board will not contain key"
+                  << " '" << key() << "' at this point in the sequence."
+                  << "\n   Needed for consume data handle '" << name() << "'");
+    throw SequenceConfigurationException{"Missing data handle for key '" +
+                                         key() + "'"};
+  }
+}
+
 }  // namespace ActsExamples
