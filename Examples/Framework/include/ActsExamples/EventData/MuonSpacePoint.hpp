@@ -4,6 +4,11 @@
 #include "Acts/EventData/StationSpacePoint.hpp"
 
 namespace ActsExamples{
+
+    class  Identifier{
+        
+    };
+
     class MuonSpacePoint {
         public:
             /** @brief Return the local meaurement position */
@@ -17,6 +22,10 @@ namespace ActsExamples{
             /** @brief Return the normal vector to the plane */
             const Acts::Vector3& stripPlaneNormal() const {
                 return m_pos;
+            }
+            /** @brief Return the  */
+            const Acts::ActsSquareMatrix<3>& covariance() const {
+                return m_cov;
             }
             /** @brief Return the drift radius */
             double driftRadius() const{
@@ -50,6 +59,7 @@ namespace ActsExamples{
             Acts::Vector3 m_pos{Acts::Vector3::Zero()};
             Acts::Vector3 m_dir{Acts::Vector3::Zero()};
             Acts::Vector3 m_norm{Acts::Vector3::Zero()};
+            Acts::ActsSquareMatrix<3> m_cov{Acts::ActsSquareMatrix<3>::Identity()};
             double m_radius{0.};
             double m_time{0.};
 

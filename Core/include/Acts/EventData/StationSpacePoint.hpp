@@ -14,16 +14,16 @@
 
 namespace Acts{
     /** @brief Concept definition of the station space points. They're primarly used in composite detectors,
-     *         like the Muon chambers in side the ATLAS experiment. The chambers usually consist of few layers
-     *         of drift tubes which maybe sandwiched by other strip detector layers to measure the local coordinates
-     *         on the reference plane the particle's passage.
-     * 
-     *  To describe the 
+     *         like the Muon stations in side the ATLAS experiment. The stations usually consist of few layers
+     *         of straw tubes which maybe sandwiched by other strip detector layers. The straws are used to measure
+     *         the passage of the particle in the bending plane, while the strip may supplement the track measurement
+     *         by providing measurements along the straw.
+     *  
      */
     template <typename SpacePointType>
-        concept StationSpacePoint = requires(SpacePointType sp) {
+        concept StationSpacePoint = requires(const SpacePointType sp) {
             /** @brief Local position of the space point measurement. It'either
-             *         the position of the wire or the position of the fired strip in the chamber */
+             *         the position of the wire or the position of the fired strip in the station */
             { sp.localPosition() } -> std::same_as<const Acts::Vector3&>;
             /** @brief Orientation of the sensor, which is either the wire orientation or 
              *         the strip orientation. Travelling along the direction does not alter the residual */
@@ -34,6 +34,12 @@ namespace Acts{
             { sp.driftRadius() } -> std::same_as<double>;
             /** @brief Time when the measurement was taken */
             { sp.time()} -> std::same_as<double>;
+            /** @brief Return the space point covariance. The upper left 2x2 block
+             *         describes the spatial meaurement uncertainty. The remaining block
+             *         the correlation between the time <-> spatial measurement or the pure time resolution */
+            { sp.covariance() } -> std::same_as<const ActsSquareMatrix<3>&>;
         };
+    /** @brief Concept of a space point container */
+    // template 
 
 }

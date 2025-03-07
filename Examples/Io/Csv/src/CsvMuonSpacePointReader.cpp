@@ -28,8 +28,7 @@
 namespace ActsExamples{
 CsvMuonSpacePointReader::CsvMuonSpacePointReader(const Config& config,
                                                  Acts::Logging::Level level): 
-      m_cfg{config},
-      // TODO check that all files (hits,cells,truth) exists
+      m_cfg{config},     
       m_eventsRange{determineEventFilesRange(m_cfg.inputDir, m_cfg.inputStem + ".csv")},
       m_logger{Acts::getDefaultLogger("CsvMuonSpacePointReader", level)} {
 
@@ -60,8 +59,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
 
   MuonSpacePointData data;
 
-//   SimHitContainer::sequence_type unordered;
-    SpacePointContainer spacePoints{};
+  SpacePointContainer spacePoints{};
 
   while (reader.read(data)) {
     // unordered.push_back(SimHit(compressId(f), data.pdgId, pos, mom, mom, -1));
