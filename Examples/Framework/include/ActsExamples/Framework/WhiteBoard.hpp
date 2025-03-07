@@ -97,6 +97,12 @@ class WhiteBoard {
   template <typename T>
   const T& get(const std::string& name) const;
 
+  template <typename T>
+  HolderT<T>* getHolder(const std::string& name) const;
+
+  template <typename T>
+  T pop(const std::string& name);
+
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
   std::unordered_multimap<std::string, std::string> m_objectAliases;
@@ -111,6 +117,9 @@ class WhiteBoard {
 
   template <typename T>
   friend class ReadDataHandle;
+
+  template <typename T>
+  friend class ConsumeDataHandle;
 };
 
 }  // namespace ActsExamples
@@ -121,9 +130,8 @@ inline ActsExamples::WhiteBoard::WhiteBoard(
     : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
-inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
-  ACTS_VERBOSE("Attempt to get object '" << name << "' of type "
-                                         << typeid(T).name());
+ActsExamples::WhiteBoard::HolderT<T>* ActsExamples::WhiteBoard::getHolder(
+    const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     const auto names = similarNames(name, 10, 3);
@@ -140,17 +148,37 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
     throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
 
-  const IHolder* holder = it->second.get();
+  IHolder* holder = it->second.get();
 
-  const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
+  auto* castedHolder = dynamic_cast<HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
     std::string msg =
         typeMismatchMessage(name, typeid(T).name(), holder->type().name());
     throw std::out_of_range(msg.c_str());
   }
 
+  return castedHolder;
+}
+
+template <typename T>
+inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
+  ACTS_VERBOSE("Attempt to get object '" << name << "' of type "
+                                         << typeid(T).name());
   ACTS_VERBOSE("Retrieved object '" << name << "'");
-  return castedHolder->value;
+  auto* holder = getHolder<T>(name);
+  return holder->value;
+}
+
+template <typename T>
+T ActsExamples::WhiteBoard::pop(const std::string& name) {
+  ACTS_VERBOSE("Pop object '" << name << "'");
+  // This will throw if the object is not of the requested type or does not
+  // exist
+  auto* holder = getHolder<T>(name);
+  // Remove the holder from the store, will go out of scope after return
+  auto owned = m_store.extract(name);
+  // Return the value by moving it out of the holder
+  return std::move(holder->value);
 }
 
 inline bool ActsExamples::WhiteBoard::exists(const std::string& name) const {
