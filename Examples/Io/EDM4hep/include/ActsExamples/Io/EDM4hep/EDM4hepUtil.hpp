@@ -21,6 +21,7 @@
 #include <edm4hep/MutableMCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
 #include <edm4hep/MutableTrack.h>
+#include <edm4hep/MutableTrackerHitLocal.h>
 #include <edm4hep/MutableTrackerHitPlane.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackerHitPlane.h>
@@ -103,11 +104,10 @@ VariableBoundMeasurementProxy readMeasurement(
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
-                      edm4hep::MutableTrackerHitPlane to,
-                      const Cluster* fromCluster,
-                      edm4hep::TrackerHit3DCollection& toClusters,
-                      const MapGeometryIdTo& geometryMapper);
+void writeMeasurement(const Acts::GeometryContext& gctx,
+                      const ConstVariableBoundMeasurementProxy& from,
+                      edm4hep::MutableTrackerHitLocal to,
+                      const Acts::Surface& surface);
 
 /// Writes a trajectory to EDM4hep.
 ///
