@@ -83,26 +83,6 @@ struct MuonSimHitData {
                  LocalDirectionx, LocalDirectiony, LocalDirectionz);
 };
 
-// Write out muon simhits before digitization
-struct MuonDriftCircleData {
-  /// Drift radius, in mm.
-  float driftRadius = 0.0f;
-  /// Drift tube center location in the station frame
-  float tubePositionx = 0.0f, tubePositiony = 0.0f, tubePositionz = 0.0f;
-  /// three components of the muon station identifier
-  int stationName = 0;
-  int stationEta = 0;
-  int stationPhi = 0;
-  // components of the tube identifier within the station
-  int multilayer = 0;
-  int tubelayer = 0;
-  int tube = 0;
-
-  DFE_NAMEDTUPLE(MuonDriftCircleData, driftRadius, tubePositionx, tubePositiony,
-                 tubePositionz, stationName, stationEta, stationPhi, multilayer,
-                 tubelayer, tube);
-};
-
 struct MuonSpacePointData{
   /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
   int sectorId{0};
@@ -110,9 +90,9 @@ struct MuonSpacePointData{
    *         pushes the space point into a new bucket container */
   int bucketId{0};
   /** @brief Local position of the space point measurement */
-  float localPositionX{0.f};
-  float localPositionY{0.f};
-  float localPositionZ{0.f};
+  float locPositionX{0.f};
+  float locPositionY{0.f};
+  float locPositionZ{0.f};
   /** @brief Direction of the sensor line */
   float locSensorDirX{0.f};
   float locSensorDirY{0.f};
@@ -122,14 +102,12 @@ struct MuonSpacePointData{
   float locPlaneNormY{0.f};
   float locPlaneNormZ{0.f};
   /** @brief Measurement covariance entries in the local x-y plane */
-  float covX{0.f};
+  float covXX{0.f};
   float covXY{0.f};
   float covYX{0.f};
-  float covY{0.f};
+  float covYY{0.f};
   /** @brief Drift radius */
   float driftR{0.f};
-  /** @brief Technology type */
-  unsigned short technology{0u};
   /** @brief Associated gasGap type */
   unsigned short gasGap{0u};
   /** @brief Primary measurement channel */
@@ -138,11 +116,11 @@ struct MuonSpacePointData{
   int secondaryCh{-1};
 
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, 
-                localPositionX ,localPositionY ,localPositionZ,
-                locSensorDirX, locSensorDirY, locSensorDirZ, 
-                locPlaneNormX, locPlaneNormY, locPlaneNormZ, 
-                covX, covXY, covYX, covY, driftR,
-                technology, gasGap, primaryCh, secondaryCh);
+                 locPositionX ,locPositionY ,locPositionZ,
+                 locSensorDirX, locSensorDirY, locSensorDirZ, 
+                 locPlaneNormX, locPlaneNormY, locPlaneNormZ, 
+                 covXX, covXY, covYX, covYY, driftR,
+                 gasGap, primaryCh, secondaryCh);
 
 };
 

@@ -1,16 +1,104 @@
-
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2025 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
 #include "Acts/EventData/StationSpacePoint.hpp"
-
+#include "Acts/Definitions/Common.hpp"
 namespace ActsExamples{
-
-    class  Identifier{
-        
-    };
-
+    /** @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM. 
+     *         The space points are expressed in a local frame such that the x-axis is parallel to the ATLAS 
+     *         Monitored Drift Tubes (Mdt), the y-axis points within the tube layer & the z-axis outside of the plane */
     class MuonSpacePoint {
-        public:
+        public:   
+            /** @brief Identifier helper class to distinguish different measurements */         
+            class MuonId {
+                public:
+                    /** @brief Technology encoding of the measurement*/
+                    enum class TechField: int8_t {
+                        UnDef = -1, Mdt = 0, Rpc = 2, Tgc = 3, sTgc = 4, Mm = 5
+                    };
+                    /** @brief ATLAS-MS station encoding */
+                    enum class StationName: int8_t {
+                        UnDef = -1, BIS, BIL, BMS, BML, BOS, BOL, BEE,
+                        EIS, EIL, EMS, EML, EOS, EOL, EES, EEL
+                    };
+                    /** @brief Detector side encoding */
+                    enum class DetSide: int8_t {
+                       UnDef = 0, A = 1, C = -1
+                    };
+                    /** @brief Empty default Identifier constructor */
+                    explicit MuonId() = default;
+                    /** @brief Default copy constructor */
+                    MuonId(const MuonId& other) = default;
+                    /** @brief Default move constructor */
+                    MuonId(MuonId && other) = default;
+                    /** @brief Default copy assignment */
+                    MuonId& operator=(const MuonId& other) = default;
+                    /** @brief Default move assignment */
+                    MuonId& operator=(MuonId&& other) = default;
+
+                    /** @brief Returns the technology of the measurement */
+                    TechField technology() const {
+                        return m_tech;
+                    }
+                    /** @brief Returns the MS station in which the measurement was recorded */
+                    StationName msStation() const {
+                        return m_stName;
+                    }
+                    /** @brief Returns the sector in which the measurement was recorded */
+                    uint8_t sector() const {
+                        return m_sector;
+                    }
+                    /** @brief Returns the detector side */
+                    DetSide side() const {
+                        return m_side;
+                    }
+                    /** @brief Returns the layer */
+                    uint8_t detLayer() const {
+                        return m_layer;
+                    }
+                    /** @brief Returns the channel number */
+                    uint16_t channel() const { 
+                        return m_channel;
+                    }
+                    bool sameStation(const MuonId& other) const {
+                        return msStation() == other.msStation() &&
+                               sector() == other.sector() &&
+                               side() == other.side();
+                    }
+                    /** @brief Set the fields neede to Identify the detector in the system
+                     *  @param stName: StationName where the muon station is located
+                     *  @param side: Positive or negative side
+                     *  @param sector: Phi sector in which the chamber is installed
+                     *  @param tech: Technology of the chamber within the chamber */
+                    void setChamber(StationName stName, DetSide side, int sector, TechField tech) {
+                        m_stName = stName;
+                        m_side = side;
+                        m_sector = sector;
+                        m_tech = tech;
+                    }
+                    /** @brief Set the measurement layer & channel */
+                    void setLayAndCh(uint8_t layer, uint16_t ch) {
+                        m_layer = layer;
+                        m_channel = ch;
+                    }
+                private:
+                    TechField m_tech{TechField::UnDef};
+                    StationName m_stName{StationName::UnDef};
+                    DetSide m_side{DetSide::UnDef};
+                    uint8_t m_sector{0};
+                    uint8_t m_layer{0};
+                    uint16_t m_channel{0}; 
+            };
+            /** @brief Return the Identifier of the space point */
+            const MuonId& id() const {
+                return m_id;
+            }
             /** @brief Return the local meaurement position */
             const Acts::Vector3& localPosition() const{
                 return m_pos;
@@ -35,11 +123,14 @@ namespace ActsExamples{
             double time() const {
                 return m_time;
             }
+            /** @brief Define the space point's identifier */
+            void setId(const MuonId & id) {
+                m_id = id;
+            }
             /** @brief Define the space point coordinates.
              *  @param pos: Space point position
-                *  @param sensorDir: Direction of the sensor */
-            void defineCoordinates(Acts::Vector3&& pos,
-                                    Acts::Vector3&& sensorDir){
+             *  @param sensorDir: Direction of the sensor */
+            void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir){
                 m_pos = std::move(pos);
                 m_dir = std::move(sensorDir);
             }
@@ -55,32 +146,65 @@ namespace ActsExamples{
             void setTime(const double t){
                 m_time = t;
             }
+            void setSpatialCov(const double xx, const double xy, 
+                               const double yx, const double yy) {
+                m_cov(Acts::eX, Acts::eX) = xx;
+                m_cov(Acts::eX, Acts::eY) = xy;
+                m_cov(Acts::eY, Acts::eX) = yx;
+                m_cov(Acts::eY, Acts::eY) = yy;
+            }
         private:
+            MuonId m_id{};
             Acts::Vector3 m_pos{Acts::Vector3::Zero()};
             Acts::Vector3 m_dir{Acts::Vector3::Zero()};
             Acts::Vector3 m_norm{Acts::Vector3::Zero()};
             Acts::ActsSquareMatrix<3> m_cov{Acts::ActsSquareMatrix<3>::Identity()};
             double m_radius{0.};
             double m_time{0.};
-
     };
-    using SpacePointContainer = std::vector<std::vector<MuonSpacePoint>>;
+    using MuonSpacePointCont = std::vector<std::vector<MuonSpacePoint>>;
 
+    /** @brief Helper class to sort the MuonspacePoints whether they're Mdt hits, i.e. straw hits or whether they're ordinary strip hits.\
+      *        Hits in each category are additionally sorted by straw or tube layer. Each layer is represented by a dedicated hit vector. 
+      *        The sorter then holds the sorted vectors in two jagged vectors and returns them via its interface.      */
     class MuonSpacePointSorter{
         public:
-            MuonSpacePointSorter(const std::vector<const MuonSpacePoint*>& spacePoins) {
-                
-            }
+            /** @brief abbreviation of the space point vector */
+            using HitVec = std::vector<const MuonSpacePoint*>;
+            /** @brief abbreviation of the layer vector. Each element inside the vector represents
+             *         all hits in a given detector layer */
+            using LayerVec = std::vector<HitVec>;
 
-            const std::vector<std::vector<const MuonSpacePoint*>>& strawHits() const{
+            using MuonId = MuonSpacePoint::MuonId;
+            /** @brief Constructor taking a list of hits in the same muon station. */
+            MuonSpacePointSorter(const HitVec& spacePoints) {
+                m_strawHits.reserve(spacePoints.size());
+                m_stripHits.reserve(spacePoints.size());
+                for (const MuonSpacePoint* sp : spacePoints){
+                    LayerVec& pushMe{sp->id().technology() == MuonId::TechField::Mdt ? m_strawHits : m_stripHits};
+                    assert(sp->id().detLayer() >=1);
+                    const unsigned idx = sp->id().detLayer() - 1;
+                    assert(idx >=0);
+                    /// Ensure that there's enough space
+                    if (idx >= pushMe.size()) {
+                        pushMe.resize(idx +1);
+                    }
+                    pushMe[idx].push_back(sp);
+                }
+                /** The lowest strip gasGap number is the max +1 straw hit gasGap number. Erase all the hit vectors which are empty */
+                m_stripHits.erase(m_stripHits.begin(), std::remove_if(m_stripHits.begin(), m_stripHits.end(),[](const HitVec& lay){ 
+                                 return lay.empty();}));
+            }
+            /** @brief Returns all straw hits sorted by straw layer */
+            const LayerVec& strawHits() const{
                 return m_strawHits;
             }
-
-            const std::vector<std::vector<const MuonSpacePoint*>>& stripHits() const { 
+            /** @brief Returns all strip hits sorted by strip layer */
+            const LayerVec& stripHits() const { 
                 return m_stripHits;
             }
         private:
-            std::vector<std::vector<const MuonSpacePoint*>> m_strawHits{};
-            std::vector<std::vector<const MuonSpacePoint*>> m_stripHits{};
+            LayerVec m_strawHits{};
+            LayerVec m_stripHits{};
     };
 }
