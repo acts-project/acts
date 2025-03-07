@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
@@ -34,7 +34,8 @@
 
 namespace ActsExamples {
 
-EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
+EDM4hepSimReader::EDM4hepSimReader(const Config& config,
+                                   Acts::Logging::Level level)
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
   if (m_cfg.outputParticlesGenerator.empty()) {
@@ -76,7 +77,7 @@ EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
   });
 }
 
-Acts::PodioUtil::ROOTReader& EDM4hepReader::reader() {
+Acts::PodioUtil::ROOTReader& EDM4hepSimReader::reader() {
   bool exists = false;
   auto& reader = m_reader.local(exists);
   if (!exists) {
@@ -86,11 +87,11 @@ Acts::PodioUtil::ROOTReader& EDM4hepReader::reader() {
   return reader;
 }
 
-std::string EDM4hepReader::name() const {
-  return "EDM4hepReader";
+std::string EDM4hepSimReader::name() const {
+  return "EDM4hepSimReader";
 }
 
-std::pair<std::size_t, std::size_t> EDM4hepReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> EDM4hepSimReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -114,9 +115,9 @@ std::string plabel(const SimParticle& particle) {
 
 }  // namespace
 
-void EDM4hepReader::graphviz(std::ostream& os,
-                             const std::vector<SimParticle>& particles,
-                             const ParentRelationship& parents) const {
+void EDM4hepSimReader::graphviz(std::ostream& os,
+                                const std::vector<SimParticle>& particles,
+                                const ParentRelationship& parents) const {
   os << "digraph Event {\n";
 
   std::set<unsigned int> primaryVertices;
@@ -152,7 +153,7 @@ void EDM4hepReader::graphviz(std::ostream& os,
   os << "}";
 }
 
-ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
+ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
   podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
   const auto& mcParticleCollection =
       frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
@@ -454,7 +455,7 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-void EDM4hepReader::processChildren(
+void EDM4hepSimReader::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     std::vector<SimParticle>& particles, ParentRelationship& parentRelationship,
     std::unordered_map<int, std::size_t>& particleMap,
@@ -528,8 +529,9 @@ void EDM4hepReader::processChildren(
   }
 }
 
-void EDM4hepReader::setSubParticleIds(std::vector<SimParticle>::iterator begin,
-                                      std::vector<SimParticle>::iterator end) {
+void EDM4hepSimReader::setSubParticleIds(
+    std::vector<SimParticle>::iterator begin,
+    std::vector<SimParticle>::iterator end) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 

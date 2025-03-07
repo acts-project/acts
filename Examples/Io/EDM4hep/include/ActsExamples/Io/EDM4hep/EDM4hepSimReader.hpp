@@ -32,7 +32,7 @@ class DD4hepDetector;
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepReader final : public IReader {
+class EDM4hepSimReader final : public IReader {
  public:
   struct Config {
     /// Where to read input file from.
@@ -68,7 +68,7 @@ class EDM4hepReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepReader(const Config& config, Acts::Logging::Level level);
+  EDM4hepSimReader(const Config& config, Acts::Logging::Level level);
 
   std::string name() const final;
 

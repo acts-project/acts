@@ -258,7 +258,7 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhit_particle_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepReader
+    from acts.examples.edm4hep import EDM4hepSimReader
 
     tmp_file = str(tmp_path / "output_edm4hep.root")
     odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
@@ -279,7 +279,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
         trackingGeometry = detector.trackingGeometry()
 
         s.addReader(
-            EDM4hepReader(
+            EDM4hepSimReader(
                 level=acts.logging.INFO,
                 inputPath=tmp_file,
                 inputSimHits=[
