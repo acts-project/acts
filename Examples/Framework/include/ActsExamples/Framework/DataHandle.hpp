@@ -20,6 +20,10 @@ class Logger;
 
 namespace ActsExamples {
 
+/// Base class for all data handles.
+///
+/// Provides common functionality for tracking the parent sequence element
+/// and key name. The key is optional until explicitly initialized.
 class DataHandleBase {
  protected:
   DataHandleBase(SequenceElement* parent, const std::string& name)
@@ -57,6 +61,12 @@ class DataHandleBase {
   std::optional<std::string> m_key{};
 };
 
+/// Base class for write data handles.
+///
+/// Write handles are used to store data in the WhiteBoard. They ensure that:
+/// - Each key can only be written once
+/// - The key must be non-empty
+/// - The data type is consistent for each key
 class WriteDataHandleBase : public DataHandleBase {
  protected:
   WriteDataHandleBase(SequenceElement* parent, const std::string& name)
@@ -72,6 +82,12 @@ class WriteDataHandleBase : public DataHandleBase {
                const Acts::Logger& logger) const final;
 };
 
+/// Base class for read data handles.
+///
+/// Read handles are used to access data from the WhiteBoard. They ensure that:
+/// - The data exists before reading
+/// - The data type matches the expected type
+/// - The data can be read multiple times
 class ReadDataHandleBase : public DataHandleBase {
  protected:
   ReadDataHandleBase(SequenceElement* parent, const std::string& name)
@@ -87,6 +103,14 @@ class ReadDataHandleBase : public DataHandleBase {
                const Acts::Logger& logger) const override;
 };
 
+/// Base class for consume data handles.
+///
+/// Consume handles are used to take ownership of data from the WhiteBoard.
+/// They ensure that:
+/// - The data exists before consuming
+/// - The data type matches the expected type
+/// - The data can only be consumed once
+/// - The data is removed from the WhiteBoard after consumption
 class ConsumeDataHandleBase : public ReadDataHandleBase {
  protected:
   ConsumeDataHandleBase(SequenceElement* parent, const std::string& name)
@@ -98,6 +122,16 @@ class ConsumeDataHandleBase : public ReadDataHandleBase {
                const Acts::Logger& logger) const override;
 };
 
+/// A write handle for storing data in the WhiteBoard.
+///
+/// @tparam T The type of data to store
+///
+/// Example usage:
+/// @code
+/// WriteDataHandle<int> handle(parent, "my_data");
+/// handle.initialize("my_key");
+/// handle(wb, 42);  // Store value
+/// @endcode
 template <typename T>
 class WriteDataHandle final : public WriteDataHandleBase {
  public:
@@ -121,6 +155,16 @@ class WriteDataHandle final : public WriteDataHandleBase {
   const std::type_info& typeInfo() const override { return typeid(T); };
 };
 
+/// A read handle for accessing data from the WhiteBoard.
+///
+/// @tparam T The type of data to read
+///
+/// Example usage:
+/// @code
+/// ReadDataHandle<int> handle(parent, "my_data");
+/// handle.initialize("my_key");
+/// const auto& value = handle(wb);  // Access value
+/// @endcode
 template <typename T>
 class ReadDataHandle final : public ReadDataHandleBase {
  public:
@@ -144,6 +188,17 @@ class ReadDataHandle final : public ReadDataHandleBase {
   const std::type_info& typeInfo() const override { return typeid(T); };
 };
 
+/// A consume handle for taking ownership of data from the WhiteBoard.
+///
+/// @tparam T The type of data to consume
+///
+/// Example usage:
+/// @code
+/// ConsumeDataHandle<int> handle(parent, "my_data");
+/// handle.initialize("my_key");
+/// auto value = handle(wb);  // Take ownership of value
+/// // value is no longer in WhiteBoard
+/// @endcode
 template <typename T>
 class ConsumeDataHandle final : public ConsumeDataHandleBase {
  public:
