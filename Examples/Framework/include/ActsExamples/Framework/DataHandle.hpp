@@ -22,8 +22,6 @@ namespace ActsExamples {
 
 class DataHandleBase {
  protected:
-  virtual ~DataHandleBase() = default;
-
   DataHandleBase(SequenceElement* parent, const std::string& name)
       : m_parent(parent), m_name(name) {}
 
@@ -32,6 +30,7 @@ class DataHandleBase {
   DataHandleBase(DataHandleBase&&) = default;
 
  public:
+  virtual ~DataHandleBase() = default;
   const std::string& key() const { return m_key.value(); }
 
   virtual const std::type_info& typeInfo() const = 0;
