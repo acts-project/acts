@@ -7,55 +7,55 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
+#include "Acts/Definitions/Units.hpp"
 
-#include "ActsExamples/EventData/MuonSimHit.hpp"
+#include "ActsExamples/EventData/MuonSegment.hpp"
+#include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonHoughMaximum.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <ostream>
 #include <stdexcept>
-#include <variant>
+#include <format>
 
 #include "TBox.h"
 #include "TLatex.h"
 #include "TLegend.h"
 
 namespace {
-/// map the station name integers in the CSV to the ATLAS station names
-static const std::map<int, std::string> stationDict{
-    {0, "BIL"},  {1, "BIS"},  {7, "BIR"},  {2, "BML"},  {3, "BMS"},
-    {8, "BMF"},  {53, "BME"}, {54, "BMG"}, {52, "BIM"}, {4, "BOL"},
-    {5, "BOS"},  {9, "BOF"},  {10, "BOG"}, {6, "BEE"},  {14, "EEL"},
-    {15, "EES"}, {13, "EIL"}, {49, "EIS"}, {17, "EML"}, {18, "EMS"},
-    {20, "EOL"}, {21, "EOS"}};
+   constexpr double stripUncertCutOff = 10. *Acts::UnitConstants::cm;
+}
 
-}  // namespace
 
-ActsExamples::MuonHoughSeeder::MuonHoughSeeder(
-    ActsExamples::MuonHoughSeeder::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("MuonHoughSeeder", lvl),
+namespace ActsExamples {
+
+MuonHoughSeeder::MuonHoughSeeder(
+    MuonHoughSeeder::Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("MuonHoughSeeder", lvl),
       m_cfg(std::move(cfg)),
-      m_logger(Acts::getDefaultLogger("MuonHoughSeeder", lvl)) {
-  if (m_cfg.inDriftCircles.empty()) {
+      m_logger(Acts::getDefaultLogger(name(), lvl)) {
+  if (m_cfg.inSpacePoints.empty()) {
     throw std::invalid_argument(
         "MuonHoughSeeder: Missing drift circle collection");
   }
-  if (m_cfg.inSimHits.empty()) {
-    throw std::invalid_argument("MuonHoughSeeder: Missing sim hit collection");
+  if (m_cfg.inTruthSegments.empty()) {
+    throw std::invalid_argument("MuonHoughSeeder: Missing truth segment collection");
   }
 
-  m_inputDriftCircles.initialize(m_cfg.inDriftCircles);
-  m_inputSimHits.initialize(m_cfg.inSimHits);
+  m_inputSpacePoints.initialize(m_cfg.inSpacePoints);
+  m_inputTruthSegs.initialize(m_cfg.inTruthSegments);
+  m_outputMaxima.initialize(m_cfg.outHoughMax);
 }
 
 using PatternSeed = std::pair<double, double>;  // y0, tan theta
 
-ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
+ProcessCode MuonHoughSeeder::execute(
     const AlgorithmContext& ctx) const {
   // read the hits and circles
-  auto gotSH = m_inputSimHits(ctx);
-  auto gotDC = m_inputDriftCircles(ctx);
+  const MuonSegmentContainer& gotTruthSegs = m_inputTruthSegs(ctx);
+  const MuonSpacePointContainer& gotSpacePoints = m_inputSpacePoints(ctx);
 
   // configure the binning of the hough plane
   Acts::HoughTransformUtils::HoughPlaneConfig planeCfg;
@@ -76,51 +76,170 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParam_fromDC_left = [](double tanTheta, const DriftCircle& DC) {
-    return DC.y() - tanTheta * DC.z() -
-           DC.rDrift() / std::cos(std::atan(tanTheta));
+  auto houghParam_fromDC_left = [](double tanAlpha, const MuonSpacePoint& DC) {
+    return DC.localPosition().y() - tanAlpha * DC.localPosition().z() -
+           DC.driftRadius() * std::sqrt(1.+tanAlpha*tanAlpha);
   };
   // right solution
-  auto houghParam_fromDC_right = [](double tanTheta, const DriftCircle& DC) {
-    return DC.y() - tanTheta * DC.z() +
-           DC.rDrift() / std::cos(std::atan(tanTheta));
+  auto houghParam_fromDC_right = [](double tanAlpha, const MuonSpacePoint& DC) {
+    return DC.localPosition().y() - tanAlpha * DC.localPosition().z() +
+          DC.driftRadius() *  std::sqrt(1.+tanAlpha*tanAlpha);
+  };
+  /// strip solution
+  auto houghParam_fromStrip = [](double tanAlpha, const MuonSpacePoint& strip) {
+    return strip.localPosition().y() - tanAlpha * strip.localPosition().z();
   };
 
   // create the function parametrising the drift radius uncertainty
-  auto houghWidth_fromDC = [](double, const DriftCircle& DC) {
+  auto houghWidth_fromDC = [](double, const MuonSpacePoint& DC) {
     // scale reported errors up to at least 1mm or 3 times the reported error as
     // drift circle calib not fully reliable at this stage
-    return std::min(DC.rDriftError() * 3., 1.0);
+    return std::min(std::sqrt(DC.covariance()(Acts::eY, Acts::eY)) * 3., 1.0);
+  };
+  auto houghWidth_fromStrip = [](double , const MuonSpacePoint& strip) {
+    return std::sqrt(strip.covariance()(Acts::eY, Acts::eY)) * 3.;
   };
 
-  // store the true parameters
-  std::vector<PatternSeed> truePatterns;
-
+  using Plane_t = const MuonSpacePoint*;
+  using PeakFinder_t = Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<Plane_t>;
+  using Maximum_t = PeakFinder_t::Maximum;
+  using MaximumVec_t = std::vector<Maximum_t>;
   // instantiate the hough plane
-  Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
-      houghPlane(planeCfg);
+  Acts::HoughTransformUtils::HoughPlane<Plane_t> houghPlane(planeCfg);
   // also instantiate the peak finder
-  Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
-      Acts::GeometryIdentifier::Value>
-      peakFinder(peakFinderCfg);
+  PeakFinder_t peakFinder(peakFinderCfg);
 
+  MuonHoughMaxContainer outMaxima{}, etaMaxima{};
+
+  for (const MuonSpacePointContainer::value_type&  bucket :  gotSpacePoints){
+      houghPlane.reset();
+      for (const MuonSpacePoint& sp : bucket) {
+          if (sp.id().technology() == MuonSpacePoint::MuonId::TechField::Mdt) {
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromDC_left,
+                                            houghWidth_fromDC, &sp, sp.id().detLayer());
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromDC_right,
+                                            houghWidth_fromDC, &sp, sp.id().detLayer());
+          } else if (std::sqrt(sp.covariance()(Acts::eY, Acts::eY)) < stripUncertCutOff) {
+            houghPlane.fill<MuonSpacePoint>(sp, axisRanges, houghParam_fromStrip,
+                                            houghWidth_fromStrip, &sp, sp.id().detLayer());
+          }
+      }
+
+      const auto bucketId{bucket.front().id()};
+      m_outCanvas->SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
+                                        to_string(bucketId.msStation()),
+                                        to_string(bucketId.side()),
+                                        bucketId.sector()).c_str());
+
+      /// Save the hough accumulator as histogram
+      TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
+                              houghPlane.nBinsX(), axisRanges.xMin, axisRanges.xMax, 
+                              houghPlane.nBinsY(), axisRanges.yMin, axisRanges.yMax);
+      houghHistoForPlot.SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
+                                             to_string(bucketId.msStation()),
+                                             to_string(bucketId.side()), 
+                                             bucketId.sector()).c_str());
+
+      for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
+        for (int by = 0; by < houghHistoForPlot.GetNbinsY(); ++by) {
+          houghHistoForPlot.SetBinContent(bx + 1, by + 1, houghPlane.nHits(bx, by));
+        }
+      }
+      /// Set the contours
+      int maxHitsAsInt = static_cast<int>(houghPlane.maxHits());
+      houghHistoForPlot.SetContour(maxHitsAsInt + 1);
+      for (int k = 0; k < maxHitsAsInt + 1; ++k) {
+        houghHistoForPlot.SetContourLevel(k, k - 0.5);
+      }
+      
+      /// Fetch the first set of peaks
+      const MaximumVec_t maxima = peakFinder.findPeaks(houghPlane, axisRanges);
+
+      std::vector<std::unique_ptr<TObject>> primitives;
+
+      houghHistoForPlot.Draw("COLZ");
+      
+      TLegend legend(0.5, 0.7, 1. - gPad->GetRightMargin(), 1. - gPad->GetTopMargin());
+
+      MuonSegmentContainer::const_iterator truthItr = gotTruthSegs.begin();
+      while ( (truthItr = std::find_if(truthItr, gotTruthSegs.end(),[bucketId](const MuonSegment& seg){
+              return seg.id().sameStation(bucketId);
+            })) != gotTruthSegs.end() ){
+          const MuonSegment& truthSeg{*truthItr};
+          const float tanAlpha = truthSeg.localDirection().y() / truthSeg.localDirection().z();
+          const float intercept = truthSeg.localPosition().y();
+          
+          auto trueMarker = std::make_unique<TMarker>(tanAlpha, intercept, kOpenCrossX);
+          trueMarker->SetMarkerSize(3);
+          trueMarker->SetMarkerColor(kRed);
+          legend.AddEntry(trueMarker.get(), "True coordinates");
+          primitives.push_back(std::move(trueMarker));          
+      }
+      {
+        auto tl = std::make_unique<TLatex>(gPad->GetLeftMargin() + 0.03, 1. - gPad->GetTopMargin() - 0.1,
+                                           std::format("Space points in station {:}", bucket.size()).c_str());
+
+        tl->SetTextFont(43);
+        tl->SetTextSize(24);
+        tl->SetNDC();
+        primitives.emplace_back(std::move(tl));                      
+      }
+
+      bool addedLeg{false};
+      for (const Maximum_t& max : maxima) {
+
+        auto marker = std::make_unique<TMarker>(max.x, max.y, kFullSquare);
+        marker->SetMarkerSize(1);
+        marker->SetMarkerColor(kBlue);
+
+        auto box = std::make_unique<TBox>(max.x - max.wx, max.y - max.wy,
+                                          max.x + max.wx, max.y + max.wy);
+        box->SetLineColor(kBlue);
+        box->SetFillStyle(1001);
+        box->SetFillColorAlpha(kBlue, 0.1);
+        box->SetLineWidth(0);
+        if (!addedLeg) {
+          legend.AddEntry(marker.get(), "Hough maxima");
+          legend.AddEntry(box.get(), "Hough uncertainties");
+          addedLeg = true;
+    
+        }
+        primitives.push_back(std::move(marker));
+        primitives.push_back(std::move(box));
+
+        MuonHoughMaximum::HitVec hits{max.hitIdentifiers.begin(), max.hitIdentifiers.end()};
+        etaMaxima.emplace_back(max.x,max.y, std::move(hits));
+      }
+
+
+      for (auto& prim : primitives) {
+        prim->Draw();
+      }
+      legend.SetBorderSize(0);
+      legend.SetFillStyle(0);
+      legend.Draw();
+      m_outCanvas->SaveAs("HoughHistograms.pdf");
+
+  }
+ 
+ /*
   // loop over true hits
   for (auto& SH : gotSH) {
     // read the identifier
     MuonMdtIdentifierFields detailedInfo =
-        ActsExamples::splitId(SH.geometryId().value());
+        splitId(SH.geometryId().value());
     // store the true parameters
     truePatterns.emplace_back(SH.direction().y() / SH.direction().z(),
                               SH.fourPosition().y());
     // ACTS_VERBOSE("station name=" << static_cast<int>(SH.stationName));
     ACTS_VERBOSE("direction = " << SH.direction().y());
     ACTS_VERBOSE("fourposition y = " << SH.fourPosition().y());
-    std::cin.ignore();
+
     // reset the hough plane
     houghPlane.reset();
     int foundDC = 0;
     // loop over drift circles
-    for (DriftCircle& DC : gotDC) {
+    for (MuonSpacePoint& DC : gotDC) {
       if (DC.stationEta() == detailedInfo.stationEta &&
           DC.stationPhi() == detailedInfo.stationPhi &&
           DC.stationName() == detailedInfo.stationName) {
@@ -136,16 +255,15 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
         auto effectiveLayer = 3 * (DC.multilayer() - 1) + (DC.tubeLayer() - 1);
         ++foundDC;
         // populate the hough plane with both solutions.
-        houghPlane.fill<DriftCircle>(DC, axisRanges, houghParam_fromDC_left,
+        houghPlane.fill<MuonSpacePoint>(DC, axisRanges, houghParam_fromDC_left,
                                      houghWidth_fromDC, identifier,
                                      effectiveLayer, 1.0);
-        houghPlane.fill<DriftCircle>(DC, axisRanges, houghParam_fromDC_right,
+        houghPlane.fill<MuonSpacePoint>(DC, axisRanges, houghParam_fromDC_right,
                                      houghWidth_fromDC, identifier,
                                      effectiveLayer, 1.0);
       }
     }
-    // now get the peaks
-    auto maxima = peakFinder.findPeaks(houghPlane, axisRanges);
+
 
     // visualisation in ROOT
     // represent the hough space as a TH2
@@ -222,10 +340,11 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
   ACTS_VERBOSE("SH: " << gotSH.size());
   ACTS_VERBOSE("DC: " << gotDC.size());
-  return ActsExamples::ProcessCode::SUCCESS;
+  */
+  return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::initialize() {
+ProcessCode MuonHoughSeeder::initialize() {
   // book the output canvas
   m_outCanvas = std::make_unique<TCanvas>("canvas", "", 800, 800);
   m_outCanvas->SaveAs("HoughHistograms.pdf[");
@@ -235,7 +354,8 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::initialize() {
   gStyle->SetOptStat(0);
   return ProcessCode::SUCCESS;
 }
-ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::finalize() {
+ProcessCode MuonHoughSeeder::finalize() {
   m_outCanvas->SaveAs("HoughHistograms.pdf]");
   return ProcessCode::SUCCESS;
+}
 }
