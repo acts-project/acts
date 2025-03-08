@@ -74,7 +74,7 @@ class MuonHoughSeeder final : public IAlgorithm {
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<MuonSpacePointCont> m_inputSpacePoints{this, "InputSpacePoints"};
-  WriteDataHandle<MuonHoughMaxCont> m_outputMaxima{this, "OutputHoughMax"};
+  WriteDataHandle<MuonHoughMaxContainer> m_outputMaxima{this, "OutputHoughMax"};
   /// use ROOT for visualisation
   std::unique_ptr<TCanvas> m_outCanvas;
 };

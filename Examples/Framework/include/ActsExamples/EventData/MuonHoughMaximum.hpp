@@ -54,5 +54,5 @@ namespace ActsExamples{
             HitVec m_hits{};
     };
 
-    using MuonHoughMaxCont = std::vector<MuonHoughMaximum>;
+    using MuonHoughMaxContainer = std::vector<MuonHoughMaximum>;
 }

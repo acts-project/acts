@@ -12,7 +12,7 @@
 #include "ActsExamples/Io/Csv/CsvMuonSpacePointReader.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
-#include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvMuonSegmentReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
@@ -75,9 +75,9 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,
                              outputSimHits);
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMuonSimHitReader, mex,
-                             "CsvMuonSimHitReader", inputDir, inputStem,
-                             outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMuonSegmentReader, mex,
+                             "CsvMuonSegmentReader", inputDir, inputStem,
+                             outputSegments);
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMuonSpacePointReader, mex,
                              "CsvMuonSpacePointReader", inputDir, inputStem,
                              outputSpacePoints);
