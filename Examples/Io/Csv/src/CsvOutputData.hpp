@@ -66,21 +66,45 @@ struct SimHitData {
 };
 
 // Write out muon simhits before digitization
-struct MuonSimHitData {
-  /// Hit surface identifier. Not available in the TrackML datasets.
-  int pdgId = 0;
-  /// three components of the muon station identifier
-  int StationName = 0;
-  int StationEta = 0;
-  int StationPhi = 0;
-  // True hit location in station frame, in mm.
-  float LocalPositionExtrx = 0.0f, LocalPositionExtry = 0.0f,
-        LocalPositionExtrz = 0.0f;
-  /// True particle momentum in GeV before interaction.
-  float LocalDirectionx = 0.0f, LocalDirectiony = 0.0f, LocalDirectionz = 0.0f;
-  DFE_NAMEDTUPLE(MuonSimHitData, pdgId, StationName, StationEta, StationPhi,
-                 LocalPositionExtrx, LocalPositionExtry, LocalPositionExtrz,
-                 LocalDirectionx, LocalDirectiony, LocalDirectionz);
+struct MuonSegmentData {
+  /** @brief Identifier hash encoding the spectrometer sector, layer & detector side */
+  int sectorId{0};
+  /** @brief  Position in the global coordinate system */
+  float globalPositionX{0.f};
+  float globalPositionY{0.f};
+  float globalPositionZ{0.f};
+  /** @brief Segment direction in the global coordinate system */
+  float globalDirectionX{0.f};
+  float globalDirectionY{0.f};
+  float globalDirectionZ{0.f};
+  /** @brief Position in the local coordinate system */
+  float localPositionX{0.f};
+  float localPositionY{0.f};
+  float localPositionZ{0.f};
+  /** @brief Segment direction in the local coordinate system  */
+  float localDirectionX{0.f};
+  float localDirectionY{0.f};
+  float localDirectionZ{0.f};
+  /** @brief Segment time & associated error */
+  float time{0.f};
+  float timeError{0.f};
+  /** @brief segment chi2 & number of degrees of freedom */
+  float chiSquared{0.f};
+  unsigned nDoF{0u};
+
+  /** @brief how many precision hits are on the segment (Straw tubes or Mm) */
+  unsigned precisionHits{0u};
+  /** @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc) */
+  unsigned phiLayers{0u};
+  /** @brief  Complementary hits in the bending direction (Rpc / Tgc) */
+  unsigned triEtaLayers{0u};
+  DFE_NAMEDTUPLE(MuonSegmentData, sectorId, 
+                 globalPositionX, globalPositionY, globalPositionZ,
+                 globalDirectionX, globalDirectionY, globalDirectionZ,
+                 localPositionX, localPositionY, localPositionZ,
+                 localDirectionX, localDirectionY, localDirectionZ,
+                 time, timeError, chiSquared, nDoF,
+                 precisionHits, phiLayers, triEtaLayers);
 };
 
 struct MuonSpacePointData{
