@@ -76,17 +76,9 @@ namespace ActsExamples{
                      *  @param side: Positive or negative side
                      *  @param sector: Phi sector in which the chamber is installed
                      *  @param tech: Technology of the chamber within the chamber */
-                    void setChamber(StationName stName, DetSide side, int sector, TechField tech) {
-                        m_stName = stName;
-                        m_side = side;
-                        m_sector = sector;
-                        m_tech = tech;
-                    }
+                    void setChamber(StationName stName, DetSide side, int sector, TechField tech);
                     /** @brief Set the measurement layer & channel */
-                    void setLayAndCh(uint8_t layer, uint16_t ch) {
-                        m_layer = layer;
-                        m_channel = ch;
-                    }
+                    void setLayAndCh(uint8_t layer, uint16_t ch);
                 private:
                     TechField m_tech{TechField::UnDef};
                     StationName m_stName{StationName::UnDef};
@@ -124,35 +116,20 @@ namespace ActsExamples{
                 return m_time;
             }
             /** @brief Define the space point's identifier */
-            void setId(const MuonId & id) {
-                m_id = id;
-            }
+            void setId(const MuonId & id);
             /** @brief Define the space point coordinates.
              *  @param pos: Space point position
              *  @param sensorDir: Direction of the sensor */
-            void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir){
-                m_pos = std::move(pos);
-                m_dir = std::move(sensorDir);
-            }
+            void defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir);
             /** @brief Define the space point normal*/
-            void defineNormal(Acts::Vector3&& norm) {
-                m_norm = std::move(norm);
-            }
+            void defineNormal(Acts::Vector3&& norm);
             /** @brief Define the space point radius */
-            void setRadius(const double r) {
-                m_radius = r;
-            }
+            void setRadius(const double r);
             /** @brief Define the time of the space point measurement */
-            void setTime(const double t){
-                m_time = t;
-            }
+            void setTime(const double t);
+            /** @brief Define the spatial components of the covariance */
             void setSpatialCov(const double xx, const double xy, 
-                               const double yx, const double yy) {
-                m_cov(Acts::eX, Acts::eX) = xx;
-                m_cov(Acts::eX, Acts::eY) = xy;
-                m_cov(Acts::eY, Acts::eX) = yx;
-                m_cov(Acts::eY, Acts::eY) = yy;
-            }
+                               const double yx, const double yy);
         private:
             MuonId m_id{};
             Acts::Vector3 m_pos{Acts::Vector3::Zero()};
@@ -162,7 +139,7 @@ namespace ActsExamples{
             double m_radius{0.};
             double m_time{0.};
     };
-    using MuonSpacePointCont = std::vector<std::vector<MuonSpacePoint>>;
+    using MuonSpacePointContainer = std::vector<std::vector<MuonSpacePoint>>;
 
     /** @brief Helper class to sort the MuonspacePoints whether they're Mdt hits, i.e. straw hits or whether they're ordinary strip hits.\
       *        Hits in each category are additionally sorted by straw or tube layer. Each layer is represented by a dedicated hit vector. 
@@ -177,24 +154,7 @@ namespace ActsExamples{
 
             using MuonId = MuonSpacePoint::MuonId;
             /** @brief Constructor taking a list of hits in the same muon station. */
-            MuonSpacePointSorter(const HitVec& spacePoints) {
-                m_strawHits.reserve(spacePoints.size());
-                m_stripHits.reserve(spacePoints.size());
-                for (const MuonSpacePoint* sp : spacePoints){
-                    LayerVec& pushMe{sp->id().technology() == MuonId::TechField::Mdt ? m_strawHits : m_stripHits};
-                    assert(sp->id().detLayer() >=1);
-                    const unsigned idx = sp->id().detLayer() - 1;
-                    assert(idx >=0);
-                    /// Ensure that there's enough space
-                    if (idx >= pushMe.size()) {
-                        pushMe.resize(idx +1);
-                    }
-                    pushMe[idx].push_back(sp);
-                }
-                /** The lowest strip gasGap number is the max +1 straw hit gasGap number. Erase all the hit vectors which are empty */
-                m_stripHits.erase(m_stripHits.begin(), std::remove_if(m_stripHits.begin(), m_stripHits.end(),[](const HitVec& lay){ 
-                                 return lay.empty();}));
-            }
+            MuonSpacePointSorter(const HitVec& spacePoints);
             /** @brief Returns all straw hits sorted by straw layer */
             const LayerVec& strawHits() const{
                 return m_strawHits;
@@ -207,4 +167,10 @@ namespace ActsExamples{
             LayerVec m_strawHits{};
             LayerVec m_stripHits{};
     };
+
+
+    std::string to_string(const MuonSpacePoint::MuonId::StationName st);
+    std::string to_string(const MuonSpacePoint::MuonId::TechField tech);
+    std::string to_string(const MuonSpacePoint::MuonId::DetSide side);
+
 }
