@@ -59,7 +59,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
 
   MuonSpacePointData data{};
 
-  MuonSpacePointCont spacePoints{};
+  MuonSpacePointContainer spacePoints{};
 
   using MuonId = MuonSpacePoint::MuonId;
   int lastBucketId{-1};
