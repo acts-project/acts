@@ -84,83 +84,83 @@ class RootMaterialTrackPayload {
   std::vector<long long> m_entryNumbers = {};
 
   /// start global x
-  float m_v_x = 0;
+  float m_vX = 0;
   /// start global y
-  float m_v_y = 0;
+  float m_vY = 0;
   /// start global z
-  float m_v_z = 0;
+  float m_vZ = 0;
   /// start global momentum x
-  float m_v_px = 0;
+  float m_vPx = 0;
   /// start global momentum y
-  float m_v_py = 0;
+  float m_vPy = 0;
   /// start global momentum z
-  float m_v_pz = 0;
+  float m_vPz = 0;
   /// start phi direction
-  float m_v_phi = 0;
+  float m_vPhi = 0;
   /// start eta direction
-  float m_v_eta = 0;
+  float m_vEta = 0;
   /// thickness in X0/L0
   float m_tX0 = 0;
   /// thickness in X0/L0
   float m_tL0 = 0;
 
   /// (pre-)step x position (optional)
-  std::vector<float>* m_step_sx = new std::vector<float>();
+  std::vector<float>* m_stepXs = new std::vector<float>();
   /// (pre-)step y position (optional)
-  std::vector<float>* m_step_sy = new std::vector<float>();
+  std::vector<float>* m_stepYs = new std::vector<float>();
   /// (pre-)step z position (optional)
-  std::vector<float>* m_step_sz = new std::vector<float>();
+  std::vector<float>* m_stepZs = new std::vector<float>();
   /// (post-)step x position (optional)
-  std::vector<float>* m_step_ex = new std::vector<float>();
+  std::vector<float>* m_stepXe = new std::vector<float>();
   /// (post-)step y position (optional)
-  std::vector<float>* m_step_ey = new std::vector<float>();
+  std::vector<float>* m_stepYe = new std::vector<float>();
   /// (post-)step z position (optional)
-  std::vector<float>* m_step_ez = new std::vector<float>();
+  std::vector<float>* m_stepZe = new std::vector<float>();
 
   /// step x position
-  std::vector<float>* m_step_x = new std::vector<float>();
+  std::vector<float>* m_stepX = new std::vector<float>();
   /// step y position
-  std::vector<float>* m_step_y = new std::vector<float>();
+  std::vector<float>* m_stepY = new std::vector<float>();
   /// step z position
-  std::vector<float>* m_step_z = new std::vector<float>();
+  std::vector<float>* m_stepZ = new std::vector<float>();
   /// step radial position
-  std::vector<float>* m_step_r = new std::vector<float>();
+  std::vector<float>* m_stepR = new std::vector<float>();
   /// step x direction
-  std::vector<float>* m_step_dx = new std::vector<float>();
+  std::vector<float>* m_stepDx = new std::vector<float>();
   /// step y direction
-  std::vector<float>* m_step_dy = new std::vector<float>();
+  std::vector<float>* m_stepDy = new std::vector<float>();
   /// step z direction
-  std::vector<float>* m_step_dz = new std::vector<float>();
+  std::vector<float>* m_stepDz = new std::vector<float>();
   /// step length
-  std::vector<float>* m_step_length = new std::vector<float>();
+  std::vector<float>* m_stepLength = new std::vector<float>();
   /// step material x0
-  std::vector<float>* m_step_X0 = new std::vector<float>();
+  std::vector<float>* m_stepMatX0 = new std::vector<float>();
   /// step material l0
-  std::vector<float>* m_step_L0 = new std::vector<float>();
+  std::vector<float>* m_stepMatL0 = new std::vector<float>();
   /// step material A
-  std::vector<float>* m_step_A = new std::vector<float>();
+  std::vector<float>* m_stepMatA = new std::vector<float>();
   /// step material Z
-  std::vector<float>* m_step_Z = new std::vector<float>();
+  std::vector<float>* m_stepMatZ = new std::vector<float>();
   /// step material rho
-  std::vector<float>* m_step_rho = new std::vector<float>();
+  std::vector<float>* m_stepMatRho = new std::vector<float>();
 
   /// ID of the surface associated with the step
-  std::vector<std::uint64_t>* m_sur_id = new std::vector<std::uint64_t>();
+  std::vector<std::uint64_t>* m_surfaceId = new std::vector<std::uint64_t>();
   /// x position of the center of the surface associated with the step
-  std::vector<float>* m_sur_x = new std::vector<float>();
+  std::vector<float>* m_surfaceX = new std::vector<float>();
   /// y position of the center of the surface associated with the step
-  std::vector<float>* m_sur_y = new std::vector<float>();
+  std::vector<float>* m_surfaceY = new std::vector<float>();
   /// z position of the center of the surface associated with the step
-  std::vector<float>* m_sur_z = new std::vector<float>();
+  std::vector<float>* m_surfaceZ = new std::vector<float>();
   /// r position of the center of the surface associated with the step
-  std::vector<float>* m_sur_r = new std::vector<float>();
+  std::vector<float>* m_surfaceR = new std::vector<float>();
   /// distance to the surface
-  std::vector<float>* m_sur_distance = new std::vector<float>();
+  std::vector<float>* m_surfaceDistance = new std::vector<float>();
   /// path correction when associating material to the given surface
-  std::vector<float>* m_sur_pathCorrection = new std::vector<float>();
+  std::vector<float>* m_surfacePathCorrection = new std::vector<float>();
 
   /// ID of the volume associated with the step
-  std::vector<std::uint64_t>* m_vol_id = new std::vector<std::uint64_t>();
+  std::vector<std::uint64_t>* m_volumeId = new std::vector<std::uint64_t>();
 };
 
 }  // namespace Acts
