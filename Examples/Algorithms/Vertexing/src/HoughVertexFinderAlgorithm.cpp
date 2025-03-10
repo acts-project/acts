@@ -6,17 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Vertexing/SingleSeedVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/HoughVertexFinderAlgorithm.hpp"
 
-#include "Acts/Vertexing/SingleSeedVertexFinder.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/HoughVertexFinder.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <chrono>
 #include <vector>
 
-ActsExamples::SingleSeedVertexFinderAlgorithm::SingleSeedVertexFinderAlgorithm(
-    const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::IAlgorithm("SingleSeedVertexFinder", lvl), m_cfg(cfg) {
+namespace ActsExamples {
+
+HoughVertexFinderAlgorithm::HoughVertexFinderAlgorithm(const Config& cfg,
+                                                       Acts::Logging::Level lvl)
+    : IAlgorithm("HoughVertexFinder", lvl), m_cfg(cfg) {
   if (m_cfg.inputSpacepoints.empty()) {
     ACTS_ERROR("You have to provide seeds");
   }
@@ -28,28 +33,25 @@ ActsExamples::SingleSeedVertexFinderAlgorithm::SingleSeedVertexFinderAlgorithm(
   m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
-ActsExamples::ProcessCode
-ActsExamples::SingleSeedVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
+ProcessCode HoughVertexFinderAlgorithm::execute(
+    const AlgorithmContext& ctx) const {
   // retrieve input seeds
-  const std::vector<ActsExamples::SimSpacePoint>& inputSpacepoints =
-      m_inputSpacepoints(ctx);
+  const std::vector<SimSpacePoint>& inputSpacepoints = m_inputSpacepoints(ctx);
 
-  Acts::SingleSeedVertexFinder<ActsExamples::SimSpacePoint>::Config
-      singleSeedVtxCfg;
-  Acts::SingleSeedVertexFinder<ActsExamples::SimSpacePoint>
-      SingleSeedVertexFinder(singleSeedVtxCfg);
+  Acts::HoughVertexFinder<SimSpacePoint>::Config houghVtxCfg;
+  Acts::HoughVertexFinder<SimSpacePoint> HoughVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto vtx = SingleSeedVertexFinder.findVertex(inputSpacepoints);
+  auto vtx = HoughVertexFinder.find(inputSpacepoints);
   auto t2 = std::chrono::high_resolution_clock::now();
   if (vtx.ok()) {
     ACTS_INFO("Found a vertex in the event in " << (t2 - t1).count() / 1e6
                                                 << " ms");
-    ACTS_INFO("Found vertex at x = " << vtx.value()[0]
-                                     << "mm, y = " << vtx.value()[1]
-                                     << "mm, z = " << vtx.value()[2] << "mm");
+    ACTS_INFO("Found vertex at x = " << vtx.value().position().x()
+                                     << "mm, y = " << vtx.value().position().y()
+                                     << "mm, z = " << vtx.value().position().z()
+                                     << "mm");
 
     std::vector<Acts::Vertex> vertexCollection;
     vertexCollection.emplace_back(vtx.value());
@@ -61,5 +63,7 @@ ActsExamples::SingleSeedVertexFinderAlgorithm::execute(
               << (t2 - t1).count() / 1e6 << " ms");
   }
 
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
+
+}  // namespace ActsExamples

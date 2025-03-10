@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/HoughVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -17,8 +18,9 @@
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
-class SingleSeedVertexFinderAlgorithm final : public IAlgorithm {
+class HoughVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Optional. Input spacepoints container.
@@ -27,7 +29,7 @@ class SingleSeedVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputVertices;
   };
 
-  SingleSeedVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  HoughVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
   /// @brief Find a vertex using spacepoints
   ///
@@ -43,8 +45,8 @@ class SingleSeedVertexFinderAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
                                                             "spacepoints"};
-  WriteDataHandle<std::vector<Acts::Vertex>> m_outputVertices{this,
-                                                              "fittedVertices"};
+  WriteDataHandle<std::vector<Acts::Vertex>> m_outputVertices{
+      this, "OutputHoughVertices"};
 };
 
 }  // namespace ActsExamples
