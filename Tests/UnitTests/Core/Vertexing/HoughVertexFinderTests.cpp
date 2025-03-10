@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
       double dirY = getRndDouble(gen, -1., 1.);
       double dirZ = getRndDouble(gen, -1., 1.);
       // use upper or lower intersection?
-      int part = getRndInt(gen, 0, 1) * 2 -1;
+      int part = getRndInt(gen, 0, 1) * 2 - 1;
 
       for (int rIndx = 1; rIndx <= 3; rIndx += 1) {
         double sgn = std::copysign(1., dirY);
