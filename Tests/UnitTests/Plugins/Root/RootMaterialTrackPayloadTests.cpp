@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialTrackPayloadTests) {
   rFile->Write();
   rFile->Close();
 
-  // Read back in - plain infromation
+  // Read back in - plain information
   TChain rpChain("material-tracks-plain");
   rpChain.Add("RootMaterialTrackPayloadWriteTests.root");
 

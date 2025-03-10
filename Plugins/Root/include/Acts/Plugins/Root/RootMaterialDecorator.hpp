@@ -154,4 +154,4 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 
-}  // namespace ActsExamples
+}  // namespace Acts
