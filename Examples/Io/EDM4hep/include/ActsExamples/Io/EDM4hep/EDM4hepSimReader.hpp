@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
@@ -47,6 +48,8 @@ class EDM4hepSimReader final : public IReader {
     std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
+    /// Output simulated vertices collection.
+    std::string outputSimVertices;
 
     /// Directory into which to write graphviz files for particles
     /// Empty string means no output
@@ -110,6 +113,9 @@ class EDM4hepSimReader final : public IReader {
       this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+
+  WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
+                                                          "OutputSimVertices"};
 
   void graphviz(std::ostream& os, const std::vector<SimParticle>& particles,
                 const ParentRelationship& parents) const;
