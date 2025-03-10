@@ -67,7 +67,7 @@ void Acts::RootMaterialTrackPayload::connectForRead(TChain& materialChain) {
   materialChain.SetBranchAddress("mat_X0", &m_stepMatX0);
   materialChain.SetBranchAddress("mat_L0", &m_stepMatL0);
   materialChain.SetBranchAddress("mat_A", &m_stepMatA);
-  materialChain.SetBranchAddress("mat_Z", &m_stepZ);
+  materialChain.SetBranchAddress("mat_Z", &m_stepMatZ);
   materialChain.SetBranchAddress("mat_rho", &m_stepMatRho);
   if (m_surfaceInfo) {
     materialChain.SetBranchAddress("sur_id", &m_surfaceId);
