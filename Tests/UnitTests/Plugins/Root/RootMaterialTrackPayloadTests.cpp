@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialTrackPayloadTests) {
 
   auto rfTree =
       new TTree("material-tracks-full", "Material Track Tree, Plain option");
-  Acts::RootMaterialTrackPayload rmtpFull(true, true, true, true, true);
+  Acts::RootMaterialTrackPayload rmtpFull(true, true, true, true);
   rmtpFull.connectForWrite(*rfTree);
 
   // Create the material surfaces
