@@ -171,8 +171,7 @@ BOOST_AUTO_TEST_CASE(RootMaterialTrackPayloadTests) {
   for (int i = 0; i < 10; i++) {
     rfChain.GetEntry(i);
     auto rmTrack = rmtpInFull.read();
-    // One is collapsed
-    BOOST_CHECK_EQUAL(rmTrack.second.materialInteractions.size(), 3u);
+    BOOST_CHECK_EQUAL(rmTrack.second.materialInteractions.size(), 4u);
     BOOST_CHECK(rmTrack.second.materialInX0 > 0.);
 
     auto rPos = Acts::Vector3(0.1 * i, 0.2 * i, 0.3 * i);

@@ -165,38 +165,6 @@ void Acts::RootMaterialTrackPayload::write(
   m_volumeId->clear();
 
   auto materialInteractions = materialTrack.second.materialInteractions;
-  if (m_collapseInteractions) {
-    std::vector<Acts::MaterialInteraction> collapsed;
-
-    Acts::Vector3 positionSum = Acts::Vector3::Zero();
-    double pathCorrectionSum = 0;
-
-    for (std::size_t start = 0, end = 0; end < materialInteractions.size();
-         ++end) {
-      const auto& mintStart = materialInteractions[start];
-      const auto& mintEnd = materialInteractions[end];
-
-      positionSum += mintEnd.position;
-      pathCorrectionSum += mintEnd.pathCorrection;
-
-      const bool same =
-          mintStart.materialSlab.material() == mintEnd.materialSlab.material();
-      const bool last = end == materialInteractions.size() - 1;
-
-      if (!same || last) {
-        auto mint = mintStart;
-        mint.position = positionSum / (end - start);
-        mint.pathCorrection = pathCorrectionSum;
-
-        collapsed.push_back(mint);
-
-        start = end;
-        positionSum = Acts::Vector3::Zero();
-        pathCorrectionSum = 0;
-      }
-    }
-    materialInteractions = std::move(collapsed);
-  }
 
   // Reserve the vector then
   std::size_t mints = materialInteractions.size();

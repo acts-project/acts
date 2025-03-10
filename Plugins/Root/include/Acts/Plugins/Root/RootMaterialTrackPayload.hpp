@@ -31,12 +31,10 @@ class RootMaterialTrackPayload {
   /// @brief Constructor
   RootMaterialTrackPayload(bool prePostStepInfo = false,
                            bool surfaceInfo = false, bool volumeInfo = false,
-                           bool collapseInteractions = false,
                            bool recalculateTotals = false)
       : m_prePostStepInfo(prePostStepInfo),
         m_surfaceInfo(surfaceInfo),
         m_volumeInfo(volumeInfo),
-        m_collapseInteractions(collapseInteractions),
         m_recalculateTotals(recalculateTotals) {}
 
   /// @brief Destructor
@@ -73,7 +71,6 @@ class RootMaterialTrackPayload {
   bool m_prePostStepInfo = false;
   bool m_surfaceInfo = false;
   bool m_volumeInfo = false;
-  bool m_collapseInteractions = false;
   bool m_recalculateTotals = false;
 
   /// Event identifier.
