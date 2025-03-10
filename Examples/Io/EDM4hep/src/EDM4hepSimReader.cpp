@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimReader.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
@@ -167,14 +168,16 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
   // primary vertices
   std::vector<std::pair<Acts::Vector3, std::vector<edm4hep::MCParticle>>>
       primaryVertices;
+
   for (const auto& particle : mcParticleCollection) {
     if (particle.parents_size() > 0) {
       // not a primary vertex
       continue;
     }
     const auto& vtx = particle.getVertex();
+    // @TODO: Might have to use the time here as well
     Acts::Vector3 vtxPos = {vtx[0], vtx[1], vtx[2]};
-    vtxPos /= Acts::UnitConstants::mm;
+    vtxPos *= Acts::UnitConstants::mm;
 
     // linear search for vector
     auto it = std::ranges::find_if(primaryVertices, [&vtxPos](const auto& v) {
@@ -256,6 +259,47 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
   particlesSimulatedUnordered.reserve(mcParticleCollection.size() -
                                       nGeneratorParticles);
 
+  std::vector<SimVertex> simVerticesUnordered;
+
+  auto maybeAddVertex = [&](const Acts::Vector4& vtxPos4) -> SimVertex& {
+    auto vertexIt = std::ranges::find_if(
+        simVerticesUnordered,
+        [&](const auto& v) { return v.position4 == vtxPos4; });
+
+    SimVertex* vertex = nullptr;
+    // We don't have a vertex for this position yet
+    if (vertexIt == simVerticesUnordered.end()) {
+      vertex = &simVerticesUnordered.emplace_back(SimVertexBarcode{}, vtxPos4);
+    } else {
+      vertex = &*vertexIt;
+    }
+
+    assert(vertex != nullptr);
+
+    return *vertex;
+  };
+
+  auto convertPosition4 = [&](const edm4hep::MCParticle& inParticle) {
+    Acts::Vector4 vtxPos4 = {inParticle.getVertex()[0],
+                             inParticle.getVertex()[1],
+                             inParticle.getVertex()[2], inParticle.getTime()};
+    vtxPos4.head<3>() *= Acts::UnitConstants::mm;
+    vtxPos4[3] *= Acts::UnitConstants::ns;
+    return vtxPos4;
+  };
+
+  auto setVertexId = [&](SimVertex& vertex, const SimParticle& particle) {
+    SimVertexBarcode vertexId{particle.particleId()};
+    if (vertex.id.value() == 0) {
+      vertex.id = vertexId;
+    } else if (vertex.id != vertexId) {
+      // This vertex already has an ID, but it's not the same number, this looks
+      // like an inconsistency.
+      ACTS_ERROR("Vertex ID mismatch: " << vertex.id << " != " << vertexId);
+      throw std::runtime_error("Vertex ID mismatch");
+    }
+  };
+
   for (const auto& inParticle : mcParticleCollection) {
     auto particleIt = edm4hepParticleMap.find(inParticle.getObjectID().index);
     if (particleIt == edm4hepParticleMap.end()) {
@@ -268,12 +312,41 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
     if (!inParticle.isCreatedInSimulation()) {
       particlesGeneratorUnordered.push_back(particleInitial);
     }
+    // Copy the particle to the simulated particle container, because we'll make
+    // modified version for the "final" state (i.e. after simulation)
     SimParticle particleSimulated = particleInitial;
 
+    // Acts::Vector4 vtxPos4 = {inParticle.getVertex()[0],
+    //                          inParticle.getVertex()[1],
+    //                          inParticle.getVertex()[2],
+    //                          inParticle.getTime()};
+    // vtxPos4.head<3>() *= Acts::UnitConstants::mm;
+    // vtxPos4[3] *= Acts::UnitConstants::ns;
+    Acts::Vector4 vtxPos4 = convertPosition4(inParticle);
+
+    // Find or create a vertex object for the source of this particle
+
+    // Add current particle to the outgoing particles of the vertex
+    // @TODO: This might be SLOW because it's a flat_set, although the number of
+    // particles is expected to be small.
+    SimVertex& vertex = maybeAddVertex(vtxPos4);
+    vertex.outgoing.insert(particleSimulated.particleId());
+    // This means that we can set the vertex ID of the vertex now
+    setVertexId(vertex, particleSimulated);
+
+    // Find the decay time of the particle, by looking for the first daughter
+    // Find the decay time of the particle, by looking for the first daughter
+    // that marks that it's the endpoint of the parent: this daughter's creation
+    // time is the decay time of the parent.
     float time = inParticle.getTime() * Acts::UnitConstants::ns;
     for (const auto& daughter : inParticle.getDaughters()) {
       if (!daughter.vertexIsNotEndpointOfParent()) {
-        time = daughter.getTime() * Acts::UnitConstants::ns;
+        Acts::Vector4 pos4 = convertPosition4(daughter);
+        time = pos4[Acts::eFreeTime];
+        // The current parent particle decays (eventually), and this daughter's
+        // vertex should have this one an incoming!
+        SimVertex& daughterVertex = maybeAddVertex(pos4);
+        setVertexId(daughterVertex, particleSimulated);
         break;
       }
     }
@@ -314,8 +387,12 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
     graphviz(dot, unorderedParticlesInitial, parentRelationship);
   }
 
-  std::vector<SimHit> simHitsUnordered;
+  std::ranges::sort(simVerticesUnordered, detail::CompareVertexId{});
 
+  SimVertexContainer simVertices{simVerticesUnordered.begin(),
+                                 simVerticesUnordered.end()};
+
+  std::vector<SimHit> simHitsUnordered;
   ACTS_DEBUG("Reading sim hits from " << m_cfg.inputSimHits.size()
                                       << " sim hit collections");
   for (const auto& name : m_cfg.inputSimHits) {
@@ -449,6 +526,7 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
 
   m_outputParticlesGenerator(ctx, std::move(particlesGenerator));
   m_outputParticlesSimulation(ctx, std::move(particlesSimulated));
+  m_outputSimVertices(ctx, std::move(simVertices));
 
   m_outputSimHits(ctx, std::move(simHits));
 
