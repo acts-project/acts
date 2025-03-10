@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Algebra.hpp>
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Material/IMaterialDecorator.hpp>
-#include <Acts/Material/ISurfaceMaterial.hpp>
-#include <Acts/Material/IVolumeMaterial.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <map>
 #include <memory>
@@ -37,7 +36,7 @@ using VolumeMaterialMap =
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 
-namespace ActsExamples {
+namespace Acts {
 
 /// @class RootMaterialDecorator
 ///

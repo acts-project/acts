@@ -13,6 +13,7 @@ add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
 add_component_if(Detray PluginDetray ACTS_BUILD_PLUGIN_TRACCC)
 add_component_if(Covfie PluginCovfie ACTS_BUILD_PLUGIN_TRACCC)
 add_component_if(Hashing PluginHashing ACTS_BUILD_PLUGIN_HASHING)
+add_component_if(Root PluginRoot ACTS_BUILD_PLUGIN_ROOT)
 
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)

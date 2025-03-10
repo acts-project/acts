@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
+#include "Acts/Plugins/Root/RootMaterialDecorator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
@@ -15,13 +15,13 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Material/BinnedSurfaceMaterial.hpp>
-#include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
-#include <Acts/Material/HomogeneousVolumeMaterial.hpp>
-#include <Acts/Utilities/AxisDefinitions.hpp>
-#include <Acts/Utilities/BinUtility.hpp>
-#include <Acts/Utilities/BinningType.hpp>
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -34,7 +34,9 @@
 
 #include <TFile.h>
 #include <TH1.h>
+#include <TH1F.h>
 #include <TH2.h>
+#include <TH2F.h>
 #include <TIterator.h>
 #include <TKey.h>
 #include <TList.h>
@@ -48,8 +50,8 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 }  // namespace Acts
 
-ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
-    const ActsExamples::RootMaterialDecorator::Config& config,
+Acts::RootMaterialDecorator::RootMaterialDecorator(
+    const Acts::RootMaterialDecorator::Config& config,
     Acts::Logging::Level level)
     : m_cfg(config),
       m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)} {
@@ -368,7 +370,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   }
 }
 
-ActsExamples::RootMaterialDecorator::~RootMaterialDecorator() {
+Acts::RootMaterialDecorator::~RootMaterialDecorator() {
   if (m_inputFile != nullptr) {
     m_inputFile->Close();
   }
