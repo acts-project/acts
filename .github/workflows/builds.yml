@@ -249,9 +249,9 @@ jobs:
           - image: ubuntu2204
             std: 20
             cxx: g++
-          - image: ubuntu2204
+          - image: ubuntu2404_clang19
             std: 20
-            cxx: clang++
+            cxx: clang++-19
     container: ghcr.io/acts-project/${{ matrix.image }}:71
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
