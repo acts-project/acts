@@ -408,7 +408,7 @@ linux_ubuntu_2404_clang19:
   variables:
     CXX: clang++
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:74
 
 
