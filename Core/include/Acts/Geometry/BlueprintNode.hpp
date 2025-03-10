@@ -232,8 +232,7 @@ class BlueprintNode {
       const std::string& name,
       const std::function<void(LayerBlueprintNode& layer)>& callback = {});
 
-  /// Convenience method for creating a @ref Acts::GeometryIdentifierBlueprintNode.
-  /// @param name The name of the geometry identifier node.
+  /// Convenience method for creating a @ref Acts::Experimental::GeometryIdentifierBlueprintNode.
   /// @param callback An optional callback that receives the node as an argument
   GeometryIdentifierBlueprintNode& withGeometryIdentifier(
       const std::function<void(
