@@ -125,7 +125,7 @@ class HoughVertexFinder {
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
   Acts::Result<Acts::Vertex> findHoughVertex(
-      const std::vector<spacepoint_t>& spacepoints, Acts::Vertex vtxOld,
+      const std::vector<spacepoint_t>& spacepoints, const Acts::Vertex& vtxOld,
       float rangeZ, std::uint32_t numZBins, float minCotTheta,
       float maxCotTheta, std::uint32_t numCotThetaBins) const;
 

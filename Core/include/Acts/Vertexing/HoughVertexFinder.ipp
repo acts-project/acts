@@ -36,7 +36,7 @@ Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
 template <typename spacepoint_t>
 Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
     const std::vector<spacepoint_t>& spacepoints) const {
-  if (spacepoints.size() == 0) {
+  if (spacepoints.empty()) {
     return Acts::Result<Acts::Vertex>::failure(std::error_code());
   }
 
@@ -47,20 +47,22 @@ Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
     if ((totalFrac + addToTotalFrac) * spacepoints.size() > m_cfg.targetSPs) {
       float needOnly = (m_cfg.targetSPs - totalFrac * spacepoints.size()) /
                        (addToTotalFrac * spacepoints.size());
-      absEtaRange =
-          (r ? m_cfg.absEtaRanges.at(r - 1) : 0.) +
-          (m_cfg.absEtaRanges.at(r) - (r ? m_cfg.absEtaRanges.at(r - 1) : 0.)) *
-              needOnly;
+      absEtaRange = (r != 0u ? m_cfg.absEtaRanges.at(r - 1) : 0.) +
+                    (m_cfg.absEtaRanges.at(r) -
+                     (r != 0u ? m_cfg.absEtaRanges.at(r - 1) : 0.)) *
+                        needOnly;
       totalFrac += needOnly * addToTotalFrac;
       break;
     }
 
     totalFrac += addToTotalFrac;
   }
-  if (absEtaRange > m_cfg.maxAbsEta)
+  if (absEtaRange > m_cfg.maxAbsEta) {
     absEtaRange = m_cfg.maxAbsEta;
-  if (absEtaRange < m_cfg.minAbsEta)
+  }
+  if (absEtaRange < m_cfg.minAbsEta) {
     absEtaRange = m_cfg.minAbsEta;
+  }
 
   const float maxCotTheta = std::sinh(absEtaRange);
   const float minCotTheta = -1. * maxCotTheta;
@@ -94,7 +96,7 @@ Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
 template <typename spacepoint_t>
 Acts::Result<Acts::Vertex>
 Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
-    const std::vector<spacepoint_t>& spacepoints, Acts::Vertex vtxOld,
+    const std::vector<spacepoint_t>& spacepoints, const Acts::Vertex& vtxOld,
     float rangeZ, std::uint32_t numZBins, float minCotTheta, float maxCotTheta,
     std::uint32_t numCotThetaBins) const {
   const float zBinSize = 2. * rangeZ / numZBins;
@@ -173,8 +175,9 @@ Acts::Result<float> Acts::HoughVertexFinder<spacepoint_t>::findHoughPeak(
     const std::vector<float>& vtxZPositions, std::uint32_t numZBins) const {
   std::uint32_t maxZBin = 0;
   for (std::uint32_t zBin = 0; zBin < numZBins; zBin++) {
-    if (houghZProjection[zBin] > houghZProjection.at(maxZBin))
+    if (houghZProjection[zBin] > houghZProjection.at(maxZBin)) {
       maxZBin = zBin;
+    }
   }
 
   float avg =
