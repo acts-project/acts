@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts::Test {
@@ -221,22 +222,9 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig1_test) {
   houghVtxCfg.defVtxPosition[1] = 0.f * Acts::UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0.f * Acts::UnitConstants::mm;
 
-  Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-      std::move(houghVtxCfg));
-
-  std::vector<std::vector<double>> positions = {
-      {10., 0., 25.},   {20., 0., 30.},   {30., 0., 35.},      // track 1
-      {0., 5., 19.},    {0., 10., 18.},   {0, 15., 17.},       // track 2
-      {-6., -4., 22.5}, {-12., -8., 25.}, {-18., -12., 27.5},  // track 3
-      {-8., 2., 23.5},  {-16., 4., 27.},  {-24., 6., 30.5}};   // track 4
-
-  std::vector<SpacePoint4HVFT> inputSpacepoints;
-  for (auto pos : positions) {
-    inputSpacepoints.emplace_back(pos[0], pos[1], pos[2]);
-  }
-
-  BOOST_CHECK_THROW(houghVertexFinder.find(inputSpacepoints),
-                    std::out_of_range);
+  BOOST_CHECK_THROW(Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
+                        std::move(houghVtxCfg)),
+                    std::invalid_argument);
 }
 
 /// @brief Unit test for HoughVertexFinder. Misconfigured #2
@@ -259,22 +247,9 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig2_test) {
   houghVtxCfg.defVtxPosition[1] = 0.f * Acts::UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0.f * Acts::UnitConstants::mm;
 
-  Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-      std::move(houghVtxCfg));
-
-  std::vector<std::vector<double>> positions = {
-      {10., 0., 25.},   {20., 0., 30.},   {30., 0., 35.},      // track 1
-      {0., 5., 19.},    {0., 10., 18.},   {0, 15., 17.},       // track 2
-      {-6., -4., 22.5}, {-12., -8., 25.}, {-18., -12., 27.5},  // track 3
-      {-8., 2., 23.5},  {-16., 4., 27.},  {-24., 6., 30.5}};   // track 4
-
-  std::vector<SpacePoint4HVFT> inputSpacepoints;
-  for (auto pos : positions) {
-    inputSpacepoints.emplace_back(pos[0], pos[1], pos[2]);
-  }
-
-  BOOST_CHECK_THROW(houghVertexFinder.find(inputSpacepoints),
-                    std::out_of_range);
+  BOOST_CHECK_THROW(Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
+                        std::move(houghVtxCfg)),
+                    std::invalid_argument);
 }
 
 /// @brief Unit test for HoughVertexFinder. Misconfigured #3
@@ -298,22 +273,9 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_misconfig3_test) {
   houghVtxCfg.defVtxPosition[1] = 0.f * Acts::UnitConstants::mm;
   houghVtxCfg.defVtxPosition[2] = 0.f * Acts::UnitConstants::mm;
 
-  Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
-      std::move(houghVtxCfg));
-
-  std::vector<std::vector<double>> positions = {
-      {10., 0., 25.},   {20., 0., 30.},   {30., 0., 35.},      // track 1
-      {0., 5., 19.},    {0., 10., 18.},   {0, 15., 17.},       // track 2
-      {-6., -4., 22.5}, {-12., -8., 25.}, {-18., -12., 27.5},  // track 3
-      {-8., 2., 23.5},  {-16., 4., 27.},  {-24., 6., 30.5}};   // track 4
-
-  std::vector<SpacePoint4HVFT> inputSpacepoints;
-  for (auto pos : positions) {
-    inputSpacepoints.emplace_back(pos[0], pos[1], pos[2]);
-  }
-
-  BOOST_CHECK_THROW(houghVertexFinder.find(inputSpacepoints),
-                    std::out_of_range);
+  BOOST_CHECK_THROW(Acts::HoughVertexFinder<SpacePoint4HVFT> houghVertexFinder(
+                        std::move(houghVtxCfg)),
+                    std::invalid_argument);
 }
 
 }  // namespace Acts::Test

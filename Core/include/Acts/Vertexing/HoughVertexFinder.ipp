@@ -11,25 +11,27 @@ Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
     Config cfg, std::unique_ptr<const Logger> lgr)
     : m_cfg(std::move(cfg)), m_logger(std::move(lgr)) {
   if (m_cfg.absEtaFractions.size() != m_cfg.absEtaRanges.size()) {
-    ACTS_ERROR("size of the absEtaFractions is "
-               << m_cfg.absEtaFractions.size()
-               << " but size of the absEtaRanges vector is "
-               << m_cfg.absEtaRanges.size() << "; these two have to be equal.");
+    throw std::invalid_argument("size of the absEtaFractions is " +
+                                std::to_string(m_cfg.absEtaFractions.size()) +
+                                " but size of the absEtaRanges vector is " +
+                                std::to_string(m_cfg.absEtaRanges.size()) +
+                                "; these two have to be equal.");
   }
 
   if (m_cfg.rangeIterZ.size() != m_cfg.nBinsZIterZ.size()) {
-    ACTS_ERROR("size of the rangeIterZ is "
-               << m_cfg.rangeIterZ.size()
-               << " but size of the nBinsZIterZ vector is "
-               << m_cfg.nBinsZIterZ.size() << "; these two have to be equal.");
+    throw std::invalid_argument("size of the rangeIterZ is " +
+                                std::to_string(m_cfg.rangeIterZ.size()) +
+                                " but size of the nBinsZIterZ vector is " +
+                                std::to_string(m_cfg.nBinsZIterZ.size()) +
+                                "; these two have to be equal.");
   }
 
   if (m_cfg.rangeIterZ.size() != m_cfg.nBinsCotThetaIterZ.size()) {
-    ACTS_ERROR("size of the rangeIterZ is "
-               << m_cfg.rangeIterZ.size()
-               << " but size of the nBinsCotThetaIterZ vector is "
-               << m_cfg.nBinsCotThetaIterZ.size()
-               << "; these two have to be equal.");
+    throw std::invalid_argument(
+        "size of the rangeIterZ is " + std::to_string(m_cfg.rangeIterZ.size()) +
+        " but size of the nBinsCotThetaIterZ vector is " +
+        std::to_string(m_cfg.nBinsCotThetaIterZ.size()) +
+        "; these two have to be equal.");
   }
 }
 

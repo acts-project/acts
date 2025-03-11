@@ -21,6 +21,7 @@
 #include <cmath>
 #include <functional>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <utility>
