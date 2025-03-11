@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include <TChain.h>
 #include <TTree.h>
 
 namespace ActsExamples {
@@ -65,8 +64,6 @@ RootMaterialTrackReader::RootMaterialTrackReader(const Config& config,
 
   m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
 }
-
-RootMaterialTrackReader::~RootMaterialTrackReader() {}
 
 std::string RootMaterialTrackReader::name() const {
   return "RootMaterialTrackReader";

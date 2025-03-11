@@ -169,11 +169,11 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
               double dt = t->GetBinContent(ib0, ib1);
               if (dt > 0.) {
-                double dx0 = x0->GetBinContent(ib0, ib1);
-                double dl0 = l0->GetBinContent(ib0, ib1);
-                double da = A->GetBinContent(ib0, ib1);
-                double dz = Z->GetBinContent(ib0, ib1);
-                double drho = rho->GetBinContent(ib0, ib1);
+                float dx0 = static_cast<float>(x0->GetBinContent(ib0, ib1));
+                float dl0 = static_cast<float>(l0->GetBinContent(ib0, ib1));
+                float da = static_cast<float>(A->GetBinContent(ib0, ib1));
+                float dz = static_cast<float>(Z->GetBinContent(ib0, ib1));
+                float drho = static_cast<float>(rho->GetBinContent(ib0, ib1));
                 // Create material properties
                 const auto material =
                     Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -189,8 +189,8 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             std::size_t nbins = static_cast<std::size_t>(n->GetBinContent(ib));
             auto val = static_cast<Acts::AxisDirection>(v->GetBinContent(ib));
             auto opt = static_cast<Acts::BinningOption>(o->GetBinContent(ib));
-            float rmin = min->GetBinContent(ib);
-            float rmax = max->GetBinContent(ib);
+            float rmin = static_cast<float>(min->GetBinContent(ib));
+            float rmax = static_cast<float>(max->GetBinContent(ib));
             bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
           }
           ACTS_VERBOSE("Created " << bUtility);
@@ -201,12 +201,12 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
 
         } else {
           // Only homogeneous material present
-          double dt = t->GetBinContent(1, 1);
-          double dx0 = x0->GetBinContent(1, 1);
-          double dl0 = l0->GetBinContent(1, 1);
-          double da = A->GetBinContent(1, 1);
-          double dz = Z->GetBinContent(1, 1);
-          double drho = rho->GetBinContent(1, 1);
+          float dt = static_cast<float>(t->GetBinContent(1, 1));
+          float dx0 = static_cast<float>(x0->GetBinContent(1, 1));
+          float dl0 = static_cast<float>(l0->GetBinContent(1, 1));
+          float da = static_cast<float>(A->GetBinContent(1, 1));
+          float dz = static_cast<float>(Z->GetBinContent(1, 1));
+          float drho = static_cast<float>(rho->GetBinContent(1, 1));
           // Create and set the homogeneous surface material
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -273,8 +273,8 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
                 static_cast<Acts::AxisDirection>(v->GetBinContent(ib));
             Acts::BinningOption opt =
                 static_cast<Acts::BinningOption>(o->GetBinContent(ib));
-            float rmin = min->GetBinContent(ib);
-            float rmax = max->GetBinContent(ib);
+            float rmin = static_cast<float>(min->GetBinContent(ib));
+            float rmax = static_cast<float>(max->GetBinContent(ib));
             bUtility += Acts::BinUtility(nbins, rmin, rmax, opt, val);
           }
           ACTS_VERBOSE("Created " << bUtility);
@@ -295,11 +295,11 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              float dx0 = static_cast<float>(x0->GetBinContent(p));
+              float dl0 = static_cast<float>(l0->GetBinContent(p));
+              float da = static_cast<float>(A->GetBinContent(p));
+              float dz = static_cast<float>(Z->GetBinContent(p));
+              float drho = static_cast<float>(rho->GetBinContent(p));
               // Create material properties
               const auto material =
                   Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -327,11 +327,11 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
             Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              float dx0 = static_cast<float>(x0->GetBinContent(p));
+              float dl0 = static_cast<float>(l0->GetBinContent(p));
+              float da = static_cast<float>(A->GetBinContent(p));
+              float dz = static_cast<float>(Z->GetBinContent(p));
+              float drho = static_cast<float>(rho->GetBinContent(p));
               // Create material properties
               const auto material =
                   Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -345,11 +345,11 @@ Acts::RootMaterialDecorator::RootMaterialDecorator(
           }
         } else {
           // Homogeneous material
-          double dx0 = x0->GetBinContent(1);
-          double dl0 = l0->GetBinContent(1);
-          double da = A->GetBinContent(1);
-          double dz = Z->GetBinContent(1);
-          double drho = rho->GetBinContent(1);
+          float dx0 = static_cast<float>(x0->GetBinContent(1));
+          float dl0 = static_cast<float>(l0->GetBinContent(1));
+          float da = static_cast<float>(A->GetBinContent(1));
+          float dz = static_cast<float>(Z->GetBinContent(1));
+          float drho = static_cast<float>(rho->GetBinContent(1));
           // Create material properties
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);

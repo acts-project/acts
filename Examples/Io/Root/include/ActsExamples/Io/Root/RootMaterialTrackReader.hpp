@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-class TChain;
+#include <TChain.h>
 
 namespace ActsExamples {
 
@@ -54,7 +54,7 @@ class RootMaterialTrackReader : public IReader {
   RootMaterialTrackReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootMaterialTrackReader() override;
+  ~RootMaterialTrackReader() = default;
 
   /// Framework name() method
   std::string name() const override;
