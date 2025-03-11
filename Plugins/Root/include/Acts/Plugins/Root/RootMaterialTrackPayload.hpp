@@ -29,9 +29,10 @@ class TrackingVolume;
 class RootMaterialTrackPayload {
  public:
   /// @brief Constructor
-  RootMaterialTrackPayload(bool prePostStepInfo = false,
-                           bool surfaceInfo = false, bool volumeInfo = false,
-                           bool recalculateTotals = false)
+  explicit RootMaterialTrackPayload(bool prePostStepInfo = false,
+                                    bool surfaceInfo = false,
+                                    bool volumeInfo = false,
+                                    bool recalculateTotals = false)
       : m_prePostStepInfo(prePostStepInfo),
         m_surfaceInfo(surfaceInfo),
         m_volumeInfo(volumeInfo),
