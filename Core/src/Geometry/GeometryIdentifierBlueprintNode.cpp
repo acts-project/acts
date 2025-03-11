@@ -31,7 +31,8 @@ class Configuration {
 };
 
 struct FixedLayerConfiguration : public Configuration {
-  FixedLayerConfiguration(GeometryIdentifier::Value layer) : m_layer(layer) {
+  explicit FixedLayerConfiguration(GeometryIdentifier::Value layer)
+      : m_layer(layer) {
     m_name = "GeoIdFixLayer(lay=" + std::to_string(m_layer) + ")";
   }
 
@@ -50,7 +51,7 @@ struct FixedLayerConfiguration : public Configuration {
 };
 
 struct IncrementLayerConfiguration : public Configuration {
-  IncrementLayerConfiguration(GeometryIdentifier::Value start)
+  explicit IncrementLayerConfiguration(GeometryIdentifier::Value start)
       : m_value(start) {
     m_name = "GeoIdIncLay(start=" + std::to_string(m_value) + ")";
   }
@@ -80,7 +81,7 @@ struct IncrementLayerConfiguration : public Configuration {
 };
 
 struct FixedVolumeConfiguration : public Configuration {
-  FixedVolumeConfiguration(GeometryIdentifier::Value volumeId)
+  explicit FixedVolumeConfiguration(GeometryIdentifier::Value volumeId)
       : m_volumeId(volumeId) {
     m_name = "GeoIdFixVol(vol=" + std::to_string(m_volumeId) + ")";
   }

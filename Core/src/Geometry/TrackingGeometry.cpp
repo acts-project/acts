@@ -142,7 +142,7 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
   const Logger& m_logger;
 
  public:
-  GeometryIdMapVisitor(const Logger& logger) : m_logger(logger) {}
+  explicit GeometryIdMapVisitor(const Logger& logger) : m_logger(logger) {}
 
   void visitVolume(const TrackingVolume& volume) override {
     std::string label = "volume(" + volume.volumeName() + ")";
