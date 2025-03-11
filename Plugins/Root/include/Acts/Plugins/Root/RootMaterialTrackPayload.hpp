@@ -43,8 +43,8 @@ class RootMaterialTrackPayload {
 
   /// @brief sets the branch connection for reading from a file
   ///
-  /// @param materainChain the TChain to read the material track from
-  void connectForRead(TChain& materainChain);
+  /// @param materialChain the TChain to read the material track from
+  void connectForRead(TChain& materialChain);
 
   /// @brief sets the branch connection for writing to a file
   ///
