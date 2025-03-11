@@ -89,6 +89,15 @@ class GeometryIdentifierBlueprintNode : public BlueprintNode {
   GeometryIdentifierBlueprintNode& setAllVolumeIdsTo(
       GeometryIdentifier::Value volumeId);
 
+  /// Predicate function to compare two @ref Acts::TrackingVolume with each other to determine their *closure order*.
+  using CompareVolumes =
+      std::function<bool(const TrackingVolume&, const TrackingVolume&)>;
+
+  /// @brief Configure this node to order eligible tracking volumes using the provided
+  /// function
+  /// @return Reference to this node for method chaining
+  GeometryIdentifierBlueprintNode& sortBy(const CompareVolumes& compare);
+
   /// @brief Get the name of this node
   /// @return String containing concatenated configuration names
   const std::string& name() const override;

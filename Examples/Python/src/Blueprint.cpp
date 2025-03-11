@@ -25,8 +25,10 @@
 
 #include <fstream>
 #include <random>
+#include <stdexcept>
 #include <utility>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -477,7 +479,22 @@ void addBlueprint(Context& ctx) {
                py::arg("start") = 0)
           .def("setAllVolumeIdsTo",
                &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
-               py::arg("value"));
+               py::arg("value"))
+          // Need to do some massaging to avoid copy issues
+          .def(
+              "sortBy",
+              [](GeometryIdentifierBlueprintNode& self,
+                 const py::function& func) -> GeometryIdentifierBlueprintNode& {
+                if (func.is_none()) {
+                  throw std::invalid_argument(
+                      "sortBy requires a comparison function");
+                }
+                return self.sortBy(
+                    [func](const TrackingVolume& a, const TrackingVolume& b) {
+                      return func(&a, &b).cast<bool>();
+                    });
+              },
+              py::arg("compare"));
 
   auto geoIdFactory = [](BlueprintNode& self) {
     auto child = std::make_shared<GeometryIdentifierBlueprintNode>();
@@ -487,7 +504,7 @@ void addBlueprint(Context& ctx) {
 
   blueprintNode.def("GeometryIdentifier", geoIdFactory)
       .def("withGeometryIdentifier", geoIdFactory);
-  addContextManagerProtocol(blueprintNode);
+  addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,

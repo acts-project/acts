@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <ranges>
 
 #include <boost/algorithm/string/join.hpp>
 
@@ -125,6 +126,8 @@ struct GeometryIdentifierBlueprintNodeImpl {
 
   std::vector<std::unique_ptr<Configuration>> m_configurations;
   std::string m_name;
+
+  GeometryIdentifierBlueprintNode::CompareVolumes m_sortBy;
 };
 
 GeometryIdentifierBlueprintNode::GeometryIdentifierBlueprintNode()
@@ -166,13 +169,24 @@ void GeometryIdentifierBlueprintNode::finalize(const BlueprintOptions& options,
 
   children().at(0).finalize(options, gctx, parent, logger);
 
-  for (auto& volume : parent.volumes()) {
-    // Skip volumes that were already in the parent before the subtree was
-    // processed
-    if (previous.contains(&volume)) {
-      continue;
-    }
+  auto newVolumesOnly =
+      std::views::transform([](TrackingVolume& a) { return &a; }) |
+      // Skip volumes that were already in the parent before the subtree
+      // was processed
+      std::views::filter(
+          [&previous](TrackingVolume* a) { return !previous.contains(a); });
 
+  std::vector<TrackingVolume*> volumes;
+  std::ranges::copy(parent.volumes() | newVolumesOnly,
+                    std::back_inserter(volumes));
+  if (m_impl->m_sortBy) {
+    std::cout << "SORT SORT SORT" << std::endl;
+    std::ranges::sort(volumes, m_impl->m_sortBy,
+                      [](TrackingVolume* v) -> TrackingVolume& { return *v; });
+  }
+  auto deref = std::views::transform([](auto* a) -> auto& { return *a; });
+  for (auto& volume : volumes | deref) {
+    std::cout << "r=" << VectorHelpers::perp(volume.center()) << std::endl;
     ACTS_VERBOSE(
         prefix() << " Applying " << m_impl->m_configurations.size()
                  << " geometry ID configuration(s) on subtree starting from "
@@ -208,6 +222,15 @@ GeometryIdentifierBlueprintNode&
 GeometryIdentifierBlueprintNode::setAllVolumeIdsTo(
     GeometryIdentifier::Value volumeId) {
   m_impl->add(std::make_unique<FixedVolumeConfiguration>(volumeId));
+  return *this;
+}
+
+GeometryIdentifierBlueprintNode& GeometryIdentifierBlueprintNode::sortBy(
+    const CompareVolumes& compare) {
+  if (!compare) {
+    throw std::invalid_argument("Invalid sorting function");
+  }
+  m_impl->m_sortBy = compare;
   return *this;
 }
 
