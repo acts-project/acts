@@ -23,15 +23,16 @@ Not complete yet
 :::{doxygenclass} Acts::Experimental::ContainerBlueprintNode
 :::
 
-:::{doxygenclass} Acts::Experimental::GeometryIdentifierBlueprintNode
-:::
-
 ### Material nodes
 
 :::{doxygenclass} Acts::Experimental::MaterialDesignatorBlueprintNode
 :::
 
 ### Geometry identification specification
+
+:::{doxygenclass} Acts::Experimental::GeometryIdentifierBlueprintNode
+:::
+
 
 ### *Layers* and other nodes
 
