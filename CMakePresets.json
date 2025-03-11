@@ -129,6 +129,7 @@
                 "ACTS_EXATRKX_ENABLE_ONNX": "OFF",
                 "ACTS_EXATRKX_ENABLE_CUDA": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_PLUGIN_ROOT": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON"
             }
         }
