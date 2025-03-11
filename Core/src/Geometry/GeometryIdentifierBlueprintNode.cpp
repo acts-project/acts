@@ -181,13 +181,11 @@ void GeometryIdentifierBlueprintNode::finalize(const BlueprintOptions& options,
   std::ranges::copy(parent.volumes() | newVolumesOnly,
                     std::back_inserter(volumes));
   if (m_impl->m_sortBy) {
-    std::cout << "SORT SORT SORT" << std::endl;
     std::ranges::sort(volumes, m_impl->m_sortBy,
                       [](TrackingVolume* v) -> TrackingVolume& { return *v; });
   }
   auto deref = std::views::transform([](auto* a) -> auto& { return *a; });
   for (auto& volume : volumes | deref) {
-    std::cout << "r=" << VectorHelpers::perp(volume.center()) << std::endl;
     ACTS_VERBOSE(
         prefix() << " Applying " << m_impl->m_configurations.size()
                  << " geometry ID configuration(s) on subtree starting from "
