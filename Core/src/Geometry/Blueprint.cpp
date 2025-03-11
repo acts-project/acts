@@ -217,8 +217,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     if (volume.geometryId() != GeometryIdentifier{}) {
       // We can have multiple volumes with the same volume ID component, but
       // they should differ in other components like "layer"
-      if (volumesById.at(volume.geometryId().volume()) == nullptr) {
-        volumesById.at(volume.geometryId().volume()) = &volume;
+      if (volumesById.at(volume.geometryId().volume() - 1) == nullptr) {
+        volumesById.at(volume.geometryId().volume() - 1) = &volume;
       }
     }
 
@@ -243,9 +243,6 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
         if (volume.geometryId() != GeometryIdentifier{}) {
           return;
         }
-
-        ACTS_VERBOSE(prefix() << "Assigning volume ID to volume: "
-                              << volume.volumeName());
 
         auto it = std::ranges::find(volumesById, nullptr);
         if (it == volumesById.end()) {

@@ -130,6 +130,10 @@ class GeometryIdMapVisitor : public TrackingGeometryVisitor {
       std::stringstream ss;
       ss << "Duplicate " << type << " ID: " << obj.geometryId() << ": & "
          << it->second << " != " << &obj;
+      if (const auto* other = dynamic_cast<const TrackingVolume*>(it->second);
+          other != nullptr) {
+        ss << " (" << other->volumeName() << ")";
+      }
       ACTS_ERROR(ss.str());
       throw std::invalid_argument(ss.str());
     } else {
