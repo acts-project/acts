@@ -170,20 +170,22 @@ void GeometryIdentifierBlueprintNode::finalize(const BlueprintOptions& options,
 
   children().at(0).finalize(options, gctx, parent, logger);
 
-  auto newVolumesOnly =
-      std::views::transform([](TrackingVolume& a) { return &a; }) |
-      // Skip volumes that were already in the parent before the subtree
-      // was processed
-      std::views::filter(
-          [&previous](TrackingVolume* a) { return !previous.contains(a); });
-
   std::vector<TrackingVolume*> volumes;
-  std::ranges::copy(parent.volumes() | newVolumesOnly,
-                    std::back_inserter(volumes));
+  for (auto& v : parent.volumes()) {
+    // Skip volumes that were already in the parent before the subtree
+    // was processed
+    if (previous.contains(&v)) {
+      continue;
+    }
+
+    volumes.push_back(&v);
+  }
+
   if (m_impl->m_sortBy) {
     std::ranges::sort(volumes, m_impl->m_sortBy,
                       [](TrackingVolume* v) -> TrackingVolume& { return *v; });
   }
+
   auto deref = std::views::transform([](auto* a) -> auto& { return *a; });
   for (auto& volume : volumes | deref) {
     ACTS_VERBOSE(
