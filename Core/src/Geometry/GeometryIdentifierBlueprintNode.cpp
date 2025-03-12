@@ -186,8 +186,8 @@ void GeometryIdentifierBlueprintNode::finalize(const BlueprintOptions& options,
                       [](TrackingVolume* v) -> TrackingVolume& { return *v; });
   }
 
-  auto deref = std::views::transform([](auto* a) -> auto& { return *a; });
-  for (auto& volume : volumes | deref) {
+  for (auto* volumePtr : volumes) {
+    auto& volume = *volumePtr;
     ACTS_VERBOSE(
         prefix() << " Applying " << m_impl->m_configurations.size()
                  << " geometry ID configuration(s) on subtree starting from "
