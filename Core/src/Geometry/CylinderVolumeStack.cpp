@@ -89,20 +89,8 @@ CylinderVolumeStack::CylinderVolumeStack(std::vector<Volume*>& volumes,
                                          VolumeAttachmentStrategy strategy,
                                          VolumeResizeStrategy resizeStrategy,
                                          const Logger& logger)
-    : Volume(initialVolume(volumes)),
-      m_direction(direction),
-      m_resizeStrategy(resizeStrategy),
-      m_volumes(volumes) {
+    : VolumeStack(volumes, direction, resizeStrategy) {
   initializeOuterVolume(direction, strategy, logger);
-}
-
-Volume& CylinderVolumeStack::initialVolume(
-    const std::vector<Volume*>& volumes) {
-  if (volumes.empty()) {
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires at least one volume");
-  }
-  return *volumes.front();
 }
 
 void CylinderVolumeStack::initializeOuterVolume(
@@ -1077,17 +1065,6 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
         "CylinderVolumeStack requires all volumes to have a bevel angle of "
         "0");
   }
-}
-
-std::shared_ptr<Volume> CylinderVolumeStack::addGapVolume(
-    const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds) {
-  auto gapVolume = std::make_shared<Volume>(transform, bounds);
-  m_gaps.push_back(gapVolume);
-  return gapVolume;
-}
-
-const std::vector<std::shared_ptr<Volume>>& CylinderVolumeStack::gaps() const {
-  return m_gaps;
 }
 
 }  // namespace Acts
