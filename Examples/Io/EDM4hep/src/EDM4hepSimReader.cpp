@@ -56,6 +56,7 @@ EDM4hepSimReader::EDM4hepSimReader(const Config& config,
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
+  m_outputSimVertices.initialize(m_cfg.outputSimVertices);
 
   m_cfg.trackingGeometry->visitSurfaces([&](const auto* surface) {
     const auto* detElement = dynamic_cast<const Acts::DD4hepDetectorElement*>(
@@ -345,8 +346,16 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
         time = pos4[Acts::eFreeTime];
         // The current parent particle decays (eventually), and this daughter's
         // vertex should have this one an incoming!
+        auto daughterIt = edm4hepParticleMap.find(daughter.getObjectID().index);
+        if (daughterIt == edm4hepParticleMap.end()) {
+          ACTS_ERROR("Daughter " << daughter.getObjectID().index
+                                 << " not found in particle map");
+          continue;
+        }
+        const auto& daughterParticle =
+            unorderedParticlesInitial.at(daughterIt->second);
         SimVertex& daughterVertex = maybeAddVertex(pos4);
-        setVertexId(daughterVertex, particleSimulated);
+        setVertexId(daughterVertex, daughterParticle);
         break;
       }
     }
