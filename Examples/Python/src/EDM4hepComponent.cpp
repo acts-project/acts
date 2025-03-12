@@ -30,8 +30,8 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::EDM4hepSimReader, m, "EDM4hepSimReader", inputPath,
       inputParticles, inputSimHits, outputParticlesGenerator,
-      outputParticlesSimulation, outputSimHits, graphvizOutput, dd4hepDetector,
-      trackingGeometry, sortSimHitsInTime);
+      outputParticlesSimulation, outputSimHits, outputSimVertices,
+      graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::EDM4hepSimHitWriter, m, "EDM4hepSimHitWriter", inputSimHits,

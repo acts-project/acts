@@ -1,6 +1,7 @@
 import os
 import multiprocessing
 from pathlib import Path
+import math
 
 import pytest
 
@@ -293,6 +294,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
                 outputParticlesGenerator="particles_generated",
                 outputParticlesSimulation="particles_simulated",
                 outputSimHits="simhits",
+                outputSimVertices="simvertices",
                 dd4hepDetector=detector,
                 trackingGeometry=trackingGeometry,
             )
