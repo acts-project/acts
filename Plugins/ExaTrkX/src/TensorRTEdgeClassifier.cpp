@@ -93,6 +93,9 @@ TensorRTEdgeClassifier::TensorRTEdgeClassifier(
     throw std::runtime_error("Failed to deserialize CUDA engine");
   }
 
+  ACTS_INFO("Device memory required by TRT context: "
+            << m_engine->getDeviceMemorySizeV2() * 1e-9 << " GB");
+
   for (auto i = 0ul; i < m_cfg.numExecutionContexts; ++i) {
     ACTS_DEBUG("Create execution context " << i);
     m_contexts.emplace_back(m_engine->createExecutionContext());
