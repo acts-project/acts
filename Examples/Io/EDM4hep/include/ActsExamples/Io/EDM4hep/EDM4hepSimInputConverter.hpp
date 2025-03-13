@@ -15,7 +15,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
 #include <string>
@@ -33,11 +33,11 @@ class DD4hepDetector;
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepSimReader final : public IReader {
+class EDM4hepSimInputConverter final : public IAlgorithm {
  public:
   struct Config {
     /// Where to read input file from.
-    std::string inputPath;
+    std::string inputFrame;
     /// Name of the particle collection in EDM4hep.
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
@@ -71,19 +71,14 @@ class EDM4hepSimReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimReader(const Config& config, Acts::Logging::Level level);
+  EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final;
-
-  /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final;
-
-  /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
+ private:
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
                        std::vector<SimParticle>& particles,
                        ParentRelationship& parentRelationship,
@@ -94,7 +89,6 @@ class EDM4hepSimReader final : public IReader {
   static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
                                 std::vector<SimParticle>::iterator end);
 
- private:
   const Acts::Logger& logger() const { return *m_logger; }
 
   Config m_cfg;
@@ -103,9 +97,7 @@ class EDM4hepSimReader final : public IReader {
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
 
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-
-  Acts::PodioUtil::ROOTReader& reader();
+  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};
