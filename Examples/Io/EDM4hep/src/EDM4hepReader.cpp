@@ -30,6 +30,10 @@ class EDM4hepReaderImpl {
     if (m_cfg.outputFrame.empty()) {
       throw std::invalid_argument("Output frame name is not set");
     }
+    if (m_cfg.category.empty()) {
+      throw std::invalid_argument("Category name is not set");
+    }
+
     m_frameWriteHandle.initialize(m_cfg.outputFrame);
   }
 
@@ -61,7 +65,7 @@ EDM4hepReader::~EDM4hepReader() = default;
 ProcessCode EDM4hepReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading EDM4hep inputs");
   podio::Frame frame =
-      m_impl->reader().readEntry("events", context.eventNumber);
+      m_impl->reader().readEntry(m_impl->m_cfg.category, context.eventNumber);
   m_impl->m_frameWriteHandle(context, std::move(frame));
 
   return ProcessCode::SUCCESS;
