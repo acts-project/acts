@@ -90,6 +90,7 @@ class EigenStepper {
     /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();

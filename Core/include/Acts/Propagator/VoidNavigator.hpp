@@ -20,6 +20,8 @@ namespace Acts {
 class TrackingVolume;
 class IVolumeMaterial;
 class Surface;
+class TrackingVolume;
+class IVolumeMaterial;
 
 /// @brief A navigator that does nothing
 ///

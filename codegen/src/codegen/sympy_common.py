@@ -12,6 +12,19 @@ from sympy.printing.cxx import CXX17CodePrinter
 NamedExpr = namedtuple("NamedExpr", ["name", "expr"])
 
 
+def make_vector(name, dim, **kwargs):
+    return Matrix([[Symbol(f"{name}[{i}]", **kwargs)] for i in range(dim)])
+
+
+def make_matrix(name, rows, cols, **kwargs):
+    return Matrix(
+        [
+            [Symbol(f"{name}[{i},{j}]", **kwargs) for j in range(cols)]
+            for i in range(rows)
+        ]
+    )
+
+
 def name_expr(name, expr):
     if hasattr(expr, "shape"):
         s = sym.MatrixSymbol(name, *expr.shape)
@@ -149,7 +162,10 @@ def order_exprs_by_input(name_exprs):
             symbols_order = [order.get(s, None) for s in expr.free_symbols]
             if None in symbols_order:
                 continue
-            order[name] = max(symbols_order) + 1
+            if len(symbols_order) == 0:
+                order[name] = 0
+            else:
+                order[name] = max(symbols_order) + 1
 
     result = name_exprs
     result = sorted(result, key=lambda n_e: len(n_e[1].args))

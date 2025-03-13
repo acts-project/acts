@@ -16,7 +16,6 @@
 #include <array>
 #include <cstddef>
 #include <functional>
-#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <string>

@@ -13,7 +13,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
 
 namespace Acts {
 
@@ -22,6 +21,7 @@ void detail::boundToBoundTransportJacobian(
     const FreeVector& freeParameters,
     const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   const Vector3 position = freeParameters.segment<3>(eFreePos0);
@@ -31,7 +31,7 @@ void detail::boundToBoundTransportJacobian(
   const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, position, direction);
   // Calculate the jacobian from free to bound at the final surface
-  FreeToBoundMatrix freeToBoundJacobian =
+  freeToBoundJacobian =
       surface.freeToBoundJacobian(geoContext, position, direction);
   // https://acts.readthedocs.io/en/latest/white_papers/correction-for-transport-jacobian.html
   // Calculate the full jacobian from the local/bound parameters at the start
@@ -50,20 +50,22 @@ BoundMatrix detail::boundToBoundTransportJacobian(
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives, const Surface& surface) {
   BoundMatrix result;
+  FreeToBoundMatrix freeToBoundJacobian;
   detail::boundToBoundTransportJacobian(
       geoContext, surface, freeParameters, boundToFreeJacobian,
-      freeTransportJacobian, freeToPathDerivatives, result);
+      freeTransportJacobian, freeToBoundJacobian, freeToPathDerivatives,
+      result);
   return result;
 }
 
 void detail::boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
+    FreeToBoundMatrix& freeToBoundJacobian,
     const FreeVector& freeToPathDerivatives,
     BoundMatrix& fullTransportJacobian) {
   // Calculate the jacobian from global to local at the curvilinear surface
-  FreeToBoundMatrix freeToBoundJacobian =
-      CurvilinearSurface(direction).freeToBoundJacobian();
+  freeToBoundJacobian = CurvilinearSurface(direction).freeToBoundJacobian();
 
   // Update the jacobian to include the derivative of the path length at the
   // curvilinear surface w.r.t. the free parameters

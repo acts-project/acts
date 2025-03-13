@@ -93,6 +93,7 @@ class StraightLineStepper {
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
+    std::optional<FreeMatrix> additionalFreeCovariance = std::nullopt;
 
     /// accummulated path length state
     double pathAccumulated = 0.;

@@ -17,7 +17,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/VoidNavigator.hpp"
@@ -220,9 +219,10 @@ void test_bound_to_curvilinear(const std::vector<TestData> &test_data_list,
 
       // compute Jacobian for bound to curvilinear covariance transformation
       Acts::BoundMatrix b2c;
+      FreeToBoundMatrix freeToBoundJacobian;
       Acts::detail::boundToCurvilinearTransportJacobian(
           direction, surface->boundToFreeJacobian(geoCtx, position, direction),
-          Acts::FreeMatrix::Identity(),
+          Acts::FreeMatrix::Identity(), freeToBoundJacobian,
           computeFreeToPathDerivatives(
               direction, params.parameters()[eBoundQOverP],
               local_bfield.value(), ParticleHypothesis::pion()),
