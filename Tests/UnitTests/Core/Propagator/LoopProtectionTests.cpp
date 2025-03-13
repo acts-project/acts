@@ -190,8 +190,8 @@ BOOST_DATA_TEST_CASE(
 
   // define start parameters
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
-      Vector4(0, 0, 0, 42), makeDirectionFromPhiTheta(phi, theta), q / p,
-      std::nullopt, ParticleHypothesis::pion());
+      Vector4(0, 0, 0, 42), phi, theta, q / p, std::nullopt,
+      ParticleHypothesis::pion());
 
   using PropagatorOptions = EigenPropagator::Options<ActorList<>>;
   PropagatorOptions options(tgContext, mfContext);

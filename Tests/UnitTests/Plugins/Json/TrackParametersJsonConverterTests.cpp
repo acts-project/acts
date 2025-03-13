@@ -53,9 +53,8 @@ BOOST_AUTO_TEST_CASE(TrackParametersJsonIO) {
 
   // Curvilinear track parameters conversion
   Acts::BoundTrackParameters ctp =
-      Acts::BoundTrackParameters::createCurvilinear(
-          position, Acts::makeDirectionFromPhiTheta(phi, theta), qOverP,
-          boundCov, particle);
+      Acts::BoundTrackParameters::createCurvilinear(position, phi, theta,
+                                                    qOverP, boundCov, particle);
 
   nlohmann::json ctpJson = ctp;
 

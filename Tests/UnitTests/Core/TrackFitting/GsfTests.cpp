@@ -122,8 +122,7 @@ auto makeParameters() {
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   Acts::BoundTrackParameters cp = Acts::BoundTrackParameters::createCurvilinear(
-      mPos4, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree), 1_e / 1_GeV,
-      cov, electron);
+      mPos4, 0_degree, 90_degree, 1_e / 1_GeV, cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();

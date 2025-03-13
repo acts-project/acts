@@ -214,28 +214,22 @@ struct Fixture {
     Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
         Acts::BoundTrackParameters::createCurvilinear(
-            mStartPos0, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree),
-            1_e / 1_GeV, cov, pion),
+            mStartPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov, pion),
         Acts::BoundTrackParameters::createCurvilinear(
-            mStartPos1, Acts::makeDirectionFromPhiTheta(-1_degree, 91_degree),
-            1_e / 1_GeV, cov, pion),
+            mStartPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov, pion),
         Acts::BoundTrackParameters::createCurvilinear(
-            mStartPos2, Acts::makeDirectionFromPhiTheta(1_degree, 89_degree),
-            -1_e / 1_GeV, cov, pion),
+            mStartPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov, pion),
     };
     Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
     Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
     Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
     endParameters = {
         Acts::BoundTrackParameters::createCurvilinear(
-            mEndPos0, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree),
-            1_e / 1_GeV, cov * 100, pion),
+            mEndPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov * 100, pion),
         Acts::BoundTrackParameters::createCurvilinear(
-            mEndPos1, Acts::makeDirectionFromPhiTheta(-1_degree, 91_degree),
-            1_e / 1_GeV, cov * 100, pion),
+            mEndPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov * 100, pion),
         Acts::BoundTrackParameters::createCurvilinear(
-            mEndPos2, Acts::makeDirectionFromPhiTheta(1_degree, 89_degree),
-            -1_e / 1_GeV, cov * 100, pion),
+            mEndPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov * 100, pion),
     };
 
     // create some measurements

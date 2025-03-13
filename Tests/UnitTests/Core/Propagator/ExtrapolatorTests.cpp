@@ -102,8 +102,7 @@ BOOST_DATA_TEST_CASE(
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p, cov,
-      ParticleHypothesis::pion());
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   EigenPropagatorType::Options<> options(tgContext, mfContext);
   options.stepping.maxStepSize = 10_cm;
@@ -145,8 +144,7 @@ BOOST_DATA_TEST_CASE(
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p, cov,
-      ParticleHypothesis::pion());
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -212,8 +210,7 @@ BOOST_DATA_TEST_CASE(
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p, cov,
-      ParticleHypothesis::pion());
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(
       tgContext, mfContext);
@@ -260,8 +257,7 @@ BOOST_DATA_TEST_CASE(
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p, cov,
-      ParticleHypothesis::pion());
+      Vector4::Zero(), phi, theta, q / p, cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   EigenPropagatorType::Options<ActorList<MaterialInteractor>> options(

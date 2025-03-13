@@ -128,12 +128,10 @@ class TrackEstimator {
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
     BoundTrackParameters ipParams = BoundTrackParameters::createCurvilinear(
-        ip, makeDirectionFromPhiTheta(phi, theta), qOverP, std::nullopt,
-        particle);
+        ip, phi, theta, qOverP, std::nullopt, particle);
     BoundTrackParameters firstLayerParams =
-        BoundTrackParameters::createCurvilinear(
-            ip, makeDirectionFromPhiTheta(phi, theta), qOverP, std::nullopt,
-            particle);
+        BoundTrackParameters::createCurvilinear(ip, phi, theta, qOverP,
+                                                std::nullopt, particle);
 
     return {ipParams, firstLayerParams};
   }
@@ -298,9 +296,9 @@ std::vector<SourceLink> createSourceLinks(
   std::vector<SourceLink> sourceLinks;
   for (double phi : truePhis) {
     BoundTrackParameters trackParameters =
-        BoundTrackParameters::createCurvilinear(
-            trueVertex, makeDirectionFromPhiTheta(phi, trueTheta), trueQOverP,
-            std::nullopt, ParticleHypothesis::electron());
+        BoundTrackParameters::createCurvilinear(trueVertex, phi, trueTheta,
+                                                trueQOverP, std::nullopt,
+                                                ParticleHypothesis::electron());
 
     auto intersections = intersectionFinder(geoCtx, trackParameters);
 

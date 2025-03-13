@@ -94,8 +94,7 @@ Acts::BoundTrackParameters makeParameters(
   // define a track in the transverse plane along x
   const Acts::Vector4 mPos4(x, y, z, w);
   return Acts::BoundTrackParameters::createCurvilinear(
-      mPos4, Acts::makeDirectionFromPhiTheta(phi, theta), q / p, cov,
-      Acts::ParticleHypothesis::pion());
+      mPos4, phi, theta, q / p, cov, Acts::ParticleHypothesis::pion());
 }
 
 static std::vector<Acts::SourceLink> prepareSourceLinks(

@@ -745,8 +745,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 
   // Set initial parameters for the particle track
   BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(0_degree, 90_degree),
-      1_e / 5_GeV, Covariance::Identity(), ParticleHypothesis::pion());
+      Vector4::Zero(), 0_degree, 90_degree, 1_e / 5_GeV, Covariance::Identity(),
+      ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
@@ -978,8 +978,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
 
   // Set initial parameters for the particle track
   BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
-      Vector4::Zero(), makeDirectionFromPhiTheta(0_degree, 90_degree),
-      1_e / 1_GeV, Covariance::Identity(), ParticleHypothesis::pion());
+      Vector4::Zero(), 0_degree, 90_degree, 1_e / 1_GeV, Covariance::Identity(),
+      ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;

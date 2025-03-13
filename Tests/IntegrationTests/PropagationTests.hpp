@@ -43,8 +43,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinear(double phi,
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
   return BoundTrackParameters::createCurvilinear(
-      pos4, makeDirectionFromPhiTheta(phi, theta),
-      particleHypothesis.qOverP(absMom, charge), std::nullopt,
+      pos4, phi, theta, particleHypothesis.qOverP(absMom, charge), std::nullopt,
       particleHypothesis);
 }
 
@@ -81,8 +80,8 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearWithCovariance(
   Vector4 pos4 = Vector4::Zero();
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
   return BoundTrackParameters::createCurvilinear(
-      pos4, makeDirectionFromPhiTheta(phi, theta),
-      particleHypothesis.qOverP(absMom, charge), cov, particleHypothesis);
+      pos4, phi, theta, particleHypothesis.qOverP(absMom, charge), cov,
+      particleHypothesis);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -99,8 +98,7 @@ inline Acts::BoundTrackParameters makeParametersCurvilinearNeutral(
 
   Vector4 pos4 = Vector4::Zero();
   return BoundTrackParameters::createCurvilinear(
-      pos4, makeDirectionFromPhiTheta(phi, theta), 1 / absMom, std::nullopt,
-      ParticleHypothesis::pion0());
+      pos4, phi, theta, 1 / absMom, std::nullopt, ParticleHypothesis::pion0());
 }
 
 // helpers to compare track parameters

@@ -92,6 +92,26 @@ class GenericBoundTrackParameters {
         std::move(cov), std::move(particleHypothesis));
   }
 
+  /// Construct from four-position, angles, and qOverP.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param phi Transverse track direction angle
+  /// @param theta Longitudinal track direction angle
+  /// @param qOverP Charge over momentum
+  /// @param cov Curvilinear bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  static GenericBoundTrackParameters createCurvilinear(
+      const Vector4& pos4, double phi, double theta, double qOverP,
+      std::optional<CovarianceMatrix> cov,
+      ParticleHypothesis particleHypothesis) {
+    return GenericBoundTrackParameters(
+        CurvilinearSurface(pos4.segment<3>(ePos0),
+                           makeDirectionFromPhiTheta(phi, theta))
+            .surface(),
+        transformFreeToCurvilinearParameters(pos4[eTime], phi, theta, qOverP),
+        std::move(cov), std::move(particleHypothesis));
+  }
+
   /// Construct from a parameters vector on the surface and particle charge.
   ///
   /// @param surface Reference surface the parameters are defined on
