@@ -224,8 +224,9 @@ BoundTrackParameters makeParameters() {
   // define a track in the transverse plane along x
   Vector4 mPos4(-1_m, loc0, loc1, t);
 
-  return BoundTrackParameters::createCurvilinear(mPos4, phi, theta, qOverP, cov,
-                                                 ParticleHypothesis::pion());
+  return BoundTrackParameters::createCurvilinear(
+      mPos4, makeDirectionFromPhiTheta(phi, theta), qOverP, cov,
+      ParticleHypothesis::pion());
 }
 
 // detector resolutions
