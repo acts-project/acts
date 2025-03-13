@@ -15,19 +15,35 @@
 #include <podio/CollectionBase.h>
 
 namespace ActsExamples {
+namespace detail {
+class EDM4hepWriterImpl {
+ public:
+  EDM4hepWriterImpl(const EDM4hepWriter::Config& config, EDM4hepWriter& parent)
+      : m_cfg(config),
+        m_inputPodioFrame(&parent, "InputPodioFrame"),
+        m_writer(config.outputPath) {
+    if (m_cfg.category.empty()) {
+      throw std::invalid_argument("Category name is not set");
+    }
+    if (m_cfg.inputFrame.empty()) {
+      throw std::invalid_argument("Input frame name is not set");
+    }
+    m_inputPodioFrame.initialize(m_cfg.inputFrame);
+  }
+
+  EDM4hepWriter::Config m_cfg;
+
+  ConsumeDataHandle<podio::Frame> m_inputPodioFrame;
+
+  std::mutex m_writeMutex;
+  Acts::PodioUtil::ROOTWriter m_writer;
+};
+}  // namespace detail
 
 EDM4hepWriter::EDM4hepWriter(const Config& config, Acts::Logging::Level level)
-    : m_cfg(config),
-      m_logger(Acts::getDefaultLogger("EDM4hepWriter", level)),
-      m_inputPodioFrame(this, "InputPodioFrame"),
-      m_writer(config.outputPath) {
-  ACTS_VERBOSE("Created output file " << config.outputPath);
-
-  m_inputPodioFrame.initialize(config.inputPodioFrame);
-
-  for (auto& converter : config.converters) {
-    converter->initialize(*this);
-  }
+    : m_logger(Acts::getDefaultLogger("EDM4hepWriter", level)),
+      m_impl(std::make_unique<detail::EDM4hepWriterImpl>(config, *this)) {
+  ACTS_DEBUG("Created output file " << config.outputPath);
 }
 
 std::string EDM4hepWriter::name() const {
@@ -35,30 +51,24 @@ std::string EDM4hepWriter::name() const {
 }
 
 ProcessCode EDM4hepWriter::write(const AlgorithmContext& ctx) {
-  podio::Frame frame = [&]() -> podio::Frame {
-    // If we are configured to read a podio::Frame from the event store, do so
-    if (m_inputPodioFrame.isInitialized()) {
-      return m_inputPodioFrame(ctx);
-    } else {
-      return podio::Frame();
-    }
-  }();
+  podio::Frame frame = m_impl->m_inputPodioFrame(ctx);
 
-  // Invoke converters
-  for (auto& converter : m_cfg.converters) {
-    converter->convert(ctx, frame);
-  }
-
-  std::lock_guard guard(m_writeMutex);
-  m_writer.writeFrame(frame, "events");
+  std::lock_guard guard(m_impl->m_writeMutex);
+  m_impl->m_writer.writeFrame(frame, m_impl->m_cfg.category);
 
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode EDM4hepWriter::finalize() {
-  m_writer.finish();
+  m_impl->m_writer.finish();
 
   return ProcessCode::SUCCESS;
+}
+
+EDM4hepWriter::~EDM4hepWriter() = default;
+
+const EDM4hepWriter::Config& EDM4hepWriter::config() const {
+  return m_impl->m_cfg;
 }
 
 }  // namespace ActsExamples
