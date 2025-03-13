@@ -157,18 +157,17 @@ struct EigenStepperDefaultExtension {
     /// different parts. The first one is given by the upper left 3x3 matrix
     /// that are calculated by the derivatives dF/dT (called dFdT) and dG/dT
     /// (calls dGdT). The second is given by the top 3 lines of the rightmost
-    /// column. This is calculated by dFdL and dGdL. The remaining non-zero
-    /// term is calculated directly. The naming of the variables is explained
-    /// in eq. 11 and are directly related to the initial problem in eq. 7.
+    /// column. This is calculated by dFdL and dGdL. The remaining non-zero term
+    /// is calculated directly. The naming of the variables is explained in eq.
+    /// 11 and are directly related to the initial problem in eq. 7.
     /// The evaluation is based by propagating the parameters T and lambda as
     /// given in eq. 16 and evaluating the derivations for matrix A.
     /// @note The translation for u_{n+1} in eq. 7 is in this case a
-    /// 3-dimensional vector without a dependency of Lambda or lambda neither
-    /// in u_n nor in u_n'. The second and fourth eq. in eq. 14 have the
-    /// constant offset matrices h * Id and Id respectively. This involves
-    /// that the constant offset does not exist for rectangular matrix dGdu'
-    /// (due to the missing Lambda part) and only exists for dFdu' in
-    /// dlambda/dlambda.
+    /// 3-dimensional vector without a dependency of Lambda or lambda neither in
+    /// u_n nor in u_n'. The second and fourth eq. in eq. 14 have the constant
+    /// offset matrices h * Id and Id respectively. This involves that the
+    /// constant offset does not exist for rectangular matrix dGdu' (due to the
+    /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
 
     auto m = state.particleHypothesis.mass();
     auto& sd = state.stepData;
