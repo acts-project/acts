@@ -50,6 +50,9 @@ EDM4hepSimReader::EDM4hepSimReader(const Config& config,
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing output collection sim hits");
   }
+  if (m_cfg.outputSimVertices.empty()) {
+    throw std::invalid_argument("Missing output collection sim vertices");
+  }
 
   m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
