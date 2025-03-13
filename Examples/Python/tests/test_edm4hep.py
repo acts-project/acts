@@ -2,7 +2,8 @@ import os
 import multiprocessing
 from pathlib import Path
 import math
-
+import tempfile
+import shutil
 import pytest
 
 from helpers import (
@@ -255,24 +256,45 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     ddsim.run()
 
 
+# Session scoped fixture that uses a temp folder
+@pytest.fixture(scope="session")
+def ddsim_input_session():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        odd_xml_file = str(
+            getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml"
+        )
+
+        # output_file = str(Path(tmp_dir) / "output_edm4hep.root")
+        output_file = str(Path.cwd() / "output_edm4hep.root")
+
+        if not os.path.exists(output_file):
+            # explicitly ask for "spawn" as CI failures were observed with "fork"
+            spawn_context = multiprocessing.get_context("spawn")
+            p = spawn_context.Process(
+                target=generate_input_test_edm4hep_simhit_reader,
+                args=(odd_xml_file, output_file),
+            )
+            p.start()
+            p.join()
+
+            assert os.path.exists(output_file)
+
+        yield output_file
+
+
+# Function scoped fixture that uses a temp folder
+@pytest.fixture(scope="function")
+def ddsim_input(ddsim_input_session, tmp_path):
+    tmp_file = str(tmp_path / "output_edm4hep.root")
+    shutil.copy(ddsim_input_session, tmp_file)
+    return tmp_file
+
+
 @pytest.mark.slow
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_simhit_particle_reader(tmp_path):
+def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
     from acts.examples.edm4hep import EDM4hepSimReader
-
-    tmp_file = str(tmp_path / "output_edm4hep.root")
-    odd_xml_file = str(getOpenDataDetectorDirectory() / "xml" / "OpenDataDetector.xml")
-
-    # explicitly ask for "spawn" as CI failures were observed with "fork"
-    spawn_context = multiprocessing.get_context("spawn")
-    p = spawn_context.Process(
-        target=generate_input_test_edm4hep_simhit_reader, args=(odd_xml_file, tmp_file)
-    )
-    p.start()
-    p.join()
-
-    assert os.path.exists(tmp_file)
 
     s = Sequencer(numThreads=1)
 
@@ -282,7 +304,7 @@ def test_edm4hep_simhit_particle_reader(tmp_path):
         s.addReader(
             EDM4hepSimReader(
                 level=acts.logging.INFO,
-                inputPath=tmp_file,
+                inputPath=ddsim_input,
                 inputSimHits=[
                     "PixelBarrelReadout",
                     "PixelEndcapReadout",
