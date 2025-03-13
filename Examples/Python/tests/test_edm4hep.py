@@ -432,3 +432,21 @@ def test_edm4hep_tracks_reader(tmp_path):
     )
 
     s.run()
+
+
+def test_edm4hep_reader(ddsim_input):
+    from acts.examples.edm4hep import EDM4hepReader
+
+    s = Sequencer(numThreads=1)
+    s.addReader(
+        EDM4hepReader(
+            level=acts.logging.VERBOSE,
+            inputPath=ddsim_input,
+            outputFrame="frame",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg("frame", "check_alg", acts.logging.WARNING)
+    s.addAlgorithm(alg)
+
+    s.run()
