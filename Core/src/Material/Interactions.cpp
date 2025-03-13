@@ -9,6 +9,7 @@
 #include "Acts/Material/Interactions.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
