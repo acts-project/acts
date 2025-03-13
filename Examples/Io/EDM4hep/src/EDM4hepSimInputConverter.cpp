@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepSimReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -35,10 +35,12 @@
 
 namespace ActsExamples {
 
-EDM4hepSimReader::EDM4hepSimReader(const Config& config,
-                                   Acts::Logging::Level level)
-    : m_cfg(config),
-      m_logger(Acts::getDefaultLogger("EDM4hepParticleReader", level)) {
+EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
+                                                   Acts::Logging::Level level)
+    : IAlgorithm("EDM4hepSimInputConverter", level), m_cfg(config) {
+  if (m_cfg.inputFrame.empty()) {
+    throw std::invalid_argument("Missing input frame");
+  }
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
         "Missing output collection generator particles");
@@ -53,8 +55,6 @@ EDM4hepSimReader::EDM4hepSimReader(const Config& config,
   if (m_cfg.outputSimVertices.empty()) {
     throw std::invalid_argument("Missing output collection sim vertices");
   }
-
-  m_eventsRange = std::make_pair(0, reader().getEntries("events"));
 
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
@@ -82,24 +82,6 @@ EDM4hepSimReader::EDM4hepSimReader(const Config& config,
   });
 }
 
-Acts::PodioUtil::ROOTReader& EDM4hepSimReader::reader() {
-  bool exists = false;
-  auto& reader = m_reader.local(exists);
-  if (!exists) {
-    reader.openFile(m_cfg.inputPath);
-  }
-
-  return reader;
-}
-
-std::string EDM4hepSimReader::name() const {
-  return "EDM4hepSimReader";
-}
-
-std::pair<std::size_t, std::size_t> EDM4hepSimReader::availableEvents() const {
-  return m_eventsRange;
-}
-
 namespace {
 std::string vid(unsigned int vtx) {
   return "V" + std::to_string(vtx);
@@ -120,9 +102,9 @@ std::string plabel(const SimParticle& particle) {
 
 }  // namespace
 
-void EDM4hepSimReader::graphviz(std::ostream& os,
-                                const std::vector<SimParticle>& particles,
-                                const ParentRelationship& parents) const {
+void EDM4hepSimInputConverter::graphviz(
+    std::ostream& os, const std::vector<SimParticle>& particles,
+    const ParentRelationship& parents) const {
   os << "digraph Event {\n";
 
   std::set<unsigned int> primaryVertices;
@@ -158,8 +140,9 @@ void EDM4hepSimReader::graphviz(std::ostream& os,
   os << "}";
 }
 
-ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
-  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
+ProcessCode EDM4hepSimInputConverter::execute(
+    const AlgorithmContext& ctx) const {
+  const auto& frame = m_inputFrame(ctx);
   const auto& mcParticleCollection =
       frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 
@@ -545,7 +528,7 @@ ProcessCode EDM4hepSimReader::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-void EDM4hepSimReader::processChildren(
+void EDM4hepSimInputConverter::processChildren(
     const edm4hep::MCParticle& inParticle, SimBarcode parentId,
     std::vector<SimParticle>& particles, ParentRelationship& parentRelationship,
     std::unordered_map<int, std::size_t>& particleMap,
@@ -619,7 +602,7 @@ void EDM4hepSimReader::processChildren(
   }
 }
 
-void EDM4hepSimReader::setSubParticleIds(
+void EDM4hepSimInputConverter::setSubParticleIds(
     std::vector<SimParticle>::iterator begin,
     std::vector<SimParticle>::iterator end) {
   std::vector<std::size_t> numByGeneration;
