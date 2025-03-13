@@ -450,3 +450,63 @@ def test_edm4hep_reader(ddsim_input):
     s.addAlgorithm(alg)
 
     s.run()
+
+
+def test_edm4hep_writer_copy(ddsim_input, tmp_path):
+    from acts.examples.edm4hep import EDM4hepWriter, EDM4hepReader
+
+    target_file = tmp_path / "rewritten_edm4hep.root"
+
+    s = Sequencer(numThreads=1)
+    s.addReader(
+        EDM4hepReader(
+            level=acts.logging.VERBOSE,
+            inputPath=ddsim_input,
+            outputFrame="myframe",
+            category="events",
+        )
+    )
+    s.addWriter(
+        EDM4hepWriter(
+            level=acts.logging.VERBOSE,
+            inputFrame="myframe",
+            outputPath=str(target_file),
+            category="myevents",
+        )
+    )
+
+    s.run()
+
+    assert target_file.exists()
+
+    from podio.root_io import Reader
+    import cppyy
+
+    reader = Reader(str(target_file))
+    assert "myevents" in reader.categories
+
+    exp_collections = set(
+        (
+            "ShortStripEndcapReadout",
+            "MCParticles",
+            "LongStripBarrelReadout",
+            "PixelEndcapReadout",
+            "HCalEndcapCollectionContributions",
+            "HCalEndcapCollection",
+            "HCalBarrelCollectionContributions",
+            "ECalBarrelCollectionContributions",
+            "LongStripEndcapReadout",
+            "EventHeader",
+            "ECalEndcapCollectionContributions",
+            "ShortStripBarrelReadout",
+            "PixelBarrelReadout",
+            "ECalEndcapCollection",
+            "HCalBarrelCollection",
+            "ECalBarrelCollection",
+        )
+    )
+
+    assert len(reader.get("myevents")) == 10
+    for frame in reader.get("myevents"):
+        assert set(frame.getAvailableCollections()) == exp_collections
+        break
