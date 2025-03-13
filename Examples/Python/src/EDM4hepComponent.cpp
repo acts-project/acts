@@ -14,7 +14,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepSimReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepWriter.hpp"
@@ -30,9 +30,9 @@ using namespace Acts;
 using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
-  ACTS_PYTHON_DECLARE_READER(
-      ActsExamples::EDM4hepSimReader, m, "EDM4hepSimReader", inputPath,
-      inputParticles, inputSimHits, outputParticlesGenerator,
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::EDM4hepSimInputConverter, m, "EDM4hepSimInputConverter",
+      inputFrame, inputParticles, inputSimHits, outputParticlesGenerator,
       outputParticlesSimulation, outputSimHits, outputSimVertices,
       graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
