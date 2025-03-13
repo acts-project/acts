@@ -202,7 +202,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
-  BoundTrackParameters start = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), std::nullopt,
       ParticleHypothesis::pion());
   // propagate to the cylinder surface
@@ -259,7 +259,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  BoundTrackParameters start = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), cov,
       ParticleHypothesis::pion());
   // propagate to a path length of 100 with two steps of 50
@@ -339,7 +339,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  BoundTrackParameters start = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), mom.normalized(), q / mom.norm(), cov,
       ParticleHypothesis::pion());
   // propagate to a final surface with one stop in between
@@ -381,9 +381,9 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   EigenStepper<> eigenStepper{field};
   VoidNavigator navigator{};
 
-  auto startSurface =
+  std::shared_ptr<PlaneSurface> startSurface =
       CurvilinearSurface(Vector3::Zero(), Vector3::UnitX()).planeSurface();
-  auto targetSurface =
+  std::shared_ptr<PlaneSurface> targetSurface =
       CurvilinearSurface(Vector3::UnitX() * 20_mm, Vector3::UnitX())
           .planeSurface();
 
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(BasicPropagatorInterface) {
   BoundTrackParameters startParameters{startSurface, startPars, std::nullopt,
                                        ParticleHypothesis::pion()};
 
-  BoundTrackParameters startCurv = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters startCurv = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), Vector3::UnitX(), 1. / 1_GeV, std::nullopt,
       ParticleHypothesis::pion());
 

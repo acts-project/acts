@@ -508,7 +508,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     auto parameters = BoundTrackParameters::create(
-        surface.getSharedPtr(), state.options.geoContext, pos4, dir, qOverP,
+        state.options.geoContext, surface.getSharedPtr(), pos4, dir, qOverP,
         std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
@@ -565,7 +565,7 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    BoundTrackParameters parameters = BoundTrackParameters::makeCurvilinear(
+    BoundTrackParameters parameters = BoundTrackParameters::createCurvilinear(
         pos4, dir, qOverP, std::move(covOpt), state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);

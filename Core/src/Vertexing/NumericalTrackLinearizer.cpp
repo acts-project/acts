@@ -117,7 +117,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
                                                    paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     BoundTrackParameters wiggledCurvilinearParams =
-        BoundTrackParameters::makeCurvilinear(
+        BoundTrackParameters::createCurvilinear(
             paramVecCopy.template head<eLinPosSize>(), wiggledDir,
             paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 

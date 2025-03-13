@@ -213,23 +213,29 @@ struct Fixture {
     Acts::Vector4 mStartPos1(-3_m, -15_mm, -15_mm, 2_ns);
     Acts::Vector4 mStartPos2(-3_m, 15_mm, 15_mm, -1_ns);
     startParameters = {
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mStartPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov, pion),
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mStartPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov, pion),
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mStartPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mStartPos0, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree),
+            1_e / 1_GeV, cov, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mStartPos1, Acts::makeDirectionFromPhiTheta(-1_degree, 91_degree),
+            1_e / 1_GeV, cov, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mStartPos2, Acts::makeDirectionFromPhiTheta(1_degree, 89_degree),
+            -1_e / 1_GeV, cov, pion),
     };
     Acts::Vector4 mEndPos0(3_m, 0.0, 0.0, 1_ns);
     Acts::Vector4 mEndPos1(3_m, -100_mm, -100_mm, 2_ns);
     Acts::Vector4 mEndPos2(3_m, 100_mm, 100_mm, -1_ns);
     endParameters = {
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mEndPos0, 0_degree, 90_degree, 1_e / 1_GeV, cov * 100, pion),
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mEndPos1, -1_degree, 91_degree, 1_e / 1_GeV, cov * 100, pion),
-        Acts::BoundTrackParameters::makeCurvilinear(
-            mEndPos2, 1_degree, 89_degree, -1_e / 1_GeV, cov * 100, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mEndPos0, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree),
+            1_e / 1_GeV, cov * 100, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mEndPos1, Acts::makeDirectionFromPhiTheta(-1_degree, 91_degree),
+            1_e / 1_GeV, cov * 100, pion),
+        Acts::BoundTrackParameters::createCurvilinear(
+            mEndPos2, Acts::makeDirectionFromPhiTheta(1_degree, 89_degree),
+            -1_e / 1_GeV, cov * 100, pion),
     };
 
     // create some measurements
@@ -318,9 +324,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   // this is the default option. set anyway for consistency
   options.propagatorPlainOptions.direction = Acts::Direction::Forward();
   // Construct a plane surface as the target surface
-  auto pSurface = Acts::CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.},
-                                           Acts::Vector3{1., 0., 0})
-                      .planeSurface();
+  std::shared_ptr<Acts::PlaneSurface> pSurface =
+      Acts::CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.},
+                               Acts::Vector3{1., 0., 0})
+          .planeSurface();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -380,9 +387,10 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   auto options = f.makeCkfOptions();
   options.propagatorPlainOptions.direction = Acts::Direction::Backward();
   // Construct a plane surface as the target surface
-  auto pSurface = Acts::CurvilinearSurface(Acts::Vector3{3_m, 0., 0.},
-                                           Acts::Vector3{1., 0., 0})
-                      .planeSurface();
+  std::shared_ptr<Acts::PlaneSurface> pSurface =
+      Acts::CurvilinearSurface(Acts::Vector3{3_m, 0., 0.},
+                               Acts::Vector3{1., 0., 0})
+          .planeSurface();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;

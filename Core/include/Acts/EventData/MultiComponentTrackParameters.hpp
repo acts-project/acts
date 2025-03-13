@@ -70,12 +70,10 @@ class MultiComponentBoundTrackParameters {
                                        double, CovarianceMatrix>;
 
   /// We need this helper function in order to construct the base class properly
-  static MultiComponentBoundTrackParameters makeCurvilinear(
+  static MultiComponentBoundTrackParameters createCurvilinear(
+      const GeometryContext& geoCtx,
       const std::vector<ConstructionTuple>& curvi,
       ParticleHypothesis particleHypothesis) {
-    // TODO where to get a geometry context here
-    Acts::GeometryContext gctx{};
-
     // Construct and average surface
     Acts::Vector3 avgPos = Acts::Vector3::Zero();
     Acts::Vector3 avgDir = Acts::Vector3::Zero();
@@ -84,14 +82,15 @@ class MultiComponentBoundTrackParameters {
       avgDir += w * dir;
     }
 
-    auto s = CurvilinearSurface(avgPos, avgDir).planeSurface();
+    std::shared_ptr<PlaneSurface> s =
+        CurvilinearSurface(avgPos, avgDir).planeSurface();
 
     std::vector<std::tuple<double, ParametersVector, CovarianceMatrix>> bound;
     bound.reserve(curvi.size());
 
     // Project the position onto the surface, keep everything else as is
     for (const auto& [w, pos4, dir, qop, cov] : curvi) {
-      Vector3 newPos = s->intersect(gctx, pos4.template segment<3>(eFreePos0),
+      Vector3 newPos = s->intersect(geoCtx, pos4.template segment<3>(eFreePos0),
                                     dir, BoundaryTolerance::Infinite())
                            .closest()
                            .position();
@@ -101,7 +100,7 @@ class MultiComponentBoundTrackParameters {
 
       // Because of the projection this should never fail
       bv.template segment<2>(eBoundLoc0) =
-          *(s->globalToLocal(gctx, newPos, dir));
+          *(s->globalToLocal(geoCtx, newPos, dir));
 
       bound.emplace_back(w, bv, cov);
     }

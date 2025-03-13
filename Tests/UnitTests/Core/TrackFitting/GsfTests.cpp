@@ -121,8 +121,9 @@ auto makeParameters() {
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  Acts::BoundTrackParameters cp = Acts::BoundTrackParameters::makeCurvilinear(
-      mPos4, 0_degree, 90_degree, 1_e / 1_GeV, cov, electron);
+  Acts::BoundTrackParameters cp = Acts::BoundTrackParameters::createCurvilinear(
+      mPos4, Acts::makeDirectionFromPhiTheta(0_degree, 90_degree), 1_e / 1_GeV,
+      cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();
@@ -228,7 +229,8 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   // create a boundless target surface near the tracker exit
   Acts::Vector3 center(-3._m, 0., 0.);
   Acts::Vector3 normal(1., 0., 0.);
-  auto targetSurface = Acts::CurvilinearSurface(center, normal).planeSurface();
+  std::shared_ptr<PlaneSurface> targetSurface =
+      Acts::CurvilinearSurface(center, normal).planeSurface();
 
   options.referenceSurface = targetSurface.get();
 

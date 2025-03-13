@@ -38,11 +38,9 @@ class GenericFreeTrackParameters {
   using ParticleHypothesis = particle_hypothesis_t;
 
   /// Converts an unknown bound track parameter.
-  template <typename other_track_parameter_t>
+  template <FreeTrackParametersConcept other_track_parameter_t>
   static GenericFreeTrackParameters create(
       const other_track_parameter_t& other) {
-    static_assert(FreeTrackParametersConcept<other_track_parameter_t>);
-
     return GenericFreeTrackParameters(
         other.parameters(), other.particleHypothesis(), other.covariance());
   }

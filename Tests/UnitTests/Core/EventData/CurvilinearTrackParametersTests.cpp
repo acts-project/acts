@@ -92,14 +92,14 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
-  BoundTrackParameters params = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters params = BoundTrackParameters::createCurvilinear(
       pos4, dir, 1 / p, std::nullopt, ParticleHypothesis::pion0());
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = BoundTrackParameters::makeCurvilinear(pos4, dir, 1 / p, cov,
-                                                 ParticleHypothesis::pion0());
+  params = BoundTrackParameters::createCurvilinear(pos4, dir, 1 / p, cov,
+                                                   ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
@@ -113,14 +113,14 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
-  BoundTrackParameters params = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters params = BoundTrackParameters::createCurvilinear(
       pos4, dir, q / p, std::nullopt,
       ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, phi, theta, p, q, pos4, dir);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = BoundTrackParameters::makeCurvilinear(
+  params = BoundTrackParameters::createCurvilinear(
       pos4, dir, q / p, cov, ParticleHypothesis::pionLike(std::abs(q)));
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -138,14 +138,14 @@ BOOST_DATA_TEST_CASE(
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
   auto qOverP = particleHypothesis.qOverP(p, q);
 
-  BoundTrackParameters params = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters params = BoundTrackParameters::createCurvilinear(
       pos4, dir, qOverP, std::nullopt, particleHypothesis);
   checkParameters(params, phi, theta, p, q, pos4, dir);
   BOOST_CHECK(!params.covariance());
 
   // reassign w/ covariance
-  params = BoundTrackParameters::makeCurvilinear(pos4, dir, qOverP, cov,
-                                                 particleHypothesis);
+  params = BoundTrackParameters::createCurvilinear(pos4, dir, qOverP, cov,
+                                                   particleHypothesis);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }

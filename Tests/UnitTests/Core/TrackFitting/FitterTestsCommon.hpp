@@ -292,7 +292,7 @@ struct FitterTester {
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
     Acts::BoundTrackParameters startOuter =
-        Acts::BoundTrackParameters::makeCurvilinear(
+        Acts::BoundTrackParameters::createCurvilinear(
             posOuter, start.direction(), start.qOverP(), start.covariance(),
             Acts::ParticleHypothesis::pion());
 
@@ -347,7 +347,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker exit
     Acts::Vector3 center(3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
@@ -568,7 +568,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker entry
     Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();

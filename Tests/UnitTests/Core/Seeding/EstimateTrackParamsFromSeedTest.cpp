@@ -78,8 +78,9 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
   BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
-  return BoundTrackParameters::makeCurvilinear(
-      mPos4, phi, theta, q / p, cov, ParticleHypothesis::pionLike(std::abs(q)));
+  return BoundTrackParameters::createCurvilinear(
+      mPos4, makeDirectionFromPhiTheta(phi, theta), q / p, cov,
+      ParticleHypothesis::pionLike(std::abs(q)));
 }
 
 std::default_random_engine rng(42);

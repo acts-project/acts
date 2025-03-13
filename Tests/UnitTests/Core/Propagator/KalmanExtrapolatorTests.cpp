@@ -123,8 +123,9 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   // The start parameters
-  BoundTrackParameters start = BoundTrackParameters::makeCurvilinear(
-      Vector4(-3_m, 0, 0, 42_ns), 0_degree, 90_degree, 1_e / 1_GeV, cov,
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4(-3_m, 0, 0, 42_ns),
+      makeDirectionFromPhiTheta(0_degree, 90_degree), 1_e / 1_GeV, cov,
       ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList

@@ -108,7 +108,7 @@ struct BenchmarkStepper {
     if (withCov) {
       covOpt = cov;
     }
-    BoundTrackParameters pars = BoundTrackParameters::makeCurvilinear(
+    BoundTrackParameters pars = BoundTrackParameters::createCurvilinear(
         pos4, dir, +1 / ptInGeV, covOpt, ParticleHypothesis::pion());
 
     double totalPathLength = 0;

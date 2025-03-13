@@ -371,9 +371,9 @@ BoundTrackParameters createStartParameters(double pT, double phi, double theta,
                                            int charge) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  return BoundTrackParameters::makeCurvilinear(Vector4(0, 0, 0, 0), phi, theta,
-                                               q / p, std::nullopt,
-                                               ParticleHypothesis::pion());
+  return BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p,
+      std::nullopt, ParticleHypothesis::pion());
 }
 
 BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,

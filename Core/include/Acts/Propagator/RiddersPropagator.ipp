@@ -41,7 +41,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // use nominal parameters and Ridders covariance
     auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
     // replace the covariance of the nominal result w/ the ridders covariance
-    nominalResult.endParameters = BoundTrackParameters::makeCurvilinear(
+    nominalResult.endParameters = BoundTrackParameters::createCurvilinear(
         nominalFinalParameters.fourPosition(options.geoContext),
         nominalFinalParameters.direction(), nominalFinalParameters.qOverP(),
         std::move(cov), nominalFinalParameters.particleHypothesis());

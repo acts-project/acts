@@ -80,12 +80,12 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsLookupEstimation::execute(
       }
 
       // Hit stores the reference layer parameters
-      auto refLayerPars = Acts::BoundTrackParameters::makeCurvilinear(
+      auto refLayerPars = Acts::BoundTrackParameters::createCurvilinear(
           hit->fourPosition(), hit->direction(), particle->qOverP(),
           std::nullopt, particle->hypothesis());
 
       // Particle stores the IP parameters
-      auto ipPars = Acts::BoundTrackParameters::makeCurvilinear(
+      auto ipPars = Acts::BoundTrackParameters::createCurvilinear(
           particle->fourPosition(), particle->direction(), particle->qOverP(),
           std::nullopt, particle->hypothesis());
 

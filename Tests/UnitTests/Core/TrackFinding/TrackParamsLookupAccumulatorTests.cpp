@@ -76,20 +76,20 @@ BOOST_AUTO_TEST_CASE(Exceptions) {
   auto hypothesis1 = Acts::ParticleHypothesis::electron();
   auto hypothesis2 = Acts::ParticleHypothesis::muon();
 
-  auto pars1 = Acts::BoundTrackParameters::create(surf1, gctx, pos, dir, 1. / P,
+  auto pars1 = Acts::BoundTrackParameters::create(gctx, surf1, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis1)
                    .value();
 
-  auto pars2 = Acts::BoundTrackParameters::create(surf2, gctx, pos, dir, 1. / P,
+  auto pars2 = Acts::BoundTrackParameters::create(gctx, surf2, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis1)
                    .value();
 
-  auto pars3 = Acts::BoundTrackParameters::create(surf1, gctx, pos, dir, 1. / P,
+  auto pars3 = Acts::BoundTrackParameters::create(gctx, surf1, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis2)
                    .value();
 
   auto pars4 = Acts::BoundTrackParameters::create(
-                   surf1, gctx, pos, dir, -1. / P, std::nullopt, hypothesis2)
+                   gctx, surf1, pos, dir, -1. / P, std::nullopt, hypothesis2)
                    .value();
 
   // Get the point of the grid
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
       // Fill in each grid
       auto parsBound = Acts::BoundTrackParameters::create(
-                           surf, gctx, fourPositions.at(j), direction, 1. / P,
+                           gctx, surf, fourPositions.at(j), direction, 1. / P,
                            std::nullopt, hypothesis)
                            .value();
 

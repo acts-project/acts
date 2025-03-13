@@ -277,7 +277,7 @@ class Particle {
   }
 
   Acts::BoundTrackParameters curvilinearParameters() const {
-    return Acts::BoundTrackParameters::makeCurvilinear(
+    return Acts::BoundTrackParameters::createCurvilinear(
         fourPosition(), direction(), qOverP(), std::nullopt, hypothesis());
   }
 

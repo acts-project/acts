@@ -84,9 +84,10 @@ auto MultiEigenStepperLoop<E, R>::curvilinearState(
     accumulatedPathLength += state.components[i].weight * pl;
   }
 
-  return BoundState{MultiComponentBoundTrackParameters::makeCurvilinear(
-                        cmps, state.particleHypothesis),
-                    Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{
+      MultiComponentBoundTrackParameters::createCurvilinear(
+          state.options.geoContext, cmps, state.particleHypothesis),
+      Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R>

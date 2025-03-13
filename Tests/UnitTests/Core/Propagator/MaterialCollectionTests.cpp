@@ -382,8 +382,9 @@ BOOST_DATA_TEST_CASE(
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
-  BoundTrackParameters start = BoundTrackParameters::makeCurvilinear(
-      Vector4(0, 0, 0, 0), phi, theta, q / p, cov, ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), makeDirectionFromPhiTheta(phi, theta), q / p, cov,
+      ParticleHypothesis::pion());
 
   runTest(epropagator, start);
   runTest(slpropagator, start);

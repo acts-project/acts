@@ -316,9 +316,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   Propagator propagator({});
 
   BoundTrackParameters displacedParameters =
-      BoundTrackParameters::makeCurvilinear(Vector4::Zero(), Vector3::Zero(), 1,
-                                            std::nullopt,
-                                            ParticleHypothesis::pion());
+      BoundTrackParameters::createCurvilinear(Vector4::Zero(), Vector3::Zero(),
+                                              1, std::nullopt,
+                                              ParticleHypothesis::pion());
   {
     PropagatorOptions options(tgContext, {});
     options.direction = Acts::Direction::Backward();

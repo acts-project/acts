@@ -324,7 +324,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
   Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
   Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
-  BoundTrackParameters rStart = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters rStart = BoundTrackParameters::createCurvilinear(
       makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV, cov,
       ParticleHypothesis::pion());
 

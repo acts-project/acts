@@ -83,9 +83,9 @@ BoundState sympy::curvilinearState(BoundSquareMatrix& boundCovariance,
   pos4[ePos2] = freeParameters[eFreePos2];
   pos4[eTime] = freeParameters[eFreeTime];
   BoundTrackParameters curvilinearParams =
-      BoundTrackParameters::makeCurvilinear(pos4, direction,
-                                            freeParameters[eFreeQOverP],
-                                            std::move(cov), particleHypothesis);
+      BoundTrackParameters::createCurvilinear(
+          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
+          particleHypothesis);
   // Create the curvilinear state
   return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }

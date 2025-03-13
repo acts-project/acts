@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   EigenStepper<>::Options esOptions(tgContext, mfContext);
 
   // Test charged parameters without covariance matrix
-  BoundTrackParameters cp = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), dir, charge / absMom, std::nullopt,
       ParticleHypothesis::pion());
   EigenStepper<> es(bField);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
-  BoundTrackParameters ncp = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters ncp = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), dir, 1 / absMom, std::nullopt,
       ParticleHypothesis::pion0());
   esOptions = EigenStepper<>::Options(tgContext, mfContext);
@@ -190,9 +190,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = BoundTrackParameters::makeCurvilinear(makeVector4(pos, time), dir,
-                                              1 / absMom, cov,
-                                              ParticleHypothesis::pion0());
+  ncp = BoundTrackParameters::createCurvilinear(makeVector4(pos, time), dir,
+                                                1 / absMom, cov,
+                                                ParticleHypothesis::pion0());
   es.initialize(esState, ncp);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom = 8.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  BoundTrackParameters cp = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), dir, charge / absMom, cov,
       ParticleHypothesis::pion());
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
-  BoundTrackParameters cp2 = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
       ParticleHypothesis::pion());
   FreeVector freeParams = transformBoundToFreeParameters(
@@ -369,15 +369,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, 0.);
 
   /// Repeat with surface related methods
-  auto plane = CurvilinearSurface(pos, dir.normalized()).planeSurface();
+  std::shared_ptr<PlaneSurface> plane =
+      CurvilinearSurface(pos, dir.normalized()).planeSurface();
   auto bp = BoundTrackParameters::create(
-                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                tgContext, plane, makeVector4(pos, time), dir, charge / absMom,
                 cov, ParticleHypothesis::pion())
                 .value();
   es.initialize(esState, bp);
 
   // Test the intersection in the context of a surface
-  auto targetSurface =
+  std::shared_ptr<PlaneSurface> targetSurface =
       CurvilinearSurface(pos + navDir * 2. * dir, dir).planeSurface();
   es.updateSurfaceStatus(esState, *targetSurface, 0, navDir,
                          BoundaryTolerance::Infinite(), s_onSurfaceTolerance,
@@ -504,7 +505,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
-  const BoundTrackParameters sbtp = BoundTrackParameters::makeCurvilinear(
+  const BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), startDir, 1_e / 1_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
@@ -599,7 +600,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
-  const BoundTrackParameters sbtp = BoundTrackParameters::makeCurvilinear(
+  const BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), startDir, 1_e / 5_GeV, cov, ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
@@ -743,9 +744,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Navigator naviDet({det, true, true, true});
 
   // Set initial parameters for the particle track
-  BoundTrackParameters sbtp = BoundTrackParameters::makeCurvilinear(
-      Vector4::Zero(), 0_degree, 90_degree, 1_e / 5_GeV, Covariance::Identity(),
-      ParticleHypothesis::pion());
+  BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), makeDirectionFromPhiTheta(0_degree, 90_degree),
+      1_e / 5_GeV, Covariance::Identity(), ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;
@@ -976,9 +977,9 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Navigator naviVac({detector, true, true, true});
 
   // Set initial parameters for the particle track
-  BoundTrackParameters sbtp = BoundTrackParameters::makeCurvilinear(
-      Vector4::Zero(), 0_degree, 90_degree, 1_e / 1_GeV, Covariance::Identity(),
-      ParticleHypothesis::pion());
+  BoundTrackParameters sbtp = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), makeDirectionFromPhiTheta(0_degree, 90_degree),
+      1_e / 1_GeV, Covariance::Identity(), ParticleHypothesis::pion());
 
   using Stepper = EigenStepper<EigenStepperDenseExtension>;
   using Propagator = Acts::Propagator<Stepper, Navigator>;

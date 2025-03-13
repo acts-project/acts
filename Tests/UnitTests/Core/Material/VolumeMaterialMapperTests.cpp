@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  BoundTrackParameters sctp = BoundTrackParameters::makeCurvilinear(
+  BoundTrackParameters sctp = BoundTrackParameters::createCurvilinear(
       pos4, dir, 1 / 1_GeV, std::nullopt, ParticleHypothesis::pion0());
 
   MagneticFieldContext mc;
