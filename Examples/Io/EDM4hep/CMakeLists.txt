@@ -11,6 +11,7 @@ add_library(
     src/EDM4hepSimHitWriter.cpp
     src/EDM4hepUtil.cpp
     src/EDM4hepWriter.cpp
+    src/EDM4hepReader.cpp
 )
 target_include_directories(
     ActsExamplesIoEDM4hep
