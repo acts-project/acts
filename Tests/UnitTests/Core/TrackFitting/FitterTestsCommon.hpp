@@ -291,9 +291,10 @@ struct FitterTester {
     // create a track near the tracker exit for outward->inward filtering
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
-    Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.direction(), start.qOverP(), start.covariance(),
-        Acts::ParticleHypothesis::pion());
+    Acts::BoundTrackParameters startOuter =
+        Acts::BoundTrackParameters::createCurvilinear(
+            posOuter, start.direction(), start.qOverP(), start.covariance(),
+            Acts::ParticleHypothesis::pion());
 
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction = Acts::Direction::Backward();
@@ -346,7 +347,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker exit
     Acts::Vector3 center(3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
@@ -567,7 +568,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker entry
     Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();

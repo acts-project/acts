@@ -16,7 +16,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
@@ -82,8 +81,8 @@ BOOST_AUTO_TEST_SUITE(AtlasStepper)
 
 // test state construction from parameters w/o covariance
 BOOST_AUTO_TEST_CASE(ConstructState) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, std::nullopt,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, std::nullopt, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -110,8 +109,8 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 
 // test state construction from parameters w/ covariance
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -138,8 +137,8 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
 
 // test stepper getters for particle state
 BOOST_AUTO_TEST_CASE(Getters) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -158,8 +157,8 @@ BOOST_AUTO_TEST_CASE(Getters) {
 
 // test stepper update methods with bound state as input
 BOOST_AUTO_TEST_CASE(UpdateFromBound) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -176,9 +175,10 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   auto newAbsMom = 0.9 * absMom;
 
   // example surface and bound parameters at the updated position
-  auto plane = CurvilinearSurface(newPos, newUnitDir).planeSurface();
+  std::shared_ptr<PlaneSurface> plane =
+      CurvilinearSurface(newPos, newUnitDir).planeSurface();
   auto params =
-      BoundTrackParameters::create(plane, geoCtx, newPos4, newUnitDir,
+      BoundTrackParameters::create(geoCtx, plane, newPos4, newUnitDir,
                                    charge / absMom, cov, particleHypothesis)
           .value();
   FreeVector freeParams;
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
 // test stepper update methods with individual components as input
 BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
 
 // test building a bound state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildBound) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -244,7 +244,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
   stepper.initialize(state, cp);
 
   // example surface at the current state position
-  auto plane = CurvilinearSurface(pos, unitDir).planeSurface();
+  std::shared_ptr<PlaneSurface> plane =
+      CurvilinearSurface(pos, unitDir).planeSurface();
 
   auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane).value();
   // check parameters
@@ -262,8 +263,8 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
 
 // test building a curvilinear state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -289,8 +290,8 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 
 // test step method without covariance transport
 BOOST_AUTO_TEST_CASE(Step) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -327,8 +328,8 @@ BOOST_AUTO_TEST_CASE(Step) {
 
 // test step method with covariance transport
 BOOST_AUTO_TEST_CASE(StepWithCovariance) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -368,8 +369,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
 // test state reset method
 BOOST_AUTO_TEST_CASE(Reset) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -389,9 +390,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
   double newTime = 7.5;
   double newCharge = 1.;
   BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
-  cp = CurvilinearTrackParameters(makeVector4(newPos, newTime), unitDir,
-                                  newCharge / newAbsMom, newCov,
-                                  particleHypothesis);
+  cp = BoundTrackParameters::createCurvilinear(makeVector4(newPos, newTime),
+                                               unitDir, newCharge / newAbsMom,
+                                               newCov, particleHypothesis);
   FreeVector freeParams = transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
 
@@ -462,7 +463,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   Transform3 trafo = Transform3::Identity();
   auto disc = Surface::makeShared<DiscSurface>(trafo);
   auto boundDisc = BoundTrackParameters::create(
-                       disc, geoCtx, makeVector4(newPos, newTime), unitDir,
+                       geoCtx, disc, makeVector4(newPos, newTime), unitDir,
                        newCharge / newAbsMom, newCov, particleHypothesis)
                        .value();
 
@@ -485,7 +486,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
   auto boundPerigee =
       BoundTrackParameters::create(
-          perigee, geoCtx, makeVector4(newPos, newTime), unitDir,
+          geoCtx, perigee, makeVector4(newPos, newTime), unitDir,
           newCharge / newAbsMom, newCov, particleHypothesis)
           .value();
 
@@ -503,7 +504,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Use the same parameters as for previous Perigee surface
   auto straw = Surface::makeShared<StrawSurface>(trafo);
   auto boundStraw = BoundTrackParameters::create(
-                        straw, geoCtx, makeVector4(newPos, newTime), unitDir,
+                        geoCtx, straw, makeVector4(newPos, newTime), unitDir,
                         newCharge / newAbsMom, newCov, particleHypothesis)
                         .value();
 
@@ -522,8 +523,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
 }
 
 BOOST_AUTO_TEST_CASE(StepSize) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -543,8 +544,8 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 
 // test step size modification with target surfaces
 BOOST_AUTO_TEST_CASE(StepSizeSurface) {
-  CurvilinearTrackParameters cp(pos4, unitDir, charge / absMom, cov,
-                                particleHypothesis);
+  BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
+      pos4, unitDir, charge / absMom, cov, particleHypothesis);
 
   Stepper stepper(magneticField);
 
@@ -555,8 +556,9 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   stepper.initialize(state, cp);
 
   auto distance = 10_mm;
-  auto target = CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
-                    .planeSurface();
+  std::shared_ptr<PlaneSurface> target =
+      CurvilinearSurface(pos + navDir * distance * unitDir, unitDir)
+          .planeSurface();
 
   stepper.updateSurfaceStatus(
       state, *target, 0, navDir, BoundaryTolerance::Infinite(),
