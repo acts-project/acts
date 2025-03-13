@@ -45,7 +45,7 @@ export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 # activate dependencies if present
 if [[ -d "@ROOT_DIR@" ]]; then
   echo "Setting up root: ROOT_DIR=@ROOT_DIR@, ROOT_BINDIR=@ROOT_BINDIR@"
-  . @ROOT_BINDIR@/bin/thisroot.sh
+  . @ROOT_BINDIR@/thisroot.sh
 fi
 if [[ -d "@Geant4_DIR@" ]]; then
   . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
