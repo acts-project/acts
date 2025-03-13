@@ -8,9 +8,12 @@
 
 #include "Acts/Geometry/Blueprint.hpp"
 
+#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
@@ -20,7 +23,7 @@ namespace {
 const std::string s_rootName = "Root";
 }
 
-namespace Acts {
+namespace Acts::Experimental {
 
 Blueprint::Blueprint(const Config &config) : m_cfg(config) {}
 
@@ -85,10 +88,12 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   ACTS_DEBUG(prefix() << "have top volume: " << ss.str() << "\n"
                       << topVolume.transform().matrix());
 
-  std::shared_ptr<VolumeBounds> worldBounds;
+  std::unique_ptr<TrackingVolume> world;
+  static const std::string worldName = "World";
 
   if (const auto *cyl = dynamic_cast<const CylinderVolumeBounds *>(&bounds);
       cyl != nullptr) {
+    ACTS_VERBOSE(prefix() << "Expanding cylinder bounds");
     using enum CylinderVolumeBounds::BoundValues;
 
     // Make a copy that we'll modify
@@ -111,28 +116,80 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
         {eMaxR, newBounds->get(eMaxR) + rEnv[1]},
     });
 
-    worldBounds = std::move(newBounds);
+    ACTS_DEBUG(prefix() << "Applied envelope to cylinder: Z=" << zEnv[0]
+                        << ", Rmin=" << rEnv[0] << ", Rmax=" << rEnv[1]);
+
+    world = std::make_unique<TrackingVolume>(topVolume.transform(),
+                                             std::move(newBounds), worldName);
+
+    // Need one-sided portal shell that connects outwards to nullptr
+    SingleCylinderPortalShell worldShell{*world};
+    worldShell.applyToVolume();
 
   } else if (const auto *box =
                  dynamic_cast<const CuboidVolumeBounds *>(&bounds);
              box != nullptr) {
-    throw std::logic_error{"Not implemented"};
+    ACTS_VERBOSE(prefix() << "Expanding cuboid bounds");
+    // Make a copy that we'll modify
+    auto newBounds = std::make_shared<CuboidVolumeBounds>(*box);
+
+    // Get the current half lengths
+    double halfX = newBounds->get(CuboidVolumeBounds::eHalfLengthX);
+    double halfY = newBounds->get(CuboidVolumeBounds::eHalfLengthY);
+    double halfZ = newBounds->get(CuboidVolumeBounds::eHalfLengthZ);
+
+    // Apply envelope to each dimension
+    const auto &xEnv = m_cfg.envelope[AxisX];
+    const auto &yEnv = m_cfg.envelope[AxisY];
+    const auto &zEnv = m_cfg.envelope[AxisZ];
+
+    // Check if envelopes are symmetric for all dimensions
+    if (xEnv[0] != xEnv[1]) {
+      ACTS_ERROR(
+          prefix() << "Root node cuboid envelope for X must be symmetric");
+      throw std::logic_error(
+          "Root node cuboid envelope for X must be symmetric");
+    }
+
+    if (yEnv[0] != yEnv[1]) {
+      ACTS_ERROR(
+          prefix() << "Root node cuboid envelope for Y must be symmetric");
+      throw std::logic_error(
+          "Root node cuboid envelope for Y must be symmetric");
+    }
+
+    if (zEnv[0] != zEnv[1]) {
+      ACTS_ERROR(
+          prefix() << "Root node cuboid envelope for Z must be symmetric");
+      throw std::logic_error(
+          "Root node cuboid envelope for Z must be symmetric");
+    }
+
+    newBounds->set({
+        {CuboidVolumeBounds::eHalfLengthX, halfX + xEnv[0]},
+        {CuboidVolumeBounds::eHalfLengthY, halfY + yEnv[0]},
+        {CuboidVolumeBounds::eHalfLengthZ, halfZ + zEnv[0]},
+    });
+
+    ACTS_DEBUG(prefix() << "Applied envelope to cuboid: X=" << xEnv[0]
+                        << ", Y=" << yEnv[0] << ", Z=" << zEnv[0]);
+
+    world = std::make_unique<TrackingVolume>(topVolume.transform(),
+                                             std::move(newBounds), worldName);
+
+    // Need one-sided portal shell that connects outwards to nullptr
+    SingleCuboidPortalShell worldShell{*world};
+    worldShell.applyToVolume();
+
   } else {
     throw std::logic_error{"Unsupported volume bounds type"};
   }
 
-  ACTS_DEBUG(prefix() << "New root volume bounds are: " << *worldBounds);
+  ACTS_DEBUG(prefix() << "New root volume bounds are: "
+                      << world->volumeBounds());
 
-  auto world = std::make_unique<TrackingVolume>(
-      topVolume.transform(), std::move(worldBounds), "World");
-
-  // @TODO: This needs to become configurable
   world->setNavigationPolicy(
       options.defaultNavigationPolicyFactory->build(gctx, *world, logger));
-
-  // Need one-sided portal shell that connects outwards to nullptr
-  SingleCylinderPortalShell worldShell{*world};
-  worldShell.applyToVolume();
 
   auto &shell = child.connect(options, gctx, logger);
 
@@ -150,8 +207,64 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     names.insert(volume->volumeName());
   });
 
+  // @TODO: Refactor this to ignore already set IDs from inside the tree!
+  class Visitor : public TrackingGeometryMutableVisitor {
+   public:
+    explicit Visitor(const Logger &logger) : m_logger(&logger) {
+      ACTS_VERBOSE("Creating Gen3 geometry closure visitor");
+    }
+
+    const Logger &logger() const { return *m_logger; }
+
+    void visitVolume(TrackingVolume &volume) override {
+      ACTS_VERBOSE("Volume: " << volume.volumeName());
+
+      // Increment the volume ID for this volume
+      m_volumeID = GeometryIdentifier().withVolume(m_volumeID.volume() + 1);
+      // Reset portal id for this volume
+      m_iportal = 0;
+      // Reset sensitive id for this volume
+      m_isensitive = 0;
+
+      // assign the Volume ID to the volume itself
+      volume.assignGeometryId(m_volumeID);
+      ACTS_VERBOSE("~> Volume ID: " << m_volumeID);
+    }
+
+    void visitPortal(::Acts::Portal &portal) override {
+      // Increment the portal ID for this portal
+      m_iportal += 1;
+      // create the portal ID
+      auto portalID = GeometryIdentifier(m_volumeID).withBoundary(m_iportal);
+      ACTS_VERBOSE("~> Portal ID: " << portalID);
+
+      portal.surface().assignGeometryId(portalID);
+    }
+
+    void visitSurface(Surface &surface) override {
+      if (surface.geometryId() == GeometryIdentifier{}) {
+        // This surface has not been processed yet, assign volume ID
+
+        m_isensitive += 1;
+        auto surfaceID =
+            GeometryIdentifier(m_volumeID).withSensitive(m_isensitive);
+        ACTS_VERBOSE("~> Surface ID: " << surfaceID);
+
+        surface.assignGeometryId(surfaceID);
+      }
+    }
+
+    const Logger *m_logger{nullptr};
+    GeometryIdentifier m_volumeID;
+    GeometryIdentifier::Value m_iportal = 0;
+    GeometryIdentifier::Value m_isensitive = 0;
+  };
+
+  Visitor closureVisitor{logger};
+  world->apply(closureVisitor);
+
   return std::make_unique<TrackingGeometry>(
-      std::move(world), nullptr, m_cfg.geometryIdentifierHook, logger);
+      std::move(world), nullptr, GeometryIdentifierHook{}, logger, false);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

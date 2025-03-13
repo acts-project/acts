@@ -97,14 +97,14 @@ struct Detector {
   MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
   MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
   MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(2), resPixel},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(4), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(6), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(8), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2), resPixel},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(2), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(4), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(6), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(8), resStrip1},
   };
 
-  Detector(const Acts::GeometryContext& geoCtx)
+  explicit Detector(const Acts::GeometryContext& geoCtx)
       : store(geoCtx), geometry(store()) {}
 };
 
@@ -208,7 +208,7 @@ struct Fixture {
 
   std::unique_ptr<const Acts::Logger> logger;
 
-  Fixture(double bz)
+  explicit Fixture(double bz)
       : detector(geoCtx),
         ckf(makeConstantFieldPropagator(detector.geometry, bz)),
         logger(Acts::getDefaultLogger("CkfTest", Acts::Logging::INFO)) {

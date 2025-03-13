@@ -36,7 +36,7 @@ class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
   double zShift = 0.;
 
-  GlobalToZPhi(double shift) : zShift(shift) {}
+  explicit GlobalToZPhi(double shift) : zShift(shift) {}
 
   std::array<double, 2u> g2ZPhi(const Acts::Vector3& global) const {
     return {global.z() + zShift, Acts::VectorHelpers::phi(global)};
@@ -48,7 +48,7 @@ class LocalToZPhi final : public Acts::GridAccess::IBoundToGridLocal {
  public:
   double radius = 1.;
 
-  LocalToZPhi(double r) : radius(r) {}
+  explicit LocalToZPhi(double r) : radius(r) {}
 
   std::array<double, 2u> l2ZPhi(const Acts::Vector2& local) const {
     return {local[1u], local[0u] / radius};
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial_invalid_global2Grid_Unconnected) {
 // This test covers the locally indexed grid material in 1D
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material(), 0.0);  // vacuum
+  material.emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
   material.emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
   material.emplace_back(
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   const Acts::MaterialSlab& mg4 = ism.materialSlab(g4);
 
   BOOST_CHECK_EQUAL(mg0.material().X0(), 1.);
-  BOOST_CHECK(!mg1.material().isValid());
+  BOOST_CHECK(mg1.material().isVacuum());
   BOOST_CHECK_EQUAL(mg2.material().X0(), 11.);
   BOOST_CHECK_EQUAL(mg3.material().X0(), 11.);
   BOOST_CHECK_EQUAL(mg4.material().X0(), 21.);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   const Acts::MaterialSlab& ml4 = ism.materialSlab(l4);
 
   BOOST_CHECK_EQUAL(ml0.material().X0(), 1.);
-  BOOST_CHECK(!ml1.material().isValid());
+  BOOST_CHECK(ml1.material().isVacuum());
   BOOST_CHECK_EQUAL(ml2.material().X0(), 11.);
   BOOST_CHECK_EQUAL(ml3.material().X0(), 11.);
   BOOST_CHECK_EQUAL(ml4.material().X0(), 21.);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   const Acts::MaterialSlab& sml4 = ism.materialSlab(l4);
 
   BOOST_CHECK_EQUAL(sml0.thickness(), 2.);
-  BOOST_CHECK(!sml1.material().isValid());
+  BOOST_CHECK(sml1.material().isVacuum());
   BOOST_CHECK_EQUAL(sml2.thickness(), 4.);
   BOOST_CHECK_EQUAL(sml3.thickness(), 4.);
   BOOST_CHECK_EQUAL(sml4.thickness(), 6.);
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
 // This test covers the locally indexed grid material in 2D
 BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   std::vector<Acts::MaterialSlab> material;
-  material.emplace_back(Acts::Material(), 1.0);  // vacuum
+  material.emplace_back(Acts::Material::Vacuum(), 1.0);  // vacuum
   material.emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
   material.emplace_back(
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
 
   Acts::Vector3 g2(0.5, 0.5, -10.5);
   const Acts::MaterialSlab& mg2 = ism.materialSlab(g2);
-  BOOST_CHECK(!mg2.material().isValid());  // vacuum
+  BOOST_CHECK(mg2.material().isVacuum());  // vacuum
 
   Acts::Vector3 g3(0.5, 0.5,
                    -9.5);  // should be material 3, same phi but different z
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
 BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   auto material = std::make_shared<std::vector<Acts::MaterialSlab>>();
 
-  material->emplace_back(Acts::Material(), 0.0);  // vacuum
+  material->emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
   material->emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
   material->emplace_back(
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
   const Acts::MaterialSlab& ml4 = ism.materialSlab(l4);
 
   BOOST_CHECK_EQUAL(ml0.material().X0(), 1.);
-  BOOST_CHECK(!ml1.material().isValid());
+  BOOST_CHECK(ml1.material().isVacuum());
   BOOST_CHECK_EQUAL(ml2.material().X0(), 11.);
   BOOST_CHECK_EQUAL(ml3.material().X0(), 11.);
   BOOST_CHECK_EQUAL(ml4.material().X0(), 21.);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialNonShared) {
 BOOST_AUTO_TEST_CASE(GridGloballyIndexedMaterialShared) {
   auto material = std::make_shared<std::vector<Acts::MaterialSlab>>();
 
-  material->emplace_back(Acts::Material(), 0.0);  // vacuum
+  material->emplace_back(Acts::Material::Vacuum(), 0.0);  // vacuum
   material->emplace_back(
       Acts::Material::fromMolarDensity(1.0, 2.0, 3.0, 4.0, 5.0), 1.0);
 
@@ -415,11 +415,11 @@ BOOST_AUTO_TEST_CASE(GridSurfaceMaterialTests) {
   EqBound eqBound{{0., 5.}, 5};
   EqGrid eqGrid{eqBound()};
 
-  eqGrid.atPosition(Point{0.5}) = Acts::MaterialSlab(Acts::Material(), 0.0);
-  eqGrid.atPosition(Point{1.5}) = Acts::MaterialSlab(Acts::Material(), 1.0);
-  eqGrid.atPosition(Point{2.5}) = Acts::MaterialSlab(Acts::Material(), 2.0);
-  eqGrid.atPosition(Point{3.5}) = Acts::MaterialSlab(Acts::Material(), 3.0);
-  eqGrid.atPosition(Point{4.5}) = Acts::MaterialSlab(Acts::Material(), 4.0);
+  eqGrid.atPosition(Point{0.5}) = Acts::MaterialSlab::Vacuum(0.0);
+  eqGrid.atPosition(Point{1.5}) = Acts::MaterialSlab::Vacuum(1.0);
+  eqGrid.atPosition(Point{2.5}) = Acts::MaterialSlab::Vacuum(2.0);
+  eqGrid.atPosition(Point{3.5}) = Acts::MaterialSlab::Vacuum(3.0);
+  eqGrid.atPosition(Point{4.5}) = Acts::MaterialSlab::Vacuum(4.0);
 
   auto localX = std::make_unique<const LocalAccessX>();
   Acts::IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToX;

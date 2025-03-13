@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
       "volume", Acts::Transform3::Identity(), std::move(bounds), {}, {},
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
-  volume->assignGeometryId(1);
+  volume->assignGeometryId(Acts::GeometryIdentifier(1));
   auto detector = Acts::Experimental::Detector::makeShared(
       "detector", {volume}, Acts::Experimental::tryRootVolumes());
 
@@ -97,7 +97,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 
     Propagator propagator(stepper, navigator);
 
-    BOOST_CHECK_THROW(propagator.makeState(start, options),
+    auto state = propagator.makeState(options);
+
+    BOOST_CHECK_THROW(propagator.initialize(state, start).value(),
                       std::invalid_argument);
   }
 
@@ -115,11 +117,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(options);
 
-    navigator.initialize(state.navigation, stepper.position(state.stepping),
-                         stepper.direction(state.stepping),
-                         state.options.direction);
+    stepper.initialize(state.stepping, start);
+
+    BOOST_CHECK(navigator
+                    .initialize(state.navigation,
+                                stepper.position(state.stepping),
+                                stepper.direction(state.stepping),
+                                state.options.direction)
+                    .ok());
 
     navigator.nextTarget(state.navigation, stepper.position(state.stepping),
                          stepper.direction(state.stepping));
@@ -147,7 +154,9 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    BOOST_CHECK_THROW(propagator.makeState(startEoW, options),
+    auto state = propagator.makeState(options);
+
+    BOOST_CHECK_THROW(propagator.initialize(state, startEoW).value(),
                       std::invalid_argument);
   }
 
@@ -162,11 +171,16 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
                      Acts::Experimental::DetectorNavigator>
         propagator(stepper, navigator);
 
-    auto state = propagator.makeState(start, options);
+    auto state = propagator.makeState(options);
 
-    navigator.initialize(state.navigation, stepper.position(state.stepping),
-                         stepper.direction(state.stepping),
-                         state.options.direction);
+    stepper.initialize(state.stepping, start);
+
+    BOOST_CHECK(navigator
+                    .initialize(state.navigation,
+                                stepper.position(state.stepping),
+                                stepper.direction(state.stepping),
+                                state.options.direction)
+                    .ok());
 
     auto initState = state.navigation;
     BOOST_CHECK_EQUAL(initState.currentDetector, detector.get());
@@ -175,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
         detector->findDetectorVolume(geoContext, start.position()));
     BOOST_CHECK_EQUAL(initState.currentSurface, nullptr);
     BOOST_CHECK_EQUAL(initState.currentPortal, nullptr);
-    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 2u);
+    BOOST_CHECK_EQUAL(initState.surfaceCandidates.size(), 1u);
   }
 }
 
@@ -243,21 +257,21 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Volume ids: 1-3
   for (auto& volume : detectorVolumes) {
-    volume->assignGeometryId(id);
+    volume->assignGeometryId(Acts::GeometryIdentifier(id));
     id++;
   }
   // Intervolume portal ids: 6,7,10,11
   for (auto& volume : detectorVolumes) {
     for (auto& port : volume->portalPtrs()) {
-      if (port->surface().geometryId() == 0) {
-        port->surface().assignGeometryId(id);
+      if (port->surface().geometryId() == Acts::GeometryIdentifier(0)) {
+        port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
         id++;
       }
     }
   }
   // Surface ids: 12-14
   for (auto& surf : {surface1, surface2, surface3}) {
-    surf->assignGeometryId(id);
+    surf->assignGeometryId(Acts::GeometryIdentifier(id));
     id++;
   }
 
@@ -316,42 +330,54 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
 
   // Action list call before the first step
   // Starting in the volume1
-  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // Step to the surface inside volume1
-  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(), 12);
+  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(12));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
 
   // Step to the volume1|volume2 boundary (portal has witched volume id)
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
                     &(statesFwd[2].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 7);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(7));
 
   // Step to the surface inside volume2
-  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface->geometryId(), 13);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(2));
+  BOOST_CHECK_EQUAL(statesFwd[3].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(13));
   BOOST_CHECK_EQUAL(statesFwd[3].currentPortal, nullptr);
 
   // Step to the volume2|volume3 boundary - volume has switched
-  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(), 3);
+  BOOST_CHECK_EQUAL(statesFwd[4].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesFwd[4].currentSurface,
                     &(statesFwd[4].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(), 10);
+  BOOST_CHECK_EQUAL(statesFwd[4].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(10));
 
   // Step to the surface inside volume3
-  BOOST_CHECK_EQUAL(statesFwd[5].currentVolume->geometryId(), 3);
-  BOOST_CHECK_EQUAL(statesFwd[5].currentSurface->geometryId(), 14);
+  BOOST_CHECK_EQUAL(statesFwd[5].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(3));
+  BOOST_CHECK_EQUAL(statesFwd[5].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(14));
   BOOST_CHECK_EQUAL(statesFwd[5].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesFwd[6].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[6].currentSurface,
                     &(statesFwd[6].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(), 11);
+  BOOST_CHECK_EQUAL(statesFwd[6].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(11));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[7]));
@@ -362,38 +388,50 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   BOOST_CHECK_EQUAL(statesBwd[6].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[6].currentSurface,
                     &(statesBwd[6].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(), 6);
+  BOOST_CHECK_EQUAL(statesBwd[6].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(6));
 
   // Step to the surface inside volume1
-  BOOST_CHECK_EQUAL(statesBwd[5].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[5].currentSurface->geometryId(), 12);
+  BOOST_CHECK_EQUAL(statesBwd[5].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesBwd[5].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(12));
   BOOST_CHECK_EQUAL(statesBwd[5].currentPortal, nullptr);
 
   // Step to the volume1|volume2 boundary / preStep not yet set
-  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[4].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[4].currentSurface,
                     &(statesBwd[4].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(), 7);
+  BOOST_CHECK_EQUAL(statesBwd[4].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(7));
 
   // Step to the surface inside volume2
-  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume->geometryId(), 2);
-  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface->geometryId(), 13);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(2));
+  BOOST_CHECK_EQUAL(statesBwd[3].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(13));
   BOOST_CHECK_EQUAL(statesBwd[3].currentPortal, nullptr);
 
   // Step to the volume2|volume3 boundary / pre-step not yet set
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
                     &(statesBwd[2].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 10);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(10));
   BOOST_CHECK_EQUAL(statesBwd[2].surfaceCandidates.size(), 2u);
 
   // Step to the surface inside volume3
-  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(), 3);
-  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(), 14);
+  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(3));
+  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(14));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
 
   // Step to the volume3|endOfWorld boundary
-  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(), 3);
+  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(3));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
@@ -413,11 +451,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
-  volume->assignGeometryId(1);
-  surface->assignGeometryId(2);
+  volume->assignGeometryId(Acts::GeometryIdentifier(1));
+  surface->assignGeometryId(Acts::GeometryIdentifier(2));
   int id = 3;
   for (auto& port : volume->portalPtrs()) {
-    port->surface().assignGeometryId(id);
+    port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
     id++;
   }
 
@@ -473,22 +511,25 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
 
   // Action list call before the first step
   // Starting in the volume
-  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // Step to the cylindrical surface
-  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
-  BOOST_CHECK_EQUAL(statesFwd[1].surfaceCandidates.size(), 2u);
   CHECK_CLOSE_REL(statesFwd[1].position.x(), 4, 1e-6);
 
   // Step to the volume|endOfWorld boundary
   BOOST_CHECK_EQUAL(statesFwd[2].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[2].currentSurface,
                     &(statesFwd[2].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(), 6);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(6));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[3]));
@@ -498,17 +539,21 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsAmbiguity) {
   BOOST_CHECK_EQUAL(statesBwd[2].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[2].currentSurface,
                     &(statesBwd[2].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(), 5);
+  BOOST_CHECK_EQUAL(statesBwd[2].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(5));
 
   // Step to the cylindrical surface
-  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[1].position.x(), -4, 1e-6);
 
   // Action list call before the first step
   // Starting in the volume
-  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
@@ -528,11 +573,11 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
       Acts::Experimental::tryNoVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
-  volume->assignGeometryId(1);
-  surface->assignGeometryId(2);
+  volume->assignGeometryId(Acts::GeometryIdentifier(1));
+  surface->assignGeometryId(Acts::GeometryIdentifier(2));
   int id = 3;
   for (auto& port : volume->portalPtrs()) {
-    port->surface().assignGeometryId(id);
+    port->surface().assignGeometryId(Acts::GeometryIdentifier(id));
     id++;
   }
 
@@ -592,19 +637,24 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
 
   // Action list call before the first step
   // Starting in the volume
-  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesFwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesFwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[0].currentPortal, nullptr);
 
   // First intersection of the cylindrical surface
-  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesFwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesFwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesFwd[1].position.x(), -4, 1e-6);
 
   // Second intersection of the cylindrical surface
-  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesFwd[2].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesFwd[2].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesFwd[2].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesFwd[2].position.x(), 4, 1e-6);
 
@@ -612,7 +662,8 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK_EQUAL(statesFwd[3].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesFwd[3].currentSurface,
                     &(statesFwd[3].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(), 6);
+  BOOST_CHECK_EQUAL(statesFwd[3].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(6));
 
   // Step to the end of world
   BOOST_CHECK(navigator.endOfWorldReached(statesFwd[4]));
@@ -622,23 +673,29 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsMultipleIntersection) {
   BOOST_CHECK_EQUAL(statesBwd[3].currentVolume, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[3].currentSurface,
                     &(statesBwd[3].currentPortal->surface()));
-  BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(), 5);
+  BOOST_CHECK_EQUAL(statesBwd[3].currentPortal->surface().geometryId(),
+                    Acts::GeometryIdentifier(5));
 
-  // Second intersection of the cylindrical surface
-  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface->geometryId(), 2);
+  // Step to the cylindrical surface
+  BOOST_CHECK_EQUAL(statesBwd[2].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesBwd[2].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[2].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[2].position.x(), -4, 1e-6);
 
   // First intersection of the cylindrical surface
-  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(), 1);
-  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(), 2);
+  BOOST_CHECK_EQUAL(statesBwd[1].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
+  BOOST_CHECK_EQUAL(statesBwd[1].currentSurface->geometryId(),
+                    Acts::GeometryIdentifier(2));
   BOOST_CHECK_EQUAL(statesBwd[1].currentPortal, nullptr);
   CHECK_CLOSE_REL(statesBwd[1].position.x(), 4, 1e-6);
 
   // Action list call before the first step
   // Starting in the volume
-  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(), 1);
+  BOOST_CHECK_EQUAL(statesBwd[0].currentVolume->geometryId(),
+                    Acts::GeometryIdentifier(1));
   BOOST_CHECK_EQUAL(statesBwd[0].currentSurface, nullptr);
   BOOST_CHECK_EQUAL(statesBwd[0].currentPortal, nullptr);
 }
