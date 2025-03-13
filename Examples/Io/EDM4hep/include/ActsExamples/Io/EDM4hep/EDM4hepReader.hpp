@@ -23,6 +23,8 @@ class EDM4hepReader : public IReader {
   struct Config {
     std::filesystem::path inputPath;
     std::string outputFrame;
+    /// The podio `category` name to read the frame from
+    std::string category;
   };
 
   EDM4hepReader(const Config& config, Acts::Logging::Level level);

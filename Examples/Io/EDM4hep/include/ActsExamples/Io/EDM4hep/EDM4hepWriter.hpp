@@ -17,16 +17,12 @@
 #include <string>
 
 #include <DD4hep/DetElement.h>
-#include <edm4hep/MCParticleCollection.h>
-#include <tbb/enumerable_thread_specific.h>
-
-namespace podio {
-class Frame;
-}
 
 namespace ActsExamples {
 
-class EDM4hepOutputConverter;
+namespace detail {
+class EDM4hepWriterImpl;
+}  // namespace detail
 
 class EDM4hepWriter final : public IWriter {
  public:
@@ -34,18 +30,19 @@ class EDM4hepWriter final : public IWriter {
     std::string outputPath;
 
     /// Retrieve a @c podio::Frame from the event store using this name.
-    /// If empty, a new frame will be created by this writer.
-    std::string inputPodioFrame = "";
+    std::string inputFrame;
 
-    std::vector<std::shared_ptr<EDM4hepOutputConverter>> converters;
+    /// The podio `category` name to write the frame to
+    std::string category;
   };
 
   EDM4hepWriter(const Config& config, Acts::Logging::Level level);
+  ~EDM4hepWriter() override;
 
   std::string name() const final;
 
   /// Readonly access to the config
-  const Config& config() const { return m_cfg; }
+  const Config& config() const;
 
   ProcessCode finalize() final;
 
@@ -54,13 +51,9 @@ class EDM4hepWriter final : public IWriter {
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 
-  Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  ConsumeDataHandle<podio::Frame> m_inputPodioFrame;
-
-  Acts::PodioUtil::ROOTWriter m_writer;
-  std::mutex m_writeMutex;
+  std::unique_ptr<detail::EDM4hepWriterImpl> m_impl;
 };
 
 }  // namespace ActsExamples
