@@ -127,16 +127,21 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
 
 /// test of the object intersection class
 BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
-  auto psf6 = CurvilinearSurface(Vector3(6., 0., 0.), Vector3(1., 0., 0.))
-                  .planeSurface();
-  auto psf7 = CurvilinearSurface(Vector3(7., 0., 0.), Vector3(1., 0., 0.))
-                  .planeSurface();
-  auto psf8 = CurvilinearSurface(Vector3(8., 0., 0.), Vector3(1., 0., 0.))
-                  .planeSurface();
-  auto psf9 = CurvilinearSurface(Vector3(9., 0., 0.), Vector3(1., 0., 0.))
-                  .planeSurface();
-  auto psf10 = CurvilinearSurface(Vector3(10., 0., 0.), Vector3(1., 0., 0.))
-                   .planeSurface();
+  std::shared_ptr<PlaneSurface> psf6 =
+      CurvilinearSurface(Vector3(6., 0., 0.), Vector3(1., 0., 0.))
+          .planeSurface();
+  std::shared_ptr<PlaneSurface> psf7 =
+      CurvilinearSurface(Vector3(7., 0., 0.), Vector3(1., 0., 0.))
+          .planeSurface();
+  std::shared_ptr<PlaneSurface> psf8 =
+      CurvilinearSurface(Vector3(8., 0., 0.), Vector3(1., 0., 0.))
+          .planeSurface();
+  std::shared_ptr<PlaneSurface> psf9 =
+      CurvilinearSurface(Vector3(9., 0., 0.), Vector3(1., 0., 0.))
+          .planeSurface();
+  std::shared_ptr<PlaneSurface> psf10 =
+      CurvilinearSurface(Vector3(10., 0., 0.), Vector3(1., 0., 0.))
+          .planeSurface();
 
   using PlaneIntersection = ObjectIntersection<PlaneSurface>;
 

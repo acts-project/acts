@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -40,6 +41,76 @@ class GenericBoundTrackParameters {
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
+
+  /// Factory to construct from four-position, direction, absolute momentum, and
+  /// charge.
+  ///
+  /// @param geoCtx Geometry context for the local-to-global transformation
+  /// @param surface Reference surface the parameters are defined on
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored
+  /// @param qOverP Charge over momentum
+  /// @param cov Bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  /// @param tolerance Tolerance used for globalToLocal
+  ///
+  /// @note The returned result indicates whether the free parameters could
+  /// successfully be converted to on-surface parameters.
+  static Result<GenericBoundTrackParameters> create(
+      const GeometryContext& geoCtx, std::shared_ptr<const Surface> surface,
+      const Vector4& pos4, const Vector3& dir, double qOverP,
+      std::optional<CovarianceMatrix> cov,
+      ParticleHypothesis particleHypothesis,
+      double tolerance = s_onSurfaceTolerance) {
+    Result<BoundVector> bound =
+        transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
+                                       qOverP, *surface, geoCtx, tolerance);
+
+    if (!bound.ok()) {
+      return bound.error();
+    }
+
+    return GenericBoundTrackParameters{std::move(surface), std::move(*bound),
+                                       std::move(cov),
+                                       std::move(particleHypothesis)};
+  }
+
+  /// Construct from four-position, direction, and qOverP.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge over momentum
+  /// @param cov Curvilinear bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  static GenericBoundTrackParameters createCurvilinear(
+      const Vector4& pos4, const Vector3& dir, double qOverP,
+      std::optional<CovarianceMatrix> cov,
+      ParticleHypothesis particleHypothesis) {
+    return GenericBoundTrackParameters(
+        CurvilinearSurface(pos4.segment<3>(ePos0), dir).surface(),
+        transformFreeToCurvilinearParameters(pos4[eTime], dir, qOverP),
+        std::move(cov), std::move(particleHypothesis));
+  }
+
+  /// Construct from four-position, angles, and qOverP.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param phi Transverse track direction angle
+  /// @param theta Longitudinal track direction angle
+  /// @param qOverP Charge over momentum
+  /// @param cov Curvilinear bound parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  static GenericBoundTrackParameters createCurvilinear(
+      const Vector4& pos4, double phi, double theta, double qOverP,
+      std::optional<CovarianceMatrix> cov,
+      ParticleHypothesis particleHypothesis) {
+    return GenericBoundTrackParameters(
+        CurvilinearSurface(pos4.segment<3>(ePos0),
+                           makeDirectionFromPhiTheta(phi, theta))
+            .surface(),
+        transformFreeToCurvilinearParameters(pos4[eTime], phi, theta, qOverP),
+        std::move(cov), std::move(particleHypothesis));
+  }
 
   /// Construct from a parameters vector on the surface and particle charge.
   ///
@@ -81,49 +152,6 @@ class GenericBoundTrackParameters {
   GenericBoundTrackParameters<Acts::ParticleHypothesis> toBound() const {
     return GenericBoundTrackParameters<Acts::ParticleHypothesis>{*this};
   }
-
-  /// Factory to construct from four-position, direction, absolute momentum, and
-  /// charge.
-  ///
-  /// @param surface Reference surface the parameters are defined on
-  /// @param geoCtx Geometry context for the local-to-global transformation
-  /// @param pos4 Track position/time four-vector
-  /// @param dir Track direction three-vector; normalization is ignored
-  /// @param qOverP Charge over momentum
-  /// @param cov Bound parameters covariance matrix
-  /// @param particleHypothesis Particle hypothesis
-  /// @param tolerance Tolerance used for globalToLocal
-  ///
-  /// @note The returned result indicates whether the free parameters could
-  /// successfully be converted to on-surface parameters.
-  static Result<GenericBoundTrackParameters> create(
-      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
-      const Vector4& pos4, const Vector3& dir, double qOverP,
-      std::optional<CovarianceMatrix> cov,
-      ParticleHypothesis particleHypothesis,
-      double tolerance = s_onSurfaceTolerance) {
-    Result<BoundVector> bound =
-        transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
-                                       qOverP, *surface, geoCtx, tolerance);
-
-    if (!bound.ok()) {
-      return bound.error();
-    }
-
-    return GenericBoundTrackParameters{std::move(surface), std::move(*bound),
-                                       std::move(cov),
-                                       std::move(particleHypothesis)};
-  }
-
-  /// Parameters are not default constructible due to the charge type.
-  GenericBoundTrackParameters() = delete;
-  GenericBoundTrackParameters(const GenericBoundTrackParameters&) = default;
-  GenericBoundTrackParameters(GenericBoundTrackParameters&&) = default;
-  ~GenericBoundTrackParameters() = default;
-  GenericBoundTrackParameters& operator=(const GenericBoundTrackParameters&) =
-      default;
-  GenericBoundTrackParameters& operator=(GenericBoundTrackParameters&&) =
-      default;
 
   /// Parameters vector.
   ParametersVector& parameters() { return m_params; }

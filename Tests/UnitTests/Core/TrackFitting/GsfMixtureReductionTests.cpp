@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
 BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean = std::accumulate(
-        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-        [](auto sum, const auto &cmp) -> Acts::BoundVector {
-          return sum + cmp.weight * cmp.boundPars;
-        });
+    const auto mean =
+        std::accumulate(cmps.begin(), cmps.end(), BoundVector::Zero().eval(),
+                        [](auto sum, const auto &cmp) -> BoundVector {
+                          return sum + cmp.weight * cmp.boundPars;
+                        });
 
     const double sumOfWeights = std::accumulate(
         cmps.begin(), cmps.end(), 0.0,
@@ -117,8 +117,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   };
 
   // Assume that the components are on a generic plane surface
-  auto surface = Acts::CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0})
-                     .planeSurface();
+  std::shared_ptr<PlaneSurface> surface =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
   const std::size_t NComps = 4;
   std::vector<GsfComponent> cmps;
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::reduceMixtureWithKLDistance(cmps, 2, *surface);
+  reduceMixtureWithKLDistance(cmps, 2, *surface);
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
 
   // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::reduceMixtureWithKLDistance(cmps, 1, *surface);
+  reduceMixtureWithKLDistance(cmps, 1, *surface);
 
   BOOST_CHECK_EQUAL(cmps.size(), 1);
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
@@ -165,8 +165,8 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
 }
 
 BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
-  auto dummy = Acts::CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0})
-                   .planeSurface();
+  std::shared_ptr<PlaneSurface> dummy =
+      CurvilinearSurface(Vector3{0, 0, 0}, Vector3{1, 0, 0}).planeSurface();
   std::vector<GsfComponent> cmps;
 
   // weights do not need to be normalized for this test
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
     cmps.push_back(a);
   }
 
-  Acts::reduceMixtureLargestWeights(cmps, 2, *dummy);
+  reduceMixtureLargestWeights(cmps, 2, *dummy);
 
   BOOST_CHECK_EQUAL(cmps.size(), 2);
   std::ranges::sort(cmps, {}, [](const auto &c) { return c.weight; });
