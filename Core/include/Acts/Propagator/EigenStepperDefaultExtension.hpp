@@ -90,6 +90,7 @@ struct EigenStepperDefaultExtension {
   /// @param [in] volumeMaterial Material of the volume
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
+  /// @param [in,out] additionalFreeCovariance Additional free covariance matrix
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
