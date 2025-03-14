@@ -64,7 +64,7 @@ struct GenericScattering {
         // rotation of the scattering deflector axis relative to the reference
         Acts::AngleAxis3(psi, direction) *
         // rotation by the scattering angle around the deflector axis
-        Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
+        Acts::AngleAxis3(theta, Acts::createCurvilinearUnitU(direction)));
     direction.applyOnTheLeft(rotation);
     particle.setDirection(direction);
 

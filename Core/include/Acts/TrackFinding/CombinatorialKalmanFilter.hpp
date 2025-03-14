@@ -159,10 +159,13 @@ class CombinatorialKalmanFilter {
  public:
   /// Default constructor is deleted
   CombinatorialKalmanFilter() = delete;
-  /// Constructor from arguments
-  CombinatorialKalmanFilter(propagator_t pPropagator,
-                            std::unique_ptr<const Logger> _logger =
-                                getDefaultLogger("CKF", Logging::INFO))
+
+  /// Constructor with propagator and logging level
+  /// @param pPropagator The propagator used for the track finding
+  /// @param _logger The logger for messages
+  explicit CombinatorialKalmanFilter(propagator_t pPropagator,
+                                     std::unique_ptr<const Logger> _logger =
+                                         getDefaultLogger("CKF", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger(std::move(_logger)),
         m_actorLogger{m_logger->cloneWithSuffix("Actor")},
@@ -186,16 +189,11 @@ class CombinatorialKalmanFilter {
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
-  /// @tparam parameters_t The type of parameters used for "local" parameters.
-  ///
   /// The CombinatorialKalmanFilter Actor does not rely on the measurements to
   /// be sorted along the track.
-  template <typename parameters_t>
   class Actor {
    public:
-    using BoundState = std::tuple<parameters_t, BoundMatrix, double>;
-    using CurvilinearState =
-        std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
+    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<track_container_t>;
 
@@ -852,8 +850,7 @@ class CombinatorialKalmanFilter {
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters>
+  template <typename start_parameters_t>
   auto findTracks(
       const start_parameters_t& initialParameters,
       const CombinatorialKalmanFilterOptions<track_container_t>& tfOptions,
@@ -862,7 +859,7 @@ class CombinatorialKalmanFilter {
       -> Result<std::vector<
           typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     // Create the ActorList
-    using CombinatorialKalmanFilterActor = Actor<parameters_t>;
+    using CombinatorialKalmanFilterActor = Actor;
     using Actors = ActorList<CombinatorialKalmanFilterActor>;
 
     // Create relevant options for the propagation options
