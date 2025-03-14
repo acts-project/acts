@@ -2,6 +2,8 @@
 
 function run() {
     set -x
+    set -e
+    set -u
     "$@"
     { set +x;  } 2> /dev/null
 }
