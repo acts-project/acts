@@ -18,7 +18,6 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -32,8 +31,18 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector4f.h>
 
-namespace Acts::EDM4hepUtil {
+namespace edm4hep {
+class MutableVertex;
+class MutableTrackerHitLocal;
+}  // namespace edm4hep
+
+namespace Acts {
+
+class Vertex;
+
+namespace EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
@@ -248,4 +257,54 @@ void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
   track.nMeasurements() = track.nTrackStates();
 }
 
-}  // namespace Acts::EDM4hepUtil
+namespace detail {
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices);
+boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
+    std::uint32_t type);
+}  // namespace detail
+
+/// Write a measurement to an EDM4hep tracker hit
+///
+/// This function converts an ACTS measurement into the EDM4hep format. It
+/// handles:
+/// - Position conversion from local to global coordinates (in mm)
+/// - Time storage (in ns)
+/// - Measurement values and covariance matrix storage
+/// - Encoding of measurement indices into a 32-bit integer:
+///   - First 4 bits: number of indices (max 6)
+///   - Next 4 bits per index: which parameter is being measured (0-6)
+///
+/// The function will throw if:
+/// - The number of indices exceeds 6
+/// - Any index is larger than 6
+/// - There's a size mismatch between parameters and covariance matrix
+///
+/// @param gctx The geometry context
+/// @param parameters The parameters of the measurement
+/// @param covariance The covariance of the measurement
+/// @param indices The indices of the measurement
+/// @param cellId The cell ID of the measurement
+/// @param surface The surface of the measurement
+/// @param to The EDM4hep tracker hit to write to
+void writeMeasurement(const GeometryContext& gctx,
+                      const Eigen::Map<const ActsDynamicVector>& parameters,
+                      const Eigen::Map<const ActsDynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      edm4hep::MutableTrackerHitLocal to);
+
+namespace detail {
+
+/// Support for both EDM4hep versions where the vertex position is a 3 or 4
+/// vector
+template <typename T>
+constexpr bool edm4hepVertexHasTime = std::is_same_v<
+    edm4hep::Vector4f,
+    std::remove_cvref_t<decltype(std::declval<T>().getPosition())>>;
+
+}  // namespace detail
+
+void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to);
+
+}  // namespace EDM4hepUtil
+}  // namespace Acts
