@@ -6,7 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <numeric>
+
 namespace Acts {
+
 // Global Iterator
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...>::GridGlobalIterator(
@@ -62,13 +65,13 @@ GridGlobalIterator<T, Axes...>& GridGlobalIterator<T, Axes...>::operator-=(
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator+(
     const std::size_t offset) const {
-  return {*m_grid, m_idx + offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx + offset);
 }
 
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator-(
     const std::size_t offset) const {
-  return {*m_grid, m_idx - offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx - offset);
 }
 
 template <typename T, class... Axes>

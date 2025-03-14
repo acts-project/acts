@@ -42,8 +42,6 @@ class AtlasStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   struct Config {
     std::shared_ptr<const MagneticFieldProvider> bField;
@@ -160,7 +158,9 @@ class AtlasStepper {
     state.pathAccumulated = 0;
     state.nSteps = 0;
     state.nStepTrials = 0;
-    state.stepSize = ConstrainedStep(state.options.maxStepSize);
+    state.stepSize = ConstrainedStep();
+    state.stepSize.setAccuracy(state.options.initialStepSize);
+    state.stepSize.setUser(state.options.maxStepSize);
     state.previousStepSize = 0;
     state.statistics = StepperStatistics();
 
@@ -508,7 +508,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     auto parameters = BoundTrackParameters::create(
-        surface.getSharedPtr(), state.options.geoContext, pos4, dir, qOverP,
+        state.options.geoContext, surface.getSharedPtr(), pos4, dir, qOverP,
         std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
@@ -542,8 +542,7 @@ class AtlasStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
-                                    bool transportCov = true) const {
+  BoundState curvilinearState(State& state, bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -566,13 +565,13 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
-                                          state.particleHypothesis);
+    BoundTrackParameters parameters = BoundTrackParameters::createCurvilinear(
+        pos4, dir, qOverP, std::move(covOpt), state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
-    return CurvilinearState(std::move(parameters), jacobian.transpose(),
-                            state.pathAccumulated);
+    return BoundState(std::move(parameters), jacobian.transpose(),
+                      state.pathAccumulated);
   }
 
   /// The state update method

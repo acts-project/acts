@@ -46,7 +46,9 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   state.pathAccumulated = 0;
   state.nSteps = 0;
   state.nStepTrials = 0;
-  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+  state.stepSize = ConstrainedStep();
+  state.stepSize.setAccuracy(state.options.initialStepSize);
+  state.stepSize.setUser(state.options.maxStepSize);
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
@@ -83,7 +85,7 @@ bool SympyStepper::prepareCurvilinearState(State& state) const {
   return true;
 }
 
-std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, double>
 SympyStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::sympy::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,

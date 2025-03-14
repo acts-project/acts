@@ -169,7 +169,7 @@ void CuboidVolumeBounds::set(
   }
 }
 
-CuboidVolumeBounds::BoundValues CuboidVolumeBounds::fromAxisDirection(
+CuboidVolumeBounds::BoundValues CuboidVolumeBounds::boundsFromAxisDirection(
     AxisDirection direction) {
   using enum AxisDirection;
   switch (direction) {
@@ -184,4 +184,48 @@ CuboidVolumeBounds::BoundValues CuboidVolumeBounds::fromAxisDirection(
   }
 }
 
+std::tuple<CuboidVolumeBounds::Face, CuboidVolumeBounds::Face,
+           std::array<CuboidVolumeBounds::Face, 4>>
+CuboidVolumeBounds::facesFromAxisDirection(AxisDirection direction) {
+  using enum AxisDirection;
+  using enum CuboidVolumeBounds::Face;
+  if (direction == AxisX) {
+    return {NegativeXFace,
+            PositiveXFace,
+            {NegativeZFace, PositiveZFace, NegativeYFace, PositiveYFace}};
+  } else if (direction == AxisY) {
+    return {NegativeYFace,
+            PositiveYFace,
+            {NegativeZFace, PositiveZFace, NegativeXFace, PositiveXFace}};
+  } else if (direction == AxisZ) {
+    return {NegativeZFace,
+            PositiveZFace,
+            {NegativeXFace, PositiveXFace, NegativeYFace, PositiveYFace}};
+  } else {
+    throw std::invalid_argument("Invalid axis direction");
+  }
+}
+
 }  // namespace Acts
+
+// Define operator<< for CuboidVolumeBounds::Face outside the class
+std::ostream& operator<<(std::ostream& os,
+                         Acts::CuboidVolumeBounds::Face face) {
+  using enum Acts::CuboidVolumeBounds::Face;
+  switch (face) {
+    case NegativeXFace:
+      return os << "NegativeXFace";
+    case PositiveXFace:
+      return os << "PositiveXFace";
+    case NegativeYFace:
+      return os << "NegativeYFace";
+    case PositiveYFace:
+      return os << "PositiveYFace";
+    case NegativeZFace:
+      return os << "NegativeZFace";
+    case PositiveZFace:
+      return os << "PositiveZFace";
+    default:
+      return os << "UnknownFace";
+  }
+}

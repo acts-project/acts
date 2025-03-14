@@ -46,7 +46,9 @@ void Acts::EigenStepper<E>::initialize(State& state,
   state.pathAccumulated = 0;
   state.nSteps = 0;
   state.nStepTrials = 0;
-  state.stepSize = ConstrainedStep(state.options.maxStepSize);
+  state.stepSize = ConstrainedStep();
+  state.stepSize.setAccuracy(state.options.initialStepSize);
+  state.stepSize.setUser(state.options.maxStepSize);
   state.previousStepSize = 0;
   state.statistics = StepperStatistics();
 
@@ -113,7 +115,7 @@ bool Acts::EigenStepper<E>::prepareCurvilinearState(State& state) const {
 
 template <typename E>
 auto Acts::EigenStepper<E>::curvilinearState(
-    State& state, bool transportCov) const -> CurvilinearState {
+    State& state, bool transportCov) const -> BoundState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, state.pars, state.particleHypothesis,
