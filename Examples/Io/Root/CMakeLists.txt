@@ -2,7 +2,6 @@ add_library(
     ActsExamplesIoRoot
     SHARED
     src/RootMeasurementWriter.cpp
-    src/RootMaterialDecorator.cpp
     src/RootMaterialWriter.cpp
     src/RootMaterialTrackReader.cpp
     src/RootMaterialTrackWriter.cpp
@@ -39,6 +38,7 @@ target_link_libraries(
     ActsExamplesIoRoot
     PUBLIC
         ActsCore
+        ActsPluginRoot
         ActsExamplesDigitization
         ActsExamplesFramework
         ActsExamplesPropagation
