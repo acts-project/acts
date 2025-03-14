@@ -514,7 +514,7 @@ def print_rk4_vacuum(name_exprs, run_cse=True):
             return (
                 "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "path_derivatives":
+        if str(var) == "new_d":
             return "if (J == nullptr) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_J":
             return printer.doprint(Assignment(MatrixSymbol("J", 8, 8), var))
@@ -599,7 +599,7 @@ def print_rk4_dense(name_exprs, run_cse=True):
             return (
                 "if (*err > errTol) {\n  return Acts::Result<bool>::success(false);\n}"
             )
-        if str(var) == "path_derivatives":
+        if str(var) == "new_d":
             return "if (J == nullptr) {\n  return Acts::Result<bool>::success(true);\n}"
         if str(var) == "new_J":
             return printer.doprint(Assignment(MatrixSymbol("J", 8, 8), var))
