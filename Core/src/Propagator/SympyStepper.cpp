@@ -145,8 +145,8 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
                                   const IVolumeMaterial* material) const {
   (void)material;
 
-  auto pos = position(state);
-  auto dir = direction(state);
+  Vector3 pos = position(state);
+  Vector3 dir = direction(state);
   double t = time(state);
   double qop = qOverP(state);
   double pabs = absoluteMomentum(state);
