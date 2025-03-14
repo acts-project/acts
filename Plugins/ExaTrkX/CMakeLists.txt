@@ -5,6 +5,7 @@ add_library(
     src/ExaTrkXPipeline.cpp
     src/BoostWalkthrough.cpp
     src/DummyEdgeClassifier.cpp
+    src/GNNTrackFitterCPU.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
@@ -106,8 +107,8 @@ target_link_libraries(
     PUBLIC
         ActsCore
         Boost::boost
-        ${TORCH_LIBRARIES} # TODO try to make this private again (torch::Device is leaking)
-        std::filesystem
+        torch # TODO try to make this private again (torch::Device is leaking)
+    #std::filesystem
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
