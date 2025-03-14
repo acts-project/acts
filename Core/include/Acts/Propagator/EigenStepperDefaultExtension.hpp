@@ -13,6 +13,7 @@
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
+#include <optional>
 
 namespace Acts {
 
@@ -89,16 +90,28 @@ struct EigenStepperDefaultExtension {
   /// @param [in] volumeMaterial Material of the volume
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
+  /// @param [in,out] additionalFreeCovariance Additional free covariance matrix
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
-                FreeMatrix& D) const {
+                FreeMatrix& D,
+                std::optional<FreeMatrix>& additionalFreeCovariance) const {
     (void)volumeMaterial;
 
     propagateTime(state, stepper, h);
-    return transportMatrix(state, stepper, h, D);
+    if (!transportMatrix(state, stepper, h, D)) {
+      return false;
+    }
+
+    if (additionalFreeCovariance) {
+      auto& cov = *additionalFreeCovariance;
+
+      cov = D * cov * D.transpose();
+    }
+
+    return true;
   }
 
  private:
