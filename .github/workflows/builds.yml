@@ -249,10 +249,10 @@ jobs:
           - image: ubuntu2204
             std: 20
             cxx: g++
-          - image: ubuntu2204
+          - image: ubuntu2404_clang19
             std: 20
-            cxx: clang++
-    container: ghcr.io/acts-project/${{ matrix.image }}:71
+            cxx: clang++-19
+    container: ghcr.io/acts-project/${{ matrix.image }}:75
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
