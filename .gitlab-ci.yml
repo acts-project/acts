@@ -403,13 +403,13 @@ linux_ubuntu_2204:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
 
-linux_ubuntu_2204_clang:
+linux_ubuntu_2404_clang19:
   extends: .linux_ubuntu_extra
   variables:
-    CXX: clang++
+    CXX: clang++-19
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:75
 
 
 ######################
