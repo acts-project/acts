@@ -7,6 +7,7 @@ target_sources(
         SympyStepper.cpp
         PropagatorError.cpp
         StraightLineStepper.cpp
+        detail/MaterialEffectsAccumulator.cpp
         detail/PointwiseMaterialInteraction.cpp
         detail/CovarianceEngine.cpp
         detail/JacobianEngine.cpp

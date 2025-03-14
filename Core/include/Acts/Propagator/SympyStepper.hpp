@@ -20,7 +20,7 @@
 #include "Acts/Propagator/PropagatorTraits.hpp"
 #include "Acts/Propagator/StepperOptions.hpp"
 #include "Acts/Propagator/StepperStatistics.hpp"
-#include "Acts/Propagator/detail/MaterialAccumulator.hpp"
+#include "Acts/Propagator/detail/MaterialEffectsAccumulator.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 
 namespace Acts {
@@ -112,7 +112,7 @@ class SympyStepper {
     /// Statistics of the stepper
     StepperStatistics statistics;
 
-    detail::MaterialAccumulator materialAccumulator;
+    detail::MaterialEffectsAccumulator materialEffectsAccumulator;
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
