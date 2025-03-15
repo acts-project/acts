@@ -13,7 +13,11 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/EventData/DriftCircle.hpp"
+
+#include "ActsExamples/EventData/MuonSegment.hpp"
+#include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonHoughMaximum.hpp"
+
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -48,8 +52,9 @@ class MuonHoughSeeder final : public IAlgorithm {
  public:
   /// config
   struct Config {
-    std::string inSimHits;
-    std::string inDriftCircles;
+    std::string inTruthSegments{};
+    std::string inSpacePoints{};
+    std::string outHoughMax{};
   };
 
   MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
@@ -70,9 +75,9 @@ class MuonHoughSeeder final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger& logger() const { return *m_logger; }
 
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<DriftCircleContainer> m_inputDriftCircles{this,
-                                                           "InputDriftCircles"};
+  ReadDataHandle<MuonSegmentContainer> m_inputTruthSegs{this, "InputTruthSegments"};
+  ReadDataHandle<MuonSpacePointContainer> m_inputSpacePoints{this, "InputSpacePoints"};
+  WriteDataHandle<MuonHoughMaxContainer> m_outputMaxima{this, "OutputHoughMax"};
   /// use ROOT for visualisation
   std::unique_ptr<TCanvas> m_outCanvas;
 };
