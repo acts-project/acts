@@ -46,6 +46,8 @@ namespace ActsExamples{
             double interceptY() const { return m_interceptY; }
             /** @brief Return the intercept in the non-precision plane */
             double interceptX() const { return m_interceptX; }
+            /** @brief Return the associated hits */
+            const HitVec& hits() const { return  m_hits; }
         private:
             double m_tanAlpha{0.};
             double m_interceptY{0.};
