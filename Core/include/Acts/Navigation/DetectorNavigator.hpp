@@ -69,9 +69,6 @@ class DetectorNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
-    // momentum in the step
-    double absMomentum = 0.;
-
     /// Navigation statistics
     NavigatorStatistics statistics;
   };
@@ -175,9 +172,6 @@ class DetectorNavigator {
       return NavigationTarget::None();
     }
 
-    std::cout << "surface candidate index is " << state.surfaceCandidateIndex
-              << std::endl;
-
     // Screen output how much is left to try
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
                                 << (state.surfaceCandidates.size() -
@@ -199,8 +193,6 @@ class DetectorNavigator {
     state.currentSurface = nullptr;
     state.currentPortal = nullptr;
 
-    std::cout << "surface candidate index is " << state.surfaceCandidateIndex
-              << std::endl;
     return NavigationTarget(surface, candidate.objectIntersection.index(),
                             candidate.boundaryTolerance);
   }
