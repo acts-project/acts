@@ -84,14 +84,14 @@ MaterialEffectsAccumulator::computeAdditionalFreeCovariance(
     SquareMatrix3 directionProjection =
         (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
 
-    additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) =
+    additionalFreeCovariance.template block<3, 3>(eFreeDir0, eFreeDir0) =
         m_varAngle * directionProjection;
-    additionalFreeCovariance.block<3, 3>(eFreePos0, eFreePos0) =
+    additionalFreeCovariance.template block<3, 3>(eFreePos0, eFreePos0) =
         m_varPosition * directionProjection;
-    additionalFreeCovariance.block<3, 3>(eFreePos0, eFreeDir0) =
+    additionalFreeCovariance.template block<3, 3>(eFreePos0, eFreeDir0) =
         m_covAnglePosition * directionProjection;
-    additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreePos0) =
-        additionalFreeCovariance.block<3, 3>(eFreePos0, eFreeDir0);
+    additionalFreeCovariance.template block<3, 3>(eFreeDir0, eFreePos0) =
+        additionalFreeCovariance.template block<3, 3>(eFreePos0, eFreeDir0);
   }
 
   // handle energy loss covariance
