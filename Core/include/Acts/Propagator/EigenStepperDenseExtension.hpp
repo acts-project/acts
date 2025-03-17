@@ -54,9 +54,6 @@ struct EigenStepperDenseExtension {
   /// Energy at each sub-step
   std::array<double, 4> energy{};
 
-  mutable MaterialSlab accumulatedMaterial;
-  std::optional<double> firstQOverP;
-
   /// @brief Evaluator of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
@@ -85,16 +82,12 @@ struct EigenStepperDenseExtension {
                                             knew, bField, kQoP, h, kprev);
     }
 
+    double q = stepper.charge(state);
     const auto& particleHypothesis = stepper.particleHypothesis(state);
-    float absQ = particleHypothesis.absoluteCharge();
     float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
     if constexpr (i == 0) {
-      if (!firstQOverP) {
-        firstQOverP = stepper.qOverP(state);
-      }
-
       // Set up for energy loss
       Vector3 position = stepper.position(state);
       material = volumeMaterial->material(position.template cast<double>());
@@ -105,7 +98,7 @@ struct EigenStepperDenseExtension {
       // Evaluate k
       knew = qop[0] * stepper.direction(state).cross(bField);
       // Evaluate k for the time propagation
-      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (absQ * absQ);
+      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (q * q);
       //~ tKi[0] = std::hypot(1, mass / initialMomentum);
       tKi[0] = fastHypot(1, mass * qop[0]);
       kQoP[0] = Lambdappi[0];
@@ -119,18 +112,17 @@ struct EigenStepperDenseExtension {
       knew = qop[i] * (stepper.direction(state) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (absQ * absQ);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
       tKi[i] = fastHypot(1, mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
-
     return true;
   }
 
-  /// After a RKN4 step was accepted by the stepper this method has an
-  /// additional veto on the quality of the step. The veto lies in evaluation of
-  /// the energy loss and the therewith constrained to keep the momentum after
-  /// the step in reasonable values.
+  /// @brief After a RKN4 step was accepted by the stepper this method has an
+  /// additional veto on the quality of the step. The veto lies in evaluation
+  /// of the energy loss and the therewith constrained to keep the momentum
+  /// after the step in reasonable values.
   ///
   /// @tparam stepper_t Type of the stepper
   ///
@@ -175,11 +167,12 @@ struct EigenStepperDenseExtension {
     return true;
   }
 
-  /// After a RKN4 step was accepted by the stepper this method has an
+  /// @brief After a RKN4 step was accepted by the stepper this method has an
   /// additional veto on the quality of the step. The veto lies in the
-  /// evaluation of the energy loss, the therewith constrained to keep the
-  /// momentum after the step in reasonable values and the evaluation of the
-  /// transport matrix.
+  /// evaluation
+  /// of the energy loss, the therewith constrained to keep the momentum
+  /// after the step in reasonable values and the evaluation of the transport
+  /// matrix.
   ///
   /// @tparam stepper_t Type of the stepper
   ///
@@ -188,40 +181,28 @@ struct EigenStepperDenseExtension {
   /// @param [in] volumeMaterial Material of the volume
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
-  /// @param [in,out] additionalFreeCovariance Additional free covariance matrix
   ///
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
                 const IVolumeMaterial* volumeMaterial, const double h,
-                FreeMatrix& D,
-                std::optional<FreeMatrix>& additionalFreeCovariance) const {
+                FreeMatrix& D) const {
     if (volumeMaterial == nullptr) {
-      return defaultExtension.finalize(state, stepper, volumeMaterial, h, D,
-                                       additionalFreeCovariance);
+      return defaultExtension.finalize(state, stepper, volumeMaterial, h, D);
     }
 
-    if (!finalize(state, stepper, volumeMaterial, h) ||
-        !transportMatrix(state, stepper, h, D)) {
-      return false;
-    }
-
-    if (!additionalFreeCovariance) {
-      additionalFreeCovariance = FreeMatrix::Zero();
-    }
-    updateAdditionalFreeCovariance(state, stepper, h, D,
-                                   *additionalFreeCovariance);
-
-    return true;
+    return finalize(state, stepper, volumeMaterial, h) &&
+           transportMatrix(state, stepper, h, D);
   }
 
  private:
   /// @brief Evaluates the transport matrix D for the Jacobian
   ///
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
   ///
-  /// @param [in] state State of the stepper
-  /// @param [in] stepper Stepper
+  /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   ///
@@ -256,7 +237,7 @@ struct EigenStepperDenseExtension {
     float mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
-    double half_h = h * 0.5;
+    const double half_h = h * 0.5;
 
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) zero
@@ -361,19 +342,19 @@ struct EigenStepperDenseExtension {
   }
 
   /// @brief Initializer of all parameters related to a RKN4 step with energy
-  ///        loss of a particle in material
+  /// loss of a particle in material
   ///
   /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] state Deliverer of configurations
-  /// @param [in] stepper Stepper
+  /// @param [in] stepper Stepper of the propagator
   template <typename stepper_t>
   void initializeEnergyLoss(const typename stepper_t::State& state,
                             const stepper_t& stepper) {
     const auto& particleHypothesis = stepper.particleHypothesis(state);
+    float mass = particleHypothesis.mass();
     PdgParticle absPdg = particleHypothesis.absolutePdg();
     float absQ = particleHypothesis.absoluteCharge();
-    float mass = particleHypothesis.mass();
 
     energy[0] = fastHypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
@@ -413,14 +394,14 @@ struct EigenStepperDenseExtension {
   }
 
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
-  ///        initialization with energy loss of a particle in material
+  /// initialization with energy loss of a particle in material
   ///
   /// @tparam stepper_t Type of the stepper
   ///
   /// @param [in] h Stepped distance of the sub-step (1-3)
   /// @param [in] mass Mass of the particle
   /// @param [in] state State of the stepper
-  /// @param [in] stepper Stepper
+  /// @param [in] stepper Stepper of the propagator
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_t>
   void updateEnergyLoss(const double mass, const double h,
@@ -437,77 +418,6 @@ struct EigenStepperDenseExtension {
                      (3. - (currentMomentum * currentMomentum) /
                                (energy[i] * energy[i])) -
                  qop[i] * qop[i] * qop[i] * energy[i] * dgdqopValue);
-    }
-  }
-
-  template <typename stepper_t>
-  void updateAdditionalFreeCovariance(
-      typename stepper_t::State& state, const stepper_t& stepper, double h,
-      const FreeMatrix& /*D*/, FreeMatrix& additionalFreeCovariance) const {
-    const auto& particleHypothesis = stepper.particleHypothesis(state);
-    PdgParticle absPdg = particleHypothesis.absolutePdg();
-    float absQ = particleHypothesis.absoluteCharge();
-    float mass = particleHypothesis.mass();
-    double qOverP = stepper.qOverP(state);
-
-    MaterialSlab newMaterial(material, h);
-
-    accumulatedMaterial =
-        MaterialSlab::combineLayers(accumulatedMaterial, newMaterial);
-
-    // handle multiple scattering
-    {
-      Vector3 direction = stepper.direction(state);
-
-      float theta0 = computeMultipleScatteringTheta0(
-          accumulatedMaterial, absPdg, mass, *firstQOverP, absQ);
-
-      /*
-      double sigmaTheta = theta0;
-      double sigmaPhi =
-          theta0 * (direction.norm() / VectorHelpers::perp(direction));
-
-      // phi=0, theta=1
-      ActsSquareMatrix<2> angleCov = ActsSquareMatrix<2>::Zero();
-      angleCov(0, 0) = sigmaPhi * sigmaPhi;
-      angleCov(1, 1) = sigmaTheta * sigmaTheta;
-
-      auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
-          VectorHelpers::evaluateTrigonomics(direction);
-
-      // dir_x=0, dir_y=1, dir_z=2
-      ActsMatrix<3, 2> jacobian = ActsMatrix<3, 2>::Zero();
-      jacobian(0, 0) = -sinTheta * sinPhi;
-      jacobian(0, 1) = cosTheta * cosPhi;
-      jacobian(1, 0) = sinTheta * cosPhi;
-      jacobian(1, 1) = cosTheta * sinPhi;
-      jacobian(2, 1) = -sinTheta;
-
-      additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) +=
-          jacobian * angleCov * jacobian.transpose();
-      */
-
-      double s = accumulatedMaterial.thickness();
-
-      // for derivation see
-      // https://github.com/andiwand/cern-scripts/blob/5f0ebf1bef35db65322f28c2e840c1db1aaaf9a7/notebooks/2023-12-07_qp-dense-nav.ipynb
-      //
-      additionalFreeCovariance = FreeMatrix::Zero();
-      additionalFreeCovariance.block<3, 3>(eFreeDir0, eFreeDir0) =
-          square(theta0) *
-          (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
-      additionalFreeCovariance.block<3, 3>(eFreePos0, eFreePos0) =
-          square(theta0 * s) / 3 *
-          (ActsSquareMatrix<3>::Identity() - direction * direction.transpose());
-    }
-
-    // handle energy loss covariance
-    {
-      float qOverPSigma = computeEnergyLossLandauSigmaQOverP(
-          accumulatedMaterial, mass, qOverP, absQ);
-
-      additionalFreeCovariance(eFreeQOverP, eFreeQOverP) =
-          qOverPSigma * qOverPSigma;
     }
   }
 };
