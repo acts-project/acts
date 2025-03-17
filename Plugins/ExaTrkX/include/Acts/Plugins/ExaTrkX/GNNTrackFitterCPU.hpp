@@ -63,8 +63,14 @@ class GNNTrackFitterCPU {
   struct Config {
     std::shared_ptr<const Acts::TrackingGeometry> geometry;
     std::shared_ptr<const Acts::MagneticFieldProvider> bfield;
-    KalmanFitterExtensions<TSBackend> extensions;
     GNNParametersBuilderCPU::Config paramBuilderCfg;
+  };
+
+  struct Options {
+    const Acts::GeometryContext &gctx;
+    const Acts::MagneticFieldContext &mctx;
+    const Acts::CalibrationContext &cctx;
+    KalmanFitterExtensions<TSBackend> extensions;
   };
 
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
@@ -74,7 +80,7 @@ class GNNTrackFitterCPU {
                     std::unique_ptr<const Acts::Logger> logger)
       : m_cfg(cfg), m_logger(std::move(logger)) {
     m_paramBuilder = std::make_unique<GNNParametersBuilderCPU>(
-        cfg.paramBuilderCfg, logger->clone());
+        cfg.paramBuilderCfg, m_logger->clone());
   }
 
   void operator()(
@@ -83,10 +89,10 @@ class GNNTrackFitterCPU {
       const std::vector<float> &spacepointFeatures,
       const std::vector<Acts::GeometryIdentifier> &geoIds,
       const std::vector<boost::container::static_vector<Acts::SourceLink, 2>>
-          &sourceLinks,
-      const Acts::GeometryContext &gctx, const Acts::MagneticFieldContext &mctx,
-      const Acts::CalibrationContext &cctx) const {
+          &sourceLinks, Options options
+      ) const {
     for (const auto &candidate : candidates) {
+      ACTS_VERBOSE("Build parameters...");
       auto params = m_paramBuilder->buildParameters(spacepointFeatures, geoIds,
                                                     candidate);
 
@@ -95,10 +101,12 @@ class GNNTrackFitterCPU {
         continue;
       }
 
-      Acts::PropagatorPlainOptions popts(gctx, mctx);
-      Acts::KalmanFitterOptions<TSBackend> opts(gctx, mctx, cctx,
-                                                m_cfg.extensions, popts);
+      ACTS_VERBOSE("Build options...");
+      Acts::PropagatorPlainOptions popts(options.gctx, options.mctx);
+      Acts::KalmanFitterOptions<TSBackend> kfOpts(options.gctx, options.mctx, options.cctx,
+                                                options.extensions, popts);
 
+      ACTS_VERBOSE("Collect source links...");
       std::vector<Acts::SourceLink> sls;
       for (auto i : candidate) {
         for (const auto &sl : sourceLinks.at(i)) {
@@ -106,7 +114,8 @@ class GNNTrackFitterCPU {
         }
       }
 
-      auto res = m_fitter->fit(sls.begin(), sls.end(), *params, opts, tracks);
+      ACTS_VERBOSE("Start fit...");
+      auto res = m_fitter->fit(sls.begin(), sls.end(), *params, kfOpts, tracks);
       if (!res.ok()) {
         ACTS_WARNING("Track fit failed!");
       }

@@ -63,9 +63,11 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
     hook(nodeFeatures, edgeIndex, {});
 
     std::any edgeScores;
-    timing->classifierTimes.clear();
+    if (timing != nullptr) {
+      timing->classifierTimes.clear();
+    }
 
-    for (auto edgeClassifier : m_edgeClassifiers) {
+    for (const auto &edgeClassifier : m_edgeClassifiers) {
       t0 = std::chrono::high_resolution_clock::now();
       ACTS_NVTX_START(edge_classifier);
       auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =

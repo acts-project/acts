@@ -239,7 +239,12 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_y(), stream));
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_hit_id(), stream));
 
+  if( edgeData.nEdges == 0 ) {
+    throw NoEdgesError{};
+  }
+
   dim3 gridDimEdges = (edgeData.nEdges + blockDim.x - 1) / blockDim.x;
+  ACTS_DEBUG("gridDimEdges: " << gridDimEdges.x << ", blockDim: " << blockDim.x);
 
   // Make edge features
   float *edgeFeaturePtr{};
@@ -250,8 +255,8 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
       edgeData.nEdges, edgeData.cudaEdgePtr,
       edgeData.cudaEdgePtr + edgeData.nEdges, nFeatures, cudaNodeFeatures,
       edgeFeaturePtr);
-  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   ACTS_CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   //  Make torch tensors
   auto edgeFeatures = torch::from_blob(
