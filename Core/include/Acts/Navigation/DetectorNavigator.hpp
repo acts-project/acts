@@ -69,6 +69,9 @@ class DetectorNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
+    // momentum in the step
+    double absMomentum = 0.;
+
     /// Navigation statistics
     NavigatorStatistics statistics;
   };
@@ -155,6 +158,8 @@ class DetectorNavigator {
       return NavigationTarget::None();
     }
 
+    ++state.surfaceCandidateIndex;
+
     fillNavigationState(position, direction, state);
 
     if (state.currentSurface != nullptr) {
@@ -162,11 +167,16 @@ class DetectorNavigator {
                    << posInfo(state, position) << "stepping through surface");
     }
 
-    if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
+    if (state.surfaceCandidateIndex ==
+        static_cast<int>(state.surfaceCandidates.size())) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
+      state.surfaceCandidateIndex = -1;
       return NavigationTarget::None();
     }
+
+    std::cout << "surface candidate index is " << state.surfaceCandidateIndex
+              << std::endl;
 
     // Screen output how much is left to try
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
@@ -189,6 +199,8 @@ class DetectorNavigator {
     state.currentSurface = nullptr;
     state.currentPortal = nullptr;
 
+    std::cout << "surface candidate index is " << state.surfaceCandidateIndex
+              << std::endl;
     return NavigationTarget(surface, candidate.objectIntersection.index(),
                             candidate.boundaryTolerance);
   }
@@ -218,7 +230,8 @@ class DetectorNavigator {
       return;
     }
 
-    if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
+    if (state.surfaceCandidateIndex ==
+        static_cast<int>(state.surfaceCandidates.size())) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position)
                    << "no surface candidates - waiting for target call");
@@ -252,7 +265,7 @@ class DetectorNavigator {
       state.currentPortal = nextPortal;
       state.currentSurface = &nextPortal->surface();
       state.surfaceCandidates.clear();
-      state.surfaceCandidateIndex = 0;
+      state.surfaceCandidateIndex = -1;
 
       state.currentPortal->updateDetectorVolume(state.options.geoContext,
                                                 state);
@@ -283,7 +296,7 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "current surface set to "
                    << state.currentSurface->geometryId());
-      ++state.surfaceCandidateIndex;
+      //++state.surfaceCandidateIndex;
     }
   }
 
@@ -349,7 +362,7 @@ class DetectorNavigator {
       return c.objectIntersection.pathLength();
     });
     // Set the surface candidate
-    state.surfaceCandidateIndex = 0;
+    state.surfaceCandidateIndex = -1;
   }
 
   void fillNavigationState(const Vector3& position, const Vector3& direction,
