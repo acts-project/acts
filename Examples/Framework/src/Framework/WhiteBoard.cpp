@@ -112,8 +112,9 @@ void ActsExamples::WhiteBoard::addHolder(
   if (!success) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  ACTS_VERBOSE("Added object '" << name << "' of type "
-                                << storeIt->second->type().name());
+  ACTS_VERBOSE("Added object '"
+               << name << "' of type '"
+               << boost::core::demangle(storeIt->second->type().name()) << "'");
 
   if (success) {
     // deal with aliases
