@@ -198,7 +198,8 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_tracks_writer(tmp_path):
-    from acts.examples.edm4hep import EDM4hepTrackWriter
+    from acts.examples.edm4hep import EDM4hepTrackOutputConverter
+    from acts.examples.podio import PodioWriter
 
     detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -222,19 +223,26 @@ def test_edm4hep_tracks_writer(tmp_path):
 
     out = tmp_path / "tracks_edm4hep.root"
 
+    converter = EDM4hepTrackOutputConverter(
+        level=acts.logging.VERBOSE,
+        inputTracks="kf_tracks",
+        outputPath=str(out),
+        Bz=2 * u.T,
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        EDM4hepTrackWriter(
+        PodioWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kf_tracks",
             outputPath=str(out),
-            Bz=2 * u.T,
+            category="events",
+            collections=converter.collections,
         )
     )
-
     s.run()
 
-    assert os.path.isfile(out)
-    assert os.stat(out).st_size > 200
+    assert os.path.isfile(out), f"File {out} does not exist"
+    assert os.stat(out).st_size > 200, f"File {out} is too small"
 
     if not podioEnabled:
         import warnings
@@ -449,7 +457,8 @@ def test_edm4hep_measurement_reader(tmp_path, fatras):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_tracks_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
+    from acts.examples.edm4hep import EDM4hepTrackOutputConverter, EDM4hepTrackReader
+    from acts.examples.podio import PodioWriter
 
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -474,15 +483,22 @@ def test_edm4hep_tracks_reader(tmp_path):
 
     out = tmp_path / "tracks_edm4hep.root"
 
+    converter = EDM4hepTrackOutputConverter(
+        level=acts.logging.VERBOSE,
+        inputTracks="kf_tracks",
+        outputPath=str(out),
+        Bz=2 * u.T,
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        EDM4hepTrackWriter(
+        PodioWriter(
             level=acts.logging.VERBOSE,
-            inputTracks="kf_tracks",
             outputPath=str(out),
-            Bz=2 * u.T,
+            category="events",
+            collections=converter.collections,
         )
     )
-
     s.run()
 
     s = Sequencer(numThreads=1)

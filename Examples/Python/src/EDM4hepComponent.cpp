@@ -14,8 +14,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -60,8 +60,13 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
                              "EDM4hepMultiTrajectoryWriter", inputTrajectories,
                              inputMeasurementParticlesMap, outputPath, Bz);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepTrackWriter, m,
-                             "EDM4hepTrackWriter", inputTracks, outputPath, Bz);
+  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
+      ActsExamples::EDM4hepTrackOutputConverter, m,
+      "EDM4hepTrackOutputConverter", inputTracks, outputTracks, outputPath,
+      Bz) {
+    alg.def_property_readonly(
+        "collections", &ActsExamples::EDM4hepTrackOutputConverter::collections);
+  };
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepTrackReader, m,
                              "EDM4hepTrackReader", inputTracks, outputTracks,

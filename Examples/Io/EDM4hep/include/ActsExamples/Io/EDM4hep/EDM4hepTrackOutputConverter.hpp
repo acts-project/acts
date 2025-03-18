@@ -8,19 +8,20 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
 
+namespace podio {
+class CollectionBase;
+}
+
 namespace ActsExamples {
 
-class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
+class EDM4hepTrackOutputConverter : public IAlgorithm {
  public:
   struct Config {
     /// Input track collection
@@ -37,27 +38,25 @@ class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  explicit EDM4hepTrackWriter(const Config& config,
-                              Acts::Logging::Level level = Acts::Logging::INFO);
-
-  ProcessCode finalize() final;
+  explicit EDM4hepTrackOutputConverter(
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
+  std::vector<std::string> collections() const;
+
  protected:
   /// @brief Write method called by the base class
   /// @param [in] context is the algorithm context for consistency
-  /// @param [in] tracks is the track collection
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const ConstTrackContainer& tracks) final;
+  ProcessCode execute(const AlgorithmContext& context) const final;
 
  private:
   Config m_cfg;
 
-  std::mutex m_writeMutex;
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
 
-  Acts::PodioUtil::ROOTWriter m_writer;
+  CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples
