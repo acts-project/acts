@@ -24,13 +24,18 @@ class PodioWriterImpl;
 class PodioWriter final : public IWriter {
  public:
   struct Config {
+    /// The path to the output file.
     std::string outputPath;
 
     /// Retrieve a @c podio::Frame from the event store using this name.
-    std::string inputFrame;
+    /// @note If not set, a new frame will be created.
+    std::string inputFrame = "";
 
     /// The podio `category` name to write the frame to
     std::string category;
+
+    /// The collection names to write to the output file.
+    std::vector<std::string> collections;
   };
 
   PodioWriter(const Config& config, Acts::Logging::Level level);
