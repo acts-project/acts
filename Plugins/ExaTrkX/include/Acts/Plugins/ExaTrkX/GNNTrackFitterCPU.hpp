@@ -138,11 +138,13 @@ class GNNTrackFitterCPU {
       ACTS_VERBOSE("Start fit...");
       auto res = m_fitter->fit(sls.begin(), sls.end(), *params, kfOpts, tracks);
       if (!res.ok()) {
-        ACTS_WARNING("Track fit failed!");
+        ACTS_DEBUG("Track fit failed!");
+        continue;
       }
 
       if( !res->hasReferenceSurface() ) {
-        ACTS_WARNING("Fit successfull, but no reference surface");
+        ACTS_DEBUG("Fit successfull, but no reference surface");
+        continue;
       }
     }
   }
