@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+import warnings
 
 
 def getOpenDataDetectorDirectory():
@@ -100,5 +101,7 @@ def getOpenDataDetector(
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
         materialDecorator=mdecorator,
     )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
     return detector
