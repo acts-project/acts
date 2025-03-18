@@ -13,22 +13,23 @@
 
 #include <filesystem>
 #include <memory>
+
 namespace ActsExamples {
 
 namespace detail {
-class EDM4hepReaderImpl;
+class PodioReaderImpl;
 }
-class EDM4hepReader : public IReader {
+class PodioReader : public IReader {
  public:
   struct Config {
     std::filesystem::path inputPath;
-    std::string outputFrame;
+    std::string outputFrame = "events";
     /// The podio `category` name to read the frame from
-    std::string category;
+    std::string category = "events";
   };
 
-  EDM4hepReader(const Config& config, Acts::Logging::Level level);
-  ~EDM4hepReader() override;
+  PodioReader(const Config& config, Acts::Logging::Level level);
+  ~PodioReader() override;
 
   std::string name() const final;
   std::pair<std::size_t, std::size_t> availableEvents() const final;
@@ -37,7 +38,7 @@ class EDM4hepReader : public IReader {
   const Config& config() const;
 
  private:
-  std::unique_ptr<detail::EDM4hepReaderImpl> m_impl;
+  std::unique_ptr<detail::PodioReaderImpl> m_impl;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }
