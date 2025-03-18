@@ -37,7 +37,7 @@ class EDM4hepSimInputConverter final : public IAlgorithm {
  public:
   struct Config {
     /// Where to read input file from.
-    std::string inputFrame;
+    std::string inputFrame = "events";
     /// Name of the particle collection in EDM4hep.
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
@@ -89,11 +89,8 @@ class EDM4hepSimInputConverter final : public IAlgorithm {
   static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
                                 std::vector<SimParticle>::iterator end);
 
-  const Acts::Logger& logger() const { return *m_logger; }
-
   Config m_cfg;
   std::pair<std::size_t, std::size_t> m_eventsRange;
-  std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
 

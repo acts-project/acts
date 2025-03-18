@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepReader.hpp"
+#include "ActsExamples/Io/Podio/PodioReader.hpp"
 
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -18,9 +18,9 @@ namespace ActsExamples {
 
 namespace detail {
 
-class EDM4hepReaderImpl {
+class PodioReaderImpl {
  public:
-  explicit EDM4hepReaderImpl(EDM4hepReader::Config cfg, EDM4hepReader& parent)
+  explicit PodioReaderImpl(PodioReader::Config cfg, PodioReader& parent)
       : m_frameWriteHandle(&parent, "EDM4hepFrameOutput"),
         m_cfg(std::move(cfg)) {
     m_eventsRange = std::make_pair(0, reader().getEntries("events"));
@@ -51,18 +51,18 @@ class EDM4hepReaderImpl {
   std::pair<std::size_t, std::size_t> m_eventsRange;
 
   tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-  EDM4hepReader::Config m_cfg;
+  PodioReader::Config m_cfg;
 };
 
 }  // namespace detail
 
-EDM4hepReader::EDM4hepReader(const Config& config, Acts::Logging::Level level)
-    : m_impl(std::make_unique<detail::EDM4hepReaderImpl>(config, *this)),
-      m_logger(Acts::getDefaultLogger("EDM4hepReader", level)) {}
+PodioReader::PodioReader(const Config& config, Acts::Logging::Level level)
+    : m_impl(std::make_unique<detail::PodioReaderImpl>(config, *this)),
+      m_logger(Acts::getDefaultLogger("PodioReader", level)) {}
 
-EDM4hepReader::~EDM4hepReader() = default;
+PodioReader::~PodioReader() = default;
 
-ProcessCode EDM4hepReader::read(const AlgorithmContext& context) {
+ProcessCode PodioReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading EDM4hep inputs");
   podio::Frame frame =
       m_impl->reader().readEntry(m_impl->m_cfg.category, context.eventNumber);
@@ -71,15 +71,15 @@ ProcessCode EDM4hepReader::read(const AlgorithmContext& context) {
   return ProcessCode::SUCCESS;
 }
 
-std::pair<std::size_t, std::size_t> EDM4hepReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> PodioReader::availableEvents() const {
   return m_impl->m_eventsRange;
 }
 
-std::string EDM4hepReader::name() const {
-  return "EDM4hepReader";
+std::string PodioReader::name() const {
+  return "PodioReader";
 }
 
-const EDM4hepReader::Config& EDM4hepReader::config() const {
+const PodioReader::Config& PodioReader::config() const {
   return m_impl->m_cfg;
 }
 
