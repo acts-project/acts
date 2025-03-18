@@ -54,19 +54,29 @@ def assert_podio(
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_measurement_writer(tmp_path, fatras):
-    from acts.examples.edm4hep import EDM4hepMeasurementWriter
+    from acts.examples.edm4hep import EDM4hepMeasurementOutputConverter
+    from acts.examples.podio import PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
     _, simAlg, digiAlg = fatras(s)
 
     out = tmp_path / "measurements_edm4hep.root"
 
+    converter = EDM4hepMeasurementOutputConverter(
+        level=acts.logging.VERBOSE,
+        inputMeasurements=digiAlg.config.outputMeasurements,
+        inputClusters=digiAlg.config.outputClusters,
+        outputTrackerHitsPlane="tracker_hits_plane",
+        outputTrackerHitsRaw="tracker_hits_raw",
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        EDM4hepMeasurementWriter(
+        PodioWriter(
             level=acts.logging.VERBOSE,
-            inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=digiAlg.config.outputClusters,
             outputPath=str(out),
+            category="events",
+            collections=converter.collections,
         )
     )
 
@@ -74,6 +84,13 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 10
+
+    assert_podio(
+        out,
+        "events",
+        collections=set(["tracker_hits_plane", "tracker_hits_raw"]),
+        nevents=10,
+    )
 
 
 @pytest.mark.edm4hep
@@ -379,31 +396,39 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
+def test_edm4hep_measurement_reader(tmp_path, fatras):
     from acts.examples.edm4hep import (
-        EDM4hepMeasurementWriter,
+        EDM4hepMeasurementOutputConverter,
         EDM4hepMeasurementReader,
     )
+    from acts.examples.podio import PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
     _, simAlg, digiAlg = fatras(s)
 
     out = tmp_path / "measurements_edm4hep.root"
 
-    config = EDM4hepMeasurementWriter.Config(
+    converter = EDM4hepMeasurementOutputConverter(
+        level=acts.logging.INFO,
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputClusters=digiAlg.config.outputClusters,
-        outputPath=str(out),
     )
-    s.addWriter(EDM4hepMeasurementWriter(level=acts.logging.INFO, config=config))
+    s.addAlgorithm(converter)
+    s.addWriter(
+        PodioWriter(
+            level=acts.logging.INFO,
+            outputPath=str(out),
+            category="events",
+            collections=converter.collections,
+        )
+    )
     s.run()
 
     # read back in
     s = Sequencer(numThreads=1)
 
     s.addReader(
-        conf_const(
-            EDM4hepMeasurementReader,
+        EDM4hepMeasurementReader(
             level=acts.logging.WARNING,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
@@ -411,17 +436,14 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
         )
     )
 
-    algs = [
-        AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap")
-    ]
-    for alg in algs:
-        s.addAlgorithm(alg)
+    alg = AssertCollectionExistsAlg(
+        ["measurements", "simhitsmap"], "check_alg", acts.logging.WARNING
+    )
+    s.addAlgorithm(alg)
 
     s.run()
 
-    for alg in algs:
-        assert alg.events_seen == 10
+    assert alg.events_seen == 10
 
 
 @pytest.mark.edm4hep
