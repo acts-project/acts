@@ -125,3 +125,11 @@ void ActsExamples::WhiteBoard::addHolder(
     }
   }
 }
+
+std::vector<std::string> ActsExamples::WhiteBoard::getKeys() const {
+  std::vector<std::string> keys;
+  for (const auto &[key, val] : m_store) {
+    keys.push_back(key);
+  }
+  return keys;
+}

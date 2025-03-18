@@ -81,6 +81,8 @@ class WhiteBoard {
   /// the keys in the other whiteboard.
   void copyFrom(const WhiteBoard& other);
 
+  std::vector<std::string> getKeys() const;
+
  private:
   /// Find similar names for suggestions with levenshtein-distance
   std::vector<std::string_view> similarNames(const std::string_view& name,
