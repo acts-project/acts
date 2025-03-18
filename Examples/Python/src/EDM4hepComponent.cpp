@@ -14,8 +14,8 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackOutputConverter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -67,7 +67,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
         "collections", &ActsExamples::EDM4hepTrackOutputConverter::collections);
   };
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepTrackReader, m,
-                             "EDM4hepTrackReader", inputTracks, outputTracks,
-                             inputPath, Bz);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepTrackInputConverter, m,
+                                "EDM4hepTrackInputConverter", inputFrame,
+                                inputTracks, outputTracks, Bz);
 }

@@ -457,8 +457,11 @@ def test_edm4hep_measurement_reader(tmp_path, fatras):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_tracks_reader(tmp_path):
-    from acts.examples.edm4hep import EDM4hepTrackOutputConverter, EDM4hepTrackReader
-    from acts.examples.podio import PodioWriter
+    from acts.examples.edm4hep import (
+        EDM4hepTrackOutputConverter,
+        EDM4hepTrackInputConverter,
+    )
+    from acts.examples.podio import PodioWriter, PodioReader
 
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -486,7 +489,6 @@ def test_edm4hep_tracks_reader(tmp_path):
     converter = EDM4hepTrackOutputConverter(
         level=acts.logging.VERBOSE,
         inputTracks="kf_tracks",
-        outputPath=str(out),
         Bz=2 * u.T,
     )
     s.addAlgorithm(converter)
@@ -502,11 +504,22 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.run()
 
     s = Sequencer(numThreads=1)
+
     s.addReader(
-        EDM4hepTrackReader(
+        PodioReader(
             level=acts.logging.VERBOSE,
-            outputTracks="kf_tracks",
             inputPath=str(out),
+            outputFrame="events",
+            category="events",
+        )
+    )
+
+    s.addAlgorithm(
+        EDM4hepTrackInputConverter(
+            level=acts.logging.VERBOSE,
+            inputFrame="events",
+            inputTracks="kf_tracks",
+            outputTracks="kf_tracks",
             Bz=2 * u.T,
         )
     )
