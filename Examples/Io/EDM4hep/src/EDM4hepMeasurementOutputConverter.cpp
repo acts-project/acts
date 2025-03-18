@@ -61,11 +61,8 @@ ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
-  m_outputTrackerHitsPlane(ctx,
-                           std::make_unique<edm4hep::TrackerHitPlaneCollection>(
-                               std::move(hitsPlane)));
-  m_outputTrackerHitsRaw(
-      ctx, std::make_unique<edm4hep::TrackerHit3DCollection>(std::move(hits)));
+  m_outputTrackerHitsPlane(ctx, std::move(hitsPlane));
+  m_outputTrackerHitsRaw(ctx, std::move(hits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
