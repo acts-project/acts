@@ -28,6 +28,7 @@ struct GNNParametersBuilderCPU {
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry;
 
     std::size_t rIdx{}, phiIdx{}, zIdx{};
+    float rScale{1.f}, phiScale{1.f}, zScale{1.f};
     std::size_t nFeatures{};
     std::set<std::size_t> stripVolumes;
 
@@ -41,12 +42,21 @@ struct GNNParametersBuilderCPU {
 
   GNNParametersBuilderCPU(const Config &cfg,
                           std::unique_ptr<const Acts::Logger> logger)
-      : m_cfg(cfg), m_logger(std::move(logger)) {}
+      : m_cfg(cfg), m_logger(std::move(logger)) {
+    if( m_cfg.nFeatures == 0 ) {
+      throw std::invalid_argument("Cannot have 0 spacepoint features");
+    }
+    if( m_cfg.rIdx == m_cfg.phiIdx || m_cfg.phiIdx == m_cfg.zIdx || m_cfg.zIdx == m_cfg.rIdx ) {
+      throw std::invalid_argument("r, phi and z idx should point to different offsets!");
+    }
+  }
 
   std::optional<BoundTrackParameters> buildParameters(
       const std::vector<float> &spacepointFeatures,
       const std::vector<Acts::GeometryIdentifier> &geoIds,
-      const std::vector<int> &candidate) const;
+      const std::vector<int> &candidate,
+      Acts::MagneticFieldProvider::Cache &bCache,
+      const Acts::GeometryContext &gctx) const;
 
  private:
   Config m_cfg;
@@ -71,6 +81,7 @@ class GNNTrackFitterCPU {
     const Acts::MagneticFieldContext &mctx;
     const Acts::CalibrationContext &cctx;
     KalmanFitterExtensions<TSBackend> extensions;
+    const Acts::Surface *targetSurface{};
   };
 
   using Propagator = Acts::Propagator<Acts::SympyStepper, Acts::Navigator>;
@@ -81,6 +92,12 @@ class GNNTrackFitterCPU {
       : m_cfg(cfg), m_logger(std::move(logger)) {
     m_paramBuilder = std::make_unique<GNNParametersBuilderCPU>(
         cfg.paramBuilderCfg, m_logger->clone());
+    Acts::Navigator::Config navCfg;
+    navCfg.trackingGeometry = m_cfg.geometry;
+    Acts::Navigator nav(navCfg, m_logger->clone());
+    Acts::SympyStepper stepper(m_cfg.bfield);
+    Propagator prop(std::move(stepper), std::move(nav), m_logger->clone());
+    m_fitter = std::make_unique<Fitter>(std::move(prop), m_logger->clone());
   }
 
   void operator()(
@@ -91,10 +108,12 @@ class GNNTrackFitterCPU {
       const std::vector<boost::container::static_vector<Acts::SourceLink, 2>>
           &sourceLinks, Options options
       ) const {
+    auto bCache = m_cfg.bfield->makeCache(options.mctx);
+
     for (const auto &candidate : candidates) {
       ACTS_VERBOSE("Build parameters...");
       auto params = m_paramBuilder->buildParameters(spacepointFeatures, geoIds,
-                                                    candidate);
+                                                    candidate, bCache, options.gctx);
 
       if (!params) {
         ACTS_DEBUG("No parameters, skip candidate");
@@ -105,6 +124,8 @@ class GNNTrackFitterCPU {
       Acts::PropagatorPlainOptions popts(options.gctx, options.mctx);
       Acts::KalmanFitterOptions<TSBackend> kfOpts(options.gctx, options.mctx, options.cctx,
                                                 options.extensions, popts);
+      kfOpts.referenceSurface = options.targetSurface;
+      kfOpts.referenceSurfaceStrategy = Acts::KalmanFitterTargetSurfaceStrategy::first;
 
       ACTS_VERBOSE("Collect source links...");
       std::vector<Acts::SourceLink> sls;
@@ -118,6 +139,10 @@ class GNNTrackFitterCPU {
       auto res = m_fitter->fit(sls.begin(), sls.end(), *params, kfOpts, tracks);
       if (!res.ok()) {
         ACTS_WARNING("Track fit failed!");
+      }
+
+      if( !res->hasReferenceSurface() ) {
+        ACTS_WARNING("Fit successfull, but no reference surface");
       }
     }
   }

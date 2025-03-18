@@ -16,11 +16,10 @@ namespace Acts {
 std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
     const std::vector<float> &spacepointFeatures,
     const std::vector<Acts::GeometryIdentifier> &geoIds,
-    const std::vector<int> &candidate) const {
+    const std::vector<int> &candidate,
+    Acts::MagneticFieldProvider::Cache &bCache,
+    const Acts::GeometryContext &gctx) const {
   ACTS_VERBOSE("Try to get seed from prototrack with " << candidate.size());
-
-  // TODO this is only for now, later pass this in
-  auto bCache = m_cfg.bField->makeCache({});
 
   // in this case we cannot seed properly
   if (candidate.size() < 3) {
@@ -31,22 +30,28 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
   }
 
   auto getR = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.rIdx);
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.rIdx) * m_cfg.rScale;
   };
   auto getZ = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.zIdx);
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.zIdx) * m_cfg.zScale;
   };
   auto getPhi = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures * m_cfg.phiIdx);
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.phiIdx) * m_cfg.phiScale;
   };
   auto getXYZ = [&](int sp) {
     return Acts::Vector3{getR(sp) * std::cos(getPhi(sp)),
                          getR(sp) * std::sin(getPhi(sp)), getZ(sp)};
   };
 
+  ACTS_VERBOSE("Cand idx: " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << t << " "; } return ss.str(); }());
+  ACTS_VERBOSE("Cand r:   " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getR(t) << " "; } return ss.str(); }());
+  ACTS_VERBOSE("Cand phi: " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getPhi(t) << " "; } return ss.str(); }());
+  ACTS_VERBOSE("Cand z:   " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getZ(t) << " "; } return ss.str(); }());
+  
   auto tmpCand = candidate;
   std::ranges::sort(
       tmpCand, {}, [&](const auto &t) { return std::hypot(getR(t), getZ(t)); });
+
 
   tmpCand.erase(
       std::unique(tmpCand.begin(), tmpCand.end(),
@@ -87,17 +92,23 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
 
   const auto s = tmpCand.size();
   auto seed = m_cfg.buildTightSeeds
-                  ? std::array{getXYZ(tmpCand[0]), getXYZ(tmpCand[1]),
-                               getXYZ(tmpCand[2])}
-                  : std::array{getXYZ(tmpCand[0]), getXYZ(tmpCand[s / 2]),
-                               getXYZ(tmpCand[s - 1])};
+                  ? std::array{getXYZ(tmpCand.at(0)), getXYZ(tmpCand.at(1)),
+                               getXYZ(tmpCand.at(2))}
+                  : std::array{getXYZ(tmpCand.at(0)), getXYZ(tmpCand.at(s / 2)),
+                               getXYZ(tmpCand.at(s - 1))};
 
-  auto fieldRes = m_cfg.bField->getField(seed[0], bCache);
-  if (!fieldRes.ok()) {
-    ACTS_ERROR("Field lookup error: " << fieldRes.error());
+  Acts::Vector3 field = Acts::Vector3::Zero();
+  try {
+    auto fieldRes = m_cfg.bField->getField(seed.at(0), bCache);
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
+      return {};
+    }
+    field = *fieldRes;
+  } catch(std::exception &e) {
+    ACTS_ERROR("Field lookup exception: " << e.what());
     return {};
   }
-  Acts::Vector3 field = *fieldRes;
 
   if (field.norm() < m_cfg.bFieldMin) {
     ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
@@ -108,7 +119,7 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
       Acts::estimateTrackParamsFromSeed(seed[0], seed[1], seed[2], field);
 
   auto surface = m_cfg.tGeometry->findSurface(bottomGeoId);
-  auto boundRes = Acts::transformFreeToBoundParameters(freePars, *surface, {});
+  auto boundRes = Acts::transformFreeToBoundParameters(freePars, *surface, gctx);
 
   if (!boundRes.ok()) {
     ACTS_DEBUG("Skip track because of bad parameters");
