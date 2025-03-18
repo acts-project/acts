@@ -1,4 +1,11 @@
-add_library(ActsExamplesIoPodio SHARED src/PodioWriter.cpp src/PodioReader.cpp)
+add_library(
+    ActsExamplesIoPodio
+    SHARED
+    src/PodioWriter.cpp
+    src/PodioReader.cpp
+    src/CollectionBaseWriteHandle.cpp
+)
+
 target_include_directories(
     ActsExamplesIoPodio
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
