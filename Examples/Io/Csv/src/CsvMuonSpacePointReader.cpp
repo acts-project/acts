@@ -65,10 +65,10 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
   int lastBucketId{-1};
   while (reader.read(data)) {
       /// Decode the stationName, sector & side of the chamber
-      MuonId::StationName stName{static_cast<MuonId::StationName>(data.sectorId >>24)};
-      MuonId::DetSide side{static_cast<MuonId::DetSide>(0x0FF && (data.sectorId >>16))};
-      const int sector = static_cast<int>( 0x0FF &&(data.sectorId >>8) );
-      MuonId::TechField tech{static_cast<MuonId::TechField>(0x0FF&&(data.sectorId))};
+      MuonId::StationName stName{static_cast<MuonId::StationName>(0x0FF & data.sectorId)};
+      MuonId::DetSide side{static_cast<MuonId::DetSide>(0x0FF & (data.sectorId >>8))};
+      const int sector = static_cast<int>( 0x0FF &(data.sectorId >>16) );
+      MuonId::TechField tech{static_cast<MuonId::TechField>(0x0FF&(data.sectorId >>24))};
       MuonId id{};
       id.setChamber(stName, side, sector, tech);
       id.setLayAndCh(data.gasGap, data.primaryCh);
@@ -83,13 +83,10 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
 
       newSpacePoint.defineCoordinates(Acts::Vector3{data.locPositionX, data.locPositionY, data.locPositionZ},
                                       Acts::Vector3{data.locSensorDirX, data.locSensorDirY, data.locSensorDirZ});
-      
       newSpacePoint.defineNormal(Acts::Vector3{data.locPlaneNormX, data.locPlaneNormY, data.locPlaneNormZ});
       newSpacePoint.setRadius(data.driftR);
 
       newSpacePoint.setSpatialCov(data.covXX, data.covXY, data.covYX, data.covYY);
-
-
 
   }
 

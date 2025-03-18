@@ -7,7 +7,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
-
+#include <format>
 namespace ActsExamples{
     using TechField = MuonSpacePoint::MuonId::TechField;
     using StationName = MuonSpacePoint::MuonId::StationName;
@@ -55,6 +55,11 @@ namespace ActsExamples{
                 return "Unknown";
         };
     }
+
+    std::ostream& operator<<(std::ostream& ostr, const MuonSpacePoint::MuonId& id){
+        ostr<<std::format("{:} in {:2d} on {:}", to_string(id.msStation()), id.sector(), to_string(id.side()));
+        return ostr;
+    }
     void MuonSpacePoint::MuonId::setChamber(StationName stName, DetSide side, int sector, TechField tech) {
         m_stName = stName;
         m_side = side;
@@ -64,6 +69,12 @@ namespace ActsExamples{
     void MuonSpacePoint::MuonId::setLayAndCh(uint8_t layer, uint16_t ch) {
         m_layer = layer;
         m_channel = ch;
+    }
+
+
+    std::ostream& operator<<(const MuonSpacePoint& sp, std::ostream& ostr) {
+        ostr<<"Id: "<<sp.id();
+        return ostr;
     }
     void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir) {
         m_pos = std::move(pos);

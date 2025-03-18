@@ -147,7 +147,6 @@ ProcessCode MuonHoughSeeder::execute(
                                             etaHoughWidth_strip, &sp, sp.id().detLayer());
           }
       }
-
       const auto bucketId{bucket.front().id()};
       m_outCanvas->SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
                                         to_string(bucketId.msStation()),
@@ -174,7 +173,6 @@ ProcessCode MuonHoughSeeder::execute(
       for (int k = 0; k < maxHitsAsInt + 1; ++k) {
         houghHistoForPlot.SetContourLevel(k, k - 0.5);
       }
-      
       /// Fetch the first set of peaks
       const MaximumVec_t maxima = etaPeakFinder.findPeaks(etaPlane, etaAxisRanges);
 
@@ -198,7 +196,9 @@ ProcessCode MuonHoughSeeder::execute(
           trueMarker->SetMarkerSize(3);
           trueMarker->SetMarkerColor(kRed);
           legend->AddEntry(trueMarker.get(), "True coordinates");
-          primitives.push_back(std::move(trueMarker));          
+          primitives.push_back(std::move(trueMarker)); 
+          ACTS_VERBOSE("Draw true segment "<<truthSeg.id()<<" in bucket: "<<bucketId);
+          ++truthItr;         
       }
       {
         auto tl = std::make_unique<TLatex>(gPad->GetLeftMargin() + 0.03, 1. - gPad->GetTopMargin() - 0.1,

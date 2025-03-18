@@ -19,6 +19,7 @@
 #include <array>
 #include <stdexcept>
 #include <format>
+#include <bitset>
 
 #include "CsvOutputData.hpp"
 
@@ -67,11 +68,13 @@ ProcessCode CsvMuonSegmentReader::read(
   while (reader.read(data)) {
     MuonSegment& newSeg = segments.emplace_back();
     /// Decode the stationName, sector & side of the chamber
-    MuonId::StationName stName{static_cast<MuonId::StationName>(data.sectorId >>24)};
-    MuonId::DetSide side{static_cast<MuonId::DetSide>(0x0FF && (data.sectorId >>16))};
-    const int sector = static_cast<int>( 0x0FF &&(data.sectorId >>8) );
+    MuonId::StationName stName{static_cast<MuonId::StationName>(0x0FF & data.sectorId)};
+    MuonId::DetSide side{static_cast<MuonId::DetSide>(0x0FF & (data.sectorId >>8))};
+    const int sector = static_cast<int>( 0x0FF &(data.sectorId >>16) );
     MuonId id{};    
     id.setChamber(stName, side, sector, MuonId::TechField::UnDef);
+    ACTS_VERBOSE("Read in new segment in "<<id<<", sector id: "<<data.sectorId
+                <<", "<<std::bitset<32>(data.sectorId));
     newSeg.setId(id);
     newSeg.setGlobalCoords(Acts::Vector3{data.globalPositionX, data.globalPositionY, data.globalPositionZ}, 
                            Acts::Vector3{data.globalDirectionX, data.globalDirectionY, data.globalDirectionZ}); 
@@ -79,9 +82,8 @@ ProcessCode CsvMuonSegmentReader::read(
                           Acts::Vector3{data.localDirectionX, data.localDirectionY, data.localDirectionZ}); 
     newSeg.setTime(data.time, data.timeError); 
     newSeg.setFitQuality(data.chiSquared, data.nDoF); 
-    newSeg.setHitSummary(data.precisionHits, data.triEtaLayers, data.phiLayers);
+    newSeg.setHitSummary(data.precisionHits, data.trigEtaLayers, data.phiLayers);
   }
-
   // write the ordered data to the EventStore (according to geometry_id).
   m_outputSegments(ctx, std::move(segments));
 
