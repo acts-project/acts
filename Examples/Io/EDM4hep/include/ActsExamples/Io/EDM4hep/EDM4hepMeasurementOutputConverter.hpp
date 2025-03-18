@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
 
@@ -68,10 +69,10 @@ class EDM4hepMeasurementOutputConverter final : public IAlgorithm {
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
-  WriteDataHandle<std::unique_ptr<podio::CollectionBase>>
-      m_outputTrackerHitsPlane{this, "OutputTrackerHitsPlane"};
-  WriteDataHandle<std::unique_ptr<podio::CollectionBase>>
-      m_outputTrackerHitsRaw{this, "OutputTrackerHitsRaw"};
+  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
+                                                     "OutputTrackerHitsPlane"};
+  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
+                                                   "OutputTrackerHitsRaw"};
 };
 
 }  // namespace ActsExamples

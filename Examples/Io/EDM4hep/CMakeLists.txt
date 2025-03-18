@@ -26,6 +26,7 @@ target_link_libraries(
         ActsExamplesFramework
         ActsExamplesDigitization
         ActsExamplesDetectorDD4hep
+        ActsExamplesIoPodio
 )
 
 install(
