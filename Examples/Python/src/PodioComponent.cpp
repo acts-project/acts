@@ -25,5 +25,5 @@ PYBIND11_MODULE(ActsPythonBindingsPodio, m) {
                              inputPath, outputFrame, category);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::PodioWriter, m, "PodioWriter",
-                             inputFrame, outputPath, category);
+                             inputFrame, outputPath, category, collections);
 }
