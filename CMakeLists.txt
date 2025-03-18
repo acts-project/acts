@@ -97,6 +97,7 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_PODIO "Build Podio-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
@@ -159,6 +160,10 @@ set_option_if(
 set_option_if(
   ACTS_BUILD_PLUGIN_PODIO
   ACTS_BUILD_EXAMPLES_EDM4HEP
+)
+set_option_if(
+  ACTS_BUILD_PLUGIN_PODIO
+  ACTS_BUILD_EXAMPLES_PODIO
 )
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
