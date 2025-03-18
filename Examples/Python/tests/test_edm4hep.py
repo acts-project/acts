@@ -23,6 +23,34 @@ from acts.examples import (
 from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
+def assert_podio(
+    target_file: Path,
+    category: str,
+    collections: set[str] | None = None,
+    nevents: int | None = None,
+):
+    assert target_file.exists(), f"File {target_file} does not exist"
+    from podio.root_io import Reader
+    import cppyy
+
+    reader = Reader(str(target_file))
+    assert (
+        category in reader.categories
+    ), f"Category {category} not found in {target_file} ({reader.categories})"
+
+    if nevents is not None:
+        assert (
+            len(reader.get(category)) == nevents
+        ), f"Expected {nevents} events in {target_file} ({category}) but got {len(reader.get(category))}"
+
+    if collections is not None:
+        for frame in reader.get(category):
+            assert (
+                set(frame.getAvailableCollections()) == collections
+            ), f"Expected collections {collections} in {target_file} ({category}) but got {frame.getAvailableCollections()}"
+            break
+
+
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_measurement_writer(tmp_path, fatras):
@@ -491,36 +519,28 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
 
     s.run()
 
-    assert target_file.exists()
-
-    from podio.root_io import Reader
-    import cppyy
-
-    reader = Reader(str(target_file))
-    assert "myevents" in reader.categories
-
-    exp_collections = set(
-        (
-            "ShortStripEndcapReadout",
-            "MCParticles",
-            "LongStripBarrelReadout",
-            "PixelEndcapReadout",
-            "HCalEndcapCollectionContributions",
-            "HCalEndcapCollection",
-            "HCalBarrelCollectionContributions",
-            "ECalBarrelCollectionContributions",
-            "LongStripEndcapReadout",
-            "EventHeader",
-            "ECalEndcapCollectionContributions",
-            "ShortStripBarrelReadout",
-            "PixelBarrelReadout",
-            "ECalEndcapCollection",
-            "HCalBarrelCollection",
-            "ECalBarrelCollection",
-        )
+    assert_podio(
+        target_file,
+        "myevents",
+        nevents=10,
+        collections=set(
+            [
+                "ShortStripEndcapReadout",
+                "MCParticles",
+                "LongStripBarrelReadout",
+                "PixelEndcapReadout",
+                "HCalEndcapCollectionContributions",
+                "HCalEndcapCollection",
+                "HCalBarrelCollectionContributions",
+                "ECalBarrelCollectionContributions",
+                "LongStripEndcapReadout",
+                "EventHeader",
+                "ECalEndcapCollectionContributions",
+                "ShortStripBarrelReadout",
+                "PixelBarrelReadout",
+                "ECalEndcapCollection",
+                "HCalBarrelCollection",
+                "ECalBarrelCollection",
+            ]
+        ),
     )
-
-    assert len(reader.get("myevents")) == 10
-    for frame in reader.get("myevents"):
-        assert set(frame.getAvailableCollections()) == exp_collections
-        break
