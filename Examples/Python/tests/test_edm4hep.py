@@ -226,7 +226,7 @@ def test_edm4hep_tracks_writer(tmp_path):
     converter = EDM4hepTrackOutputConverter(
         level=acts.logging.VERBOSE,
         inputTracks="kf_tracks",
-        outputPath=str(out),
+        outputTracks="ActsTracks",
         Bz=2 * u.T,
     )
     s.addAlgorithm(converter)

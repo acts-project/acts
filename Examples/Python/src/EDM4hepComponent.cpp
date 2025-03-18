@@ -62,8 +62,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
       ActsExamples::EDM4hepTrackOutputConverter, m,
-      "EDM4hepTrackOutputConverter", inputTracks, outputTracks, outputPath,
-      Bz) {
+      "EDM4hepTrackOutputConverter", inputTracks, outputTracks, Bz) {
     alg.def_property_readonly(
         "collections", &ActsExamples::EDM4hepTrackOutputConverter::collections);
   };

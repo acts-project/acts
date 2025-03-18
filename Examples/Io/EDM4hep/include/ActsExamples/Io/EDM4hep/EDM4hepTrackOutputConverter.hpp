@@ -28,8 +28,6 @@ class EDM4hepTrackOutputConverter : public IAlgorithm {
     std::string inputTracks;
     /// Output track collection in edm4hep
     std::string outputTracks = "ActsTracks";
-    /// Where to place output file
-    std::string outputPath;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
     double Bz;
