@@ -56,6 +56,7 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
     throw std::invalid_argument("Missing output collection sim vertices");
   }
 
+  m_inputFrame.initialize(m_cfg.inputFrame);
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
@@ -142,11 +143,11 @@ void EDM4hepSimInputConverter::graphviz(
 
 ProcessCode EDM4hepSimInputConverter::execute(
     const AlgorithmContext& ctx) const {
+  ACTS_DEBUG("Reading EDM4hep inputs");
+
   const auto& frame = m_inputFrame(ctx);
   const auto& mcParticleCollection =
       frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
-
-  ACTS_DEBUG("Reading EDM4hep inputs");
 
   std::vector<SimParticle> unorderedParticlesInitial;
 

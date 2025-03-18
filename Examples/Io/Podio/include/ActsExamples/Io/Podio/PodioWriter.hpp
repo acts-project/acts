@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
@@ -16,15 +15,13 @@
 #include <memory>
 #include <string>
 
-#include <DD4hep/DetElement.h>
-
 namespace ActsExamples {
 
 namespace detail {
-class EDM4hepWriterImpl;
+class PodioWriterImpl;
 }  // namespace detail
 
-class EDM4hepWriter final : public IWriter {
+class PodioWriter final : public IWriter {
  public:
   struct Config {
     std::string outputPath;
@@ -36,8 +33,8 @@ class EDM4hepWriter final : public IWriter {
     std::string category;
   };
 
-  EDM4hepWriter(const Config& config, Acts::Logging::Level level);
-  ~EDM4hepWriter() override;
+  PodioWriter(const Config& config, Acts::Logging::Level level);
+  ~PodioWriter() override;
 
   std::string name() const final;
 
@@ -53,7 +50,7 @@ class EDM4hepWriter final : public IWriter {
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::unique_ptr<detail::EDM4hepWriterImpl> m_impl;
+  std::unique_ptr<detail::PodioWriterImpl> m_impl;
 };
 
 }  // namespace ActsExamples

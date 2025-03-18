@@ -294,7 +294,8 @@ def ddsim_input(ddsim_input_session, tmp_path):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
-    from acts.examples.edm4hep import EDM4hepSimReader
+    from acts.examples.edm4hep import EDM4hepSimInputConverter
+    from acts.examples.podio import PodioReader
 
     s = Sequencer(numThreads=1)
 
@@ -302,9 +303,18 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
         trackingGeometry = detector.trackingGeometry()
 
         s.addReader(
-            EDM4hepSimReader(
+            PodioReader(
                 level=acts.logging.INFO,
                 inputPath=ddsim_input,
+                outputFrame="events",
+                category="events",
+            )
+        )
+
+        s.addAlgorithm(
+            EDM4hepSimInputConverter(
+                level=acts.logging.INFO,
+                inputFrame="events",
                 inputSimHits=[
                     "PixelBarrelReadout",
                     "PixelEndcapReadout",
@@ -322,7 +332,11 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
             )
         )
 
-        alg = AssertCollectionExistsAlg("simhits", "check_alg", acts.logging.WARNING)
+        alg = AssertCollectionExistsAlg(
+            ["simhits", "simvertices", "particles_generated", "particles_simulated"],
+            "check_alg",
+            acts.logging.WARNING,
+        )
         s.addAlgorithm(alg)
 
         alg = AssertCollectionExistsAlg(
@@ -435,11 +449,11 @@ def test_edm4hep_tracks_reader(tmp_path):
 
 
 def test_edm4hep_reader(ddsim_input):
-    from acts.examples.edm4hep import EDM4hepReader
+    from acts.examples.podio import PodioReader
 
     s = Sequencer(numThreads=1)
     s.addReader(
-        EDM4hepReader(
+        PodioReader(
             level=acts.logging.VERBOSE,
             inputPath=ddsim_input,
             outputFrame="frame",
@@ -453,13 +467,13 @@ def test_edm4hep_reader(ddsim_input):
 
 
 def test_edm4hep_writer_copy(ddsim_input, tmp_path):
-    from acts.examples.edm4hep import EDM4hepWriter, EDM4hepReader
+    from acts.examples.podio import PodioWriter, PodioReader
 
     target_file = tmp_path / "rewritten_edm4hep.root"
 
     s = Sequencer(numThreads=1)
     s.addReader(
-        EDM4hepReader(
+        PodioReader(
             level=acts.logging.VERBOSE,
             inputPath=ddsim_input,
             outputFrame="myframe",
@@ -467,7 +481,7 @@ def test_edm4hep_writer_copy(ddsim_input, tmp_path):
         )
     )
     s.addWriter(
-        EDM4hepWriter(
+        PodioWriter(
             level=acts.logging.VERBOSE,
             inputFrame="myframe",
             outputPath=str(target_file),
