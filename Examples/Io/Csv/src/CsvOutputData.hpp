@@ -97,14 +97,14 @@ struct MuonSegmentData {
   /** @brief  Complementary hits in the non-bending direction (Rpc / Tgc / sTgc) */
   unsigned phiLayers{0u};
   /** @brief  Complementary hits in the bending direction (Rpc / Tgc) */
-  unsigned triEtaLayers{0u};
+  unsigned trigEtaLayers{0u};
   DFE_NAMEDTUPLE(MuonSegmentData, sectorId, 
                  globalPositionX, globalPositionY, globalPositionZ,
                  globalDirectionX, globalDirectionY, globalDirectionZ,
                  localPositionX, localPositionY, localPositionZ,
                  localDirectionX, localDirectionY, localDirectionZ,
                  time, timeError, chiSquared, nDoF,
-                 precisionHits, phiLayers, triEtaLayers);
+                 precisionHits, phiLayers, trigEtaLayers);
 };
 
 struct MuonSpacePointData{
@@ -140,7 +140,7 @@ struct MuonSpacePointData{
   int secondaryCh{-1};
 
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, 
-                 locPositionX ,locPositionY ,locPositionZ,
+                 locPositionX, locPositionY, locPositionZ,
                  locSensorDirX, locSensorDirY, locSensorDirZ, 
                  locPlaneNormX, locPlaneNormY, locPlaneNormZ, 
                  covXX, covXY, covYX, covYY, driftR,

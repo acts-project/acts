@@ -9,6 +9,9 @@
 
 #include "Acts/EventData/StationSpacePoint.hpp"
 #include "Acts/Definitions/Common.hpp"
+
+#include <iostream>
+
 namespace ActsExamples{
     /** @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM. 
      *         The space points are expressed in a local frame such that the x-axis is parallel to the ATLAS 
@@ -66,6 +69,8 @@ namespace ActsExamples{
                     uint16_t channel() const { 
                         return m_channel;
                     }
+                    /** @brief Returns whether two Identifiers belong to the same station, which
+                     *         is characterized that both share the same msStation, sector & side field. */
                     bool sameStation(const MuonId& other) const {
                         return msStation() == other.msStation() &&
                                sector() == other.sector() &&
@@ -79,6 +84,8 @@ namespace ActsExamples{
                     void setChamber(StationName stName, DetSide side, int sector, TechField tech);
                     /** @brief Set the measurement layer & channel */
                     void setLayAndCh(uint8_t layer, uint16_t ch);
+                    /*** @brief Prints the Identifier */
+                    operator std::string() const;
                 private:
                     TechField m_tech{TechField::UnDef};
                     StationName m_stName{StationName::UnDef};
@@ -168,6 +175,8 @@ namespace ActsExamples{
             LayerVec m_stripHits{};
     };
 
+    std::ostream& operator<<(std::ostream&ostr, const MuonSpacePoint::MuonId& id);
+    std::ostream& operator<<(std::ostream&ostr, const MuonSpacePoint& sp);
 
     std::string to_string(const MuonSpacePoint::MuonId::StationName st);
     std::string to_string(const MuonSpacePoint::MuonId::TechField tech);
