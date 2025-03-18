@@ -2,7 +2,7 @@ add_library(
     ActsExamplesIoEDM4hep
     SHARED
     src/EDM4hepMeasurementReader.cpp
-    src/EDM4hepMeasurementWriter.cpp
+    src/EDM4hepMeasurementOutputConverter.cpp
     src/EDM4hepMultiTrajectoryWriter.cpp
     src/EDM4hepSimInputConverter.cpp
     src/EDM4hepTrackWriter.cpp
