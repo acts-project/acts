@@ -6,19 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepWriter.hpp"
+#include "ActsExamples/Io/Podio/PodioWriter.hpp"
 
+#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 
 #include <podio/CollectionBase.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 namespace detail {
-class EDM4hepWriterImpl {
+class PodioWriterImpl {
  public:
-  EDM4hepWriterImpl(const EDM4hepWriter::Config& config, EDM4hepWriter& parent)
+  PodioWriterImpl(const PodioWriter::Config& config, PodioWriter& parent)
       : m_cfg(config),
         m_inputPodioFrame(&parent, "InputPodioFrame"),
         m_writer(config.outputPath) {
@@ -31,7 +32,7 @@ class EDM4hepWriterImpl {
     m_inputPodioFrame.initialize(m_cfg.inputFrame);
   }
 
-  EDM4hepWriter::Config m_cfg;
+  PodioWriter::Config m_cfg;
 
   ConsumeDataHandle<podio::Frame> m_inputPodioFrame;
 
@@ -40,17 +41,17 @@ class EDM4hepWriterImpl {
 };
 }  // namespace detail
 
-EDM4hepWriter::EDM4hepWriter(const Config& config, Acts::Logging::Level level)
-    : m_logger(Acts::getDefaultLogger("EDM4hepWriter", level)),
-      m_impl(std::make_unique<detail::EDM4hepWriterImpl>(config, *this)) {
+PodioWriter::PodioWriter(const Config& config, Acts::Logging::Level level)
+    : m_logger(Acts::getDefaultLogger("PodioWriter", level)),
+      m_impl(std::make_unique<detail::PodioWriterImpl>(config, *this)) {
   ACTS_DEBUG("Created output file " << config.outputPath);
 }
 
-std::string EDM4hepWriter::name() const {
-  return "EDM4hepWriter";
+std::string PodioWriter::name() const {
+  return "PodioWriter";
 }
 
-ProcessCode EDM4hepWriter::write(const AlgorithmContext& ctx) {
+ProcessCode PodioWriter::write(const AlgorithmContext& ctx) {
   podio::Frame frame = m_impl->m_inputPodioFrame(ctx);
 
   std::lock_guard guard(m_impl->m_writeMutex);
@@ -59,15 +60,15 @@ ProcessCode EDM4hepWriter::write(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode EDM4hepWriter::finalize() {
+ProcessCode PodioWriter::finalize() {
   m_impl->m_writer.finish();
 
   return ProcessCode::SUCCESS;
 }
 
-EDM4hepWriter::~EDM4hepWriter() = default;
+PodioWriter::~PodioWriter() = default;
 
-const EDM4hepWriter::Config& EDM4hepWriter::config() const {
+const PodioWriter::Config& PodioWriter::config() const {
   return m_impl->m_cfg;
 }
 
