@@ -5,13 +5,14 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
 #include <string>
 
@@ -31,7 +32,7 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-class EDM4hepMeasurementInputConverter final : public IAlgorithm {
+class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
  public:
   struct Config {
     /// Where to read the input frame from.
@@ -52,7 +53,8 @@ class EDM4hepMeasurementInputConverter final : public IAlgorithm {
                                    Acts::Logging::Level level);
 
   /// Read out data from the input stream.
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
