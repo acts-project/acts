@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepParticleOutputConverter.hpp"
 
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
@@ -18,27 +18,24 @@
 
 namespace ActsExamples {
 
-EDM4hepParticleWriter::EDM4hepParticleWriter(
-    const EDM4hepParticleWriter::Config& cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputParticles, "EDM4hepParticleWriter", lvl),
-      m_cfg(cfg),
-      m_writer(cfg.outputPath) {
-  ACTS_VERBOSE("Created output file " << cfg.outputPath);
-
+EDM4hepParticleOutputConverter::EDM4hepParticleOutputConverter(
+    const EDM4hepParticleOutputConverter::Config& cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("EDM4hepParticleOutputConverter", lvl), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
+
+  if (m_cfg.outputParticles.empty()) {
+    throw std::invalid_argument("Missing particles output collection");
+  }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
-ActsExamples::ProcessCode EDM4hepParticleWriter::finalize() {
-  m_writer.finish();
-
-  return ProcessCode::SUCCESS;
-}
-
-ProcessCode EDM4hepParticleWriter::writeT(
-    const AlgorithmContext& /*ctx*/, const SimParticleContainer& particles) {
-  podio::Frame frame;
+ProcessCode EDM4hepParticleOutputConverter::execute(
+    const AlgorithmContext& ctx) const {
+  const SimParticleContainer particles = m_inputParticles(ctx);
 
   edm4hep::MCParticleCollection mcParticleCollection;
 
@@ -47,12 +44,13 @@ ProcessCode EDM4hepParticleWriter::writeT(
     EDM4hepUtil::writeParticle(particle, p);
   }
 
-  frame.put(std::move(mcParticleCollection), m_cfg.outputParticles);
-
-  std::lock_guard guard(m_writeMutex);
-  m_writer.writeFrame(frame, "events");
+  m_outputParticles(ctx, std::move(mcParticleCollection));
 
   return ProcessCode::SUCCESS;
+}
+
+std::vector<std::string> EDM4hepParticleOutputConverter::collections() const {
+  return {m_cfg.outputParticles};
 }
 
 }  // namespace ActsExamples

@@ -7,7 +7,7 @@ add_library(
     src/EDM4hepSimInputConverter.cpp
     src/EDM4hepTrackOutputConverter.cpp
     src/EDM4hepTrackInputConverter.cpp
-    src/EDM4hepParticleWriter.cpp
+    src/EDM4hepParticleOutputConverter.cpp
     src/EDM4hepSimHitWriter.cpp
     src/EDM4hepUtil.cpp
 )
