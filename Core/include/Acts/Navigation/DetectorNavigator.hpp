@@ -163,7 +163,8 @@ class DetectorNavigator {
     }
     ++state.surfaceCandidateIndex;
 
-    if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
+    if (state.surfaceCandidateIndex ==
+        static_cast<int>(state.surfaceCandidates.size())) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
 
@@ -221,7 +222,8 @@ class DetectorNavigator {
       return;
     }
 
-    if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
+    if (state.surfaceCandidateIndex ==
+        static_cast<int>(state.surfaceCandidates.size())) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position)
                    << "no surface candidates - waiting for target call");
