@@ -69,9 +69,6 @@ class DetectorNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
-    // Direction from the propagation
-    // Direction direction = Direction::Forward();
-
     /// Navigation statistics
     NavigatorStatistics statistics;
   };
