@@ -120,8 +120,9 @@ def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
 
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
-def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
-    from acts.examples.edm4hep import EDM4hepParticleWriter
+def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
+    from acts.examples.edm4hep import EDM4hepParticleOutputConverter
+    from acts.examples.podio import PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
     evGen = ptcl_gun(s)
@@ -130,12 +131,19 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     out.mkdir()
 
+    converter = EDM4hepParticleOutputConverter(
+        acts.logging.INFO,
+        inputParticles=evGen.config.outputParticles,
+        outputParticles="MCParticles",
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        conf_const(
-            EDM4hepParticleWriter,
-            acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
+        PodioWriter(
+            level=acts.logging.INFO,
             outputPath=str(out),
+            category="events",
+            collections=converter.collections,
         )
     )
 
@@ -143,6 +151,8 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 200
+
+    assert_podio(out, "events", collections=set(["MCParticles"]), nevents=10)
 
 
 @pytest.mark.edm4hep
