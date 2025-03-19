@@ -13,7 +13,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
 #include <string>
@@ -32,11 +32,11 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-class EDM4hepMeasurementReader final : public IReader {
+class EDM4hepMeasurementInputConverter final : public IAlgorithm {
  public:
   struct Config {
-    /// Where to read the input file from.
-    std::string inputPath;
+    /// Where to read the input frame from.
+    std::string inputFrame;
     /// Output measurement collection.
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
@@ -49,27 +49,19 @@ class EDM4hepMeasurementReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepMeasurementReader(const Config& config, Acts::Logging::Level level);
-
-  std::string name() const final;
-
-  /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final;
+  EDM4hepMeasurementInputConverter(const Config& config,
+                                   Acts::Logging::Level level);
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  std::pair<std::size_t, std::size_t> m_eventsRange;
-  std::unique_ptr<const Acts::Logger> m_logger;
 
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-
-  Acts::PodioUtil::ROOTReader& reader();
+  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

@@ -8,8 +8,8 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
@@ -38,10 +38,10 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
       ActsExamples::EDM4hepSimHitWriter, m, "EDM4hepSimHitWriter", inputSimHits,
       inputParticles, outputPath, outputParticles, outputSimTrackerHits);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepMeasurementReader, m,
-                             "EDM4hepMeasurementReader", inputPath,
-                             outputMeasurements, outputMeasurementSimHitsMap,
-                             outputClusters);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepMeasurementInputConverter,
+                                m, "EDM4hepMeasurementInputConverter",
+                                inputFrame, outputMeasurements,
+                                outputMeasurementSimHitsMap, outputClusters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
       ActsExamples::EDM4hepMeasurementOutputConverter, m,

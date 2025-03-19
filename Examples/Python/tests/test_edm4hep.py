@@ -415,9 +415,9 @@ def test_edm4hep_simhit_particle_reader(tmp_path, ddsim_input):
 def test_edm4hep_measurement_reader(tmp_path, fatras):
     from acts.examples.edm4hep import (
         EDM4hepMeasurementOutputConverter,
-        EDM4hepMeasurementReader,
+        EDM4hepMeasurementInputConverter,
     )
-    from acts.examples.podio import PodioWriter
+    from acts.examples.podio import PodioWriter, PodioReader
 
     s = Sequencer(numThreads=1, events=10)
     _, simAlg, digiAlg = fatras(s)
@@ -444,11 +444,19 @@ def test_edm4hep_measurement_reader(tmp_path, fatras):
     s = Sequencer(numThreads=1)
 
     s.addReader(
-        EDM4hepMeasurementReader(
+        PodioReader(
             level=acts.logging.WARNING,
+            inputPath=str(out),
+            outputFrame="events",
+            category="events",
+        )
+    )
+    s.addAlgorithm(
+        EDM4hepMeasurementInputConverter(
+            level=acts.logging.WARNING,
+            inputFrame="events",
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
-            inputPath=str(out),
         )
     )
 

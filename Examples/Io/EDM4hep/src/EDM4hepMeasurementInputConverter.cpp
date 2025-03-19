@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
@@ -24,37 +24,33 @@
 
 namespace ActsExamples {
 
-EDM4hepMeasurementReader::EDM4hepMeasurementReader(
-    const EDM4hepMeasurementReader::Config& config, Acts::Logging::Level level)
-    : m_cfg(config),
-      m_logger(Acts::getDefaultLogger("EDM4hepMeasurementReader", level)) {
+EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
+    const EDM4hepMeasurementInputConverter::Config& config,
+    Acts::Logging::Level level)
+    : IAlgorithm("EDM4hepMeasurementInputConverter", level), m_cfg(config) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
 
-  m_eventsRange = std::make_pair(0, reader().getEntries("events"));
+  if (m_cfg.inputFrame.empty()) {
+    throw std::invalid_argument("Missing input frame");
+  }
+
+  m_inputFrame.initialize(m_cfg.inputFrame);
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
-std::string EDM4hepMeasurementReader::EDM4hepMeasurementReader::name() const {
-  return "EDM4hepMeasurementReader";
-}
-
-std::pair<std::size_t, std::size_t> EDM4hepMeasurementReader::availableEvents()
-    const {
-  return m_eventsRange;
-}
-
-ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
+ProcessCode EDM4hepMeasurementInputConverter::execute(
+    const AlgorithmContext& ctx) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
   // TODO what about those?
   IndexMultimap<Index> measurementSimHitsMap;
 
-  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
+  const podio::Frame& frame = m_inputFrame(ctx);
 
   const auto& trackerHitPlaneCollection =
       frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
@@ -78,16 +74,6 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   }
 
   return ProcessCode::SUCCESS;
-}
-
-Acts::PodioUtil::ROOTReader& EDM4hepMeasurementReader::reader() {
-  bool exists = false;
-  auto& reader = m_reader.local(exists);
-  if (!exists) {
-    reader.openFile(m_cfg.inputPath);
-  }
-
-  return reader;
 }
 
 }  // namespace ActsExamples
