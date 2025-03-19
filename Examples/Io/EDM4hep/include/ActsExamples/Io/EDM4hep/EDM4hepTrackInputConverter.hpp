@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
 #include <string>
 
@@ -20,7 +20,7 @@ class Frame;
 
 namespace ActsExamples {
 
-class EDM4hepTrackInputConverter : public IAlgorithm {
+class EDM4hepTrackInputConverter : public EDM4hepInputConverter {
  public:
   struct Config {
     std::string inputFrame;
@@ -42,13 +42,13 @@ class EDM4hepTrackInputConverter : public IAlgorithm {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const final;
 
  private:
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 };
 
 }  // namespace ActsExamples

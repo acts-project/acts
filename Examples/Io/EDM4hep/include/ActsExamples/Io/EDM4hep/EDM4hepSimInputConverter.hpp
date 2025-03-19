@@ -14,7 +14,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
 #include <memory>
 #include <string>
@@ -36,7 +36,7 @@ class DD4hepDetector;
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepSimInputConverter final : public IAlgorithm {
+class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
  public:
   struct Config {
     /// Where to read input file from.
@@ -76,7 +76,8 @@ class EDM4hepSimInputConverter final : public IAlgorithm {
   /// @param level is the logging level
   EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -95,8 +96,6 @@ class EDM4hepSimInputConverter final : public IAlgorithm {
   Config m_cfg;
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
-
-  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};

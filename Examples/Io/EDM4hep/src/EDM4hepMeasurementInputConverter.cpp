@@ -27,7 +27,9 @@ namespace ActsExamples {
 EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
     const EDM4hepMeasurementInputConverter::Config& config,
     Acts::Logging::Level level)
-    : IAlgorithm("EDM4hepMeasurementInputConverter", level), m_cfg(config) {
+    : EDM4hepInputConverter("EDM4hepMeasurementInputConverter", level,
+                            config.inputFrame),
+      m_cfg(config) {
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
@@ -43,14 +45,12 @@ EDM4hepMeasurementInputConverter::EDM4hepMeasurementInputConverter(
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
-ProcessCode EDM4hepMeasurementInputConverter::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode EDM4hepMeasurementInputConverter::convert(
+    const AlgorithmContext& ctx, const podio::Frame& frame) const {
   MeasurementContainer measurements;
   ClusterContainer clusters;
   // TODO what about those?
   IndexMultimap<Index> measurementSimHitsMap;
-
-  const podio::Frame& frame = m_inputFrame(ctx);
 
   const auto& trackerHitPlaneCollection =
       frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");

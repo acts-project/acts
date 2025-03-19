@@ -37,10 +37,9 @@ namespace ActsExamples {
 
 EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
                                                    Acts::Logging::Level level)
-    : IAlgorithm("EDM4hepSimInputConverter", level), m_cfg(config) {
-  if (m_cfg.inputFrame.empty()) {
-    throw std::invalid_argument("Missing input frame");
-  }
+    : EDM4hepInputConverter("EDM4hepSimInputConverter", level,
+                            config.inputFrame),
+      m_cfg(config) {
   if (m_cfg.outputParticlesGenerator.empty()) {
     throw std::invalid_argument(
         "Missing output collection generator particles");
@@ -56,7 +55,6 @@ EDM4hepSimInputConverter::EDM4hepSimInputConverter(const Config& config,
     throw std::invalid_argument("Missing output collection sim vertices");
   }
 
-  m_inputFrame.initialize(m_cfg.inputFrame);
   m_outputParticlesGenerator.initialize(m_cfg.outputParticlesGenerator);
   m_outputParticlesSimulation.initialize(m_cfg.outputParticlesSimulation);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
@@ -141,11 +139,10 @@ void EDM4hepSimInputConverter::graphviz(
   os << "}";
 }
 
-ProcessCode EDM4hepSimInputConverter::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
+                                              const podio::Frame& frame) const {
   ACTS_DEBUG("Reading EDM4hep inputs");
 
-  const auto& frame = m_inputFrame(ctx);
   const auto& mcParticleCollection =
       frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 
