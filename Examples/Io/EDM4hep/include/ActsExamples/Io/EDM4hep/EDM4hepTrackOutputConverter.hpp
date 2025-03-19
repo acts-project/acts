@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
@@ -21,7 +21,7 @@ class CollectionBase;
 
 namespace ActsExamples {
 
-class EDM4hepTrackOutputConverter : public IAlgorithm {
+class EDM4hepTrackOutputConverter : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Input track collection
@@ -42,7 +42,7 @@ class EDM4hepTrackOutputConverter : public IAlgorithm {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::vector<std::string> collections() const;
+  std::vector<std::string> collections() const final;
 
  protected:
   /// @brief Write method called by the base class

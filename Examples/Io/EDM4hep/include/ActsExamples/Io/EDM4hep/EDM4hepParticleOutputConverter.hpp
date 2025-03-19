@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
@@ -22,7 +22,7 @@ namespace ActsExamples {
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepParticleOutputConverter final : public IAlgorithm {
+class EDM4hepParticleOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Input particles collection to write.
@@ -42,7 +42,7 @@ class EDM4hepParticleOutputConverter final : public IAlgorithm {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::vector<std::string> collections() const;
+  std::vector<std::string> collections() const final;
 
  private:
   Config m_cfg;

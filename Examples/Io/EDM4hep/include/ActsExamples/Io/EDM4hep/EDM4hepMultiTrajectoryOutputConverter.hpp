@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -29,7 +29,7 @@ namespace ActsExamples {
 /// - curvature parameter
 /// - track state local coordinates are written to (D0,Z0)
 /// - covariance incorrect
-class EDM4hepMultiTrajectoryOutputConverter : public IAlgorithm {
+class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Input trajectory collection
@@ -55,7 +55,7 @@ class EDM4hepMultiTrajectoryOutputConverter : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
   /// Readonly access to the collections
-  std::vector<std::string> collections() const;
+  std::vector<std::string> collections() const final;
 
  protected:
   /// @brief Write method called by the base class

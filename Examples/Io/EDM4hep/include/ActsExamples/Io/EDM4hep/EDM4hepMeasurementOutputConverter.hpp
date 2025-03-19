@@ -11,7 +11,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
@@ -28,16 +28,17 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-class EDM4hepMeasurementOutputConverter final : public IAlgorithm {
+class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters;
+    /// Name of the output tracker hit plane collection.
     std::string outputTrackerHitsPlane = "ActsTrackerHitsPlane";
+    /// Name of the output tracker hit raw collection.
     std::string outputTrackerHitsRaw = "ActsTrackerHitsRaw";
-    std::string outputFrame = "events";
   };
 
   /// Constructor with
@@ -49,7 +50,7 @@ class EDM4hepMeasurementOutputConverter final : public IAlgorithm {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::vector<std::string> collections() const;
+  std::vector<std::string> collections() const final;
 
  protected:
   /// This implementation converts the measurements to EDM4hep.

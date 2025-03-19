@@ -11,6 +11,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
@@ -28,6 +29,18 @@ using namespace pybind11::literals;
 
 using namespace Acts;
 using namespace Acts::Python;
+using namespace ActsExamples;
+
+template <typename A, typename B = IAlgorithm>
+auto declareAlgorithm(py::module_& m, const char* name) {
+  using Config = typename A::Config;
+  auto alg = py::class_<A, B, std::shared_ptr<A>>(m, name)
+                 .def(py::init<const Config&, Acts::Logging::Level>(),
+                      py::arg("config"), py::arg("level"))
+                 .def_property_readonly("config", &A::config);
+  auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+  return std::tuple{alg, c};
+}
 
 PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -36,54 +49,61 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
       outputParticlesSimulation, outputSimHits, outputSimVertices,
       graphvizOutput, dd4hepDetector, trackingGeometry, sortSimHitsInTime);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
-      ActsExamples::EDM4hepSimHitOutputConverter, m,
-      "EDM4hepSimHitOutputConverter", inputSimHits, inputParticles,
-      outputParticles, outputSimTrackerHits) {
-    alg.def_property_readonly(
-        "collections",
-        &ActsExamples::EDM4hepSimHitOutputConverter::collections);
-  };
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepTrackInputConverter, m,
+                                "EDM4hepTrackInputConverter", inputFrame,
+                                inputTracks, outputTracks, Bz);
+
+  py::class_<EDM4hepOutputConverter, IAlgorithm,
+             std::shared_ptr<EDM4hepOutputConverter>>(m,
+                                                      "EDM4hepOutputConverter")
+      .def_property_readonly("collections",
+                             &EDM4hepOutputConverter::collections);
+
+  {
+    auto [alg, config] =
+        declareAlgorithm<EDM4hepSimHitOutputConverter, EDM4hepOutputConverter>(
+            m, "EDM4hepSimHitOutputConverter");
+    ACTS_PYTHON_STRUCT(config, EDM4hepSimHitOutputConverter::Config,
+                       inputSimHits, inputParticles, outputParticles,
+                       outputSimTrackerHits);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepMeasurementInputConverter,
                                 m, "EDM4hepMeasurementInputConverter",
                                 inputFrame, outputMeasurements,
                                 outputMeasurementSimHitsMap, outputClusters);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
-      ActsExamples::EDM4hepMeasurementOutputConverter, m,
-      "EDM4hepMeasurementOutputConverter", inputMeasurements, inputClusters,
-      outputTrackerHitsPlane, outputTrackerHitsRaw) {
-    alg.def_property_readonly(
-        "collections",
-        &ActsExamples::EDM4hepMeasurementOutputConverter::collections);
-  };
+  {
+    auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,
+                                          EDM4hepOutputConverter>(
+        m, "EDM4hepMeasurementOutputConverter");
+    ACTS_PYTHON_STRUCT(config, EDM4hepMeasurementOutputConverter::Config,
+                       inputMeasurements, inputClusters, outputTrackerHitsPlane,
+                       outputTrackerHitsRaw);
+  }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
-      ActsExamples::EDM4hepParticleOutputConverter, m,
-      "EDM4hepParticleOutputConverter", inputParticles, outputParticles) {
-    alg.def_property_readonly(
-        "collections",
-        &ActsExamples::EDM4hepParticleOutputConverter::collections);
-  };
+  {
+    auto [alg, config] = declareAlgorithm<EDM4hepParticleOutputConverter,
+                                          EDM4hepOutputConverter>(
+        m, "EDM4hepParticleOutputConverter");
+    ACTS_PYTHON_STRUCT(config, EDM4hepParticleOutputConverter::Config,
+                       inputParticles, outputParticles);
+  }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
-      ActsExamples::EDM4hepMultiTrajectoryOutputConverter, m,
-      "EDM4hepMultiTrajectoryOutputConverter", inputTrajectories,
-      inputMeasurementParticlesMap, outputTracks, Bz) {
-    alg.def_property_readonly(
-        "collections",
-        &ActsExamples::EDM4hepMultiTrajectoryOutputConverter::collections);
-  };
+  {
+    auto [alg, config] = declareAlgorithm<EDM4hepMultiTrajectoryOutputConverter,
+                                          EDM4hepOutputConverter>(
+        m, "EDM4hepMultiTrajectoryOutputConverter");
+    ACTS_PYTHON_STRUCT(config, EDM4hepMultiTrajectoryOutputConverter::Config,
+                       inputTrajectories, inputMeasurementParticlesMap,
+                       outputTracks, Bz);
+  }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
-      ActsExamples::EDM4hepTrackOutputConverter, m,
-      "EDM4hepTrackOutputConverter", inputTracks, outputTracks, Bz) {
-    alg.def_property_readonly(
-        "collections", &ActsExamples::EDM4hepTrackOutputConverter::collections);
-  };
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::EDM4hepTrackInputConverter, m,
-                                "EDM4hepTrackInputConverter", inputFrame,
-                                inputTracks, outputTracks, Bz);
+  {
+    auto [alg, config] =
+        declareAlgorithm<EDM4hepTrackOutputConverter, EDM4hepOutputConverter>(
+            m, "EDM4hepTrackOutputConverter");
+    ACTS_PYTHON_STRUCT(config, EDM4hepTrackOutputConverter::Config, inputTracks,
+                       outputTracks, Bz);
+  }
 }
