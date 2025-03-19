@@ -111,14 +111,6 @@ class DetectorNavigator {
     return state.options.targetSurface;
   }
 
-  // void nextSurface() {
-  //   if (direction == Direction::Forward()) {
-  //     ++state.surfaceCandidateIndex;
-  //   } else {
-  //     --state.surfaceCandidateIndex;
-  //   }
-  // }
-
   bool endOfWorldReached(State& state) const {
     return state.currentVolume == nullptr;
   }
@@ -174,12 +166,8 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "stepping through surface");
     }
-<<<<<<< Updated upstream
-
-=======
     ++state.surfaceCandidateIndex;
     
->>>>>>> Stashed changes
     if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
