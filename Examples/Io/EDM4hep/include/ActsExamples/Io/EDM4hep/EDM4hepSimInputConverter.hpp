@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -20,9 +19,13 @@
 #include <memory>
 #include <string>
 
-#include <DD4hep/DetElement.h>
-#include <edm4hep/MCParticleCollection.h>
-#include <tbb/enumerable_thread_specific.h>
+namespace edm4hep {
+class MCParticle;
+}
+
+namespace podio {
+class Frame;
+}
 
 namespace ActsExamples {
 
@@ -90,7 +93,6 @@ class EDM4hepSimInputConverter final : public IAlgorithm {
                                 std::vector<SimParticle>::iterator end);
 
   Config m_cfg;
-  std::pair<std::size_t, std::size_t> m_eventsRange;
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
 

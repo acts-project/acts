@@ -16,11 +16,11 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
-#include <list>
 #include <stdexcept>
 
 #include <edm4hep/TrackerHitPlane.h>
 #include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 

@@ -8,13 +8,11 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
-#include <mutex>
 #include <string>
 
 namespace ActsExamples {
