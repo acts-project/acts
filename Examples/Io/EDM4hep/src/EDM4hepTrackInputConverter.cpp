@@ -20,15 +20,14 @@ namespace ActsExamples {
 
 EDM4hepTrackInputConverter::EDM4hepTrackInputConverter(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("EDM4hepTrackInputConverter", level), m_cfg(config) {
-  m_inputFrame.initialize(m_cfg.inputFrame);
+    : EDM4hepInputConverter("EDM4hepTrackInputConverter", level,
+                            config.inputFrame),
+      m_cfg(config) {
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ProcessCode EDM4hepTrackInputConverter::execute(
-    const AlgorithmContext& ctx) const {
-  const podio::Frame& frame = m_inputFrame(ctx);
-
+ProcessCode EDM4hepTrackInputConverter::convert(
+    const AlgorithmContext& ctx, const podio::Frame& frame) const {
   const auto& trackCollection =
       frame.get<edm4hep::TrackCollection>(m_cfg.inputTracks);
 
