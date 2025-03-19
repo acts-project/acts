@@ -155,9 +155,9 @@ BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,
       0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0, 0, 0;
-  CurvilinearTrackParameters curvilinear(Vector4(341., 412., 93., 0.),
-                                         Vector3(1.2, 8.3, 0.45), 1 / 10.0, cov,
-                                         ParticleHypothesis::pion());
+  BoundTrackParameters curvilinear = BoundTrackParameters::createCurvilinear(
+      Vector4(341., 412., 93., 0.), Vector3(1.2, 8.3, 0.45), 1 / 10.0, cov,
+      ParticleHypothesis::pion());
 
   // run the test
   testJacobianToGlobal(curvilinear);
@@ -211,7 +211,8 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   Vector3 sNormal = Vector3(1.2, -0.3, 0.05).normalized();
 
   // Create a surface & parameters with covariance on the surface
-  auto pSurface = CurvilinearSurface(sPosition, sNormal).planeSurface();
+  std::shared_ptr<PlaneSurface> pSurface =
+      CurvilinearSurface(sPosition, sNormal).planeSurface();
 
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,

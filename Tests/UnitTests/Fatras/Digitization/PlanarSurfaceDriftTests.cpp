@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   Acts::Vector3 cPosition = Acts::Vector3(10., 50., 12.);
   Acts::Vector3 cNormal = Acts::Vector3(1., 1., 1.).normalized();
 
-  auto planeSurface =
+  std::shared_ptr<Acts::PlaneSurface> planeSurface =
       Acts::CurvilinearSurface(cPosition, cNormal).planeSurface();
 
   double depletion = 0.250;

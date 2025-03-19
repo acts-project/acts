@@ -29,7 +29,8 @@ Volume& StaticBlueprintNode::build(const BlueprintOptions& options,
     throw std::runtime_error("Volume is not built");
   }
 
-  ACTS_DEBUG(prefix() << "Building volume (" << name() << ") with "
+  ACTS_DEBUG(prefix() << "Building volume (" << name()
+                      << ", id=" << m_volume->geometryId() << ") with "
                       << children().size() << " children");
   for (auto& child : children()) {
     child.build(options, gctx, logger);

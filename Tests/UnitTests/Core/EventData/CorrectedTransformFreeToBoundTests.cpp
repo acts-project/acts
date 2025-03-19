@@ -56,8 +56,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // construct two parallel plane surfaces with normal in x direction
   double distance = 10_mm;
-  auto eSurface = CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
-                      .planeSurface();
+  std::shared_ptr<PlaneSurface> eSurface =
+      CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
+          .planeSurface();
 
   // the bound parameters at the starting plane
   BoundVector sBoundParams = BoundVector::Zero();
