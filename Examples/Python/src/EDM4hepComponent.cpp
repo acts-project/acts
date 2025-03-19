@@ -11,7 +11,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepMultiTrajectoryOutputConverter.hpp"
-#include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepParticleOutputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimInputConverter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
@@ -52,9 +52,13 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
         &ActsExamples::EDM4hepMeasurementOutputConverter::collections);
   };
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepParticleWriter, m,
-                             "EDM4hepParticleWriter", inputParticles,
-                             outputPath, outputParticles);
+  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
+      ActsExamples::EDM4hepParticleOutputConverter, m,
+      "EDM4hepParticleOutputConverter", inputParticles, outputParticles) {
+    alg.def_property_readonly(
+        "collections",
+        &ActsExamples::EDM4hepParticleOutputConverter::collections);
+  };
 
   ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(
       ActsExamples::EDM4hepMultiTrajectoryOutputConverter, m,
