@@ -96,22 +96,29 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
-    from acts.examples.edm4hep import EDM4hepSimHitWriter
+    from acts.examples.edm4hep import EDM4hepSimHitOutputConverter
+    from acts.examples.podio import PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
     _, simAlg, _ = fatras(s)
 
     out = tmp_path / "simhits_edm4hep.root"
 
+    converter = EDM4hepSimHitOutputConverter(
+        level=acts.logging.INFO,
+        inputSimHits=simAlg.config.outputSimHits,
+        outputSimTrackerHits="sim_tracker_hits",
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        conf_const(
-            EDM4hepSimHitWriter,
+        PodioWriter(
             level=acts.logging.INFO,
-            inputSimHits=simAlg.config.outputSimHits,
             outputPath=str(out),
+            category="events",
+            collections=converter.collections,
         )
     )
-
     s.run()
 
     assert os.path.isfile(out)
