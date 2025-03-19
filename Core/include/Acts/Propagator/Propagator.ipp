@@ -60,8 +60,17 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
         return nextTarget;
       }else{
         //in case the target is a portal and the target is not reachable, reinitialize the navigator
-        
+        if(nextTarget.isPortal && i == state.options.maxTargetSkipping - 1){
+          ACTS_VERBOSE("Found unreachable target surface after " << i << " attempts.");
+          ACTS_VERBOSE("Unreachable Target is a portal - try to reinitialize with the current navigation state");
+          auto navInitRes = m_navigator.initialize(state.navigation, state.position, state.direction,
+            state.options.direction);;
+          if (!navInitRes.ok()) {
+            return navInitRes.error();
+          }
+      }
     }
+  }
 
     ACTS_ERROR("getNextTarget failed to find a valid target surface after "
                << state.options.maxTargetSkipping << " attempts.");
@@ -188,7 +197,7 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
                                        const propagator_options_t& options,
-                                       bool makeCurvilinear) const
+                                       bool createCurvilinear) const
     -> Result<
         actor_list_t_result_t<StepperCurvilinearTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -207,7 +216,7 @@ auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
   auto propagationResult = propagate(state);
 
   return makeResult(std::move(state), propagationResult, options,
-                    makeCurvilinear);
+                    createCurvilinear);
 }
 
 template <typename S, typename N>
@@ -304,7 +313,7 @@ Acts::Result<void> Acts::Propagator<S, N>::initialize(
   static_assert(BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
-  m_stepper.initialize(state.stepping, start);
+  m_stepper.initialize(state.stepping, start.toBound());
 
   state.position = m_stepper.position(state.stepping);
   state.direction =
@@ -333,7 +342,7 @@ template <typename propagator_state_t, typename propagator_options_t>
 auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
                                         Result<void> propagationResult,
                                         const propagator_options_t& /*options*/,
-                                        bool makeCurvilinear) const
+                                        bool createCurvilinear) const
     -> Result<
         actor_list_t_result_t<StepperCurvilinearTrackParameters,
                               typename propagator_options_t::actor_list_type>> {
@@ -355,7 +364,7 @@ auto Acts::Propagator<S, N>::makeResult(propagator_state_t state,
   ResultType result{};
   moveStateToResult(state, result);
 
-  if (makeCurvilinear) {
+  if (createCurvilinear) {
     if (!m_stepper.prepareCurvilinearState(state.stepping)) {
       // information to compute curvilinearState is incomplete.
       return propagationResult.error();
