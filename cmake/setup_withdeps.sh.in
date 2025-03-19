@@ -8,9 +8,9 @@
 
 # This script sets up the ACTS Examples environment in a somewhat robust way.
 
-if [ -n "$ZSH_VERSION" ]; then
+if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
-elif [ -n "$BASH_VERSION" ]; then
+elif [ -n "${BASH_VERSION:-}" ]; then
     script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 else
     # If the current shell is not ZSH or Bash, we can't guarantee that the
