@@ -16,10 +16,6 @@
 
 #include <string>
 
-namespace podio {
-class CollectionBase;
-}
-
 namespace ActsExamples {
 
 /// Write out a measurement cluster collection to EDM4hep.
