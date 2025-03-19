@@ -48,14 +48,7 @@ class SequenceElement {
   void registerWriteHandle(const DataHandleBase& handle);
   void registerReadHandle(const DataHandleBase& handle);
 
-  template <typename T>
-  friend class WriteDataHandle;
-
-  template <typename T>
-  friend class ReadDataHandle;
-
-  template <typename T>
-  friend class ConsumeDataHandle;
+  friend class DataHandleBase;
 
   friend class BufferedReader;
 

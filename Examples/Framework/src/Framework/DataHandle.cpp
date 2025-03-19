@@ -206,4 +206,12 @@ void ConsumeDataHandleBase::emulate(
   }
 }
 
+void DataHandleBase::registerAsWriteHandle() {
+  m_parent->registerWriteHandle(*this);
+}
+
+void DataHandleBase::registerAsReadHandle() {
+  m_parent->registerReadHandle(*this);
+}
+
 }  // namespace ActsExamples

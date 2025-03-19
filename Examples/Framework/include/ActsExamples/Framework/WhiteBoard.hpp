@@ -112,14 +112,7 @@ class WhiteBoard {
   static std::string typeMismatchMessage(const std::string& name,
                                          const char* req, const char* act);
 
-  template <typename T>
-  friend class WriteDataHandle;
-
-  template <typename T>
-  friend class ReadDataHandle;
-
-  template <typename T>
-  friend class ConsumeDataHandle;
+  friend class DataHandleBase;
 };
 
 }  // namespace ActsExamples

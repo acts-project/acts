@@ -56,6 +56,25 @@ class DataHandleBase {
   std::string fullName() const { return m_parent->name() + "." + name(); }
 
  protected:
+  void registerAsWriteHandle();
+  void registerAsReadHandle();
+
+  // Trampoline functions to avoid having the WhiteBoard as a friend
+  template <typename T>
+  void add(WhiteBoard& wb, T&& object) const {
+    wb.add(m_key.value(), std::forward<T>(object));
+  }
+
+  template <typename T>
+  const T& get(const WhiteBoard& wb) const {
+    return wb.get<T>(m_key.value());
+  }
+
+  template <typename T>
+  T pop(WhiteBoard& wb) const {
+    return wb.pop<T>(m_key.value());
+  }
+
   SequenceElement* m_parent{nullptr};
   std::string m_name;
   std::optional<std::string> m_key{};
@@ -137,7 +156,7 @@ class WriteDataHandle final : public WriteDataHandleBase {
  public:
   WriteDataHandle(SequenceElement* parent, const std::string& name)
       : WriteDataHandleBase{parent, name} {
-    m_parent->registerWriteHandle(*this);
+    registerAsWriteHandle();
   }
 
   void operator()(const AlgorithmContext& ctx, T&& value) const {
@@ -149,7 +168,7 @@ class WriteDataHandle final : public WriteDataHandleBase {
       throw std::runtime_error{"WriteDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    wb.add(m_key.value(), std::move(value));
+    add(wb, std::move(value));
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
@@ -170,7 +189,7 @@ class ReadDataHandle final : public ReadDataHandleBase {
  public:
   ReadDataHandle(SequenceElement* parent, const std::string& name)
       : ReadDataHandleBase{parent, name} {
-    m_parent->registerReadHandle(*this);
+    registerAsReadHandle();
   }
 
   const T& operator()(const AlgorithmContext& ctx) const {
@@ -182,7 +201,7 @@ class ReadDataHandle final : public ReadDataHandleBase {
       throw std::runtime_error{"ReadDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    return wb.get<T>(m_key.value());
+    return get<T>(wb);
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
@@ -204,7 +223,7 @@ class ConsumeDataHandle final : public ConsumeDataHandleBase {
  public:
   ConsumeDataHandle(SequenceElement* parent, const std::string& name)
       : ConsumeDataHandleBase{parent, name} {
-    m_parent->registerReadHandle(*this);
+    registerAsReadHandle();
   }
 
   T operator()(const AlgorithmContext& ctx) const {
@@ -216,7 +235,7 @@ class ConsumeDataHandle final : public ConsumeDataHandleBase {
       throw std::runtime_error{"ConsumeDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    return wb.pop<T>(m_key.value());
+    return pop<T>(wb);
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
