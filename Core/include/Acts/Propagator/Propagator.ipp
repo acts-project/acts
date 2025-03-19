@@ -54,23 +54,28 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           ConstrainedStep::Type::Navigator, logger());
       if (preStepSurfaceStatus == IntersectionStatus::reachable ||
           preStepSurfaceStatus == IntersectionStatus::onSurface) {
-            
-            ACTS_VERBOSE("Found valid target surface after " << i << " attempts.");
-            ACTS_VERBOSE("Target is " << nextTarget.surface->geometryId());
+        ACTS_VERBOSE("Found valid target surface after " << i << " attempts.");
+        ACTS_VERBOSE("Target is " << nextTarget.surface->geometryId());
         return nextTarget;
-      }else{
-        //in case the target is a portal and the target is not reachable, reinitialize the navigator
-        if(nextTarget.isPortal && i == state.options.maxTargetSkipping - 1){
-          ACTS_VERBOSE("Found unreachable target surface after " << i << " attempts.");
-          ACTS_VERBOSE("Unreachable Target is a portal - try to reinitialize with the current navigation state");
-          auto navInitRes = m_navigator.initialize(state.navigation, state.position, state.direction,
-            state.options.direction);;
+      } else {
+        // in case the target is a portal and the target is not reachable,
+        // reinitialize the navigator
+        if (nextTarget.isPortal && i == state.options.maxTargetSkipping - 1) {
+          ACTS_VERBOSE("Found unreachable target surface after "
+                       << i << " attempts.");
+          ACTS_VERBOSE(
+              "Unreachable Target is a portal - try to reinitialize with the "
+              "current navigation state");
+          auto navInitRes =
+              m_navigator.initialize(state.navigation, state.position,
+                                     state.direction, state.options.direction);
+          ;
           if (!navInitRes.ok()) {
             return navInitRes.error();
           }
+        }
       }
     }
-  }
 
     ACTS_ERROR("getNextTarget failed to find a valid target surface after "
                << state.options.maxTargetSkipping << " attempts.");

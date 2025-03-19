@@ -69,8 +69,8 @@ class DetectorNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
-    //Direction from the propagation
-    //Direction direction = Direction::Forward();
+    // Direction from the propagation
+    // Direction direction = Direction::Forward();
 
     /// Navigation statistics
     NavigatorStatistics statistics;
@@ -158,8 +158,6 @@ class DetectorNavigator {
       return NavigationTarget::None();
     }
 
-  
-
     fillNavigationState(position, direction, state);
 
     if (state.currentSurface != nullptr) {
@@ -167,14 +165,14 @@ class DetectorNavigator {
                    << posInfo(state, position) << "stepping through surface");
     }
     ++state.surfaceCandidateIndex;
-    
+
     if (state.surfaceCandidateIndex == state.surfaceCandidates.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
-    
-        return NavigationTarget::None();
+
+      return NavigationTarget::None();
     }
-    
+
     // Screen output how much is left to try
     ACTS_VERBOSE(volInfo(state) << posInfo(state, position)
                                 << (state.surfaceCandidates.size() -
@@ -291,7 +289,6 @@ class DetectorNavigator {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "current surface set to "
                    << state.currentSurface->geometryId());
-      //++state.surfaceCandidateIndex;
     }
   }
 
@@ -363,7 +360,6 @@ class DetectorNavigator {
                            State& state) const {
     state.position = position;
     state.direction = direction;
-
   }
 };
 

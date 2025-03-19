@@ -33,8 +33,7 @@ struct NavigationTarget {
 
   NavigationTarget(const Surface& surface_,
                    std::uint8_t surfaceIntersectionIndex_,
-                   BoundaryTolerance boundaryTolerance_,
-                   bool isPortal_ = false)
+                   BoundaryTolerance boundaryTolerance_, bool isPortal_ = false)
       : surface(&surface_),
         surfaceIntersectionIndex(surfaceIntersectionIndex_),
         boundaryTolerance(std::move(boundaryTolerance_)),
