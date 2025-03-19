@@ -11,7 +11,7 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
 #include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
@@ -25,7 +25,7 @@ namespace ActsExamples {
 /// - after4 momentum
 /// - hit index
 /// - digitization channel
-class EDM4hepSimHitOutputConverter final : public IAlgorithm {
+class EDM4hepSimHitOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.
@@ -50,7 +50,7 @@ class EDM4hepSimHitOutputConverter final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
   /// Access to the collections
-  std::vector<std::string> collections() const;
+  std::vector<std::string> collections() const final;
 
  protected:
   /// Type-specific write implementation.

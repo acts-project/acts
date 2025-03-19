@@ -21,7 +21,8 @@ namespace ActsExamples {
 
 EDM4hepTrackOutputConverter::EDM4hepTrackOutputConverter(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("EDM4hepTrackOutputConverter", level), m_cfg(config) {
+    : EDM4hepOutputConverter("EDM4hepTrackOutputConverter", level),
+      m_cfg(config) {
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
