@@ -148,7 +148,8 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_multitrajectory_writer(tmp_path):
-    from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
+    from acts.examples.edm4hep import EDM4hepMultiTrajectoryOutputConverter
+    from acts.examples.podio import PodioWriter
 
     detector = GenericDetector()
     trackingGeometry = detector.trackingGeometry()
@@ -180,15 +181,22 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 
     out = tmp_path / "trajectories_edm4hep.root"
 
+    converter = EDM4hepMultiTrajectoryOutputConverter(
+        level=acts.logging.VERBOSE,
+        inputTrajectories="trajectories",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputTracks="ActsTrajectories",
+    )
+    s.addAlgorithm(converter)
+
     s.addWriter(
-        EDM4hepMultiTrajectoryWriter(
+        PodioWriter(
             level=acts.logging.VERBOSE,
-            inputTrajectories="trajectories",
-            inputMeasurementParticlesMap="measurement_particles_map",
             outputPath=str(out),
+            category="events",
+            collections=converter.collections,
         )
     )
-
     s.run()
 
     assert os.path.isfile(out)
@@ -527,6 +535,8 @@ def test_edm4hep_tracks_reader(tmp_path):
     s.run()
 
 
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_reader(ddsim_input):
     from acts.examples.podio import PodioReader
 
@@ -545,6 +555,8 @@ def test_edm4hep_reader(ddsim_input):
     s.run()
 
 
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_writer_copy(ddsim_input, tmp_path):
     from acts.examples.podio import PodioWriter, PodioReader
 
