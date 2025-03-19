@@ -3,7 +3,7 @@ add_library(
     SHARED
     src/EDM4hepMeasurementReader.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
-    src/EDM4hepMultiTrajectoryWriter.cpp
+    src/EDM4hepMultiTrajectoryOutputConverter.cpp
     src/EDM4hepSimInputConverter.cpp
     src/EDM4hepTrackOutputConverter.cpp
     src/EDM4hepTrackInputConverter.cpp
