@@ -82,6 +82,12 @@ void patchKwargsConstructor(T& c) {
 /// This macro is needed to use the BOOST_PP_SEQ_FOR_EACH loop macro
 #define ACTS_PYTHON_MEMBER_LOOP(r, data, elem) ACTS_PYTHON_MEMBER(elem);
 
+#define ACTS_PYTHON_STRUCT(object, cls, ...)                   \
+  ACTS_PYTHON_STRUCT_BEGIN(object, cls);                       \
+  BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,            \
+                        BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+  ACTS_PYTHON_STRUCT_END();
+
 /// A macro that uses Boost.Preprocessor to create the python binding for an
 /// algorithm and the additional config struct. The binding can be customized
 /// by a lambda function that takes the algorithm and config class as arguments.
