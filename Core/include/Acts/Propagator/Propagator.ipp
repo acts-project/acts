@@ -60,7 +60,7 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
       } else {
         // in case the target is a portal and the target is not reachable,
         // reinitialize the navigator
-        if (nextTarget.isPortal && i == state.options.maxTargetSkipping - 1) {
+        if (nextTarget.isPortal) {
           ACTS_VERBOSE("Found unreachable target surface after "
                        << i << " attempts.");
           ACTS_VERBOSE(
@@ -69,7 +69,6 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           auto navInitRes =
               m_navigator.initialize(state.navigation, state.position,
                                      state.direction, state.options.direction);
-          ;
           if (!navInitRes.ok()) {
             return navInitRes.error();
           }

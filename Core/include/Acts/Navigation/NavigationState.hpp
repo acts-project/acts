@@ -85,7 +85,6 @@ struct NavigationState {
   /// Auxiliary attached information
   std::any auxiliary;
 
-  // move to -1 in order to get the first surface correctly
   const SurfaceCandidate& surfaceCandidate() const {
     return surfaceCandidates.at(surfaceCandidateIndex);
   }
