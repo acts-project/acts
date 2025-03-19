@@ -1,7 +1,7 @@
 add_library(
     ActsExamplesIoEDM4hep
     SHARED
-    src/EDM4hepMeasurementReader.cpp
+    src/EDM4hepMeasurementInputConverter.cpp
     src/EDM4hepMeasurementOutputConverter.cpp
     src/EDM4hepMultiTrajectoryOutputConverter.cpp
     src/EDM4hepSimInputConverter.cpp
