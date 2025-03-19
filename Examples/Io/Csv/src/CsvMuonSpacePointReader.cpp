@@ -72,6 +72,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
       MuonId id{};
       id.setChamber(stName, side, sector, tech);
       id.setLayAndCh(data.gasGap, data.primaryCh);
+      id.setCoordFlags(data.measuresEta, data.measuresPhi);
       /// Start a new bucket if the sector id or the bucket Id are different
       if (spacePoints.empty() || !spacePoints.back().back().id().sameStation(id) || lastBucketId != data.bucketId) {
         spacePoints.emplace_back();

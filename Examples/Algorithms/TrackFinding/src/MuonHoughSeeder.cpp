@@ -12,7 +12,6 @@
 #include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/EventData/MuonHoughMaximum.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -20,15 +19,14 @@
 #include <stdexcept>
 #include <format>
 
+
+#include "TCanvas.h"
+#include "TH2D.h"
+#include "TMarker.h"
+#include "TStyle.h"
 #include "TBox.h"
 #include "TLatex.h"
 #include "TLegend.h"
-
-namespace {
-   constexpr double stripUncertCutOff = 10. *Acts::UnitConstants::cm;
-
-}
-
 
 namespace ActsExamples {
 
@@ -95,8 +93,8 @@ ProcessCode MuonHoughSeeder::execute(
 
   // configure the binning of the hough plane
   Acts::HoughTransformUtils::HoughPlaneConfig etaPlaneCfg;
-  etaPlaneCfg.nBinsX = 1000;
-  etaPlaneCfg.nBinsY = 1000;
+  etaPlaneCfg.nBinsX = 25;
+  etaPlaneCfg.nBinsY = 25;
 
 
   Acts::HoughTransformUtils::HoughPlaneConfig phiPlaneCfg;
@@ -133,16 +131,32 @@ ProcessCode MuonHoughSeeder::execute(
   MuonHoughMaxContainer outMaxima{};
   
 
-  for (const MuonSpacePointContainer::value_type&  bucket :  gotSpacePoints){
+  for (const MuonSpacePointContainer::value_type&  bucket :  gotSpacePoints) {
       MuonHoughMaxContainer etaMaxima{};
       etaPlane.reset();
+      /// First loop over the bucket to find the covered range in x & y
+      etaAxisRanges.yMin = 100.* Acts::UnitConstants::m;
+      etaAxisRanges.yMax = - 100.* Acts::UnitConstants::m;
+      phiAxisRanges.yMin = 100.* Acts::UnitConstants::m;
+      phiAxisRanges.yMax = - 100.* Acts::UnitConstants::m;
+      for (const MuonSpacePoint& sp : bucket) {
+         if (sp.id().measuresEta()) {
+            etaAxisRanges.yMin = std::min(etaAxisRanges.yMin, sp.localPosition().y()- m_cfg.etaPlaneMarginIcept);
+            etaAxisRanges.yMax = std::max(etaAxisRanges.yMax, sp.localPosition().y()+ m_cfg.etaPlaneMarginIcept);
+         }
+         if (sp.id().measuresPhi()) {
+           phiAxisRanges.yMin = std::min(phiAxisRanges.yMin, sp.localPosition().x() - m_cfg.phiPlaneMarginIcept);
+           phiAxisRanges.yMax = std::max(phiAxisRanges.yMax, sp.localPosition().x() + m_cfg.phiPlaneMarginIcept);
+         }
+      }
+
       for (const MuonSpacePoint& sp : bucket) {
           if (sp.id().technology() == MuonSpacePoint::MuonId::TechField::Mdt) {
             etaPlane.fill<MuonSpacePoint>(sp, etaAxisRanges, etaHoughParamDC_left,
                                             houghWidth_fromDC, &sp, sp.id().detLayer());
             etaPlane.fill<MuonSpacePoint>(sp, etaAxisRanges, etaHoughParamDC_right,
                                             houghWidth_fromDC, &sp, sp.id().detLayer());
-          } else if (std::sqrt(sp.covariance()(Acts::eY, Acts::eY)) < stripUncertCutOff) {
+          } else if (sp.id().measuresEta()) {
             etaPlane.fill<MuonSpacePoint>(sp, etaAxisRanges, etaHoughParam_strip,
                                             etaHoughWidth_strip, &sp, sp.id().detLayer());
           }
@@ -234,7 +248,7 @@ ProcessCode MuonHoughSeeder::execute(
         MuonHoughMaximum::HitVec hits{max.hitIdentifiers.begin(), max.hitIdentifiers.end()};
         /// Add all the space points that don't measure the precision coordinate
         for (const MuonSpacePoint& sp : bucket) {
-            if (std::sqrt(sp.covariance()(Acts::eY, Acts::eY)) >= stripUncertCutOff) {
+            if (!sp.id().measuresEta()) {
               hits.push_back(&sp);
             }
         }
@@ -251,10 +265,10 @@ ProcessCode MuonHoughSeeder::execute(
         phiPlane.reset();
         unsigned nPhiHits{0};
         for (const MuonSpacePoint* sp : etaMax.hits()) {
-          if (std::sqrt(sp->covariance()(Acts::eX, Acts::eX)) < stripUncertCutOff) {
+          if (sp->id().measuresPhi()) {
              phiPlane.fill<MuonSpacePoint>(*sp, phiAxisRanges, phiHoughParam_strip,
                                            phiHoughWidth_strip, sp, sp->id().detLayer());
-              ++nPhiHits;
+             ++nPhiHits;
           }
         }
         // 2 hits always share a common hough maximum
@@ -263,10 +277,15 @@ ProcessCode MuonHoughSeeder::execute(
           continue;
         }
         /// Fetch the first set of peaks
-        const MaximumVec_t maxima = etaPeakFinder.findPeaks(phiPlane, phiAxisRanges);
-
-        // phiPeakFinderCfg
-
+        const MaximumVec_t phiMaxima = phiPeakFinder.findPeaks(phiPlane, phiAxisRanges);
+        for (const Maximum_t& max : phiMaxima) {
+            MuonHoughMaximum::HitVec hits{max.hitIdentifiers.begin(), max.hitIdentifiers.end()};
+            /// Copy all hits not constaining the phi coordinate
+            std::ranges::copy_if(etaMax.hits(), std::back_inserter(hits), [](const MuonSpacePoint* sp){
+                return !sp->id().measuresPhi();
+            });
+            outMaxima.emplace_back(etaMax.interceptY(), etaMax.tanAlpha(), max.x, max.y, std::move(hits));
+        }
       }
 
   }

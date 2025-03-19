@@ -136,15 +136,16 @@ struct MuonSpacePointData{
   unsigned short gasGap{0u};
   /** @brief Primary measurement channel */
   unsigned short primaryCh{0u};
-  /** @brief Secondary measurement channel */
-  int secondaryCh{-1};
-
+  /** @brief Flag toggling whether the measurement is a precision one */
+  bool measuresEta{false};
+  /** @brief Flag togglign whether the measurement is a non-precision one */
+  bool measuresPhi{false};
   DFE_NAMEDTUPLE(MuonSpacePointData, sectorId, bucketId, 
                  locPositionX, locPositionY, locPositionZ,
                  locSensorDirX, locSensorDirY, locSensorDirZ, 
                  locPlaneNormX, locPlaneNormY, locPlaneNormZ, 
                  covXX, covXY, covYX, covYY, driftR,
-                 gasGap, primaryCh, secondaryCh);
+                 gasGap, primaryCh, measuresEta, measuresPhi);
 
 };
 

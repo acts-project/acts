@@ -69,6 +69,10 @@ namespace ActsExamples{
                     uint16_t channel() const { 
                         return m_channel;
                     }
+                    /** @brief Returns whether the id corresponds to a precision coordinate (eta) measurement */
+                    bool measuresEta() const { return m_measEta; }
+                    /**  @brief Returns whether the id corresponds to a non-precision coordinate (phi) measurement */
+                    bool measuresPhi() const { return m_measPhi; }
                     /** @brief Returns whether two Identifiers belong to the same station, which
                      *         is characterized that both share the same msStation, sector & side field. */
                     bool sameStation(const MuonId& other) const {
@@ -84,8 +88,10 @@ namespace ActsExamples{
                     void setChamber(StationName stName, DetSide side, int sector, TechField tech);
                     /** @brief Set the measurement layer & channel */
                     void setLayAndCh(uint8_t layer, uint16_t ch);
-                    /*** @brief Prints the Identifier */
-                    operator std::string() const;
+                    /** @brief Define the measurement type of the space point
+                     *  @param measEta: Flag stating whether the space point measures the precision (eta) coordinate
+                     *  @param measPhi: Flag stating whether the space point measures the non-precsion (phi) coordinate */
+                    void setCoordFlags(bool measEta, bool measPhi);
                 private:
                     TechField m_tech{TechField::UnDef};
                     StationName m_stName{StationName::UnDef};
@@ -93,32 +99,34 @@ namespace ActsExamples{
                     uint8_t m_sector{0};
                     uint8_t m_layer{0};
                     uint16_t m_channel{0}; 
+                    bool m_measEta{false};
+                    bool m_measPhi{false};
             };
-            /** @brief Return the Identifier of the space point */
+            /** @brief Returns the Identifier of the space point */
             const MuonId& id() const {
                 return m_id;
             }
-            /** @brief Return the local meaurement position */
+            /** @brief Returns the local meaurement position */
             const Acts::Vector3& localPosition() const{
                 return m_pos;
             }
-            /** @brief Return the local sensor direction */
+            /** @brief Returns the local sensor direction */
             const Acts::Vector3& sensorDirection() const{
                 return m_dir;
             }
-            /** @brief Return the normal vector to the plane */
+            /** @brief Returns the normal vector to the plane */
             const Acts::Vector3& stripPlaneNormal() const {
                 return m_pos;
             }
-            /** @brief Return the  */
+            /** @brief Returns the space point covariance */
             const Acts::ActsSquareMatrix<3>& covariance() const {
                 return m_cov;
             }
-            /** @brief Return the drift radius */
+            /** @brief Returns the drift radius */
             double driftRadius() const{
                 return m_radius;
             }
-            /** @brief Return the measurement time */
+            /** @brief Returns the measurement time */
             double time() const {
                 return m_time;
             }
