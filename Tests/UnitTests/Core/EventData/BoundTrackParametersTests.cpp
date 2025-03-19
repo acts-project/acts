@@ -13,7 +13,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -22,7 +21,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -30,14 +28,11 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <memory>
 #include <numbers>
 #include <optional>
-#include <utility>
-#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -189,7 +184,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -198,7 +193,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // negative charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -1_e / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, -1_e / p,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
@@ -207,7 +202,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // positive charged parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1_e / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1_e / p,
                                      std::nullopt, ParticleHypothesis::pion())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
@@ -216,7 +211,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p,
+        BoundTrackParameters::create(geoCtx, surface, pos4, dir, 1 / p,
                                      std::nullopt, ParticleHypothesis::pion0())
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
@@ -225,7 +220,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // double-negative any parameters from global information
   {
     auto params = BoundTrackParameters::create(
-                      surface, geoCtx, pos4, dir, -2_e / p, std::nullopt,
+                      geoCtx, surface, pos4, dir, -2_e / p, std::nullopt,
                       ParticleHypothesis::pionLike(2_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
@@ -234,7 +229,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // triple-positive any parameters from global information
   {
     auto params = BoundTrackParameters::create(
-                      surface, geoCtx, pos4, dir, 3_e / p, std::nullopt,
+                      geoCtx, surface, pos4, dir, 3_e / p, std::nullopt,
                       ParticleHypothesis::pionLike(3_e))
                       .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
