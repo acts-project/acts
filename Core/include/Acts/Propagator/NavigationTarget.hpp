@@ -27,15 +27,18 @@ struct NavigationTarget {
   const Surface* surface = nullptr;
   std::uint8_t surfaceIntersectionIndex = 0;
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
+  bool isPortal = false;
 
   static NavigationTarget None() { return NavigationTarget(); }
 
   NavigationTarget(const Surface& surface_,
                    std::uint8_t surfaceIntersectionIndex_,
-                   BoundaryTolerance boundaryTolerance_)
+                   BoundaryTolerance boundaryTolerance_,
+                   bool isPortal_ = false)
       : surface(&surface_),
         surfaceIntersectionIndex(surfaceIntersectionIndex_),
-        boundaryTolerance(std::move(boundaryTolerance_)) {}
+        boundaryTolerance(std::move(boundaryTolerance_)),
+        isPortal(isPortal_) {}
 
   bool isNone() const { return surface == nullptr; }
 
