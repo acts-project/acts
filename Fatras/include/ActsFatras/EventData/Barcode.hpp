@@ -154,7 +154,10 @@ class Barcode : public Acts::MultiIndex<std::uint64_t, 12, 12, 16, 8, 16> {
     // The vertex is identified by primary vertex, secondary vertex, and
     // generation. The other components are set to 0 so two particle originating
     // from the same vertex will have the same vertex ID.
-    return Barcode(*this).setParticle(0).setSubParticle(0);
+    return Barcode()
+        .setVertexPrimary(vertexPrimary())
+        .setVertexSecondary(vertexSecondary())
+        .setGeneration(generation());
   }
 };
 

@@ -78,7 +78,7 @@ class TrackParamsLookupAccumulator {
         Acts::GeometryContext gctx;
 
         auto res = TrackParameters::create(
-            track.referenceSurface().getSharedPtr(), gctx,
+            gctx, track.referenceSurface().getSharedPtr(),
             track.fourPosition(gctx) / count, track.momentum().normalized(),
             count * track.charge() / track.momentum().norm(),
             track.covariance(), track.particleHypothesis());
@@ -148,7 +148,7 @@ class TrackParamsLookupAccumulator {
       Acts::Vector4 fourPosition = a.fourPosition(gctx) + b.fourPosition(gctx);
 
       auto res = TrackParameters::create(
-          a.referenceSurface().getSharedPtr(), gctx, fourPosition,
+          gctx, a.referenceSurface().getSharedPtr(), fourPosition,
           momentum.normalized(), a.charge() / momentum.norm(), a.covariance(),
           a.particleHypothesis());
 

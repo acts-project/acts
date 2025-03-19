@@ -51,6 +51,8 @@ class IAlgorithm : public SequenceElement {
   /// Finalize the algorithm
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
+  std::string_view typeName() const override { return "Algorithm"; }
+
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
 

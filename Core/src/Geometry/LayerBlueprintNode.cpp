@@ -79,8 +79,18 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
   ACTS_VERBOSE(prefix() << " -> bounds: " << *bounds);
 
   Transform3 transform = m_transform;
-  transform.translation() =
-      Vector3{extent.medium(AxisX), extent.medium(AxisY), extent.medium(AxisZ)};
+  Vector3 translation = Vector3::Zero();
+  if (m_useCenterOfGravity.at(toUnderlying(AxisX))) {
+    translation.x() = extent.medium(AxisX);
+  }
+  if (m_useCenterOfGravity.at(toUnderlying(AxisY))) {
+    translation.y() = extent.medium(AxisY);
+  }
+  if (m_useCenterOfGravity.at(toUnderlying(AxisZ))) {
+    translation.z() = extent.medium(AxisZ);
+  }
+
+  transform.translation() = translation;
 
   ACTS_VERBOSE(prefix() << " -> adjusted transform:\n" << transform.matrix());
 
@@ -130,6 +140,12 @@ LayerBlueprintNode& LayerBlueprintNode::setLayerType(LayerType layerType) {
 
 const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
   return m_layerType;
+}
+
+LayerBlueprintNode& LayerBlueprintNode::setUseCenterOfGravity(bool x, bool y,
+                                                              bool z) {
+  m_useCenterOfGravity = {x, y, z};
+  return *this;
 }
 
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {

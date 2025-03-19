@@ -12,6 +12,7 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -160,6 +161,17 @@ LayerBlueprintNode& BlueprintNode::addLayer(
     callback(*layer);
   }
   return *layer;
+}
+
+GeometryIdentifierBlueprintNode& BlueprintNode::withGeometryIdentifier(
+    const std::function<
+        void(GeometryIdentifierBlueprintNode& geometryIdentifier)>& callback) {
+  auto geometryIdentifier = std::make_shared<GeometryIdentifierBlueprintNode>();
+  addChild(geometryIdentifier);
+  if (callback) {
+    callback(*geometryIdentifier);
+  }
+  return *geometryIdentifier;
 }
 
 void BlueprintNode::clearChildren() {

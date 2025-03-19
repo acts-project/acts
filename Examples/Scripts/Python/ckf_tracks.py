@@ -119,7 +119,7 @@ def runCKFTracks(
         ),
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaR=(1 * u.mm, 300 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,

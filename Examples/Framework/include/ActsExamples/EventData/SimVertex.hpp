@@ -22,13 +22,13 @@ class SimVertexBarcode {
 
   constexpr SimVertexBarcode() = default;
   explicit constexpr SimVertexBarcode(Value encoded)
-      : m_id(SimBarcode(encoded)) {}
-  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
-      : m_id(vertexId.setParticle(0).setSubParticle(0)) {
-    if (vertexId != vertexId.vertexId()) {
+      : m_id(SimBarcode(encoded)) {
+    if (m_id != m_id.vertexId()) {
       throw std::invalid_argument("SimVertexBarcode: invalid vertexId");
     }
   }
+  explicit constexpr SimVertexBarcode(SimBarcode vertexId)
+      : SimVertexBarcode(vertexId.vertexId().value()) {}
 
   /// Get the encoded value of all index levels.
   constexpr Value value() const { return m_id.value(); }

@@ -30,6 +30,10 @@ Not complete yet
 
 ### Geometry identification specification
 
+:::{doxygenclass} Acts::Experimental::GeometryIdentifierBlueprintNode
+:::
+
+
 ### *Layers* and other nodes
 
 :::{doxygenclass} Acts::Experimental::StaticBlueprintNode
