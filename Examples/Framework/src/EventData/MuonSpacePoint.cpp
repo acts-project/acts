@@ -70,7 +70,10 @@ namespace ActsExamples{
         m_layer = layer;
         m_channel = ch;
     }
-
+    void MuonSpacePoint::MuonId::setCoordFlags(bool measEta, bool measPhi) {
+        m_measEta = measEta;
+        m_measPhi = measPhi;
+    }
 
     std::ostream& operator<<(const MuonSpacePoint& sp, std::ostream& ostr) {
         ostr<<"Id: "<<sp.id();
