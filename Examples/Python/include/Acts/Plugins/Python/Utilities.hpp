@@ -88,43 +88,25 @@ void patchKwargsConstructor(T& c) {
                         BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
   ACTS_PYTHON_STRUCT_END();
 
-/// A macro that uses Boost.Preprocessor to create the python binding for an
-/// algorithm and the additional config struct. The binding can be customized
-/// by a lambda function that takes the algorithm and config class as arguments.
-#define ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(algorithm, mod, name, ...)      \
-  [&]() {                                                                    \
-    struct A {                                                               \
-      using Alg = algorithm;                                                 \
-      using Config = Alg::Config;                                            \
-      A& operator=(                                                          \
-          const std::function<void(py::class_<Alg, ActsExamples::IAlgorithm, \
-                                              std::shared_ptr<Alg>>&,        \
-                                   py::class_<Config>&)>& cb) {              \
-        auto alg =                                                           \
-            py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>( \
-                m_mod, name)                                                 \
-                .def(py::init<const Config&, Acts::Logging::Level>(),        \
-                     py::arg("config"), py::arg("level"))                    \
-                .def_property_readonly("config", &Alg::config);              \
-                                                                             \
-        auto c = py::class_<Config>(alg, "Config").def(py::init<>());        \
-        ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                 \
-        BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                    \
-                              BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))         \
-        ACTS_PYTHON_STRUCT_END();                                            \
-        cb(alg, c);                                                          \
-        return *this;                                                        \
-      }                                                                      \
-      using mod_t = std::remove_cvref_t<decltype(mod)>;                      \
-      mod_t& m_mod;                                                          \
-    };                                                                       \
-    return A{mod};                                                           \
-  }() = [&]([[maybe_unused]] auto& alg, [[maybe_unused]] auto& cfg)
-
-/// A macro that uses Boost.Preprocessor to create the python binding for an
+/// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
-#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...) \
-  ACTS_PYTHON_DECLARE_ALGORITHM_CUSTOM(algorithm, mod, name, __VA_ARGS__) {}
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)              \
+  do {                                                                        \
+    using Alg = algorithm;                                                    \
+    using Config = Alg::Config;                                               \
+    auto alg =                                                                \
+        py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(mod,  \
+                                                                        name) \
+            .def(py::init<const Config&, Acts::Logging::Level>(),             \
+                 py::arg("config"), py::arg("level"))                         \
+            .def_property_readonly("config", &Alg::config);                   \
+                                                                              \
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());             \
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                      \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                         \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))              \
+    ACTS_PYTHON_STRUCT_END();                                                 \
+  } while (0)
 
 /// Similar as above for writers
 #define ACTS_PYTHON_DECLARE_WRITER(writer, mod, name, ...)                  \
