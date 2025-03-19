@@ -45,11 +45,10 @@ export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 # activate dependencies if present
 if [[ -n "$ROOT_SETUP_SCRIPT" ]]; then
   # Dependency setup script has already given us this location!
-  source "$ROOT_SETUP_SCRIPT"
+  . "$ROOT_SETUP_SCRIPT"
 else
   # Try to recover the build-time configuration
   if [[ -d "@ROOT_DIR@" ]]; then
-    echo "Setting up root: ROOT_DIR=@ROOT_DIR@, ROOT_BINDIR=@ROOT_BINDIR@"
     . @ROOT_BINDIR@/thisroot.sh
   fi
 fi
