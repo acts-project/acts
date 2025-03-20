@@ -49,8 +49,7 @@ std::string symbol(const char* in) {
   std::string s = demangleAndShorten(in);
   std::size_t pos = 0;
   while (pos + 80 < s.size()) {
--    ss << "   " + s.substr(pos, pos + 80);
-+    ss << "   " + s.substr(pos, 80);
+    ss << "   " + s.substr(pos, 80);
     pos += 80;
   }
   ss << "   " + s.substr(pos);
