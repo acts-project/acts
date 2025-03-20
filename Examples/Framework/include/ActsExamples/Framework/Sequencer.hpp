@@ -45,7 +45,7 @@ class FpeFailure : public std::runtime_error {
 
 class SequenceConfigurationException : public std::runtime_error {
  public:
-  SequenceConfigurationException(const std::string &message)
+  explicit SequenceConfigurationException(const std::string &message)
       : std::runtime_error{"Sequence configuration error: " + message} {}
 };
 

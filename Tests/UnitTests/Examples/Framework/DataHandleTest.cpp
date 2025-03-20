@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
 struct DestructorCounter {
   static int count;
   int value;
-  DestructorCounter(int v) : value(v) {}
+  explicit DestructorCounter(int v) : value(v) {}
   ~DestructorCounter() { count++; }
 };
 int DestructorCounter::count = 0;
