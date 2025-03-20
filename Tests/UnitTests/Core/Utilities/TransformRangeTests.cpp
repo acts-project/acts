@@ -8,10 +8,12 @@
 
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Utilities/TransformRange.hpp"
 
 #include <algorithm>
+#include <ranges>
 
 using namespace Acts;
 
@@ -248,6 +250,25 @@ BOOST_AUTO_TEST_CASE(TransformRangeReferenceWrappers) {
   std::copy(r.begin(), r.end(), std::back_inserter(act));
   std::vector<int> exp = {5, 6, 7};
   BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
+}
+
+BOOST_AUTO_TEST_CASE(Ranges) {
+  std::vector<std::unique_ptr<int>> v;
+  v.push_back(std::make_unique<int>(1));
+  v.push_back(std::make_unique<int>(2));
+  v.push_back(std::make_unique<int>(3));
+  v.push_back(std::make_unique<int>(4));
+  v.push_back(std::make_unique<int>(5));
+  auto r = detail::TransformRange{detail::Dereference{}, v};
+
+  std::vector<int> results;
+  std::ranges::copy(r | std::views::transform([](int val) { return val * 3; }) |
+                        std::views::filter([](int val) { return val < 10; }),
+                    std::back_inserter(results));
+  BOOST_CHECK_EQUAL(results.size(), 3);
+  std::vector exp{3, 6, 9};
+  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), results.begin(),
+                                results.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
