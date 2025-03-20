@@ -71,7 +71,7 @@ execute_process(
 message(STATUS "uv version: ${uv_version}")
 
 function(acts_code_generation)
-    set(options ISOLATED)
+    set(options ISOLATED OFFLINE)
     set(oneValueArgs TARGET PYTHON PYTHON_VERSION OUTPUT)
     set(multiValueArgs DEPENDS WITH_REQUIREMENTS WITH)
     cmake_parse_arguments(
@@ -84,7 +84,12 @@ function(acts_code_generation)
     )
 
     if(NOT DEFINED ARGS_PYTHON_VERSION)
-        set(ARGS_PYTHON_VERSION "3.13")
+        if(ARGS_OFFLINE)
+            find_package(Python REQUIRED COMPONENTS Interpreter)
+            set(ARGS_PYTHON_VERSION ${Python_EXECUTABLE})
+        else()
+            set(ARGS_PYTHON_VERSION "3.13")
+        endif()
     endif()
 
     if(NOT DEFINED ARGS_PYTHON)
@@ -102,16 +107,24 @@ function(acts_code_generation)
     endif()
 
     set(_arg_isolated "")
-    if(ARGS_ISOLATED)
+    if(ARGS_ISOLATED AND NOT ARGS_OFFLINE)
         set(_arg_isolated "--isolated")
+    endif()
+
+    set(_arg_offline "")
+    if(ARGS_OFFLINE)
+        set(_arg_offline "--offline;--no-managed-python")
     endif()
 
     set(_depends "${ARGS_PYTHON}")
     set(_with_args "")
-    foreach(_requirement ${ARGS_WITH_REQUIREMENTS})
-        list(APPEND _depends ${_requirement})
-        list(APPEND _with_args "--with-requirements;${_requirement}")
-    endforeach()
+
+    if(NOT ARGS_OFFLINE)
+        foreach(_requirement ${ARGS_WITH_REQUIREMENTS})
+            list(APPEND _depends ${_requirement})
+            list(APPEND _with_args "--with-requirements;${_requirement}")
+        endforeach()
+    endif()
 
     foreach(_requirement ${ARGS_WITH})
         list(APPEND _with_args "--with;${_requirement}")
@@ -133,8 +146,8 @@ function(acts_code_generation)
         OUTPUT ${_output_file}
         COMMAND
             env -i ${uv_exe} run --quiet --python ${ARGS_PYTHON_VERSION}
-            --no-project ${_arg_isolated} ${_with_args} ${ARGS_PYTHON}
-            ${_output_file}
+            --no-project ${_arg_offline} ${_arg_isolated} ${_with_args}
+            ${ARGS_PYTHON} ${_output_file}
         DEPENDS ${_depends}
         COMMENT "Generating ${ARGS_OUTPUT}"
         VERBATIM
