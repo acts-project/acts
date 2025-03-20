@@ -9,10 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-
-#include <cmath>
 
 namespace Acts {
 
