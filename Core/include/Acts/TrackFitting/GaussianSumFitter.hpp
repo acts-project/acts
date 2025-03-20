@@ -335,6 +335,18 @@ struct GaussianSumFitter {
                                   : sParameters.referenceSurface();
 
       const auto& params = *fwdGsfResult.lastMeasurementState;
+      std::vector<
+          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+          inflatedParamVector;
+      for (auto& [w, p, cov] : params.components()) {
+        inflatedParamVector.emplace_back(
+            w, p, cov.value() * options.reverseFilteringCovarianceScaling);
+      }
+
+      MultiComponentBoundTrackParameters inflatedParams(
+          params.referenceSurface().getSharedPtr(),
+          std::move(inflatedParamVector), params.particleHypothesis());
+
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
                                                    MultiStepperSurfaceReached>(
           target, bwdPropOptions);
@@ -348,7 +360,7 @@ struct GaussianSumFitter {
           std::declval<StateType&&>(), std::declval<PropagationResultType>(),
           target, std::declval<const OptionsType&>()));
 
-      auto initRes = m_propagator.initialize(state, params);
+      auto initRes = m_propagator.initialize(state, inflatedParams);
       if (!initRes.ok()) {
         return ResultType::failure(initRes.error());
       }
