@@ -16,6 +16,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -34,7 +35,7 @@ void addHepMC3(Context& ctx) {
                                 absPdgMin, absPdgMax, pMin);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3AsciiWriter, hepmc3,
-                             "HepMC3AsciiWriter", outputDir, outputStem,
+                             "HepMC3AsciiWriter", outputPath, perEvent,
                              inputEvents);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3AsciiReader, hepmc3,
