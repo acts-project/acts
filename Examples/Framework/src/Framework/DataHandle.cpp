@@ -77,10 +77,9 @@ bool WriteDataHandleBase::isCompatible(const DataHandleBase& other) const {
          typeInfo() == other.typeInfo();
 }
 
-void WriteDataHandleBase::emulate(
-    std::unordered_map<std::string, const DataHandleBase*>& state,
-    std::unordered_multimap<std::string, std::string>& aliases,
-    const Acts::Logger& logger) const {
+void WriteDataHandleBase::emulate(StateMapType& state,
+                                  WhiteBoard::AliasMapType& aliases,
+                                  const Acts::Logger& logger) const {
   if (!isInitialized()) {
     return;
   }
@@ -119,10 +118,9 @@ bool ReadDataHandleBase::isCompatible(const DataHandleBase& other) const {
          typeInfo() == other.typeInfo();
 }
 
-void ReadDataHandleBase::emulate(
-    std::unordered_map<std::string, const DataHandleBase*>& state,
-    std::unordered_multimap<std::string, std::string>& /*aliases*/,
-    const Acts::Logger& logger) const {
+void ReadDataHandleBase::emulate(StateMapType& state,
+                                 WhiteBoard::AliasMapType& /*aliases*/,
+                                 const Acts::Logger& logger) const {
   if (!isInitialized()) {
     return;
   }
@@ -158,10 +156,9 @@ void ReadDataHandleBase::emulate(
   }
 }
 
-void ConsumeDataHandleBase::emulate(
-    std::unordered_map<std::string, const DataHandleBase*>& state,
-    std::unordered_multimap<std::string, std::string>& aliases,
-    const Acts::Logger& logger) const {
+void ConsumeDataHandleBase::emulate(StateMapType& state,
+                                    WhiteBoard::AliasMapType& aliases,
+                                    const Acts::Logger& logger) const {
   if (!isInitialized()) {
     return;
   }

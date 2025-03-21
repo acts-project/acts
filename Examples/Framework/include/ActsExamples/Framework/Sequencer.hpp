@@ -9,11 +9,13 @@
 #pragma once
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
@@ -22,14 +24,12 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
-class DataHandleBase;
 class IAlgorithm;
 class IContextDecorator;
 class IReader;
@@ -177,9 +177,9 @@ class Sequencer {
   std::vector<SequenceElementWithFpeResult> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::unordered_multimap<std::string, std::string> m_whiteboardObjectAliases;
+  WhiteBoard::AliasMapType m_whiteboardObjectAliases;
 
-  std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
+  DataHandleBase::StateMapType m_whiteBoardState;
 
   std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 

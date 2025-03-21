@@ -13,6 +13,7 @@
 
 #include <stdexcept>
 #include <typeinfo>
+#include <unordered_map>
 
 namespace Acts {
 class Logger;
@@ -25,6 +26,16 @@ namespace ActsExamples {
 /// Provides common functionality for tracking the parent sequence element
 /// and key name. The key is optional until explicitly initialized.
 class DataHandleBase {
+ private:
+  struct StringHash {
+    using is_transparent = void;  // Enables heterogeneous operations.
+
+    std::size_t operator()(std::string_view sv) const {
+      std::hash<std::string_view> hasher;
+      return hasher(sv);
+    }
+  };
+
  protected:
   DataHandleBase(SequenceElement* parent, const std::string& name)
       : m_parent(parent), m_name(name) {}
@@ -48,10 +59,11 @@ class DataHandleBase {
 
   virtual bool isCompatible(const DataHandleBase& other) const = 0;
 
-  virtual void emulate(
-      std::unordered_map<std::string, const DataHandleBase*>& state,
-      std::unordered_multimap<std::string, std::string>& aliases,
-      const Acts::Logger& logger) const = 0;
+  using StateMapType = std::unordered_map<std::string, const DataHandleBase*,
+                                          StringHash, std::equal_to<>>;
+
+  virtual void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
+                       const Acts::Logger& logger) const = 0;
 
   std::string fullName() const { return m_parent->name() + "." + name(); }
 
@@ -96,8 +108,7 @@ class WriteDataHandleBase : public DataHandleBase {
 
   bool isCompatible(const DataHandleBase& other) const final;
 
-  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
-               std::unordered_multimap<std::string, std::string>& aliases,
+  void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const final;
 };
 
@@ -117,8 +128,7 @@ class ReadDataHandleBase : public DataHandleBase {
 
   bool isCompatible(const DataHandleBase& other) const final;
 
-  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
-               std::unordered_multimap<std::string, std::string>& aliases,
+  void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const override;
 };
 
@@ -136,8 +146,7 @@ class ConsumeDataHandleBase : public ReadDataHandleBase {
       : ReadDataHandleBase{parent, name} {}
 
  public:
-  void emulate(std::unordered_map<std::string, const DataHandleBase*>& state,
-               std::unordered_multimap<std::string, std::string>& aliases,
+  void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
                const Acts::Logger& logger) const override;
 };
 
