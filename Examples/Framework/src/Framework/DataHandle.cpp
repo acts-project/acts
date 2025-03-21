@@ -184,10 +184,15 @@ void ConsumeDataHandleBase::emulate(StateMapType& state,
     // Remove the key from state since it will be consumed
     ACTS_VERBOSE("Removing key '" << key() << "' from state");
     state.erase(it);
-    for (auto ait = aliases.begin(); ait != aliases.end(); ait++) {
-      if (ait->second == key()) {
-        ACTS_VERBOSE("Removing alias '" << ait->second << "' from aliases");
-        aliases.erase(ait);
+
+    for (const auto& [source, target] : aliases) {
+      if (target == key()) {
+        ACTS_VERBOSE("Removing alias target '" << target << "' from state");
+        state.erase(source);
+      }
+      if (source == key()) {
+        ACTS_VERBOSE("Removing alias source '" << source << "' from state");
+        state.erase(target);
       }
     }
   } else {
