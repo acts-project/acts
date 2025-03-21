@@ -31,17 +31,17 @@ def runDigitization(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=10000, numThreads=-1, logLevel=acts.logging.INFO
     )
     rnd = acts.examples.RandomNumbers(seed=42)
 
     if particlesInput is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
+            EtaConfig(-3.5, 3.5, uniform=True),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            multiplicity=1,
             rnd=rnd,
         )
     else:
@@ -80,15 +80,23 @@ def runDigitization(
 
 
 if "__main__" == __name__:
-    detector = acts.examples.GenericDetector()
+
+    # ODD
+    from acts.examples.odd import getOpenDataDetector
+
+    detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
 
+    #detector = acts.examples.GenericDetector()
+    #trackingGeometry = detector.trackingGeometry()
+
     digiConfigFile = (
-        Path(__file__).resolve().parent.parent.parent.parent
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+       Path.cwd()
+        / "odd-geo-digi-config.json"
     )
     assert digiConfigFile.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+
+    runDigitization(trackingGeometry, field, outputDir=Path.cwd(), digiConfigFile = digiConfigFile).run()

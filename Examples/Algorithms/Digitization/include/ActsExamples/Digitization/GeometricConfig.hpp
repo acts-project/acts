@@ -37,25 +37,26 @@ struct GeometricConfig {
   // The dimensions of the measurement
   std::vector<Acts::BoundIndices> indices = {};
 
-  // The (multidimensional) binning definition for the segmentation of the
-  // sensor
+  /// The (multidimensional) binning definition for the segmentation of the
+  /// sensor
   Acts::BinUtility segmentation;
 
-  // The thickness of the sensor
+  /// The thickness of the sensor
   double thickness = 0.;
 
   /// The charge smearer
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
       chargeSmearer = Digitization::Exact(0);
 
-  // The threshold below a cell activation is ignored
+  /// The threshold below a cell activation is ignored
   double threshold = 0.;
 
-  // Whether to assume digital readout (activation is either 0 or 1)
+  /// Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
 
-  // Flag as strip
-  bool strip = false;
+  /// Flag as component digital, i.e. do not use simple center of gravity,
+  /// but take only individual cell columns, rows
+  bool componentDigital = true;
 
   /// The variances for this digitization
   std::map<Acts::BoundIndices, std::vector<double>> varianceMap = {};
