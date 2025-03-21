@@ -31,17 +31,17 @@ def runDigitization(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=10000, numThreads=-1, logLevel=acts.logging.INFO
     )
     rnd = acts.examples.RandomNumbers(seed=42)
 
     if particlesInput is None:
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
+            EtaConfig(-3.5, 3.5, uniform=True),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            multiplicity=1,
             rnd=rnd,
         )
     else:
@@ -91,4 +91,6 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+    runDigitization(
+        trackingGeometry, field, outputDir=Path.cwd(), digiConfigFile=digiConfigFile
+    ).run()
