@@ -80,7 +80,6 @@ def runDigitization(
 
 
 if "__main__" == __name__:
-
     detector = acts.examples.GenericDetector()
     trackingGeometry = detector.trackingGeometry()
 
@@ -88,6 +87,7 @@ if "__main__" == __name__:
         Path(__file__).resolve().parent.parent.parent.parent
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
     )
+    assert digiConfigFile.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
