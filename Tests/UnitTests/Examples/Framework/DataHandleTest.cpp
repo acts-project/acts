@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(WhiteBoardCopy) {
 
 BOOST_AUTO_TEST_CASE(EmulateStateConsistency) {
   DummySequenceElement dummyElement;
-  std::unordered_map<std::string, const DataHandleBase*> state;
-  std::unordered_multimap<std::string, std::string> aliases;
+  DataHandleBase::StateMapType state;
+  WhiteBoard::AliasMapType aliases;
   std::vector<std::unique_ptr<WriteDataHandleBase>> writeHandles;
   std::vector<std::unique_ptr<ReadDataHandleBase>> readHandles;
 
@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
 
   BOOST_TEST_CHECKPOINT("Test consume handle emulation");
   {
-    std::unordered_map<std::string, const DataHandleBase*> state;
-    std::unordered_multimap<std::string, std::string> aliases;
+    DataHandleBase::StateMapType state;
+    WhiteBoard::AliasMapType aliases;
     std::vector<std::unique_ptr<WriteDataHandleBase>> writeHandles;
     std::vector<std::unique_ptr<ReadDataHandleBase>> readHandles;
 

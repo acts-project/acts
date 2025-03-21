@@ -52,7 +52,7 @@ std::string symbol(const char* in) {
     ss << "   " + s.substr(pos, 80);
     pos += 80;
   }
-  ss << "   " + s.substr(pos);
+  ss << s.substr(pos);
   return ss.str();
 };
 
@@ -85,7 +85,6 @@ void WriteDataHandleBase::emulate(StateMapType& state,
   }
 
   ACTS_INFO("-> " << name() << " '" << key() << "':");
-  // symbol(handle->typeInfo().name());
 
   if (auto it = state.find(key()); it != state.end()) {
     const auto& source = *it->second;
@@ -97,11 +96,11 @@ void WriteDataHandleBase::emulate(StateMapType& state,
         "': " + source.fullName()};
   }
 
-  state.emplace(std::pair{key(), this});
+  state.try_emplace(key(), this);
 
   if (auto it = aliases.find(key()); it != aliases.end()) {
     ACTS_DEBUG("Key '" << key() << "' aliased to '" << it->second << "'");
-    state.emplace(std::pair{it->second, this});
+    state.try_emplace(it->second, this);
   }
 }
 
@@ -126,7 +125,7 @@ void ReadDataHandleBase::emulate(StateMapType& state,
   }
 
   ACTS_INFO("<- " << name() << " '" << key() << "':");
-  symbol(typeInfo().name());
+  ACTS_INFO("   " << symbol(typeInfo().name()));
 
   if (auto it = state.find(key()); it != state.end()) {
     const auto& source = *it->second;
@@ -164,11 +163,10 @@ void ConsumeDataHandleBase::emulate(StateMapType& state,
   }
 
   ACTS_INFO("<< " << name() << " '" << key() << "':");
-  symbol(typeInfo().name());
+  ACTS_INFO("   " << symbol(typeInfo().name()));
 
   if (auto it = state.find(key()); it != state.end()) {
-    const auto& source = *it->second;
-    if (!source.isCompatible(*this)) {
+    if (const auto& source = *it->second; !source.isCompatible(*this)) {
       ACTS_ERROR(
           "Adding " << m_parent->typeName() << " " << m_parent->name() << ":"
                     << "\n-> white board will contain key '" << key() << "'"
