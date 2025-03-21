@@ -15,14 +15,19 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 #include <numbers>
 
 #include <edm4hep/EDM4hepVersion.h>
 #include <edm4hep/MCParticle.h>
 #include <edm4hep/MutableSimTrackerHit.h>
+#include <edm4hep/MutableTrackerHitLocal.h>
+#include <edm4hep/MutableVertex.h>
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/TrackState.h>
+#include <edm4hep/Vector3f.h>
+#include <edm4hep/Vector4f.h>
 
 namespace Acts::EDM4hepUtil {
 namespace detail {
@@ -212,5 +217,148 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
   hit.setMCParticle(particle);
 }
 #endif
+
+namespace detail {
+std::uint32_t encodeIndices(std::span<const std::uint8_t> indices) {
+  if (indices.size() > eBoundSize) {
+    throw std::runtime_error(
+        "Number of indices exceeds maximum of 6 for EDM4hep");
+  }
+  std::uint32_t result = 0;
+
+  std::uint8_t shift = 0;
+  result |= (indices.size() << 0);
+  shift += 4;
+
+  for (std::uint8_t index : indices) {
+    if (index > eBoundSize) {
+      throw std::runtime_error(
+          "Index out of range: can only encode indices up to 4 bits (0-15)");
+    }
+    result |= (index << shift);
+    shift += 4;
+  }
+  return result;
+}
+
+boost::container::static_vector<std::uint8_t, eBoundSize> decodeIndices(
+    std::uint32_t type) {
+  boost::container::static_vector<std::uint8_t, eBoundSize> result;
+  std::uint8_t size = type & 0xF;
+  if (size > eBoundSize) {
+    throw std::runtime_error(
+        "Number of indices exceeds maximum of 6 for EDM4hep");
+  }
+  result.resize(size);
+  for (std::size_t i = 0; i < result.size(); ++i) {
+    result[i] = (type >> ((i + 1) * 4)) & 0xF;
+    if (result[i] > eBoundSize) {
+      throw std::runtime_error(
+          "Index out of range: can only encode indices up to 4 bits (0-15)");
+    }
+  }
+  return result;
+}
+}  // namespace detail
+
+void writeMeasurement(const GeometryContext& gctx,
+                      const Eigen::Map<const ActsDynamicVector>& parameters,
+                      const Eigen::Map<const ActsDynamicMatrix>& covariance,
+                      std::span<const std::uint8_t> indices,
+                      std::uint64_t cellId, const Acts::Surface& surface,
+                      edm4hep::MutableTrackerHitLocal to) {
+  if (parameters.size() != covariance.rows() ||
+      covariance.rows() != covariance.cols() || parameters.size() < 0 ||
+      indices.size() != static_cast<std::size_t>(parameters.size())) {
+    throw std::runtime_error(
+        "Size mismatch between parameters and covariance matrix");
+  }
+
+  std::size_t dim = static_cast<std::size_t>(parameters.size());
+
+  if (cellId != 0) {
+    to.setCellID(cellId);
+  }
+
+  to.setType(detail::encodeIndices(indices));
+
+  auto loc0 = std::ranges::find(indices, eBoundLoc0);
+  auto loc1 = std::ranges::find(indices, eBoundLoc1);
+  auto time = std::ranges::find(indices, eBoundTime);
+
+  if (loc0 != indices.end() && loc1 != indices.end()) {
+    Vector2 loc{parameters[std::distance(indices.begin(), loc0)],
+                parameters[std::distance(indices.begin(), loc1)]};
+    Vector3 global = surface.localToGlobal(gctx, loc, Vector3::UnitZ());
+    global /= Acts::UnitConstants::mm;
+    to.setPosition({global.x(), global.y(), global.z()});
+  }
+
+  if (time != indices.end()) {
+    to.setTime(parameters[std::distance(indices.begin(), time)] /
+               Acts::UnitConstants::ns);
+  }
+
+  for (double value : std::span{parameters.data(), dim}) {
+    to.addToMeasurement(value);
+  }
+
+  for (double value : std::span{covariance.data(), dim * dim}) {
+    to.addToCovariance(value);
+  }
+}
+
+void writeVertex(const Vertex& vertex, edm4hep::MutableVertex to) {
+  static constexpr std::array<edm4hep::FourMomCoords, 4> toEdm4hep = []() {
+    std::array<edm4hep::FourMomCoords, 4> values{};
+    values.at(eFreePos0) = edm4hep::FourMomCoords::x;
+    values.at(eFreePos1) = edm4hep::FourMomCoords::y;
+    values.at(eFreePos2) = edm4hep::FourMomCoords::z;
+    values.at(eFreeTime) = edm4hep::FourMomCoords::t;
+    return values;
+  }();
+
+  // Wrap this in a templated lambda so we can use `if constexpr` to select the
+  // correct write function based on the type of the properties of the `to`
+  // object.
+  auto writeVertex = [&]<typename T>(const Vertex& vertex, T& to)
+    requires(std::is_same_v<T, edm4hep::MutableVertex>)
+  {
+    if constexpr (detail::edm4hepVertexHasTime<edm4hep::MutableVertex>) {
+      Vector4 pos = vertex.fullPosition();
+      to.setPosition({static_cast<float>(pos[eFreePos0]),
+                      static_cast<float>(pos[eFreePos1]),
+                      static_cast<float>(pos[eFreePos2]),
+                      static_cast<float>(pos[eFreeTime])});
+
+      edm4hep::CovMatrix4f& cov = to.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2, eFreeTime};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex.fullCovariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    } else {
+      Vector3 pos = vertex.position();
+      to.setPosition({static_cast<float>(pos[eFreePos0]),
+                      static_cast<float>(pos[eFreePos1]),
+                      static_cast<float>(pos[eFreePos2])});
+      edm4hep::CovMatrix3f& cov = to.getCovMatrix();
+      std::array coords{eFreePos0, eFreePos1, eFreePos2};
+      for (auto i : coords) {
+        for (auto j : coords) {
+          cov.setValue(static_cast<float>(vertex.covariance()(i, j)),
+                       toEdm4hep.at(i), toEdm4hep.at(j));
+        }
+      }
+    }
+
+    to.setChi2(static_cast<float>(vertex.fitQuality().first));
+    to.setNdf(static_cast<int>(vertex.fitQuality().second));
+  };
+
+  writeVertex(vertex, to);
+}
 
 }  // namespace Acts::EDM4hepUtil
