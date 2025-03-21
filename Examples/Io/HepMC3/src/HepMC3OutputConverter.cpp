@@ -60,16 +60,23 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
         std::make_shared<HepMC3::GenParticle>(vec, inParticle.pdg());
     hepmc3Particle->set_generated_mass(inParticle.mass());
     genEvent.add_particle(hepmc3Particle);
+    ACTS_VERBOSE("Adding particle with barcode " << inParticle.particleId());
     barcodeMap.insert({inParticle.particleId(), hepmc3Particle});
   }
 
   for (const auto& inVertex : inputVertices) {
+    if (inVertex.incoming.empty()) {
+      // HepMC3 does not like vertices without incoming particles
+      continue;
+    }
+
     const Vector4 position =
         inVertex.position4 / 1_mm;  // Let's ensure we're using mm
     const HepMC3::FourVector vec(position[0], position[1], position[2],
                                  position[3]);
     auto hepmc3Vertex = std::make_shared<HepMC3::GenVertex>(vec);
     genEvent.add_vertex(hepmc3Vertex);
+    hepmc3Vertex->set_status(1);
 
     for (const auto& particleId : inVertex.incoming) {
       auto it = barcodeMap.find(particleId);
