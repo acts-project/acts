@@ -87,16 +87,14 @@ if "__main__" == __name__:
     detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
 
-    #detector = acts.examples.GenericDetector()
-    #trackingGeometry = detector.trackingGeometry()
+    # detector = acts.examples.GenericDetector()
+    # trackingGeometry = detector.trackingGeometry()
 
-    digiConfigFile = (
-       Path.cwd()
-        / "odd-geo-digi-config.json"
-    )
+    digiConfigFile = Path.cwd() / "odd-geo-digi-config.json"
     assert digiConfigFile.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-
-    runDigitization(trackingGeometry, field, outputDir=Path.cwd(), digiConfigFile = digiConfigFile).run()
+    runDigitization(
+        trackingGeometry, field, outputDir=Path.cwd(), digiConfigFile=digiConfigFile
+    ).run()

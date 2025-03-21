@@ -335,7 +335,7 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
-  // For digitial readout, the weight needs to be split in x and y
+  // For digital readout, the weight needs to be split in x and y
   std::array<double, 2u> pos = {0., 0.};
   std::array<double, 2u> totalWeight = {0., 0.};
   std::array<std::size_t, 2u> bmin = {std::numeric_limits<std::size_t>::max(),
