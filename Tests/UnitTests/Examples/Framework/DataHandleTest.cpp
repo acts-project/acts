@@ -405,6 +405,69 @@ BOOST_AUTO_TEST_CASE(ConsumeDataHandleTest) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ConsumeDataHandleWithAliases) {
+  DummySequenceElement dummyElement;
+  DataHandleBase::StateMapType state;
+  WhiteBoard::AliasMapType aliases;
+  std::vector<std::unique_ptr<WriteDataHandleBase>> writeHandles;
+  std::vector<std::unique_ptr<ReadDataHandleBase>> readHandles;
+
+  BOOST_TEST_CHECKPOINT("Test consume handle emulation with aliases");
+  {
+    aliases.insert({"original_key", "alias_key"});
+    // Set up write handle with original key
+    auto& writeHandle = *writeHandles.emplace_back(
+        std::make_unique<WriteDataHandle<int>>(&dummyElement, "test"));
+    writeHandle.initialize("original_key");
+    writeHandle.emulate(state, aliases, logger());
+
+    // Verify initial state
+    BOOST_CHECK(state.contains("original_key"));
+    BOOST_CHECK(state.contains("alias_key"));
+    BOOST_CHECK_EQUAL(state["original_key"], &writeHandle);
+    BOOST_CHECK_EQUAL(state["alias_key"], &writeHandle);
+
+    // Emulate consume handle with alias
+    auto& consumeHandle = *readHandles.emplace_back(
+        std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test"));
+    consumeHandle.initialize("alias_key");
+    consumeHandle.emulate(state, aliases, logger());
+
+    // Verify both original and alias keys are removed from state
+    BOOST_CHECK(!state.contains("original_key"));
+    BOOST_CHECK(!state.contains("alias_key"));
+  }
+
+  BOOST_TEST_CHECKPOINT("Test consume handle emulation with original key");
+  {
+    state.clear();
+    aliases.clear();
+    aliases.insert({"original_key", "alias_key"});
+
+    // Set up write handle with original key
+    auto& writeHandle = *writeHandles.emplace_back(
+        std::make_unique<WriteDataHandle<int>>(&dummyElement, "test"));
+    writeHandle.initialize("original_key");
+    writeHandle.emulate(state, aliases, logger());
+
+    // Verify initial state
+    BOOST_CHECK(state.contains("original_key"));
+    BOOST_CHECK(state.contains("alias_key"));
+    BOOST_CHECK_EQUAL(state["original_key"], &writeHandle);
+    BOOST_CHECK_EQUAL(state["alias_key"], &writeHandle);
+
+    // Emulate consume handle with original key
+    auto& consumeHandle = *readHandles.emplace_back(
+        std::make_unique<ConsumeDataHandle<int>>(&dummyElement, "test"));
+    consumeHandle.initialize("original_key");
+    consumeHandle.emulate(state, aliases, logger());
+
+    // Verify both original and alias keys are removed from state
+    BOOST_CHECK(!state.contains("original_key"));
+    BOOST_CHECK(!state.contains("alias_key"));
+  }
+}
+
 // Custom type with destructor counter for testing
 struct DestructorCounter {
   static int count;

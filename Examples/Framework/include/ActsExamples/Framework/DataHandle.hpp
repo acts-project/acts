@@ -120,8 +120,7 @@ class WriteDataHandleBase : public DataHandleBase {
 /// - The data can be read multiple times
 class ReadDataHandleBase : public DataHandleBase {
  protected:
-  ReadDataHandleBase(SequenceElement* parent, const std::string& name)
-      : DataHandleBase{parent, name} {}
+  using DataHandleBase::DataHandleBase;
 
  public:
   void initialize(const std::string& key);
@@ -142,8 +141,7 @@ class ReadDataHandleBase : public DataHandleBase {
 /// - The data is removed from the WhiteBoard after consumption
 class ConsumeDataHandleBase : public ReadDataHandleBase {
  protected:
-  ConsumeDataHandleBase(SequenceElement* parent, const std::string& name)
-      : ReadDataHandleBase{parent, name} {}
+  using ReadDataHandleBase::ReadDataHandleBase;
 
  public:
   void emulate(StateMapType& state, WhiteBoard::AliasMapType& aliases,
