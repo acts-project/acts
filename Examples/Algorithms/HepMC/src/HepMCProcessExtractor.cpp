@@ -101,7 +101,7 @@ std::vector<SimParticle> selectOutgoingParticles(
                                                std::to_string(trackID))
           ->value() != "Death") {
     // Store the particle if it survives
-    finalStateParticles.push_back(HepMC3Particle::particle(procPart));
+    finalStateParticles.push_back(HepMC3Particle::particle(*procPart));
   } else {
     // Store the leftovers if it dies
     for (const HepMC3::ConstGenParticlePtr& procPartOut :
@@ -111,7 +111,8 @@ std::vector<SimParticle> selectOutgoingParticles(
           procPartOut->end_vertex()) {
         for (const HepMC3::ConstGenParticlePtr& dyingPartOut :
              procPartOut->end_vertex()->particles_out()) {
-          finalStateParticles.push_back(HepMC3Particle::particle(dyingPartOut));
+          finalStateParticles.push_back(
+              HepMC3Particle::particle(*dyingPartOut));
         }
       }
     }
@@ -207,7 +208,7 @@ ProcessCode HepMCProcessExtractor::execute(
 
     // Get the initial particle
     HepMC3::ConstGenParticlePtr initialParticle = event.particles()[0];
-    SimParticle simParticle = HepMC3Particle::particle(initialParticle);
+    SimParticle simParticle = HepMC3Particle::particle(*initialParticle);
 
     // Get the final state particles
     SimParticle particleToInteraction;
@@ -222,7 +223,7 @@ ProcessCode HepMCProcessExtractor::execute(
           const int procID = stoi(attribute.substr(attribute.find("-") + 1));
           // Get the particle before the interaction
           particleToInteraction =
-              HepMC3Particle::particle(vertex->particles_in()[0]);
+              HepMC3Particle::particle(*vertex->particles_in()[0]);
           // Attach passed material to the particle
           setPassedMaterial(vertex, procID, particleToInteraction);
           // Record the final state particles
