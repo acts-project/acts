@@ -50,7 +50,7 @@ struct FreeToBoundCorrection {
   explicit FreeToBoundCorrection(bool apply_);
 
   /// Return boolean for applying correction or not
-  operator bool() const;
+  explicit operator bool() const;
 };
 
 namespace detail {
@@ -72,7 +72,7 @@ struct CorrectedFreeToBoundTransformer {
   /// Construct from a FreeToBoundCorrection
   ///
   /// @param freeToBoundCorrection The freeToBoundCorrection object
-  CorrectedFreeToBoundTransformer(
+  explicit CorrectedFreeToBoundTransformer(
       const FreeToBoundCorrection& freeToBoundCorrection);
 
   /// Default constructors
@@ -96,7 +96,7 @@ struct CorrectedFreeToBoundTransformer {
   std::optional<std::tuple<BoundVector, BoundSquareMatrix>> operator()(
       const FreeVector& freeParams, const FreeSquareMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
-      Direction navDir = Direction::Forward,
+      Direction navDir = Direction::Forward(),
       const Logger& logger = getDummyLogger()) const;
 
  private:

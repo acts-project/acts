@@ -216,16 +216,11 @@ ScoreBasedAmbiguityResolutionConfig = namedtuple(
         "minScore",
         "minScoreSharedTracks",
         "maxShared",
+        "minUnshared",
         "maxSharedTracksPerMeasurement",
-        "pTMax",
-        "pTMin",
-        "phiMax",
-        "phiMin",
-        "etaMax",
-        "etaMin",
-        "useAmbiguityFunction",
+        "useAmbiguityScoring",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 6,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -278,7 +273,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     layerMappingConfigFile: Optional[Union[Path, str]] = None,
-    connector_inputConfigFile: Optional[Union[Path, str]] = None,
+    ConnectorInputConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
@@ -430,12 +425,11 @@ def addSeeding(
                 spacePoints,
                 seedFinderConfigArg,
                 seedFinderOptionsArg,
-                seedFilterConfigArg,
                 trackingGeometry,
                 logLevel,
                 layerMappingConfigFile,
                 geoSelectionConfigFile,
-                connector_inputConfigFile,
+                ConnectorInputConfigFile,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Hashing:
             logger.info("Using Hashing seeding")
@@ -642,6 +636,7 @@ def addStandardSeeding(
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
 ):
     """adds standard seeding
     For parameters description see addSeeding
@@ -768,7 +763,7 @@ def addStandardSeeding(
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -1088,24 +1083,22 @@ def addGbtsSeeding(
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
-    seedFilterConfigArg: SeedFilterConfigArg,
     trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
     geoSelectionConfigFile: Union[Path, str] = None,
-    connector_inputConfigFile: Union[Path, str] = None,
+    ConnectorInputConfigFile: Union[Path, str] = None,
 ):
     """Gbts seeding"""
 
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile = str(layerMappingConfigFile)  # turn path into string
-    connector_inputFile = str(connector_inputConfigFile)
+    ConnectorInputFileStr = str(ConnectorInputConfigFile)
     seedFinderConfig = acts.SeedFinderGbtsConfig(
         **acts.examples.defaultKWArgs(
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            connector_input_file=connector_inputFile,
+            ConnectorInputFile=ConnectorInputFileStr,
             m_useClusterWidth=False,
         ),
     )
@@ -1121,33 +1114,11 @@ def addGbtsSeeding(
             bFieldInZ=seedFinderOptionsArg.bFieldInZ,
         )
     )
-    seedFilterConfig = acts.SeedFilterConfig(
-        **acts.examples.defaultKWArgs(
-            maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-            deltaRMin=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFilterConfigArg.deltaRMin is None
-                else seedFilterConfigArg.deltaRMin
-            ),
-            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
-            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
-            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
-            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
-            seedConfirmation=seedFilterConfigArg.seedConfirmation,
-            # curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
-            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
-            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
-            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-        )
-    )
 
     seedingAlg = acts.examples.GbtsSeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
-        seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile,
@@ -1304,6 +1275,7 @@ def addKalmanTracks(
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
+        "chi2Cut": float("inf"),
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
@@ -1458,11 +1430,17 @@ def addCKFTracks(
         )
     )
 
-    overwriteArgs = dict() if len(tslist) == 1 else dict(absEtaMax=None)
-    cutSets = [
-        acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c) | overwriteArgs))
-        for c in tslist
-    ]
+    if len(tslist) > 1:
+        cutSets = []
+        for c in tslist:
+            defKW = trackSelectorDefaultKWArgs(c)
+            defKW.pop("absEtaMax", None)
+            cutSets += [acts.TrackSelector.Config(**(defKW))]
+    else:
+        cutSets = [
+            acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c))) for c in tslist
+        ]
+
     if len(tslist) == 0:
         trkSelCfg = None
     elif len(tslist) == 1:
@@ -1947,12 +1925,9 @@ def addScoreBasedAmbiguityResolution(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
             maxShared=config.maxShared,
+            minUnshared=config.minUnshared,
             maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
-            phiMax=config.phiMax,
-            phiMin=config.phiMin,
-            etaMax=config.etaMax,
-            etaMin=config.etaMin,
-            useAmbiguityFunction=config.useAmbiguityFunction,
+            useAmbiguityScoring=config.useAmbiguityScoring,
         ),
     )
     s.addAlgorithm(algScoreBased)
@@ -2149,9 +2124,9 @@ def addVertexFitting(
         trackParameters = converter.config.outputTrackParameters
 
     tracks = tracks if tracks is not None else ""
-    inputParticles = "particles_input"
+    inputParticles = "particles"
     selectedParticles = "particles_selected"
-    inputTruthVertices = "vertices_input"
+    inputTruthVertices = "vertices_truth"
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -2245,7 +2220,7 @@ def addSingleSeedVertexFinding(
     )
     s.addAlgorithm(findSingleSeedVertex)
 
-    inputParticles = "particles_input"
+    inputParticles = "particles"
     selectedParticles = "particles_selected"
 
     if outputDirRoot is not None:

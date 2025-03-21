@@ -235,9 +235,8 @@ struct GsfActor {
     }
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      cmp.singleStepper(stepper).transportCovarianceToBound(
-          singleState.stepping, surface);
+      cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
+                                                            surface);
     }
 
     if (haveMaterial) {
@@ -416,7 +415,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           return p_prev * (gaussian.mean - 1.);
         } else {
           return p_prev * (1. / gaussian.mean - 1.);
@@ -431,7 +430,7 @@ struct GsfActor {
       auto new_cov = old_bound.covariance().value();
 
       const auto varInvP = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           const auto f = 1. / (p_prev * gaussian.mean);
           return f * f * gaussian.var;
         } else {
@@ -492,7 +491,7 @@ struct GsfActor {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
       cmp.pars() =
-          MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
+          MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
       cmp.cov() = proxy.filteredCovariance();
       cmp.weight() = tmpStates.weights.at(idx);
     }
@@ -640,9 +639,8 @@ struct GsfActor {
     // components should behave the same
     bool isHole = true;
 
-    auto cmps = stepper.componentIterable(state.stepping);
-    for (auto cmp : cmps) {
-      auto singleState = cmp.singleState(state);
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // There is some redundant checking inside this function, but do this for

@@ -47,10 +47,10 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_FIND_FRAMEWORK": "LAST",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
                 "ACTS_BUILD_BENCHMARKS": "ON",
-                "ACTS_BUILD_NONCOMPILE_TESTS": "ON",
                 "ACTS_BUILD_ANALYSIS_APPS": "ON",
                 "ACTS_BUILD_ALIGNMENT": "ON",
                 "ACTS_BUILD_FATRAS_GEANT4": "ON",
@@ -93,12 +93,21 @@
         },
         {
             "name": "gitlab-ci-clangtidy",
-            "displayName": "GitLab-CI",
+            "displayName": "GitLab-CI clang-tidy",
             "inherits": "ci-common",
             "cacheVariables": {
                 "ACTS_BUILD_ODD": "OFF",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "OFF",
                 "ACTS_RUN_CLANG_TIDY": "ON"
+            }
+        },
+        {
+            "name": "gitlab-ci-lcg",
+            "displayName": "GitLab-CI LCG",
+            "inherits": "ci-common",
+            "cacheVariables": {
+                "ACTS_USE_SYSTEM_NLOHMANN_JSON": "ON",
+                "ACTS_BUILD_PLUGIN_GEOMODEL": "OFF"
             }
         },
         {

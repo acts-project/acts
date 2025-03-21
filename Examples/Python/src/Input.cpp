@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/Framework/BufferedReader.hpp"
 #include "ActsExamples/Io/Csv/CsvDriftCircleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvExaTrkXGraphReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
@@ -38,6 +39,11 @@ namespace Acts::Python {
 
 void addInput(Context& ctx) {
   auto mex = ctx.get("examples");
+
+  // Buffered reader
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::BufferedReader, mex,
+                             "BufferedReader", upstreamReader, selectionSeed,
+                             bufferSize);
 
   // ROOT READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
@@ -94,9 +100,9 @@ void addInput(Context& ctx) {
       ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
       inputfile, outputMeasurements, outputPixelSpacePoints,
       outputStripSpacePoints, outputSpacePoints, outputClusters,
-      outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
-      skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-      absBoundaryTolerance);
+      outputMeasurementParticlesMap, outputParticles, onlySpacepoints,
+      onlyPassedParticles, skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap,
+      trackingGeometry, absBoundaryTolerance);
 
 #ifdef WITH_GEOMODEL_PLUGIN
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,

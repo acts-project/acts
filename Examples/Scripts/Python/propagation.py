@@ -33,8 +33,8 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
 
     trkParamExtractor = acts.examples.ParticleTrackParamExtractor(
         level=acts.logging.WARNING,
-        inputParticles="particles_input",
-        outputTrackParameters="params_particles_input",
+        inputParticles="particles_generated",
+        outputTrackParameters="params_particles_generated",
     )
     s.addAlgorithm(trkParamExtractor)
 
@@ -50,7 +50,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         propagatorImpl=propagator,
         level=acts.logging.INFO,
         sterileLogger=True,
-        inputTrackParameters="params_particles_input",
+        inputTrackParameters="params_particles_generated",
         outputSummaryCollection="propagation_summary",
     )
     s.addAlgorithm(propagationAlgorithm)
@@ -72,7 +72,7 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetector(mdecorator=matDeco)
+    detector = GenericDetector(materialDecorator=matDeco)
 
     ## Alternative: Aligned detector in a couple of modes
     # detector = AlignedDetector(

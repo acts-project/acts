@@ -13,7 +13,6 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -27,6 +26,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <memory>
@@ -102,8 +102,7 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
                         DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
-    Acts::GeometryIdentifier geoID;
-    geoID.setVolume(ccache.volumeCount);
+    auto geoID = Acts::GeometryIdentifier().withVolume(ccache.volumeCount);
     dVolume.assignGeometryId(geoID);
   }
 

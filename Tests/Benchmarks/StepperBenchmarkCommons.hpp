@@ -108,8 +108,8 @@ struct BenchmarkStepper {
     if (withCov) {
       covOpt = cov;
     }
-    CurvilinearTrackParameters pars(pos4, dir, +1 / ptInGeV, covOpt,
-                                    ParticleHypothesis::pion());
+    BoundTrackParameters pars = BoundTrackParameters::createCurvilinear(
+        pos4, dir, +1 / ptInGeV, covOpt, ParticleHypothesis::pion());
 
     double totalPathLength = 0;
     std::size_t numSteps = 0;
@@ -117,7 +117,12 @@ struct BenchmarkStepper {
     std::size_t numIters = 0;
     const auto propagationBenchResult = Acts::Test::microBenchmark(
         [&] {
-          auto state = propagator.makeState(pars, options);
+          auto state = propagator.makeState(options);
+          auto initRes = propagator.initialize(state, pars);
+          if (!initRes.ok()) {
+            ACTS_ERROR("initialization failed: " << initRes.error());
+            return;
+          }
           auto tmp = propagator.propagate(state);
           auto r = propagator.makeResult(state, tmp, options, true).value();
           if (totalPathLength == 0.) {
@@ -129,7 +134,6 @@ struct BenchmarkStepper {
           numSteps += r.steps;
           numStepTrials += state.stepping.nStepTrials;
           ++numIters;
-          return r;
         },
         1, toys);
 
