@@ -55,7 +55,7 @@ class DataHandleBase {
 
   const std::string& name() const { return m_name; }
 
-  void maybeInitialize(const std::string& key);
+  void maybeInitialize(std::string_view key);
 
   virtual bool isCompatible(const DataHandleBase& other) const = 0;
 
@@ -104,7 +104,7 @@ class WriteDataHandleBase : public DataHandleBase {
       : DataHandleBase{parent, name} {}
 
  public:
-  void initialize(const std::string& key);
+  void initialize(std::string_view key);
 
   bool isCompatible(const DataHandleBase& other) const final;
 
@@ -123,7 +123,7 @@ class ReadDataHandleBase : public DataHandleBase {
   using DataHandleBase::DataHandleBase;
 
  public:
-  void initialize(const std::string& key);
+  void initialize(std::string_view key);
 
   bool isCompatible(const DataHandleBase& other) const final;
 

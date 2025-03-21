@@ -58,7 +58,7 @@ std::string symbol(const char* in) {
 
 }  // namespace
 
-void WriteDataHandleBase::initialize(const std::string& key) {
+void WriteDataHandleBase::initialize(std::string_view key) {
   if (key.empty()) {
     throw std::invalid_argument{"Write handle '" + fullName() +
                                 "' cannot receive empty key"};
@@ -66,7 +66,7 @@ void WriteDataHandleBase::initialize(const std::string& key) {
   m_key = key;
 }
 
-void DataHandleBase::maybeInitialize(const std::string& key) {
+void DataHandleBase::maybeInitialize(std::string_view key) {
   if (!key.empty()) {
     m_key = key;
   }
@@ -104,7 +104,7 @@ void WriteDataHandleBase::emulate(StateMapType& state,
   }
 }
 
-void ReadDataHandleBase::initialize(const std::string& key) {
+void ReadDataHandleBase::initialize(std::string_view key) {
   if (key.empty()) {
     throw std::invalid_argument{"Read handle '" + fullName() +
                                 "' cannot receive empty key"};
