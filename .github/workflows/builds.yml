@@ -190,7 +190,9 @@ jobs:
           geant4-config --install-datasets
           venv_python=$(which python3)
           echo $venv_python
+          echo "Pre-setup"
           source build/this_acts_withdeps.sh
+          echo "Post-setup"
           export PATH=$(dirname $venv_python):$PATH
           which python3
           echo $PATH
