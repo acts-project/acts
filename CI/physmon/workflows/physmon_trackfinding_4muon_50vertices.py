@@ -95,7 +95,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         SeedFinderConfigArg(
             r=(33 * u.mm, 200 * u.mm),
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaR=(1 * u.mm, 200 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
