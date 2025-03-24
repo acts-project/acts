@@ -31,7 +31,7 @@ def runDigitization(
     )
 
     s = s or acts.examples.Sequencer(
-        events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
     rnd = acts.examples.RandomNumbers(seed=42)
 

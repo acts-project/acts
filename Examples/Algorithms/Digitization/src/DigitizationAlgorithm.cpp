@@ -355,7 +355,7 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
       for (std::size_t ib = 0; ib < 2; ++ib) {
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled
-          if (componentChannels[ib].count(bin[ib]) == 0) {
+          if (componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
             pos[ib] += weight * binningData[ib].center(bin[ib]);
           }
@@ -382,8 +382,8 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
     for (auto idx : dParameters.indices) {
       dParameters.values.push_back(pos[idx]);
     }
-    std::size_t size0 = static_cast<std::size_t>(bmax[0] - bmin[0] + 1);
-    std::size_t size1 = static_cast<std::size_t>(bmax[1] - bmin[1] + 1);
+    std::size_t size0 = (bmax[0] - bmin[0] + 1);
+    std::size_t size1 = (bmax[1] - bmin[1] + 1);
 
     dParameters.variances = geoCfg.variances({size0, size1}, bmin);
     dParameters.cluster.sizeLoc0 = size0;
