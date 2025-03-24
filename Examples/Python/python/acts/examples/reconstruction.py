@@ -2235,7 +2235,6 @@ def addSingleSeedVertexFinding(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                useTracks=False,
                 inputVertices=outputVertices,
                 treeName="seedvertexing",
                 filePath=str(outputDirRoot / "performance_seedvertexing.root"),
