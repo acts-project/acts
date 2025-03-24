@@ -102,7 +102,7 @@ void addInput(Context& ctx) {
       inputfiles, outputMeasurements, outputPixelSpacePoints,
       outputStripSpacePoints, outputSpacePoints, outputClusters,
       outputMeasurementParticlesMap, outputParticleMeasurementsMap,
-      outputParticles, onlyPassedParticles, skipOverlapSPsPhi,
+      outputParticles, onlySpacepoints, onlyPassedParticles, skipOverlapSPsPhi,
       skipOverlapSPsEta, geometryIdMap, trackingGeometry, absBoundaryTolerance,
       onlySpacepoints, noTruth);
 

@@ -22,6 +22,8 @@ target_link_libraries(
         ActsExamplesDetectorsCommon
 )
 
+acts_compile_headers(ActsExamplesDetectorTGeo GLOB "include/**/*.hpp")
+
 install(
     TARGETS ActsExamplesDetectorTGeo
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

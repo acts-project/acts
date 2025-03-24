@@ -194,7 +194,7 @@ template <typename Callable>
 struct CallableHook : public Acts::GeometryIdentifierHook {
   Callable callable;
 
-  CallableHook(const Callable& c) : callable(c) {}
+  explicit CallableHook(const Callable& c) : callable(c) {}
 
   Acts::GeometryIdentifier decorateIdentifier(
       Acts::GeometryIdentifier identifier,
@@ -209,8 +209,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
   auto hookImpl = [&](GeometryIdentifier orig, const Surface& srf) {
     ++extra;
     extraMap[&srf] = extra;
-    orig.setExtra(extra);
-    return orig;
+    return orig.withExtra(extra);
   };
   CallableHook<decltype(hookImpl)> hook{hookImpl};
 

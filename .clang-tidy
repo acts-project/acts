@@ -5,6 +5,7 @@ Checks: >
   cppcoreguidelines-init-variables,
   cppcoreguidelines-pro-type-member-init,
   google-readability-casting,
+  google-explicit-constructor,
   modernize-concat-nested-namespaces,
   modernize-use-equals-default,
   modernize-use-default-member-init,
@@ -21,6 +22,7 @@ Checks: >
   readability-inconsistent-declaration-parameter-name,
   readability-named-parameter,
   readability-operators-representation,
+  readability-redundant-smartptr-get
 HeaderFilterRegex: '.*(?<!nlohmann\/json)\.(hpp|cpp|ipp)$'
 CheckOptions:
   readability-operators-representation.BinaryOperators: '&&;&=;&;|;~;!;!=;||;|=;^;^='
