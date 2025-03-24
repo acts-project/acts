@@ -199,6 +199,8 @@ jobs:
           echo "::endgroup::"
           CI/physmon/phys_perf_mon.sh all physmon
 
+      - uses: mxschmitt/action-tmate@v3
+        if: failure()
 
       - name: Post step summary
         if: always()
