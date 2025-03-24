@@ -156,7 +156,7 @@ class TrackingGeometry {
     requires(detail::callableWithAnyMutable<Callable>() &&
              !detail::callableWithAnyConst<Callable>())
   {
-    detail::TrackingGeometryLambdaVisitor visitor{
+    detail::TrackingGeometryLambdaMutableVisitor visitor{
         std::forward<Callable>(callable)};
     apply(visitor);
   }
@@ -171,7 +171,7 @@ class TrackingGeometry {
   void apply(Callable&& callable) const
     requires(detail::callableWithAnyConst<Callable>())
   {
-    detail::TrackingGeometryLambdaMutableVisitor visitor{
+    detail::TrackingGeometryLambdaVisitor visitor{
         std::forward<Callable>(callable)};
     apply(visitor);
   }
