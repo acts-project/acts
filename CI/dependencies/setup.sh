@@ -1,4 +1,7 @@
 #!/bin/bash
+echo "Opts at beginning:"
+set +o
+echo "----"
 oldstate="$(set +o)"
 set -e
 set -u
@@ -214,3 +217,5 @@ end_section
 # set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
 
 eval "$oldstate"
+echo "Opts at end"
+set +o
