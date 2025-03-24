@@ -111,7 +111,7 @@ def run_ckf_tracking(label, seeding):
             ),
             SeedFinderConfigArg(
                 r=(33 * u.mm, 200 * u.mm),
-                deltaR=(1 * u.mm, 200 * u.mm),
+                deltaR=(1 * u.mm, 300 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
                 maxSeedsPerSpM=1,

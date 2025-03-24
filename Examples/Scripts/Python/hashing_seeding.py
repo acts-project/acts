@@ -249,7 +249,7 @@ def runHashingSeeding(
     cotThetaMax = 1 / (np.tan(2 * np.arctan(np.exp(-eta))))  # =1/tan(2×atan(e^(-eta)))
     seedFinderConfigArg = SeedFinderConfigArg(
         r=(None, 200 * u.mm),  # rMin=default, 33mm
-        deltaR=(1 * u.mm, 200 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
         collisionRegion=(-250 * u.mm, 250 * u.mm),
         z=(-2000 * u.mm, 2000 * u.mm),
         maxSeedsPerSpM=maxSeedsPerSpM,
