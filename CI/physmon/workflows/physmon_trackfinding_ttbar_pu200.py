@@ -187,6 +187,7 @@ with tempfile.TemporaryDirectory() as temp:
         seeder=acts.VertexSeedFinder.GaussianSeeder,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gauss_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -200,6 +201,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
+        writeTrackInfo=True,
     )
 
     s.run()

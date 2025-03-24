@@ -74,7 +74,7 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
     /// as truth matched.
     double trackMatchThreshold = 0.5;
     /// Whether to write information about tracks
-    bool writeTrackInfo = true;
+    bool writeTrackInfo = false;
     /// Minimum track weight for track to be considered as part of the fit
     double minTrkWeight = 0.1;
     /// Spatial window for vertex density calculation.
