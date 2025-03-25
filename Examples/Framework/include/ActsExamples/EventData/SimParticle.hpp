@@ -215,6 +215,14 @@ struct SecondaryVertexIdGetter {
         .setVertexSecondary(particle.particleId().vertexSecondary());
   }
 };
+struct VertexIdGetter {
+  SimBarcode operator()(const SimParticleState& particle) const {
+    return particle.particleId().vertexId();
+  }
+  SimBarcode operator()(const SimParticle& particle) const {
+    return particle.particleId().vertexId();
+  }
+};
 }  // namespace detail
 
 using SimParticleStateContainer =
@@ -234,12 +242,20 @@ groupByPrimaryVertex(const SimParticleContainer& container) {
 /// Iterate over groups of particles belonging to the same secondary vertex.
 ///
 /// For each primary vertex, this yields one group of particles belonging
-/// directly to the primary vertex (secondary vertex id 0) and a group for
-/// each secondary vertex.
+/// directly to the secondary vertex and a group for each secondary vertex.
 inline GroupBy<SimParticleContainer::const_iterator,
                detail::SecondaryVertexIdGetter>
 groupBySecondaryVertex(const SimParticleContainer& container) {
   return makeGroupBy(container, detail::SecondaryVertexIdGetter());
+}
+
+/// Iterate over groups of particles belonging to the same vertex.
+///
+/// For each vertex, this yields one group of particles belonging
+/// directly to the vertex and a group for each secondary vertex.
+inline GroupBy<SimParticleContainer::const_iterator, detail::VertexIdGetter>
+groupByVertexId(const SimParticleContainer& container) {
+  return makeGroupBy(container, detail::VertexIdGetter());
 }
 
 }  // namespace ActsExamples
