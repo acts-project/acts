@@ -32,8 +32,11 @@ class IWriter : public SequenceElement {
     return write(context);
   }
 
-  /// Fulfil the algorithm interface
+  /// Fulfill the algorithm interface
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
+
+  /// Return the type for debug output
+  std::string_view typeName() const override { return "Writer"; }
 };
 
 }  // namespace ActsExamples
