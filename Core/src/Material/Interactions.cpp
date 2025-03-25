@@ -125,7 +125,8 @@ inline float computeDeltaHalf(float meanExcitationEnergy,
   }
   // pre-factor according to RPP2019 table 33.1
   const float plasmaEnergy =
-      PlasmaEnergyScale * std::sqrt(molarElectronDensity / (1 / 1_cm3));
+      PlasmaEnergyScale *
+      std::sqrt(molarElectronDensity / static_cast<float>(1 / 1_cm3));
   return std::log(rq.betaGamma) +
          std::log(plasmaEnergy / meanExcitationEnergy) - 0.5f;
 }
