@@ -54,8 +54,6 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
           ConstrainedStep::Type::Navigator, logger());
       if (preStepSurfaceStatus == IntersectionStatus::reachable ||
           preStepSurfaceStatus == IntersectionStatus::onSurface) {
-        ACTS_VERBOSE("Found valid target surface after " << i << " attempts.");
-        ACTS_VERBOSE("Target is " << nextTarget.surface->geometryId());
         return nextTarget;
       }
     }
