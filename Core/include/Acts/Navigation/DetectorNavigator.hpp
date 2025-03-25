@@ -189,7 +189,6 @@ class DetectorNavigator {
     const auto& surface = (candidate.surface != nullptr)
                               ? (*candidate.surface)
                               : (candidate.portal->surface());
-    bool isPortal = (candidate.portal != nullptr);
     // Screen output which surface you are on
     ACTS_VERBOSE(volInfo(state)
                  << posInfo(state, position)
@@ -200,7 +199,7 @@ class DetectorNavigator {
     state.currentSurface = nullptr;
     state.currentPortal = nullptr;
     return NavigationTarget(surface, candidate.objectIntersection.index(),
-                            candidate.boundaryTolerance, isPortal);
+                            candidate.boundaryTolerance);
   }
 
   bool checkTargetValid(const State& state, const Vector3& position,
