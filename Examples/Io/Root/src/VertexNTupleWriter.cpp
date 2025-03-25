@@ -126,17 +126,17 @@ VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
   if (m_cfg.inputSelectedParticles.empty()) {
     throw std::invalid_argument("Collection with selected particles missing");
   }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
+  if (m_cfg.useTracks && m_cfg.inputTrackParticleMatching.empty()) {
     throw std::invalid_argument("Missing input track particles matching");
   }
 
   m_inputTruthVertices.initialize(m_cfg.inputTruthVertices);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputSelectedParticles.initialize(m_cfg.inputSelectedParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
 
   if (m_cfg.useTracks) {
     m_inputTracks.initialize(m_cfg.inputTracks);
+    m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   }
 
   // Setup ROOT I/O
@@ -277,16 +277,20 @@ ProcessCode VertexNTupleWriter::writeT(
   // Read truth particle input collection
   const SimParticleContainer& particles = m_inputParticles(ctx);
   const SimParticleContainer& selectedParticles = m_inputSelectedParticles(ctx);
-  const TrackParticleMatching& trackParticleMatching =
-      m_inputTrackParticleMatching(ctx);
+  const TrackParticleMatching* trackParticleMatching =
+      (m_cfg.useTracks ? &m_inputTrackParticleMatching(ctx) : nullptr);
 
   const ConstTrackContainer* tracks = nullptr;
   SimParticleContainer recoParticles;
 
   auto findParticle = [&](ConstTrackProxy track) -> std::optional<SimParticle> {
+    if (trackParticleMatching == nullptr) {
+      ACTS_DEBUG("trackParticleMatching is not set");
+      return {};
+    }
     // Get the truth-matched particle
-    auto imatched = trackParticleMatching.find(track.index());
-    if (imatched == trackParticleMatching.end() ||
+    auto imatched = trackParticleMatching->find(track.index());
+    if (imatched == trackParticleMatching->end() ||
         !imatched->second.particle.has_value()) {
       ACTS_DEBUG("No truth particle associated with this track, index = "
                  << track.index() << " tip index = " << track.tipIndex());
@@ -470,25 +474,34 @@ ProcessCode VertexNTupleWriter::writeT(
     std::vector<std::pair<SimVertexBarcode, double>> contributingTruthVertices;
 
     double totalTrackWeight = 0;
-    for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
-      if (trk.trackWeight < m_cfg.minTrkWeight) {
-        continue;
-      }
+    if (m_cfg.useTracks) {
+      for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
+        if (trk.trackWeight < m_cfg.minTrkWeight) {
+          continue;
+        }
 
-      totalTrackWeight += trk.trackWeight;
+        totalTrackWeight += trk.trackWeight;
 
-      std::optional<ConstTrackProxy> trackOpt = findTrack(trk);
-      if (!trackOpt.has_value()) {
-        ACTS_DEBUG("Track has no matching input track.");
-        continue;
+        std::optional<ConstTrackProxy> trackOpt = findTrack(trk);
+        if (!trackOpt.has_value()) {
+          ACTS_DEBUG("Track has no matching input track.");
+          continue;
+        }
+        const ConstTrackProxy& inputTrk = *trackOpt;
+        std::optional<SimParticle> particleOpt = findParticle(inputTrk);
+        if (!particleOpt.has_value()) {
+          ACTS_VERBOSE("Track has no matching truth particle.");
+        } else {
+          contributingTruthVertices.emplace_back(
+              SimBarcode{particleOpt->particleId()}.vertexId(),
+              trk.trackWeight);
+        }
       }
-      const ConstTrackProxy& inputTrk = *trackOpt;
-      std::optional<SimParticle> particleOpt = findParticle(inputTrk);
-      if (!particleOpt.has_value()) {
-        ACTS_VERBOSE("Track has no matching truth particle.");
-      } else {
+    } else {
+      // if not using tracks, then use all truth particles
+      for (auto& particle : recoParticles) {
         contributingTruthVertices.emplace_back(
-            SimBarcode{particleOpt->particleId()}.vertexId(), trk.trackWeight);
+            SimBarcode{particle.particleId()}.vertexId(), 1.);
       }
     }
 
@@ -510,7 +523,9 @@ ProcessCode VertexNTupleWriter::writeT(
     double sumPt2 = calcSumPt2(vtx);
 
     double vertexMatchFraction =
-        truthMajorityVertexTrackWeights / totalTrackWeight;
+        (totalTrackWeight > 0
+             ? truthMajorityVertexTrackWeights / totalTrackWeight
+             : 0.);
     RecoVertexClassification recoVertexClassification =
         RecoVertexClassification::Unknown;
 
