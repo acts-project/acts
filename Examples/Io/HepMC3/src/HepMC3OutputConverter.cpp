@@ -59,24 +59,35 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
     auto hepmc3Particle =
         std::make_shared<HepMC3::GenParticle>(vec, inParticle.pdg());
     hepmc3Particle->set_generated_mass(inParticle.mass());
+    hepmc3Particle->set_status(1);
     genEvent.add_particle(hepmc3Particle);
     ACTS_VERBOSE("Adding particle with barcode " << inParticle.particleId());
     barcodeMap.insert({inParticle.particleId(), hepmc3Particle});
   }
 
   for (const auto& inVertex : inputVertices) {
-    if (inVertex.incoming.empty()) {
-      // HepMC3 does not like vertices without incoming particles
-      continue;
-    }
-
-    const Vector4 position =
-        inVertex.position4 / 1_mm;  // Let's ensure we're using mm
+    Vector4 position = inVertex.position4;
+    // Let's make sure we use correct units
+    position.head<3>() /= 1_mm;
+    position[3] /= 1_ns;
     const HepMC3::FourVector vec(position[0], position[1], position[2],
                                  position[3]);
     auto hepmc3Vertex = std::make_shared<HepMC3::GenVertex>(vec);
-    genEvent.add_vertex(hepmc3Vertex);
+
+    if (inVertex.incoming.empty()) {
+      // HepMC3 does not like vertices without incoming particles
+      // Add our dummy incoming particle
+      ACTS_VERBOSE("Adding dummy incoming particle to vertex");
+      auto dummyParticle = std::make_shared<HepMC3::GenParticle>(
+          HepMC3::FourVector(0, 0, 0, 0), 0, 666);
+      dummyParticle->set_generated_mass(123);
+      dummyParticle->set_status(12);
+      genEvent.add_particle(dummyParticle);
+      hepmc3Vertex->add_particle_in(dummyParticle);
+    }
+
     hepmc3Vertex->set_status(1);
+    genEvent.add_vertex(hepmc3Vertex);
 
     for (const auto& particleId : inVertex.incoming) {
       auto it = barcodeMap.find(particleId);
