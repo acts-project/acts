@@ -167,8 +167,14 @@ class DetectorNavigator {
         static_cast<int>(state.surfaceCandidates.size())) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, position) << "no surface candidates");
-
-      return NavigationTarget::None();
+      // we run out of surfaces and we are in a portal - try to reinitialize the
+      // navigation state
+      if (state.currentPortal == nullptr) {
+        updateCandidateSurfaces(state, position);
+        state.surfaceCandidateIndex = 0;
+      } else {
+        return NavigationTarget::None();
+      }
     }
 
     // Screen output how much is left to try

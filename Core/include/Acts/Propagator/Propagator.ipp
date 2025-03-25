@@ -57,22 +57,6 @@ Acts::Result<void> Acts::Propagator<S, N>::propagate(
         ACTS_VERBOSE("Found valid target surface after " << i << " attempts.");
         ACTS_VERBOSE("Target is " << nextTarget.surface->geometryId());
         return nextTarget;
-      } else {
-        // in case the target is a portal and the target is not reachable,
-        // reinitialize the navigator
-        if (nextTarget.isPortal) {
-          ACTS_VERBOSE("Found unreachable target surface after "
-                       << i << " attempts.");
-          ACTS_VERBOSE(
-              "Unreachable Target is a portal - try to reinitialize with the "
-              "current navigation state");
-          auto navInitRes =
-              m_navigator.initialize(state.navigation, state.position,
-                                     state.direction, state.options.direction);
-          if (!navInitRes.ok()) {
-            return navInitRes.error();
-          }
-        }
       }
     }
 
