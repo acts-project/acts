@@ -19,6 +19,8 @@ else
     exit 1
 fi
 
+echo "POST SCRIPT_DIR"
+
 # source the python and ODD environment
 # first check if python bindings are enabled
 # then check if the setup.sh file exists
@@ -33,14 +35,18 @@ else
   echo "INFO:    Python bindings are disabled."
 fi
 
+echo "POST PYTHON"
+
 # set ACTS and ODD environment variables
 export ACTS_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@
 export ODD_SOURCE_DIR=@CMAKE_CURRENT_SOURCE_DIR@/thirdparty/OpenDataDetector
+echo "POST ACTS_SOURCE_DIR"
 
 # make ACTS binaries available
 export PATH="$script_dir/bin:${PATH}"
 export LD_LIBRARY_PATH="$script_dir/lib:${LD_LIBRARY_PATH}"
 export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
+echo "POST PATH"
 
 # activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
@@ -52,23 +58,30 @@ else
     . @ROOT_BINDIR@/thisroot.sh
   fi
 fi
+echo "POST ROOT"
+
 if [[ -d "@Geant4_DIR@" ]]; then
   . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
 fi
+echo "POST Geant4"
 if [[ -d "@DD4hep_DIR@" ]]; then
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
 fi
+echo "POST DD4hep"
 if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"
   export DYLD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@podio_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
   export PYTHONPATH="@podio_PYTHON_DIR@:${PYTHONPATH}"
 fi
+echo "POST podio"
 if [[ -d "@EDM4HEP_DIR@" ]]; then
   export LD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${LD_LIBRARY_PATH}"
   export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
+
+echo "DONE"
