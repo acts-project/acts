@@ -21,9 +21,10 @@ HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
     throw std::invalid_argument("Missing output file path");
   }
 
-  if (!std::filesystem::exists(m_cfg.outputPath.parent_path())) {
+  auto absolute = std::filesystem::absolute(m_cfg.outputPath);
+  if (!std::filesystem::exists(absolute.parent_path())) {
     throw std::invalid_argument("Output directory does not exist: " +
-                                m_cfg.outputPath.parent_path().string());
+                                absolute.parent_path().string());
   }
 
   if (!m_cfg.perEvent) {
