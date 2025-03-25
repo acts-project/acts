@@ -470,15 +470,11 @@ class CombinatorialKalmanFilter {
             state.geoContext, *calibrationContextPtr, *surface, boundState,
             prevTip, result.trackStateCandidates, *result.trackStates,
             logger());
-        if (!tsRes.ok()) {
-          ACTS_ERROR("Track state creation failed on surface "
-                     << surface->geometryId() << ": " << tsRes.error());
-          return tsRes.error();
-        }
       }
-      const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList = *tsRes;
 
-      if (!newTrackStateList.empty()) {
+      if (tsRes.ok() && !(*tsRes).empty()) {
+        const CkfTypes::BranchVector<TrackIndexType>& newTrackStateList =
+            *tsRes;
         Result<unsigned int> procRes =
             processNewTrackStates(state.geoContext, newTrackStateList, result);
         if (!procRes.ok()) {
@@ -501,6 +497,19 @@ class CombinatorialKalmanFilter {
         currentBranch = result.activeBranches.back();
         prevTip = currentBranch.tipIndex();
       } else {
+        if (!tsRes.ok()) {
+          if (static_cast<CombinatorialKalmanFilterError>(
+                  tsRes.error().value()) ==
+              CombinatorialKalmanFilterError::NoMeasurementExpected) {
+            // recoverable error returned by track state creator
+            expectMeasurements = false;
+          } else {
+            ACTS_ERROR("Track state creation failed on surface "
+                       << surface->geometryId() << ": " << tsRes.error());
+            return tsRes.error();
+          }
+        }
+
         if (expectMeasurements) {
           ACTS_VERBOSE("Detected hole after measurement selection on surface "
                        << surface->geometryId());
@@ -509,8 +518,9 @@ class CombinatorialKalmanFilter {
         auto stateMask = PM::Predicted | PM::Jacobian;
 
         // Add a hole or material track state to the multitrajectory
-        TrackIndexType currentTip = addNonSourcelinkState(
-            stateMask, boundState, result, expectMeasurements, prevTip);
+        TrackIndexType currentTip =
+            addNonSourcelinkState(stateMask, boundState, result, isSensitive,
+                                  expectMeasurements, prevTip);
         currentBranch.tipIndex() = currentTip;
         auto currentState = currentBranch.outermostTrackState();
         if (expectMeasurements) {
@@ -668,22 +678,27 @@ class CombinatorialKalmanFilter {
     /// @param boundState The bound state on current surface
     /// @param result is the mutable result state object and which to leave invalid
     /// @param isSensitive The surface is sensitive or passive
+    /// @param expectMeasurements True if measurements where expected for this surface
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
     TrackIndexType addNonSourcelinkState(TrackStatePropMask stateMask,
                                          const BoundState& boundState,
                                          result_type& result, bool isSensitive,
+                                         bool expectMeasurements,
                                          TrackIndexType prevTip) const {
       using PM = TrackStatePropMask;
 
       // Add a track state
       auto trackStateProxy =
           result.trackStates->makeTrackState(stateMask, prevTip);
-      ACTS_VERBOSE("Create " << (isSensitive ? "Hole" : "Material")
-                             << " output track state #"
-                             << trackStateProxy.index()
-                             << " with mask: " << stateMask);
+      ACTS_VERBOSE("Create "
+                   << (isSensitive
+                           ? (expectMeasurements ? "Hole"
+                                                 : "noMeasurementExpected")
+                           : "Material")
+                   << " output track state #" << trackStateProxy.index()
+                   << " with mask: " << stateMask);
 
       const auto& [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
@@ -702,7 +717,8 @@ class CombinatorialKalmanFilter {
       }
       typeFlags.set(TrackStateFlag::ParameterFlag);
       if (isSensitive) {
-        typeFlags.set(TrackStateFlag::HoleFlag);
+        typeFlags.set(expectMeasurements ? TrackStateFlag::HoleFlag
+                                         : TrackStateFlag::NoExpectedHitFlag);
       }
 
       // Set the filtered parameter index to be the same with predicted
