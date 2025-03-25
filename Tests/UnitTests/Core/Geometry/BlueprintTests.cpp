@@ -733,6 +733,135 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
+  // Test disc layer with center of gravity disabled
+  {
+    double yrot = 45_degree;
+    Transform3 base =
+        Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
+
+    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<std::unique_ptr<DetectorElementBase>> elements;
+    double r = 300_mm;
+    std::size_t nSensors = 8;
+    double thickness = 2.5_mm;
+    auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
+
+    double deltaPhi = 2 * std::numbers::pi / nSensors;
+    for (std::size_t i = 0; i < nSensors; i++) {
+      Transform3 trf = base * AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
+                       Translation3(Vector3::UnitX() * r);
+
+      if (i % 2 == 0) {
+        trf = trf * Translation3{Vector3::UnitZ() * 5_mm};
+      }
+
+      auto& element = elements.emplace_back(
+          std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
+
+      element->surface().assignDetectorElement(*element);
+      surfaces.push_back(element->surface().getSharedPtr());
+    }
+
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
+
+    root.addLayer("Layer0", [&](auto& layer) {
+      layer.setSurfaces(surfaces)
+          .setLayerType(LayerBlueprintNode::LayerType::Disc)
+          .setEnvelope(ExtentEnvelope{{
+              .z = {0.1_mm, 0.1_mm},
+              .r = {1_mm, 1_mm},
+          }})
+          .setTransform(base)
+          .setUseCenterOfGravity(false, false, false);  // Disable all axes
+    });
+
+    auto trackingGeometry = root.construct({}, gctx, *logger);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+
+    // With center of gravity disabled, the layer should be at the origin
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR),
+                      346.25353003_mm, 1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
+                      1e-6);
+  }
+
+  // Test cylinder layer with center of gravity disabled
+  {
+    double yrot = 0_degree;
+    Transform3 base =
+        Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
+
+    std::vector<std::shared_ptr<Surface>> surfaces;
+    std::vector<std::unique_ptr<DetectorElementBase>> elements;
+
+    double r = 300_mm;
+    std::size_t nStaves = 10;
+    int nSensorsPerStave = 8;
+    double thickness = 0;
+    double hlPhi = 40_mm;
+    double hlZ = 60_mm;
+    auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
+
+    double deltaPhi = 2 * std::numbers::pi / nStaves;
+
+    for (std::size_t istave = 0; istave < nStaves; istave++) {
+      for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
+           isensor++) {
+        double z = isensor * (2 * hlZ + 5_mm);
+
+        Transform3 trf = base * Translation3(Vector3::UnitZ() * z) *
+                         AngleAxis3{deltaPhi * istave, Vector3::UnitZ()} *
+                         Translation3(Vector3::UnitX() * r) *
+                         AngleAxis3{10_degree, Vector3::UnitZ()} *
+                         AngleAxis3{90_degree, Vector3::UnitY()} *
+                         AngleAxis3{90_degree, Vector3::UnitZ()};
+        auto& element = elements.emplace_back(
+            std::make_unique<DetectorElementStub>(trf, recBounds, thickness));
+        element->surface().assignDetectorElement(*element);
+        surfaces.push_back(element->surface().getSharedPtr());
+      }
+    }
+
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
+
+    root.addLayer("Layer0", [&](auto& layer) {
+      layer.setSurfaces(surfaces)
+          .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+          .setEnvelope(ExtentEnvelope{{
+              .z = {10_mm, 10_mm},
+              .r = {20_mm, 10_mm},
+          }})
+          .setTransform(base)
+          .setUseCenterOfGravity(false, false, false);  // Disable all axes
+    });
+
+    auto trackingGeometry = root.construct({}, gctx, *logger);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+
+    // With center of gravity disabled, the layer should be at the origin
+    BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
+                      1e-6);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END();
 
 BOOST_AUTO_TEST_SUITE_END();
