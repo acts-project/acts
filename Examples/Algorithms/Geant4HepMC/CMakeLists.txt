@@ -18,7 +18,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesEventRecording
-    PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 ${HEPMC3_LIBRARIES}
+    PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 HepMC3::HepMC3
 )
 
 install(
