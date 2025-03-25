@@ -23,7 +23,8 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
       const ActsExamples::AlgorithmContext & /*context*/) override {
     return {};
   };
-  std::string name() const override { return {}; };
+  std::string name() const override { return "Dummy"; };
+  std::string_view typeName() const override { return "Dummy"; };
 };
 
 template <typename T>
