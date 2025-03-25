@@ -14,7 +14,6 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <iterator>
 #include <ostream>
 #include <random>
@@ -147,7 +146,6 @@ Pythia8Generator::operator()(RandomEngine& rng) {
     auto hepmc_event = std::make_shared<HepMC3::GenEvent>();
     m_hepMC3Converter->fill_next_event(*m_pythia8, hepmc_event.get());
     hepmc_event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
-    std::cout << "WRITING DEBUG PYTHIA8" << std::endl;
     m_hepMC3Writer->write_event(*hepmc_event);
   }
 #endif
