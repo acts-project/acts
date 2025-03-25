@@ -52,7 +52,7 @@ namespace ActsExamples {
 
 namespace {
 
-const double nan = std::numeric_limits<double>::quiet_NaN();
+constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 
 std::uint32_t getNumberOfReconstructableVertices(
     const SimParticleContainer& collection) {
@@ -150,7 +150,7 @@ double calculateTruthPrimaryVertexDensity(
   return count / (2 * config.vertexDensityWindow);
 }
 
-std::optional<SimParticle> findParticle(
+const SimParticle* findParticle(
     const SimParticleContainer& particles,
     const TrackParticleMatching& trackParticleMatching, ConstTrackProxy track,
     const Acts::Logger& logger) {
@@ -160,7 +160,7 @@ std::optional<SimParticle> findParticle(
       !imatched->second.particle.has_value()) {
     ACTS_DEBUG("No truth particle associated with this track, index = "
                << track.index() << " tip index = " << track.tipIndex());
-    return {};
+    return nullptr;
   }
 
   const TrackMatchEntry& particleMatch = imatched->second;
@@ -174,7 +174,7 @@ std::optional<SimParticle> findParticle(
     return {};
   }
 
-  return *iparticle;
+  return &(*iparticle);
 }
 
 std::optional<ConstTrackProxy> findTrack(const ConstTrackContainer& tracks,
@@ -387,9 +387,9 @@ ProcessCode VertexNTupleWriter::writeT(
         continue;
       }
 
-      if (std::optional<SimParticle> particle =
+      if (const SimParticle* particle =
               findParticle(particles, trackParticleMatching, track, logger());
-          particle.has_value()) {
+          particle != nullptr) {
         recoParticles.insert(*particle);
       }
     }
@@ -473,13 +473,13 @@ ProcessCode VertexNTupleWriter::writeT(
         continue;
       }
       const ConstTrackProxy& inputTrk = *trackOpt;
-      std::optional<SimParticle> particleOpt =
+      const SimParticle* particle =
           findParticle(particles, trackParticleMatching, inputTrk, logger());
-      if (!particleOpt.has_value()) {
+      if (particle == nullptr) {
         ACTS_VERBOSE("Track has no matching truth particle.");
       } else {
         contributingTruthVertices.emplace_back(
-            SimBarcode{particleOpt->particleId()}.vertexId(), trk.trackWeight);
+            SimBarcode{particle->particleId()}.vertexId(), trk.trackWeight);
       }
     }
 
@@ -892,21 +892,19 @@ void VertexNTupleWriter::writeTrackInfo(
     Acts::Vector3 trueUnitDir = Acts::Vector3::Zero();
     Acts::Vector3 trueMom = Acts::Vector3::Zero();
 
-    std::optional<SimParticle> particleOpt;
+    const SimParticle* particle = nullptr;
     std::optional<ConstTrackProxy> trackOpt = findTrack(tracks, trk);
     if (trackOpt.has_value()) {
-      particleOpt =
+      particle =
           findParticle(particles, trackParticleMatching, *trackOpt, logger());
     }
 
-    if (particleOpt.has_value()) {
-      const SimParticle& particle = *particleOpt;
+    if (particle != nullptr) {
+      innerTrkParticleId.push_back(particle->particleId().value());
 
-      innerTrkParticleId.push_back(particle.particleId().value());
-
-      trueUnitDir = particle.direction();
+      trueUnitDir = particle->direction();
       trueMom.head<2>() = Acts::makePhiThetaFromDirection(trueUnitDir);
-      trueMom[2] = particle.qOverP();
+      trueMom[2] = particle->qOverP();
 
       innerTruthPhi.push_back(trueMom[0]);
       innerTruthTheta.push_back(trueMom[1]);
@@ -934,7 +932,7 @@ void VertexNTupleWriter::writeTrackInfo(
       innerRecoTheta.push_back(recoMom[1]);
       innerRecoQOverP.push_back(recoMom[2]);
 
-      if (particleOpt.has_value()) {
+      if (particle != nullptr) {
         Acts::Vector3 diffMom = recoMom - trueMom;
         // Accounting for the periodicity of phi. We overwrite the
         // previously computed value for better readability.
@@ -988,7 +986,7 @@ void VertexNTupleWriter::writeTrackInfo(
       innerRecoThetaFitted.push_back(recoMomFitted[1]);
       innerRecoQOverPFitted.push_back(recoMomFitted[2]);
 
-      if (particleOpt.has_value()) {
+      if (particle != nullptr) {
         Acts::Vector3 diffMomFitted = recoMomFitted - trueMom;
         // Accounting for the periodicity of phi. We overwrite the
         // previously computed value for better readability.
