@@ -184,7 +184,7 @@ class DetectorNavigator {
                                 << " out of " << state.surfaceCandidates.size()
                                 << " surfaces remain to try.");
 
-    // Take the surface and mark it as a portal or a surface
+    // Take the surface
     const auto& candidate = state.surfaceCandidate();
     const auto& surface = (candidate.surface != nullptr)
                               ? (*candidate.surface)
