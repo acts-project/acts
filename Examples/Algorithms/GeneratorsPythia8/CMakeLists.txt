@@ -14,7 +14,7 @@ target_link_libraries(
 )
 
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
-    target_link_libraries(ActsExamplesGeneratorsPythia8 PRIVATE HepMC3::HepMC3)
+    target_link_libraries(ActsExamplesGeneratorsPythia8 PRIVATE ${HEPMC3_LIBRARIES})
     target_compile_definitions(
         ActsExamplesGeneratorsPythia8
         PRIVATE _HAS_HEPMC3
