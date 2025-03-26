@@ -33,7 +33,7 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// Write out the performance of CombinatorialKalmanFilter (CKF), e.g. track
-/// efficiency, fake rate etc.
+/// efficiency, fake rate/ratio etc.
 ///
 /// @TODO: add duplication plots
 ///
