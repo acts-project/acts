@@ -16,7 +16,7 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/FakeRatePlotTool.hpp"
+#include "ActsExamples/Validation/FakePlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <cstddef>
@@ -59,7 +59,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
 
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
-    FakeRatePlotTool::Config fakeRatePlotToolConfig;
+    FakePlotTool::Config fakePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
 
@@ -92,10 +92,10 @@ class TrackFinderPerformanceWriter final : public WriterT<ConstTrackContainer> {
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
-  /// Plot tool for fake rate
-  FakeRatePlotTool m_fakeRatePlotTool;
-  FakeRatePlotTool::FakeRatePlotCache m_fakeRatePlotCache{};
-  /// Plot tool for duplication rate
+  /// Plot tool for fake rate/ratio
+  FakePlotTool m_fakePlotTool;
+  FakePlotTool::FakePlotCache m_fakePlotCache{};
+  /// Plot tool for duplication rate/raio
   DuplicationPlotTool m_duplicationPlotTool;
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
   /// Plot tool for track hit info

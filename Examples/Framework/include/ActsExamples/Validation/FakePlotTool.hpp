@@ -26,11 +26,11 @@ class Particle;
 
 namespace ActsExamples {
 
-// Tools to make fake rate plots to show tracking fake rate.
+// Tools to make fake rate/raio plots.
 //
-// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
-// not matched with truth.
-class FakeRatePlotTool {
+// The fake rate/raio is investigated for all reco tracks. A track is 'fake' if
+// it's not matched with truth.
+class FakePlotTool {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -42,7 +42,7 @@ class FakeRatePlotTool {
   };
 
   /// @brief Nested Cache struct
-  struct FakeRatePlotCache {
+  struct FakePlotCache {
     TH2F* nReco_vs_pT;          ///< Number of reco tracks vs pT scatter plot
     TH2F* nTruthMatched_vs_pT;  ///< Number of truth-matched reco tracks vs pT
                                 ///< scatter plot
@@ -53,51 +53,50 @@ class FakeRatePlotTool {
                                  ///< scatter plot
     TH2F* nFake_vs_eta;  ///< Number of fake (truth-unmatched) tracks vs eta
                          ///< scatter plot
-    TEfficiency* fakeRate_vs_pT;   ///< Tracking fake rate vs pT
-    TEfficiency* fakeRate_vs_eta;  ///< Tracking fake rate vs eta
-    TEfficiency* fakeRate_vs_phi;  ///< Tracking fake rate vs phi
+    TEfficiency* fakeRatio_vs_pT;   ///< Tracking fake ratio vs pT
+    TEfficiency* fakeRatio_vs_eta;  ///< Tracking fake ratio vs eta
+    TEfficiency* fakeRatio_vs_phi;  ///< Tracking fake ratio vs phi
   };
 
   /// Constructor
   ///
   /// @param cfg Configuration struct
   /// @param lvl Message level declaration
-  FakeRatePlotTool(const Config& cfg, Acts::Logging::Level lvl);
+  FakePlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the fake rate plots
+  /// @brief book the fake rate/ratio plots
   ///
-  /// @param fakeRatePlotCache the cache for fake rate plots
-  void book(FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param fakePlotCache the cache for fake rate/ratio plots
+  void book(FakePlotCache& fakePlotCache) const;
 
-  /// @brief fill fake rate w.r.t. fitted track parameters
+  /// @brief fill fake rate/ratio w.r.t. fitted track parameters
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
+  /// @param fakePlotCache cache object for fake rate/ratio plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
+  void fill(FakePlotCache& fakePlotCache,
             const Acts::BoundTrackParameters& fittedParameters,
             bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
+  /// @param fakePlotCache cache object for fake rate/ratio plots
   /// @param truthParticle the truth Particle
   /// @param nTruthMatchedTracks the number of truth-Matched tracks
   /// @param nFakeTracks the number of fake tracks
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const SimParticleState& truthParticle,
+  void fill(FakePlotCache& fakePlotCache, const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
 
-  /// @brief write the fake rate plots to file
+  /// @brief write the fake rate/ratio plots to file
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
-  void write(const FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param fakePlotCache cache object for fake rate/ratio plots
+  void write(const FakePlotCache& fakePlotCache) const;
 
-  /// @brief delete the fake rate plots
+  /// @brief delete the fake rate/ratio plots
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
-  void clear(FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param fakePlotCache cache object for fake rate/ratio plots
+  void clear(FakePlotCache& fakePlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The Config class

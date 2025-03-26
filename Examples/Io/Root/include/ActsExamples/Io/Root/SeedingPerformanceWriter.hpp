@@ -69,7 +69,7 @@ class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
-  /// Plot tool for duplication rate
+  /// Plot tool for duplication rate/ratio
   DuplicationPlotTool m_duplicationPlotTool;
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
 

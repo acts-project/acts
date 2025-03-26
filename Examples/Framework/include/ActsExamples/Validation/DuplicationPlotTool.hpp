@@ -26,8 +26,8 @@ class Particle;
 
 namespace ActsExamples {
 
-// Tools to make duplication rate and duplication number plots to show tracking
-// duplication.
+// Tools to make duplication rate/ratio and duplication number plots to show
+// tracking duplication.
 //
 // The duplication is investigated for those truth-matched reco tracks. If there
 // are a few reco tracks matched to the same truth particle, the reco track with
@@ -46,12 +46,14 @@ class DuplicationPlotTool {
 
   /// @brief Nested Cache struct
   struct DuplicationPlotCache {
-    TProfile* nDuplicated_vs_pT;         ///< Number of duplicated tracks vs pT
-    TProfile* nDuplicated_vs_eta;        ///< Number of duplicated tracks vs eta
-    TProfile* nDuplicated_vs_phi;        ///< Number of duplicated tracks vs phi
-    TEfficiency* duplicationRate_vs_pT;  ///< Tracking duplication rate vs pT
-    TEfficiency* duplicationRate_vs_eta;  ///< Tracking duplication rate vs eta
-    TEfficiency* duplicationRate_vs_phi;  ///< Tracking duplication rate vs phi
+    TProfile* nDuplicated_vs_pT;   ///< Number of duplicated tracks vs pT
+    TProfile* nDuplicated_vs_eta;  ///< Number of duplicated tracks vs eta
+    TProfile* nDuplicated_vs_phi;  ///< Number of duplicated tracks vs phi
+    TEfficiency* duplicationRatio_vs_pT;  ///< Tracking duplication ratio vs pT
+    TEfficiency*
+        duplicationRatio_vs_eta;  ///< Tracking duplication ratio vs eta
+    TEfficiency*
+        duplicationRatio_vs_phi;  ///< Tracking duplication ratio vs phi
   };
 
   /// Constructor
@@ -65,7 +67,7 @@ class DuplicationPlotTool {
   /// @param duplicationPlotCache the cache for duplication plots
   void book(DuplicationPlotCache& duplicationPlotCache) const;
 
-  /// @brief fill duplication rate w.r.t. fitted track parameters
+  /// @brief fill duplication raio w.r.t. fitted track parameters
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track

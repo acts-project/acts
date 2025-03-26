@@ -177,7 +177,7 @@ void addOutput(Context& ctx) {
         .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
              "varBinning"_a);
 
-    py::class_<FakeRatePlotTool::Config>(mex, "FakeRatePlotToolConfig")
+    py::class_<FakePlotTool::Config>(mex, "FakePlotToolConfig")
         .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
              "varBinning"_a);
 
@@ -403,7 +403,7 @@ void addOutput(Context& ctx) {
       ActsExamples::TrackFinderPerformanceWriter, mex,
       "TrackFinderPerformanceWriter", inputTracks, inputParticles,
       inputTrackParticleMatching, inputParticleTrackMatching, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
+      fileMode, effPlotToolConfig, fakePlotToolConfig,
       duplicationPlotToolConfig, trackSummaryPlotToolConfig,
       subDetectorTrackSummaryVolumes, writeMatchingDetails);
 

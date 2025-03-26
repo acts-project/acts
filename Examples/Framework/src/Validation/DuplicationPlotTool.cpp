@@ -31,18 +31,20 @@ void ActsExamples::DuplicationPlotTool::book(
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bNum = m_cfg.varBinning.at("Num");
-  ACTS_DEBUG("Initialize the histograms for duplication rate plots");
+  ACTS_DEBUG("Initialize the histograms for duplication rate/ratio plots");
 
-  // duplication rate vs pT
-  duplicationPlotCache.duplicationRate_vs_pT =
-      PlotHelpers::bookEff("duplicationRate_vs_pT",
-                           "Duplication rate;pT [GeV/c];Duplication rate", bPt);
-  // duplication rate vs eta
-  duplicationPlotCache.duplicationRate_vs_eta = PlotHelpers::bookEff(
-      "duplicationRate_vs_eta", "Duplication rate;#eta;Duplication rate", bEta);
-  // duplication rate vs phi
-  duplicationPlotCache.duplicationRate_vs_phi = PlotHelpers::bookEff(
-      "duplicationRate_vs_phi", "Duplication rate;#phi;Duplication rate", bPhi);
+  // duplication ratio vs pT
+  duplicationPlotCache.duplicationRatio_vs_pT = PlotHelpers::bookEff(
+      "duplicationRatio_vs_pT",
+      "Duplication ratio;pT [GeV/c];Duplication ratio", bPt);
+  // duplication ratio vs eta
+  duplicationPlotCache.duplicationRatio_vs_eta =
+      PlotHelpers::bookEff("duplicationRatio_vs_eta",
+                           "Duplication ratio;#eta;Duplication ratio", bEta);
+  // duplication ratio vs phi
+  duplicationPlotCache.duplicationRatio_vs_phi =
+      PlotHelpers::bookEff("duplicationRatio_vs_phi",
+                           "Duplication ratio;#phi;Duplication ratio", bPhi);
 
   // duplication number vs pT
   duplicationPlotCache.nDuplicated_vs_pT = PlotHelpers::bookProf(
@@ -59,9 +61,9 @@ void ActsExamples::DuplicationPlotTool::book(
 
 void ActsExamples::DuplicationPlotTool::clear(
     DuplicationPlotCache& duplicationPlotCache) const {
-  delete duplicationPlotCache.duplicationRate_vs_pT;
-  delete duplicationPlotCache.duplicationRate_vs_eta;
-  delete duplicationPlotCache.duplicationRate_vs_phi;
+  delete duplicationPlotCache.duplicationRatio_vs_pT;
+  delete duplicationPlotCache.duplicationRatio_vs_eta;
+  delete duplicationPlotCache.duplicationRatio_vs_phi;
   delete duplicationPlotCache.nDuplicated_vs_pT;
   delete duplicationPlotCache.nDuplicated_vs_eta;
   delete duplicationPlotCache.nDuplicated_vs_phi;
@@ -71,9 +73,9 @@ void ActsExamples::DuplicationPlotTool::write(
     const DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache)
     const {
   ACTS_DEBUG("Write the plots to output file.");
-  duplicationPlotCache.duplicationRate_vs_pT->Write();
-  duplicationPlotCache.duplicationRate_vs_eta->Write();
-  duplicationPlotCache.duplicationRate_vs_phi->Write();
+  duplicationPlotCache.duplicationRatio_vs_pT->Write();
+  duplicationPlotCache.duplicationRatio_vs_eta->Write();
+  duplicationPlotCache.duplicationRatio_vs_phi->Write();
   duplicationPlotCache.nDuplicated_vs_pT->Write();
   duplicationPlotCache.nDuplicated_vs_eta->Write();
   duplicationPlotCache.nDuplicated_vs_phi->Write();
@@ -87,11 +89,11 @@ void ActsExamples::DuplicationPlotTool::fill(
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_pT, fit_pT,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRatio_vs_pT, fit_pT,
                        status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_eta, fit_eta,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRatio_vs_eta, fit_eta,
                        status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_phi, fit_phi,
+  PlotHelpers::fillEff(duplicationPlotCache.duplicationRatio_vs_phi, fit_phi,
                        status);
 }
 

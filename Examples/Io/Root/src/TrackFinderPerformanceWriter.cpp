@@ -32,7 +32,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     : WriterT(cfg.inputTracks, "TrackFinderPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
+      m_fakePlotTool(m_cfg.fakePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
   // tracks collection name is already checked by base ctor
@@ -71,7 +71,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
 
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
-  m_fakeRatePlotTool.book(m_fakeRatePlotCache);
+  m_fakePlotTool.book(m_fakePlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -81,7 +81,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
 
 TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
-  m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
+  m_fakePlotTool.clear(m_fakePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -134,7 +134,7 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
-    m_fakeRatePlotTool.write(m_fakeRatePlotCache);
+    m_fakePlotTool.write(m_fakePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
     m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -241,12 +241,12 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalDuplicateTracks++;
     }
 
-    // Fill fake rate plots
-    m_fakeRatePlotTool.fill(
-        m_fakeRatePlotCache, fittedParameters,
+    // Fill fake raio plots
+    m_fakePlotTool.fill(
+        m_fakePlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Fake);
 
-    // Fill the duplication rate
+    // Fill the duplication ratio
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
@@ -315,8 +315,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
                                nMatchedTracks - 1);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle.initial(),
-                            nMatchedTracks, nFakeTracks);
+    m_fakePlotTool.fill(m_fakePlotCache, particle.initial(), nMatchedTracks,
+                        nFakeTracks);
 
     m_nTotalParticles += 1;
   }
