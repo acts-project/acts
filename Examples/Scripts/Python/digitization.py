@@ -91,6 +91,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runDigitization(
-        trackingGeometry, field, outputDir=Path.cwd(), digiConfigFile=digiConfigFile
-    ).run()
+    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
