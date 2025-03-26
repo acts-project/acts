@@ -45,11 +45,9 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
     for (std::size_t i = 0; i < counters.size(); i++) {
       const auto& [counterMap, threshold] = counters[i];
       const auto it = counterMap.find(geoId);
-      if (it == counterMap.end()) {
-        continue;
+      if (it != counterMap.end()) {
+        counterValues[i]++;
       }
-
-      counterValues[i]++;
     }
   }
 
