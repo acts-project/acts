@@ -23,6 +23,10 @@
 #include <utility>
 #include <vector>
 
+namespace HepMC3 {
+class GenEvent;
+}  // namespace HepMC3
+
 namespace ActsExamples {
 
 /// Event generator based on separate particles and vertex generators.
@@ -77,8 +81,7 @@ class EventGenerator final : public ActsExamples::IReader {
     ///
     /// @param rng Shared random number generator instance
     /// @return The vertex and particle containers
-    virtual std::pair<SimVertexContainer, SimParticleContainer> operator()(
-        RandomEngine& rng) = 0;
+    virtual std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) = 0;
   };
 
   /// @brief Combined struct which contains all generator components
@@ -93,6 +96,9 @@ class EventGenerator final : public ActsExamples::IReader {
     std::string outputParticles;
     /// Name of the output vertex collection.
     std::string outputVertices;
+
+    /// Name of the output event collection.
+    std::optional<std::string> outputEvent = "hepmc3_event";
 
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
@@ -122,6 +128,9 @@ class EventGenerator final : public ActsExamples::IReader {
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
+
+  WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
+      this, "OutputEvent"};
 };
 
 }  // namespace ActsExamples

@@ -23,7 +23,8 @@ class Writer;
 namespace ActsExamples {
 
 /// HepMC3 event writer.
-class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
+class HepMC3AsciiWriter final
+    : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
  public:
   struct Config {
     /// If true, one file per event is written with the event number appended to
@@ -34,7 +35,7 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
     std::filesystem::path outputPath;
 
     // The input collection
-    std::string inputEvents;
+    std::string inputEvent;
   };
 
   /// Construct the writer.
@@ -48,11 +49,11 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
   /// Writing events to file.
   ///
   /// @param [in] ctx The context of this algorithm
-  /// @param [in] events The recorded HepMC3 events
+  /// @param [in] event The recorded HepMC3 event
   ///
   /// @return Code describing whether the writing was successful
   ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const std::vector<HepMC3::GenEvent>& events) override;
+                     const std::shared_ptr<HepMC3::GenEvent>& event) override;
 
   ProcessCode finalize() override;
 

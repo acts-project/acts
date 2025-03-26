@@ -30,19 +30,18 @@ HepMC3OutputConverter::HepMC3OutputConverter(const Config& config,
     throw std::invalid_argument("Missing input vertices collection");
   }
 
-  if (m_cfg.outputEvents.empty()) {
+  if (m_cfg.outputEvent.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputVertices.initialize(m_cfg.inputVertices);
-  m_outputEvents.initialize(m_cfg.outputEvents);
+  m_outputEvent.initialize(m_cfg.outputEvent);
 }
 
 ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
-  std::vector<HepMC3::GenEvent> genEvents;
-  auto& genEvent =
-      genEvents.emplace_back(HepMC3::Units::GEV, HepMC3::Units::MM);
+  auto genEvent =
+      std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 
   const auto& inputParticles = m_inputParticles(ctx);
   const auto& inputVertices = m_inputVertices(ctx);
@@ -60,7 +59,7 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
         std::make_shared<HepMC3::GenParticle>(vec, inParticle.pdg());
     hepmc3Particle->set_generated_mass(inParticle.mass());
     hepmc3Particle->set_status(1);
-    genEvent.add_particle(hepmc3Particle);
+    genEvent->add_particle(hepmc3Particle);
     ACTS_VERBOSE("Adding particle with barcode " << inParticle.particleId());
     barcodeMap.insert({inParticle.particleId(), hepmc3Particle});
   }
@@ -82,12 +81,12 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
           HepMC3::FourVector(0, 0, 0, 0), 0, 666);
       dummyParticle->set_generated_mass(123);
       dummyParticle->set_status(12);
-      genEvent.add_particle(dummyParticle);
+      genEvent->add_particle(dummyParticle);
       hepmc3Vertex->add_particle_in(dummyParticle);
     }
 
     hepmc3Vertex->set_status(1);
-    genEvent.add_vertex(hepmc3Vertex);
+    genEvent->add_vertex(hepmc3Vertex);
 
     for (const auto& particleId : inVertex.incoming) {
       auto it = barcodeMap.find(particleId);
@@ -108,7 +107,7 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  m_outputEvents(ctx, std::move(genEvents));
+  m_outputEvent(ctx, std::move(genEvent));
 
   return ProcessCode::SUCCESS;
 }

@@ -28,7 +28,7 @@ void addHepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3AsciiWriter, hepmc3,
                              "HepMC3AsciiWriter", outputPath, perEvent,
-                             inputEvents);
+                             inputEvent);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3AsciiReader, hepmc3,
                              "HepMC3AsciiReader", inputDir, inputStem,
@@ -36,6 +36,6 @@ void addHepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
-                                inputVertices, outputEvents);
+                                inputVertices, outputEvent);
 }
 }  // namespace Acts::Python

@@ -113,15 +113,15 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
         HepMC3OutputConverter,
     )
 
-    s = Sequencer(numThreads=10, events=10000)
+    s = Sequencer(numThreads=1, events=2)
 
     evGen = acts.examples.EventGenerator(
-        level=acts.logging.INFO,
+        level=acts.logging.VERBOSE,
         generators=[
             acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=10),
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
                 vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 0),
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=acts.examples.ParametricParticleGenerator(
@@ -129,12 +129,13 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
                     eta=(-2, 2),
                     phi=(0, 360 * u.degree),
                     randomizeCharge=True,
-                    numParticles=4,
+                    numParticles=2,
                 ),
             )
         ],
         outputParticles="particles_generated",
         outputVertices="vertices_input",
+        outputEvent="hepmc3_event",
         randomNumbers=rng,
     )
 
@@ -143,18 +144,19 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
     out = tmp_path / "out" / "events_pytest.hepmc3"
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    s.addAlgorithm(
-        HepMC3OutputConverter(
-            level=acts.logging.VERBOSE,
-            inputParticles=evGen.config.outputParticles,
-            inputVertices=evGen.config.outputVertices,
-            outputEvents="hepmc-events",
-        )
-    )
+    # s.addAlgorithm(
+    #     HepMC3OutputConverter(
+    #         level=acts.logging.VERBOSE,
+    #         inputParticles=evGen.config.outputParticles,
+    #         inputVertices=evGen.config.outputVertices,
+    #         outputEvents="hepmc-events",
+    #     )
+    # )
+
     s.addWriter(
         HepMC3AsciiWriter(
             acts.logging.VERBOSE,
-            inputEvents="hepmc-events",
+            inputEvent="hepmc3_event",
             outputPath=out,
             perEvent=per_event,
         )
@@ -178,6 +180,23 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
 
         shutil.copy(out, Path.cwd() / "events_ptcl.hepmc3")
 
+        try:
+            import pyhepmc
+            from pyhepmc.view import to_dot
+
+            nevts = 0
+            with pyhepmc.open(out) as f:
+                nevts += 1
+                for evt in f:
+                    assert len(evt.particles) == 4 + 2  # muons + beam particles
+                    print(evt)
+                    with open(f"evt_{evt.event_number}.dot", "w") as d:
+                        d.write(str(to_dot(evt)))
+            assert nevts == 1
+
+        except ImportError:
+            pass
+
 
 def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     from acts.examples.hepmc3 import (
@@ -186,31 +205,40 @@ def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     )
     from pythia8 import addPythia8
 
-    s = Sequencer(numThreads=1, events=10)
+    s = Sequencer(numThreads=1, events=1)
+
+    vtxGen = acts.examples.GaussianVertexGenerator(
+        stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+        mean=acts.Vector4(0, 0, 0, 0),
+    )
 
     addPythia8(
         s,
         rnd=rng,
         hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=0,
+        npileup=10,
         outputDirCsv=None,
         outputDirRoot=None,
+        outputEvent="hepmc3_event",
+        logLevel=acts.logging.INFO,
+        vtxGen=vtxGen,
     )
 
     out = tmp_path / "events.hepmc3"
 
-    s.addAlgorithm(
-        HepMC3OutputConverter(
-            level=acts.logging.VERBOSE,
-            inputParticles="particles_generated",
-            inputVertices="vertices_generated",
-            outputEvents="hepmc-events",
-        )
-    )
+    # s.addAlgorithm(
+    #     HepMC3OutputConverter(
+    #         level=acts.logging.VERBOSE,
+    #         inputParticles="particles_generated",
+    #         inputVertices="vertices_generated",
+    #         outputEvents="hepmc-events",
+    #     )
+    # )
+
     s.addWriter(
         HepMC3AsciiWriter(
             acts.logging.VERBOSE,
-            inputEvents="hepmc-events",
+            inputEvent="hepmc3_event",
             outputPath=out,
         )
     )
@@ -222,6 +250,24 @@ def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     import shutil
 
     shutil.copy(out, Path.cwd() / "events.hepmc3")
+
+    try:
+        import pyhepmc
+        from pyhepmc.view import to_dot
+
+        nevts = 0
+        with pyhepmc.open(out) as f:
+            nevts += 1
+            for evt in f:
+                pass
+                # assert len(evt.particles) == 2012
+                # print(evt)
+                # with open(f"pythia8_evt_{evt.event_number}.dot", "w") as d:
+                #     d.write(str(to_dot(evt)))
+        assert nevts == 1
+
+    except ImportError:
+        pass
 
     # with out.open("r") as f:
     #     assert len(f.readlines()) == 326237

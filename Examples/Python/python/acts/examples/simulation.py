@@ -234,6 +234,7 @@ def addPythia8(
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
     writeHepMC3: Optional[Path] = None,
+    outputEvent: Optional[str] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -332,6 +333,7 @@ def addPythia8(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent=outputEvent,
     )
     s.addReader(evGen)
 
