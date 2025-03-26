@@ -10,7 +10,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesGenerators
-    PUBLIC ActsCore ActsExamplesFramework
+    PUBLIC ActsCore ActsExamplesFramework HepMC3::HepMC3
 )
 
 install(

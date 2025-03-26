@@ -16,7 +16,7 @@ namespace ActsExamples {
 
 HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
                                      Acts::Logging::Level level)
-    : WriterT(config.inputEvents, "HepMC3AsciiWriter", level), m_cfg(config) {
+    : WriterT(config.inputEvent, "HepMC3AsciiWriter", level), m_cfg(config) {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
   }
@@ -36,16 +36,15 @@ HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
 HepMC3AsciiWriter::~HepMC3AsciiWriter() = default;
 
 ProcessCode HepMC3AsciiWriter::writeT(
-    const AlgorithmContext& ctx, const std::vector<HepMC3::GenEvent>& events) {
-  ACTS_VERBOSE("Writing " << events.size() << " events to "
+    const AlgorithmContext& ctx,
+    const std::shared_ptr<HepMC3::GenEvent>& event) {
+  ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
                           << m_cfg.outputPath);
 
-  auto write = [&events](HepMC3::Writer& writer) -> ProcessCode {
-    for (const auto& event : events) {
-      writer.write_event(event);
-      if (writer.failed()) {
-        return ProcessCode::ABORT;
-      }
+  auto write = [&event](HepMC3::Writer& writer) -> ProcessCode {
+    writer.write_event(*event);
+    if (writer.failed()) {
+      return ProcessCode::ABORT;
     }
     return ProcessCode::SUCCESS;
   };

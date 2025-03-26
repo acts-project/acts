@@ -27,7 +27,7 @@ class HepMC3OutputConverter : public IAlgorithm {
   struct Config {
     std::string inputParticles;
     std::string inputVertices;
-    std::string outputEvents;
+    std::string outputEvent;
   };
   HepMC3OutputConverter(const Config& config, Acts::Logging::Level);
 
@@ -41,8 +41,8 @@ class HepMC3OutputConverter : public IAlgorithm {
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimVertexContainer> m_inputVertices{this, "InputVertices"};
 
-  WriteDataHandle<std::vector<HepMC3::GenEvent>> m_outputEvents{this,
-                                                                "OutputEvent"};
+  WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
+      this, "OutputEvent"};
 };
 
 }  // namespace ActsExamples
