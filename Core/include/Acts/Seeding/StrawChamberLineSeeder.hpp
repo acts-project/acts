@@ -21,34 +21,27 @@ namespace Acts{
     /** @brief Define the concept of the space point measurement sorter. The sorter shall take a collection 
      *         of station space points and sort them first into straw and strip hits. Then each category
      *         needs to be sorted by the logical measurement layers. */
-    template <typename MeasurementSorterType,typename SpType>
-    concept StationSpacePointSorter = std::constructible_from<MeasurementSorterType, const std::vector<const SpType*>&> &&
-        requires(MeasurementSorterType sorter, SpType SP){
+    template <typename MeasurementSorterType>
+    concept StationSpacePointSorter = 
+            StationSpacePointContainer<typename MeasurementSorterType::SpVec_t> &&
+            std::constructible_from<MeasurementSorterType, 
+                                    const typename MeasurementSorterType::SpVec_t&> &&
+        requires(MeasurementSorterType sorter){
             /** @brief Return the straw-hit space point sorted by straw layer */
-            { sorter.strawHits()} -> std::same_as<const std::vector<std::vector<const SpType*>>& >;
+            { sorter.strawHits()} -> std::same_as<const std::vector<typename MeasurementSorterType::SpVec_t>& >;
             /** @brief Return the strip-hit  space points sorted by detector layer */
-            { sorter.stripHits()} -> std::same_as<const std::vector<std::vector<const SpType*>>& >;
+            { sorter.stripHits()} -> std::same_as<const std::vector<typename MeasurementSorterType::SpVec_t>& >;
     };
 
-    /** @brief Define the  */
- ///   template <typename CalibratorType, typename CalibSpType, typename UnCalibSpType>
- ///   concept SpacePointCalibrator = requires(CalibratorType calibrator, CalibSpType CalibSp_t, UnCalibSpType unCalibSp){
- ///       /** @brief Calibration of the space point  */
- ///       { calibrator.calibrate(const CalibrationContext& ctx,
- ///                              const Acts::Vector3& seedPos,
- ///                              const Acts::Vector3& seedDir,
- ///                              const double t0,
- ///                              const UnCalibSpType& uncalibSp)} -> std::same_as<std::unique_ptr<UnCalibSpType>;
- ///   };
     
-    template <StationSpacePoint UncalibSp_t, StationSpacePointSorter<UncalibSp_t> Sorter_t>
+    template <StationSpacePoint UncalibSp_t, StationSpacePointSorter Sorter_t>
     class StrawChamberLineSeeder{
         public:
             /** @brief Abbreviation of the uncalibrated hit vectors */
             using UnCalibHitVec_t = std::vector<const UncalibSp_t*>;
             struct Config{
                 /** @brief Cut on the theta angle */
-                std::array<double, 2> thetaRange{0, 180.*UnitConstants::degree};
+                std::array<double, 2> thetaRange{0, 179.*UnitConstants::degree};
                 /** @brief Cut on the intercept range */
                 std::array<double, 2> interceptRange{-20.*UnitConstants::m, 20.*UnitConstants::m};
                 /** @brief Upper cut on the hit chi2 w.r.t. seed in order to be associated to the seed*/
@@ -58,10 +51,10 @@ namespace Acts{
                 /** @brief How many drift circles may be on a layer to be used for seeding */
                 unsigned int busyLayerLimit{2};
                 /** @brief How many drift circle hits needs the seed to contain in order to be valid */
-                unsigned int nMdtHitCut{3};
+                unsigned int nStrawHitCut{3};
                 /** @brief Hit cut based on the fraction of collected tube layers. 
                  *         The seed must pass the tighter of the two requirements.  */
-                double nMdtLayHitCut{2./3.};
+                double nStrawLayHitCut{2./3.};
                 /** @brief Once a seed with even more than initially required hits is found,
                  *         reject all following seeds with less hits */
                 bool tightenHitCut{true};
@@ -82,7 +75,6 @@ namespace Acts{
                 double precCutOff{1.e-6};
             };
 
-
             StrawChamberLineSeeder(const UnCalibHitVec_t& seedHits,
                                    Config&& cfg,
                                    std::unique_ptr<const Acts::Logger> logObj);
@@ -96,7 +88,6 @@ namespace Acts{
             unsigned int numGenerated() const {
                 return m_nGenSeeds;
             }
-
             /** @brief Seed object returned by the seeder. The seed contains the initial parameter estimate w.r.t
              *         to the central plane surface inside the chamber. *Note* the parameter q/p is set to zero and 
              *         does not serve any purpose here.
@@ -105,26 +96,25 @@ namespace Acts{
              *         fast 2D fit mode, the number of iterations w.r.t. this fit procedure is appended as well. */
             struct DriftCircleSeed {
                 /** @param Initial straight line seed parameters  */
-                ActsVector<5> parameters{ActsVector<5>::Zero()};
+                ActsVector<6> parameters{ActsVector<6>::Zero()};
                 /** @brief  */
-                std::vector<std::unique_ptr<UncalibSp_t>> measurements{};
-                /** @brief Iterations to obtain the seed */
+                UnCalibHitVec_t measurements{};
+                /** @brief Iterations to obtain the seed with fast fit */
                 unsigned int nIter{0};
                 /** @brief Seed chi2 */
-                double chi2{0.};
-                // /** @brief Pointer to the parent bucket */
-                // const SpacePointBucket* parentBucket{nullptr};
-                /** @brief number of Mdt hits on the seed */
-                unsigned int nMdt{0};
+                double chi2{0.};                
+                /** @brief Number of straw hits on the seed */
+                unsigned int nStrawHits{0};
             };
         private:
-            Sorter_t m_hitLayers;
+            const Sorter_t m_hitLayers;
             Config m_cfg{};
             std::unique_ptr<const Acts::Logger> m_logger{};
             /** @brief Sign combinations to draw the 4 lines tangent to 2 drift circles s*/
             using SignCombo_t = std::array<int, 2>;
             constexpr static std::array<SignCombo_t, 4> s_signCombos{std::array{ 1, 1}, std::array{ 1,-1}, 
                                                                      std::array{-1,-1}, std::array{-1, 1}};
+            
             /** @brief Cache of all solutions seen thus far */
             struct SeedSolution{
                 /** @brief: Theta of the line */
@@ -208,6 +198,15 @@ namespace Acts{
                     /** @brief Second derivative of the ftted Y0 */
                     double fitY0TwoPrime{0.};
             };
+
+            void fitDriftCircles(DriftCircleSeed& candidateSeed) const;
+
+            void fitDriftCirclesWithT0(const CalibrationContext& ctx, 
+                                       DriftCircleSeed& candidateSeed) const;
+
+            SeedFitAuxilliaries estimateAuxillaries(const DriftCircleSeed& candidateSeed) const;
+
+
             /** @brief Considered layer to pick the top drift circle from*/
             std::size_t m_upperLayer{0};
             /** @brief Considered layer to pick the bottom drift circle from*/

@@ -57,9 +57,9 @@ namespace Acts{
          *  @param lineDir: Direction of the line to intersect
          *  @param planeNorm: Normal vector of the plane
          *  @param offSet: Offset to move the plane along the normal vector */
-        inline Intersection3D planeIntersect(const Acts::Vector3& linePos,
-                                             const Acts::Vector3& lineDir,
-                                             const Acts::Vector3& planeNorm,
+        inline Intersection3D planeIntersect(const Vector3& linePos,
+                                             const Vector3& lineDir,
+                                             const Vector3& planeNorm,
                                              const double offset) {
             /** Use the formula: <P, N> - C = 0
              *   --> insert line equation: <A + lambda * B, N> - C = 0
@@ -76,11 +76,29 @@ namespace Acts{
          *  @param lineDir: Direction of the line to intersect
          *  @param planeNorm: Normal vector of the plane
          *  @param planePoint: Point on the plane */
-        inline Intersection3D planeIntersect(const Acts::Vector3& linePos,
-                                             const Acts::Vector3& lineDir,
-                                             const Acts::Vector3& planeNorm,
-                                             const Acts::Vector3& planePoint) {
+        inline Intersection3D planeIntersect(const Vector3& linePos,
+                                             const Vector3& lineDir,
+                                             const Vector3& planeNorm,
+                                             const Vector3& planePoint) {
             return planeIntersect(linePos, lineDir, planeNorm, planePoint.dot(planeNorm));
+        }
+        /** @brief Calculates the signed distance between two lines in 3D space 
+            *  @param linePosA: Arbitrary point on the first line
+         *  @param lineDirA: Direction of the first line (Unit-length)
+         *  @param linePosB: Arbitrary point on the second line
+         *  @param lineDirB: Direction of the second line (Unit-length) */
+        inline double signedDistance(const Vector3& linePosA,
+                                     const Vector3& lineDirA,
+                                     const Vector3& linePosB,
+                                     const Vector3& lineDirB) {
+            /** Project the first direction onto the second & renormalize to a unit vector */
+            const double dirDots = lineDirA.dot(lineDirB);
+            const Vector3 AminusB = linePosA - linePosB;
+            if (std::abs(dirDots -1.) <  std::numeric_limits<double>::epsilon()){
+            return (AminusB - lineDirA.dot(AminusB)*lineDirA).norm();
+            }
+            const Vector3 projDir = (lineDirA - dirDots*lineDirB).normalized();
+            return AminusB.cross(lineDirB).dot(projDir);
         }
     }
 }

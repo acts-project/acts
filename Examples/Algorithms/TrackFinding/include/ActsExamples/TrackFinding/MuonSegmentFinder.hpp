@@ -12,6 +12,9 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include "ActsExamples/EventData/MuonSegment.hpp"
+#include "ActsExamples/EventData/MuonHoughMaximum.hpp"
+
 #include <algorithm>
 #include <memory>
 #include <string>
@@ -42,8 +45,6 @@ class MuonSegmentFinder final : public IAlgorithm {
      /// @return a process code indication success or failure
      ProcessCode execute(const AlgorithmContext& ctx) const final;
      ProcessCode initialize() final;
-     ProcessCode finalize() final;
-   
      /// Const access to the config
      const Config& config() const { return m_cfg; }
    
@@ -52,8 +53,7 @@ class MuonSegmentFinder final : public IAlgorithm {
      std::unique_ptr<const Acts::Logger> m_logger;
      const Acts::Logger& logger() const { return *m_logger; }
    
-       /// ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-       /// ReadDataHandle<DriftCircleContainer> m_inputDriftCircles{this,
-       ///                                                          "InputDriftCircles"};
-     };   
+     ReadDataHandle<MuonHoughMaxContainer> m_inputMax{this, "InputMaxima"};
+     WriteDataHandle<MuonSegmentContainer> m_outSegments{this, "OutputMax"};
+  };   
 }

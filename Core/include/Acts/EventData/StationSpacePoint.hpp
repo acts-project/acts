@@ -7,7 +7,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
-#include  "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/PointerConcept.hpp"
 
 #include <type_traits>
 
@@ -39,7 +40,26 @@ namespace Acts{
              *         the correlation between the time <-> spatial measurement or the pure time resolution */
             { sp.covariance() } -> std::same_as<const ActsSquareMatrix<3>&>;
         };
-    /** @brief Concept of a space point container */
-    // template 
 
-}
+
+        /** @brief Define the Space Point pointer concept as an ordinary / smart pointer 
+         *         over space points */
+        template <typename SpacePoint_t>
+             concept StationSpacePointPtr = PointerConcept<SpacePoint_t> &&
+                     StationSpacePoint<typename std::remove_pointer<SpacePoint_t>::type>;
+
+        /** @brief A station space point container is any std::container over space points */
+        template <typename ContType_t>
+            concept StationSpacePointContainer = requires(ContType_t cont, const ContType_t const_cont){
+                { cont.begin() } -> std::same_as<typename ContType_t::iterator>;
+                { cont.end() } -> std::same_as<typename ContType_t::iterator>;
+                { const_cont.begin() } -> std::same_as<typename ContType_t::const_iterator>;
+                { const_cont.end() } -> std::same_as<typename ContType_t::const_iterator>;                
+                { const_cont.size() } -> std::same_as<typename ContType_t::size_type>;
+                { const_cont.empty() } -> std::same_as<bool>;
+                // requires StationSpacePointPtr<decltype(std::declval<typename ContType_t::iterator>().operator*())>;
+                requires StationSpacePointPtr<typename ContType_t::value_type>;
+            };
+
+
+    }

@@ -103,7 +103,7 @@ namespace ActsExamples{
         m_id = id;
     }
 
-    MuonSpacePointSorter::MuonSpacePointSorter(const HitVec& spacePoints) {
+    MuonSpacePointSorter::MuonSpacePointSorter(const SpVec_t& spacePoints) {
         m_strawHits.reserve(spacePoints.size());
         m_stripHits.reserve(spacePoints.size());
         for (const MuonSpacePoint* sp : spacePoints){
@@ -118,7 +118,7 @@ namespace ActsExamples{
             pushMe[idx].push_back(sp);
         }
         /** The lowest strip gasGap number is the max +1 straw hit gasGap number. Erase all the hit vectors which are empty */
-        m_stripHits.erase(m_stripHits.begin(), std::remove_if(m_stripHits.begin(), m_stripHits.end(),[](const HitVec& lay){ 
+        m_stripHits.erase(m_stripHits.begin(), std::remove_if(m_stripHits.begin(), m_stripHits.end(),[](const SpVec_t& lay){ 
                          return lay.empty();}));
     }
 

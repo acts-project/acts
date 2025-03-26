@@ -287,7 +287,6 @@ ProcessCode MuonHoughSeeder::execute(
             outMaxima.emplace_back(etaMax.interceptY(), etaMax.tanAlpha(), max.x, max.y, std::move(hits));
         }
       }
-
   }
 
   m_outputMaxima(ctx, std::move(outMaxima));

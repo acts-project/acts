@@ -162,14 +162,14 @@ namespace ActsExamples{
     class MuonSpacePointSorter{
         public:
             /** @brief abbreviation of the space point vector */
-            using HitVec = std::vector<const MuonSpacePoint*>;
+            using SpVec_t = std::vector<const MuonSpacePoint*>;
             /** @brief abbreviation of the layer vector. Each element inside the vector represents
              *         all hits in a given detector layer */
-            using LayerVec = std::vector<HitVec>;
+            using LayerVec = std::vector<SpVec_t>;
 
             using MuonId = MuonSpacePoint::MuonId;
             /** @brief Constructor taking a list of hits in the same muon station. */
-            MuonSpacePointSorter(const HitVec& spacePoints);
+            MuonSpacePointSorter(const SpVec_t& spacePoints);
             /** @brief Returns all straw hits sorted by straw layer */
             const LayerVec& strawHits() const{
                 return m_strawHits;

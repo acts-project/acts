@@ -18,7 +18,7 @@ namespace ActsExamples{
         public:
             /** @brief Recycle the same Identifier class from the MuonSpacePoint */            
             using MuonId = MuonSpacePoint::MuonId;
-            using HitVec = MuonSpacePointSorter::HitVec;
+            using HitVec = MuonSpacePointSorter::SpVec_t;
 
             /** @brief Constructor taking the estimated hough paramters and the associated hits
              *  @param tanAlpha: Slope of the estimated line in precision direction
