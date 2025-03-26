@@ -358,7 +358,7 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
         using GridType = Grid<grid_value_t, AxisType>;
         return std::make_unique<
             GridSurfaceMaterialT<GridType, material_accessor_t>>(
-            GridType(axis), std::move(materialAccessor),
+            GridType(axis), std::forward(materialAccessor),
             std::move(boundToGridLocal), std::move(globalToGridLocal));
       });
   // Fill it via the grid view
@@ -402,7 +402,7 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
               using GridType = Grid<grid_value_t, AxisTypeA, AxisTypeB>;
               return std::make_unique<
                   GridSurfaceMaterialT<GridType, material_accessor_t>>(
-                  GridType(axisA, axisB), std::move(materialAccessor),
+                  GridType(axisA, axisB), std::forward(materialAccessor),
                   std::move(boundToGridLocal), std::move(globalToGridLocal));
             });
       });
