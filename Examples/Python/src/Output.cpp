@@ -353,7 +353,8 @@ void addOutput(Context& ctx) {
       ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
       inputVertices, inputTracks, inputTruthVertices, inputParticles,
       inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
-      treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
+      treeName, fileMode, vertexMatchThreshold, trackMatchThreshold,
+      writeTrackInfo);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

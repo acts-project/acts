@@ -2112,6 +2112,7 @@ def addVertexFitting(
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
+    writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -2238,6 +2239,7 @@ def addVertexFitting(
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
                 bField=field,
+                writeTrackInfo=writeTrackInfo,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
@@ -2280,7 +2282,6 @@ def addSingleSeedVertexFinding(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                useTracks=False,
                 inputVertices=outputVertices,
                 treeName="seedvertexing",
                 filePath=str(outputDirRoot / "performance_seedvertexing.root"),
