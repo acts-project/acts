@@ -116,7 +116,8 @@ void addFramework(Context& ctx) {
                  Acts::getDefaultLogger(name, level));
            }),
            py::arg("level"), py::arg("name") = "WhiteBoard")
-      .def("exists", &WhiteBoard::exists);
+      .def("exists", &WhiteBoard::exists)
+      .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
