@@ -29,14 +29,14 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
     return true;
   }
 
-  const auto measurementRange =
+  const auto [measurementsBegin, measurementsEnd] =
       particleMeasurementsMap.equal_range(particle.particleId());
 
   boost::container::small_vector<unsigned int, 4> counterValues;
   counterValues.resize(counters.size(), 0);
 
-  for (auto measurementIt = measurementRange.first;
-       measurementIt != measurementRange.second; ++measurementIt) {
+  for (auto measurementIt = measurementsBegin; measurementIt != measurementsEnd;
+       ++measurementIt) {
     const auto measurementIndex = measurementIt->second;
     const auto measurement = measurements.at(measurementIndex);
 
@@ -44,8 +44,7 @@ bool ParticleSelector::MeasurementCounter::isValidParticle(
 
     for (std::size_t i = 0; i < counters.size(); i++) {
       const auto& [counterMap, threshold] = counters[i];
-      const auto it = counterMap.find(geoId);
-      if (it != counterMap.end()) {
+      if (const auto it = counterMap.find(geoId); it != counterMap.end()) {
         counterValues[i]++;
       }
     }
