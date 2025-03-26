@@ -115,6 +115,9 @@ class ISurfaceMaterial {
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 
+  /// Return the properly formatted class name for screen output and I/O
+  virtual std::string name() const = 0;
+
   /// @brief output into a string
   ///
   /// @return the string representation

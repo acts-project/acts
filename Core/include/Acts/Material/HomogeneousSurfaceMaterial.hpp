@@ -87,6 +87,9 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param sl The outoput stream
   std::ostream& toStream(std::ostream& sl) const final;
 
+  /// Return the properly formatted class name for screen output and I/O
+  std::string name() const final { return "HomogeneousSurfaceMaterial"; }
+
  private:
   /// The five different MaterialSlab
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();

@@ -37,6 +37,8 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
   };
 
   MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
+
+  std::string name() const override { return "SurfaceMaterialStub"; }
 };
 
 /// Test the constructors

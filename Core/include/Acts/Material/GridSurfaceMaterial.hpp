@@ -11,8 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -21,8 +24,15 @@
 namespace Acts {
 
 /// @brief  This is an accessor for cases where the material is directly stored
+struct IGridMaterialAccessor {
+  virtual ~IGridMaterialAccessor() = default;
+};
+
+/// @brief  This is an accessor for cases where the material is directly stored
 /// in the grid, it simply forwards the grid entry in const and non-const way.
-struct GridMaterialAccessor {
+struct GridMaterialAccessor : public IGridMaterialAccessor {
+  /// @brief  Broadcast the type of the material slab
+  using grid_value_type = MaterialSlab;
   /// @brief  Direct const access to the material slap sorted in the grid
   /// @tparam grid_type the type of the grid, also defines the point type
   /// @param grid the grid
@@ -48,11 +58,21 @@ struct GridMaterialAccessor {
       grid.at(ib).scaleThickness(scale);
     }
   }
+
+  /// A constexpr name for the type of the resulting GridSurfaceMaterial
+  constexpr static const char* nameStr = "GridSurfaceMaterial";
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a vector
 /// and then indexed by the grid
-struct IndexedMaterialAccessor {
+struct IndexedMaterialAccessor : public IGridMaterialAccessor {
+  /// Broadcast the grid_value_type
+  using grid_value_type = std::size_t;
+
+  /// @brief The internal storage of the material
+  explicit IndexedMaterialAccessor(std::vector<MaterialSlab>&& mmaterial)
+      : IGridMaterialAccessor(), material(std::move(mmaterial)) {}
+
   /// @brief The internal storage of the material
   std::vector<MaterialSlab> material;
   /// @brief  Direct const access to the material slap sorted in the grid
@@ -77,11 +97,23 @@ struct IndexedMaterialAccessor {
       m.scaleThickness(scale);
     }
   }
+
+  /// A constexpr name for the type of the resulting GridSurfaceMaterial
+  constexpr static const char* nameStr = "IndexedSurfaceMaterial";
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a global
 /// material vector that is accessed from the different material grids.
-struct GloballyIndexedMaterialAccessor {
+struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
+  explicit GloballyIndexedMaterialAccessor(
+      std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
+      : IGridMaterialAccessor(),
+        globalMaterial(std::move(gMaterial)),
+        sharedEntries(shared) {}
+
+  /// Broadcast the grid_value_type
+  using grid_value_type = std::size_t;
+
   /// @brief The internal storage of the material
   std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
 
@@ -128,6 +160,33 @@ struct GloballyIndexedMaterialAccessor {
       (*globalMaterial)[index].scaleThickness(scale);
     }
   }
+
+  /// A constexpr name for the type of the resulting GridSurfaceMaterial
+  constexpr static const char* nameStr = "GloballyIndexedSurfaceMaterial";
+};
+
+/// Intermediate interface to the grid surface material given access to the grid
+/// and the material accessor.
+template <typename grid_value_t>
+class IGridSurfaceMaterial : public ISurfaceMaterial {
+ public:
+  /// @brief Accessor to the grid interface
+  virtual const IGrid& grid() const = 0;
+
+  /// @brief Accessor to the material accessor
+  virtual const IGridMaterialAccessor& materialAccessor() const = 0;
+
+  /// @brief Accessor to the bound to grid local delegate
+  virtual const GridAccess::IBoundToGridLocal& boundToGridLocal() const = 0;
+
+  /// @brief Accessor to the global to grid local delegate
+  virtual const GridAccess::IGlobalToGridLocal& globalToGridLocal() const = 0;
+
+  /// Return the type erased grid view
+  virtual AnyGridView<grid_value_t> gridView() = 0;
+
+  /// Return the type erased (const) grid view
+  virtual AnyGridConstView<grid_value_t> gridConstView() const = 0;
 };
 
 /// @brief GridSurfaceMaterialT
@@ -140,8 +199,10 @@ struct GloballyIndexedMaterialAccessor {
 ///
 /// It is templated on the material type and a slab accessor type in order
 /// to allow it to be used in the material recording as well.
-template <typename grid_t, typename material_accessor_t = GridMaterialAccessor>
-class GridSurfaceMaterialT : public ISurfaceMaterial {
+template <typename grid_t, typename material_accessor_t>
+class GridSurfaceMaterialT
+    : public IGridSurfaceMaterial<
+          typename material_accessor_t::grid_value_type> {
  public:
   // Definition of bound (on surface) to grid local representation delegate
   using BoundToGridLocalDelegate =
@@ -207,21 +268,54 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
+  /// Return the properly formatted class name for screen output and I/O
+  std::string name() const final { return material_accessor_type::nameStr; }
+
+  /// @brief Accessor to the grid interface
+  const IGrid& grid() const final { return m_grid; }
+
   /// @brief Accessor to the grid
-  const grid_type& grid() const { return m_grid; }
+  const grid_type& gridImpl() const { return m_grid; }
+
+  // Return a type-erased indexed grid view
+  AnyGridView<typename material_accessor_t::grid_value_type> gridView() final {
+    return AnyGridView<typename material_accessor_t::grid_value_type>(m_grid);
+  }
+
+  // Return a type-erased indexed const grid view
+  AnyGridConstView<typename material_accessor_t::grid_value_type>
+  gridConstView() const final {
+    return AnyGridConstView<typename material_accessor_t::grid_value_type>(
+        m_grid);
+  }
 
   /// @brief Accessor to the material accessor
-  const material_accessor_type& materialAccessor() const {
+  const IGridMaterialAccessor& materialAccessor() const final {
+    return m_materialAccessor;
+  }
+
+  /// @brief Accessor to the material accessor
+  const material_accessor_type& materialAccessorImpl() const {
     return m_materialAccessor;
   }
 
   /// @brief Accessor to the bound to grid local delegate
-  const BoundToGridLocalDelegate& boundToGridLocal() const {
+  const GridAccess::IBoundToGridLocal& boundToGridLocal() const final {
+    return *(m_boundToGridLocal.instance());
+  }
+
+  /// @brief Accessor to the bound to grid local delegate
+  const BoundToGridLocalDelegate& boundToGridLocalDelegate() const {
     return m_boundToGridLocal;
   }
 
   /// @brief Accessor to the global to grid local delegate
-  const GlobalToGridLocalDelegate& globalToGridLocal() const {
+  const GridAccess::IGlobalToGridLocal& globalToGridLocal() const final {
+    return *(m_globalToGridLocal.instance());
+  }
+
+  /// @brief Accessor to the global to grid local delegate
+  const GlobalToGridLocalDelegate& globalToGridLocalDelegate() const {
     return m_globalToGridLocal;
   }
 
@@ -251,6 +345,90 @@ using GloballyIndexedSurfaceMaterial =
 
 // Grid Surface material
 template <typename grid_type>
-using GridSurfaceMaterial = GridSurfaceMaterialT<grid_type>;
+using GridSurfaceMaterial =
+    GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
+
+/// Create and fill from a single proto axis
+///
+/// @param pAxis the type of the ProtoAxis
+/// @param materialAccessor the material accessor
+/// @param boundToGridLocal the delegate from bound to grid local frame
+/// @param globalToGridLocal the delegate from global into grid local frame
+/// @param payload the grid payload (material slab / indices)
+///
+/// @return a unique pointer to the surface material
+template <typename grid_value_t, typename material_accessor_t>
+std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
+    const ProtoAxis& pAxis, material_accessor_t&& materialAccessor,
+    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
+    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
+    const std::vector<grid_value_t>& payload) {
+  // Visit the axis type and create the grid surface material
+  auto ism = pAxis.getAxis().visit(
+      [&]<typename AxisType>(const AxisType& axis)
+          -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
+        using GridType = Grid<grid_value_t, AxisType>;
+        return std::make_unique<
+            GridSurfaceMaterialT<GridType, material_accessor_t>>(
+            GridType(axis), std::move(materialAccessor),
+            std::move(boundToGridLocal), std::move(globalToGridLocal));
+      });
+  // Fill it via the grid view
+  AnyGridView<grid_value_t> gv = ism->gridView();
+  auto indices = gv.numLocalBins();
+  for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
+    gv.atLocalBins({i0 + 1u}) = payload[i0];
+  }
+  return ism;
+}
+
+/// Static creation method for the with ProtoAxis objects
+///
+/// @param pAxis0 proto axis in direction 0
+/// @param pAxis1 proto axis in direction 1
+/// @param materialAccessor the material accessor
+/// @param boundToGridLocal the delegate from bound to grid local frame
+/// @param globalToGridLocal the delegate from global into grid local frame
+/// @param payload the grid payload in 2D (material slab / indices)
+/// the payload has to be column major, i.e. [i0][i1]
+///
+/// @return a unique pointer to the surface material
+template <typename grid_value_t, typename material_accessor_t>
+std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
+    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
+    material_accessor_t&& materialAccessor,
+    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
+    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
+    const std::vector<std::vector<grid_value_t>>& payload) {
+  // Validate axis compatibility
+  if (pAxis0.getAxisDirection() == pAxis1.getAxisDirection()) {
+    throw std::invalid_argument(
+        "createGridSurfaceMaterial: ProtoAxes must have different directions");
+  }
+  auto ism = pAxis0.getAxis().visit(
+      [&]<typename AxisTypeA>(const AxisTypeA& axisA)
+          -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
+        return pAxis1.getAxis().visit(
+            [&]<typename AxisTypeB>(const AxisTypeB& axisB)
+                -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
+              using GridType = Grid<grid_value_t, AxisTypeA, AxisTypeB>;
+              return std::make_unique<
+                  GridSurfaceMaterialT<GridType, material_accessor_t>>(
+                  GridType(axisA, axisB), std::move(materialAccessor),
+                  std::move(boundToGridLocal), std::move(globalToGridLocal));
+            });
+      });
+
+  // Fill it via the grid view
+  AnyGridView<grid_value_t> gv = ism->gridView();
+  auto indices = gv.numLocalBins();
+  for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
+    for (std::size_t i1 = 0; i1 < indices[1]; ++i1) {
+      gv.atLocalBins({i0 + 1, i1 + 1}) = payload[i0][i1];
+    }
+  }
+
+  return ism;
+}
 
 }  // namespace Acts
