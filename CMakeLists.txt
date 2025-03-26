@@ -546,6 +546,20 @@ elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
 endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
     find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+
+    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.3.0
+    if(${HEPMC3_VERSION} VERSION_LESS 3.3.0)
+        # add_library(HepMC3::HepMC3 ALIAS HepMC3)
+        add_library(HepMC3::HepMC3 SHARED IMPORTED)
+        set_property(
+            TARGET HepMC3::HepMC3
+            PROPERTY IMPORTED_LOCATION "${HEPMC3_LIB}"
+        )
+        target_include_directories(
+            HepMC3::HepMC3
+            INTERFACE "${HEPMC3_INCLUDE_DIR}"
+        )
+    endif()
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
     find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
