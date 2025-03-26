@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -20,8 +19,13 @@ namespace ActsExamples {
 class PrototracksToTracks final : public IAlgorithm {
  public:
   struct Config {
+    /// Input proto tracks.
     std::string inputProtoTracks;
+    /// Optional. Input track parameters passed to the output tracks.
+    std::string inputTrackParameters;
+    /// Input measurements.
     std::string inputMeasurements;
+    /// Output tracks.
     std::string outputTracks = "tracks_from_prototracks";
   };
 
@@ -46,6 +50,8 @@ class PrototracksToTracks final : public IAlgorithm {
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
                                                          "InputProtoTracks"};
 };

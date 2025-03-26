@@ -6,35 +6,35 @@ set(ACTS_ACTSVG_SOURCE
 mark_as_advanced(ACTS_ACTSVG_SOURCE)
 
 set(ACTS_VECMEM_SOURCE
-    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=545dfb4de4f9f3d773eef6a0e3297ebf981bb81950930d0991ad739e31ab16af"
+    "URL;https://github.com/acts-project/vecmem/archive/refs/tags/v${_acts_vecmem_version}.tar.gz;URL_HASH;SHA256=3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783"
     CACHE STRING
     "Source to take VECMEM from"
 )
 mark_as_advanced(ACTS_VECMEM_SOURCE)
 
 set(ACTS_ALGEBRAPLUGINS_SOURCE
-    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=6fde02181c1b856c0a17a1925f0969798eecd5e3d6f2a87ea2eb365b6c948cc1"
+    "URL;https://github.com/acts-project/algebra-plugins/archive/refs/tags/v${_acts_algebraplugins_version}.tar.gz;URL_HASH;SHA256=0170f22e1a75493b86464f27991117bc2c5a9d52554c75786e321d4c591990e7"
     CACHE STRING
     "Source to take ALGEBRAPLUGINS from"
 )
 mark_as_advanced(ACTS_ALGEBRAPLUGINS_SOURCE)
 
 set(ACTS_COVFIE_SOURCE
-    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=d44142b302ffc193ad2229f1d2cc6d8d720dd9da8c37989ada4f23018f86c964"
+    "URL;https://github.com/acts-project/covfie/archive/refs/tags/v${_acts_covfie_version}.tar.gz;URL_HASH;SHA256=c33d7707ee30ab5fa8df686a780600343760701023ac0b23355627e1f2f044de"
     CACHE STRING
     "Source to take COVFIE from"
 )
 mark_as_advanced(ACTS_COVFIE_SOURCE)
 
 set(ACTS_DETRAY_SOURCE
-    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=1249d7398d1e534bd36b6f5a7d06a5e67adf6adeb8bca188d7e35490a675de7a"
+    "URL;https://github.com/acts-project/detray/archive/refs/tags/v${_acts_detray_version}.tar.gz;URL_HASH;SHA256=b893b7f5434c1c9951433876ef43d1db1b08d36749f062e261b4e6d48e77d5db"
     CACHE STRING
     "Source to take DETRAY from"
 )
 mark_as_advanced(ACTS_DETRAY_SOURCE)
 
 set(ACTS_TRACCC_SOURCE
-    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=86e0ebe7364d3a2106301d50a89feef583470da53c9dae6d1430dcc6eda7dba9"
+    "URL;https://github.com/acts-project/traccc/archive/refs/tags/v${_acts_traccc_version}.tar.gz;URL_HASH;SHA256=4f58aa1b33ccb49934a3552b4a0243787a94573a17b25331493d44010623fc95"
     CACHE STRING
     "Source to take TRACCC from"
 )
