@@ -99,7 +99,6 @@ option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
@@ -140,7 +139,6 @@ set_option_if(
   ACTS_BUILD_EXAMPLES_DD4HEP
   OR ACTS_BUILD_EXAMPLES_EDM4HEP
   OR ACTS_BUILD_EXAMPLES_GEANT4
-  OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_HASHING
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
@@ -515,6 +513,21 @@ if(ACTS_BUILD_EXAMPLES)
         COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
     )
     check_root_compatibility()
+
+    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+
+    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.3.0
+    if(${HEPMC3_VERSION} VERSION_LESS 3.3.0)
+        add_library(HepMC3::HepMC3 SHARED IMPORTED)
+        set_property(
+            TARGET HepMC3::HepMC3
+            PROPERTY IMPORTED_LOCATION "${HEPMC3_LIB}"
+        )
+        target_include_directories(
+            HepMC3::HepMC3
+            INTERFACE "${HEPMC3_INCLUDE_DIR}"
+        )
+    endif()
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
@@ -540,23 +553,6 @@ elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
         CONFIG
         COMPONENTS DDCore DDDetectors
     )
-endif()
-if(ACTS_BUILD_EXAMPLES_HEPMC3)
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
-
-    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.3.0
-    if(${HEPMC3_VERSION} VERSION_LESS 3.3.0)
-        # add_library(HepMC3::HepMC3 ALIAS HepMC3)
-        add_library(HepMC3::HepMC3 SHARED IMPORTED)
-        set_property(
-            TARGET HepMC3::HepMC3
-            PROPERTY IMPORTED_LOCATION "${HEPMC3_LIB}"
-        )
-        target_include_directories(
-            HepMC3::HepMC3
-            INTERFACE "${HEPMC3_INCLUDE_DIR}"
-        )
-    endif()
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
     find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
