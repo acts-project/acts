@@ -214,6 +214,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
       cudaNbHits, nHits, cudaModuleIds, m_cudaModuleMapSize,
       m_cudaModuleMapKeys, m_cudaModuleMapVals);
   ACTS_CUDA_CHECK(cudaGetLastError());
+  ACTS_CUDA_CHECK(cudaFreeAsync(cudaModuleIds, stream));
 
   thrust::exclusive_scan(thrust::device.on(stream), cudaNbHits,
                          cudaNbHits + m_cudaModuleMapSize + 1, cudaNbHits);
@@ -231,6 +232,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   auto t2 = std::chrono::high_resolution_clock::now();
 
+  ACTS_CUDA_CHECK(cudaFreeAsync(cudaNbHits, stream));
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_R(), stream));
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_phi(), stream));
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_z(), stream));
@@ -239,12 +241,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_y(), stream));
   ACTS_CUDA_CHECK(cudaFreeAsync(inputData.cuda_hit_id(), stream));
 
-  if( edgeData.nEdges == 0 ) {
+  if (edgeData.nEdges == 0) {
     throw NoEdgesError{};
   }
 
   dim3 gridDimEdges = (edgeData.nEdges + blockDim.x - 1) / blockDim.x;
-  ACTS_DEBUG("gridDimEdges: " << gridDimEdges.x << ", blockDim: " << blockDim.x);
+  ACTS_DEBUG("gridDimEdges: " << gridDimEdges.x
+                              << ", blockDim: " << blockDim.x);
 
   // Make edge features
   float *edgeFeaturePtr{};
@@ -665,6 +668,8 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         cuda_edge_sum, cuda_vertices, cuda_mask);
     ACTS_CUDA_CHECK(cudaGetLastError());
   }
+
+  ACTS_CUDA_CHECK(cudaFreeAsync(cuda_vertices, stream));
 
   //----------------
   // edges reduction
