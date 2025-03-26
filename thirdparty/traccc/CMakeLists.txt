@@ -37,7 +37,7 @@ set(TRACCC_SETUP_ALGEBRA_PLUGINS
 )
 set(TRACCC_SETUP_COVFIE OFF CACHE BOOL "Do not set up Covfie as part of Traccc")
 set(TRACCC_SETUP_DFELIBS
-    OFF
+    ON
     CACHE BOOL
     "Do not set up dfelibs as part of Traccc"
 )
