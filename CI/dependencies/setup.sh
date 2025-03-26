@@ -210,4 +210,3 @@ end_section
 
 # Pythia8 looks for settings in this directory
 # set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
-
