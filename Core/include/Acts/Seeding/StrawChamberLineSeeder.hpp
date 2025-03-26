@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
+
 #include "Acts/EventData/StationSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -19,8 +20,17 @@
 namespace Acts{
 
     /** @brief Define the concept of the space point measurement sorter. The sorter shall take a collection 
-     *         of station space points and sort them first into straw and strip hits. Then each category
-     *         needs to be sorted by the logical measurement layers. */
+     *         of station space points and split them into straw && strip hits. Hits from each category are then
+     *         subdivided further into the particular detector layers.
+     * 
+     *      A possible implementation of the StationSpacePointSorter needs to have the following attribtues
+     * 
+     *      using SpVec_t =  Standard container satisfiyng the StationSpacePointContainer concept
+     * 
+     *     
+     *      const std::vector<SpVec_t>& strawHits();
+     *      const std::vector<SpVec_t>& stripHits();
+     *  Each SpVec_t contains all measurements from a particular detector layer   */
     template <typename MeasurementSorterType>
     concept StationSpacePointSorter = 
             StationSpacePointContainer<typename MeasurementSorterType::SpVec_t> &&
@@ -33,12 +43,27 @@ namespace Acts{
             { sorter.stripHits()} -> std::same_as<const std::vector<typename MeasurementSorterType::SpVec_t>& >;
     };
 
+    /** @brief The StationSpacePointCalibrator refines the StationsSpacePoints by using the points of closest\
+     *         approach to the external track. In case, of the straw measurements, the calibrator further provides
+     *          the derivatives of the electron-drift  <-> straw radius relations */
+
+    // template <typename Calibrator_t,
+    //           StationSpacePointContainer UnCalibCont_t,
+    //           StationSpacePointContainer CalibCont_t>
+    //     concept StationSpacePointCalibrator =  requires(const CalibrationContext& ctx,
+    //                                                     Calibrator_t calibrator,
+    //                                                     UnCalibCont_t uncalibSp,
+    //                                                     const Vector3& dir,
+    //                                                 const double time) {
+    //         {calibrator.calibrate(ctx, dir, dir, time, uncalibSp)};
+    // };
     
-    template <StationSpacePoint UncalibSp_t, StationSpacePointSorter Sorter_t>
+    template <StationSpacePointSorter Sorter_t>
     class StrawChamberLineSeeder{
         public:
             /** @brief Abbreviation of the uncalibrated hit vectors */
-            using UnCalibHitVec_t = std::vector<const UncalibSp_t*>;
+            using UnCalibHitVec_t = typename Sorter_t::SpVec_t;
+            using UncalibSp_t = typename UnCalibHitVec_t::value_type;
             struct Config{
                 /** @brief Cut on the theta angle */
                 std::array<double, 2> thetaRange{0, 179.*UnitConstants::degree};
@@ -75,20 +100,7 @@ namespace Acts{
                 double precCutOff{1.e-6};
             };
 
-            StrawChamberLineSeeder(const UnCalibHitVec_t& seedHits,
-                                   Config&& cfg,
-                                   std::unique_ptr<const Acts::Logger> logObj);
-
-            /** @brief Remove the copy constructor */
-            StrawChamberLineSeeder(const StrawChamberLineSeeder& other) = delete;
-            /** @brief Remove the copy assignment */
-            StrawChamberLineSeeder& operator=(const StrawChamberLineSeeder& other) = delete;
-
-            /** @brief Returns the number of already generated seeds */
-            unsigned int numGenerated() const {
-                return m_nGenSeeds;
-            }
-            /** @brief Seed object returned by the seeder. The seed contains the initial parameter estimate w.r.t
+             /** @brief Seed object returned by the seeder. The seed contains the initial parameter estimate w.r.t
              *         to the central plane surface inside the chamber. *Note* the parameter q/p is set to zero and 
              *         does not serve any purpose here.
              *          
@@ -106,6 +118,23 @@ namespace Acts{
                 /** @brief Number of straw hits on the seed */
                 unsigned int nStrawHits{0};
             };
+
+            StrawChamberLineSeeder(const UnCalibHitVec_t& seedHits,
+                                   Config&& cfg,
+                                   std::unique_ptr<const Acts::Logger> logObj);
+
+            /** @brief Remove the copy constructor */
+            StrawChamberLineSeeder(const StrawChamberLineSeeder& other) = delete;
+            /** @brief Remove the copy assignment */
+            StrawChamberLineSeeder& operator=(const StrawChamberLineSeeder& other) = delete;
+
+            /** @brief Returns the number of already generated seeds */
+            unsigned int numGenerated() const {
+                return m_nGenSeeds;
+            }
+
+            std::optional<DriftCircleSeed> generateSeed(const CalibrationContext& ctx);
+           
         private:
             const Sorter_t m_hitLayers;
             Config m_cfg{};

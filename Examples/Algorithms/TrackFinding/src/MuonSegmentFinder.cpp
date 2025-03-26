@@ -27,10 +27,15 @@ namespace ActsExamples{
 ProcessCode MuonSegmentFinder::execute( const AlgorithmContext& ctx) const {
   
   const MuonHoughMaxContainer& gotMaxima = m_inputMax(ctx);
-  using StrawSeeder_t = Acts::StrawChamberLineSeeder<MuonSpacePoint, MuonSpacePointSorter>;
+  using StrawSeeder_t = Acts::StrawChamberLineSeeder<MuonSpacePointSorter>;
+  using SeedCandidate_t = StrawSeeder_t::DriftCircleSeed;
+  
+  
+  Acts::CalibrationContext calibCtx{ctx};
   for (const MuonHoughMaximum& max : gotMaxima){
     StrawSeeder_t::Config seedCfg{};
     StrawSeeder_t seeder{max.hits(), std::move(seedCfg), m_logger->clone()};
+    while (std::optional<SeedCandidate_t> cand = seeder.generateSeed(calibCtx));
   }
   MuonSegmentContainer outSegments{};
 
