@@ -10,6 +10,7 @@ input_rel=$(basename "$input_abs")
 dir=$(dirname "$input_abs")
 output=requirements.txt
 
+uv python install $PYTHON_VERSION
 pushd "$dir"
 uv pip compile \
   --python-version $PYTHON_VERSION \

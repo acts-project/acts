@@ -9,6 +9,7 @@
 #include "Acts/Material/Interactions.hpp"
 
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 
@@ -23,7 +24,7 @@ namespace {
 // electron mass
 constexpr float Me = 0.5109989461_MeV;
 // Bethe formular prefactor. 1/mol unit is just a factor 1 here.
-constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
+constexpr float K = 30.7075_MeV * 1_mm2;
 // Energy scale for plasma energy.
 constexpr float PlasmaEnergyScale = 28.816_eV;
 
@@ -114,19 +115,20 @@ inline float logDeriveEpsilon(float qOverP, const RelativisticQuantities& rq) {
 }
 
 /// Compute the density correction factor delta/2.
-inline float computeDeltaHalf(float meanExitationPotential,
+inline float computeDeltaHalf(float meanExcitationEnergy,
                               float molarElectronDensity,
                               const RelativisticQuantities& rq) {
-  /// Uses RPP2018 eq. 33.6 which is only valid for high energies.
+  // Uses RPP2018 eq. 33.6 which is only valid for high energies.
   // only relevant for very high ernergies; use arbitrary cutoff
   if (rq.betaGamma < 10.0f) {
     return 0.0f;
   }
   // pre-factor according to RPP2019 table 33.1
   const float plasmaEnergy =
-      PlasmaEnergyScale * std::sqrt(1000.f * molarElectronDensity);
+      PlasmaEnergyScale *
+      std::sqrt(molarElectronDensity / static_cast<float>(1 / 1_cm3));
   return std::log(rq.betaGamma) +
-         std::log(plasmaEnergy / meanExitationPotential) - 0.5f;
+         std::log(plasmaEnergy / meanExcitationEnergy) - 0.5f;
 }
 
 /// Compute derivative w/ respect to q/p for the density correction.
@@ -181,6 +183,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
   const float eps = computeEpsilon(Ne, thickness, rq);
+  // TODO calculation of dhalf is not always necessary
   const float dhalf = computeDeltaHalf(I, Ne, rq);
   const float u = computeMassTerm(Me, rq);
   const float wmax = computeWMax(m, rq);
@@ -402,7 +405,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
 
   // muon- or muon+
   // TODO magic number 8_GeV
-  if ((absPdg == PdgParticle::eMuon) && (8_GeV < energy)) {
+  if ((absPdg == PdgParticle::eMuon) && (energy > 8_GeV)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
   // scale from energy loss per unit radiation length to total energy
@@ -462,7 +465,7 @@ float Acts::computeEnergyLossMode(const MaterialSlab& slab, PdgParticle absPdg,
                                   float m, float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
-  return 0.9f * computeEnergyLossLandau(slab, m, qOverP, absQ) +
+  return 0.9f * computeEnergyLossBethe(slab, m, qOverP, absQ) +
          0.15f * computeEnergyLossRadiative(slab, absPdg, m, qOverP, absQ);
 }
 
@@ -471,7 +474,7 @@ float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab,
                                        float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
-  return 0.9f * deriveEnergyLossLandauQOverP(slab, m, qOverP, absQ) +
+  return 0.9f * deriveEnergyLossBetheQOverP(slab, m, qOverP, absQ) +
          0.15f * deriveEnergyLossRadiativeQOverP(slab, absPdg, m, qOverP, absQ);
 }
 

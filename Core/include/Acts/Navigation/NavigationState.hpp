@@ -71,7 +71,10 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  std::size_t surfaceCandidateIndex = 0;
+
+  // starting index of the surface candidate - to catch correctly the first
+  // surface
+  int surfaceCandidateIndex = -1;
 
   /// Boundary directives for surfaces
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();

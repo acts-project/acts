@@ -9,11 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -52,7 +50,7 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
     std::string inputVertices;
     /// Tracks object from track finidng.
     std::string inputTracks;
-    /// Input truth vertex collection.
+    /// Optional. Input truth vertex collection.
     std::string inputTruthVertices;
     /// All input truth particle collection.
     std::string inputParticles;
@@ -75,8 +73,8 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
     /// Minimum fraction of hits associated to particle to consider track
     /// as truth matched.
     double trackMatchThreshold = 0.5;
-    /// Whether information about tracks is available
-    bool useTracks = true;
+    /// Whether to write information about tracks
+    bool writeTrackInfo = false;
     /// Minimum track weight for track to be considered as part of the fit
     double minTrkWeight = 0.1;
     /// Spatial window for vertex density calculation.
@@ -106,6 +104,13 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
                      const std::vector<Acts::Vertex>& vertices) override;
 
  private:
+  void writeTrackInfo(const AlgorithmContext& ctx,
+                      const SimParticleContainer& particles,
+                      const ConstTrackContainer& tracks,
+                      const TrackParticleMatching& trackParticleMatching,
+                      const std::optional<Acts::Vector4>& truthPos,
+                      const std::vector<Acts::TrackAtVertex>& tracksAtVtx);
+
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
