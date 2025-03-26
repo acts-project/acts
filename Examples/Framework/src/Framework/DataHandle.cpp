@@ -85,6 +85,7 @@ void WriteDataHandleBase::emulate(StateMapType& state,
   }
 
   ACTS_INFO("-> " << name() << " '" << key() << "':");
+  ACTS_INFO("   " << symbol(typeInfo().name()));
 
   if (auto it = state.find(key()); it != state.end()) {
     const auto& source = *it->second;
