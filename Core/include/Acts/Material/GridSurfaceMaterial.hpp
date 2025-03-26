@@ -358,13 +358,14 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
         using GridType = Grid<grid_value_t, AxisType>;
         return std::make_unique<
             GridSurfaceMaterialT<GridType, material_accessor_t>>(
-            GridType(axis), std::forward(materialAccessor),
+            GridType(axis), std::forward<material_accessor_t>(materialAccessor),
             std::move(boundToGridLocal), std::move(globalToGridLocal));
       });
   // Fill it via the grid view
   AnyGridView<grid_value_t> gv = ism->gridView();
   auto indices = gv.numLocalBins();
   for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
+    // Offset comes from overflow/underflow bin
     gv.atLocalBins({i0 + 1u}) = payload[i0];
   }
   return ism;
@@ -402,7 +403,7 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
               using GridType = Grid<grid_value_t, AxisTypeA, AxisTypeB>;
               return std::make_unique<
                   GridSurfaceMaterialT<GridType, material_accessor_t>>(
-                  GridType(axisA, axisB), std::forward(materialAccessor),
+                  GridType(axisA, axisB), std::forward<material_accessor_t>(materialAccessor),
                   std::move(boundToGridLocal), std::move(globalToGridLocal));
             });
       });
@@ -412,6 +413,7 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
   auto indices = gv.numLocalBins();
   for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
     for (std::size_t i1 = 0; i1 < indices[1]; ++i1) {
+      // Offset comes from overflow/underflow bin
       gv.atLocalBins({i0 + 1, i1 + 1}) = payload[i0][i1];
     }
   }
