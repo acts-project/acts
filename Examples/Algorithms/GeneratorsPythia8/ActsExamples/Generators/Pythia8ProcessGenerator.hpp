@@ -25,6 +25,11 @@ namespace Pythia8 {
 class Pythia;
 }
 
+namespace HepMC3 {
+class Writer;
+class Pythia8ToHepMC3;
+}  // namespace HepMC3
+
 namespace ActsExamples {
 
 struct Pythia8RandomEngineWrapper;
@@ -52,6 +57,9 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
     /// Random seed for the initialization stage of Pythia8
     unsigned int initializationSeed = 42;
+
+    /// Direct HepMC3 output (for debugging)
+    std::optional<std::filesystem::path> writeHepMC3 = std::nullopt;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
@@ -75,6 +83,9 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   std::unique_ptr<::Pythia8::Pythia> m_pythia8;
   std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
   std::mutex m_pythia8Mutex;
+
+  std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
+  std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
 };
 
 }  // namespace ActsExamples
