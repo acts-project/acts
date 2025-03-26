@@ -38,7 +38,7 @@ def runDigitization(
     if particlesInput is None:
         addParticleGun(
             s,
-            EtaConfig(-3.5, 3.5, uniform=True),
+            EtaConfig(-2.0, 2.0, uniform=True),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=1,
