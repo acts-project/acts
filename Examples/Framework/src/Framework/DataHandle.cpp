@@ -66,9 +66,9 @@ void WriteDataHandleBase::initialize(std::string_view key) {
   m_key = key;
 }
 
-void DataHandleBase::maybeInitialize(std::string_view key) {
-  if (!key.empty()) {
-    m_key = key;
+void DataHandleBase::maybeInitialize(std::optional<std::string_view> key) {
+  if (key.has_value() && !key.value().empty()) {
+    m_key = key.value();
   }
 }
 
