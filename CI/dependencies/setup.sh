@@ -1,10 +1,5 @@
 #!/bin/bash
-echo "Opts at beginning:"
-set +o
-echo "----"
-oldstate="$(set +o)"
-set -e
-set -u
+# @TODO: Add back strict options
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -216,6 +211,3 @@ end_section
 # Pythia8 looks for settings in this directory
 # set_env PYTHIA8DATA "${destination}/share/Pythia8/xmldoc"
 
-eval "$oldstate"
-echo "Opts at end"
-set +o
