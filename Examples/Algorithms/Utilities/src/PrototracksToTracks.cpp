@@ -14,6 +14,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace ActsExamples {
 
@@ -93,7 +94,10 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       std::make_shared<Acts::ConstVectorMultiTrajectory>(std::move(*mtj))};
 
   ACTS_DEBUG("Produced " << constTracks.size() << " tracks");
-  ACTS_DEBUG("Avg track size: " << avgSize / constTracks.size());
+  ACTS_DEBUG(
+      "Avg track size: " << (constTracks.size() > 0
+                                 ? avgSize / constTracks.size()
+                                 : std::numeric_limits<float>::quiet_NaN()));
   ACTS_DEBUG("Min track size: " << minSize << ", max track size " << maxSize);
 
   m_outputTracks(ctx, std::move(constTracks));
