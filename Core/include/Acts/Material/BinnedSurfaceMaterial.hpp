@@ -98,9 +98,6 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector3&) const
   const MaterialSlab& materialSlab(const Vector3& gp) const final;
 
-  /// Return the properly formatted class name for screen output and I/O
-  std::string name() const final { return "BinnedSurfaceMaterial"; }
-
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
 

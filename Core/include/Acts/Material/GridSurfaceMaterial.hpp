@@ -58,9 +58,6 @@ struct GridMaterialAccessor : public IGridMaterialAccessor {
       grid.at(ib).scaleThickness(scale);
     }
   }
-
-  /// A constexpr name for the type of the resulting GridSurfaceMaterial
-  constexpr static const char* nameStr = "GridSurfaceMaterial";
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a vector
@@ -97,9 +94,6 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
       m.scaleThickness(scale);
     }
   }
-
-  /// A constexpr name for the type of the resulting GridSurfaceMaterial
-  constexpr static const char* nameStr = "IndexedSurfaceMaterial";
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a global
@@ -160,9 +154,6 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
       (*globalMaterial)[index].scaleThickness(scale);
     }
   }
-
-  /// A constexpr name for the type of the resulting GridSurfaceMaterial
-  constexpr static const char* nameStr = "GloballyIndexedSurfaceMaterial";
 };
 
 /// Intermediate interface to the grid surface material given access to the grid
@@ -267,9 +258,6 @@ class GridSurfaceMaterialT
     sl << "GridSurfaceMaterial - material access via accessor.";
     return sl;
   }
-
-  /// Return the properly formatted class name for screen output and I/O
-  std::string name() const final { return material_accessor_type::nameStr; }
 
   /// @brief Accessor to the grid interface
   const IGrid& grid() const final { return m_grid; }

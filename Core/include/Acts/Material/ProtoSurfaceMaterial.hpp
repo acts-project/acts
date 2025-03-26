@@ -101,9 +101,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
     return sl;
   }
 
-  /// Return the properly formatted class name for screen output and I/O
-  std::string name() const final { return "ProtoSurfaceMaterial"; }
-
  private:
   /// A binning description
   BinningType m_binning;
