@@ -40,7 +40,6 @@
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsExamples/Io/Root/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
@@ -214,11 +213,6 @@ void addOutput(Context& ctx) {
                              inputParticles, inputTrackParticleMatching,
                              filePath, resPlotToolConfig, effPlotToolConfig,
                              trackSummaryPlotToolConfig);
-
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::SeedingPerformanceWriter, mex, "SeedingPerformanceWriter",
-      inputSeeds, inputMeasurementParticlesMap, inputParticles, filePath,
-      fileMode, effPlotToolConfig, duplicationPlotToolConfig);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackParameterWriter, mex, "RootTrackParameterWriter",
