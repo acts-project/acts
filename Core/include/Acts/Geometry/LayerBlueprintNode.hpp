@@ -96,6 +96,14 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @return Reference to this node for chaining
   LayerBlueprintNode& setLayerType(LayerType layerType);
 
+  /// Set the layer volume to be centered on the center of gravity of the
+  /// surfaces.
+  /// @param x Whether to center the layer volume on the x-axis
+  /// @param y Whether to center the layer volume on the y-axis
+  /// @param z Whether to center the layer volume on the z-axis
+  /// @return Reference to this node for chaining
+  LayerBlueprintNode& setUseCenterOfGravity(bool x, bool y, bool z);
+
   /// Access the layer type of the layer node.
   /// @return The layer type
   const LayerType& layerType() const;
@@ -136,6 +144,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   Transform3 m_transform = Transform3::Identity();
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   LayerType m_layerType = LayerType::Cylinder;
+  std::array<bool, 3> m_useCenterOfGravity = {true, true, true};
 };
 
 }  // namespace Acts::Experimental
