@@ -89,7 +89,7 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
 #if PYTHIA_VERSION_INTEGER >= 8310
   m_pythia8->setRndmEnginePtr(m_impl->m_pythia8RndmEngine);
 #else
-  m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine.get());
+  m_pythia8->setRndmEnginePtr(m_impl->m_pythia8RndmEngine.get());
 #endif
 
   RandomEngine rng{m_cfg.initializationSeed};
