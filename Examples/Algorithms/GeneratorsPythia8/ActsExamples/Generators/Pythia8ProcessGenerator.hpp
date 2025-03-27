@@ -25,14 +25,9 @@ namespace Pythia8 {
 class Pythia;
 }
 
-namespace HepMC3 {
-class Writer;
-class Pythia8ToHepMC3;
-}  // namespace HepMC3
-
 namespace ActsExamples {
 
-struct Pythia8RandomEngineWrapper;
+struct Pythia8GeneratorImpl;
 
 class Pythia8Generator : public EventGenerator::ParticlesGenerator {
  public:
@@ -81,11 +76,9 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<::Pythia8::Pythia> m_pythia8;
-  std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
   std::mutex m_pythia8Mutex;
 
-  std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
-  std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
+  std::unique_ptr<Pythia8GeneratorImpl> m_impl;
 };
 
 }  // namespace ActsExamples
