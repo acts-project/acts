@@ -98,6 +98,15 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
         const auto pos4 = (vertexPosition + vertex.position4).eval();
         ACTS_VERBOSE(" - vertex at " << pos4.transpose());
         vertex.position4 = pos4;
+
+        for (auto& particleId : vertex.incoming) {
+          particleId =
+              SimBarcode{particleId}.setVertexPrimary(nPrimaryVertices);
+        }
+        for (auto& particleId : vertex.outgoing) {
+          particleId =
+              SimBarcode{particleId}.setVertexPrimary(nPrimaryVertices);
+        }
       };
       for (auto& vertex : newVertices) {
         updateVertexInPlace(vertex);
