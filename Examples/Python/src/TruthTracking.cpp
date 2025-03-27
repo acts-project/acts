@@ -63,11 +63,18 @@ void addTruthTracking(Context& ctx) {
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
 
+    {
+      auto mc = py::class_<Alg::MeasurementCounter>(alg, "MeasurementCounter")
+                    .def(py::init<>())
+                    .def("addCounter", &Alg::MeasurementCounter::addCounter);
+    }
+
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(inputParticleMeasurementsMap);
+    ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(rhoMin);
     ACTS_PYTHON_MEMBER(rhoMax);
@@ -95,6 +102,7 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(excludeAbsPdgs);
     ACTS_PYTHON_MEMBER(minPrimaryVertexId);
     ACTS_PYTHON_MEMBER(maxPrimaryVertexId);
+    ACTS_PYTHON_MEMBER(measurementCounter);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
