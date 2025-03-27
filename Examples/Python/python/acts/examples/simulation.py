@@ -46,8 +46,9 @@ ParticleSelectorConfig = namedtuple(
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
+        "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 10 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 4,
 )
 
 
@@ -76,6 +77,7 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
         "removeCharged": config.removeCharged,
         "removeNeutral": config.removeNeutral,
         "removeSecondaries": config.removeSecondaries,
+        "measurementCounter": config.nMeasurementsGroupMin,
     }
 
 
@@ -801,6 +803,7 @@ def addDigiParticleSelection(
         level=customLogLevel(),
         inputParticles="particles_simulated_selected",
         inputParticleMeasurementsMap="particle_measurements_map",
+        inputMeasurements="measurements",
         outputParticles="tmp_particles_digitized_selected",
     )
     s.addAlgorithm(selector)
