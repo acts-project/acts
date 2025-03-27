@@ -106,10 +106,7 @@ void patchKwargsConstructor(T& c) {
             .def_property_readonly("config", &Alg::config);                   \
                                                                               \
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c);                                              \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                         \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))              \
-    ACTS_PYTHON_STRUCT_END();                                                 \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                       \
   } while (0)
 
 /// Similar as above for writers
@@ -130,12 +127,8 @@ void patchKwargsConstructor(T& c) {
     if constexpr (has_write_method) {                                       \
       w.def("write", &Writer::write);                                       \
     }                                                                       \
-                                                                            \
     auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c);                                            \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
-    ACTS_PYTHON_STRUCT_END();                                               \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)
 
 /// Similar as above for readers
@@ -151,8 +144,5 @@ void patchKwargsConstructor(T& c) {
             .def_property_readonly("config", &Reader::config);              \
                                                                             \
     auto c = py::class_<Config>(r, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c);                                            \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
-    ACTS_PYTHON_STRUCT_END();                                               \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)
