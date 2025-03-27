@@ -45,10 +45,13 @@ Ort::Value torchToOnnx(Ort::MemoryInfo &memoryInfo, at::Tensor &tensor) {
 namespace Acts {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
-                                       std::unique_ptr<const Logger> logger)
-    : m_logger(std::move(logger)),
+                                       std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)),
       m_cfg(cfg),
-      m_device(torch::Device(torch::kCPU)) {
+      m_device(torch::cuda::is_available() ? torch::Device(torch::kCUDA)
+                                           : torch::Device(torch::kCPU)) {
+  ACTS_INFO("OnnxEdgeClassifier with ORT API version " << ORT_API_VERSION);
+
   OrtLoggingLevel onnxLevel = ORT_LOGGING_LEVEL_WARNING;
   switch (m_logger->level()) {
     case Acts::Logging::VERBOSE:
@@ -75,19 +78,20 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
   m_env = std::make_unique<Ort::Env>(onnxLevel, "ExaTrkX - edge classifier");
 
-  Ort::SessionOptions session_options;
-  session_options.SetIntraOpNumThreads(1);
-  // session_options.SetGraphOptimizationLevel(
-  //     GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
+  Ort::SessionOptions sessionOptions;
+  sessionOptions.SetIntraOpNumThreads(1);
+  sessionOptions.SetGraphOptimizationLevel(
+      GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-  // if( m_device.is_cuda() ) {
-  OrtCUDAProviderOptions cuda_options;
-  cuda_options.device_id = 0;
-  session_options.AppendExecutionProvider_CUDA(cuda_options);
-  //}
+  if (m_device.is_cuda()) {
+    ACTS_INFO("Try to add ONNX execution provider for CUDA");
+    OrtCUDAProviderOptions cuda_options;
+    cuda_options.device_id = 0;
+    sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
+  }
 
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
-                                           session_options);
+                                           sessionOptions);
 
   Ort::AllocatorWithDefaultOptions allocator;
 
