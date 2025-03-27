@@ -82,7 +82,7 @@ void addPropagation(Context& ctx) {
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
-                      trackingGeometry);
+                       trackingGeometry);
   }
 
   {
@@ -101,7 +101,7 @@ void addPropagation(Context& ctx) {
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
-                      detector);
+                       detector);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

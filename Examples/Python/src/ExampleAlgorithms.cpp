@@ -82,11 +82,11 @@ void addExampleAlgorithms(Context& ctx) {
 
       patchKwargsConstructor(c);
 
-      ACTS_PYTHON_STRUCT(c, loc0Min, loc0Max, loc1Min, loc1Max, timeMin, timeMax,
-                        phiMin, phiMax, etaMin, etaMax, absEtaMin, absEtaMax,
-                        ptMin, ptMax, minMeasurements, maxHoles, maxOutliers,
-                        maxHolesAndOutliers, maxSharedHits, maxChi2,
-                        measurementCounter, requireReferenceSurface);
+      ACTS_PYTHON_STRUCT(c, loc0Min, loc0Max, loc1Min, loc1Max, timeMin,
+                         timeMax, phiMin, phiMax, etaMin, etaMax, absEtaMin,
+                         absEtaMax, ptMin, ptMax, minMeasurements, maxHoles,
+                         maxOutliers, maxHolesAndOutliers, maxSharedHits,
+                         maxChi2, measurementCounter, requireReferenceSurface);
 
       pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
       pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);

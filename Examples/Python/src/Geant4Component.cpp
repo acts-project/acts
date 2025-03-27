@@ -112,7 +112,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector, geant4Handle);
+    ACTS_PYTHON_STRUCT(c1, inputParticles, randomNumbers, detector,
+                       geant4Handle);
   }
 
   {
@@ -187,7 +188,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto c1 = py::class_<Config, Geant4SimulationBase::Config,
                          std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c1, outputSimHits, outputParticles, outputPropagationSummaries, sensitiveSurfaceMapper, magneticField, physicsList, killVolume, killAfterTime, killSecondaries, recordHitsOfCharged, recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries, keepParticlesWithoutHits, recordPropagationSummaries);
+    ACTS_PYTHON_STRUCT(
+        c1, outputSimHits, outputParticles, outputPropagationSummaries,
+        sensitiveSurfaceMapper, magneticField, physicsList, killVolume,
+        killAfterTime, killSecondaries, recordHitsOfCharged,
+        recordHitsOfNeutrals, recordHitsOfPrimaries, recordHitsOfSecondaries,
+        keepParticlesWithoutHits, recordPropagationSummaries);
   }
 
   {
@@ -219,7 +225,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using Factory = Acts::Geant4DetectorSurfaceFactory;
     auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(o, scaleConversion, convertMaterial, convertedMaterialThickness, sensitiveSurfaceSelector, passiveSurfaceSelector);
+    ACTS_PYTHON_STRUCT(o, scaleConversion, convertMaterial,
+                       convertedMaterialThickness, sensitiveSurfaceSelector,
+                       passiveSurfaceSelector);
   }
 
   {
@@ -229,7 +237,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def(py::init<const Geant4Detector::Config&>());
 
     auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, protoDetector, geometryIdentifierHook, logLevel);
+    ACTS_PYTHON_STRUCT(c, name, g4World, g4SurfaceOptions, protoDetector,
+                       geometryIdentifierHook, logLevel);
   }
 
   {
@@ -331,7 +340,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut, volumes);
+    ACTS_PYTHON_STRUCT(c, gammaCut, electronCut, positronCut, protonCut,
+                       volumes);
   }
 
   Acts::Python::Context ctx;

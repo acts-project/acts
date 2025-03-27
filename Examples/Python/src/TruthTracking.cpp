@@ -71,13 +71,13 @@ void addTruthTracking(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(
-        c, inputParticles, inputParticleMeasurementsMap, outputParticles,
-        rhoMin, rhoMax, absZMin, absZMax, timeMin, timeMax, phiMin, phiMax,
-        etaMin, etaMax, absEtaMin, absEtaMax, mMin, mMax, ptMin, ptMax, hitsMin,
-        hitsMax, measurementsMin, measurementsMax, removeCharged, removeNeutral,
-        removeSecondaries, excludeAbsPdgs, minPrimaryVertexId,
-        maxPrimaryVertexId, measurementCounter);
+    ACTS_PYTHON_STRUCT(c, inputParticles, inputParticleMeasurementsMap,
+                       outputParticles, rhoMin, rhoMax, absZMin, absZMax,
+                       timeMin, timeMax, phiMin, phiMax, etaMin, etaMax,
+                       absEtaMin, absEtaMax, mMin, mMax, ptMin, ptMax, hitsMin,
+                       hitsMax, measurementsMin, measurementsMax, removeCharged,
+                       removeNeutral, removeSecondaries, excludeAbsPdgs,
+                       minPrimaryVertexId, maxPrimaryVertexId);
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
     pythonRangeProperty(c, "absZ", &Config::absZMin, &Config::absZMax);

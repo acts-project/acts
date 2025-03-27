@@ -76,8 +76,9 @@ void addJson(Context& ctx) {
 
     auto c = py::class_<MaterialMapJsonConverter::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches, processRepresenting,
-                      processBoundaries, processVolumes, processDenseVolumes, processNonMaterial);
+    ACTS_PYTHON_STRUCT(c, context, processSensitives, processApproaches,
+                       processRepresenting, processBoundaries, processVolumes,
+                       processDenseVolumes, processNonMaterial);
   }
 
   {
@@ -156,7 +157,9 @@ void addJson(Context& ctx) {
     auto c =
         py::class_<JsonSurfacesWriter::Config>(cls, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, trackingGeometry, outputDir, outputPrecision, writeLayer, writeApproach, writeSensitive, writeBoundary, writePerEvent, writeOnlyNames);
+    ACTS_PYTHON_STRUCT(c, trackingGeometry, outputDir, outputPrecision,
+                       writeLayer, writeApproach, writeSensitive, writeBoundary,
+                       writePerEvent, writeOnlyNames);
   }
 
   {

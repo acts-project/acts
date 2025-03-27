@@ -66,11 +66,12 @@ void addTrackFinding(Context& ctx) {
   {
     using Config = Acts::SeedFilterConfig;
     auto c = py::class_<Config>(m, "SeedFilterConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, deltaInvHelixDiameter, impactWeightFactor, zOriginWeightFactor,
-                      compatSeedWeight, deltaRMin, maxSeedsPerSpM, compatSeedLimit,
-                      seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange,
-                      useDeltaRorTopRadius, seedWeightIncrement, numSeedIncrement,
-                      maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf);
+    ACTS_PYTHON_STRUCT(
+        c, deltaInvHelixDiameter, impactWeightFactor, zOriginWeightFactor,
+        compatSeedWeight, deltaRMin, maxSeedsPerSpM, compatSeedLimit,
+        seedConfirmation, centralSeedConfirmationRange,
+        forwardSeedConfirmationRange, useDeltaRorTopRadius, seedWeightIncrement,
+        numSeedIncrement, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf);
     patchKwargsConstructor(c);
   }
 
@@ -79,17 +80,18 @@ void addTrackFinding(Context& ctx) {
         ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
         Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, cotThetaMax, deltaRMin, deltaRMax, deltaRMinBottomSP,
-                      deltaRMaxBottomSP, deltaRMinTopSP, deltaRMaxTopSP, impactMax,
-                      sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
-                      collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
-                      radLengthPerSeed, zAlign, rAlign, sigmaError, maxBlockSize,
-                      nTrplPerSpBLimit, nAvgTrplPerSpBLimit, impactMax, deltaZMax,
-                      zBinEdges, interactionPointCut, zBinsCustomLooping,
-                      useVariableMiddleSPRange, deltaRMiddleMinSPRange,
-                      deltaRMiddleMaxSPRange, rRangeMiddleSP, rMinMiddle, rMaxMiddle,
-                      binSizeR, seedConfirmation, centralSeedConfirmationRange,
-                      forwardSeedConfirmationRange, useDetailedDoubleMeasurementInfo);
+    ACTS_PYTHON_STRUCT(
+        c, minPt, cotThetaMax, deltaRMin, deltaRMax, deltaRMinBottomSP,
+        deltaRMaxBottomSP, deltaRMinTopSP, deltaRMaxTopSP, impactMax,
+        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
+        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
+        radLengthPerSeed, zAlign, rAlign, sigmaError, maxBlockSize,
+        nTrplPerSpBLimit, nAvgTrplPerSpBLimit, impactMax, deltaZMax, zBinEdges,
+        interactionPointCut, zBinsCustomLooping, useVariableMiddleSPRange,
+        deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
+        rMinMiddle, rMaxMiddle, binSizeR, seedConfirmation,
+        centralSeedConfirmationRange, forwardSeedConfirmationRange,
+        useDetailedDoubleMeasurementInfo);
     patchKwargsConstructor(c);
   }
   {
@@ -106,15 +108,16 @@ void addTrackFinding(Context& ctx) {
             Acts::detail::RefHolder>::SpacePointProxyType>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
-                      deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaPhiMax, deltaZMax,
-                      sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
-                      collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
-                      radLengthPerSeed, deltaZMax, interactionPointCut, deltaPhiMax,
-                      highland, maxScatteringAngle2, useVariableMiddleSPRange,
-                      deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
-                      rMinMiddle, rMaxMiddle, seedConfirmation, centralSeedConfirmationRange,
-                      forwardSeedConfirmationRange);
+    ACTS_PYTHON_STRUCT(
+        c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
+        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaPhiMax, deltaZMax,
+        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
+        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
+        radLengthPerSeed, deltaZMax, interactionPointCut, deltaPhiMax, highland,
+        maxScatteringAngle2, useVariableMiddleSPRange, deltaRMiddleMinSPRange,
+        deltaRMiddleMaxSPRange, rRangeMiddleSP, rMinMiddle, rMaxMiddle,
+        seedConfirmation, centralSeedConfirmationRange,
+        forwardSeedConfirmationRange);
     patchKwargsConstructor(c);
   }
 
@@ -122,8 +125,8 @@ void addTrackFinding(Context& ctx) {
     using Config = Acts::Experimental::SeedFinderGbtsConfig<SimSpacePoint>;
     auto c = py::class_<Config>(m, "SeedFinderGbtsConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, minPt, sigmaScattering, highland, maxScatteringAngle2,
-                      ConnectorInputFile, m_phiSliceWidth, m_nMaxPhiSlice,
-                      m_useClusterWidth, m_layerGeometry);
+                       ConnectorInputFile, m_phiSliceWidth, m_nMaxPhiSlice,
+                       m_useClusterWidth, m_layerGeometry);
     patchKwargsConstructor(c);
   }
 
@@ -131,9 +134,9 @@ void addTrackFinding(Context& ctx) {
     using seedConf = Acts::SeedConfirmationRangeConfig;
     auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, zMinSeedConf, zMaxSeedConf, rMaxSeedConf, nTopForLargeR,
-                      nTopForSmallR, seedConfMinBottomRadius, seedConfMaxZOrigin,
-                      minImpactSeedConf);
+    ACTS_PYTHON_STRUCT(c, zMinSeedConf, zMaxSeedConf, rMaxSeedConf,
+                       nTopForLargeR, nTopForSmallR, seedConfMinBottomRadius,
+                       seedConfMaxZOrigin, minImpactSeedConf);
     patchKwargsConstructor(c);
   }
 
@@ -142,8 +145,8 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, minPt, rMax, zMax, zMin, phiMin, phiMax, deltaRMax,
-                      cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
-                      impactMax, zBinEdges);
+                       cotThetaMax, phiBinDeflectionCoverage, maxPhiBins,
+                       impactMax, zBinEdges);
     patchKwargsConstructor(c);
   }
   {
@@ -221,12 +224,12 @@ void addTrackFinding(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, inputMeasurements, inputInitialTrackParameters,
-                      inputSeeds, outputTracks, trackingGeometry, magneticField,
-                      findTracks, measurementSelectorCfg, trackSelectorCfg,
-                      maxSteps, twoWay, reverseSearch, seedDeduplication,
-                      stayOnSeed, pixelVolumeIds, stripVolumeIds,
-                      maxPixelHoles, maxStripHoles, trimTracks, constrainToVolumeIds,
-                      endOfWorldVolumeIds);
+                       inputSeeds, outputTracks, trackingGeometry,
+                       magneticField, findTracks, measurementSelectorCfg,
+                       trackSelectorCfg, maxSteps, twoWay, reverseSearch,
+                       seedDeduplication, stayOnSeed, pixelVolumeIds,
+                       stripVolumeIds, maxPixelHoles, maxStripHoles, trimTracks,
+                       constrainToVolumeIds, endOfWorldVolumeIds);
   }
 
   {

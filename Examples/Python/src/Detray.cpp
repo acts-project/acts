@@ -61,7 +61,8 @@ void addDetray(Context& ctx) {
     auto options = py::class_<DetrayConverter::Options>(converter, "Options")
                        .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(options, convertMaterial, convertSurfaceGrids, writeToJson);
+    ACTS_PYTHON_STRUCT(options, convertMaterial, convertSurfaceGrids,
+                       writeToJson);
   }
 }
 }  // namespace Acts::Python

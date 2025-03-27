@@ -492,9 +492,11 @@ void addExperimentalGeometry(Context& ctx) {
                   config, getDefaultLogger(name, level));
             }));
 
-    auto lsConfig = py::class_<LayerStructureBuilder::Config>(lsBuilder, "Config")
-                       .def(py::init<>());
-    ACTS_PYTHON_STRUCT(lsConfig, surfacesProvider, supports, binnings, quarterSegments, auxiliary);
+    auto lsConfig =
+        py::class_<LayerStructureBuilder::Config>(lsBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(lsConfig, surfacesProvider, supports, binnings,
+                       quarterSegments, auxiliary);
 
     // The internal layer structure builder
     py::class_<Acts::Experimental::ISurfacesProvider,
@@ -599,8 +601,9 @@ void addExperimentalGeometry(Context& ctx) {
                   config, getDefaultLogger(name, level));
             }));
 
-    auto vsConfig = py::class_<VolumeStructureBuilder::Config>(vsBuilder, "Config")
-                       .def(py::init<>());
+    auto vsConfig =
+        py::class_<VolumeStructureBuilder::Config>(vsBuilder, "Config")
+            .def(py::init<>());
     ACTS_PYTHON_STRUCT(vsConfig, boundsType, boundValues, transform, auxiliary);
   }
 
@@ -622,11 +625,12 @@ void addExperimentalGeometry(Context& ctx) {
                   config, getDefaultLogger(name, level));
             }));
 
-    auto geoIdGenConfig = py::class_<Acts::Experimental::GeometryIdGenerator::Config>(
-                             geoIdGen, "Config")
-                             .def(py::init<>());
-    ACTS_PYTHON_STRUCT(geoIdGenConfig, containerMode, containerId, resetSubCounters,
-                      overrideExistingIds);
+    auto geoIdGenConfig =
+        py::class_<Acts::Experimental::GeometryIdGenerator::Config>(geoIdGen,
+                                                                    "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(geoIdGenConfig, containerMode, containerId,
+                       resetSubCounters, overrideExistingIds);
   }
 
   {
@@ -648,10 +652,11 @@ void addExperimentalGeometry(Context& ctx) {
             }))
             .def("construct", &DetectorVolumeBuilder::construct);
 
-    auto dvConfig = py::class_<DetectorVolumeBuilder::Config>(dvBuilder, "Config")
-                       .def(py::init<>());
-    ACTS_PYTHON_STRUCT(dvConfig, name, internalsBuilder, externalsBuilder, geoIdGenerator,
-                      auxiliary);
+    auto dvConfig =
+        py::class_<DetectorVolumeBuilder::Config>(dvBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(dvConfig, name, internalsBuilder, externalsBuilder,
+                       geoIdGenerator, auxiliary);
   }
 
   {
@@ -684,10 +689,11 @@ void addExperimentalGeometry(Context& ctx) {
             }))
             .def("construct", &CylindricalContainerBuilder::construct);
 
-    auto ccConfig = py::class_<CylindricalContainerBuilder::Config>(ccBuilder, "Config")
-                       .def(py::init<>());
-    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder, geoIdGenerator,
-                      geoIdReverseGen, auxiliary);
+    auto ccConfig =
+        py::class_<CylindricalContainerBuilder::Config>(ccBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder,
+                       geoIdGenerator, geoIdReverseGen, auxiliary);
   }
 
   {
@@ -705,10 +711,11 @@ void addExperimentalGeometry(Context& ctx) {
             }))
             .def("construct", &CuboidalContainerBuilder::construct);
 
-    auto ccConfig = py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
-                       .def(py::init<>());
-    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder, geoIdGenerator,
-                      geoIdReverseGen, auxiliary);
+    auto ccConfig =
+        py::class_<CuboidalContainerBuilder::Config>(ccBuilder, "Config")
+            .def(py::init<>());
+    ACTS_PYTHON_STRUCT(ccConfig, builders, binning, rootVolumeFinderBuilder,
+                       geoIdGenerator, geoIdReverseGen, auxiliary);
   }
 
   {
@@ -726,7 +733,8 @@ void addExperimentalGeometry(Context& ctx) {
 
     auto dConfig = py::class_<DetectorBuilder::Config>(dBuilder, "Config")
                        .def(py::init<>());
-    ACTS_PYTHON_STRUCT(dConfig, name, builder, geoIdGenerator, materialDecorator, auxiliary);
+    ACTS_PYTHON_STRUCT(dConfig, name, builder, geoIdGenerator,
+                       materialDecorator, auxiliary);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,

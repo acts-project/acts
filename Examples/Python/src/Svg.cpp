@@ -218,7 +218,10 @@ void addSvg(Context& ctx) {
   // Core components, added as an acts.svg submodule
   {
     auto c = py::class_<Svg::Style>(svg, "Style").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, fillColor, fillOpacity, highlightColor, highlights, strokeWidth, strokeColor, highlightStrokeWidth, highlightStrokeColor, fontSize, fontColor, quarterSegments);
+    ACTS_PYTHON_STRUCT(c, fillColor, fillOpacity, highlightColor, highlights,
+                       strokeWidth, strokeColor, highlightStrokeWidth,
+                       highlightStrokeColor, fontSize, fontColor,
+                       quarterSegments);
   }
 
   // How surfaces should be drawn: Svg Surface options & drawning
@@ -332,7 +335,8 @@ void addSvg(Context& ctx) {
                  svg, "DetectorVolumeOptions")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions, indexedSurfacesOptions);
+    ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
+                       indexedSurfacesOptions);
 
     // Define the proto volume & indexed surface grid
     py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
@@ -371,7 +375,8 @@ void addSvg(Context& ctx) {
 
     auto c = py::class_<Svg::LayerConverter::Options>(svg, "LayerOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, name, surfaceStyles, zRange, phiRange, gridInfo, moduleInfo, projectionInfo, labelProjection, labelGauge);
+    ACTS_PYTHON_STRUCT(c, name, surfaceStyles, zRange, phiRange, gridInfo,
+                       moduleInfo, projectionInfo, labelProjection, labelGauge);
   }
 
   {
@@ -416,9 +421,10 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection, infoBoxTitle, outputDir);
+    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
+                       infoBoxTitle, outputDir);
   }
-  
+
   {
     using Writer =
         ActsExamples::SvgPointWriter<ActsExamples::SimHit,
@@ -432,7 +438,8 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection, infoBoxTitle, outputDir);
+    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
+                       infoBoxTitle, outputDir);
   }
 }
 }  // namespace Acts::Python

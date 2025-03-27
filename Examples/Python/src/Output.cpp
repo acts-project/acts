@@ -112,8 +112,9 @@ void addOutput(Context& ctx) {
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness, surfaceThickness,
-                      quarterSegments, triangulate, outputName);
+    ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness,
+                       surfaceThickness, quarterSegments, triangulate,
+                       outputName);
 
     patchKwargsConstructor(c);
 
@@ -141,8 +142,9 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, outputScalor, outputPrecision, outputDir, containerView,
-                      volumeView, sensitiveView, passiveView, gridView);
+    ACTS_PYTHON_STRUCT(c, outputScalor, outputPrecision, outputDir,
+                       containerView, volumeView, sensitiveView, passiveView,
+                       gridView);
   }
 
   // Bindings for the binning in e.g., TrackFinderPerformanceWriter
@@ -222,8 +224,8 @@ void addOutput(Context& ctx) {
         .value("xyz", Writer::GridType::xyz);
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, treeName, fileName, fileMode, bField, gridType, 
-                      rBounds, zBounds, rBins, zBins, phiBins);
+    ACTS_PYTHON_STRUCT(c, treeName, fileName, fileMode, bField, gridType,
+                       rBounds, zBounds, rBins, zBins, phiBins);
   }
 
   {
@@ -236,8 +238,8 @@ void addOutput(Context& ctx) {
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(c, inputMeasurements, inputClusters, inputSimHits,
-                      inputMeasurementSimHitsMap, filePath, fileMode,
-                      surfaceByIdentifier);
+                       inputMeasurementSimHitsMap, filePath, fileMode,
+                       surfaceByIdentifier);
   }
 
   py::class_<IMaterialWriter, std::shared_ptr<IMaterialWriter>>(
@@ -262,11 +264,12 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches, processRepresenting,
-                      processBoundaries, processVolumes, folderSurfaceNameBase,
-                      folderVolumeNameBase, voltag, boutag, laytag, apptag, sentag,
-                      ntag, vtag, otag, mintag, maxtag, ttag, x0tag, l0tag, atag,
-                      ztag, rhotag, filePath, fileMode);
+    ACTS_PYTHON_STRUCT(c, processSensitives, processApproaches,
+                       processRepresenting, processBoundaries, processVolumes,
+                       folderSurfaceNameBase, folderVolumeNameBase, voltag,
+                       boutag, laytag, apptag, sentag, ntag, vtag, otag, mintag,
+                       maxtag, ttag, x0tag, l0tag, atag, ztag, rhotag, filePath,
+                       fileMode);
   }
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSeedWriter, mex,
