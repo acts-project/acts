@@ -74,6 +74,7 @@ set +o
 if [[ -d "@DD4hep_DIR@" ]]; then
   oldstate="$(set +o)"
   set +e
+  set -x
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
   eval "$oldstate"
   # Without this, DD4hep's Xerces-C XML parsing fails with:
