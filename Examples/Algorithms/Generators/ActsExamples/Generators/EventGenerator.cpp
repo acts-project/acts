@@ -40,6 +40,19 @@ EventGenerator::EventGenerator(const Config& cfg, Acts::Logging::Level lvl)
   if (m_cfg.generators.empty()) {
     throw std::invalid_argument("No generators are configured");
   }
+
+  for (auto& generator : m_cfg.generators) {
+    if (generator.multiplicity == nullptr) {
+      throw std::invalid_argument("Missing multiplicity generator");
+    }
+    if (generator.vertex == nullptr) {
+      throw std::invalid_argument("Missing vertex generator");
+    }
+    if (generator.particles == nullptr) {
+      throw std::invalid_argument("Missing particles generator");
+    }
+  }
+
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers service");
   }
@@ -77,15 +90,19 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
     std::vector<std::shared_ptr<HepMC3::GenParticle>> particles;
 
     // generate the primary vertices from this generator
-    ACTS_VERBOSE("Generating " << nPrimaryVertices << " primary vertices");
-    for (std::size_t n = (*generate.multiplicity)(rng); 0 < n; --n) {
+    assert(generate.multiplicity != nullptr);
+    std::size_t multiplicity = (*generate.multiplicity)(rng);
+    ACTS_VERBOSE("Generating " << multiplicity << " primary vertices");
+    for (std::size_t n = multiplicity; 0 < n; --n) {
       nPrimaryVertices += 1;
 
       // generate primary vertex position
+      assert(generate.vertex != nullptr);
       auto vertexPosition = (*generate.vertex)(rng);
       ACTS_VERBOSE("Generate vertex at " << vertexPosition.transpose());
 
       // generate particles associated to this vertex
+      assert(generate.particles != nullptr);
       auto genEvent = (*generate.particles)(rng);
       if (genEvent->length_unit() != HepMC3::Units::MM) {
         throw std::runtime_error("EventGenerator: length unit is not mm");
