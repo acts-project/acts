@@ -405,6 +405,8 @@ int Sequencer::run() {
                                                 << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
+              ACTS_VERBOSE("Completed " << alg->typeName() << ": "
+                                        << alg->name());
 
               if (mon) {
                 auto& local = fpe.local();

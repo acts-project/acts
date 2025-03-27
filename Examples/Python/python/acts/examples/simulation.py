@@ -233,6 +233,7 @@ def addPythia8(
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
+    writeHepMC3: Optional[Path] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -259,6 +260,8 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    writeHepMC3 : Path|None
+        write directly from Pythia8 into HepMC3
     printPythiaEventListing
         None or "short" or "long"
     """
@@ -301,6 +304,7 @@ def addPythia8(
                         settings=hardProcess,
                         printLongEventListing=printLongEventListing,
                         printShortEventListing=printShortEventListing,
+                        writeHepMC3=writeHepMC3,
                     ),
                 ),
             )

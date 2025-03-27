@@ -11,6 +11,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -19,6 +20,11 @@
 #include <utility>
 
 #include <Pythia8/Pythia.h>
+
+#if defined(_HAS_HEPMC3)
+#include <HepMC3/WriterAscii.h>
+#include <Pythia8Plugins/HepMC3.h>
+#endif
 
 namespace ActsExamples {
 
@@ -80,10 +86,27 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
   m_pythia8RndmEngine->setRandomEngine(rng);
   m_pythia8->init();
   m_pythia8RndmEngine->clearRandomEngine();
+
+  if (m_cfg.writeHepMC3.has_value()) {
+#if defined(_HAS_HEPMC3)
+    ACTS_DEBUG("Initializing HepMC3 output to: " << m_cfg.writeHepMC3.value());
+    m_hepMC3Converter = std::make_unique<HepMC3::Pythia8ToHepMC3>();
+    m_hepMC3Writer =
+        std::make_unique<HepMC3::WriterAscii>(m_cfg.writeHepMC3.value());
+#else
+    throw std::runtime_error("HepMC3 output requested but not available");
+#endif
+  }
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
 Pythia8Generator::~Pythia8Generator() {
+#if defined(_HAS_HEPMC3)
+  if (m_hepMC3Writer) {
+    m_hepMC3Writer->close();
+  }
+#endif
+
   ACTS_INFO("Pythia8Generator produced "
             << m_pythia8RndmEngine->statistics.numUniformRandomNumbers
             << " uniform random numbers");
@@ -117,6 +140,15 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   if (m_cfg.printLongEventListing) {
     m_pythia8->event.list();
   }
+
+#if defined(_HAS_HEPMC3)
+  if (m_hepMC3Converter && m_hepMC3Writer) {
+    auto hepmc_event = std::make_shared<HepMC3::GenEvent>();
+    m_hepMC3Converter->fill_next_event(*m_pythia8, hepmc_event.get());
+    hepmc_event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
+    m_hepMC3Writer->write_event(*hepmc_event);
+  }
+#endif
 
   // create the primary vertex
   vertices.emplace_back(SimVertexBarcode{0}, Acts::Vector4(0., 0., 0., 0.));
