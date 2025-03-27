@@ -403,7 +403,8 @@ std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
               using GridType = Grid<grid_value_t, AxisTypeA, AxisTypeB>;
               return std::make_unique<
                   GridSurfaceMaterialT<GridType, material_accessor_t>>(
-                  GridType(axisA, axisB), std::forward<material_accessor_t>(materialAccessor),
+                  GridType(axisA, axisB),
+                  std::forward<material_accessor_t>(materialAccessor),
                   std::move(boundToGridLocal), std::move(globalToGridLocal));
             });
       });
