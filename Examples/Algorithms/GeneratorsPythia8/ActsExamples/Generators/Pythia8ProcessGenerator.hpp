@@ -84,8 +84,10 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
   std::mutex m_pythia8Mutex;
 
+#if defined(_HAS_HEPMC3)
   std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
   std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
+#endif
 };
 
 }  // namespace ActsExamples
