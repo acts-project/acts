@@ -55,7 +55,8 @@ void addGeometryBuildingGen1(Context &ctx) {
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT(config, surfaceArrayCreator, cylinderZtolerance,
-                      cylinderPhiTolerance, defaultEnvelopeR, defaultEnvelopeZ);
+                       cylinderPhiTolerance, defaultEnvelopeR,
+                       defaultEnvelopeZ);
   }
 
   {
@@ -121,8 +122,8 @@ void addGeometryBuildingGen1(Context &ctx) {
                       .def(py::init<>());
 
     ACTS_PYTHON_STRUCT(config, layerArrayCreator, trackingVolumeArrayCreator,
-                      passiveLayerThickness, passiveLayerPhiBins,
-                      passiveLayerRzBins);
+                       passiveLayerThickness, passiveLayerPhiBins,
+                       passiveLayerRzBins);
   }
 }
 

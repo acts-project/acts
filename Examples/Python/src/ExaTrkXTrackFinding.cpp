@@ -67,7 +67,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, embeddingDim, rVal, knnVal, deviceID);
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, embeddingDim, rVal,
+                       knnVal, deviceID);
   }
   {
     using Alg = Acts::TorchEdgeClassifier;
@@ -84,7 +85,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, nChunks, undirected, deviceID, useEdgeFeatures);
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, nChunks, undirected,
+                       deviceID, useEdgeFeatures);
   }
   {
     using Alg = Acts::BoostTrackBuilding;
@@ -115,7 +117,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, deviceID, doSigmoid);
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, deviceID,
+                       doSigmoid);
   }
 #endif
 
@@ -152,7 +155,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, spacepointFeatures, embeddingDim, rVal, knnVal);
+    ACTS_PYTHON_STRUCT(c, modelPath, spacepointFeatures, embeddingDim, rVal,
+                       knnVal);
   }
   {
     using Alg = Acts::OnnxEdgeClassifier;

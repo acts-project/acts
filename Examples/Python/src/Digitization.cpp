@@ -49,7 +49,12 @@ void addDigitization(Context& ctx) {
 
     auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, inputSimHits, outputMeasurements, outputClusters, outputMeasurementParticlesMap, outputMeasurementSimHitsMap, outputParticleMeasurementsMap, outputSimHitMeasurementsMap, surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization, doMerge, minEnergyDeposit, digitizationConfigs);
+    ACTS_PYTHON_STRUCT(
+        c, inputSimHits, outputMeasurements, outputClusters,
+        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
+        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
+        surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
+        doMerge, minEnergyDeposit, digitizationConfigs);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
@@ -72,7 +77,8 @@ void addDigitization(Context& ctx) {
 
     dc.def("__call__", &DC::operator());
 
-    ACTS_PYTHON_STRUCT(dc, inputDigiComponents, compactify, volumeLayerComponents, outputDigiComponents);
+    ACTS_PYTHON_STRUCT(dc, inputDigiComponents, compactify,
+                       volumeLayerComponents, outputDigiComponents);
   }
 
   {

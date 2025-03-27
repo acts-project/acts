@@ -67,7 +67,8 @@ void addDetector(Context& ctx) {
             .def(py::init<const GenericDetector::Config&>());
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel, volumeLogLevel, buildProto, materialDecorator);
+    ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
+                       volumeLogLevel, buildProto, materialDecorator);
   }
 
   {
@@ -78,7 +79,8 @@ void addDetector(Context& ctx) {
 
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness, surfaceType, binValue, materialDecorator, logLevel);
+    ACTS_PYTHON_STRUCT(c, positions, stereos, offsets, bounds, thickness,
+                       surfaceType, binValue, materialDecorator, logLevel);
   }
 
   {
@@ -90,7 +92,9 @@ void addDetector(Context& ctx) {
     auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
                  d, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, seed, iovSize, flushSize, doGarbageCollection, sigmaInPlane, sigmaOutPlane, sigmaInRot, sigmaOutRot, firstIovNominal, decoratorLogLevel, mode);
+    ACTS_PYTHON_STRUCT(c, seed, iovSize, flushSize, doGarbageCollection,
+                       sigmaInPlane, sigmaOutPlane, sigmaInRot, sigmaOutRot,
+                       firstIovNominal, decoratorLogLevel, mode);
 
     py::enum_<AlignedDetector::Config::Mode>(c, "Mode")
         .value("Internal", AlignedDetector::Config::Mode::Internal)
@@ -126,7 +130,12 @@ void addDetector(Context& ctx) {
 
     auto volume =
         py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
-    ACTS_PYTHON_STRUCT(volume, name, binToleranceR, binTolerancePhi, binToleranceZ, cylinderDiscSplit, cylinderNZSegments, cylinderNPhiSegments, discNRSegments, discNPhiSegments, itkModuleSplit, barrelMap, discMap, splitPatterns, layers, subVolumeName, sensitiveNames, sensitiveAxes, rRange, zRange, splitTolR, splitTolZ, binning0, binning1);
+    ACTS_PYTHON_STRUCT(
+        volume, name, binToleranceR, binTolerancePhi, binToleranceZ,
+        cylinderDiscSplit, cylinderNZSegments, cylinderNPhiSegments,
+        discNRSegments, discNPhiSegments, itkModuleSplit, barrelMap, discMap,
+        splitPatterns, layers, subVolumeName, sensitiveNames, sensitiveAxes,
+        rRange, zRange, splitTolR, splitTolZ, binning0, binning1);
 
     auto regTriplet = [&c](const std::string& name, auto v) {
       using type = decltype(v);
@@ -152,7 +161,11 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorBinning",
                std::vector<std::pair<int, Acts::BinningType>>{});
 
-    ACTS_PYTHON_STRUCT(c, surfaceLogLevel, layerLogLevel, volumeLogLevel, fileName, buildBeamPipe, beamPipeRadius, beamPipeHalflengthZ, beamPipeLayerThickness, beamPipeEnvelopeR, layerEnvelopeR, unitScalor, materialDecorator, volumes);
+    ACTS_PYTHON_STRUCT(c, surfaceLogLevel, layerLogLevel, volumeLogLevel,
+                       fileName, buildBeamPipe, beamPipeRadius,
+                       beamPipeHalflengthZ, beamPipeLayerThickness,
+                       beamPipeEnvelopeR, layerEnvelopeR, unitScalor,
+                       materialDecorator, volumes);
 
     patchKwargsConstructor(c);
   }

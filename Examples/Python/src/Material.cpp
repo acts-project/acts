@@ -98,8 +98,9 @@ void addMaterial(Context& ctx) {
     using Config = RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag, otag,
-                      mintag, maxtag, ttag, x0tag, l0tag, atag, ztag, rhotag, fileName);
+    ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
+                       otag, mintag, maxtag, ttag, x0tag, l0tag, atag, ztag,
+                       rhotag, fileName);
   }
 
   {
@@ -129,9 +130,10 @@ void addMaterial(Context& ctx) {
                  .def(py::init<const Acts::GeometryContext&,
                                const Acts::MagneticFieldContext&>());
 
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappingMaterialCollection, materialSurfaceMapper,
-                      materialVolumeMapper, materialWriters, trackingGeometry, geoContext,
-                      magFieldContext);
+    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappingMaterialCollection,
+                       materialSurfaceMapper, materialVolumeMapper,
+                       materialWriters, trackingGeometry, geoContext,
+                       magFieldContext);
   }
 
   {
@@ -150,7 +152,8 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, etaRange, emptyBinCorrection, mapperDebugOutput, computeVariance);
+    ACTS_PYTHON_STRUCT(c, etaRange, emptyBinCorrection, mapperDebugOutput,
+                       computeVariance);
   }
 
   {
@@ -256,8 +259,9 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<CoreMaterialMapping::Config>(mmca, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks, unmappedMaterialTracks,
-                      materialMapper, materiaMaplWriters);
+    ACTS_PYTHON_STRUCT(c, inputMaterialTracks, mappedMaterialTracks,
+                       unmappedMaterialTracks, materialMapper,
+                       materiaMaplWriters);
   }
 
   {
@@ -289,8 +293,9 @@ void addMaterial(Context& ctx) {
 
     auto c =
         py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange, randomNumberSvc,
-                      materialValidater, outputMaterialTracks);
+    ACTS_PYTHON_STRUCT(c, ntracks, startPosition, phiRange, etaRange,
+                       randomNumberSvc, materialValidater,
+                       outputMaterialTracks);
   }
 }
 
