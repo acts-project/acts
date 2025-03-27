@@ -63,8 +63,7 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
     auto [alg, config] =
         declareAlgorithm<EDM4hepSimHitOutputConverter, EDM4hepOutputConverter>(
             m, "EDM4hepSimHitOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepSimHitOutputConverter::Config,
-                       inputSimHits, inputParticles, outputParticles,
+    ACTS_PYTHON_STRUCT(config, inputSimHits, inputParticles, outputParticles,
                        outputSimTrackerHits);
   }
 
@@ -77,25 +76,22 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
     auto [alg, config] = declareAlgorithm<EDM4hepMeasurementOutputConverter,
                                           EDM4hepOutputConverter>(
         m, "EDM4hepMeasurementOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepMeasurementOutputConverter::Config,
-                       inputMeasurements, inputClusters, outputTrackerHitsPlane,
-                       outputTrackerHitsRaw);
+    ACTS_PYTHON_STRUCT(config, inputMeasurements, inputClusters,
+                       outputTrackerHitsPlane, outputTrackerHitsRaw);
   }
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepParticleOutputConverter,
                                           EDM4hepOutputConverter>(
         m, "EDM4hepParticleOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepParticleOutputConverter::Config,
-                       inputParticles, outputParticles);
+    ACTS_PYTHON_STRUCT(config, inputParticles, outputParticles);
   }
 
   {
     auto [alg, config] = declareAlgorithm<EDM4hepMultiTrajectoryOutputConverter,
                                           EDM4hepOutputConverter>(
         m, "EDM4hepMultiTrajectoryOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepMultiTrajectoryOutputConverter::Config,
-                       inputTrajectories, inputMeasurementParticlesMap,
+    ACTS_PYTHON_STRUCT(config, inputTrajectories, inputMeasurementParticlesMap,
                        outputTracks, Bz);
   }
 
@@ -103,7 +99,6 @@ PYBIND11_MODULE(ActsPythonBindingsEDM4hep, m) {
     auto [alg, config] =
         declareAlgorithm<EDM4hepTrackOutputConverter, EDM4hepOutputConverter>(
             m, "EDM4hepTrackOutputConverter");
-    ACTS_PYTHON_STRUCT(config, EDM4hepTrackOutputConverter::Config, inputTracks,
-                       outputTracks, Bz);
+    ACTS_PYTHON_STRUCT(config, inputTracks, outputTracks, Bz);
   }
 }
