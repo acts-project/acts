@@ -28,7 +28,8 @@ enum TrackStateFlag {
   HoleFlag = 3,
   MaterialFlag = 4,
   SharedHitFlag = 5,
-  NumTrackStateFlags = 6
+  NoExpectedHitFlag = 6,
+  NumTrackStateFlags = 7
 };
 
 class ConstTrackStateType;
@@ -46,7 +47,9 @@ class TrackStateType {
 
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  TrackStateType(raw_type& raw) : m_raw{&raw} { assert(m_raw != nullptr); }
+  explicit TrackStateType(raw_type& raw) : m_raw{&raw} {
+    assert(m_raw != nullptr);
+  }
 
   // Delete copy constructor
   TrackStateType(const TrackStateType&) = delete;
@@ -114,7 +117,7 @@ class ConstTrackStateType {
 
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
-  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
+  explicit ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {
     assert(m_raw != nullptr);
   }
 

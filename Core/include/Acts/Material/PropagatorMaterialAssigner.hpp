@@ -13,7 +13,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/interface/IAssignmentFinder.hpp"
 #include "Acts/Propagator/ActorList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -98,7 +97,7 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
  public:
   /// @brief  Construct with propagator
   /// @param propagator
-  PropagatorMaterialAssigner(propagator_t propagator)
+  explicit PropagatorMaterialAssigner(propagator_t propagator)
       : m_propagator(std::move(propagator)) {}
 
   /// @brief Method for generating assignment candidates for the
@@ -123,9 +122,10 @@ class PropagatorMaterialAssigner final : public IAssignmentFinder {
 
     using VectorHelpers::makeVector4;
     // Neutral curvilinear parameters
-    NeutralCurvilinearTrackParameters start(
-        makeVector4(position, 0), direction, 1, std::nullopt,
-        NeutralParticleHypothesis::geantino());
+    NeutralBoundTrackParameters start =
+        NeutralBoundTrackParameters::createCurvilinear(
+            makeVector4(position, 0), direction, 1, std::nullopt,
+            NeutralParticleHypothesis::geantino());
 
     // Prepare Action list and abort list
     using MaterialSurfaceCollector =

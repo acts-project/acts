@@ -356,10 +356,11 @@ void VolumeMaterialMapper::mapMaterialTrack(
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(
-      makeVector4(mTrack.first.first, 0), mTrack.first.second,
-      1 / mTrack.first.second.norm(), std::nullopt,
-      NeutralParticleHypothesis::geantino());
+  NeutralBoundTrackParameters start =
+      NeutralBoundTrackParameters::createCurvilinear(
+          makeVector4(mTrack.first.first, 0), mTrack.first.second,
+          1 / mTrack.first.second.norm(), std::nullopt,
+          NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
@@ -489,7 +490,7 @@ void VolumeMaterialMapper::mapMaterialTrack(
           sfIter++;
         }
       }
-      rmIter->volume = volIter->volume;
+      rmIter->volume = InteractionVolume(volIter->volume);
       rmIter->intersectionID = currentID;
       rmIter->intersection = rmIter->position;
     }

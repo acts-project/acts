@@ -10,8 +10,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/CylinderContainerBlueprintNode.hpp"
+#include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -24,8 +25,10 @@
 
 #include <fstream>
 #include <random>
+#include <stdexcept>
 #include <utility>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -214,7 +217,9 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::Blueprint;
   using Acts::Experimental::BlueprintNode;
   using Acts::Experimental::BlueprintOptions;
+  using Acts::Experimental::CuboidContainerBlueprintNode;
   using Acts::Experimental::CylinderContainerBlueprintNode;
+  using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
@@ -372,13 +377,51 @@ void addBlueprint(Context& ctx) {
       },
       py::arg("name"), py::arg("direction"));
 
-  auto matNode =
-      py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
-                 std::shared_ptr<MaterialDesignatorBlueprintNode>>(
-          m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<const std::string&>(), "name"_a)
-          .def_property("binning", &MaterialDesignatorBlueprintNode::binning,
-                        &MaterialDesignatorBlueprintNode::setBinning);
+  auto boxNode =
+      py::class_<CuboidContainerBlueprintNode, BlueprintNode,
+                 std::shared_ptr<CuboidContainerBlueprintNode>>(
+          m, "CuboidContainerBlueprintNode")
+          .def(py::init<const std::string&, AxisDirection,
+                        VolumeAttachmentStrategy, VolumeResizeStrategy>(),
+               py::arg("name"), py::arg("direction"),
+               py::arg("attachmentStrategy") = VolumeAttachmentStrategy::Gap,
+               py::arg("resizeStrategy") = VolumeResizeStrategy::Gap)
+          .def_property("attachmentStrategy",
+                        &CuboidContainerBlueprintNode::attachmentStrategy,
+                        &CuboidContainerBlueprintNode::setAttachmentStrategy)
+          .def_property("resizeStrategy",
+                        &CuboidContainerBlueprintNode::resizeStrategy,
+                        &CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property("direction", &CuboidContainerBlueprintNode::direction,
+                        &CuboidContainerBlueprintNode::setDirection);
+
+  addContextManagerProtocol(boxNode);
+
+  addNodeMethods(
+      "CuboidContainer",
+      [](BlueprintNode& self, const std::string& name,
+         AxisDirection direction) {
+        auto cylinder =
+            std::make_shared<CuboidContainerBlueprintNode>(name, direction);
+        self.addChild(cylinder);
+        return cylinder;
+      },
+      py::arg("name"), py::arg("direction"));
+
+  auto matNode = py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
+                            std::shared_ptr<MaterialDesignatorBlueprintNode>>(
+                     m, "MaterialDesignatorBlueprintNode")
+                     .def(py::init<const std::string&>(), "name"_a)
+                     .def("configureFace",
+                          py::overload_cast<CylinderVolumeBounds::Face,
+                                            const ProtoAxis&, const ProtoAxis&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a)
+                     .def("configureFace",
+                          py::overload_cast<CuboidVolumeBounds::Face,
+                                            const ProtoAxis&, const ProtoAxis&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
 
@@ -423,6 +466,45 @@ void addBlueprint(Context& ctx) {
         return child;
       },
       py::arg("name"));
+
+  auto geoIdNode =
+      py::class_<GeometryIdentifierBlueprintNode, BlueprintNode,
+                 std::shared_ptr<GeometryIdentifierBlueprintNode>>(
+          m, "GeometryIdentifierBlueprintNode")
+          .def(py::init<>())
+          .def("setLayerIdTo", &GeometryIdentifierBlueprintNode::setLayerIdTo,
+               py::arg("value"))
+          .def("incrementLayerIds",
+               &GeometryIdentifierBlueprintNode::incrementLayerIds,
+               py::arg("start") = 0)
+          .def("setAllVolumeIdsTo",
+               &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
+               py::arg("value"))
+          // Need to do some massaging to avoid copy issues
+          .def(
+              "sortBy",
+              [](GeometryIdentifierBlueprintNode& self,
+                 const py::function& func) -> GeometryIdentifierBlueprintNode& {
+                if (func.is_none()) {
+                  throw std::invalid_argument(
+                      "sortBy requires a comparison function");
+                }
+                return self.sortBy(
+                    [func](const TrackingVolume& a, const TrackingVolume& b) {
+                      return func(&a, &b).cast<bool>();
+                    });
+              },
+              py::arg("compare"));
+
+  auto geoIdFactory = [](BlueprintNode& self) {
+    auto child = std::make_shared<GeometryIdentifierBlueprintNode>();
+    self.addChild(child);
+    return child;
+  };
+
+  blueprintNode.def("GeometryIdentifier", geoIdFactory)
+      .def("withGeometryIdentifier", geoIdFactory);
+  addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
