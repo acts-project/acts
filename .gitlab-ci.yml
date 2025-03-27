@@ -184,7 +184,7 @@ test_exatrkx_python:
     - python3 --version
     - python3 -c "import acts"
     - pytest -rFsv -k torch --collect-only
-    - pytest -rFsv -k gpu-torch # For now only test torch GPU pipeline
+    - pytest -rFsv -k gpu # For now only test torch GPU pipeline
 
 build_gnn_tensorrt:
   stage: build
