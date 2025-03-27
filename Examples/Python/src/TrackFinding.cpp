@@ -86,7 +86,7 @@ void addTrackFinding(Context& ctx) {
         sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
         collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
         radLengthPerSeed, zAlign, rAlign, sigmaError, maxBlockSize,
-        nTrplPerSpBLimit, nAvgTrplPerSpBLimit, impactMax, deltaZMax, zBinEdges,
+        nTrplPerSpBLimit, nAvgTrplPerSpBLimit, deltaZMax, zBinEdges,
         interactionPointCut, zBinsCustomLooping, useVariableMiddleSPRange,
         deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
         rMinMiddle, rMaxMiddle, binSizeR, seedConfirmation,
