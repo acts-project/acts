@@ -42,9 +42,7 @@ class IAlgorithm : public SequenceElement {
 
   /// Internal execute method forwards to the algorithm execute method as const
   /// @param context The algorithm context
-  ProcessCode internalExecute(const AlgorithmContext& context) final {
-    return execute(context);
-  }
+  ProcessCode internalExecute(const AlgorithmContext& context) final;
 
   /// Initialize the algorithm
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
