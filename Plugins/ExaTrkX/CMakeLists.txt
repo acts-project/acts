@@ -10,6 +10,7 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
         ActsPluginExaTrkX
         PRIVATE src/OnnxEdgeClassifier.cpp src/OnnxMetricLearning.cpp
     )
+    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
@@ -82,7 +83,7 @@ if(ACTS_EXATRKX_ENABLE_ONNX)
         PUBLIC ACTS_EXATRKX_ONNX_BACKEND
     )
 
-    target_link_libraries(ActsPluginExaTrkX PRIVATE OnnxRuntime)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
