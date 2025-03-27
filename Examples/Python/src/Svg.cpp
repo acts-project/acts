@@ -218,7 +218,7 @@ void addSvg(Context& ctx) {
   // Core components, added as an acts.svg submodule
   {
     auto c = py::class_<Svg::Style>(svg, "Style").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::Style);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(fillColor);
     ACTS_PYTHON_MEMBER(fillOpacity);
     ACTS_PYTHON_MEMBER(highlightColor);
@@ -237,7 +237,7 @@ void addSvg(Context& ctx) {
   {
     auto c = py::class_<Svg::SurfaceConverter::Options>(svg, "SurfaceOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::SurfaceConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(style);
     ACTS_PYTHON_MEMBER(templateSurface);
     ACTS_PYTHON_STRUCT_END();
@@ -270,7 +270,7 @@ void addSvg(Context& ctx) {
     auto c = py::class_<Svg::PortalConverter::Options>(svg, "PortalOptions")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::PortalConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(surfaceOptions);
     ACTS_PYTHON_MEMBER(linkLength);
     ACTS_PYTHON_MEMBER(volumeIndices);
@@ -337,14 +337,14 @@ void addSvg(Context& ctx) {
   {
     auto gco = py::class_<Svg::GridConverter::Options>(svg, "GridOptions")
                    .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(gco, Svg::GridConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(gco);
     ACTS_PYTHON_MEMBER(style);
     ACTS_PYTHON_STRUCT_END();
 
     auto isco = py::class_<Svg::IndexedSurfacesConverter::Options>(
                     svg, "IndexedSurfacesOptions")
                     .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(isco, Svg::IndexedSurfacesConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(isco);
     ACTS_PYTHON_MEMBER(gridOptions);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -355,7 +355,7 @@ void addSvg(Context& ctx) {
                  svg, "DetectorVolumeOptions")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::DetectorVolumeConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(portalIndices);
     ACTS_PYTHON_MEMBER(portalOptions);
     ACTS_PYTHON_MEMBER(surfaceOptions);
@@ -399,7 +399,7 @@ void addSvg(Context& ctx) {
 
     auto c = py::class_<Svg::LayerConverter::Options>(svg, "LayerOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::LayerConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(surfaceStyles);
     ACTS_PYTHON_MEMBER(zRange);
@@ -425,7 +425,7 @@ void addSvg(Context& ctx) {
     auto c = py::class_<Svg::TrackingGeometryConverter::Options>(
                  svg, "TrackingGeometryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::TrackingGeometryConverter::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(prefix);
     ACTS_PYTHON_MEMBER(layerOptions);
     ACTS_PYTHON_STRUCT_END();
@@ -444,7 +444,7 @@ void addSvg(Context& ctx) {
                                    &Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_MEMBER(converterOptions);
     ACTS_PYTHON_STRUCT_END();
@@ -460,7 +460,7 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(writerName);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(inputCollection);
@@ -481,7 +481,7 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(writerName);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(inputCollection);

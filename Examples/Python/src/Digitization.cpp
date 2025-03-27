@@ -49,7 +49,7 @@ void addDigitization(Context& ctx) {
 
     auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(outputMeasurements);
     ACTS_PYTHON_MEMBER(outputClusters);
@@ -74,7 +74,7 @@ void addDigitization(Context& ctx) {
     auto cc = py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig")
                   .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(cc, DigiComponentsConfig);
+    ACTS_PYTHON_STRUCT_BEGIN(cc);
     ACTS_PYTHON_MEMBER(geometricDigiConfig);
     ACTS_PYTHON_MEMBER(smearingDigiConfig);
     ACTS_PYTHON_STRUCT_END();
@@ -90,7 +90,7 @@ void addDigitization(Context& ctx) {
 
     dc.def("__call__", &DC::operator());
 
-    ACTS_PYTHON_STRUCT_BEGIN(dc, DC);
+    ACTS_PYTHON_STRUCT_BEGIN(dc);
     ACTS_PYTHON_MEMBER(inputDigiComponents);
     ACTS_PYTHON_MEMBER(compactify);
     ACTS_PYTHON_MEMBER(volumeLayerComponents);

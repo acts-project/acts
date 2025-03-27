@@ -67,7 +67,7 @@ void addDetector(Context& ctx) {
             .def(py::init<const GenericDetector::Config&>());
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, GenericDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(buildLevel);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
@@ -86,7 +86,7 @@ void addDetector(Context& ctx) {
 
     auto c =
         py::class_<TelescopeDetector::Config>(d, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, TelescopeDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(positions);
     ACTS_PYTHON_MEMBER(stereos);
     ACTS_PYTHON_MEMBER(offsets);
@@ -108,7 +108,7 @@ void addDetector(Context& ctx) {
     auto c = py::class_<AlignedDetector::Config, GenericDetector::Config>(
                  d, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, AlignedDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(seed);
     ACTS_PYTHON_MEMBER(iovSize);
     ACTS_PYTHON_MEMBER(flushSize);
@@ -156,7 +156,7 @@ void addDetector(Context& ctx) {
 
     auto volume =
         py::class_<TGeoDetector::Config::Volume>(c, "Volume").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(volume, TGeoDetector::Config::Volume);
+    ACTS_PYTHON_STRUCT_BEGIN(volume);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(binToleranceR);
     ACTS_PYTHON_MEMBER(binTolerancePhi);
@@ -207,7 +207,7 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletVectorBinning",
                std::vector<std::pair<int, Acts::BinningType>>{});
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, TGeoDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(surfaceLogLevel);
     ACTS_PYTHON_MEMBER(layerLogLevel);
     ACTS_PYTHON_MEMBER(volumeLogLevel);

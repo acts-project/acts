@@ -58,7 +58,7 @@ void addExampleAlgorithms(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(inputTracks);
     ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(selectorConfig);
@@ -86,7 +86,7 @@ void addExampleAlgorithms(Context& ctx) {
 
       patchKwargsConstructor(c);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+      ACTS_PYTHON_STRUCT_BEGIN(c);
       ACTS_PYTHON_MEMBER(loc0Min);
       ACTS_PYTHON_MEMBER(loc0Max);
       ACTS_PYTHON_MEMBER(loc1Min);
@@ -129,7 +129,7 @@ void addExampleAlgorithms(Context& ctx) {
 
       c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, EtaBinnedConfig);
+      ACTS_PYTHON_STRUCT_BEGIN(c);
       ACTS_PYTHON_MEMBER(cutSets);
       ACTS_PYTHON_MEMBER(absEtaEdges);
       ACTS_PYTHON_STRUCT_END();

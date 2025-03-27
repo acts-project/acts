@@ -181,7 +181,7 @@ void addFramework(Context& ctx) {
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+  ACTS_PYTHON_STRUCT_BEGIN(c);
   ACTS_PYTHON_MEMBER(skip);
   ACTS_PYTHON_MEMBER(events);
   ACTS_PYTHON_MEMBER(logLevel);
@@ -205,7 +205,7 @@ void addFramework(Context& ctx) {
             return ss.str();
           });
 
-  ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
+  ACTS_PYTHON_STRUCT_BEGIN(fpem);
   ACTS_PYTHON_MEMBER(file);
   ACTS_PYTHON_MEMBER(lines);
   ACTS_PYTHON_MEMBER(type);

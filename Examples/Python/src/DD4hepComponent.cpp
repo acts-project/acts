@@ -41,7 +41,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
             .def_property_readonly("field", &DD4hepDetector::field);
 
     auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, DD4hepDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(dd4hepLogLevel);
     ACTS_PYTHON_MEMBER(xmlFileNames);
@@ -101,7 +101,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
     using Options = Acts::Experimental::DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Options);
+    ACTS_PYTHON_STRUCT_BEGIN(o);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(emulateToGraph);
     ACTS_PYTHON_MEMBER(geoIdGenerator);

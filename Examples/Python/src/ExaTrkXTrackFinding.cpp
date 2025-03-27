@@ -67,7 +67,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
@@ -91,7 +91,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(cut);
@@ -130,7 +130,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(selectedFeatures);
     ACTS_PYTHON_MEMBER(cut);
@@ -153,7 +153,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         "config"_a, "level"_a);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif
@@ -174,7 +174,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
@@ -197,7 +197,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_STRUCT_END();
