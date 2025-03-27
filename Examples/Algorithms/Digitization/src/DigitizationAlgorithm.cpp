@@ -355,11 +355,11 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
       for (std::size_t ib = 0; ib < 2; ++ib) {
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled
-          if (componentChannels[ib].contains(bin[ib])) {
+          if (!componentChannels[ib].contains(bin[ib])) {
             totalWeight[ib] += weight;
             pos[ib] += weight * binningData[ib].center(bin[ib]);
+            componentChannels[ib].insert(bin[ib]);
           }
-          componentChannels[ib].insert(bin[ib]);
         } else {
           totalWeight[ib] += weight;
           pos[ib] += weight * binningData[ib].center(bin[ib]);
