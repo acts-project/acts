@@ -57,7 +57,6 @@ namespace Acts{
                 { const_cont.end() } -> std::same_as<typename ContType_t::const_iterator>;                
                 { const_cont.size() } -> std::same_as<typename ContType_t::size_type>;
                 { const_cont.empty() } -> std::same_as<bool>;
-                // requires StationSpacePointPtr<decltype(std::declval<typename ContType_t::iterator>().operator*())>;
                 requires StationSpacePointPtr<typename ContType_t::value_type>;
             };
 

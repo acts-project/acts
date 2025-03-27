@@ -31,39 +31,42 @@ namespace Acts{
      *      const std::vector<SpVec_t>& strawHits();
      *      const std::vector<SpVec_t>& stripHits();
      *  Each SpVec_t contains all measurements from a particular detector layer   */
-    template <typename MeasurementSorterType>
-    concept StationSpacePointSorter = 
-            StationSpacePointContainer<typename MeasurementSorterType::SpVec_t> &&
-            std::constructible_from<MeasurementSorterType, 
-                                    const typename MeasurementSorterType::SpVec_t&> &&
-        requires(MeasurementSorterType sorter){
+    template <typename Sorter_t, typename SpacePointCont_t >
+    concept StationSpacePointSorter =  StationSpacePointContainer<SpacePointCont_t> &&
+            std::constructible_from<Sorter_t, const SpacePointCont_t&> &&
+        requires(Sorter_t sorter){
             /** @brief Return the straw-hit space point sorted by straw layer */
-            { sorter.strawHits()} -> std::same_as<const std::vector<typename MeasurementSorterType::SpVec_t>& >;
+            { sorter.strawHits()} -> std::same_as<const std::vector<SpacePointCont_t>& >;
             /** @brief Return the strip-hit  space points sorted by detector layer */
-            { sorter.stripHits()} -> std::same_as<const std::vector<typename MeasurementSorterType::SpVec_t>& >;
+            { sorter.stripHits()} -> std::same_as<const std::vector<SpacePointCont_t>& >;
     };
 
     /** @brief The StationSpacePointCalibrator refines the StationsSpacePoints by using the points of closest\
      *         approach to the external track. In case, of the straw measurements, the calibrator further provides
      *          the derivatives of the electron-drift  <-> straw radius relations */
 
-    // template <typename Calibrator_t,
-    //           StationSpacePointContainer UnCalibCont_t,
-    //           StationSpacePointContainer CalibCont_t>
-    //     concept StationSpacePointCalibrator =  requires(const CalibrationContext& ctx,
-    //                                                     Calibrator_t calibrator,
-    //                                                     UnCalibCont_t uncalibSp,
-    //                                                     const Vector3& dir,
-    //                                                 const double time) {
-    //         {calibrator.calibrate(ctx, dir, dir, time, uncalibSp)};
-    // };
+    template <typename Calibrator_t,
+              typename UnCalibCont_t,
+              typename CalibCont_t>
+        concept StationSpacePointCalibrator =  
+            StationSpacePointContainer<UnCalibCont_t> &&
+            StationSpacePointContainer<CalibCont_t> &&
+        requires(const Calibrator_t calibrator,
+                 const UnCalibCont_t& uncalibSp,
+                 const Vector3& trackPos,
+                 const Vector3& trackDir,
+                 const double trackT0,
+                 const CalibrationContext& ctx) {
+            {calibrator.calibrate(ctx, trackPos, trackDir, trackT0, uncalibSp)} -> std::same_as<CalibCont_t>;
+    };
     
-    template <StationSpacePointSorter Sorter_t>
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibCont_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibCont_t> Calibrator_t>
     class StrawChamberLineSeeder{
         public:
-            /** @brief Abbreviation of the uncalibrated hit vectors */
-            using UnCalibHitVec_t = typename Sorter_t::SpVec_t;
-            using UncalibSp_t = typename UnCalibHitVec_t::value_type;
+            using UncalibSp_t = typename UnCalibCont_t::value_type;
             struct Config{
                 /** @brief Cut on the theta angle */
                 std::array<double, 2> thetaRange{0, 179.*UnitConstants::degree};
@@ -110,7 +113,7 @@ namespace Acts{
                 /** @param Initial straight line seed parameters  */
                 ActsVector<6> parameters{ActsVector<6>::Zero()};
                 /** @brief  */
-                UnCalibHitVec_t measurements{};
+                UnCalibCont_t measurements{};
                 /** @brief Iterations to obtain the seed with fast fit */
                 unsigned int nIter{0};
                 /** @brief Seed chi2 */
@@ -119,7 +122,7 @@ namespace Acts{
                 unsigned int nStrawHits{0};
             };
 
-            StrawChamberLineSeeder(const UnCalibHitVec_t& seedHits,
+            StrawChamberLineSeeder(const UnCalibCont_t& seedHits,
                                    Config&& cfg,
                                    std::unique_ptr<const Acts::Logger> logObj);
 
@@ -155,7 +158,7 @@ namespace Acts{
                 /** @brief: Uncertainty on the intercept */
                 double dY0{0.};
                 /** @brief Used hits in the seed */
-                UnCalibHitVec_t seedHits{};
+                UnCalibCont_t seedHits{};
                 /** @brief Vector of radial signs of the valid hits */
                 std::vector<int> solutionSigns{};
                 /** @brief Stringstream output operator */

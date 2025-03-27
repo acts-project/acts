@@ -60,10 +60,13 @@ namespace Acts{
                 return signs;
             }
     }
-    template <StationSpacePointSorter Sorter_t>
-    StrawChamberLineSeeder<Sorter_t>::StrawChamberLineSeeder(const UnCalibHitVec_t& seedHits,
-                                                             Config&& cfg,
-                                                             std::unique_ptr<const Logger> logObj):
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::StrawChamberLineSeeder(const UnCalibCont_t& seedHits,
+                                                                                                  Config&& cfg,
+                                                                                                  std::unique_ptr<const Logger> logObj):
         m_hitLayers{seedHits},
         m_cfg{std::move(cfg)},
         m_logger{std::move(logObj)} {
@@ -73,7 +76,7 @@ namespace Acts{
             ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - Not enough straw layers have been parsed");
             return;
         }
-        if (std::ranges::find_if(m_hitLayers.strawHits(), [this](const UnCalibHitVec_t& vec){
+        if (std::ranges::find_if(m_hitLayers.strawHits(), [this](const UnCalibCont_t& vec){
                 return vec.size() > m_cfg.busyLayerLimit;
             }) != m_hitLayers.strawHits().end()) {
             ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - Detected at least one busy layer with more than "<<m_cfg.busyLayerLimit
@@ -94,14 +97,25 @@ namespace Acts{
             --m_upperLayer;
         }
     }
-
-    template <StationSpacePointSorter Sorter_t>
-    std::optional<typename StrawChamberLineSeeder<Sorter_t>::DriftCircleSeed>
-        StrawChamberLineSeeder<Sorter_t>::generateSeed(const CalibrationContext& ctx) {
+       template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    std::ostream& StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::SeedSolution::print(std::ostream& ostr) const {
+        ostr<<"theta: "<<theta<<" pm "<<dTheta<<", ";
+        ostr<<"Y0: "<<Y0<<" pm "<<dY0<<", ";
+        return ostr;
+    }
+       template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
+        StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::generateSeed(const CalibrationContext& ctx) {
             std::optional<DriftCircleSeed> found{std::nullopt};
             while (m_lowerLayer < m_upperLayer) {
-                const UnCalibHitVec_t& lower = m_hitLayers.strawHits().at(m_lowerLayer);
-                const UnCalibHitVec_t& upper = m_hitLayers.strawHits().at(m_upperLayer);
+                const UnCalibCont_t& lower = m_hitLayers.strawHits().at(m_lowerLayer);
+                const UnCalibCont_t& upper = m_hitLayers.strawHits().at(m_upperLayer);
                 ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" - Layers with hits: "<<m_hitLayers.strawHits().size()
                                 <<" -- next bottom hit: "<<m_lowerLayer<<", hit: "<<m_lowerHitIndex
                                 <<" ("<<lower.size()<<"), topHit " <<m_upperLayer<<", "<<m_upperHitIndex
@@ -117,10 +131,13 @@ namespace Acts{
             }
             return std::nullopt; 
     }
-    template < StationSpacePointSorter Sorter_t>
-    void StrawChamberLineSeeder<Sorter_t>::moveToNextCandidate() {
-        const UnCalibHitVec_t& lower = m_hitLayers.strawHits()[m_lowerLayer];
-        const UnCalibHitVec_t& upper = m_hitLayers.strawHits()[m_upperLayer];
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::moveToNextCandidate() {
+        const UnCalibCont_t& lower = m_hitLayers.strawHits()[m_lowerLayer];
+        const UnCalibCont_t& upper = m_hitLayers.strawHits()[m_upperLayer];
         /// Vary the left-right solutions 
         if (++m_signComboIndex < s_signCombos.size()) {
             return;
@@ -150,12 +167,15 @@ namespace Acts{
         }
     }
      
-    template < StationSpacePointSorter Sorter_t>
-    std::optional<typename StrawChamberLineSeeder< Sorter_t>::DriftCircleSeed>
-        StrawChamberLineSeeder< Sorter_t>::buildSeed(const CalibrationContext& ctx,
-                                                                 const UncalibSp_t& topHit, 
-                                                                 const UncalibSp_t& bottomHit, 
-                                                                 const SignCombo_t& signs) {
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
+        StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::buildSeed(const CalibrationContext& ctx,
+                                                                                           const UncalibSp_t& topHit, 
+                                                                                           const UncalibSp_t& bottomHit, 
+                                                                                           const SignCombo_t& signs) {
         
         // Fetch the signs
         const auto&[signTop, signBot] = signs;
@@ -287,10 +307,13 @@ namespace Acts{
         return candidateSeed;
     }
     
-    template < StationSpacePointSorter Sorter_t>
-    typename StrawChamberLineSeeder< Sorter_t>::SeedFitAuxilliaries
+    template <StationSpacePointContainer UnCalibCont_t,
+    StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+    StationSpacePointContainer CalibSp_t,
+    StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::SeedFitAuxilliaries
     
-    StrawChamberLineSeeder< Sorter_t>::estimateAuxillaries(const DriftCircleSeed& seed) const {
+    StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::estimateAuxillaries(const DriftCircleSeed& seed) const {
 
         SeedFitAuxilliaries aux{};
         /// Seed direction vector
@@ -338,8 +361,11 @@ namespace Acts{
         return aux;
     }
     
-    template <StationSpacePointSorter Sorter_t>
-    void StrawChamberLineSeeder< Sorter_t>::fitDriftCircles(DriftCircleSeed& inSeed) const {
+       template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::fitDriftCircles(DriftCircleSeed& inSeed) const {
 
         const SeedFitAuxilliaries auxVars = estimateAuxillaries(inSeed);
      
@@ -397,8 +423,11 @@ namespace Acts{
         inSeed.parameters[eBoundTheta] = theta;
         inSeed.parameters[eBoundLoc0] = fitY0;       
     }
-    template <StationSpacePointSorter Sorter_t>
-    void StrawChamberLineSeeder< Sorter_t>:: fitDriftCirclesWithT0(const CalibrationContext& ctx, 
+       template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointContainer CalibSp_t,
+              StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>:: fitDriftCirclesWithT0(const CalibrationContext& ctx, 
                                                                    DriftCircleSeed& candidateSeed) const {
 
     }

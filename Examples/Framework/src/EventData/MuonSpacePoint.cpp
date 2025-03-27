@@ -7,6 +7,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include <format>
 namespace ActsExamples{
     using TechField = MuonSpacePoint::MuonId::TechField;
@@ -76,7 +77,8 @@ namespace ActsExamples{
     }
 
     std::ostream& operator<<(const MuonSpacePoint& sp, std::ostream& ostr) {
-        ostr<<"Id: "<<sp.id();
+        ostr<<"Id: "<<sp.id()<<", pos: "<<Acts::toString(sp.localPosition())
+            <<", dir: "<<Acts::toString(sp.sensorDirection());
         return ostr;
     }
     void MuonSpacePoint::defineCoordinates(Acts::Vector3&& pos, Acts::Vector3&& sensorDir) {

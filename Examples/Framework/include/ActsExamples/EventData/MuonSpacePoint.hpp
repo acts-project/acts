@@ -9,8 +9,10 @@
 
 #include "Acts/EventData/StationSpacePoint.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <iostream>
+#include <memory>
 
 namespace ActsExamples{
     /** @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM. 
@@ -102,6 +104,12 @@ namespace ActsExamples{
                     bool m_measEta{false};
                     bool m_measPhi{false};
             };
+            /** @brief Empty default constructor */
+            MuonSpacePoint() = default;
+            /** @brief Copy constructor */
+            MuonSpacePoint(const MuonSpacePoint& other) = default;
+            /** @brief Move constructor */
+            MuonSpacePoint(MuonSpacePoint&& other) = default;
             /** @brief Returns the Identifier of the space point */
             const MuonId& id() const {
                 return m_id;
@@ -182,6 +190,23 @@ namespace ActsExamples{
             LayerVec m_strawHits{};
             LayerVec m_stripHits{};
     };
+
+    class MuonSpacePointCalibrator {
+        public:
+            using UnCalibSpVec_t = MuonSpacePointSorter::SpVec_t;
+            using CalibSpCont_t = std::vector<std::unique_ptr<MuonSpacePoint>>;
+            
+            CalibSpCont_t calibrate(const Acts::CalibrationContext& /*ctx*/,
+                                    const Acts::Vector3& trackPos,
+                                    const Acts::Vector3& trackDir,
+                                    const double trackT0,
+                                    const UnCalibSpVec_t& uncalibSp) const {
+                std::cout<<"Stonjek sei ruhig und zaehle lieber die kieselsteine aufm'm hof"
+                        <<trackPos.x()<<", "<<trackDir.y()<<", "<<trackT0<<", "<<uncalibSp.size()<<std::endl;
+                return CalibSpCont_t{};
+            }
+    };
+
 
     std::ostream& operator<<(std::ostream&ostr, const MuonSpacePoint::MuonId& id);
     std::ostream& operator<<(std::ostream&ostr, const MuonSpacePoint& sp);
