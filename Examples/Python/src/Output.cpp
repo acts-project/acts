@@ -90,7 +90,7 @@ void register_csv_bfield_writer_binding(
                py::arg("config"), py::arg("level"));
   auto c = py::class_<Config>(w, (std::string("Config") + name).c_str())
                .def(py::init<>());
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+  ACTS_PYTHON_STRUCT_BEGIN(c);
   ACTS_PYTHON_MEMBER(fileName);
   ACTS_PYTHON_MEMBER(bField);
   ACTS_PYTHON_MEMBER(range);
@@ -117,7 +117,7 @@ void addOutput(Context& ctx) {
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, ViewConfig);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(visible);
     ACTS_PYTHON_MEMBER(color);
     ACTS_PYTHON_MEMBER(offset);
@@ -153,7 +153,7 @@ void addOutput(Context& ctx) {
                                    &Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(outputScalor);
     ACTS_PYTHON_MEMBER(outputPrecision);
     ACTS_PYTHON_MEMBER(outputDir);
@@ -242,7 +242,7 @@ void addOutput(Context& ctx) {
         .value("xyz", Writer::GridType::xyz);
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(treeName);
     ACTS_PYTHON_MEMBER(fileName);
     ACTS_PYTHON_MEMBER(fileMode);
@@ -265,7 +265,7 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(inputMeasurements);
     ACTS_PYTHON_MEMBER(inputClusters);
     ACTS_PYTHON_MEMBER(inputSimHits);
@@ -298,7 +298,7 @@ void addOutput(Context& ctx) {
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(processSensitives);
     ACTS_PYTHON_MEMBER(processApproaches);
     ACTS_PYTHON_MEMBER(processRepresenting);

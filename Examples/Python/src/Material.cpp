@@ -98,7 +98,7 @@ void addMaterial(Context& ctx) {
     using Config = RootMaterialDecorator::Config;
     auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(voltag);
     ACTS_PYTHON_MEMBER(boutag);
     ACTS_PYTHON_MEMBER(laytag);
@@ -146,7 +146,7 @@ void addMaterial(Context& ctx) {
                  .def(py::init<const Acts::GeometryContext&,
                                const Acts::MagneticFieldContext&>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(inputMaterialTracks);
     ACTS_PYTHON_MEMBER(mappingMaterialCollection);
     ACTS_PYTHON_MEMBER(materialSurfaceMapper);
@@ -174,7 +174,7 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<SurfaceMaterialMapper::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, SurfaceMaterialMapper::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(etaRange);
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(mapperDebugOutput);
@@ -197,7 +197,7 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<VolumeMaterialMapper::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, VolumeMaterialMapper::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(mappingStep);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -227,7 +227,7 @@ void addMaterial(Context& ctx) {
     auto c =
         py::class_<Acts::IntersectionMaterialAssigner::Config>(isma, "Config")
             .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Acts::IntersectionMaterialAssigner::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(surfaces);
     ACTS_PYTHON_MEMBER(trackingVolumes);
     ACTS_PYTHON_MEMBER(detectorVolumes);
@@ -264,7 +264,7 @@ void addMaterial(Context& ctx) {
     auto c =
         py::class_<BinnedSurfaceMaterialAccumulater::Config>(bsma, "Config")
             .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, BinnedSurfaceMaterialAccumulater::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(materialSurfaces);
     ACTS_PYTHON_STRUCT_END();
@@ -281,7 +281,7 @@ void addMaterial(Context& ctx) {
                        py::arg("config"), py::arg("level"));
 
     auto c = py::class_<MaterialMapper::Config>(mm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialMapper::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(assignmentFinder);
     ACTS_PYTHON_MEMBER(surfaceMaterialAccumulater);
     ACTS_PYTHON_STRUCT_END();
@@ -297,7 +297,7 @@ void addMaterial(Context& ctx) {
 
     auto c = py::class_<CoreMaterialMapping::Config>(mmca, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, CoreMaterialMapping::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(inputMaterialTracks);
     ACTS_PYTHON_MEMBER(mappedMaterialTracks);
     ACTS_PYTHON_MEMBER(unmappedMaterialTracks);
@@ -320,7 +320,7 @@ void addMaterial(Context& ctx) {
 
     auto c =
         py::class_<MaterialValidater::Config>(mvc, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialValidater::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(materialAssigner);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -337,7 +337,7 @@ void addMaterial(Context& ctx) {
 
     auto c =
         py::class_<MaterialValidation::Config>(mv, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialValidation::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(ntracks);
     ACTS_PYTHON_MEMBER(startPosition);
     ACTS_PYTHON_MEMBER(phiRange);

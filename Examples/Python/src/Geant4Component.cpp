@@ -112,7 +112,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c1);
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detector);
@@ -135,7 +135,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     py::class_<State>(sm, "State").def(py::init<>());
 
     auto c = py::class_<Config>(sm, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(volumeMappings);
     ACTS_PYTHON_MEMBER(candidateSurfaces);
@@ -196,7 +196,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto c1 = py::class_<Config, Geant4SimulationBase::Config,
                          std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c1);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticles);
     ACTS_PYTHON_MEMBER(outputPropagationSummaries);
@@ -228,7 +228,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto c = py::class_<Config, Geant4SimulationBase::Config,
                         std::shared_ptr<Config>>(alg, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_MEMBER(excludeMaterials);
     ACTS_PYTHON_STRUCT_END();
@@ -247,7 +247,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using Factory = Acts::Geant4DetectorSurfaceFactory;
     auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Factory::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(o);
     ACTS_PYTHON_MEMBER(scaleConversion);
     ACTS_PYTHON_MEMBER(convertMaterial);
     ACTS_PYTHON_MEMBER(convertedMaterialThickness);
@@ -263,7 +263,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def(py::init<const Geant4Detector::Config&>());
 
     auto c = py::class_<Geant4Detector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(g4World);
     ACTS_PYTHON_MEMBER(g4SurfaceOptions);
@@ -279,7 +279,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                  .def(py::init<const GdmlDetector::Config&>());
 
     auto c = py::class_<GdmlDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, GdmlDetector::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(path);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
@@ -361,14 +361,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             .def("drawSector", &MockupSectorBuilder::drawSector);
 
     auto c = py::class_<Config>(ms, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(gdmlPath);
     ACTS_PYTHON_MEMBER(NumberOfSectors);
     ACTS_PYTHON_MEMBER(toleranceOverlap);
     ACTS_PYTHON_STRUCT_END();
 
     auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    ACTS_PYTHON_STRUCT_BEGIN(cch);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(SensitiveNames);
     ACTS_PYTHON_MEMBER(PassiveNames);
@@ -383,7 +383,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                     .def_property_readonly("config", &Tool::config);
 
     auto c = py::class_<Config>(tool, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(gammaCut);
     ACTS_PYTHON_MEMBER(electronCut);
     ACTS_PYTHON_MEMBER(positronCut);

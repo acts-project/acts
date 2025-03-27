@@ -174,7 +174,7 @@ void addNavigation(Context& ctx) {
         py::class_<TryAllNavigationPolicy>(m, "TryAllNavigationPolicy");
     using Config = TryAllNavigationPolicy::Config;
     auto c = py::class_<Config>(tryAll, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(portals);
     ACTS_PYTHON_MEMBER(sensitives);
     ACTS_PYTHON_STRUCT_END();
@@ -219,7 +219,7 @@ void addNavigation(Context& ctx) {
 
     using Config = SurfaceArrayNavigationPolicy::Config;
     auto c = py::class_<Config>(saPolicy, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(layerType);
     ACTS_PYTHON_MEMBER(bins);
     ACTS_PYTHON_STRUCT_END();

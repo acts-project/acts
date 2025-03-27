@@ -81,7 +81,7 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(resolveMaterial);
     ACTS_PYTHON_MEMBER(resolvePassive);
     ACTS_PYTHON_MEMBER(resolveSensitive);
@@ -104,7 +104,7 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(resolveMaterial);
     ACTS_PYTHON_MEMBER(resolvePassive);
     ACTS_PYTHON_MEMBER(resolveSensitive);

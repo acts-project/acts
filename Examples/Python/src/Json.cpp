@@ -76,7 +76,7 @@ void addJson(Context& ctx) {
 
     auto c = py::class_<MaterialMapJsonConverter::Config>(cls, "Config")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, MaterialMapJsonConverter::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(context);
     ACTS_PYTHON_MEMBER(processSensitives);
     ACTS_PYTHON_MEMBER(processApproaches);
@@ -111,7 +111,7 @@ void addJson(Context& ctx) {
     auto c =
         py::class_<JsonMaterialWriter::Config>(cls, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonMaterialWriter::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(converterCfg);
     ACTS_PYTHON_MEMBER(fileName);
     ACTS_PYTHON_MEMBER(writeFormat);
@@ -133,7 +133,7 @@ void addJson(Context& ctx) {
                  .def(py::init<>())
                  .def(py::init<const std::string&>(), py::arg("path"));
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(path);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -156,7 +156,7 @@ void addJson(Context& ctx) {
                                std::pair<double, double>>(),
                       py::arg("refLayers"), py::arg("bins"));
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(refLayers);
     ACTS_PYTHON_MEMBER(bins);
     ACTS_PYTHON_STRUCT_END();
@@ -176,7 +176,7 @@ void addJson(Context& ctx) {
     auto c =
         py::class_<JsonSurfacesWriter::Config>(cls, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, JsonSurfacesWriter::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_MEMBER(outputPrecision);
@@ -208,7 +208,7 @@ void addJson(Context& ctx) {
         py::class_<Acts::JsonSurfacesReader::Options>(m, "SurfaceJsonOptions")
             .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(sjOptions, Acts::JsonSurfacesReader::Options);
+    ACTS_PYTHON_STRUCT_BEGIN(sjOptions);
     ACTS_PYTHON_MEMBER(inputFile);
     ACTS_PYTHON_MEMBER(jsonEntryPath);
     ACTS_PYTHON_STRUCT_END();

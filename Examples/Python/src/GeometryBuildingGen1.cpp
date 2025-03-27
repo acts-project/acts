@@ -54,7 +54,7 @@ void addGeometryBuildingGen1(Context &ctx) {
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, LayerCreator::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(config);
     ACTS_PYTHON_MEMBER(surfaceArrayCreator);
     ACTS_PYTHON_MEMBER(cylinderZtolerance);
     ACTS_PYTHON_MEMBER(cylinderPhiTolerance);
@@ -125,7 +125,7 @@ void addGeometryBuildingGen1(Context &ctx) {
     auto config = py::class_<CylinderVolumeHelper::Config>(helper, "Config")
                       .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, CylinderVolumeHelper::Config);
+    ACTS_PYTHON_STRUCT_BEGIN(config);
     ACTS_PYTHON_MEMBER(layerArrayCreator);
     ACTS_PYTHON_MEMBER(trackingVolumeArrayCreator);
     ACTS_PYTHON_MEMBER(passiveLayerThickness);
