@@ -53,7 +53,7 @@ export DYLD_LIBRARY_PATH="$script_dir/lib:${DYLD_LIBRARY_PATH}"
 echo "POST PATH"
 set +o
 
-activate dependencies if present
+# activate dependencies if present
 if [[ -n "${ROOT_SETUP_SCRIPT:-}" ]]; then
   # Dependency setup script has already given us this location!
   . "$ROOT_SETUP_SCRIPT"
