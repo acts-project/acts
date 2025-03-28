@@ -64,7 +64,9 @@ clang_tidy:
         && ln -sf /usr/bin/clang-18 /usr/bin/clang
         && ln -sf /usr/bin/clang-tidy-18 /usr/bin/clang-tidy
 
-    - source CI/dependencies/setup.sh -c clang++
+    - |
+      CI/dependencies/setup.sh -c clang++ -e .env
+      source .env
 
     - >
         cmake -B build -S .
@@ -114,7 +116,10 @@ build_exatrkx_cpu:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
+
     - cd ..
     - mkdir build
     # Here we only do a minimal build without examples to save resources
@@ -156,7 +161,9 @@ build_exatrkx:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
     - mkdir build
     - >
@@ -187,7 +194,9 @@ test_exatrkx_unittests:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
     - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda)"
 
@@ -211,7 +220,9 @@ test_exatrkx_python:
     - cd src
     - git checkout $HEAD_SHA
     - nvidia-smi
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - source ../build/this_acts_withdeps.sh
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
     - echo $PYTHONPATH
@@ -239,7 +250,9 @@ build_gnn_tensorrt:
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
     - mkdir build
     - >
@@ -280,7 +293,9 @@ build_linux_ubuntu:
 
     - cd ..
 
-    - source src/CI/dependencies/setup.sh -c g++
+    - |
+      src/CI/dependencies/setup.sh -c g++ -e .env
+      source .env
 
     - mkdir build
     - >
@@ -331,7 +346,9 @@ linux_test_examples:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
 
     - geant4-config --install-datasets
@@ -365,7 +382,9 @@ linux_physmon:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - source CI/dependencies/setup.sh -c g++
+    - |
+      CI/dependencies/setup.sh -c g++ -e .env
+      source .env
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
@@ -405,7 +424,9 @@ linux_physmon:
     - git checkout $HEAD_SHA
     - git submodule init
     - git submodule update
-    - source CI/dependencies/setup.sh -c ${CXX}
+    - |
+      CI/dependencies/setup.sh -c ${CXX} -e .env
+      source .env
 
     - cd ..
     - mkdir build

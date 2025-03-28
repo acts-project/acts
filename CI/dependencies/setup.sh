@@ -1,24 +1,10 @@
 #!/bin/bash
-oldstate="$(set +o)"
 set -u
 set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 export SPACK_COLOR=always
-
-function set_env {
-  key="$1"
-  value="$2"
-
-  echo "=> ${key}=${value}"
-
-  if [ -n "${GITHUB_ACTIONS:-}" ]; then
-    echo "${key}=${value}" >> "$GITHUB_ENV"
-  else
-    export "${key}"="${value}"
-  fi
-}
 
 function start_section() {
     local section_name="$1"
@@ -36,7 +22,7 @@ function end_section() {
 }
 
 # Parse command line arguments
-while getopts "c:t:d:h" opt; do
+while getopts "c:t:d:e:h" opt; do
   case ${opt} in
     c )
       compiler=$OPTARG
@@ -47,12 +33,16 @@ while getopts "c:t:d:h" opt; do
     d )
       destination=$OPTARG
       ;;
+    e )
+      env_file=$OPTARG
+      ;;
     h )
       echo "Usage: $0 [-c compiler] [-t tag] [-d destination]"
       echo "Options:"
       echo "  -c <compiler>    Specify compiler (defaults to CXX env var)"
       echo "  -t <tag>         Specify dependency tag (defaults to DEPENDENCY_TAG env var)"
       echo "  -d <destination> Specify install destination (defaults based on CI environment)"
+      echo "  -e <env_file>    Specify environment file to output environments to"
       echo "  -h              Show this help message"
       exit 0
       ;;
@@ -90,6 +80,31 @@ if [ -z "${destination:-}" ]; then
     exit 1
   fi
 fi
+
+if [ -z "${env_file:-}" ]; then
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    env_file="${GITHUB_ENV}"
+  else
+    echo "No destination specified via -d and not running in GitHub Actions"
+    exit 1
+  fi
+fi
+
+export env_file
+
+function set_env {
+  key="$1"
+  value="$2"
+
+  echo "=> ${key}=${value}"
+
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "${key}=${value}" >> "$env_file"
+  else
+    echo "export ${key}=${value}" >> "$env_file"
+  fi
+}
+
 
 
 
@@ -210,5 +225,3 @@ set_env LD_LIBRARY_PATH "${view_dir}/lib"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
 set_env CMAKE_CXX_SCAN_FOR_MODULES "OFF"
 end_section
-
-eval "$oldstate"
