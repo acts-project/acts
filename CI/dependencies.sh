@@ -1,9 +1,9 @@
 #!/bin/bash
 
 function run() {
-    set -x
+    set -xeu
     "$@"
-    { set +x;  } 2> /dev/null
+    { set +xeu;  } 2> /dev/null
 }
 
 function set_env {
