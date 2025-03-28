@@ -8,6 +8,10 @@ endif()
 if(ACTS_EXATRKX_ENABLE_ONNX)
     target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
     target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
+    )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
@@ -72,15 +76,6 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     )
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
-endif()
-
-if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_compile_definitions(
-        ActsPluginExaTrkX
-        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
-    )
-
-    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
