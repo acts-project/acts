@@ -104,6 +104,9 @@ class EventGenerator final : public ActsExamples::IReader {
     std::vector<Generator> generators;
     /// The random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
+
+    bool printListing = false;
+    double spatialVertexThreshold = 1 * Acts::UnitConstants::nm;
   };
 
   EventGenerator(const Config& cfg, Acts::Logging::Level lvl);
@@ -121,6 +124,9 @@ class EventGenerator final : public ActsExamples::IReader {
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
+
+  void convertHepMC3ToInternalEdm(const AlgorithmContext& ctx,
+                                  const HepMC3::GenEvent& genEvent);
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
