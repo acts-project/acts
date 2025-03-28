@@ -136,7 +136,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   if (m_inputNames.size() == 3 && inEdgeFeatures.has_value()) {
     edgeFeatures =
         std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
-    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeFeatures});
+    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
     inputTensors.push_back(torchToOnnx(memoryInfo, *edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
