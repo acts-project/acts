@@ -28,6 +28,10 @@ x86_64-slc6-gcc49-opt
 /cmake_cmd
 /cleanup.sh
 
+#codegen related
+codegen/build/
+codegen/src/codegen.egg-info/
+
 # dont ignore hidden configs
 !.clang-format
 !.github
