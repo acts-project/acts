@@ -10,7 +10,6 @@
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
@@ -159,29 +158,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
-  {
-    using Alg = Acts::OnnxMetricLearning;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "OnnxMetricLearning")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("MetricLearning", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_STRUCT_END();
-  }
   {
     using Alg = Acts::OnnxEdgeClassifier;
     using Config = Alg::Config;
