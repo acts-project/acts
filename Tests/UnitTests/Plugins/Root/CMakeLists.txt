@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsPluginRoot)
+
+add_unittest(RootMaterialTrackPayload RootMaterialTrackPayloadTests.cpp)
