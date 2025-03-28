@@ -286,7 +286,7 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
-          return {cfg};
+          return Acts::TrackSelector(cfg);
         },
         m_cfg.trackSelectorCfg.value());
   }
@@ -420,14 +420,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
 
-    // flag seeds which are covered by the track
-    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
-      if (auto it = discoveredSeeds.find(seedIdentifier);
-          it != discoveredSeeds.end()) {
-        it->second = true;
-      }
-    });
-
     // trim the track if requested
     if (m_cfg.trimTracks) {
       Acts::trimTrack(track, true, true, true, true);
@@ -437,6 +429,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
     if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
       return;
     }
+
+    // flag seeds which are covered by the track
+    visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
+      if (auto it = discoveredSeeds.find(seedIdentifier);
+          it != discoveredSeeds.end()) {
+        it->second = true;
+      }
+    });
 
     ++m_nSelectedTracks;
 
@@ -502,8 +502,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       auto trackCandidate = tracksTemp.makeTrack();
       trackCandidate.copyFrom(firstTrack, true);
 
-      auto firstSmoothingResult =
-          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+      Acts::Result<void> firstSmoothingResult{
+          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -536,10 +536,13 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         }
 
         if (firstMeasurementOpt.has_value()) {
-          auto& firstMeasurement = firstMeasurementOpt.value();
+          TrackContainer::TrackStateProxy firstMeasurement{
+              firstMeasurementOpt.value()};
+          TrackContainer::ConstTrackStateProxy firstMeasurementConst{
+              firstMeasurement};
 
           Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(firstMeasurement);
+              trackCandidate.createParametersFromState(firstMeasurementConst);
 
           if (!secondInitialParameters.referenceSurface().insideBounds(
                   secondInitialParameters.localPosition())) {

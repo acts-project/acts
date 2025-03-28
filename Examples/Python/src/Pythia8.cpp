@@ -20,6 +20,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -50,7 +51,8 @@ void addPythia8(Context& ctx) {
       .def_readwrite("labelSecondaries", &Gen::Config::labelSecondaries)
       .def_readwrite("spatialVertexThreshold",
                      &Gen::Config::spatialVertexThreshold)
-      .def_readwrite("initializationSeed", &Gen::Config::initializationSeed);
+      .def_readwrite("initializationSeed", &Gen::Config::initializationSeed)
+      .def_readwrite("writeHepMC3", &Gen::Config::writeHepMC3);
 
   patchClassesWithConfig(p8);
 }

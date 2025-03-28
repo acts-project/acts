@@ -92,7 +92,7 @@ class BasePropagatorHelper : public BasePropagator {
 template <typename stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
     : public std::conditional_t<
-          SupportsBoundParameters_v<stepper_t, navigator_t>,
+          SupportsBoundParameters_v<stepper_t>,
           detail::BasePropagatorHelper<Propagator<stepper_t, navigator_t>>,
           detail::PropagatorStub> {
   /// Re-define bound track parameters dependent on the stepper
@@ -236,7 +236,7 @@ class Propagator final
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
-  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
+  /// @param [in] createCurvilinear Produce curvilinear parameters at the end of the propagation
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
@@ -246,7 +246,7 @@ class Propagator final
   Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
                                typename propagator_options_t::actor_list_type>>
   propagate(const parameters_t& start, const propagator_options_t& options,
-            bool makeCurvilinear = true) const;
+            bool createCurvilinear = true) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -346,7 +346,7 @@ class Propagator final
   /// This function creates the propagator result object from the propagator
   /// state object. The `result` is passed to pipe a potential error from the
   /// propagation call. The `options` are used to determine the type of the
-  /// result object. The `makeCurvilinear` flag is used to determine if the
+  /// result object. The `createCurvilinear` flag is used to determine if the
   /// result should contain curvilinear track parameters.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
@@ -355,14 +355,14 @@ class Propagator final
   /// @param [in] state Propagator state object
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
-  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
+  /// @param [in] createCurvilinear Produce curvilinear parameters at the end of the propagation
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
   Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
                                typename propagator_options_t::actor_list_type>>
   makeResult(propagator_state_t state, Result<void> result,
-             const propagator_options_t& options, bool makeCurvilinear) const;
+             const propagator_options_t& options, bool createCurvilinear) const;
 
   /// @brief Builds the propagator result object
   ///

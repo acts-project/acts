@@ -40,7 +40,6 @@
 #include "ActsExamples/Io/Root/RootTrackStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 #include "ActsExamples/Io/Root/RootVertexWriter.hpp"
-#include "ActsExamples/Io/Root/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFinderNTupleWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/TrackFitterPerformanceWriter.hpp"
@@ -216,11 +215,6 @@ void addOutput(Context& ctx) {
                              trackSummaryPlotToolConfig);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::SeedingPerformanceWriter, mex, "SeedingPerformanceWriter",
-      inputSeeds, inputMeasurementParticlesMap, inputParticles, filePath,
-      fileMode, effPlotToolConfig, duplicationPlotToolConfig);
-
-  ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrackParameterWriter, mex, "RootTrackParameterWriter",
       inputTrackParameters, inputProtoTracks, inputParticles, inputSimHits,
       inputMeasurementParticlesMap, inputMeasurementSimHitsMap, filePath,
@@ -359,7 +353,8 @@ void addOutput(Context& ctx) {
       ActsExamples::VertexNTupleWriter, mex, "VertexNTupleWriter",
       inputVertices, inputTracks, inputTruthVertices, inputParticles,
       inputSelectedParticles, inputTrackParticleMatching, bField, filePath,
-      treeName, fileMode, vertexMatchThreshold, trackMatchThreshold, useTracks);
+      treeName, fileMode, vertexMatchThreshold, trackMatchThreshold,
+      writeTrackInfo);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

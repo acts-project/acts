@@ -71,6 +71,8 @@ class PyIAlgorithm : public IAlgorithm {
       throw py::type_error("Python algorithm did not conform to interface");
     }
   }
+
+  std::string_view typeName() const override { return "Algorithm"; }
 };
 
 void trigger_divbyzero() {
@@ -114,7 +116,8 @@ void addFramework(Context& ctx) {
                  Acts::getDefaultLogger(name, level));
            }),
            py::arg("level"), py::arg("name") = "WhiteBoard")
-      .def("exists", &WhiteBoard::exists);
+      .def("exists", &WhiteBoard::exists)
+      .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
@@ -133,7 +136,6 @@ void addFramework(Context& ctx) {
       py::class_<ActsExamples::SequenceElement, PySequenceElement,
                  std::shared_ptr<ActsExamples::SequenceElement>>(
           mex, "SequenceElement")
-          .def(py::init_alias<>())
           .def("internalExecute", &SequenceElement::internalExecute)
           .def("name", &SequenceElement::name);
 

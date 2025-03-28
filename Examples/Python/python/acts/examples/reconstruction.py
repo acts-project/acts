@@ -216,16 +216,11 @@ ScoreBasedAmbiguityResolutionConfig = namedtuple(
         "minScore",
         "minScoreSharedTracks",
         "maxShared",
+        "minUnshared",
         "maxSharedTracksPerMeasurement",
-        "pTMax",
-        "pTMin",
-        "phiMax",
-        "phiMin",
-        "etaMax",
-        "etaMin",
-        "useAmbiguityFunction",
+        "useAmbiguityScoring",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 6,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -478,11 +473,35 @@ def addSeeding(
             )
         )
 
+        tracks = "seed-tracks"
+        s.addAlgorithm(
+            acts.examples.PrototracksToTracks(
+                level=logLevel,
+                inputProtoTracks=prototracks,
+                inputTrackParameters="estimatedparameters",
+                inputMeasurements="measurements",
+                outputTracks=tracks,
+            )
+        )
+
+        s.addAlgorithm(
+            acts.examples.TrackTruthMatcher(
+                level=logLevel,
+                inputTracks=tracks,
+                inputParticles=selectedParticles,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputTrackParticleMatching="seed_particle_matching",
+                outputParticleTrackMatching="particle_seed_matching",
+                matchingRatio=1.0,
+                doubleMatching=False,
+            )
+        )
+
         if outputDirRoot is not None:
             addSeedPerformanceWriters(
                 s,
                 outputDirRoot,
-                seeds,
+                tracks,
                 prototracks,
                 selectedParticles,
                 inputParticles,
@@ -641,6 +660,7 @@ def addStandardSeeding(
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
     logLevel: acts.logging.Level = None,
+    outputSeeds: str = "seeds",
 ):
     """adds standard seeding
     For parameters description see addSeeding
@@ -767,7 +787,7 @@ def addStandardSeeding(
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
-        outputSeeds="seeds",
+        outputSeeds=outputSeeds,
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -1141,7 +1161,7 @@ def addGbtsSeeding(
 def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
-    seeds: str,
+    tracks: str,
     prototracks: str,
     selectedParticles: str,
     inputParticles: str,
@@ -1155,12 +1175,13 @@ def addSeedPerformanceWriters(
         outputDirRoot.mkdir()
 
     sequence.addWriter(
-        acts.examples.SeedingPerformanceWriter(
-            level=customLogLevel(minLevel=acts.logging.DEBUG),
-            inputSeeds=seeds,
+        acts.examples.TrackFinderPerformanceWriter(
+            level=customLogLevel(),
+            inputTracks=tracks,
             inputParticles=selectedParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "performance_seeding.root"),
+            inputTrackParticleMatching="seed_particle_matching",
+            inputParticleTrackMatching="particle_seed_matching",
+            filePath=str(outputDirRoot / f"performance_seeding.root"),
         )
     )
 
@@ -1199,6 +1220,8 @@ def addSeedFilterML(
     selectedParticles = "particles_selected"
     seeds = "seeds"
     estParams = "estimatedparameters"
+    prototracks = "seed-prototracks-ML"
+    tracks = "seed-tracks-ML"
 
     filterML = SeedFilterMLAlgorithm(
         level=customLogLevel,
@@ -1217,7 +1240,6 @@ def addSeedFilterML(
     s.addWhiteboardAlias(seeds, "filtered-seeds")
     s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
 
-    prototracks = "seed-prototracks-ML"
     s.addAlgorithm(
         acts.examples.SeedsToPrototracks(
             level=customLogLevel,
@@ -1226,12 +1248,33 @@ def addSeedFilterML(
         )
     )
 
+    s.addAlgorithm(
+        acts.examples.PrototracksToTracks(
+            level=customLogLevel,
+            inputProtoTracks=prototracks,
+            inputTrackParameters="estimatedparameters",
+            outputTracks=tracks,
+        )
+    )
+
+    s.addAlgorithm(
+        acts.examples.TrackTruthMatcher(
+            level=customLogLevel,
+            inputTracks=tracks,
+            inputParticles=selectedParticles,
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputTrackParticleMatching="seed_particle_matching",
+            outputParticleTrackMatching="particle_seed_matching",
+            matchingRatio=1.0,
+            doubleMatching=False,
+        )
+    )
+
     if outputDirRoot is not None:
         addSeedPerformanceWriters(
             s,
             outputDirRoot,
-            seeds,
-            prototracks,
+            tracks,
             selectedParticles,
             inputParticles,
             estParams,
@@ -1434,11 +1477,17 @@ def addCKFTracks(
         )
     )
 
-    overwriteArgs = dict() if len(tslist) == 1 else dict(absEtaMax=None)
-    cutSets = [
-        acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c) | overwriteArgs))
-        for c in tslist
-    ]
+    if len(tslist) > 1:
+        cutSets = []
+        for c in tslist:
+            defKW = trackSelectorDefaultKWArgs(c)
+            defKW.pop("absEtaMax", None)
+            cutSets += [acts.TrackSelector.Config(**(defKW))]
+    else:
+        cutSets = [
+            acts.TrackSelector.Config(**(trackSelectorDefaultKWArgs(c))) for c in tslist
+        ]
+
     if len(tslist) == 0:
         trkSelCfg = None
     elif len(tslist) == 1:
@@ -1923,12 +1972,9 @@ def addScoreBasedAmbiguityResolution(
             minScore=config.minScore,
             minScoreSharedTracks=config.minScoreSharedTracks,
             maxShared=config.maxShared,
+            minUnshared=config.minUnshared,
             maxSharedTracksPerMeasurement=config.maxSharedTracksPerMeasurement,
-            phiMax=config.phiMax,
-            phiMin=config.phiMin,
-            etaMax=config.etaMax,
-            etaMin=config.etaMin,
-            useAmbiguityFunction=config.useAmbiguityFunction,
+            useAmbiguityScoring=config.useAmbiguityScoring,
         ),
     )
     s.addAlgorithm(algScoreBased)
@@ -2066,6 +2112,7 @@ def addVertexFitting(
     spatialBinExtent: Optional[float] = None,
     temporalBinExtent: Optional[float] = None,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
+    writeTrackInfo: bool = False,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -2192,6 +2239,7 @@ def addVertexFitting(
                 inputSelectedParticles=selectedParticles,
                 inputTrackParticleMatching="track_particle_matching",
                 bField=field,
+                writeTrackInfo=writeTrackInfo,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
@@ -2234,7 +2282,6 @@ def addSingleSeedVertexFinding(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                useTracks=False,
                 inputVertices=outputVertices,
                 treeName="seedvertexing",
                 filePath=str(outputDirRoot / "performance_seedvertexing.root"),

@@ -16,7 +16,6 @@
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -78,7 +77,7 @@ static void drawMeasurements(
 }
 
 //// Construct initial track parameters.
-Acts::CurvilinearTrackParameters makeParameters(
+Acts::BoundTrackParameters makeParameters(
     const double x = 0.0_m, const double y = 0.0_m, const double z = 0.0_m,
     const double w = 42_ns, const double phi = 0_degree,
     const double theta = 90_degree, const double p = 2_GeV,
@@ -94,8 +93,8 @@ Acts::CurvilinearTrackParameters makeParameters(
   const Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   const Acts::Vector4 mPos4(x, y, z, w);
-  return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
-                                          Acts::ParticleHypothesis::pion());
+  return Acts::BoundTrackParameters::createCurvilinear(
+      mPos4, phi, theta, q / p, cov, Acts::ParticleHypothesis::pion());
 }
 
 static std::vector<Acts::SourceLink> prepareSourceLinks(
@@ -228,7 +227,7 @@ const MeasurementResolution resPixel = {MeasurementType::eLoc01,
 const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
 const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
 const MeasurementResolutionMap resMapAllPixel = {
-    {Acts::GeometryIdentifier().setVolume(0), resPixel}};
+    {Acts::GeometryIdentifier().withVolume(0), resPixel}};
 
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
@@ -429,13 +428,13 @@ BOOST_AUTO_TEST_CASE(MixedDetector) {
 
   ACTS_DEBUG("Create the measurements");
   const MeasurementResolutionMap resMap = {
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(8), resPixel},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(10), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(12), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(2), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(4), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(6), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(8), resPixel},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(10), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(12), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2).withLayer(14), resPixel},
   };
 
   using SimPropagator =
