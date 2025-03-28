@@ -33,11 +33,7 @@ void addHashing(Context& ctx) {
     using Config = Acts::HashingAlgorithmConfig;
     auto c = py::class_<Config>(hashingModule, "HashingAlgorithmConfig")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(bucketSize);
-    ACTS_PYTHON_MEMBER(zBins);
-    ACTS_PYTHON_MEMBER(phiBins);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, bucketSize, zBins, phiBins);
     patchKwargsConstructor(c);
   }
 
@@ -45,10 +41,7 @@ void addHashing(Context& ctx) {
     using Config = Acts::HashingTrainingConfig;
     auto c = py::class_<Config>(hashingModule, "HashingTrainingConfig")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(annoySeed);
-    ACTS_PYTHON_MEMBER(f);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, annoySeed, f);
     patchKwargsConstructor(c);
   }
 
