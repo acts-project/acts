@@ -71,6 +71,7 @@ if [[ -d "@Geant4_DIR@" ]]; then
 fi
 echo "POST Geant4"
 set +o
+echo "PRE DD4hep"
 if [[ -d "@DD4hep_DIR@" ]]; then
   oldstate="$(set +o)"
   set +e
