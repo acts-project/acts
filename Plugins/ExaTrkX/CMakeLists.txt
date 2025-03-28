@@ -6,10 +6,7 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_sources(
-        ActsPluginExaTrkX
-        PRIVATE src/OnnxEdgeClassifier.cpp src/OnnxMetricLearning.cpp
-    )
+    target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
     target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
 endif()
 
