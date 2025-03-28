@@ -49,22 +49,12 @@ void addDigitization(Context& ctx) {
 
     auto c = py::class_<Config>(a, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(outputMeasurements);
-    ACTS_PYTHON_MEMBER(outputClusters);
-    ACTS_PYTHON_MEMBER(outputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(outputParticleMeasurementsMap);
-    ACTS_PYTHON_MEMBER(outputSimHitMeasurementsMap);
-    ACTS_PYTHON_MEMBER(surfaceByIdentifier);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(doOutputCells);
-    ACTS_PYTHON_MEMBER(doClusterization);
-    ACTS_PYTHON_MEMBER(doMerge);
-    ACTS_PYTHON_MEMBER(minEnergyDeposit);
-    ACTS_PYTHON_MEMBER(digitizationConfigs);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(
+        c, inputSimHits, outputMeasurements, outputClusters,
+        outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
+        outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
+        surfaceByIdentifier, randomNumbers, doOutputCells, doClusterization,
+        doMerge, minEnergyDeposit, digitizationConfigs);
 
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
@@ -74,10 +64,7 @@ void addDigitization(Context& ctx) {
     auto cc = py::class_<DigiComponentsConfig>(mex, "DigiComponentsConfig")
                   .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(cc, DigiComponentsConfig);
-    ACTS_PYTHON_MEMBER(geometricDigiConfig);
-    ACTS_PYTHON_MEMBER(smearingDigiConfig);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(cc, geometricDigiConfig, smearingDigiConfig);
 
     py::class_<DigiConfigContainer>(mex, "DigiConfigContainer")
         .def(py::init<std::vector<
@@ -90,12 +77,8 @@ void addDigitization(Context& ctx) {
 
     dc.def("__call__", &DC::operator());
 
-    ACTS_PYTHON_STRUCT_BEGIN(dc, DC);
-    ACTS_PYTHON_MEMBER(inputDigiComponents);
-    ACTS_PYTHON_MEMBER(compactify);
-    ACTS_PYTHON_MEMBER(volumeLayerComponents);
-    ACTS_PYTHON_MEMBER(outputDigiComponents);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(dc, inputDigiComponents, compactify,
+                       volumeLayerComponents, outputDigiComponents);
   }
 
   {
