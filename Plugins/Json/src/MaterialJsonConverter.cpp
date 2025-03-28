@@ -96,7 +96,7 @@ void convertIndexedGridMaterial(
 
     // If we have a globally indexed map, the material data is loaded elsewhere,
     // locally indexed material vectors are written though
-    const auto& materialAccessor = indexedMaterial->materialAccessorImpl();
+    const auto& materialAccessor = indexedMaterial->materialAccessor();
 
     if constexpr (std::is_same_v<decltype(materialAccessor),
                                  const Acts::IndexedMaterialAccessor&>) {
@@ -111,7 +111,7 @@ void convertIndexedGridMaterial(
     }
     // Write the index grid
     jMaterialAccessor["grid"] =
-        Acts::GridJsonConverter::toJson(indexedMaterial->gridImpl());
+        Acts::GridJsonConverter::toJson(indexedMaterial->grid());
     jMaterial["accessor"] = jMaterialAccessor;
 
     // Global and bound -> grid local

@@ -23,7 +23,9 @@
 
 namespace Acts {
 
-/// @brief  This is an accessor for cases where the material is directly stored
+/// @brief Base class for material accessors, this is needed
+/// for the I/O of the different grid material types, in the actual
+/// implementation the material accessor is a template parameter.
 struct IGridMaterialAccessor {
   virtual ~IGridMaterialAccessor() = default;
 };
@@ -259,11 +261,8 @@ class GridSurfaceMaterialT
     return sl;
   }
 
-  /// @brief Accessor to the grid interface
-  const IGrid& grid() const final { return m_grid; }
-
   /// @brief Accessor to the grid
-  const grid_type& gridImpl() const { return m_grid; }
+  const grid_type& grid() const final { return m_grid; }
 
   // Return a type-erased indexed grid view
   AnyGridView<typename material_accessor_t::grid_value_type> gridView() final {
@@ -278,12 +277,7 @@ class GridSurfaceMaterialT
   }
 
   /// @brief Accessor to the material accessor
-  const IGridMaterialAccessor& materialAccessor() const final {
-    return m_materialAccessor;
-  }
-
-  /// @brief Accessor to the material accessor
-  const material_accessor_type& materialAccessorImpl() const {
+  const material_accessor_type& materialAccessor() const final {
     return m_materialAccessor;
   }
 
@@ -335,91 +329,5 @@ using GloballyIndexedSurfaceMaterial =
 template <typename grid_type>
 using GridSurfaceMaterial =
     GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
-
-/// Create and fill from a single proto axis
-///
-/// @param pAxis the type of the ProtoAxis
-/// @param materialAccessor the material accessor
-/// @param boundToGridLocal the delegate from bound to grid local frame
-/// @param globalToGridLocal the delegate from global into grid local frame
-/// @param payload the grid payload (material slab / indices)
-///
-/// @return a unique pointer to the surface material
-template <typename grid_value_t, typename material_accessor_t>
-std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
-    const ProtoAxis& pAxis, material_accessor_t&& materialAccessor,
-    GridAccess::BoundToGridLocal1DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal1DimDelegate globalToGridLocal,
-    const std::vector<grid_value_t>& payload) {
-  // Visit the axis type and create the grid surface material
-  auto ism = pAxis.getAxis().visit(
-      [&]<typename AxisType>(const AxisType& axis)
-          -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
-        using GridType = Grid<grid_value_t, AxisType>;
-        return std::make_unique<
-            GridSurfaceMaterialT<GridType, material_accessor_t>>(
-            GridType(axis), std::forward<material_accessor_t>(materialAccessor),
-            std::move(boundToGridLocal), std::move(globalToGridLocal));
-      });
-  // Fill it via the grid view
-  AnyGridView<grid_value_t> gv = ism->gridView();
-  auto indices = gv.numLocalBins();
-  for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
-    // Offset comes from overflow/underflow bin
-    gv.atLocalBins({i0 + 1u}) = payload[i0];
-  }
-  return ism;
-}
-
-/// Static creation method for the with ProtoAxis objects
-///
-/// @param pAxis0 proto axis in direction 0
-/// @param pAxis1 proto axis in direction 1
-/// @param materialAccessor the material accessor
-/// @param boundToGridLocal the delegate from bound to grid local frame
-/// @param globalToGridLocal the delegate from global into grid local frame
-/// @param payload the grid payload in 2D (material slab / indices)
-/// the payload has to be column major, i.e. [i0][i1]
-///
-/// @return a unique pointer to the surface material
-template <typename grid_value_t, typename material_accessor_t>
-std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> createGridSurfaceMaterial(
-    const ProtoAxis& pAxis0, const ProtoAxis& pAxis1,
-    material_accessor_t&& materialAccessor,
-    GridAccess::BoundToGridLocal2DimDelegate boundToGridLocal,
-    GridAccess::GlobalToGridLocal2DimDelegate globalToGridLocal,
-    const std::vector<std::vector<grid_value_t>>& payload) {
-  // Validate axis compatibility
-  if (pAxis0.getAxisDirection() == pAxis1.getAxisDirection()) {
-    throw std::invalid_argument(
-        "createGridSurfaceMaterial: ProtoAxes must have different directions");
-  }
-  auto ism = pAxis0.getAxis().visit(
-      [&]<typename AxisTypeA>(const AxisTypeA& axisA)
-          -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
-        return pAxis1.getAxis().visit(
-            [&]<typename AxisTypeB>(const AxisTypeB& axisB)
-                -> std::unique_ptr<IGridSurfaceMaterial<grid_value_t>> {
-              using GridType = Grid<grid_value_t, AxisTypeA, AxisTypeB>;
-              return std::make_unique<
-                  GridSurfaceMaterialT<GridType, material_accessor_t>>(
-                  GridType(axisA, axisB),
-                  std::forward<material_accessor_t>(materialAccessor),
-                  std::move(boundToGridLocal), std::move(globalToGridLocal));
-            });
-      });
-
-  // Fill it via the grid view
-  AnyGridView<grid_value_t> gv = ism->gridView();
-  auto indices = gv.numLocalBins();
-  for (std::size_t i0 = 0; i0 < indices[0]; ++i0) {
-    for (std::size_t i1 = 0; i1 < indices[1]; ++i1) {
-      // Offset comes from overflow/underflow bin
-      gv.atLocalBins({i0 + 1, i1 + 1}) = payload[i0][i1];
-    }
-  }
-
-  return ism;
-}
 
 }  // namespace Acts

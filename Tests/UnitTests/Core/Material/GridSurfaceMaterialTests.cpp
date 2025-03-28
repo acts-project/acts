@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/GridSurfaceMaterial.hpp"
+#include "Acts/Material/GridSurfaceMaterialFactory.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
@@ -157,7 +158,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
   Acts::GridAccess::GlobalToGridLocal1DimDelegate gToX;
   gToX.connect<&GlobalAccessX::g2X>(std::move(globalX));
 
-  auto ismX = Acts::createGridSurfaceMaterial<Acts::MaterialSlab>(
+  auto ismX = Acts::GridSurfaceMaterialFactory::create(
       pAxisX, Acts::GridMaterialAccessor{}, std::move(bToX), std::move(gToX),
       material);
 
@@ -210,7 +211,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
   materialPhi.emplace_back(
       Acts::Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0), 4.0);
 
-  auto ismPhi = Acts::createGridSurfaceMaterial<Acts::MaterialSlab>(
+  auto ismPhi = Acts::GridSurfaceMaterialFactory::create(
       pAxisPhi, Acts::GridMaterialAccessor{}, std::move(bToPhi),
       std::move(gToPhi), materialPhi);
 
@@ -272,7 +273,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   Acts::GridAccess::GlobalToGridLocal2DimDelegate gToXY;
   gToXY.connect<&GlobalAccessXY::g2XY>(std::move(globalXY));
 
-  auto ismXY = Acts::createGridSurfaceMaterial<Acts::MaterialSlab>(
+  auto ismXY = Acts::GridSurfaceMaterialFactory::create(
       pAxisX, pAxisY, Acts::GridMaterialAccessor{}, std::move(bToXY),
       std::move(gToXY), materialXY);
 
@@ -317,7 +318,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   Acts::GridAccess::GlobalToGridLocal2DimDelegate gToZPhi;
   gToZPhi.connect<&GlobalToZPhi::g2ZPhi>(std::move(globalZPhi));
 
-  auto ismZPhi = Acts::createGridSurfaceMaterial<Acts::MaterialSlab>(
+  auto ismZPhi = Acts::GridSurfaceMaterialFactory::create(
       pAxisZ, pAxisPhi, Acts::GridMaterialAccessor{}, std::move(bToZPhi),
       std::move(gToZPhi), materialZPhi);
 
@@ -468,7 +469,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
   Acts::IndexedSurfaceMaterial<EqGrid>::GlobalToGridLocalDelegate gToXidx;
   gToXidx.connect<&GlobalAccessX::g2X>(std::move(globalXidx));
 
-  auto ismXidx = Acts::createGridSurfaceMaterial<std::size_t>(
+  auto ismXidx = Acts::GridSurfaceMaterialFactory::create(
       pAxisX, std::move(indexedAccessor), std::move(bToXidx),
       std::move(gToXidx), indexPayload);
 
@@ -564,7 +565,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
       std::vector<std::size_t>{1u, 1u, 0u, 2u},
       std::vector<std::size_t>{0u, 3u, 3u, 0u}};
 
-  auto ismZPhi = Acts::createGridSurfaceMaterial<std::size_t>(
+  auto ismZPhi = Acts::GridSurfaceMaterialFactory::create(
       pAxisZ, pAxisPhi, Acts::IndexedMaterialAccessor{std::move(materialT2)},
       std::move(bToZPhiT2), std::move(gToZphiT2), indexPayload);
 

@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
       dynamic_cast<const Acts::IndexedSurfaceMaterial<EqGrid>*>(ismRead);
   BOOST_REQUIRE(ismReadTyped != nullptr);
 
-  auto gridRead = ismReadTyped->gridImpl();
+  const auto& gridRead = ismReadTyped->grid();
   BOOST_CHECK(gridRead.atPosition(Point{0.5}) == 1u);  // material 1
   BOOST_CHECK(gridRead.atPosition(Point{1.5}) == 0u);  // vacuum
   BOOST_CHECK(gridRead.atPosition(Point{2.5}) == 2u);  // material 2
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(IndexedSurfaceMaterial1DTests) {
   BOOST_CHECK(gridRead.atPosition(Point{4.5}) == 3u);  // material 3
 
   // Check the accessor is there and the material is filled
-  auto accessorRead = ismReadTyped->materialAccessorImpl();
+  const auto& accessorRead = ismReadTyped->materialAccessor();
 
   auto materialRead = accessorRead.material;
   BOOST_REQUIRE(materialRead.size() == 4);
