@@ -8,6 +8,9 @@
 #pragma once
 
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 namespace ActsExamples{
     /** @brief EDM class to store the result from the HoughTransform pattern finding step. The class takes the 
      *         local line parameters of the transform in the precision direction (tanAlpha, interceptY) if the transform,
@@ -16,43 +19,50 @@ namespace ActsExamples{
      *         Further, the MuonHoughMaximum stores the list of all hits associated with the maximum. */
     class MuonHoughMaximum {
         public:
-            /** @brief Recycle the same Identifier class from the MuonSpacePoint */            
-            using MuonId = MuonSpacePoint::MuonId;
-            using HitVec = MuonSpacePointSorter::SpVec_t;
 
+            using HitVec = std::vector<const MuonSpacePoint*>;
             /** @brief Constructor taking the estimated hough paramters and the associated hits
-             *  @param tanAlpha: Slope of the estimated line in precision direction
+             *  @param tanBeta: Slope of the estimated line in precision direction
              *  @param interceptY: Intercept of the line along the precision direction
              *  @param assocHits: List of hits associated with these parameters */
-            MuonHoughMaximum(const double tanAlpha, const double interceptY, const HitVec& assocHits):
-                m_tanAlpha{tanAlpha}, m_interceptY{interceptY}, m_hits{assocHits}{}
+            MuonHoughMaximum(const double tanBeta, const double interceptY, const HitVec& assocHits):
+                m_tanBeta{tanBeta}, m_interceptY{interceptY}, m_hits{assocHits}{}
             /** @brief Constructor taking the estimated hough parameters from a complementary hough transform
              *        & the associated hits.
-             *  @param tanAlpha: Slope of the estimated line in precision direction
-             *  @param interceptY: Intercept of the line along the precision direction
-             *  @param tanBeta: Slope of the estimate line in the non-bending direction
+             *  @param tanAlpha: Slope of the estimate line in the non-bending direction
              *  @param interceptX: Intercept of the line along the non-bending direction
+             *  @param tanBeta: Slope of the estimated line in precision direction
+             *  @param interceptY: Intercept of the line along the precision direction
              *  @param assocHits: List of hits associated with these parameters */
-            MuonHoughMaximum(const double tanAlpha, const double interceptY, 
-                             const double tanBeta, const double interceptX, 
+            MuonHoughMaximum(const double tanAlpha, const double interceptX, 
+                             const double tanBeta, const double interceptY, 
                              const HitVec& assocHits):
-                m_tanAlpha{tanAlpha}, m_interceptY{interceptY},
-                m_tanBeta{tanBeta}, m_interceptX{interceptX}, m_hits{assocHits}{}
-            /** @brief Return the slope along the precision direction */
+                m_tanAlpha{tanAlpha}, m_interceptX{interceptX},
+                m_tanBeta{tanBeta}, m_interceptY{interceptY}, m_hits{assocHits}{}
+            /** @brief Return the slope along the non-bending direction */
             double tanAlpha() const {return m_tanAlpha; }
-            /** @brief Return slope along the non-bending direction */
+            /** @brief Return slope along the bending direction */
             double tanBeta() const { return m_tanBeta; }
-            /** @brief Return the intercept in the precision plane */
-            double interceptY() const { return m_interceptY; }
             /** @brief Return the intercept in the non-precision plane */
             double interceptX() const { return m_interceptX; }
+            /** @brief Return the intercept in the precision plane */
+            double interceptY() const { return m_interceptY; }
             /** @brief Return the associated hits */
             const HitVec& hits() const { return  m_hits; }
+            /** @brief Returns the track parameters of the seed */
+            Acts::ActsVector<6> trackParameters() const {
+                Acts::ActsVector<6> pars{Acts::ActsVector<6>::Zero()};
+                const Acts::Vector3 dir{Acts::makeDirectionFromAxisTangents(tanAlpha(), tanBeta())};
+                pars[Acts::eBoundLoc0] = interceptX();
+                pars[Acts::eBoundLoc1] = interceptY();
+                pars.block<2,1>(Acts::eBoundPhi,0) = Acts::makePhiThetaFromDirection(dir);
+                return pars;
+            }
         private:
             double m_tanAlpha{0.};
-            double m_interceptY{0.};
-            double m_tanBeta{0.};
             double m_interceptX{0.};
+            double m_tanBeta{0.};
+            double m_interceptY{0.};
             HitVec m_hits{};
     };
 

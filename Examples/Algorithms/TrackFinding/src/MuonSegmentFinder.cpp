@@ -4,6 +4,8 @@
 
 #include "ActsExamples/TrackFinding/MuonSegmentFinder.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsExamples/EventData/MuonSpacePointCalibrator.hpp"
+
 
 
 namespace ActsExamples{
@@ -24,23 +26,29 @@ namespace ActsExamples{
 
 }
 
+
 ProcessCode MuonSegmentFinder::execute( const AlgorithmContext& ctx) const {
   
   const MuonHoughMaxContainer& gotMaxima = m_inputMax(ctx);
   
   using UnCalibSpCont_t = MuonSpacePointCalibrator::UnCalibSpVec_t;
   using CalibSpCont_t = MuonSpacePointCalibrator::CalibSpCont_t;
-
   using StrawSeeder_t = Acts::StrawChamberLineSeeder<UnCalibSpCont_t, MuonSpacePointSorter, CalibSpCont_t,
                                                      MuonSpacePointCalibrator>;
   using SeedCandidate_t = StrawSeeder_t::DriftCircleSeed;
+
+  using SeedParam_t = StrawSeeder_t::SeedParam_t;
   
-  
+  StrawSeeder_t::Config seedCfg{};
   Acts::CalibrationContext calibCtx{ctx};
   for (const MuonHoughMaximum& max : gotMaxima){
-    StrawSeeder_t::Config seedCfg{};
-    StrawSeeder_t seeder{max.hits(), std::move(seedCfg), m_logger->clone()};
-    while (std::optional<SeedCandidate_t> cand = seeder.generateSeed(calibCtx));
+
+    UnCalibSpCont_t hits{};
+    SeedParam_t pars{SeedParam_t::Zero()};
+    StrawSeeder_t seeder{pars, max.hits(), seedCfg, m_logger->clone()};
+    while (std::optional<SeedCandidate_t> cand = seeder.generateSeed(calibCtx)) {
+
+    }
   }
   MuonSegmentContainer outSegments{};
 

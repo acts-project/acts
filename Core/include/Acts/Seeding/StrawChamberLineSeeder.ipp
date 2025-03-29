@@ -41,34 +41,42 @@ namespace Acts{
             const Eigen::Map<const ActsSquareMatrix<2>> cov(strawMeas.covariance().template block<2,2>(0,0).data());
             return std::sqrt(res.dot(cov.inverse()*res));
         }
+        /** @brief Calculates the sign of the straw measurement w.r.t. the segment line. 
+         *         Positive (negative) signs refer that the straw is on the right(left)-hand side
+         * @param linePos: Position of the segment line
+         * @param lineDir: Direction of the segment line
+         * @param strawMeas: Reference to the straw measurement of interest */        
         template<StationSpacePoint UncalibSp_t>
         constexpr int calcStrawSign(const Vector3& linePos,
                                     const Vector3& lineDir,
                                     const UncalibSp_t& strawMeas) {
             return LineHelper::signedDistance(linePos, lineDir, strawMeas.localPosition(), strawMeas.sensorDirection()) > 0 ? 1 : -1;
         }
-        template<StationSpacePointContainer CalibSpCont_t>
+        template<typename UncalibSp_t>
             constexpr std::vector<int> calcStrawSigns(const Vector3& linePos,
                                                       const Vector3& lineDir,
-                                                      const CalibSpCont_t& measVec) {
+                                                      const std::vector<UncalibSp_t>& measVec) {
                 std::vector<int> signs{};
                 signs.reserve(measVec.size());
                 std::ranges::transform(measVec, std::back_inserter(signs),
-                                        [&linePos, &lineDir](const CalibSpCont_t::value_type& straw ){
-                                            return calcStrawSign(linePos, lineDir, *straw);
+                                        [&linePos, &lineDir](const UncalibSp_t& straw ){
+                                            using unwrapped_ref = std::unwrap_reference_t<UncalibSp_t>;
+                                            return calcStrawSign(linePos, lineDir, * static_cast<unwrapped_ref>(straw));
                                         });
                 return signs;
             }
     }
     template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::StrawChamberLineSeeder(const UnCalibCont_t& seedHits,
-                                                                                                  Config&& cfg,
-                                                                                                  std::unique_ptr<const Logger> logObj):
+    StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::StrawChamberLineSeeder(const SeedParam_t& grainSeedPars,
+                                                                                                      const UnCalibCont_t& seedHits,
+                                                                                                      const Config& cfg,
+                                                                                                      std::unique_ptr<const Logger> logObj):
+        m_grainPars{grainSeedPars},
         m_hitLayers{seedHits},
-        m_cfg{std::move(cfg)},
+        m_cfg{cfg},
         m_logger{std::move(logObj)} {
             
         /** The StrawChamberLine needs to have at least 2 straw layers */
@@ -98,20 +106,20 @@ namespace Acts{
         }
     }
        template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    std::ostream& StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::SeedSolution::print(std::ostream& ostr) const {
+    std::ostream& StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::SeedSolution::print(std::ostream& ostr) const {
         ostr<<"theta: "<<theta<<" pm "<<dTheta<<", ";
         ostr<<"Y0: "<<Y0<<" pm "<<dY0<<", ";
         return ostr;
     }
        template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
-        StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::generateSeed(const CalibrationContext& ctx) {
+    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
+        StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::generateSeed(const CalibrationContext& ctx) {
             std::optional<DriftCircleSeed> found{std::nullopt};
             while (m_lowerLayer < m_upperLayer) {
                 const UnCalibCont_t& lower = m_hitLayers.strawHits().at(m_lowerLayer);
@@ -132,10 +140,10 @@ namespace Acts{
             return std::nullopt; 
     }
     template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::moveToNextCandidate() {
+    void StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::moveToNextCandidate() {
         const UnCalibCont_t& lower = m_hitLayers.strawHits()[m_lowerLayer];
         const UnCalibCont_t& upper = m_hitLayers.strawHits()[m_upperLayer];
         /// Vary the left-right solutions 
@@ -168,11 +176,11 @@ namespace Acts{
     }
      
     template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
-        StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::buildSeed(const CalibrationContext& ctx,
+    std::optional<typename StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::DriftCircleSeed>
+        StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::buildSeed(const CalibrationContext& ctx,
                                                                                            const UncalibSp_t& topHit, 
                                                                                            const UncalibSp_t& bottomHit, 
                                                                                            const SignCombo_t& signs) {
@@ -202,26 +210,28 @@ namespace Acts{
         double combDriftUncert{std::sqrt(bottomHit->covariance()(eY, eY) + 
                                          topHit->covariance()(eY, eY))};
 
-
-        candidateSeed.parameters[eBoundLoc0] = y0 / seedDir.z();
+        candidateSeed.parameters[eBoundLoc0] = 
+        candidateSeed.parameters[eBoundLoc1] = y0 / seedDir.z();
         candidateSeed.parameters[eBoundTheta] = theta;
         
         /// Check that the initial estimate of the seed is in range
         if (!detail::inRange(m_cfg.thetaRange, candidateSeed.parameters[eBoundTheta]) ||
-            !detail::inRange(m_cfg.interceptRange, candidateSeed.parameters[eBoundLoc0])) {
+            !detail::inRange(m_cfg.interceptRange, candidateSeed.parameters[eBoundLoc1])) {
             ACTS_VERBOSE(__func__<<"() "<<__LINE__<<" Seed parameters are out of range");
             return std::nullopt;
         }
-        
-        const Vector3 seedPos = candidateSeed.parameters[eBoundLoc0]  * Vector3::UnitY();
+
+        const Vector3 seedPos = candidateSeed.parameters[eBoundLoc1]  * Vector3::UnitY();
 
         assert(std::abs(topPos.y()*seedDir.z() - topPos.z() * seedDir.y() + signTop*topHit->driftRadius() - Y0) < std::numeric_limits<float>::epsilon() );
         ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Candidate seed theta: "<<theta<<", tanTheta: "<<(seedDir.y() / seedDir.z())
-                    <<", y0: "<<candidateSeed.parameters[eBoundLoc0]);
+                    <<", y0: "<<candidateSeed.parameters[eBoundLoc1]);
 
         SeedSolution solCandidate{};
-        solCandidate.Y0 = candidateSeed.parameters[eBoundLoc0];
+        solCandidate.Y0 = candidateSeed.parameters[eBoundLoc1];
         solCandidate.theta = theta;
+        /** Reserve enough memory */
+        solCandidate.seedHits.reserve(2* m_hitLayers.strawHits().size());
         /// d/dx asin(x) = 1 / sqrt(1- x*x)
         const double denomSquare =  1. - std::pow(R / distTubes, 2); 
         if (denomSquare < std::numeric_limits<double>::epsilon()){
@@ -257,70 +267,77 @@ namespace Acts{
                     hadGoodHit = true;
                     solCandidate.seedHits.emplace_back(testMe);
                     ++candidateSeed.nStrawHits;
-                }/// what ever comes after is not matching onto the segment 
+                }/// what ever comes after will be further away from the segment 
                 else if (hadGoodHit) {
                     break;
                 } 
             }
-            /** Reject seeds with too little straw hit association */
-            const unsigned hitCut = std::max(1.*m_cfg.nStrawHitCut, m_cfg.nStrawLayHitCut * m_hitLayers.strawHits().size()); 
-
-            if (1.*candidateSeed.nStrawHits < hitCut) {
-                ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Too few hits associated "<<candidateSeed.nStrawHits
-                          <<", expect at least "<<hitCut<<" hits.");
-                return std::nullopt;
-            }
-             /* Calculate the left-right signs of the used hits */
-            if (m_cfg.overlapCorridor) {
-                solCandidate.solutionSigns = detail::calcStrawSigns(seedPos, seedDir, solCandidate.seedHits);
-                ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Circle solutions for seed - "<<solCandidate);
-                /** Last check whether another seed with the same left-right combination hasn't already been found */
-                for (const SeedSolution& accepted : m_seenSolutions) {
-                    unsigned int nOverlap{0};
-                    std::vector<int> corridor = detail::calcStrawSigns(seedPos, seedDir, accepted.seedHits);
-                    for (unsigned int l =0; l < accepted.seedHits.size(); ++l) {
-                        nOverlap += (corridor[l] == accepted.solutionSigns[l]);
-                    }
-                    /// The seed basically generates a new line that's in he same left-right corridor compared 
-                    /// to a previously found solution. There's no need to return that seed again
-                    if (nOverlap == corridor.size() && accepted.seedHits.size() >= solCandidate.seedHits.size()) {
-                        ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Same set of hits collected within the same corridor.");
-                        return std::nullopt;
-                    }
+        }
+        /** Reject seeds with too little straw hit association */
+        const unsigned hitCut = std::max(1.*m_cfg.nStrawHitCut, m_cfg.nStrawLayHitCut * m_hitLayers.strawHits().size()); 
+        if (1.*candidateSeed.nStrawHits < hitCut) {
+            ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Too few hits associated "<<candidateSeed.nStrawHits
+                        <<", expect at least "<<hitCut<<" hits.");
+            return std::nullopt;
+        }
+        /* Reject seeds that are in the same corridor as previously built seed and don't add any other straw hit*/
+        if (m_cfg.overlapCorridor) {
+            solCandidate.solutionSigns = detail::calcStrawSigns(seedPos, seedDir, solCandidate.seedHits);
+            ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Circle solutions for seed - "<<solCandidate);
+            /** Last check whether another seed with the same left-right combination hasn't already been found */
+            for (const SeedSolution& accepted : m_seenSolutions) {
+                unsigned int nOverlap{0};
+                std::vector<int> corridor = detail::calcStrawSigns(seedPos, seedDir, accepted.seedHits);
+                for (unsigned int l =0; l < accepted.seedHits.size(); ++l) {
+                    nOverlap += (corridor[l] == accepted.solutionSigns[l]);
                 }
-            }
-            /** If we found a long straw hit seed, then ensure that all
-               *  subsequent seeds have at least the same amount of straw hits hits. */
-            if (m_cfg.tightenHitCut) {
-                m_cfg.nStrawHitCut = std::max(m_cfg.nStrawHitCut, candidateSeed.nStrawHits);
-            }
-            ++m_nGenSeeds;
-            
-            if (m_cfg.fastSeedFit) {
-                if (!m_cfg.fastSegFitWithT0) {
-                    fitDriftCircles(candidateSeed);
-                } else {
-                    fitDriftCirclesWithT0(ctx, candidateSeed);
+                /// The seed basically generates a new line that's in he same left-right corridor compared 
+                /// to a previously found solution. There's no need to return that seed again
+                if (nOverlap == corridor.size() && accepted.seedHits.size() >= solCandidate.seedHits.size()) {
+                    ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Same set of hits collected within the same corridor.");
+                    return std::nullopt;
                 }
             }
         }
+
+        /** If we found a long straw hit seed, then ensure that all
+             *  subsequent seeds have at least the same amount of straw hits hits. */
+        if (m_cfg.tightenHitCut) {
+            m_cfg.nStrawHitCut = std::max(m_cfg.nStrawHitCut, candidateSeed.nStrawHits);
+        }
+        /** Increment the counter of the total number of generated seeds */
+        ++m_nGenSeeds;
+        
+        
+        using unwrapped_ref = std::unwrap_reference_t<UncalibSp_t>;
+        for (unwrapped_ref onSeed : solCandidate.seedHits) {
+            // m_cfg.calibrator->calbirate()
+        }
+        if (m_cfg.fastSeedFit) {
+            if (!m_cfg.fastSegFitWithT0) {
+                fitDriftCircles(candidateSeed);
+            } else {
+                fitDriftCirclesWithT0(ctx, candidateSeed);
+            }
+        }
+        
         return candidateSeed;
     }
     
     template <StationSpacePointContainer UnCalibCont_t,
-    StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+    StationSpacePointSorter<UnCalibCont_t> Splitter_t,
     StationSpacePointContainer CalibSp_t,
     StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    typename StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::SeedFitAuxilliaries
+    typename StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::SeedFitAuxilliaries
     
-    StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::estimateAuxillaries(const DriftCircleSeed& seed) const {
+    StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::estimateAuxillaries(const DriftCircleSeed& seed) const {
 
         SeedFitAuxilliaries aux{};
         /// Seed direction vector
         const Vector3 seedDir= makeDirectionFromPhiTheta(90.*UnitConstants::degree,
                                                          seed.parameters[eBoundTheta]);
         /// y0Prime = y0 * cos(theta)
-        const double y0 = seed.parameters[eBoundLoc0] * seedDir.z();
+        const double y0 = seed.parameters[eBoundLoc1] * seedDir.z();
 
         aux.invCovs.reserve(seed.measurements.size());
         aux.driftSigns.reserve(seed.measurements.size());
@@ -361,11 +378,11 @@ namespace Acts{
         return aux;
     }
     
-       template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>::fitDriftCircles(DriftCircleSeed& inSeed) const {
+    void StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::fitDriftCircles(DriftCircleSeed& inSeed) const {
 
         const SeedFitAuxilliaries auxVars = estimateAuxillaries(inSeed);
      
@@ -374,17 +391,9 @@ namespace Acts{
         const double thetaGuess = std::atan2( 2.*(auxVars.T_yz - auxVars.T_rz), auxVars.T_zzyy) / 2.;
 
         ACTS_VERBOSE(__func__<<"() "<<__LINE__<<": Start fast fit seed: "<<theta
-                    <<", guess: "<<thetaGuess<<", y0: "<<inSeed.parameters[eBoundLoc0]
+                    <<", guess: "<<thetaGuess<<", y0: "<<inSeed.parameters[eBoundLoc1]
                     <<", fitY0: "<<auxVars.fitY0<<", centre: "<<toString(auxVars.centerOfGrav));
         
-        /*** Dummy helper struct to conviniently wrap cos & sin */
-        struct sincos{
-            sincos(const double alpha):
-                cs{std::cos(alpha)},
-                sn{std::sin(alpha)}{}
-            double cs{0.};
-            double sn{0.};
-        };
         //// 
         theta = thetaGuess;
         sincos thetaCS{theta};
@@ -421,14 +430,53 @@ namespace Acts{
                    <<inSeed.nIter<<" iterations giving "<<toString(inSeed.parameters)<<", chi2: "
                    <<inSeed.chi2<<" - theta: "<<(theta / UnitConstants::degree)<<", y0: "<<fitY0);
         inSeed.parameters[eBoundTheta] = theta;
-        inSeed.parameters[eBoundLoc0] = fitY0;       
+        inSeed.parameters[eBoundLoc1] = fitY0;       
     }
-       template <StationSpacePointContainer UnCalibCont_t,
-              StationSpacePointSorter<UnCalibCont_t> Sorter_t,
+    
+    template <StationSpacePointContainer UnCalibCont_t,
+    StationSpacePointSorter<UnCalibCont_t> Splitter_t,
+    StationSpacePointContainer CalibSp_t,
+    StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
+    
+    typename StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::SeedFitAuxWithT0 
+    
+    
+    StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::estimateAuxillaries(const CalibrationContext& ctx,
+                                                                                                   const DriftCircleSeed& seed) const {
+        SeedFitAuxWithT0 aux{estimateAuxillaries(seed)};
+        for (const auto& [idx, hit] : Acts::enumerate(seed.measurements)){
+            const double signedCov = aux.driftSigns[idx] * aux.invCovs[idx];
+            const double weight = aux.covNorm * signedCov;
+            const double velocity = m_cfg.calibrator->driftVelocity(ctx, *hit); 
+            const double acceleration = m_cfg.calibrator->driftAcceleration(ctx, *hit);
+            const Vector3 pos = hit->localPosition() - aux.centerOfGrav;
+            aux.fitY0Prime+= weight * velocity;
+            aux.fitY0TwoPrime+= weight * acceleration;
+
+            aux.T_vz += signedCov * pos.z()*velocity;
+            aux.T_vy += signedCov * pos.y()*velocity;
+            aux.T_az += signedCov * pos.z()*acceleration;
+            aux.T_ay += signedCov * pos.y()*acceleration;
+
+            aux.R_vr += signedCov * hit->driftRadius() * velocity;
+            aux.R_va += signedCov * hit->driftRadius() * acceleration;
+            aux.R_vv += signedCov * velocity * velocity;
+        }
+        ACTS_VERBOSE(__func__<<"() - "<<__LINE__<<" Estimated T_vz: "<<aux.T_vz<<", T_vy: "<<aux.T_vy
+                        <<", T_az: "<<aux.T_az<<", T_ay: "<<aux.T_ay<<" --- R_vr: "<<aux.R_vr
+                        <<", R_va: "<<aux.R_va<<", R_vv: "<<aux.R_vv<<" -- Y0^{'}: "<<aux.fitY0Prime
+                        <<", Y0^{''}: "<<aux.fitY0TwoPrime);
+        return aux;
+    }
+
+    
+    
+    template <StationSpacePointContainer UnCalibCont_t,
+              StationSpacePointSorter<UnCalibCont_t> Splitter_t,
               StationSpacePointContainer CalibSp_t,
               StationSpacePointCalibrator<UnCalibCont_t, CalibSp_t> Calibrator_t>
-    void StrawChamberLineSeeder<UnCalibCont_t, Sorter_t, CalibSp_t,Calibrator_t>:: fitDriftCirclesWithT0(const CalibrationContext& ctx, 
-                                                                   DriftCircleSeed& candidateSeed) const {
-
+    void StrawChamberLineSeeder<UnCalibCont_t, Splitter_t, CalibSp_t,Calibrator_t>::fitDriftCirclesWithT0(const CalibrationContext& ctx, 
+                                                                                                         DriftCircleSeed& seed) const {
+        SeedFitAuxWithT0 auxillaries = estimateAuxillaries(ctx, seed);
     }
 }

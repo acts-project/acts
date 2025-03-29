@@ -284,7 +284,7 @@ ProcessCode MuonHoughSeeder::execute(
             std::ranges::copy_if(etaMax.hits(), std::back_inserter(hits), [](const MuonSpacePoint* sp){
                 return !sp->id().measuresPhi();
             });
-            outMaxima.emplace_back(etaMax.interceptY(), etaMax.tanAlpha(), max.x, max.y, std::move(hits));
+            outMaxima.emplace_back(max.x, max.y, etaMax.tanBeta(), etaMax.interceptY(), std::move(hits));
         }
       }
   }
