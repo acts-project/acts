@@ -27,4 +27,14 @@ constexpr auto fastHypot(T... args) {
   return std::sqrt(hypotSquare(args...));
 }
 
+/// @brief Helper struct to calculate sin/cos in one go
+template <typename T>
+struct sincos{
+  sincos(const T alpha):
+      cs{std::cos(alpha)},
+      sn{std::sin(alpha)}{}
+  T cs{0.};
+  T sn{0.};
+};
+
 }  // namespace Acts
