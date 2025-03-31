@@ -251,9 +251,7 @@ void addBlueprint(Context& ctx) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, envelope);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
