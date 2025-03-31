@@ -119,7 +119,7 @@ def clang_format(content):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Generate the particle data table.")
-    p.add_argument("output", type=Path, default=None, help="Output file.")
+    p.add_argument("output", type=Path, nargs="?", default=None, help="Output file.")
     p.add_argument(
         "--format", action="store_true", help="Run clang-format on the output."
     )
