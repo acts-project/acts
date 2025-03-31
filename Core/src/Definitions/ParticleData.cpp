@@ -143,11 +143,8 @@ std::optional<Acts::ParticleData> Acts::findParticleData(PdgParticle pdg) {
       itMass == kParticlesMapMass.end() || itName == kParticlesMapName.end()) {
     return std::nullopt;
   }
-  const auto charge = static_cast<float>(itCharge->second);
-  const auto mass = static_cast<float>(itMass->second);
-  const auto name = itName->second;
 
-  return ParticleData{charge, mass, name};
+  return ParticleData{itCharge->second, itMass->second, itName->second};
 }
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
