@@ -80,12 +80,13 @@ TorchEdgeClassifier::operator()(std::any inNodeFeatures, std::any inEdgeIndex,
   assert(device == torch::Device(torch::kCPU));
 #else
   std::optional<c10::cuda::CUDAGuard> device_guard;
-  // At least under torch 2.3 and below stream guard causes a memory leak I think
-  // We instead just synchronize the stream and use the default torch stream
-  //std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
+  // At least under torch 2.3 and below stream guard causes a memory leak I
+  // think We instead just synchronize the stream and use the default torch
+  // stream
+  // std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (device.is_cuda()) {
     device_guard.emplace(device.index());
-    //streamGuard.emplace(execContext.stream.value());
+    // streamGuard.emplace(execContext.stream.value());
     execContext.stream->synchronize();
   }
 #endif

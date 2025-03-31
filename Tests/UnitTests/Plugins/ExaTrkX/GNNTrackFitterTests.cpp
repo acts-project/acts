@@ -26,10 +26,11 @@ BOOST_AUTO_TEST_CASE(instantiate) {
   std::vector<float> features;
   std::vector<Acts::GeometryIdentifier> geoids;
   std::vector<boost::container::static_vector<Acts::SourceLink, 2>> sls;
-  
+
   Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> exts;
   Acts::GNNTrackFitterCPU<TrackContainer>::Options opts{
-    Acts::GeometryContext{}, Acts::MagneticFieldContext{}, Acts::CalibrationContext{}, exts};
+      Acts::GeometryContext{}, Acts::MagneticFieldContext{},
+      Acts::CalibrationContext{}, exts};
 
   fitter(tracks, candidates, features, geoids, sls, opts);
 }

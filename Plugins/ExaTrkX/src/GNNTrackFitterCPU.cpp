@@ -30,28 +30,54 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
   }
 
   auto getR = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.rIdx) * m_cfg.rScale;
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.rIdx) *
+           m_cfg.rScale;
   };
   auto getZ = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.zIdx) * m_cfg.zScale;
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.zIdx) *
+           m_cfg.zScale;
   };
   auto getPhi = [&](int sp) {
-    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.phiIdx) * m_cfg.phiScale;
+    return spacepointFeatures.at(sp * m_cfg.nFeatures + m_cfg.phiIdx) *
+           m_cfg.phiScale;
   };
   auto getXYZ = [&](int sp) {
     return Acts::Vector3{getR(sp) * std::cos(getPhi(sp)),
                          getR(sp) * std::sin(getPhi(sp)), getZ(sp)};
   };
 
-  ACTS_VERBOSE("Cand idx: " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << t << " "; } return ss.str(); }());
-  ACTS_VERBOSE("Cand r:   " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getR(t) << " "; } return ss.str(); }());
-  ACTS_VERBOSE("Cand phi: " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getPhi(t) << " "; } return ss.str(); }());
-  ACTS_VERBOSE("Cand z:   " << [&](){ std::stringstream ss; for(auto t : candidate) { ss << getZ(t) << " "; } return ss.str(); }());
-  
+  ACTS_VERBOSE("Cand idx: " << [&]() {
+    std::stringstream ss;
+    for (auto t : candidate) {
+      ss << t << " ";
+    }
+    return ss.str();
+  }());
+  ACTS_VERBOSE("Cand r:   " << [&]() {
+    std::stringstream ss;
+    for (auto t : candidate) {
+      ss << getR(t) << " ";
+    }
+    return ss.str();
+  }());
+  ACTS_VERBOSE("Cand phi: " << [&]() {
+    std::stringstream ss;
+    for (auto t : candidate) {
+      ss << getPhi(t) << " ";
+    }
+    return ss.str();
+  }());
+  ACTS_VERBOSE("Cand z:   " << [&]() {
+    std::stringstream ss;
+    for (auto t : candidate) {
+      ss << getZ(t) << " ";
+    }
+    return ss.str();
+  }());
+
   auto tmpCand = candidate;
   std::ranges::sort(
       tmpCand, {}, [&](const auto &t) { return std::hypot(getR(t), getZ(t)); });
-
 
   tmpCand.erase(
       std::unique(tmpCand.begin(), tmpCand.end(),
@@ -105,7 +131,7 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
       return {};
     }
     field = *fieldRes;
-  } catch(std::exception &e) {
+  } catch (std::exception &e) {
     ACTS_ERROR("Field lookup exception: " << e.what());
     return {};
   }
@@ -119,7 +145,8 @@ std::optional<BoundTrackParameters> GNNParametersBuilderCPU::buildParameters(
       Acts::estimateTrackParamsFromSeed(seed[0], seed[1], seed[2], field);
 
   auto surface = m_cfg.tGeometry->findSurface(bottomGeoId);
-  auto boundRes = Acts::transformFreeToBoundParameters(freePars, *surface, gctx);
+  auto boundRes =
+      Acts::transformFreeToBoundParameters(freePars, *surface, gctx);
 
   if (!boundRes.ok()) {
     ACTS_DEBUG("Skip track because of bad parameters");
