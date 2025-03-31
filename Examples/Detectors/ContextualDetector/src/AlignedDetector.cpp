@@ -17,8 +17,7 @@
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
-
-#include <memory>
+#include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 
 namespace ActsExamples {
 
@@ -59,22 +58,25 @@ AlignedDetector::AlignedDetector(const Config& cfg)
     ExternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
-    std::vector<std::vector<std::shared_ptr<ExternallyAlignedDetectorElement>>>
-        specificDetectorStore;
+    auto detectorElementFactory =
+        [this](std::shared_ptr<const Acts::Transform3> transform,
+               std::shared_ptr<const Acts::PlanarBounds> bounds,
+               double thickness,
+               std::shared_ptr<const Acts::ISurfaceMaterial> material)
+        -> std::shared_ptr<GenericDetectorElement> {
+      auto id = m_detectorStore.size();
+      auto detElem = std::make_shared<ExternallyAlignedDetectorElement>(
+          id, transform, bounds, thickness, material);
+      m_detectorStore.push_back(detElem);
+      return detElem;
+    };
 
     m_trackingGeometry =
         Generic::buildDetector<ExternallyAlignedDetectorElement>(
-            m_nominalGeometryContext, specificDetectorStore, m_cfg.buildLevel,
+            m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
             m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
             m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
     agcsConfig.trackingGeometry = m_trackingGeometry;
-
-    // need to upcast to store in this object as well
-    for (auto& lstore : specificDetectorStore) {
-      for (auto& ldet : lstore) {
-        m_detectorStore.push_back(ldet);
-      }
-    }
 
     m_contextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
         std::move(agcsConfig),
@@ -83,11 +85,24 @@ AlignedDetector::AlignedDetector(const Config& cfg)
     InternalAlignmentDecorator::Config agcsConfig;
     fillDecoratorConfig(agcsConfig);
 
+    auto detectorElementFactory =
+        [this](std::shared_ptr<const Acts::Transform3> transform,
+               std::shared_ptr<const Acts::PlanarBounds> bounds,
+               double thickness,
+               std::shared_ptr<const Acts::ISurfaceMaterial> material)
+        -> std::shared_ptr<GenericDetectorElement> {
+      auto id = m_detectorStore.size();
+      auto detElem = std::make_shared<InternallyAlignedDetectorElement>(
+          id, transform, bounds, thickness, material);
+      m_detectorStore.push_back(detElem);
+      return detElem;
+    };
+
     m_trackingGeometry =
         Generic::buildDetector<InternallyAlignedDetectorElement>(
-            m_nominalGeometryContext, agcsConfig.detectorStore,
-            m_cfg.buildLevel, m_cfg.materialDecorator, m_cfg.buildProto,
-            m_cfg.surfaceLogLevel, m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+            m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
+            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
     // need to upcast to store in this object as well
     for (auto& lstore : agcsConfig.detectorStore) {

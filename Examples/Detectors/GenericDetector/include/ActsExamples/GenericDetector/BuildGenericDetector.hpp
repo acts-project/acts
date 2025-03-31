@@ -29,7 +29,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilder.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -89,7 +89,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 /// element, each derivative of a GenericDetectorElement can be used
 ///
 /// @param gctx is the detector element dependent geometry context
-/// @param detectorStore is the store for the detector element
+/// @param detectorElementFactory is the factory for the detector elements
 /// @param matDecorator is an optional decorator for the material
 /// @param level is the detector building level
 ///          0 - pixel barrel only
@@ -105,8 +105,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const Acts::GeometryContext& gctxIn,
-    std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
-        detectorStore,
+    const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
     std::size_t level,
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr,
     bool protoMaterial = false,
@@ -114,8 +113,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     Acts::Logging::Level layerLLevel = Acts::Logging::INFO,
     Acts::Logging::Level volumeLLevel = Acts::Logging::INFO) {
   using namespace Acts::UnitLiterals;
-
-  using ProtoLayerCreator = ProtoLayerCreatorT<detector_element_t>;
 
   //   auto gctx = Acts::GeometryContext::make(gctxIn);
   Acts::GeometryContext gctx{gctxIn};
@@ -251,6 +248,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
   // configure the pixel proto layer builder
   typename ProtoLayerCreator::Config pplConfig;
+  pplConfig.detectorElementFactory = detectorElementFactory;
+
   // standard, an approach envelope
   pplConfig.approachSurfaceEnvelope = 1.;
   // BARREL :
@@ -348,8 +347,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
   // material concentration alsways outside the modules
-  plbConfig.centralProtoLayers =
-      pplCreator.centralProtoLayers(gctx, detectorStore);
+  plbConfig.centralProtoLayers = pplCreator.centralProtoLayers(gctx);
   plbConfig.centralLayerMaterialConcentration = {1, 1, 1, 1};
   plbConfig.centralLayerMaterial = {pCentralMaterial, pCentralMaterial,
                                     pCentralMaterial, pCentralMaterial};
@@ -361,10 +359,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
         pEndcapMaterial, pEndcapMaterial, pEndcapMaterial, pEndcapMaterial,
         pEndcapMaterial, pEndcapMaterial, pEndcapMaterial};
     // negative proto layers
-    plbConfig.negativeProtoLayers =
-        pplCreator.negativeProtoLayers(gctx, detectorStore);
-    plbConfig.positiveProtoLayers =
-        pplCreator.positiveProtoLayers(gctx, detectorStore);
+    plbConfig.negativeProtoLayers = pplCreator.negativeProtoLayers(gctx);
+    plbConfig.positiveProtoLayers = pplCreator.positiveProtoLayers(gctx);
   }
   // define the builder
   auto pixelLayerBuilder = std::make_shared<const LayerBuilder>(
@@ -463,6 +459,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // ----------------------------------------------------------------------------
     // Configure the short strip proto layer builder
     typename ProtoLayerCreator::Config ssplConfig;
+    ssplConfig.detectorElementFactory = detectorElementFactory;
+
     // configure the central barrel
     ssplConfig.centralLayerBinMultipliers = {1, 1};
     ssplConfig.centralLayerRadii = {260., 360., 500., 660.};
@@ -556,17 +554,14 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     sslbConfig.layerCreator = layerCreator;
     sslbConfig.layerIdentification = "SStrip";
 
-    sslbConfig.centralProtoLayers =
-        ssplCreator.centralProtoLayers(gctx, detectorStore);
+    sslbConfig.centralProtoLayers = ssplCreator.centralProtoLayers(gctx);
     sslbConfig.centralLayerMaterialConcentration = {-1, -1, -1, -1};
     sslbConfig.centralLayerMaterial = {ssCentralMaterial, ssCentralMaterial,
                                        ssCentralMaterial, ssCentralMaterial};
 
     if (level > 2) {
-      sslbConfig.negativeProtoLayers =
-          ssplCreator.negativeProtoLayers(gctx, detectorStore);
-      sslbConfig.positiveProtoLayers =
-          ssplCreator.positiveProtoLayers(gctx, detectorStore);
+      sslbConfig.negativeProtoLayers = ssplCreator.negativeProtoLayers(gctx);
+      sslbConfig.positiveProtoLayers = ssplCreator.positiveProtoLayers(gctx);
 
       sslbConfig.posnegLayerMaterialConcentration =
           std::vector<int>(nposnegs, 0);
@@ -638,6 +633,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     // The proto layer creator
     typename ProtoLayerCreator::Config lsplConfig;
+    lsplConfig.detectorElementFactory = detectorElementFactory;
 
     // configure the central barrel
     lsplConfig.centralLayerBinMultipliers = {1, 1};
@@ -726,8 +722,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lslbConfig.layerIdentification = "LStrip";
     lslbConfig.centralLayerMaterialConcentration = {-1, -1};
     lslbConfig.centralLayerMaterial = {lsCentralMaterial, lsCentralMaterial};
-    lslbConfig.centralProtoLayers =
-        lsplCreator.centralProtoLayers(gctx, detectorStore);
+    lslbConfig.centralProtoLayers = lsplCreator.centralProtoLayers(gctx);
 
     if (level > 2) {
       lslbConfig.posnegLayerMaterialConcentration =
@@ -735,10 +730,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
       lslbConfig.posnegLayerMaterial =
           std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>(
               nposnegs, lsEndcapMaterial);
-      lslbConfig.negativeProtoLayers =
-          lsplCreator.negativeProtoLayers(gctx, detectorStore);
-      lslbConfig.positiveProtoLayers =
-          lsplCreator.positiveProtoLayers(gctx, detectorStore);
+      lslbConfig.negativeProtoLayers = lsplCreator.negativeProtoLayers(gctx);
+      lslbConfig.positiveProtoLayers = lsplCreator.positiveProtoLayers(gctx);
     }
 
     // define the builder

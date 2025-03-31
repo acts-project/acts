@@ -18,7 +18,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 namespace ActsExamples::Generic {
 
