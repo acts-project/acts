@@ -104,7 +104,7 @@ void addInput(Context& ctx) {
       outputMeasurementParticlesMap, outputParticleMeasurementsMap,
       outputParticles, onlySpacepoints, onlyPassedParticles, skipOverlapSPsPhi,
       skipOverlapSPsEta, geometryIdMap, trackingGeometry, absBoundaryTolerance,
-      onlySpacepoints, noTruth);
+      onlySpacepoints, noTruth, readCellData);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
                              "RootAthenaDumpGeoIdCollector", treename,

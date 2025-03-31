@@ -344,32 +344,35 @@ RootAthenaDumpReader::readMeasurements(
     const auto [minPhi, maxPhi] = std::minmax_element(phis.begin(), phis.end());
 
     Cluster cluster;
-    cluster.channels.reserve(etas.size());
+    if (m_cfg.readCellData) {
+      cluster.channels.reserve(etas.size());
 
-    cluster.sizeLoc0 = *maxEta - *minEta;
-    cluster.sizeLoc1 = *maxPhi - *minPhi;
+      cluster.sizeLoc0 = *maxEta - *minEta;
+      cluster.sizeLoc1 = *maxPhi - *minPhi;
 
-    if (totalTot == 0.0) {
-      ACTS_VERBOSE("total time over threshold is 0, set all activations to 0");
-      nTotalTotZero++;
-    }
+      if (totalTot == 0.0) {
+        ACTS_VERBOSE(
+            "total time over threshold is 0, set all activations to 0");
+        nTotalTotZero++;
+      }
 
-    for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
-      // Make best out of what we have:
-      // Weight the overall collected charge corresponding to the
-      // time-over-threshold of each cell Use this as activation (does this make
-      // sense?)
-      auto activation =
-          (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
+      for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
+        // Make best out of what we have:
+        // Weight the overall collected charge corresponding to the
+        // time-over-threshold of each cell Use this as activation (does this
+        // make sense?)
+        auto activation =
+            (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
 
-      // This bases every cluster at zero, but shouldn't matter right now
-      ActsFatras::Segmentizer::Bin2D bin;
-      bin[0] = eta - *minEta;
-      bin[1] = phi - *minPhi;
+        // This bases every cluster at zero, but shouldn't matter right now
+        ActsFatras::Segmentizer::Bin2D bin;
+        bin[0] = eta - *minEta;
+        bin[1] = phi - *minPhi;
 
-      // Of course we have no Segment2D because this is not Fatras
-      cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
-                                    activation);
+        // Of course we have no Segment2D because this is not Fatras
+        cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
+                                      activation);
+      }
     }
 
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};

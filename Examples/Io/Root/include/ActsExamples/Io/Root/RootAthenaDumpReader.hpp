@@ -96,6 +96,9 @@ class RootAthenaDumpReader : public IReader {
     /// tolerance should be allowed. If a value above zero is needed, this
     /// indicates that the ACTS surfaces do not 100% include the athena surfaces
     double absBoundaryTolerance = 0.0;
+
+    /// Whether to read cell data
+    bool readCellData = true;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
