@@ -8,9 +8,11 @@
 
 #include "Acts/Definitions/ParticleData.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
@@ -21,56 +23,60 @@
 
 #include "ParticleDataTable.hpp"
 
-namespace {
-
-static constexpr float extractCharge(float value) {
-  // convert three charge to regular charge in native units
-  return (value / 3.0f) * Acts::UnitConstants::e;
-}
-
-static constexpr float extractMass(float value) {
-  return value * Acts::UnitConstants::MeV;
-}
-
-}  // namespace
-
 std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
-  const auto it = kParticlesMapThreeCharge.find(pdg);
-  if (it == kParticlesMapThreeCharge.end()) {
+  if (auto cached = findCached<float, Type::Charge>(pdg, kParticlesMapCharge);
+      cached) {
+    return cached;
+  }
+
+  const auto it = kParticlesMapCharge.find(pdg);
+  if (it == kParticlesMapCharge.end()) {
     return std::nullopt;
   }
-  const auto charge =
-      static_cast<std::int32_t>(kParticlesMapThreeCharge.at(pdg));
-  return extractCharge(charge);
+  return it->second;
 }
 
 std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
-  const auto it = kParticlesMapMassMeV.find(pdg);
-  if (it == kParticlesMapMassMeV.end()) {
+  if (auto cached = findCached<float, Type::Mass>(pdg, kParticlesMapMass);
+      cached) {
+    return cached;
+  }
+
+  const auto it = kParticlesMapMass.find(pdg);
+  if (it == kParticlesMapMass.end()) {
     return std::nullopt;
   }
-  const auto mass = static_cast<float>(kParticlesMapMassMeV.at(pdg));
-  return extractMass(mass);
+  return it->second;
 }
 
 std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
+  if (auto cached =
+          findCached<const char* const, Type::Name>(pdg, kParticlesMapName);
+      cached) {
+    return cached;
+  }
+
   const auto it = kParticlesMapName.find(pdg);
   if (it == kParticlesMapName.end()) {
     return std::nullopt;
   }
-  return kParticlesMapName.at(pdg);
+  return it->second;
 }
 
 std::optional<Acts::ParticleData> Acts::findParticleData(PdgParticle pdg) {
-  const auto it = kParticlesMapThreeCharge.find(pdg);
-  if (it == kParticlesMapThreeCharge.end()) {
+  const auto itCharge = kParticlesMapCharge.find(pdg);
+  const auto itMass = kParticlesMapMass.find(pdg);
+  const auto itName = kParticlesMapName.find(pdg);
+
+  if (itCharge == kParticlesMapCharge.end() ||
+      itMass == kParticlesMapMass.end() || itName == kParticlesMapName.end()) {
     return std::nullopt;
   }
-  const auto charge = static_cast<float>(kParticlesMapThreeCharge.at(pdg));
-  const auto mass = static_cast<float>(kParticlesMapMassMeV.at(pdg));
-  const auto name = kParticlesMapName.at(pdg);
+  const auto charge = static_cast<float>(itCharge->second);
+  const auto mass = static_cast<float>(itMass->second);
+  const auto name = itName->second;
 
-  return ParticleData{extractCharge(charge), extractMass(mass), name};
+  return ParticleData{charge, mass, name};
 }
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
