@@ -49,10 +49,10 @@ class ScopedTimer {
   /// Automatically calculates and logs the duration between construction
   /// and destruction using the specified logger and level.
   ~ScopedTimer() {
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start);
     if (m_logger->doPrint(m_lvl)) {
+      auto end = std::chrono::high_resolution_clock::now();
+      auto duration =
+          std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start);
       std::ostringstream oss;
       oss << m_name << " took " << duration.count() << " ms";
       m_logger->log(m_lvl, oss.str());
