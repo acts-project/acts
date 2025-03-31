@@ -23,6 +23,77 @@
 
 #include "ParticleDataTable.hpp"
 
+namespace {
+
+enum class Type {
+  Charge,
+  Mass,
+  Name,
+};
+
+// Template function depending on the PDG and *type* of data
+// so we can use statically cached values
+template <typename T, Acts::PdgParticle pdg, Type type>
+std::optional<T> findCachedImpl(const std::map<std::int32_t, T>& map) {
+  const static std::optional<T> value = [&map]() -> std::optional<T> {
+    const auto it = map.find(pdg);
+    if (it == map.end()) {
+      return std::nullopt;
+    }
+    return it->second;
+  }();
+
+  return value;
+}
+
+// Cache lookup for particle data
+// Uses a switch statement to map the PDG code to the correct cached value
+template <typename T, Type type>
+std::optional<T> findCached(Acts::PdgParticle pdg,
+                            const std::map<std::int32_t, T>& map) {
+  using enum Acts::PdgParticle;
+  switch (pdg) {
+    case eElectron:
+      return findCachedImpl<T, eElectron, type>(map);
+    case ePositron:
+      return findCachedImpl<T, ePositron, type>(map);
+    case eMuon:
+      return findCachedImpl<T, eMuon, type>(map);
+    case eAntiMuon:
+      return findCachedImpl<T, eAntiMuon, type>(map);
+    case eTau:
+      return findCachedImpl<T, eTau, type>(map);
+    case eAntiTau:
+      return findCachedImpl<T, eAntiTau, type>(map);
+    case eGamma:
+      return findCachedImpl<T, eGamma, type>(map);
+    case ePionZero:
+      return findCachedImpl<T, ePionZero, type>(map);
+    case ePionPlus:
+      return findCachedImpl<T, ePionPlus, type>(map);
+    case ePionMinus:
+      return findCachedImpl<T, ePionMinus, type>(map);
+    case eKaonPlus:
+      return findCachedImpl<T, eKaonPlus, type>(map);
+    case eKaonMinus:
+      return findCachedImpl<T, eKaonMinus, type>(map);
+    case eNeutron:
+      return findCachedImpl<T, eNeutron, type>(map);
+    case eAntiNeutron:
+      return findCachedImpl<T, eAntiNeutron, type>(map);
+    case eProton:
+      return findCachedImpl<T, eProton, type>(map);
+    case eAntiProton:
+      return findCachedImpl<T, eAntiProton, type>(map);
+    case eLead:
+      return findCachedImpl<T, eLead, type>(map);
+    default:
+      return std::nullopt;
+  }
+}
+
+}  // namespace
+
 std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
   if (auto cached = findCached<float, Type::Charge>(pdg, kParticlesMapCharge);
       cached) {
