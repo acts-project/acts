@@ -28,7 +28,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
+#include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 #include <cstddef>
@@ -116,7 +116,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   using namespace Acts::UnitLiterals;
 
   using ProtoLayerCreator = ProtoLayerCreatorT<detector_element_t>;
-  using LayerBuilder = LayerBuilderT<detector_element_t>;
 
   //   auto gctx = Acts::GeometryContext::make(gctxIn);
   Acts::GeometryContext gctx{gctxIn};
