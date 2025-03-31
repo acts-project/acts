@@ -1620,8 +1620,7 @@ class Gx2Fitter {
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");
-        return Experimental::GlobalChiSquareFitterError::
-            UsedUnreachableMeasurements;
+        tipIndex = gx2fResult.lastMeasurementIndex;
       }
     }
 
