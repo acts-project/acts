@@ -35,11 +35,10 @@ class ScopedTimer {
   /// @brief Construct a new Scoped Timer
   ///
   /// @param name Identifier for the timed block
-  /// @param lvl Logging level for the timing output
   /// @param logger Logger instance to use for output
-  explicit ScopedTimer(const std::string& name,
-                       Logging::Level lvl = Logging::Level::INFO,
-                       const Logger& logger = getDummyLogger())
+  /// @param lvl Logging level for the timing output
+  explicit ScopedTimer(const std::string& name, const Logger& logger,
+                       Logging::Level lvl = Logging::Level::INFO)
       : m_name(name), m_lvl(lvl), m_logger(&logger) {
     m_start = std::chrono::high_resolution_clock::now();
   }
