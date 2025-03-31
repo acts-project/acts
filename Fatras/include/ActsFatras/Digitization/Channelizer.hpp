@@ -38,31 +38,20 @@ class Channelizer {
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const Acts::BinUtility& segmentation, double thickness) const {
-    auto driftedSegment = m_surfaceDrift.toReadout(
+    // Drfted surface and scalor 2D to 3D segement    
+    auto [ driftedSegment, dScalor ] = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
-
+    // Applies the surface mask     
     auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-
     if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
     }
-
-    // Now Channelize
+    // Now Channelize, i.e. segments are mapped to the readout grid 
     auto segments =
         m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
-
-    // Go from 2D-path to 3D-path by applying thickness
-    const auto path2D = std::accumulate(
-        segments.begin(), segments.end(), 0.0,
-        [](double sum, const auto& seg) { return sum + seg.activation; });
-
-    for (auto& seg : segments) {
-      auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
-      auto segThickness = r * thickness;
-
-      seg.activation = std::hypot(segThickness, seg.activation);
-    }
-
+    // Apply the drift scaling to the segments
+    std::for_each(segments.begin(), segments.end(),
+                 [dScalor](auto& seg) { seg.activation *= dScalor; });
     return segments;
   }
 };

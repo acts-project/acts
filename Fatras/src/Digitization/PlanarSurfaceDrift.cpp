@@ -12,39 +12,24 @@
 
 #include <cmath>
 
-ActsFatras::PlanarSurfaceDrift::Segment2D
+std::tuple<ActsFatras::PlanarSurfaceDrift::Segment2D, double>
 ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                                           const Acts::Surface& surface,
                                           double thickness,
                                           const Acts::Vector3& pos,
                                           const Acts::Vector3& dir,
-                                          const Acts::Vector3& driftDir) const {
+                                          [[ maybe_unused ]] const Acts::Vector3& driftDir) const {
   // Transform the hit & direction into the local surface frame
   const auto& invTransform = surface.transform(gctx).inverse();
   Acts::Vector2 pos2Local = (invTransform * pos).segment<2>(0);
   Acts::Vector3 seg3Local = invTransform.linear() * dir;
-  // Scale unit direction to the actual segment in the (depletion/drift) zone
-  seg3Local *= thickness / std::cos(Acts::VectorHelpers::theta(seg3Local));
-  // Calculate local entry/exit before drift
+  double scale = thickness / seg3Local.z();
+  seg3Local *= scale;
+
+  Acts::Vector2 seg2Local = seg3Local.segment<2>(0);
   Acts::Vector2 entry = pos2Local - 0.5 * seg3Local.segment<2>(0);
   Acts::Vector2 exit = pos2Local + 0.5 * seg3Local.segment<2>(0);
-  // Actually apply a drift
-  // - dirftDir is assumed in local coordinates
-  if (!driftDir.segment<2>(0).isApprox(Acts::Vector2(0., 0.))) {
-    // Apply the scaled drift
-    auto applyDrift = [&](Acts::Vector2& local) {
-      auto scaledDriftDir =
-          driftDir * thickness / std::cos(Acts::VectorHelpers::theta(driftDir));
-      local += scaledDriftDir.segment<2>(0);
-    };
+  double driftScale = seg3Local.norm() / seg2Local.norm();
 
-    if (driftDir.z() > 0.) {
-      applyDrift(entry);
-    }
-    if (driftDir.z() < 0.) {
-      applyDrift(exit);
-    }
-  }
-
-  return {entry, exit};
+  return { ActsFatras::PlanarSurfaceDrift::Segment2D{entry, exit}, driftScale };
 }

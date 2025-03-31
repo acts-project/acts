@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 
+#include <tuple>
 #include <array>
 #include <functional>
 
@@ -41,7 +42,7 @@ struct PlanarSurfaceDrift {
   ///       or -0.5*depletion
   ///
   /// @return a Segment on the readout surface @note without masking
-  Segment2D toReadout(const Acts::GeometryContext& gctx,
+  std::tuple<Segment2D, double> toReadout(const Acts::GeometryContext& gctx,
                       const Acts::Surface& surface, double thickness,
                       const Acts::Vector3& pos, const Acts::Vector3& dir,
                       const Acts::Vector3& driftdir) const;
