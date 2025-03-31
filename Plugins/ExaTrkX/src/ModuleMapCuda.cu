@@ -93,6 +93,11 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
     const std::vector<std::uint64_t> &moduleIds,
     const ExecutionContext &execContext) {
   auto t0 = std::chrono::high_resolution_clock::now();
+
+  if (moduleIds.empty()) {
+    throw NoEdgesError{};
+  }
+
   const auto nHits = moduleIds.size();
   const auto nFeatures = inputValues.size() / moduleIds.size();
   auto &features = inputValues;
@@ -379,6 +384,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
     ACTS_DEBUG("sum_nb_hits_per_doublet: " << sum_nb_src_hits_per_doublet);
 
+    if (sum_nb_src_hits_per_doublet == 0) {
+      throw NoEdgesError{};
+    }
+
     int *cuda_edge_sum_per_src_hit;
     ACTS_CUDA_CHECK(cudaMallocAsync(
         &cuda_edge_sum_per_src_hit,
@@ -508,6 +517,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     ACTS_CUDA_CHECK(cudaGetLastError());
   }
 
+  if (nb_doublet_edges == 0) {
+    // TODO avoid memory leak
+    throw NoEdgesError{};
+  }
   //---------------------------------------------
   // reduce nb of hits and sort by hid id M2 hits
   //---------------------------------------------
@@ -603,6 +616,9 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
         sizeof(int), cudaMemcpyDeviceToHost, stream));
     ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
     ACTS_DEBUG("nb_src_hits_per_triplet_sum: " << nb_src_hits_per_triplet_sum);
+    if (nb_src_hits_per_triplet_sum == 0) {
+      throw NoEdgesError{};
+    }
 
     dim3 grid_dim_shpt =
         ((nb_src_hits_per_triplet_sum + block_dim.x - 1) / block_dim.x);
@@ -688,6 +704,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
 
   ACTS_DEBUG("nb_graph_edges: " << nb_graph_edges);
+  if (nb_graph_edges == 0) {
+    // TODO avoid memory leak
+    throw NoEdgesError{};
+  }
 
   int *cuda_graph_edge_ptr{};
   cudaMallocAsync(&cuda_graph_edge_ptr, 2 * nb_graph_edges * sizeof(int),
