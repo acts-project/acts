@@ -71,11 +71,10 @@ AlignedDetector::AlignedDetector(const Config& cfg)
       return detElem;
     };
 
-    m_trackingGeometry =
-        Generic::buildDetector<ExternallyAlignedDetectorElement>(
-            m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
-            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    m_trackingGeometry = Generic::buildDetector(
+        m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
+        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
     agcsConfig.trackingGeometry = m_trackingGeometry;
 
     m_contextDecorators.push_back(std::make_shared<ExternalAlignmentDecorator>(
@@ -98,11 +97,10 @@ AlignedDetector::AlignedDetector(const Config& cfg)
       return detElem;
     };
 
-    m_trackingGeometry =
-        Generic::buildDetector<InternallyAlignedDetectorElement>(
-            m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
-            m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-            m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+    m_trackingGeometry = Generic::buildDetector(
+        m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
+        m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
+        m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
 
     // need to upcast to store in this object as well
     for (auto& lstore : agcsConfig.detectorStore) {
