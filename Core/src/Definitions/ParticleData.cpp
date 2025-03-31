@@ -23,34 +23,6 @@
 
 namespace {
 
-// TODO the following functions could be constexpr but we are currently limited
-// by `std::find`
-
-static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
-  auto beg = std::cbegin(kParticlesPdgNumber);
-  auto end = std::cend(kParticlesPdgNumber);
-  // assumes sorted container of pdg numbers
-  auto pos = std::find(beg, end, pdg);
-  if (pos == end) {
-    return std::nullopt;
-  }
-  return std::make_optional(std::distance(beg, pos));
-}
-
-// Find an element within a data column using sorted pdg numbers as the index.
-template <typename ColumnContainer>
-static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
-    -> std::optional<std::decay_t<decltype(column[0])>> {
-  // should be a static_assert, but that seems to fail on LLVM
-  assert((std::size(column) == kParticlesCount) && "Inconsistent column size");
-
-  auto index = findIndexByPdg(pdg);
-  if (!index) {
-    return std::nullopt;
-  }
-  return column[*index];
-}
-
 static constexpr float extractCharge(float value) {
   // convert three charge to regular charge in native units
   return (value / 3.0f) * Acts::UnitConstants::e;
@@ -63,37 +35,42 @@ static constexpr float extractMass(float value) {
 }  // namespace
 
 std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
-  const auto charge =
-      findByPdg(static_cast<std::int32_t>(pdg), kParticlesThreeCharge);
-  if (!charge) {
+  const auto it = kParticlesMapThreeCharge.find(pdg);
+  if (it == kParticlesMapThreeCharge.end()) {
     return std::nullopt;
   }
-  return extractCharge(*charge);
+  const auto charge =
+      static_cast<std::int32_t>(kParticlesMapThreeCharge.at(pdg));
+  return extractCharge(charge);
 }
 
 std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
-  const auto mass =
-      findByPdg(static_cast<std::int32_t>(pdg), kParticlesMassMeV);
-  if (!mass) {
+  const auto it = kParticlesMapMassMeV.find(pdg);
+  if (it == kParticlesMapMassMeV.end()) {
     return std::nullopt;
   }
-  return extractMass(*mass);
+  const auto mass = static_cast<float>(kParticlesMapMassMeV.at(pdg));
+  return extractMass(mass);
 }
 
 std::optional<std::string_view> Acts::findName(Acts::PdgParticle pdg) {
-  return findByPdg(static_cast<std::int32_t>(pdg), kParticlesName);
+  const auto it = kParticlesMapName.find(pdg);
+  if (it == kParticlesMapName.end()) {
+    return std::nullopt;
+  }
+  return kParticlesMapName.at(pdg);
 }
 
 std::optional<Acts::ParticleData> Acts::findParticleData(PdgParticle pdg) {
-  auto index = findIndexByPdg(pdg);
-  if (!index) {
+  const auto it = kParticlesMapThreeCharge.find(pdg);
+  if (it == kParticlesMapThreeCharge.end()) {
     return std::nullopt;
   }
-  ParticleData result;
-  result.charge = extractCharge(kParticlesThreeCharge[*index]);
-  result.mass = extractMass(kParticlesMassMeV[*index]);
-  result.name = kParticlesName[*index];
-  return {};
+  const auto charge = static_cast<float>(kParticlesMapThreeCharge.at(pdg));
+  const auto mass = static_cast<float>(kParticlesMapMassMeV.at(pdg));
+  const auto name = kParticlesMapName.at(pdg);
+
+  return ParticleData{extractCharge(charge), extractMass(mass), name};
 }
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {

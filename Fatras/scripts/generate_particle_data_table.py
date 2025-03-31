@@ -44,19 +44,14 @@ CODE_HEADER = """\
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // The entries within this file have been automatically created using the
-// particle data files from the 2019 edition of the Review of Particle Physics
+// particle data files from Review of Particle Physics
 // by the Berkeley Particle Data Group.
 
 #pragma once
 
 #include <cstdint>
-#include <array>
+#include <map>
 #include <limits>
-
-// Rows within the particle data table are sorted by their signed PDG particle
-// number and are then stored column-wise. Since the PDG particle number column
-// is sorted it can be used to quickly search for the index of a particle
-// within all column arrays.
 
 """
 
@@ -81,19 +76,22 @@ def generate_code(table):
     ]
     # build a separate array for each column
     for i, (variable_name, type_name, value_format) in enumerate(columns):
-        lines.append(
-            f"static const std::array<{type_name}, kParticlesCount> kParticles{variable_name} = {{"
-        )
 
+        lines.append(
+            f"static const std::map<std::int32_t, {type_name}> kParticlesMap{variable_name} = {{"
+        )
         for row in table:
             if i < 3:
                 lines.append(f"// {row[-1]}")
             if row[i] is None and type_name == "float":
-                lines.append("  std::numeric_limits<float>::quiet_NaN(),")
+                lines.append(
+                    f"{{ {row[0]} , std::numeric_limits<float>::quiet_NaN() }},"
+                )
             else:
-                lines.append("  " + value_format.format(row[i]) + ",")
+                lines.append(f"{{ {row[0]}, {value_format.format(row[i])} }},")
 
         lines.append("};")
+
     # ensure we end with a newline
     lines.append("")
     return "\n".join(lines)
