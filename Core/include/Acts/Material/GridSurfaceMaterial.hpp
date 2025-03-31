@@ -57,7 +57,7 @@ struct GridMaterialAccessor : public IGridMaterialAccessor {
   void scale(grid_type& grid, double scale) {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      grid.at(ib).scaleThickness(scale);
+      grid.at(ib).scaleThickness(static_cast<float>(scale));
     }
   }
 };
@@ -93,7 +93,7 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   template <typename grid_type>
   void scale(grid_type& /*grid*/, double scale) {
     for (auto& m : material) {
-      m.scaleThickness(scale);
+      m.scaleThickness(static_cast<float>(scale));
     }
   }
 };
@@ -153,7 +153,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
       auto index = grid.at(ib);
-      (*globalMaterial)[index].scaleThickness(scale);
+      (*globalMaterial)[index].scaleThickness(static_cast<float>(scale));
     }
   }
 };
