@@ -37,8 +37,9 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
     surfaces.push_back(surface.getSharedPtr());
   }
 
-  ACTS_VERBOSE("Number of surfaces passed to the surface array creation: " << surfaces.size());
-  if(surfaces.size() == 0){
+  ACTS_VERBOSE("Number of surfaces passed to the surface array creation: "
+               << surfaces.size());
+  if (surfaces.size() == 0) {
     ACTS_ERROR("The number of surfaces is 0!");
   }
 
