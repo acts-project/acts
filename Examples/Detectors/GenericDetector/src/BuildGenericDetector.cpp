@@ -11,8 +11,9 @@
 #include <cmath>
 #include <numbers>
 
-std::unique_ptr<const Acts::TrackingGeometry>
-ActsExamples::Generic::buildDetector(
+namespace ActsExamples::Generic {
+
+std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const Acts::GeometryContext& gctxIn,
     const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
     std::size_t level,
@@ -683,7 +684,7 @@ ActsExamples::Generic::buildDetector(
 }
 
 /// helper method for cylinder
-std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsCylinder(
+std::vector<Acts::Vector3> modulePositionsCylinder(
     double radius, double zStagger, double moduleHalfLength, double lOverlap,
     const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
@@ -714,8 +715,7 @@ std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsCylinder(
 }
 
 /// helper method for disc
-std::vector<std::vector<Acts::Vector3>>
-ActsExamples::Generic::modulePositionsDisc(
+std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
     const std::vector<std::size_t>& discBinning,
@@ -765,9 +765,10 @@ ActsExamples::Generic::modulePositionsDisc(
 }
 
 /// Helper method for positioning
-std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsRing(
-    double z, double radius, double phiStagger, double phiSubStagger,
-    int nPhiBins) {
+std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
+                                               double phiStagger,
+                                               double phiSubStagger,
+                                               int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
@@ -799,3 +800,5 @@ std::vector<Acts::Vector3> ActsExamples::Generic::modulePositionsRing(
   }
   return rPositions;
 }
+
+}  // namespace ActsExamples::Generic
