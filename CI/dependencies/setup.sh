@@ -223,5 +223,4 @@ set_env ROOT_SETUP_SCRIPT "${view_dir}/bin/thisroot.sh"
 set_env CMAKE_PREFIX_PATH "${venv_dir}:${view_dir}"
 set_env LD_LIBRARY_PATH "${view_dir}/lib"
 set_env ROOT_INCLUDE_PATH "${view_dir}/include"
-set_env CMAKE_CXX_SCAN_FOR_MODULES "OFF"
 end_section
