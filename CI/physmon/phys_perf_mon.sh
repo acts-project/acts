@@ -438,7 +438,7 @@ if [[ "$mode" == "all" || "$mode" == "gx2f" ]]; then
         --config CI/physmon/config/trackfitting_gx2f.yml
 fi
 
-if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
+if [[ "$mode" == "all" || "$mode" == "refit_kf" ]]; then
     run_histcmp \
         $outdir/data/trackrefitting_kf/performance_trackrefitting.root \
         $refdir/trackrefitting_kf/performance_trackrefitting.root \
@@ -448,7 +448,7 @@ if [[ "$mode" == "all" || "$mode" == "kf_refit" ]]; then
         --config CI/physmon/config/trackfitting_kf.yml
 fi
 
-if [[ "$mode" == "all" || "$mode" == "gsf_refit" ]]; then
+if [[ "$mode" == "all" || "$mode" == "refit_gsf" ]]; then
     run_histcmp \
         $outdir/data/trackrefitting_gsf/performance_trackrefitting.root \
         $refdir/trackrefitting_gsf/performance_trackrefitting.root \

@@ -33,7 +33,6 @@
 #include <numeric>
 #include <ostream>
 #include <ratio>
-#include <regex>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -42,22 +41,11 @@
 #include <TROOT.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/core/demangle.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 
 namespace ActsExamples {
 
 namespace {
-
-std::string_view getAlgorithmType(const SequenceElement& element) {
-  if (dynamic_cast<const IWriter*>(&element) != nullptr) {
-    return "Writer";
-  }
-  if (dynamic_cast<const IReader*>(&element) != nullptr) {
-    return "Reader";
-  }
-  return "Algorithm";
-}
 
 // Saturated addition that does not overflow and exceed
 // std::numeric_limits<std::size_t>::max().
@@ -67,31 +55,6 @@ std::size_t saturatedAdd(std::size_t a, std::size_t b) {
   std::size_t res = a + b;
   res |= -static_cast<int>(res < a);
   return res;
-}
-
-/// Shorten some common but lengthy C++ constructs
-std::string demangleAndShorten(std::string name) {
-  name = boost::core::demangle(name.c_str());
-
-  // Remove std::allocator from vector
-  const static std::regex vector_pattern(
-      R"??(std::vector<(.*), std::allocator<(\1\s*)>\s*>)??");
-  name = std::regex_replace(name, vector_pattern, "std::vector<$1>");
-
-  // Shorten Acts::BoundVariantMeasurement
-  const static std::regex variant_pattern(
-      R"??(std::variant<(Acts::Measurement<Acts::BoundIndices, [0-9]ul>(,|)\s+)+>)??");
-  name = std::regex_replace(name, variant_pattern,
-                            "Acts::BoundVariantMeasurement");
-
-  // strip namespaces
-  boost::algorithm::replace_all(name, "std::", "");
-  boost::algorithm::replace_all(name, "boost::container::", "");
-  boost::algorithm::replace_all(name, "Acts::", "");
-  boost::algorithm::replace_all(name, "ActsExamples::", "");
-  boost::algorithm::replace_all(name, "ActsFatras::", "");
-
-  return name;
 }
 
 }  // namespace
@@ -169,91 +132,18 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
   m_sequenceElements.push_back({element});
 
-  std::string elementType{getAlgorithmType(*element)};
-  std::string elementTypeCapitalized = elementType;
-  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
-  ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
-
-  auto symbol = [&](const char* in) {
-    std::string s = demangleAndShorten(in);
-    std::size_t pos = 0;
-    while (pos + 80 < s.size()) {
-      ACTS_INFO("   " + s.substr(pos, pos + 80));
-      pos += 80;
-    }
-    ACTS_INFO("   " + s.substr(pos));
-  };
+  ACTS_INFO("Add " << element->typeName() << " '" << element->name() << "'");
 
   bool valid = true;
 
   for (const auto* handle : element->readHandles()) {
-    if (!handle->isInitialized()) {
-      continue;
-    }
-
-    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
-    symbol(handle->typeInfo().name());
-
-    if (auto it = m_whiteBoardState.find(handle->key());
-        it != m_whiteBoardState.end()) {
-      const auto& source = *it->second;
-      if (!source.isCompatible(*handle)) {
-        ACTS_ERROR("Adding "
-                   << elementType << " " << element->name() << ":"
-                   << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence (source: "
-                   << source.fullName() << "),"
-                   << "\nbut the type will be\n"
-                   << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
-                   << "\nand not\n"
-                   << "'" << demangleAndShorten(handle->typeInfo().name())
-                   << "'");
-        valid = false;
-      }
-    } else {
-      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << " '" << handle->key()
-                           << "' at this point in the sequence."
-                           << "\n   Needed for read data handle '"
-                           << handle->name() << "'");
-      valid = false;
-    }
+    handle->emulate(m_whiteBoardState, m_whiteboardObjectAliases, *m_logger);
   }
 
   if (valid) {  // only record outputs this if we're valid until here
     for (const auto* handle : element->writeHandles()) {
-      if (!handle->isInitialized()) {
-        continue;
-      }
-
-      ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
-      symbol(handle->typeInfo().name());
-
-      if (auto it = m_whiteBoardState.find(handle->key());
-          it != m_whiteBoardState.end()) {
-        const auto& source = *it->second;
-        ACTS_ERROR("White board will already contain key '"
-                   << handle->key() << "'. Source: '" << source.fullName()
-                   << "' (cannot overwrite)");
-        valid = false;
-        break;
-      }
-
-      m_whiteBoardState.emplace(std::pair{handle->key(), handle});
-
-      if (auto it = m_whiteboardObjectAliases.find(handle->key());
-          it != m_whiteboardObjectAliases.end()) {
-        ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
-                           << "'");
-        m_whiteBoardState[it->second] = handle;
-      }
+      handle->emulate(m_whiteBoardState, m_whiteboardObjectAliases, *m_logger);
     }
-  }
-
-  if (!valid) {
-    throw SequenceConfigurationException{};
   }
 }
 
@@ -289,7 +179,7 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
     names.push_back("Decorator:" + decorator->name());
   }
   for (const auto& [algorithm, fpe] : m_sequenceElements) {
-    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+    names.push_back(std::string(algorithm->typeName()) + ":" +
                     algorithm->name());
   }
 
@@ -459,10 +349,9 @@ int Sequencer::run() {
 
   ACTS_VERBOSE("Initialize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
-    ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
-                               << alg->name());
+    ACTS_VERBOSE("Initialize " << alg->typeName() << ": " << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize " << getAlgorithmType(*alg) << ": "
+      ACTS_FATAL("Failed to initialize " << alg->typeName() << ": "
                                          << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
@@ -509,13 +398,15 @@ int Sequencer::run() {
                 context.fpeMonitor = &mon.value();
               }
               StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
+              ACTS_VERBOSE("Execute " << alg->typeName() << ": "
                                       << alg->name());
               if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute " << getAlgorithmType(*alg)
-                                                << ": " << alg->name());
+                ACTS_FATAL("Failed to execute " << alg->typeName() << ": "
+                                                << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
+              ACTS_VERBOSE("Completed " << alg->typeName() << ": "
+                                        << alg->name());
 
               if (mon) {
                 auto& local = fpe.local();
@@ -573,9 +464,9 @@ int Sequencer::run() {
 
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
-    ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
+    ACTS_VERBOSE("Finalize " << alg->typeName() << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
+      ACTS_FATAL("Failed to finalize " << alg->typeName() << ": "
                                        << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
@@ -623,8 +514,7 @@ void Sequencer::fpeReport() const {
       continue;
     }
     ACTS_INFO("-----------------------------------");
-    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
-                                 << alg->name());
+    ACTS_INFO("FPE summary for " << alg->typeName() << ": " << alg->name());
     ACTS_INFO("-----------------------------------");
 
     std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>

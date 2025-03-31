@@ -22,4 +22,8 @@ std::string ActsExamples::IAlgorithm::name() const {
   return m_name;
 }
 
+ProcessCode IAlgorithm::internalExecute(const AlgorithmContext& context) {
+  return execute(context);
+}
+
 }  // namespace ActsExamples
