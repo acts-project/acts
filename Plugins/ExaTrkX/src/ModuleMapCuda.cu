@@ -71,19 +71,22 @@ ModuleMapCuda::ModuleMapCuda(const Config &cfg,
 
   // copy module map to device
   m_cudaModuleMapSize = m_cudaModuleMapDoublet->module_map().size();
-  cudaMalloc(&m_cudaModuleMapKeys, m_cudaModuleMapSize * sizeof(std::uint64_t));
-  cudaMalloc(&m_cudaModuleMapVals, m_cudaModuleMapSize * sizeof(int));
+  ACTS_CUDA_CHECK(cudaMalloc(&m_cudaModuleMapKeys,
+                             m_cudaModuleMapSize * sizeof(std::uint64_t)));
+  ACTS_CUDA_CHECK(
+      cudaMalloc(&m_cudaModuleMapVals, m_cudaModuleMapSize * sizeof(int)));
 
-  cudaMemcpy(m_cudaModuleMapKeys, keys.data(),
-             m_cudaModuleMapSize * sizeof(std::uint64_t),
-             cudaMemcpyHostToDevice);
-  cudaMemcpy(m_cudaModuleMapVals, vals.data(),
-             m_cudaModuleMapSize * sizeof(int), cudaMemcpyHostToDevice);
+  ACTS_CUDA_CHECK(cudaMemcpy(m_cudaModuleMapKeys, keys.data(),
+                             m_cudaModuleMapSize * sizeof(std::uint64_t),
+                             cudaMemcpyHostToDevice));
+  ACTS_CUDA_CHECK(cudaMemcpy(m_cudaModuleMapVals, vals.data(),
+                             m_cudaModuleMapSize * sizeof(int),
+                             cudaMemcpyHostToDevice));
 }
 
 ModuleMapCuda::~ModuleMapCuda() {
-  cudaFree(m_cudaModuleMapKeys);
-  cudaFree(m_cudaModuleMapVals);
+  ACTS_CUDA_CHECK(cudaFree(m_cudaModuleMapKeys));
+  ACTS_CUDA_CHECK(cudaFree(m_cudaModuleMapVals));
 }
 
 namespace {}  // namespace
@@ -710,8 +713,8 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
   }
 
   int *cuda_graph_edge_ptr{};
-  cudaMallocAsync(&cuda_graph_edge_ptr, 2 * nb_graph_edges * sizeof(int),
-                  stream);
+  ACTS_CUDA_CHECK(cudaMallocAsync(&cuda_graph_edge_ptr,
+                                  2 * nb_graph_edges * sizeof(int), stream));
   int *cuda_graph_M1_hits = cuda_graph_edge_ptr;
   int *cuda_graph_M2_hits = cuda_graph_edge_ptr + nb_graph_edges;
 
