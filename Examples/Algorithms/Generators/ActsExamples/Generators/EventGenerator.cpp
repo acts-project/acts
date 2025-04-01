@@ -99,8 +99,10 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
   std::size_t nPrimaryVertices = 0;
   ACTS_VERBOSE("Using " << m_cfg.generators.size() << " generators");
   {
-    Acts::ScopedTimer timer("Generating primary vertices", Acts::Logging::DEBUG,
-                            logger());
+    Acts::AveragingScopedTimer mergeTimer("Merging generator events", logger(),
+                                          Acts::Logging::DEBUG);
+    Acts::AveragingScopedTimer genTimer("Generating primary vertices", logger(),
+                                        Acts::Logging::DEBUG);
 
     for (std::size_t iGenerate = 0; iGenerate < m_cfg.generators.size();
          ++iGenerate) {
@@ -113,6 +115,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
       std::size_t multiplicity = (*generate.multiplicity)(rng);
       ACTS_VERBOSE("Generating " << multiplicity << " primary vertices");
       for (std::size_t n = multiplicity; 0 < n; --n) {
+        std::optional sample{genTimer.sample()};
         nPrimaryVertices += 1;
 
         // generate primary vertex position
@@ -149,6 +152,8 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
                             return ss.str();
                           }());
         }
+        sample.reset();                       // reset the gen timer
+        sample.emplace(mergeTimer.sample());  // start the merge timer
 
         particles.clear();
         particles.reserve(genEvent->particles_size());
