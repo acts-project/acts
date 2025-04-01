@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/HoughTransformUtils.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsExamples/EventData/DriftCircle.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/MuonHoughMaximum.hpp"
+#include "ActsExamples/EventData/MuonSegment.hpp"
+#include "ActsExamples/EventData/MuonSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -22,14 +23,10 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
 #include "TCanvas.h"
-#include "TH2D.h"
-#include "TMarker.h"
-#include "TStyle.h"
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -48,8 +45,14 @@ class MuonHoughSeeder final : public IAlgorithm {
  public:
   /// config
   struct Config {
-    std::string inSimHits;
-    std::string inDriftCircles;
+    std::string inTruthSegments{};
+    std::string inSpacePoints{};
+    std::string outHoughMax{};
+
+    /** @brief Extra margin added to both y-sides of the eta-hough accumulator plane */
+    double etaPlaneMarginIcept{10. * Acts::UnitConstants::cm};
+    /** @brief Extra margin added to both y-sides of the phi-hough accumulator plane */
+    double phiPlaneMarginIcept{10. * Acts::UnitConstants::cm};
   };
 
   MuonHoughSeeder(Config cfg, Acts::Logging::Level lvl);
@@ -70,9 +73,11 @@ class MuonHoughSeeder final : public IAlgorithm {
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger& logger() const { return *m_logger; }
 
-  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<DriftCircleContainer> m_inputDriftCircles{this,
-                                                           "InputDriftCircles"};
+  ReadDataHandle<MuonSegmentContainer> m_inputTruthSegs{this,
+                                                        "InputTruthSegments"};
+  ReadDataHandle<MuonSpacePointContainer> m_inputSpacePoints{
+      this, "InputSpacePoints"};
+  WriteDataHandle<MuonHoughMaxContainer> m_outputMaxima{this, "OutputHoughMax"};
   /// use ROOT for visualisation
   std::unique_ptr<TCanvas> m_outCanvas;
 };
