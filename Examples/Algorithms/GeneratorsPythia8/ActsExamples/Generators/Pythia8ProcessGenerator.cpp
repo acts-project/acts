@@ -11,6 +11,7 @@
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -19,6 +20,11 @@
 #include <utility>
 
 #include <Pythia8/Pythia.h>
+
+#if defined(_HAS_HEPMC3)
+#include <HepMC3/WriterAscii.h>
+#include <Pythia8Plugins/HepMC3.h>
+#endif
 
 namespace ActsExamples {
 
@@ -52,6 +58,14 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
   void clearRandomEngine() { rng = nullptr; }
 };
 
+struct Pythia8GeneratorImpl {
+#if defined(_HAS_HEPMC3)
+  std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
+  std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
+#endif
+  std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
+};
+
 Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
@@ -68,29 +82,48 @@ Pythia8Generator::Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl)
   m_pythia8->settings.parm("Beams:eCM",
                            m_cfg.cmsEnergy / Acts::UnitConstants::GeV);
 
-  m_pythia8RndmEngine = std::make_shared<Pythia8RandomEngineWrapper>();
+  m_impl = std::make_unique<Pythia8GeneratorImpl>();
+
+  m_impl->m_pythia8RndmEngine = std::make_shared<Pythia8RandomEngineWrapper>();
 
 #if PYTHIA_VERSION_INTEGER >= 8310
-  m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine);
+  m_pythia8->setRndmEnginePtr(m_impl->m_pythia8RndmEngine);
 #else
-  m_pythia8->setRndmEnginePtr(m_pythia8RndmEngine.get());
+  m_pythia8->setRndmEnginePtr(m_impl->m_pythia8RndmEngine.get());
 #endif
 
   RandomEngine rng{m_cfg.initializationSeed};
-  m_pythia8RndmEngine->setRandomEngine(rng);
+  m_impl->m_pythia8RndmEngine->setRandomEngine(rng);
   m_pythia8->init();
-  m_pythia8RndmEngine->clearRandomEngine();
+  m_impl->m_pythia8RndmEngine->clearRandomEngine();
+
+  if (m_cfg.writeHepMC3.has_value()) {
+#if defined(_HAS_HEPMC3)
+    ACTS_DEBUG("Initializing HepMC3 output to: " << m_cfg.writeHepMC3.value());
+    m_impl->m_hepMC3Converter = std::make_unique<HepMC3::Pythia8ToHepMC3>();
+    m_impl->m_hepMC3Writer =
+        std::make_unique<HepMC3::WriterAscii>(m_cfg.writeHepMC3.value());
+#else
+    throw std::runtime_error("HepMC3 output requested but not available");
+#endif
+  }
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
 Pythia8Generator::~Pythia8Generator() {
+#if defined(_HAS_HEPMC3)
+  if (m_impl->m_hepMC3Writer) {
+    m_impl->m_hepMC3Writer->close();
+  }
+#endif
+
   ACTS_INFO("Pythia8Generator produced "
-            << m_pythia8RndmEngine->statistics.numUniformRandomNumbers
+            << m_impl->m_pythia8RndmEngine->statistics.numUniformRandomNumbers
             << " uniform random numbers");
-  ACTS_INFO(
-      "                 first = " << m_pythia8RndmEngine->statistics.first);
-  ACTS_INFO(
-      "                  last = " << m_pythia8RndmEngine->statistics.last);
+  ACTS_INFO("                 first = "
+            << m_impl->m_pythia8RndmEngine->statistics.first);
+  ACTS_INFO("                  last = "
+            << m_impl->m_pythia8RndmEngine->statistics.last);
 }
 
 std::pair<SimVertexContainer, SimParticleContainer>
@@ -104,7 +137,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
   // use per-thread random engine also in pythia
 
-  m_pythia8RndmEngine->setRandomEngine(rng);
+  m_impl->m_pythia8RndmEngine->setRandomEngine(rng);
 
   {
     Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
@@ -117,6 +150,15 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   if (m_cfg.printLongEventListing) {
     m_pythia8->event.list();
   }
+
+#if defined(_HAS_HEPMC3)
+  if (m_impl->m_hepMC3Converter && m_impl->m_hepMC3Writer) {
+    auto hepmc_event = std::make_shared<HepMC3::GenEvent>();
+    m_impl->m_hepMC3Converter->fill_next_event(*m_pythia8, hepmc_event.get());
+    hepmc_event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
+    m_impl->m_hepMC3Writer->write_event(*hepmc_event);
+  }
+#endif
 
   // create the primary vertex
   vertices.emplace_back(SimVertexBarcode{0}, Acts::Vector4(0., 0., 0., 0.));
@@ -192,7 +234,7 @@ Pythia8Generator::operator()(RandomEngine& rng) {
   out.first.insert(vertices.begin(), vertices.end());
   out.second.insert(particles.begin(), particles.end());
 
-  m_pythia8RndmEngine->clearRandomEngine();
+  m_impl->m_pythia8RndmEngine->clearRandomEngine();
 
   return out;
 }
