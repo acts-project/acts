@@ -54,16 +54,16 @@ ProcessCode InternalAlignmentDecorator::decorate(AlgorithmContext& context) {
       // Create an algorithm local random number generator
       RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
 
-      for (auto& lstore : m_cfg.detectorStore) {
-        for (auto& ldet : lstore) {
-          // get the nominal transform
-          Acts::Transform3 tForm =
-              ldet->nominalTransform(context.geoContext);  // copy
-          // create a new transform
-          applyTransform(tForm, m_cfg, rng, iov);
-          // put it back into the store
-          ldet->addAlignedTransform(tForm, iov);
-        }
+      ACTS_VERBOSE("Emulating new alignment for " << m_cfg.detectorStore.size()
+                                                  << " detector elements.");
+      for (auto& ldet : m_cfg.detectorStore) {
+        // get the nominal transform
+        Acts::Transform3 tForm =
+            ldet->nominalTransform(context.geoContext);  // copy
+        // create a new transform
+        applyTransform(tForm, m_cfg, rng, iov);
+        // put it back into the store
+        ldet->addAlignedTransform(tForm, iov);
       }
     }
   }
@@ -77,10 +77,8 @@ ProcessCode InternalAlignmentDecorator::decorate(AlgorithmContext& context) {
         ACTS_DEBUG("IOV " << this_iov << " has not been accessed in the last "
                           << m_cfg.flushSize << " events, clearing");
         it = m_activeIovs.erase(it);
-        for (auto& lstore : m_cfg.detectorStore) {
-          for (auto& ldet : lstore) {
-            ldet->clearAlignedTransform(this_iov);
-          }
+        for (auto& ldet : m_cfg.detectorStore) {
+          ldet->clearAlignedTransform(this_iov);
         }
       } else {
         it++;

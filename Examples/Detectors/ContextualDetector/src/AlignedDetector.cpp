@@ -85,15 +85,16 @@ AlignedDetector::AlignedDetector(const Config& cfg)
     fillDecoratorConfig(agcsConfig);
 
     auto detectorElementFactory =
-        [this](std::shared_ptr<const Acts::Transform3> transform,
-               std::shared_ptr<const Acts::PlanarBounds> bounds,
-               double thickness,
-               std::shared_ptr<const Acts::ISurfaceMaterial> material)
+        [this, &agcsConfig](
+            std::shared_ptr<const Acts::Transform3> transform,
+            std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
+            std::shared_ptr<const Acts::ISurfaceMaterial> material)
         -> std::shared_ptr<GenericDetectorElement> {
       auto id = m_detectorStore.size();
       auto detElem = std::make_shared<InternallyAlignedDetectorElement>(
           id, transform, bounds, thickness, material);
       m_detectorStore.push_back(detElem);
+      agcsConfig.detectorStore.push_back(detElem);
       return detElem;
     };
 
@@ -101,13 +102,6 @@ AlignedDetector::AlignedDetector(const Config& cfg)
         m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
         m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
         m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
-
-    // need to upcast to store in this object as well
-    for (auto& lstore : agcsConfig.detectorStore) {
-      for (auto& ldet : lstore) {
-        m_detectorStore.push_back(ldet);
-      }
-    }
 
     m_contextDecorators.push_back(std::make_shared<InternalAlignmentDecorator>(
         std::move(agcsConfig),
