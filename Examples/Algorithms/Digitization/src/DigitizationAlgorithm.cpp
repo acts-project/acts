@@ -335,26 +335,39 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
-  double totalWeight = 0.;
-  Acts::Vector2 m(0., 0.);
-  std::size_t b0min = std::numeric_limits<std::size_t>::max();
-  std::size_t b0max = 0;
-  std::size_t b1min = std::numeric_limits<std::size_t>::max();
-  std::size_t b1max = 0;
+  // For digital readout, the weight needs to be split in x and y
+  std::array<double, 2u> pos = {0., 0.};
+  std::array<double, 2u> totalWeight = {0., 0.};
+  std::array<std::size_t, 2u> bmin = {std::numeric_limits<std::size_t>::max(),
+                                      std::numeric_limits<std::size_t>::max()};
+  std::array<std::size_t, 2u> bmax = {0, 0};
+
+  // The component digital store
+  std::array<std::set<std::size_t>, 2u> componentChannels;
+
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    double charge = geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
-    if (geoCfg.digital || charge > geoCfg.threshold) {
-      totalWeight += charge;
-      std::size_t b0 = bin[0];
-      std::size_t b1 = bin[1];
-      m += Acts::Vector2(charge * binningData[0].center(b0),
-                         charge * binningData[1].center(b1));
-      b0min = std::min(b0min, b0);
-      b0max = std::max(b0max, b0);
-      b1min = std::min(b1min, b1);
-      b1max = std::max(b1max, b1);
+    double charge = geoCfg.charge(ch.activation, rng);
+    // Loop and check
+    if (charge > geoCfg.threshold) {
+      double weight = geoCfg.digital ? 1. : charge;
+      for (std::size_t ib = 0; ib < 2; ++ib) {
+        if (geoCfg.digital && geoCfg.componentDigital) {
+          // only fill component of this row/column if not yet filled
+          if (!componentChannels[ib].contains(bin[ib])) {
+            totalWeight[ib] += weight;
+            pos[ib] += weight * binningData[ib].center(bin[ib]);
+            componentChannels[ib].insert(bin[ib]);
+          }
+        } else {
+          totalWeight[ib] += weight;
+          pos[ib] += weight * binningData[ib].center(bin[ib]);
+        }
+        // min max channels
+        bmin[ib] = std::min(bmin[ib], static_cast<std::size_t>(bin[ib]));
+        bmax[ib] = std::max(bmax[ib], static_cast<std::size_t>(bin[ib]));
+      }
       // Create a copy of the channel, as activation may change
       auto chdig = ch;
       chdig.bin = ch.bin;
@@ -362,16 +375,17 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
       dParameters.cluster.channels.push_back(chdig);
     }
   }
-  if (totalWeight > 0.) {
-    m *= 1. / totalWeight;
+  if (totalWeight[0] > 0. && totalWeight[1] > 0.) {
+    pos[0] /= totalWeight[0];
+    pos[1] /= totalWeight[1];
     dParameters.indices = geoCfg.indices;
     for (auto idx : dParameters.indices) {
-      dParameters.values.push_back(m[idx]);
+      dParameters.values.push_back(pos[idx]);
     }
-    std::size_t size0 = static_cast<std::size_t>(b0max - b0min + 1);
-    std::size_t size1 = static_cast<std::size_t>(b1max - b1min + 1);
+    std::size_t size0 = (bmax[0] - bmin[0] + 1);
+    std::size_t size1 = (bmax[1] - bmin[1] + 1);
 
-    dParameters.variances = geoCfg.variances({size0, size1}, {b0min, b1min});
+    dParameters.variances = geoCfg.variances({size0, size1}, bmin);
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
   }
