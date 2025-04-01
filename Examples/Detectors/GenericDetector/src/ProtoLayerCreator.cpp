@@ -8,6 +8,8 @@
 
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
+using Acts::VectorHelpers::phi;
+
 namespace ActsExamples::Generic {
 
 std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(

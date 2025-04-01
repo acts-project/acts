@@ -22,12 +22,6 @@
 
 namespace ActsExamples::Generic {
 
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
-
-using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3>;
-
 /// @class LayerBuilder
 ///
 /// The LayerBuilder is able to build cylinder & disc layers

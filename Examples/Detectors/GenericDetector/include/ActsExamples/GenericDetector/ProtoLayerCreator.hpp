@@ -32,12 +32,6 @@ class DetecorElementBase;
 
 namespace ActsExamples::Generic {
 
-using Acts::VectorHelpers::eta;
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
-
-using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3>;
-
 struct ProtoLayerSurfaces {
   Acts::ProtoLayer protoLayer;
   std::vector<std::shared_ptr<const Acts::Surface>> surfaces;

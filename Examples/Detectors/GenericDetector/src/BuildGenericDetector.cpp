@@ -11,9 +11,9 @@
 #include <cmath>
 #include <numbers>
 
-namespace ActsExamples::Generic {
+namespace ActsExamples {
 
-std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
+std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     const Acts::GeometryContext& gctxIn,
     const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
     std::size_t level,
@@ -684,7 +684,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 }
 
 /// helper method for cylinder
-std::vector<Acts::Vector3> modulePositionsCylinder(
+std::vector<Acts::Vector3> Generic::modulePositionsCylinder(
     double radius, double zStagger, double moduleHalfLength, double lOverlap,
     const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
@@ -715,7 +715,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 }
 
 /// helper method for disc
-std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
+std::vector<std::vector<Acts::Vector3>> Generic::modulePositionsDisc(
     double z, double ringStagger, std::vector<double> phiStagger,
     std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
     const std::vector<std::size_t>& discBinning,
@@ -765,10 +765,10 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 }
 
 /// Helper method for positioning
-std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
-                                               double phiStagger,
-                                               double phiSubStagger,
-                                               int nPhiBins) {
+std::vector<Acts::Vector3> Generic::modulePositionsRing(double z, double radius,
+                                                        double phiStagger,
+                                                        double phiSubStagger,
+                                                        int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
@@ -801,4 +801,4 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   return rPositions;
 }
 
-}  // namespace ActsExamples::Generic
+}  // namespace ActsExamples
