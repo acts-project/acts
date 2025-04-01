@@ -240,88 +240,6 @@ Acts::Vector4 convertPosition(const HepMC3::FourVector& vec) {
                        vec.t() * 1_mm);
 }
 
-void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
-                  std::vector<SimVertex>& vertices,
-                  std::vector<SimParticle>& particles,
-                  std::size_t& nSecondaryVertices, std::size_t& nParticles,
-                  bool mergeSecondaries, double spatialVertexThreshold,
-                  std::vector<bool>& seenVertices, const Acts::Logger& logger,
-                  std::size_t generation = 0) {
-  for (const auto& particle : genVertex.particles_out()) {
-    if (particle->end_vertex() != nullptr) {
-      // This particle has an end vertex, we need to handle that vertex
-      const auto& endVertex = *particle->end_vertex();
-      if (seenVertices.at(std::abs(endVertex.id()) - 1)) {
-        // We've seen this vertex before, we don't need to create it again
-        continue;
-      }
-      seenVertices.at(std::abs(endVertex.id()) - 1) = true;
-
-      const auto endVertexPosition = convertPosition(endVertex.position());
-
-      ACTS_VERBOSE("Found secondary vertex at "
-                   << endVertexPosition.transpose());
-      double distance = (endVertexPosition.template head<3>() -
-                         vertex.position4.template head<3>())
-                            .squaredNorm();
-
-      if (distance <= spatialVertexThreshold * spatialVertexThreshold &&
-          mergeSecondaries) {
-        handleVertex(endVertex, vertex, vertices, particles, nSecondaryVertices,
-                     nParticles, mergeSecondaries, spatialVertexThreshold,
-                     seenVertices, logger, generation + 1);
-      } else {
-        // Over threshold, make a new vertex
-        SimVertex secondaryVertex;
-        nSecondaryVertices += 1;
-        secondaryVertex.id =
-            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
-        secondaryVertex.position4 = convertPosition(endVertex.position());
-
-        handleVertex(endVertex, secondaryVertex, vertices, particles,
-                     nSecondaryVertices, nParticles, mergeSecondaries,
-                     spatialVertexThreshold, seenVertices, logger,
-                     generation + 1);
-
-        // Only keep the secondary vertex if it has outgoing particles
-        if (!secondaryVertex.outgoing.empty()) {
-          vertices.push_back(secondaryVertex);
-        }
-      }
-    } else {
-      if (particle->status() != kUndecayedParticleStatus) {
-        ACTS_ERROR("Undecayed particle has status "
-                   << particle->status() << "(and not "
-                   << kUndecayedParticleStatus << ")");
-      }
-      // This particle is a final state particle
-      SimBarcode particleId{0u};
-      nParticles += 1;
-      particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
-          .setVertexSecondary(vertex.vertexId().vertexSecondary())
-          .setParticle(nParticles);
-
-      Acts::PdgParticle pdg{particle->pdg_id()};
-      double mass = Acts::findMass(pdg).value();
-      double charge = Acts::findCharge(pdg).value();
-
-      SimParticle simParticle{particleId, pdg, charge, mass};
-      simParticle.initial().setPosition4(vertex.position4);
-
-      const HepMC3::FourVector& genMomentum = particle->momentum();
-      Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
-                             genMomentum.pz() * 1_GeV};
-      double p = momentum.norm();
-
-      simParticle.initial().setDirection(momentum.normalized());
-      simParticle.initial().setAbsoluteMomentum(p);
-
-      particles.push_back(simParticle);
-      vertex.outgoing.insert(particleId);
-    }
-  }
-}
-
 std::string printListing(const auto& vertices, const auto& particles) {
   auto findParticle = [&](SimBarcode particleId) {
     if (auto it = std::ranges::find_if(particles,
@@ -364,8 +282,87 @@ std::string printListing(const auto& vertices, const auto& particles) {
 
   return ss.str();
 };
-
 }  // namespace
+
+void EventGenerator::handleVertex(const HepMC3::GenVertex& genVertex,
+                                  SimVertex& vertex,
+                                  std::vector<SimVertex>& vertices,
+                                  std::vector<SimParticle>& particles,
+                                  std::size_t& nSecondaryVertices,
+                                  std::size_t& nParticles,
+                                  std::vector<bool>& seenVertices) {
+  for (const auto& particle : genVertex.particles_out()) {
+    if (particle->end_vertex() != nullptr) {
+      // This particle has an end vertex, we need to handle that vertex
+      const auto& endVertex = *particle->end_vertex();
+      if (seenVertices.at(std::abs(endVertex.id()) - 1)) {
+        // We've seen this vertex before, we don't need to create it again
+        continue;
+      }
+      seenVertices.at(std::abs(endVertex.id()) - 1) = true;
+
+      const auto endVertexPosition = convertPosition(endVertex.position());
+
+      ACTS_VERBOSE("Found secondary vertex at "
+                   << endVertexPosition.transpose());
+      double distance = (endVertexPosition.template head<3>() -
+                         vertex.position4.template head<3>())
+                            .squaredNorm();
+
+      if (distance <=
+              m_cfg.vertexSpatialThreshold * m_cfg.vertexSpatialThreshold &&
+          m_cfg.mergeSecondaries) {
+        handleVertex(endVertex, vertex, vertices, particles, nSecondaryVertices,
+                     nParticles, seenVertices);
+      } else {
+        // Over threshold, make a new vertex
+        SimVertex secondaryVertex;
+        nSecondaryVertices += 1;
+        secondaryVertex.id =
+            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+        secondaryVertex.position4 = convertPosition(endVertex.position());
+
+        handleVertex(endVertex, secondaryVertex, vertices, particles,
+                     nSecondaryVertices, nParticles, seenVertices);
+
+        // Only keep the secondary vertex if it has outgoing particles
+        if (!secondaryVertex.outgoing.empty()) {
+          vertices.push_back(secondaryVertex);
+        }
+      }
+    } else {
+      if (particle->status() != kUndecayedParticleStatus) {
+        ACTS_ERROR("Undecayed particle has status "
+                   << particle->status() << "(and not "
+                   << kUndecayedParticleStatus << ")");
+      }
+      // This particle is a final state particle
+      SimBarcode particleId{0u};
+      nParticles += 1;
+      particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
+          .setVertexSecondary(vertex.vertexId().vertexSecondary())
+          .setParticle(nParticles);
+
+      Acts::PdgParticle pdg{particle->pdg_id()};
+      double mass = Acts::findMass(pdg).value();
+      double charge = Acts::findCharge(pdg).value();
+
+      SimParticle simParticle{particleId, pdg, charge, mass};
+      simParticle.initial().setPosition4(vertex.position4);
+
+      const HepMC3::FourVector& genMomentum = particle->momentum();
+      Acts::Vector3 momentum{genMomentum.px() * 1_GeV, genMomentum.py() * 1_GeV,
+                             genMomentum.pz() * 1_GeV};
+      double p = momentum.norm();
+
+      simParticle.initial().setDirection(momentum.normalized());
+      simParticle.initial().setAbsoluteMomentum(p);
+
+      particles.push_back(simParticle);
+      vertex.outgoing.insert(particleId);
+    }
+  }
+}
 
 void EventGenerator::convertHepMC3ToInternalEdm(
     const AlgorithmContext& ctx, const HepMC3::GenEvent& genEvent) {
@@ -483,8 +480,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
       for (auto& genVertex : cluster) {
         handleVertex(*genVertex, primaryVertex, verticesUnordered,
                      particlesUnordered, nSecondaryVertices, nParticles,
-                     m_cfg.mergeSecondaries, m_cfg.vertexSpatialThreshold,
-                     seenVertices, logger());
+                     seenVertices);
       }
       verticesUnordered.push_back(primaryVertex);
     }

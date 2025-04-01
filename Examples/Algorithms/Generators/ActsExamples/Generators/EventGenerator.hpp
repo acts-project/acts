@@ -25,6 +25,7 @@
 
 namespace HepMC3 {
 class GenEvent;
+class GenVertex;
 }  // namespace HepMC3
 
 namespace ActsExamples {
@@ -142,6 +143,12 @@ class EventGenerator final : public ActsExamples::IReader {
 
   void convertHepMC3ToInternalEdm(const AlgorithmContext& ctx,
                                   const HepMC3::GenEvent& genEvent);
+
+  void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
+                    std::vector<SimVertex>& vertices,
+                    std::vector<SimParticle>& particles,
+                    std::size_t& nSecondaryVertices, std::size_t& nParticles,
+                    std::vector<bool>& seenVertices);
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
