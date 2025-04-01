@@ -7,14 +7,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
-#include <cstdint>
 #include <vector>
-
 
 namespace ActsExamples {
 /** @brief Example implementation of a StationSpacePoint concept inspired by the ATLAS Muon::SpacePoint EDM.
@@ -160,8 +159,9 @@ class MuonSpacePoint {
   double m_time{0.};
 };
 /** @brief Abbrivation of the MuonSpace point container as a jagged vector of
- *         space point objects. The inner vector represents a collection of 
- *         spacepoints that are close-by together in space, a so-called bucket */
+ *         space point objects. The inner vector represents a collection of
+ *         spacepoints that are close-by together in space, a so-called bucket
+ */
 using MuonSpacePointContainer = std::vector<std::vector<MuonSpacePoint>>;
 
 /** @brief Print the Identifier's stationName to a string */
@@ -171,8 +171,7 @@ std::string to_string(const MuonSpacePoint::MuonId::TechField tech);
 /** @brief Print the Identifier's detector side to a string */
 std::string to_string(const MuonSpacePoint::MuonId::DetSide side);
 
-
-}
+}  // namespace ActsExamples
 
 /// @brief ostream operator of the Muon space point Identifier
 std::ostream& operator<<(std::ostream& ostr,
