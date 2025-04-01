@@ -16,8 +16,6 @@
 #include <algorithm>
 #include <cmath>
 #include <format>
-#include <iterator>
-#include <ostream>
 #include <stdexcept>
 
 #include "TBox.h"
