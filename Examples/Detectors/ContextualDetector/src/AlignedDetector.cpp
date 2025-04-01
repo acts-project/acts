@@ -66,7 +66,8 @@ AlignedDetector::AlignedDetector(const Config& cfg)
         -> std::shared_ptr<GenericDetectorElement> {
       auto id = m_detectorStore.size();
       auto detElem = std::make_shared<ExternallyAlignedDetectorElement>(
-          id, transform, bounds, thickness, material);
+          id, std::move(transform), std::move(bounds), thickness,
+          std::move(material));
       m_detectorStore.push_back(detElem);
       return detElem;
     };
@@ -92,7 +93,8 @@ AlignedDetector::AlignedDetector(const Config& cfg)
         -> std::shared_ptr<GenericDetectorElement> {
       auto id = m_detectorStore.size();
       auto detElem = std::make_shared<InternallyAlignedDetectorElement>(
-          id, transform, bounds, thickness, material);
+          id, std::move(transform), std::move(bounds), thickness,
+          std::move(material));
       m_detectorStore.push_back(detElem);
       agcsConfig.detectorStore.push_back(detElem);
       return detElem;

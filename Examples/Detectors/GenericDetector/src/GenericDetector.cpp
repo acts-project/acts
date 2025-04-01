@@ -30,7 +30,8 @@ GenericDetector::GenericDetector(const Config& cfg)
     GenericDetectorElement::Identifier id =
         static_cast<GenericDetectorElement::Identifier>(m_detectorStore.size());
     auto detElem = std::make_shared<GenericDetectorElement>(
-        id, transform, bounds, thickness, material);
+        id, std::move(transform), std::move(bounds), thickness,
+        std::move(material));
     m_detectorStore.push_back(detElem);
     return detElem;
   };
