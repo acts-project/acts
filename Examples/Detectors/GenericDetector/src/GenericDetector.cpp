@@ -27,7 +27,7 @@ GenericDetector::GenericDetector(const Config& cfg)
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
              std::shared_ptr<const Acts::ISurfaceMaterial> material)
       -> std::shared_ptr<GenericDetectorElement> {
-    auto id =
+    GenericDetectorElement::Identifier id =
         static_cast<GenericDetectorElement::Identifier>(m_detectorStore.size());
     auto detElem = std::make_shared<GenericDetectorElement>(
         id, std::move(transform), std::move(bounds), thickness,
