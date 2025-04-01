@@ -244,6 +244,7 @@ void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
                   std::vector<SimVertex>& vertices,
                   std::vector<SimParticle>& particles,
                   std::size_t& nSecondaryVertices, std::size_t& nParticles,
+                  bool mergeSecondaries, double spatialVertexThreshold,
                   std::vector<bool>& seenVertices, const Acts::Logger& logger,
                   std::size_t generation = 0) {
   for (const auto& particle : genVertex.particles_out()) {
@@ -256,22 +257,36 @@ void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
       }
       seenVertices.at(std::abs(endVertex.id()) - 1) = true;
 
-      SimVertex secondaryVertex;
-      nSecondaryVertices += 1;
-      secondaryVertex.id = SimVertexBarcode{vertex.id}
-                               .setVertexSecondary(nSecondaryVertices)
-                               .setGeneration(generation);
-      secondaryVertex.position4 = convertPosition(endVertex.position());
+      const auto endVertexPosition = convertPosition(endVertex.position());
 
-      // @TODO: Might need position deduplication as well
+      ACTS_VERBOSE("Found secondary vertex at "
+                   << endVertexPosition.transpose());
+      double distance = (endVertexPosition.template head<3>() -
+                         vertex.position4.template head<3>())
+                            .squaredNorm();
 
-      handleVertex(endVertex, secondaryVertex, vertices, particles,
-                   nSecondaryVertices, nParticles, seenVertices, logger,
-                   generation + 1);
+      if (distance <= spatialVertexThreshold * spatialVertexThreshold &&
+          mergeSecondaries) {
+        handleVertex(endVertex, vertex, vertices, particles, nSecondaryVertices,
+                     nParticles, mergeSecondaries, spatialVertexThreshold,
+                     seenVertices, logger, generation + 1);
+      } else {
+        // Over threshold, make a new vertex
+        SimVertex secondaryVertex;
+        nSecondaryVertices += 1;
+        secondaryVertex.id =
+            SimVertexBarcode{vertex.id}.setVertexSecondary(nSecondaryVertices);
+        secondaryVertex.position4 = convertPosition(endVertex.position());
 
-      // Only keep the secondary vertex if it has outgoing particles
-      if (!secondaryVertex.outgoing.empty()) {
-        vertices.push_back(secondaryVertex);
+        handleVertex(endVertex, secondaryVertex, vertices, particles,
+                     nSecondaryVertices, nParticles, mergeSecondaries,
+                     spatialVertexThreshold, seenVertices, logger,
+                     generation + 1);
+
+        // Only keep the secondary vertex if it has outgoing particles
+        if (!secondaryVertex.outgoing.empty()) {
+          vertices.push_back(secondaryVertex);
+        }
       }
     } else {
       if (particle->status() != kUndecayedParticleStatus) {
@@ -284,8 +299,7 @@ void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
       nParticles += 1;
       particleId.setVertexPrimary(vertex.vertexId().vertexPrimary())
           .setVertexSecondary(vertex.vertexId().vertexSecondary())
-          .setParticle(nParticles)
-          .setGeneration(generation);
+          .setParticle(nParticles);
 
       Acts::PdgParticle pdg{particle->pdg_id()};
       double mass = Acts::findMass(pdg).value();
@@ -364,7 +378,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
   std::vector<VertexCluster> vertexClusters;
 
   ACTS_VERBOSE("Finding primary vertex clusters with threshold "
-               << m_cfg.spatialVertexThreshold);
+               << m_cfg.primaryVertexSpatialThreshold);
 
   // Find all vertices whose incoming particles are either all beam particles or
   // that don't have any incoming particles
@@ -397,7 +411,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
                   return (position - clusterPosition)
                              .template head<3>()
                              .cwiseAbs()
-                             .maxCoeff() < m_cfg.spatialVertexThreshold;
+                             .maxCoeff() < m_cfg.primaryVertexSpatialThreshold;
                 });
             it != vertexClusters.end()) {
           // Add the vertex to the cluster
@@ -469,6 +483,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
       for (auto& genVertex : cluster) {
         handleVertex(*genVertex, primaryVertex, verticesUnordered,
                      particlesUnordered, nSecondaryVertices, nParticles,
+                     m_cfg.mergeSecondaries, m_cfg.vertexSpatialThreshold,
                      seenVertices, logger());
       }
       verticesUnordered.push_back(primaryVertex);
@@ -494,6 +509,25 @@ void EventGenerator::convertHepMC3ToInternalEdm(
     std::ranges::sort(verticesUnordered, [](const auto& a, const auto& b) {
       return a.vertexId() < b.vertexId();
     });
+  }
+
+  if (m_cfg.checkConsistency) {
+    ACTS_DEBUG("Checking consistency of particles");
+    auto equalParticleIds = [](const auto& a, const auto& b) {
+      return a.particleId() == b.particleId();
+    };
+    if (auto it =
+            std::ranges::adjacent_find(particlesUnordered, equalParticleIds);
+        it != particlesUnordered.end()) {
+      ACTS_ERROR("Found duplicate particle id " << it->particleId());
+    }
+    auto equalVertexIds = [](const auto& a, const auto& b) {
+      return a.vertexId() == b.vertexId();
+    };
+    if (auto it = std::ranges::adjacent_find(verticesUnordered, equalVertexIds);
+        it != verticesUnordered.end()) {
+      ACTS_ERROR("Found duplicate vertex id " << it->vertexId());
+    }
   }
 
   SimParticleContainer particles{particlesUnordered.begin(),
