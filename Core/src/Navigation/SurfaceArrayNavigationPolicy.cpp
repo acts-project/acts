@@ -41,6 +41,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
                << surfaces.size());
   if (surfaces.size() == 0) {
     ACTS_ERROR("The number of surfaces is 0!");
+    throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
 
   if (config.layerType == LayerType::Disc) {
