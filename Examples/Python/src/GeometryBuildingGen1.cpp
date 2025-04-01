@@ -54,13 +54,9 @@ void addGeometryBuildingGen1(Context &ctx) {
     auto config =
         py::class_<LayerCreator::Config>(creator, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, LayerCreator::Config);
-    ACTS_PYTHON_MEMBER(surfaceArrayCreator);
-    ACTS_PYTHON_MEMBER(cylinderZtolerance);
-    ACTS_PYTHON_MEMBER(cylinderPhiTolerance);
-    ACTS_PYTHON_MEMBER(defaultEnvelopeR);
-    ACTS_PYTHON_MEMBER(defaultEnvelopeZ);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(config, surfaceArrayCreator, cylinderZtolerance,
+                       cylinderPhiTolerance, defaultEnvelopeR,
+                       defaultEnvelopeZ);
   }
 
   {
@@ -125,13 +121,9 @@ void addGeometryBuildingGen1(Context &ctx) {
     auto config = py::class_<CylinderVolumeHelper::Config>(helper, "Config")
                       .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(config, CylinderVolumeHelper::Config);
-    ACTS_PYTHON_MEMBER(layerArrayCreator);
-    ACTS_PYTHON_MEMBER(trackingVolumeArrayCreator);
-    ACTS_PYTHON_MEMBER(passiveLayerThickness);
-    ACTS_PYTHON_MEMBER(passiveLayerPhiBins);
-    ACTS_PYTHON_MEMBER(passiveLayerRzBins);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(config, layerArrayCreator, trackingVolumeArrayCreator,
+                       passiveLayerThickness, passiveLayerPhiBins,
+                       passiveLayerRzBins);
   }
 }
 
