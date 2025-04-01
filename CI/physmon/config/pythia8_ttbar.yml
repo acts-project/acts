@@ -54,6 +54,13 @@ histograms:
     min: -2.0
     max: 2.0
 
+extra_histograms:
+  - expression: df["outgoing_particles"]
+    name: outgoing_particles_zoomed
+    nbins: 100
+    min: 0.0
+    max: 100
+
 exclude:
   - event_id
   - particle_id
