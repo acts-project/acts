@@ -304,7 +304,7 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
       for (const Maximum_t& max : phiMaxima) {
         MuonHoughMaximum::HitVec hits{max.hitIdentifiers.begin(),
                                       max.hitIdentifiers.end()};
-        /// Copy all hits not constaining the phi coordinate
+        /// Copy all hits not constraining the phi coordinate
         std::ranges::copy_if(
             etaMax.hits(), std::back_inserter(hits),
             [](const MuonSpacePoint* sp) { return !sp->id().measuresPhi(); });

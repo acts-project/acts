@@ -21,7 +21,7 @@ class MuonSegment {
   using MuonId = MuonSpacePoint::MuonId;
   /** @brief Empty default constructor */
   MuonSegment() = default;
-  /** @brief Standard copy constrcutor */
+  /** @brief Standard copy constructor */
   MuonSegment(const MuonSegment& other) = default;
   /** @brief Standard move constructor */
   MuonSegment(MuonSegment&& other) = default;
