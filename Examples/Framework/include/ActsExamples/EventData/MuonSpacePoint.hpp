@@ -72,13 +72,13 @@ class MuonSpacePoint {
     /** @brief Returns the MS station in which the measurement was recorded */
     StationName msStation() const { return m_stName; }
     /** @brief Returns the sector in which the measurement was recorded */
-    uint8_t sector() const { return m_sector; }
+    std::uint8_t sector() const { return m_sector; }
     /** @brief Returns the detector side */
     DetSide side() const { return m_side; }
     /** @brief Returns the layer */
-    uint8_t detLayer() const { return m_layer; }
+    std::uint8_t detLayer() const { return m_layer; }
     /** @brief Returns the channel number */
-    uint16_t channel() const { return m_channel; }
+    std::uint16_t channel() const { return m_channel; }
     /** @brief Returns whether the id corresponds to a precision coordinate (eta) measurement */
     bool measuresEta() const { return m_measEta; }
     /**  @brief Returns whether the id corresponds to a non-precision coordinate (phi) measurement */
@@ -90,7 +90,7 @@ class MuonSpacePoint {
       return msStation() == other.msStation() && sector() == other.sector() &&
              side() == other.side();
     }
-    /** @brief Set the fields neede to Identify the detector in the system
+    /** @brief Set the fields needed to Identify the detector in the system
      *  @param stName: StationName where the muon station is located
      *  @param side: Positive or negative side
      *  @param sector: Phi sector in which the chamber is installed
@@ -122,7 +122,7 @@ class MuonSpacePoint {
   MuonSpacePoint(MuonSpacePoint&& other) = default;
   /** @brief Returns the Identifier of the space point */
   const MuonId& id() const { return m_id; }
-  /** @brief Returns the local meaurement position */
+  /** @brief Returns the local measurement position */
   const Acts::Vector3& localPosition() const { return m_pos; }
   /** @brief Returns the local sensor direction */
   const Acts::Vector3& sensorDirection() const { return m_dir; }
@@ -160,7 +160,7 @@ class MuonSpacePoint {
   double m_time{0.};
 };
 /** @brief Abbrivation of the MuonSpace point container as a jagged vector of
- *         space point objects. The inner vector respresents a collection of 
+ *         space point objects. The inner vector represents a collection of 
  *         spacepoints that are close-by together in space, a so-called bucket */
 using MuonSpacePointContainer = std::vector<std::vector<MuonSpacePoint>>;
 
