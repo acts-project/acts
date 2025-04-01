@@ -36,11 +36,11 @@ Acts::GeometryContext tContext;
 
 Acts::Experimental::NavigationState nState;
 
-double r0 = 0.;
-double r1 = 10.;
-double r2 = 100.;
-double r3 = 200.;
-double zHalfL = 200.;
+long double r0 = 0.;
+long double r1 = 10.;
+long double r2 = 100.;
+long double r3 = 200.;
+long double zHalfL = 200.;
 
 Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -122,13 +122,13 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
       Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>;
   using Grid = Acts::Grid<SingleIndex, Axis>;
 
-  std::vector<double> b = {r0, r1, r2, r3};
+  std::vector<long double> b = {r0, r1, r2, r3};
   Axis a(b);
   Grid g(std::make_tuple(a));
 
-  g.atPosition(std::array<double, 1u>{5.}) = 0u;
-  g.atPosition(std::array<double, 1u>{50.}) = 1u;
-  g.atPosition(std::array<double, 1u>{150.}) = 2u;
+  g.atPosition(std::array<long double, 1u>{5.}) = 0u;
+  g.atPosition(std::array<long double, 1u>{50.}) = 1u;
+  g.atPosition(std::array<long double, 1u>{150.}) = 2u;
 
   Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(
       std::move(g), {Acts::AxisDirection::AxisR});

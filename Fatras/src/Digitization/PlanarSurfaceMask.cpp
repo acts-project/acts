@@ -38,7 +38,8 @@ namespace {
 /// @param candidate The candidate intersection
 /// @param sLength The segment length, maximal allowed length
 void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
-                       const Acts::Intersection2D& candidate, double sLength) {
+                       const Acts::Intersection2D& candidate,
+                       long double sLength) {
   if (candidate.isValid() && candidate.pathLength() > 0 &&
       candidate.pathLength() < sLength) {
     intersections.push_back(candidate);
@@ -164,7 +165,7 @@ ActsFatras::PlanarSurfaceMask::polygonMask(
   std::vector<Acts::Intersection2D> intersections;
   Acts::Vector2 sVector(segment[1] - segment[0]);
   Acts::Vector2 sDir = sVector.normalized();
-  double sLength = sVector.norm();
+  long double sLength = sVector.norm();
 
   for (std::size_t iv = 0; iv < vertices.size(); ++iv) {
     const Acts::Vector2& s0 = vertices[iv];
@@ -182,26 +183,26 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
                                           const Segment2D& segment,
                                           const Segment2D& polarSegment,
                                           bool firstInside) const {
-  double rMin = rBounds.get(Acts::RadialBounds::eMinR);
-  double rMax = rBounds.get(Acts::RadialBounds::eMaxR);
-  double hPhi = rBounds.get(Acts::RadialBounds::eHalfPhiSector);
-  double aPhi = rBounds.get(Acts::RadialBounds::eAveragePhi);
+  long double rMin = rBounds.get(Acts::RadialBounds::eMinR);
+  long double rMax = rBounds.get(Acts::RadialBounds::eMaxR);
+  long double hPhi = rBounds.get(Acts::RadialBounds::eHalfPhiSector);
+  long double aPhi = rBounds.get(Acts::RadialBounds::eAveragePhi);
 
-  std::array<double, 2> radii = {rMin, rMax};
-  std::array<double, 2> phii = {aPhi - hPhi, aPhi + hPhi};
+  std::array<long double, 2> radii = {rMin, rMax};
+  std::array<long double, 2> phii = {aPhi - hPhi, aPhi + hPhi};
 
   std::vector<Acts::Intersection2D> intersections;
   Acts::Vector2 sVector(segment[1] - segment[0]);
   Acts::Vector2 sDir = sVector.normalized();
-  double sLength = sVector.norm();
+  long double sLength = sVector.norm();
 
-  double sR = polarSegment[0][Acts::eBoundLoc0];
-  double eR = polarSegment[1][Acts::eBoundLoc0];
-  double sPhi = polarSegment[0][Acts::eBoundLoc1];
-  double ePhi = polarSegment[1][Acts::eBoundLoc1];
+  long double sR = polarSegment[0][Acts::eBoundLoc0];
+  long double eR = polarSegment[1][Acts::eBoundLoc0];
+  long double sPhi = polarSegment[0][Acts::eBoundLoc1];
+  long double ePhi = polarSegment[1][Acts::eBoundLoc1];
 
   // Helper method to intersect phi boundaries
-  auto intersectPhiLine = [&](double phi) -> void {
+  auto intersectPhiLine = [&](long double phi) -> void {
     Acts::Vector2 s0(rMin * std::cos(phi), rMin * std::sin(phi));
     Acts::Vector2 s1(rMax * std::cos(phi), rMax * std::sin(phi));
     checkIntersection(
@@ -210,7 +211,7 @@ ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
   };
 
   // Helper method to intersect radial full boundaries
-  auto intersectCircle = [&](double r) -> void {
+  auto intersectCircle = [&](long double r) -> void {
     auto cIntersections = intersector.intersectCircle(r, segment[0], sDir);
     for (const auto& intersection : cIntersections) {
       checkIntersection(intersections, intersection, sLength);
@@ -264,7 +265,7 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
   std::vector<Acts::Intersection2D> intersections;
   Acts::Vector2 sVector(segment[1] - segment[0]);
   Acts::Vector2 sDir = sVector.normalized();
-  double sLength = sVector.norm();
+  long double sLength = sVector.norm();
   // First the phi edges in strip system
   for (const auto& ec : edgeCombos) {
     checkIntersection(

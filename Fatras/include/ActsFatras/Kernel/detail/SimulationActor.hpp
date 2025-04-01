@@ -51,7 +51,7 @@ struct SimulationActor {
   Particle initialParticle;
 
   /// Relative tolerance of the particles proper time limit
-  double properTimeRelativeTolerance = 1e-3;
+  long double properTimeRelativeTolerance = 1e-3;
 
   /// Simulate the interaction with a single surface.
   ///

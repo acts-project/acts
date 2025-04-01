@@ -133,8 +133,8 @@ GbtsConnector::GbtsConnector(std::ifstream &inFile) {
 
   int currentStage = 0;
 
-  // the doublet making is done using "outside-in" approach hence the reverse
-  // iterations
+  // the long doublet making is done using "outside-in" approach hence the
+  // reverse iterations
 
   for (auto it = newConnMap.rbegin(); it != newConnMap.rend();
        it++, currentStage++) {

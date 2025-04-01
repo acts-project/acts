@@ -16,9 +16,9 @@
 namespace Acts::detail {
 
 std::tuple<std::shared_ptr<AnnulusBounds>, Transform3>
-AnnulusBoundsHelper::create(const Transform3& transform, double rMin,
-                            double rMax, std::vector<Vector2> vertices) {
-  using Line2D = Eigen::Hyperplane<double, 2>;
+AnnulusBoundsHelper::create(const Transform3& transform, long double rMin,
+                            long double rMax, std::vector<Vector2> vertices) {
+  using Line2D = Eigen::Hyperplane<long double, 2>;
 
   // Construct the bound lines
   std::vector<std::pair<Vector2, Vector2>> boundLines;
@@ -26,7 +26,7 @@ AnnulusBoundsHelper::create(const Transform3& transform, double rMin,
     Vector2 a = vertices.at(i);
     Vector2 b = vertices.at((i + 1) % vertices.size());
     Vector2 ab = b - a;
-    double phi = VectorHelpers::phi(ab);
+    long double phi = VectorHelpers::phi(ab);
 
     if (std::abs(phi) > 3 * std::numbers::pi / 4. ||
         std::abs(phi) < std::numbers::pi / 4.) {
@@ -53,11 +53,13 @@ AnnulusBoundsHelper::create(const Transform3& transform, double rMin,
   // Update transform by prepending the origin shift translation
   Transform3 boundsTransform = transform * originTranslation;
   // Transform phi line point to new origin and get phi
-  double phi1 = VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
-  double phi2 = VectorHelpers::phi(boundLines[1].second - boundLines[1].first);
-  double phiMax = std::max(phi1, phi2);
-  double phiMin = std::min(phi1, phi2);
-  double phiShift = 0.;
+  long double phi1 =
+      VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
+  long double phi2 =
+      VectorHelpers::phi(boundLines[1].second - boundLines[1].first);
+  long double phiMax = std::max(phi1, phi2);
+  long double phiMin = std::min(phi1, phi2);
+  long double phiShift = 0.;
 
   // Create the bounds
   auto annulusBounds = std::make_shared<AnnulusBounds>(

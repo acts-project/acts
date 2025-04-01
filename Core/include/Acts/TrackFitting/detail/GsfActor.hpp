@@ -52,8 +52,8 @@ struct GsfResult {
 
   /// Statistics about material encounterings
   Updatable<std::size_t> nInvalidBetheHeitler;
-  Updatable<double> maxPathXOverX0;
-  Updatable<double> sumPathXOverX0;
+  Updatable<long double> maxPathXOverX0;
+  Updatable<long double> sumPathXOverX0;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -89,7 +89,7 @@ struct GsfActor {
     bool multipleScattering = true;
 
     /// When to discard components
-    double weightCutoff = 1.0e-4;
+    long double weightCutoff = 1.0e-4;
 
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
@@ -126,7 +126,7 @@ struct GsfActor {
   struct TemporaryStates {
     traj_t traj;
     std::vector<MultiTrajectoryTraits::IndexType> tips;
-    std::map<MultiTrajectoryTraits::IndexType, double> weights;
+    std::map<MultiTrajectoryTraits::IndexType, long double> weights;
   };
 
   /// @brief GSF actor operation
@@ -340,7 +340,7 @@ struct GsfActor {
                            std::vector<ComponentCache>& componentCache,
                            result_type& result) const {
     auto cmps = stepper.componentIterable(state.stepping);
-    double pathXOverX0 = 0.0;
+    long double pathXOverX0 = 0.0;
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
@@ -359,12 +359,12 @@ struct GsfActor {
   }
 
   template <typename propagator_state_t, typename navigator_t>
-  double applyBetheHeitler(const propagator_state_t& state,
-                           const navigator_t& navigator,
-                           const BoundTrackParameters& old_bound,
-                           const double old_weight,
-                           std::vector<ComponentCache>& componentCaches,
-                           result_type& result) const {
+  long double applyBetheHeitler(const propagator_state_t& state,
+                                const navigator_t& navigator,
+                                const BoundTrackParameters& old_bound,
+                                const long double old_weight,
+                                std::vector<ComponentCache>& componentCaches,
+                                result_type& result) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
     const auto& particleHypothesis = old_bound.particleHypothesis();
@@ -379,7 +379,7 @@ struct GsfActor {
         old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
-    const double pathXOverX0 = slab.thicknessInX0();
+    const long double pathXOverX0 = slab.thicknessInX0();
     result.maxPathXOverX0.tmp() =
         std::max(result.maxPathXOverX0.tmp(), pathXOverX0);
 
@@ -454,7 +454,7 @@ struct GsfActor {
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
   void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
-    auto proj = [](auto& cmp) -> double& { return cmp.weight; };
+    auto proj = [](auto& cmp) -> long double& { return cmp.weight; };
 
     detail::normalizeWeights(cmps, proj);
 
@@ -500,8 +500,8 @@ struct GsfActor {
 
     // TODO we have two normalization passes here now, this can probably be
     // optimized
-    detail::normalizeWeights(cmps,
-                             [&](auto cmp) -> double& { return cmp.weight(); });
+    detail::normalizeWeights(
+        cmps, [&](auto cmp) -> long double& { return cmp.weight(); });
   }
 
   /// Function that updates the stepper from the ComponentCache
@@ -584,7 +584,7 @@ struct GsfActor {
 
     computePosteriorWeights(tmpStates.traj, tmpStates.tips, tmpStates.weights);
 
-    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> double& {
+    detail::normalizeWeights(tmpStates.tips, [&](auto idx) -> long double& {
       return tmpStates.weights.at(idx);
     });
 
@@ -603,7 +603,7 @@ struct GsfActor {
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
 
-    std::vector<std::tuple<double, BoundVector, BoundMatrix>> v;
+    std::vector<std::tuple<long double, BoundVector, BoundMatrix>> v;
 
     // TODO Check why can zero weights can occur
     for (const auto& idx : tmpStates.tips) {
@@ -613,7 +613,8 @@ struct GsfActor {
       }
     }
 
-    normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
+    normalizeWeights(
+        v, [](auto& c) -> long double& { return std::get<long double>(c); });
 
     result.lastMeasurementState = MultiComponentBoundTrackParameters(
         surface.getSharedPtr(), std::move(v),

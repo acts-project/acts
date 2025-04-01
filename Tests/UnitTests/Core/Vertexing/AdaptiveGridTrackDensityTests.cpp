@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // Using a large track grid so we can choose a small bin size
   const std::uint32_t spatialTrkGridSize = 4001;
   // Arbitrary (but small) bin size
-  const double binExtent = 3.1e-4;
+  const long double binExtent = 3.1e-4;
   // Arbitrary impact parameters
-  const double d0 = 0.4;
-  const double z0 = -0.2;
+  const long double d0 = 0.4;
+  const long double z0 = -0.2;
   Vector2 impactParameters{d0, z0};
 
   Covariance covMat = makeRandomCovariance();
@@ -75,14 +75,14 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // Add track
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
 
-  double relTol = 1e-5;
-  double small = 1e-5;
+  long double relTol = 1e-5;
+  long double small = 1e-5;
 
   auto gaussian2D = [&](const Vector2& args, const Vector2& mus,
                         const SquareMatrix2& sigmas) {
     Vector2 diffs = args - mus;
-    double coef = 1 / std::sqrt(sigmas.determinant());
-    double expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
+    long double coef = 1 / std::sqrt(sigmas.determinant());
+    long double expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
     return coef * std::exp(expo);
   };
 
@@ -100,12 +100,12 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
   // Analytical maximum of the Gaussian (can be obtained by expressing the
   // exponent as (az - b)^2 + c and noting correctMaxZ = b/a)
-  double correctMaxZ =
+  long double correctMaxZ =
       -0.5 * (subCovMat(0, 1) + subCovMat(1, 0)) / subCovMat(0, 0) * d0 + z0;
   // Analytical FWHM of the Gaussian (result similar to
   // https://en.wikipedia.org/wiki/Full_width_at_half_maximum#Normal_distribution
   // but the calculation needs to be slightly modified in our case)
-  double correctFWHM =
+  long double correctFWHM =
       2. * std::sqrt(2 * std::numbers::ln2 * subCovMat.determinant() /
                      subCovMat(0, 0));
 
@@ -114,12 +114,12 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   BOOST_CHECK(res.ok());
 
   // Extract variables for better readability...
-  double maxZ = res.value().first.first;
-  double fwhm = res.value().second * 2.355;
+  long double maxZ = res.value().first.first;
+  long double fwhm = res.value().second * 2.355;
 
   // ... and check if they are correct (note: the optimization is not as exact
   // as the density values).
-  double relTolOptimization = 1e-3;
+  long double relTolOptimization = 1e-3;
   CHECK_CLOSE_REL(correctMaxZ, maxZ, relTolOptimization);
   CHECK_CLOSE_REL(correctFWHM, fwhm, relTolOptimization);
 }
@@ -130,12 +130,12 @@ BOOST_AUTO_TEST_CASE(
   const std::uint32_t spatialTrkGridSize = 401;
   const std::uint32_t temporalTrkGridSize = 401;
   // Bin extents
-  const double spatialBinExtent = 3.1e-3;
-  const double temporalBinExtent = 3.1e-3;
+  const long double spatialBinExtent = 3.1e-3;
+  const long double temporalBinExtent = 3.1e-3;
   // Arbitrary impact parameters
-  const double d0 = -0.1;
-  const double z0 = -0.2;
-  const double t0 = 0.1;
+  const long double d0 = -0.1;
+  const long double z0 = -0.2;
+  const long double t0 = 0.1;
   Vector3 impactParameters{d0, z0, t0};
 
   // symmetric covariance matrix
@@ -170,21 +170,21 @@ BOOST_AUTO_TEST_CASE(
   // Add track
   auto trackDensityMap = grid.addTrack(params, mainDensityMap);
 
-  double relTol = 1e-5;
-  double small = 1e-5;
+  long double relTol = 1e-5;
+  long double small = 1e-5;
 
   auto gaussian3D = [&](const Vector3& args, const Vector3& mus,
                         const SquareMatrix3& sigmas) {
     Vector3 diffs = args - mus;
-    double coef = 1 / std::sqrt(sigmas.determinant());
-    double expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
+    long double coef = 1 / std::sqrt(sigmas.determinant());
+    long double expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
     return coef * std::exp(expo);
   };
 
   for (const auto& [bin, density] : mainDensityMap) {
     // Extract variables for better readability
-    double z = grid.getBinCenter(bin.first, spatialBinExtent);
-    double t = grid.getBinCenter(bin.second, temporalBinExtent);
+    long double z = grid.getBinCenter(bin.first, spatialBinExtent);
+    long double t = grid.getBinCenter(bin.second, temporalBinExtent);
     // Argument for 3D gaussian
     Vector3 dztVec{0., z, t};
 
@@ -199,32 +199,33 @@ BOOST_AUTO_TEST_CASE(
   // https://acts.readthedocs.io/en/latest/white_papers/gaussian-track-densities.html
   // Analytical maximum of the Gaussian
   ActsSquareMatrix<3> ipWeights = ipCov.inverse();
-  double denom =
+  long double denom =
       ipWeights(1, 1) * ipWeights(2, 2) - ipWeights(1, 2) * ipWeights(1, 2);
 
-  double zNom =
+  long double zNom =
       ipWeights(0, 1) * ipWeights(2, 2) - ipWeights(0, 2) * ipWeights(1, 2);
-  double correctMaxZ = zNom / denom * d0 + z0;
+  long double correctMaxZ = zNom / denom * d0 + z0;
 
-  double tNom =
+  long double tNom =
       ipWeights(0, 2) * ipWeights(1, 1) - ipWeights(0, 1) * ipWeights(1, 2);
-  double correctMaxT = tNom / denom * d0 + t0;
+  long double correctMaxT = tNom / denom * d0 + t0;
 
   // Analytical FWHM of the Gaussian
-  double correctFWHM = 2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
+  long double correctFWHM =
+      2. * std::sqrt(2 * std::numbers::ln2 / ipWeights(1, 1));
 
   // Estimate maximum z position and seed width
   auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);
   BOOST_CHECK(res.ok());
 
   // Extract variables for better readability...
-  double maxZ = res.value().first.first;
-  double maxT = res.value().first.second;
-  double fwhm = res.value().second * 2.355;
+  long double maxZ = res.value().first.first;
+  long double maxT = res.value().first.second;
+  long double fwhm = res.value().second * 2.355;
 
   // ... and check if they are correct (note: the optimization is not as exact
   // as the density values).
-  double relTolOptimization = 1e-1;
+  long double relTolOptimization = 1e-1;
   CHECK_CLOSE_REL(correctMaxZ, maxZ, relTolOptimization);
   CHECK_CLOSE_REL(correctMaxT, maxT, relTolOptimization);
   CHECK_CLOSE_REL(correctFWHM, fwhm, relTolOptimization);
@@ -233,7 +234,7 @@ BOOST_AUTO_TEST_CASE(
 BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
   const std::uint32_t spatialTrkGridSize = 1;
-  double binExtent = 2.;
+  long double binExtent = 2.;
   AdaptiveGridTrackDensity::Config cfg;
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
   cfg.spatialBinExtent = binExtent;
@@ -243,7 +244,7 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   AdaptiveGridTrackDensity::DensityMap mainDensityMap;
 
   // z-position of the maximum density
-  double correctMaxZ = -2.;
+  long double correctMaxZ = -2.;
 
   // Fill map with a triangular track density.
   // We use an isoscele triangle with a maximum density value of 1 and a width
@@ -259,19 +260,19 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   BOOST_CHECK(res.ok());
 
   // Check if we found the correct maximum
-  double maxZ = res.value().first.first;
+  long double maxZ = res.value().first.first;
   BOOST_CHECK_EQUAL(correctMaxZ, maxZ);
 
   // Calculate full width at half maximum from seed width and check if it's
   // correct
-  double fwhm = res.value().second * 2.355;
+  long double fwhm = res.value().second * 2.355;
   CHECK_CLOSE_REL(10., fwhm, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(track_adding) {
   const std::uint32_t spatialTrkGridSize = 15;
 
-  double binExtent = 0.1;  // mm
+  long double binExtent = 0.1;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   const std::uint32_t temporalTrkGridSize = 29;
 
   // spatial and temporal bin extent
-  double binExtent = 0.05;
+  long double binExtent = 0.05;
 
   // 1D grid of z values
   AdaptiveGridTrackDensity::Config cfg1D;
@@ -354,10 +355,10 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // Create some test tracks
   Covariance covMat(Covariance::Identity() * 0.005);
 
-  double z0Trk1 = 0.25;
-  double t0Trk1 = 0.05;
-  double z0Trk2 = -10.95;
-  double t0Trk2 = 0.1;
+  long double z0Trk1 = 0.25;
+  long double t0Trk1 = 0.05;
+  long double z0Trk2 = -10.95;
+  long double t0Trk2 = 0.1;
   BoundVector paramVec1;
   paramVec1 << 0.02, z0Trk1, 0, 0, 0, t0Trk1;
   BoundVector paramVec2;
@@ -424,7 +425,7 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
 BOOST_AUTO_TEST_CASE(highest_density_sum) {
   const std::uint32_t spatialTrkGridSize = 29;
 
-  double binExtent = 0.05;  // mm
+  long double binExtent = 0.05;  // mm
 
   AdaptiveGridTrackDensity::Config cfg;
   cfg.spatialTrkGridSizeRange = {spatialTrkGridSize, spatialTrkGridSize};
@@ -436,8 +437,8 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
   // Create some test tracks
   Covariance covMat(Covariance::Identity() * 0.005);
 
-  double z0Trk1 = 0.25;
-  double z0Trk2 = -10.95;
+  long double z0Trk1 = 0.25;
+  long double z0Trk2 = -10.95;
   BoundVector paramVec1;
   paramVec1 << 0.01, z0Trk1, 0, 0, 0, 0;
   BoundVector paramVec2;
@@ -490,7 +491,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   std::uint32_t trkGridSize = spatialTrkGridSize * temporalTrkGridSize;
 
   // bin extent in z and t direction
-  double binExtent = 0.05;
+  long double binExtent = 0.05;
 
   // 1D grid
   AdaptiveGridTrackDensity::Config cfg1D;
@@ -511,10 +512,10 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   Covariance covMat = makeRandomCovariance();
 
   // Define z0 values for test tracks
-  double z0Trk1 = -0.45;
-  double t0Trk1 = -0.15;
-  double z0Trk2 = -0.25;
-  double t0Trk2 = t0Trk1;
+  long double z0Trk1 = -0.45;
+  long double t0Trk1 = -0.15;
+  long double z0Trk2 = -0.25;
+  long double t0Trk2 = t0Trk1;
 
   BoundVector paramVec0;
   paramVec0 << 0.1, z0Trk1, 0, 0, 0, t0Trk1;
@@ -536,7 +537,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
 
   // Lambda for calculating total density
   auto densitySum = [](const auto& densityMap) {
-    double sum = 0.;
+    long double sum = 0.;
     for (const auto& [_, density] : densityMap) {
       sum += density;
     }
@@ -548,14 +549,14 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   BOOST_CHECK(!mainDensityMap1D.empty());
   // Grid size should match spatialTrkGridSize
   BOOST_CHECK_EQUAL(spatialTrkGridSize, mainDensityMap1D.size());
-  double firstDensitySum1D = densitySum(mainDensityMap1D);
+  long double firstDensitySum1D = densitySum(mainDensityMap1D);
 
   // Add track 0 to 2D grid
   auto firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
   BOOST_CHECK(!mainDensityMap2D.empty());
   // Grid size should match spatialTrkGridSize
   BOOST_CHECK_EQUAL(trkGridSize, mainDensityMap2D.size());
-  double firstDensitySum2D = densitySum(mainDensityMap2D);
+  long double firstDensitySum2D = densitySum(mainDensityMap2D);
 
   // Add track 0 again to 1D grid
   firstTrackDensityMap1D = grid1D.addTrack(params0, mainDensityMap1D);
@@ -563,7 +564,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Grid size should still match spatialTrkGridSize
   BOOST_CHECK_EQUAL(spatialTrkGridSize, mainDensityMap1D.size());
   // Calculate new total density ...
-  double secondDensitySum1D = densitySum(mainDensityMap1D);
+  long double secondDensitySum1D = densitySum(mainDensityMap1D);
   // ... and check that it's twice as large as before
   BOOST_CHECK_EQUAL(2 * firstDensitySum1D, secondDensitySum1D);
 
@@ -573,14 +574,14 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Grid size should still match trkGridSize
   BOOST_CHECK_EQUAL(trkGridSize, mainDensityMap2D.size());
   // Calculate new total density ...
-  double secondDensitySum2D = densitySum(mainDensityMap2D);
+  long double secondDensitySum2D = densitySum(mainDensityMap2D);
   // ... and check that it's twice as large as before
   BOOST_CHECK_EQUAL(2 * firstDensitySum2D, secondDensitySum2D);
 
   // Remove track 0 from 1D grid
   grid1D.subtractTrack(firstTrackDensityMap1D, mainDensityMap1D);
   // Calculate new total density
-  double thirdDensitySum1D = densitySum(mainDensityMap1D);
+  long double thirdDensitySum1D = densitySum(mainDensityMap1D);
   // Density should be old one again
   BOOST_CHECK_EQUAL(firstDensitySum1D, thirdDensitySum1D);
   // Grid size should still match spatialTrkGridSize (removal does not change
@@ -590,7 +591,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Remove track 0 from 2D grid
   grid2D.subtractTrack(firstTrackDensityMap2D, mainDensityMap2D);
   // Calculate new total density
-  double thirdDensitySum2D = densitySum(mainDensityMap2D);
+  long double thirdDensitySum2D = densitySum(mainDensityMap2D);
   // Density should be old one again
   BOOST_CHECK_EQUAL(firstDensitySum2D, thirdDensitySum2D);
   // Grid size should still match trkGridSize (removal does not change grid
@@ -603,7 +604,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
       static_cast<std::uint32_t>(std::abs(z0Trk1 - z0Trk2) / binExtent);
   BOOST_CHECK_EQUAL(spatialTrkGridSize + nNonOverlappingBins1D,
                     mainDensityMap1D.size());
-  double fourthDensitySum1D = densitySum(mainDensityMap1D);
+  long double fourthDensitySum1D = densitySum(mainDensityMap1D);
 
   // Add track 1 to 2D grid (overlaps with track 0!)
   auto secondTrackDensityMap2D = grid2D.addTrack(params1, mainDensityMap2D);
@@ -611,18 +612,18 @@ BOOST_AUTO_TEST_CASE(track_removing) {
       nNonOverlappingBins1D * temporalTrkGridSize;
   BOOST_CHECK_EQUAL(trkGridSize + nNonOverlappingBins2D,
                     mainDensityMap2D.size());
-  double fourthDensitySum2D = densitySum(mainDensityMap2D);
+  long double fourthDensitySum2D = densitySum(mainDensityMap2D);
 
   // Remove second track 0 from 1D grid
   grid1D.subtractTrack(firstTrackDensityMap1D, mainDensityMap1D);
-  double fifthDensitySum1D = densitySum(mainDensityMap1D);
+  long double fifthDensitySum1D = densitySum(mainDensityMap1D);
   // Density should match differences of removed tracks
   CHECK_CLOSE_REL(fifthDensitySum1D, fourthDensitySum1D - firstDensitySum1D,
                   1e-5);
 
   // Remove second track 0 from 2D grid
   grid2D.subtractTrack(firstTrackDensityMap2D, mainDensityMap2D);
-  double fifthDensitySum2D = densitySum(mainDensityMap2D);
+  long double fifthDensitySum2D = densitySum(mainDensityMap2D);
   // Density should match differences of removed tracks
   CHECK_CLOSE_REL(fifthDensitySum2D, fourthDensitySum2D - firstDensitySum2D,
                   1e-5);
@@ -632,7 +633,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Size should not have changed
   BOOST_CHECK_EQUAL(spatialTrkGridSize + nNonOverlappingBins1D,
                     mainDensityMap1D.size());
-  double sixthDensitySum1D = densitySum(mainDensityMap1D);
+  long double sixthDensitySum1D = densitySum(mainDensityMap1D);
   // 1D grid is now empty after all tracks were removed
   CHECK_CLOSE_ABS(0., sixthDensitySum1D, 1e-4);
 
@@ -641,7 +642,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Size should not have changed
   BOOST_CHECK_EQUAL(trkGridSize + nNonOverlappingBins2D,
                     mainDensityMap2D.size());
-  double sixthDensitySum2D = densitySum(mainDensityMap2D);
+  long double sixthDensitySum2D = densitySum(mainDensityMap2D);
   // 2D grid is now empty after all tracks were removed
   CHECK_CLOSE_ABS(0., sixthDensitySum2D, 1e-4);
 }

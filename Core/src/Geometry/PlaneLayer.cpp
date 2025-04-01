@@ -20,7 +20,7 @@
 Acts::PlaneLayer::PlaneLayer(const Transform3& transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
                              std::unique_ptr<SurfaceArray> surfaceArray,
-                             double thickness,
+                             long double thickness,
                              std::unique_ptr<ApproachDescriptor> ades,
                              LayerType laytyp)
     : PlaneSurface(transform, pbounds),

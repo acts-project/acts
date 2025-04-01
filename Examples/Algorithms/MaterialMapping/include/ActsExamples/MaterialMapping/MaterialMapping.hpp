@@ -114,7 +114,7 @@ class MaterialMapping : public IAlgorithm {
   /// Those parameters are the variance and the number of track for each bin
   ///
   /// @param surfaceID the ID of the surface of interest
-  std::vector<std::pair<double, int>> scoringParameters(
+  std::vector<std::pair<long double, int>> scoringParameters(
       std::uint64_t surfaceID);
 
   /// Readonly access to the config

@@ -40,7 +40,7 @@ class RectangleBounds : public PlanarBounds {
   ///
   /// @param halfX halflength in X
   /// @param halfY halflength in Y
-  RectangleBounds(double halfX, double halfY) noexcept(false)
+  RectangleBounds(long double halfX, long double halfY) noexcept(false)
       : m_min({-halfX, -halfY}), m_max({halfX, halfY}) {
     checkConsistency();
   }
@@ -48,8 +48,8 @@ class RectangleBounds : public PlanarBounds {
   /// Constructor - from fixed size array - generic
   ///
   /// @param values The parameter values
-  explicit RectangleBounds(const std::array<double, eSize>& values) noexcept(
-      false)
+  explicit RectangleBounds(
+      const std::array<long double, eSize>& values) noexcept(false)
       : m_min({values[eMinX], values[eMinY]}),
         m_max({values[eMaxX], values[eMaxY]}) {
     checkConsistency();
@@ -66,7 +66,7 @@ class RectangleBounds : public PlanarBounds {
 
   BoundsType type() const final { return SurfaceBounds::eRectangle; }
 
-  std::vector<double> values() const final {
+  std::vector<long double> values() const final {
     return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
   }
 
@@ -99,13 +99,13 @@ class RectangleBounds : public PlanarBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const;
+  long double get(BoundValues bValue) const;
 
   /// Access to the half length in X
-  double halfLengthX() const { return 0.5 * (m_max.x() - m_min.x()); }
+  long double halfLengthX() const { return 0.5 * (m_max.x() - m_min.x()); }
 
   /// Access to the half length in Y
-  double halfLengthY() const { return 0.5 * (m_max.y() - m_min.y()); }
+  long double halfLengthY() const { return 0.5 * (m_max.y() - m_min.y()); }
 
   /// Get the min vertex defining the bounds
   /// @return The min vertex

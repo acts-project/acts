@@ -22,13 +22,13 @@ namespace Acts::Test {
 auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
 
 struct DriftCircle {
-  double y{0.};
-  double z{0.};
-  double rDrift{0.};
-  double rDriftError{0.};
+  long double y{0.};
+  long double z{0.};
+  long double rDrift{0.};
+  long double rDriftError{0.};
 
-  DriftCircle(const double _y, const double _z, const double _r,
-              const double _rUncert)
+  DriftCircle(const long double _y, const long double _z, const long double _r,
+              const long double _rUncert)
       : y{_y}, z{_z}, rDrift{_r}, rDriftError{_rUncert} {}
 };
 
@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
 
   // we are using the slope on yz plane with the y coordinate (hardcoded from
   // the csv MuonSimHit data)
-  std::vector<std::pair<double, double>> simHits = {
+  std::vector<std::pair<long double, long double>> simHits = {
       {-0.0401472 / 0.994974, -422.612}};
 
   // Define the drift Circles
-  constexpr double uncert{0.3};
+  constexpr long double uncert{0.3};
   std::array<DriftCircle, 6> driftCircles{
       DriftCircle{-427.981, -225.541, 14.5202, uncert},
       DriftCircle{-412.964, -199.53, 1.66237, uncert},
@@ -71,16 +71,16 @@ BOOST_AUTO_TEST_CASE(hough_transform_seeder) {
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParamFromDCleft = [](double tanTheta, const DriftCircle& DC) {
+  auto houghParamFromDCleft = [](long double tanTheta, const DriftCircle& DC) {
     return DC.y - tanTheta * DC.z - DC.rDrift / std::cos(std::atan(tanTheta));
   };
   // right solution
-  auto houghParamFromDCright = [](double tanTheta, const DriftCircle& DC) {
+  auto houghParamFromDCright = [](long double tanTheta, const DriftCircle& DC) {
     return DC.y - tanTheta * DC.z + DC.rDrift / std::cos(std::atan(tanTheta));
   };
 
   // create the function parametrising the drift radius uncertainty
-  auto houghWidthFromDC = [](double, const DriftCircle& DC) {
+  auto houghWidthFromDC = [](long double, const DriftCircle& DC) {
     return std::min(DC.rDriftError * 3.,
                     1.0);  // scale reported errors up to at least 1mm or 3
                            // times the reported error as drift circle calib not

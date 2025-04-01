@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set up a random engine for sampling material
   std::random_device rd;
   std::mt19937 gen(42);
-  std::uniform_real_distribution<double> disX(0., 3_m);
-  std::uniform_real_distribution<double> disYZ(-0.5_m, 0.5_m);
+  std::uniform_real_distribution<long double> disX(0., 3_m);
+  std::uniform_real_distribution<long double> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Collect the material as given by the grid and test it
   std::vector<Material> matvector;
-  double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
+  long double gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     matvector.push_back(
         Acts::Material{matGrid.atPosition(stepResult.position[i])});

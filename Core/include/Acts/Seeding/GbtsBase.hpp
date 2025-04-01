@@ -36,7 +36,7 @@ class TrigInDetTriplet {
   const GbtsSP<space_point_t>& s2() const { return m_s2; }
   const GbtsSP<space_point_t>& s3() const { return m_s3; }
   float Q() const { return m_Q; }
-  void Q(double newQ) { m_Q = newQ; }
+  void Q(long double newQ) { m_Q = newQ; }
 
  protected:
   GbtsSP<space_point_t> m_s1;

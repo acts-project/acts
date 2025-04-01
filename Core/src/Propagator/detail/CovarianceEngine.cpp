@@ -25,7 +25,7 @@ namespace Acts {
 
 /// Some type defs
 using Jacobian = BoundMatrix;
-using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+using BoundState = std::tuple<BoundTrackParameters, Jacobian, long double>;
 
 Result<BoundState> detail::boundState(
     const GeometryContext& geoContext, const Surface& surface,
@@ -33,7 +33,7 @@ Result<BoundState> detail::boundState(
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath,
+    long double accumulatedPath,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Create the bound parameters
   Result<BoundVector> bv =
@@ -67,7 +67,7 @@ BoundState detail::curvilinearState(
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath) {
+    long double accumulatedPath) {
   const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
 
   // Covariance transport

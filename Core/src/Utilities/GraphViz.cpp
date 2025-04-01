@@ -74,11 +74,11 @@ std::ostream& operator<<(std::ostream& os, const Shape& shape) {
     case Octagon:
       os << "octagon";
       break;
-    case DoubleCircle:
-      os << "doublecircle";
+    case long doubleCircle:
+      os << "long doublecircle";
       break;
-    case DoubleOctagon:
-      os << "doubleoctagon";
+    case long doubleOctagon:
+      os << "long doubleoctagon";
       break;
     case TripleOctagon:
       os << "tripleoctagon";

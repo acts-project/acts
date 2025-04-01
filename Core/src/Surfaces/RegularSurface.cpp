@@ -21,7 +21,7 @@ Vector3 RegularSurface::normal(const GeometryContext& gctx, const Vector3& pos,
 Result<Vector2> RegularSurface::globalToLocal(const GeometryContext& gctx,
                                               const Vector3& position,
                                               const Vector3& /*direction*/,
-                                              double tolerance) const {
+                                              long double tolerance) const {
   return globalToLocal(gctx, position, tolerance);
 }
 
@@ -34,7 +34,7 @@ Vector3 RegularSurface::localToGlobal(const GeometryContext& gctx,
 bool RegularSurface::isOnSurface(const GeometryContext& gctx,
                                  const Vector3& position,
                                  const BoundaryTolerance& boundaryTolerance,
-                                 double tolerance) const {
+                                 long double tolerance) const {
   // global to local transformation
   auto lpResult = globalToLocal(gctx, position, tolerance);
   if (!lpResult.ok()) {

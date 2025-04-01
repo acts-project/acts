@@ -60,7 +60,7 @@ namespace Acts::Test {
 static void drawMeasurements(
     IVisualization3D& helper, const Measurements& measurements,
     const std::shared_ptr<const TrackingGeometry>& geometry,
-    const Acts::GeometryContext& geoCtx, double locErrorScale = 1.,
+    const Acts::GeometryContext& geoCtx, long double locErrorScale = 1.,
     const ViewConfig& viewConfig = s_viewMeasurement) {
   std::cout << "\n*** Draw measurements ***\n" << std::endl;
 
@@ -78,10 +78,10 @@ static void drawMeasurements(
 
 //// Construct initial track parameters.
 Acts::BoundTrackParameters makeParameters(
-    const double x = 0.0_m, const double y = 0.0_m, const double z = 0.0_m,
-    const double w = 42_ns, const double phi = 0_degree,
-    const double theta = 90_degree, const double p = 2_GeV,
-    const double q = 1_e) {
+    const long double x = 0.0_m, const long double y = 0.0_m,
+    const long double z = 0.0_m, const long double w = 42_ns,
+    const long double phi = 0_degree, const long double theta = 90_degree,
+    const long double p = 2_GeV, const long double q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -119,10 +119,10 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
   }
 
   // Define the dimensions of the square surfaces
-  const double halfSizeSurface = 1_m;
+  const long double halfSizeSurface = 1_m;
 
   // Rotation of the surfaces around the y-axis
-  const double rotationAngle = std::numbers::pi / 2.;
+  const long double rotationAngle = std::numbers::pi / 2.;
   const Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   const Vector3 yPos(0., 1., 0.);
   const Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -159,7 +159,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
     cfg.detElementConstructor =
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
+           long double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);
@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(Material) {
     std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
     ObjVisualization3D obj;
 
-    double localErrorScale = 10000000.;
+    long double localErrorScale = 10000000.;
     ViewConfig mcolor{.color = {255, 145, 48}};
     mcolor.offset = 2;
     //  mcolor.visible = true;

@@ -26,7 +26,7 @@ class ScalableBFieldService : public IContextDecorator {
  public:
   struct Config {
     /// Scaling factor. Unit value means the magnetic field is left unchanged.
-    double scalor = 1.25;
+    long double scalor = 1.25;
   };
 
   /// Construct the magnetic field service.

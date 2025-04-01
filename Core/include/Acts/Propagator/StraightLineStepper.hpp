@@ -46,7 +46,7 @@ class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, long double>;
   using BField = NullBField;
 
   struct Config {};
@@ -95,7 +95,7 @@ class StraightLineStepper {
     Covariance cov = Covariance::Zero();
 
     /// accummulated path length state
-    double pathAccumulated = 0.;
+    long double pathAccumulated = 0.;
 
     /// Total number of performed steps
     std::size_t nSteps = 0;
@@ -107,7 +107,7 @@ class StraightLineStepper {
     ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation (ignored for SL stepper)
-    double previousStepSize = 0.;
+    long double previousStepSize = 0.;
 
     /// Statistics of the stepper
     StepperStatistics statistics;
@@ -145,12 +145,14 @@ class StraightLineStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
+  long double qOverP(const State& state) const {
+    return state.pars[eFreeQOverP];
+  }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double absoluteMomentum(const State& state) const {
+  long double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
@@ -164,7 +166,7 @@ class StraightLineStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const {
+  long double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
 
@@ -178,7 +180,7 @@ class StraightLineStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.pars[eFreeTime]; }
+  long double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
   ///
@@ -198,7 +200,7 @@ class StraightLineStepper {
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance, ConstrainedStep::Type stype,
+      long double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
         *this, state, surface, index, navDir, boundaryTolerance,
@@ -218,16 +220,16 @@ class StraightLineStepper {
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
-    double stepSize = oIntersection.pathLength();
+    long double stepSize = oIntersection.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
-  /// Update step size - explicitly with a double
+  /// Update step size - explicitly with a long double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void updateStepSize(State& state, double stepSize,
+  void updateStepSize(State& state, long double stepSize,
                       ConstrainedStep::Type stype) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype);
@@ -237,7 +239,8 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
-  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+  long double getStepSize(const State& state,
+                          ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
 
@@ -333,7 +336,7 @@ class StraightLineStepper {
   /// @param [in] qop the updated qop value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double qop, double time) const;
+              long double qop, long double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -369,8 +372,8 @@ class StraightLineStepper {
   ///
   /// @note The state contains the desired step size. It can be negative during
   ///       backwards track propagation.
-  Result<double> step(State& state, Direction propDir,
-                      const IVolumeMaterial* material) const {
+  Result<long double> step(State& state, Direction propDir,
+                           const IVolumeMaterial* material) const {
     (void)material;
 
     // use the adjusted step size

@@ -24,10 +24,10 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating compliant/non-compliant LineBounds object
 BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
-  const double radius = 0.5;
-  const double halfZ = 10.;
+  const long double radius = 0.5;
+  const long double halfZ = 10.;
 
-  /// Test LineBounds(double, double)
+  /// Test LineBounds(long double, long double)
   LineBounds lineBounds(radius, halfZ);
   BOOST_CHECK_EQUAL(lineBounds.type(), SurfaceBounds::eLine);
 
@@ -38,21 +38,21 @@ BOOST_AUTO_TEST_CASE(LineBoundsConstruction) {
 
 /// Unit test for testing LineBounds recreation from streaming
 BOOST_AUTO_TEST_CASE(LineBoundsRecreation) {
-  const double radius = 0.5;
-  const double halfZ = 20.;  // != 10.
+  const long double radius = 0.5;
+  const long double halfZ = 20.;  // != 10.
 
   LineBounds original(radius, halfZ);
   LineBounds recreated(original);
   auto valvector = original.values();
-  std::array<double, LineBounds::eSize> values{};
+  std::array<long double, LineBounds::eSize> values{};
   std::copy_n(valvector.begin(), LineBounds::eSize, values.begin());
   BOOST_CHECK_EQUAL(original, recreated);
 }
 
 /// Unit test for testing LineBounds exceptions
 BOOST_AUTO_TEST_CASE(LineBoundsExceptions) {
-  const double radius = 0.5;
-  const double halfZ = 20.;  // != 10.
+  const long double radius = 0.5;
+  const long double halfZ = 20.;  // != 10.
 
   // Negative radius
   BOOST_CHECK_THROW(LineBounds(-radius, halfZ), std::logic_error);
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(LineBoundsExceptions) {
 
 /// Unit test for testing LineBounds assignment
 BOOST_AUTO_TEST_CASE(LineBoundsAssignment) {
-  const double radius = 0.5;
-  const double halfZ = 20.;  // != 10.
+  const long double radius = 0.5;
+  const long double halfZ = 20.;  // != 10.
 
   LineBounds lineBoundsObject(radius, halfZ);
   LineBounds assignedLineBounds = lineBoundsObject;
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(LineBoundsAssignment) {
 
 /// Unit tests for LineBounds properties
 BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
-  const double radius = 0.5;
-  const double halfZ = 20.;  // != 10.
+  const long double radius = 0.5;
+  const long double halfZ = 20.;  // != 10.
 
   LineBounds lineBoundsObject(radius, halfZ);
 

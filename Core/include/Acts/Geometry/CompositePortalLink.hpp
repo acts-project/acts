@@ -76,7 +76,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param tolerance The on-surface tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
-      double tolerance = s_onSurfaceTolerance) const override;
+      long double tolerance = s_onSurfaceTolerance) const override;
 
   /// Resolve the volume for a 3D position
   /// @note @p position is assumed to be on surface
@@ -85,7 +85,7 @@ class CompositePortalLink final : public PortalLinkBase {
   /// @param tolerance The tolerance
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const override;
+      long double tolerance = s_onSurfaceTolerance) const override;
 
   /// Get the depth of the composite tree
   /// @return The depth

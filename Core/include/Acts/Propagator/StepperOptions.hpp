@@ -31,16 +31,16 @@ struct StepperPlainOptions {
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 
   /// Tolerance for the error of the integration
-  double stepTolerance = 1e-4;
+  long double stepTolerance = 1e-4;
 
   /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
+  long double stepSizeCutOff = 0.;
 
   /// Initial step size
-  double initialStepSize = 10 * Acts::UnitConstants::m;
+  long double initialStepSize = 10 * Acts::UnitConstants::m;
 
   /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
+  long double maxStepSize = std::numeric_limits<long double>::max();
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
@@ -53,7 +53,7 @@ struct StepperPlainOptions {
     bool includeGradient = true;
 
     /// Cut-off value for the momentum in SI units
-    double momentumCutOff = 0.;
+    long double momentumCutOff = 0.;
   } dense;
 };
 

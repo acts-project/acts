@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(Static) {
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
-  double hlZ = 30_mm;
+  long double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
                                               "child");
@@ -226,8 +226,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
   auto& cyl = root->addCylinderContainer("Container", AxisDirection::AxisZ);
   cyl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap);
 
-  double z0 = -200_mm;
-  double hlZ = 30_mm;
+  long double z0 = -200_mm;
+  long double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   for (std::size_t i = 0; i < 3; i++) {
     auto childCyl = std::make_unique<TrackingVolume>(
@@ -279,9 +279,9 @@ BOOST_AUTO_TEST_CASE(Confined) {
   root->addStaticVolume(
       base, std::make_shared<CylinderVolumeBounds>(50_mm, 400_mm, 1000_mm),
       "PixelWrapper", [&](auto& wrap) {
-        double rMin = 100_mm;
-        double rMax = 350_mm;
-        double hlZ = 100_mm;
+        long double rMin = 100_mm;
+        long double rMax = 350_mm;
+        long double hlZ = 100_mm;
 
         wrap.addStaticVolume(
             base * Translation3{Vector3{0, 0, -600_mm}},
@@ -339,17 +339,17 @@ BOOST_AUTO_TEST_CASE(Confined) {
 }
 
 BOOST_AUTO_TEST_CASE(DiscLayer) {
-  double yrot = 45_degree;
+  long double yrot = 45_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
   std::vector<std::shared_ptr<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
-  double r = 300_mm;
+  long double r = 300_mm;
   std::size_t nSensors = 8;
-  double thickness = 2.5_mm;
+  long double thickness = 2.5_mm;
   auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
-  double deltaPhi = 2 * std::numbers::pi / nSensors;
+  long double deltaPhi = 2 * std::numbers::pi / nSensors;
   for (std::size_t i = 0; i < nSensors; i++) {
     // Create a fan of sensors
 
@@ -407,26 +407,26 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayer) {
-  double yrot = 0_degree;
+  long double yrot = 0_degree;
   Transform3 base = Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
   std::vector<std::shared_ptr<Surface>> surfaces;
   std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
-  double r = 300_mm;
+  long double r = 300_mm;
   std::size_t nStaves = 10;
   int nSensorsPerStave = 8;
-  double thickness = 0;
-  double hlPhi = 40_mm;
-  double hlZ = 60_mm;
+  long double thickness = 0;
+  long double hlPhi = 40_mm;
+  long double hlZ = 60_mm;
   auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
 
-  double deltaPhi = 2 * std::numbers::pi / nStaves;
+  long double deltaPhi = 2 * std::numbers::pi / nStaves;
 
   for (std::size_t istave = 0; istave < nStaves; istave++) {
     for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
          isensor++) {
-      double z = isensor * (2 * hlZ + 5_mm);
+      long double z = isensor * (2 * hlZ + 5_mm);
 
       Transform3 trf = base * Translation3(Vector3::UnitZ() * z) *
                        AngleAxis3{deltaPhi * istave, Vector3::UnitZ()} *
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(Material) {
   cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
   Blueprint root{cfg};
 
-  double hlZ = 30_mm;
+  long double hlZ = 30_mm;
   auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
   auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
                                               "child");
@@ -654,9 +654,9 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   using enum AxisBoundaryType;
   using enum CuboidVolumeBounds::Face;
 
-  double hlX = 30_mm;
-  double hlY = 40_mm;
-  double hlZ = 50_mm;
+  long double hlX = 30_mm;
+  long double hlY = 40_mm;
+  long double hlZ = 50_mm;
   auto cuboidBounds = std::make_shared<CuboidVolumeBounds>(hlX, hlY, hlZ);
   auto cuboid = std::make_unique<TrackingVolume>(Transform3::Identity(),
                                                  cuboidBounds, "child");
@@ -736,18 +736,18 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
 BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
   // Test disc layer with center of gravity disabled
   {
-    double yrot = 45_degree;
+    long double yrot = 45_degree;
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
-    double r = 300_mm;
+    long double r = 300_mm;
     std::size_t nSensors = 8;
-    double thickness = 2.5_mm;
+    long double thickness = 2.5_mm;
     auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
-    double deltaPhi = 2 * std::numbers::pi / nSensors;
+    long double deltaPhi = 2 * std::numbers::pi / nSensors;
     for (std::size_t i = 0; i < nSensors; i++) {
       Transform3 trf = base * AngleAxis3{deltaPhi * i, Vector3::UnitZ()} *
                        Translation3(Vector3::UnitX() * r);
@@ -795,27 +795,27 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
 
   // Test cylinder layer with center of gravity disabled
   {
-    double yrot = 0_degree;
+    long double yrot = 0_degree;
     Transform3 base =
         Transform3::Identity() * AngleAxis3{yrot, Vector3::UnitY()};
 
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::vector<std::unique_ptr<DetectorElementBase>> elements;
 
-    double r = 300_mm;
+    long double r = 300_mm;
     std::size_t nStaves = 10;
     int nSensorsPerStave = 8;
-    double thickness = 0;
-    double hlPhi = 40_mm;
-    double hlZ = 60_mm;
+    long double thickness = 0;
+    long double hlPhi = 40_mm;
+    long double hlZ = 60_mm;
     auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
 
-    double deltaPhi = 2 * std::numbers::pi / nStaves;
+    long double deltaPhi = 2 * std::numbers::pi / nStaves;
 
     for (std::size_t istave = 0; istave < nStaves; istave++) {
       for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
            isensor++) {
-        double z = isensor * (2 * hlZ + 5_mm);
+        long double z = isensor * (2 * hlZ + 5_mm);
 
         Transform3 trf = base * Translation3(Vector3::UnitZ() * z) *
                          AngleAxis3{deltaPhi * istave, Vector3::UnitZ()} *

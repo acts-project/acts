@@ -57,17 +57,17 @@ Acts::Vector3 momentum(const std::shared_ptr<HepMC3::GenParticle>& particle);
 /// @brief Returns the energy of a particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
 /// @return energy of the particle
-double energy(const std::shared_ptr<HepMC3::GenParticle>& particle);
+long double energy(const std::shared_ptr<HepMC3::GenParticle>& particle);
 
 /// @brief Returns the mass of a particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
 /// @return mass of the particle
-double mass(const std::shared_ptr<HepMC3::GenParticle>& particle);
+long double mass(const std::shared_ptr<HepMC3::GenParticle>& particle);
 
 /// @brief Returns the charge of a particle translated into Acts
 /// @param particle HepMC3::GenParticle particle
 /// @return charge of the particle
-double charge(const std::shared_ptr<HepMC3::GenParticle>& particle);
+long double charge(const std::shared_ptr<HepMC3::GenParticle>& particle);
 
 /// @brief Sets the PDG code of a particle translated from Acts
 /// @param particle HepMC3::GenParticle particle
@@ -84,12 +84,12 @@ void momentum(const std::shared_ptr<HepMC3::GenParticle>& particle,
 /// @param particle HepMC3::GenParticle particle
 /// @param energy energy that will be set
 void energy(const std::shared_ptr<HepMC3::GenParticle>& particle,
-            const double energy);
+            const long double energy);
 
 /// @brief Sets the mass of a particle translated from Acts
 /// @param particle HepMC3::GenParticle particle
 /// @param mass mass that will be set
 void mass(const std::shared_ptr<HepMC3::GenParticle>& particle,
-          const double mass);
+          const long double mass);
 
 }  // namespace ActsExamples::HepMC3Particle

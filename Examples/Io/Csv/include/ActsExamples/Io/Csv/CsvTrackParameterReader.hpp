@@ -43,7 +43,7 @@ class CsvTrackParameterReader final : public IReader {
     std::string outputTrackParameters;
 
     /// Beamspot
-    std::array<double, 3> beamspot{};
+    std::array<long double, 3> beamspot{};
   };
 
   /// Construct the track parameter reader.

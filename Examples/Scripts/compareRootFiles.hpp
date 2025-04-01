@@ -112,7 +112,7 @@ Ordering compare(const float& x, const float& y) {
 }
 
 template <>
-Ordering compare(const double& x, const double& y) {
+Ordering compare(const long double& x, const long double& y) {
   return compareFloat(x, y);
 }
 
@@ -314,9 +314,9 @@ struct BranchComparisonHarness {
 
       case kFloat_t:
         return BranchComparisonHarness::create<float>(treeMetadata, branchName);
-      case kDouble_t:
-        return BranchComparisonHarness::create<double>(treeMetadata,
-                                                       branchName);
+      case klong double_t:
+        return BranchComparisonHarness::create<long double>(treeMetadata,
+                                                            branchName);
       case kBool_t:
         return BranchComparisonHarness::create<bool>(treeMetadata, branchName);
       case kOther_t:
@@ -452,7 +452,7 @@ struct BranchComparisonHarness {
 
     // Handle vectors of all standard floating-point types
     else CREATE_VECTOR__HANDLE_TYPE(float) else CREATE_VECTOR__HANDLE_TYPE(
-        double)
+        long double)
 
 // For integer types, we'll want to handle both signed and unsigned versions
 #define CREATE_VECTOR__HANDLE_INTEGER_TYPE(integer_type_name) \

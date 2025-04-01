@@ -12,10 +12,10 @@
 
 namespace Acts {
 
-bool detail::checkPathLength(double pathLength, double nearLimit,
-                             double farLimit, const Logger& logger) {
+bool detail::checkPathLength(long double pathLength, long double nearLimit,
+                             long double farLimit, const Logger& logger) {
   // TODO why?
-  const double tolerance = s_onSurfaceTolerance;
+  const long double tolerance = s_onSurfaceTolerance;
 
   ACTS_VERBOSE(" -> near limit, far limit, distance: "
                << nearLimit << ", " << farLimit << ", " << pathLength);

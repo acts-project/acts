@@ -344,8 +344,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
                                                        externalExtent);
 
       ACTS_VERBOSE("Requested range: " << rangeExtent.toString());
-      std::array<double, 3u> mins = {};
-      std::array<double, 3u> maxs = {};
+      std::array<long double, 3u> mins = {};
+      std::array<long double, 3u> maxs = {};
 
       // Fill what we have - follow the convention to fill up with the last
       for (std::size_t ibv = 0; ibv < 3u; ++ibv) {
@@ -359,7 +359,7 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
         maxs[ibv] = rangeExtent.max(m_cfg.kdtBinning.back());
       }
       // Create the search range
-      RangeXD<3u, double> searchRange{mins, maxs};
+      RangeXD<3u, long double> searchRange{mins, maxs};
       auto surfaces = cache.kdtSurfaces->surfaces(searchRange);
       // Loop over surfaces and create an internal extent
       for (auto& sf : surfaces) {
@@ -406,8 +406,8 @@ Acts::GeoModelBlueprintCreater::createInternalStructureBuilder(
   return {nullptr, Extent()};
 }
 
-std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent, std::vector<double>,
-           Acts::Vector3>
+std::tuple<Acts::VolumeBounds::BoundsType, Acts::Extent,
+           std::vector<long double>, Acts::Vector3>
 Acts::GeoModelBlueprintCreater::parseBounds(
     const std::string& boundsEntry, const Extent& externalExtent,
     const Extent& internalExtent) const {
@@ -416,7 +416,7 @@ Acts::GeoModelBlueprintCreater::parseBounds(
 
   // Create the return values
   Vector3 translation{0., 0., 0.};
-  std::vector<double> boundValues = {};
+  std::vector<long double> boundValues = {};
   auto [boundsType, extent] = detail::GeoModelExentHelper::extentFromTable(
       boundsEntrySplit, externalExtent, internalExtent);
 

@@ -21,10 +21,10 @@ namespace ActsExamples {
 class ScalingCalibrator : public MeasurementCalibrator {
  public:
   struct ConstantTuple {
-    double x_offset{0};
-    double x_scale{1};
-    double y_offset{0};
-    double y_scale{1};
+    long double x_offset{0};
+    long double x_scale{1};
+    long double y_offset{0};
+    long double y_scale{1};
   };
 
   struct MapTuple {

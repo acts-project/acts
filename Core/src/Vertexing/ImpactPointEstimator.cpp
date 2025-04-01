@@ -20,9 +20,9 @@ namespace Acts {
 
 namespace {
 template <typename vector_t>
-Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
-                                          const BoundTrackParameters* trkParams,
-                                          const vector_t& vertexPos) {
+Result<long double> getVertexCompatibilityImpl(
+    const GeometryContext& gctx, const BoundTrackParameters* trkParams,
+    const vector_t& vertexPos) {
   static constexpr int nDim = vector_t::RowsAtCompileTime;
   static_assert(nDim == 3 || nDim == 4,
                 "The number of dimensions nDim must be either 3 or 4.");
@@ -101,32 +101,35 @@ Result<double> getVertexCompatibilityImpl(const GeometryContext& gctx,
 /// @param rho Signed helix radius
 ///
 /// @return Phi value at 3D PCA
-Result<double> performNewtonOptimization(
-    const Vector3& helixCenter, const Vector3& vtxPos, double phi, double theta,
-    double rho, const ImpactPointEstimator::Config& cfg, const Logger& logger) {
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
+Result<long double> performNewtonOptimization(
+    const Vector3& helixCenter, const Vector3& vtxPos, long double phi,
+    long double theta, long double rho, const ImpactPointEstimator::Config& cfg,
+    const Logger& logger) {
+  long double sinPhi = std::sin(phi);
+  long double cosPhi = std::cos(phi);
 
   int nIter = 0;
   bool hasConverged = false;
 
-  double cotTheta = 1. / std::tan(theta);
+  long double cotTheta = 1. / std::tan(theta);
 
-  double xO = helixCenter.x();
-  double yO = helixCenter.y();
-  double zO = helixCenter.z();
+  long double xO = helixCenter.x();
+  long double yO = helixCenter.y();
+  long double zO = helixCenter.z();
 
-  double xVtx = vtxPos.x();
-  double yVtx = vtxPos.y();
-  double zVtx = vtxPos.z();
+  long double xVtx = vtxPos.x();
+  long double yVtx = vtxPos.y();
+  long double zVtx = vtxPos.z();
 
   // Iterate until convergence is reached or the maximum amount of iterations
   // is exceeded
   while (!hasConverged && nIter < cfg.maxIterations) {
-    double derivative = rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
-                               (zVtx - zO + rho * phi * cotTheta) * cotTheta);
-    double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
-                                  rho * cotTheta * cotTheta);
+    long double derivative =
+        rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
+               (zVtx - zO + rho * phi * cotTheta) * cotTheta);
+    long double secDerivative =
+        rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
+               rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
       ACTS_ERROR(
@@ -135,7 +138,7 @@ Result<double> performNewtonOptimization(
       return VertexingError::NumericFailure;
     }
 
-    double deltaPhi = -derivative / secDerivative;
+    long double deltaPhi = -derivative / secDerivative;
 
     phi += deltaPhi;
     sinPhi = std::sin(phi);
@@ -169,8 +172,8 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
 
   // Extract charge-related particle parameters
-  double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
-  double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
+  long double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
+  long double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
 
   // Z-component of the B field at the reference position.
   // Note that we assume a constant B field here!
@@ -180,7 +183,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
                << refPoint << "\ncould not be retrieved.");
     return fieldRes.error();
   }
-  double bZ = (*fieldRes)[eZ];
+  long double bZ = (*fieldRes)[eZ];
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. In that case, the 3D PCA can be calculated analytically, see
@@ -193,7 +196,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
     Vector3 positionOnTrack = trkParams.position(gctx);
 
     // Distance between positionOnTrack and the 3D PCA
-    double distanceToPca =
+    long double distanceToPca =
         (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
 
     // 3D PCA
@@ -202,13 +205,14 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
       // Track time at positionOnTrack
-      double timeOnTrack = trkParams.parameters()[BoundIndices::eBoundTime];
+      long double timeOnTrack =
+          trkParams.parameters()[BoundIndices::eBoundTime];
 
-      double m0 = trkParams.particleHypothesis().mass();
-      double p = trkParams.particleHypothesis().extractMomentum(qOvP);
+      long double m0 = trkParams.particleHypothesis().mass();
+      long double p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
       // Speed in units of c
-      double beta = p / fastHypot(p, m0);
+      long double beta = p / fastHypot(p, m0);
 
       pcaStraightTrack[3] = timeOnTrack + distanceToPca / beta;
     }
@@ -225,21 +229,21 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // the reference.
 
   // Spatial Perigee parameters (i.e., spatial parameters of 2D PCA)
-  double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
-  double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
+  long double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
+  long double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
   // Momentum angles at 2D PCA
-  double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
-  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  long double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
+  long double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
   // Functions of the polar angle theta for later use
-  double sinTheta = std::sin(theta);
-  double cotTheta = 1. / std::tan(theta);
+  long double sinTheta = std::sin(theta);
+  long double cotTheta = 1. / std::tan(theta);
 
   // Set optimization variable phi to the angle at the 2D PCA as a first guess.
   // Note that phi corresponds to phiV in the reference.
-  double phi = phiP;
+  long double phi = phiP;
 
   // Signed radius of the helix on which the particle moves
-  double rho = sinTheta * (1. / qOvP) / bZ;
+  long double rho = sinTheta * (1. / qOvP) / bZ;
 
   // Position of the helix center.
   // We can set the z-position to a convenient value since it is not fixed by
@@ -259,8 +263,8 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
   // Set new phi value
   phi = *res;
 
-  double cosPhi = std::cos(phi);
-  double sinPhi = std::sin(phi);
+  long double cosPhi = std::cos(phi);
+  long double sinPhi = std::sin(phi);
 
   // Momentum direction at the 3D PCA.
   // Note that we have thetaV = thetaP = theta since the polar angle does not
@@ -277,13 +281,13 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
 
   if constexpr (nDim == 4) {
     // Time at the 2D PCA P
-    double tP = trkParams.parameters()[BoundIndices::eBoundTime];
+    long double tP = trkParams.parameters()[BoundIndices::eBoundTime];
 
-    double m0 = trkParams.particleHypothesis().mass();
-    double p = trkParams.particleHypothesis().extractMomentum(qOvP);
+    long double m0 = trkParams.particleHypothesis().mass();
+    long double p = trkParams.particleHypothesis().extractMomentum(qOvP);
 
     // Speed in units of c
-    double beta = p / fastHypot(p, m0);
+    long double beta = p / fastHypot(p, m0);
 
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
@@ -296,7 +300,7 @@ Result<std::pair<Vector4, Vector3>> getDistanceAndMomentumImpl(
 
 }  // namespace
 
-Result<double> ImpactPointEstimator::calculateDistance(
+Result<long double> ImpactPointEstimator::calculateDistance(
     const GeometryContext& gctx, const BoundTrackParameters& trkParams,
     const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentumImpl(gctx, trkParams, vtxPos, m_cfg, state,
@@ -387,7 +391,7 @@ Result<BoundTrackParameters> ImpactPointEstimator::estimate3DImpactParameters(
   }
 }
 
-Result<double> ImpactPointEstimator::getVertexCompatibility(
+Result<long double> ImpactPointEstimator::getVertexCompatibility(
     const GeometryContext& gctx, const BoundTrackParameters* trkParams,
     Eigen::Map<const ActsDynamicVector> vertexPos) const {
   if (vertexPos.size() == 3) {
@@ -461,15 +465,15 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
   // (i.e., we approximate the vertex as a sphere rather than an ellipsoid).
   // Using the full covariance matrix might furnish better results.
-  double vtxVarX = vtx.covariance()(eX, eX);
-  double vtxVarY = vtx.covariance()(eY, eY);
-  double vtxVarZ = vtx.covariance()(eZ, eZ);
+  long double vtxVarX = vtx.covariance()(eX, eX);
+  long double vtxVarY = vtx.covariance()(eY, eY);
+  long double vtxVarZ = vtx.covariance()(eZ, eZ);
 
   ImpactParametersAndSigma ipAndSigma;
 
   ipAndSigma.d0 = impactParams[0];
   // Variance of the vertex extent in the x-y-plane
-  double vtxVar2DExtent = std::max(vtxVarX, vtxVarY);
+  long double vtxVar2DExtent = std::max(vtxVarX, vtxVarY);
   // TODO: vtxVar2DExtent, vtxVarZ, and vtxVarT should always be >= 0. We need
   // to throw an error here once
   // https://github.com/acts-project/acts/issues/2231 is resolved.
@@ -489,7 +493,7 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
 
   if (calculateTimeIP) {
     ipAndSigma.deltaT = std::abs(vtx.time() - impactParams[2]);
-    double vtxVarT = vtx.fullCovariance()(eTime, eTime);
+    long double vtxVarT = vtx.fullCovariance()(eTime, eTime);
     if (vtxVarT > 0) {
       ipAndSigma.sigmaDeltaT = std::sqrt(vtxVarT + impactParamCovariance(2, 2));
     } else {
@@ -500,7 +504,8 @@ Result<ImpactParametersAndSigma> ImpactPointEstimator::getImpactParameters(
   return ipAndSigma;
 }
 
-Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
+Result<std::pair<long double, long double>>
+ImpactPointEstimator::getLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
@@ -520,18 +525,18 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   }
 
   const auto& params = (*result).parameters();
-  const double d0 = params[BoundIndices::eBoundLoc0];
-  const double z0 = params[BoundIndices::eBoundLoc1];
-  const double phi = params[BoundIndices::eBoundPhi];
-  const double theta = params[BoundIndices::eBoundTheta];
+  const long double d0 = params[BoundIndices::eBoundLoc0];
+  const long double z0 = params[BoundIndices::eBoundLoc1];
+  const long double phi = params[BoundIndices::eBoundPhi];
+  const long double theta = params[BoundIndices::eBoundTheta];
 
-  double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
-  double eta = AngleHelpers::etaFromTheta(theta);
-  double dir_eta = VectorHelpers::eta(direction);
+  long double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
+  long double eta = AngleHelpers::etaFromTheta(theta);
+  long double dir_eta = VectorHelpers::eta(direction);
 
-  double zs = (dir_eta - eta) * z0;
+  long double zs = (dir_eta - eta) * z0;
 
-  std::pair<double, double> vszs;
+  std::pair<long double, long double> vszs;
 
   vszs.first = vs >= 0. ? 1. : -1.;
   vszs.second = zs >= 0. ? 1. : -1.;
@@ -539,7 +544,7 @@ Result<std::pair<double, double>> ImpactPointEstimator::getLifetimeSignOfTrack(
   return vszs;
 }
 
-Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
+Result<long double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
     const BoundTrackParameters& track, const Vertex& vtx,
     const Vector3& direction, const GeometryContext& gctx,
     const MagneticFieldContext& mctx) const {
@@ -562,7 +567,7 @@ Result<double> ImpactPointEstimator::get3DLifetimeSignOfTrack(
   const Vector3 trkpos = params.position(gctx);
   const Vector3 trkmom = params.momentum();
 
-  double sign =
+  long double sign =
       (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));
 
   return sign >= 0. ? 1. : -1.;

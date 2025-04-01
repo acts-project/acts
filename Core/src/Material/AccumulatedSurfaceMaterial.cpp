@@ -14,7 +14,8 @@
 #include <utility>
 
 // Default Constructor - for homogeneous material
-Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
+Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
+    long double splitFactor)
     : m_splitFactor(splitFactor) {
   AccumulatedVector accMat = {{AccumulatedMaterialSlab()}};
   m_accumulatedMaterial = {{accMat}};
@@ -22,7 +23,7 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
 
 // Binned Material constructor with split factor
 Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
-    const BinUtility& binUtility, double splitFactor)
+    const BinUtility& binUtility, long double splitFactor)
     : m_binUtility(binUtility), m_splitFactor(splitFactor) {
   std::size_t bins0 = m_binUtility.bins(0);
   std::size_t bins1 = m_binUtility.bins(1);
@@ -32,7 +33,7 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 
 // Assign a material properties object
 std::array<std::size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector2& lp, const MaterialSlab& mp, double pathCorrection) {
+    const Vector2& lp, const MaterialSlab& mp, long double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -45,7 +46,7 @@ std::array<std::size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 
 // Assign a material properties object
 std::array<std::size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector3& gp, const MaterialSlab& mp, double pathCorrection) {
+    const Vector3& gp, const MaterialSlab& mp, long double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};

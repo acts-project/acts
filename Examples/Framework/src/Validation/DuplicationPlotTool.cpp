@@ -83,9 +83,9 @@ void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
   const auto momentum = fittedParameters.momentum();
-  const double fit_phi = phi(momentum);
-  const double fit_eta = eta(momentum);
-  const double fit_pT = perp(momentum);
+  const long double fit_phi = phi(momentum);
+  const long double fit_eta = eta(momentum);
+  const long double fit_pT = perp(momentum);
 
   PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_pT, fit_pT,
                        status);

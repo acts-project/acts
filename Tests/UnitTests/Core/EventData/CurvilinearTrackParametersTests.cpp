@@ -30,13 +30,13 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<long double>::epsilon();
 const GeometryContext geoCtx;
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
-void checkParameters(const BoundTrackParameters& params, double phi,
-                     double theta, double p, double q, const Vector4& pos4,
-                     const Vector3& unitDir) {
+void checkParameters(const BoundTrackParameters& params, long double phi,
+                     long double theta, long double p, long double q,
+                     const Vector4& pos4, const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
 

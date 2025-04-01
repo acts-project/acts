@@ -30,7 +30,7 @@ Acts::MaterialInteractionAssignment::assign(
   /// Simple matching of material interactions to surfaces - no pre/post
   /// matching
   // -----------------------------------------------------------------------------
-  // Double-Loop over the sorted material interactions
+  // long double-Loop over the sorted material interactions
   std::size_t is = 0u;
   for (const auto& materialInteraction : materialInteractions) {
     // First check if there is a global veto
@@ -49,7 +49,7 @@ Acts::MaterialInteractionAssignment::assign(
 
     // Walk along the sorted intersections
     auto [cSurface, cPosition, cDirection] = intersectedSurfaces[is];
-    double cDistance = (cPosition - materialInteraction.position).norm();
+    long double cDistance = (cPosition - materialInteraction.position).norm();
 
     // Peak forward to check if you have a closer intersection
     while (
@@ -57,9 +57,9 @@ Acts::MaterialInteractionAssignment::assign(
         (((intersectedSurfaces[is + 1]).position - materialInteraction.position)
              .norm() < cDistance)) {
       // Recalculate the new distance
-      double nDistance = ((intersectedSurfaces[is + 1]).position -
-                          materialInteraction.position)
-                             .norm();
+      long double nDistance = ((intersectedSurfaces[is + 1]).position -
+                               materialInteraction.position)
+                                  .norm();
       ++is;
       cDistance = nDistance;
     }
@@ -68,7 +68,8 @@ Acts::MaterialInteractionAssignment::assign(
     auto [surface, position, direction] = intersectedSurfaces[is];
 
     // Calculate the path correction
-    double pathCorrection = surface->pathCorrection(gctx, position, direction);
+    long double pathCorrection =
+        surface->pathCorrection(gctx, position, direction);
 
     // A local veta veto kicked in
     GeometryIdentifier intersectionID = surface->geometryId();

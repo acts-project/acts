@@ -41,7 +41,8 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   static MutableLayerPtr create(
       const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      long double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::active) {
     return MutableLayerPtr(new PlaneLayer(transform, pbounds,
                                           std::move(surfaceArray), thickness,
@@ -76,7 +77,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   PlaneLayer(const Transform3& transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-             double thickness = 0.,
+             long double thickness = 0.,
              std::unique_ptr<ApproachDescriptor> ades = nullptr,
              LayerType laytyp = Acts::active);
 

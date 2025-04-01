@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(SimpleGeometryTest) {
   // ----------------- build a beam pipe -----------------------------------
   PassiveLayerBuilder::Config bplConfig;
   bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii = std::vector<double>(1, 3_mm);
-  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40_mm);
-  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8_mm);
+  bplConfig.centralLayerRadii = std::vector<long double>(1, 3_mm);
+  bplConfig.centralLayerHalflengthZ = std::vector<long double>(1, 40_mm);
+  bplConfig.centralLayerThickness = std::vector<long double>(1, 0.8_mm);
   auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
       bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
   // create the volume for the beam pipe

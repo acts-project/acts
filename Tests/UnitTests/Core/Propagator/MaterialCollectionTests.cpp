@@ -55,7 +55,7 @@ using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
 using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-const double Bz = 2_T;
+const long double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 
 EigenStepper estepper(bField);
@@ -105,8 +105,8 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
 
-  double fwdStepMaterialInX0 = 0.;
-  double fwdStepMaterialInL0 = 0.;
+  long double fwdStepMaterialInX0 = 0.;
+  long double fwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : fwdMaterial.materialInteractions) {
     fwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
@@ -155,8 +155,8 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
 
-  double bwdStepMaterialInX0 = 0.;
-  double bwdStepMaterialInL0 = 0.;
+  long double bwdStepMaterialInX0 = 0.;
+  long double bwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : bwdMaterial.materialInteractions) {
     bwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
@@ -195,8 +195,8 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   fwdStepMaterialInteractor.energyLoss = false;
   fwdStepMaterialInteractor.multipleScattering = false;
 
-  double fwdStepStepMaterialInX0 = 0.;
-  double fwdStepStepMaterialInL0 = 0.;
+  long double fwdStepStepMaterialInX0 = 0.;
+  long double fwdStepStepMaterialInL0 = 0.;
 
   if (debugMode) {
     // check if the surfaces are free
@@ -269,8 +269,8 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
   bwdStepMaterialInteractor.multipleScattering = false;
   bwdStepMaterialInteractor.energyLoss = false;
 
-  double bwdStepStepMaterialInX0 = 0.;
-  double bwdStepStepMaterialInL0 = 0.;
+  long double bwdStepStepMaterialInX0 = 0.;
+  long double bwdStepStepMaterialInL0 = 0.;
 
   if (debugMode) {
     // check if the surfaces are free
@@ -348,15 +348,16 @@ void runTest(const propagator_t& prop, const BoundTrackParameters& start) {
 BOOST_DATA_TEST_CASE(
     test_material_collector,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.5_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 21,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
@@ -367,8 +368,8 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
 
   // define start parameters
   BoundSquareMatrix cov;

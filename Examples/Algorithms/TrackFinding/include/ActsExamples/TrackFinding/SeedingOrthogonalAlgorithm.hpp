@@ -42,7 +42,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
     ///
     /// We allow multiple space point collections to allow different parts of
     /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// e.g. single-hit space points for pixel-like detectors or long double-hit
     /// space points for strip-like detectors.
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.

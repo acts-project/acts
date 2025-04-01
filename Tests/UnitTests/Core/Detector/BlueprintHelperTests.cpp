@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   // Create  root node
   std::vector<Acts::AxisDirection> detectorBinning = {
       Acts::AxisDirection::AxisR};
-  std::vector<double> detectorBoundaries = {0., 50., 100.};
+  std::vector<long double> detectorBoundaries = {0., 50., 100.};
   auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "detector", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       detectorBoundaries, detectorBinning);
@@ -35,23 +35,23 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
   BOOST_CHECK_EQUAL(detector->name, "detector");
 
   std::vector<Acts::AxisDirection> pixelsBinning = {Acts::AxisDirection::AxisZ};
-  std::vector<double> pixelsBoundaries = {20., 50., 100.};
+  std::vector<long double> pixelsBoundaries = {20., 50., 100.};
 
   auto pixels = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "pixels", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       pixelsBoundaries, pixelsBinning);
 
-  std::vector<double> beamPipeBoundaries = {0., 20., 100.};
+  std::vector<long double> beamPipeBoundaries = {0., 20., 100.};
   auto beamPipe = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "beam_pipe", Acts::Transform3::Identity(), Acts::VolumeBounds::eOther,
       beamPipeBoundaries);
 
-  std::vector<double> gapBoundaries = {20., 50., 10.};
+  std::vector<long double> gapBoundaries = {20., 50., 10.};
   auto gap0 = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "gap0", Acts::Transform3::Identity() * Acts::Translation3(0., 0., -90.),
       Acts::VolumeBounds::eCylinder, gapBoundaries);
 
-  std::vector<double> layerBoundaries = {20., 50., 80.};
+  std::vector<long double> layerBoundaries = {20., 50., 80.};
   auto layer = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "layer", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       layerBoundaries,
@@ -90,17 +90,17 @@ BOOST_AUTO_TEST_CASE(BlueprintHelperSorting) {
 
 BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   // Detector dimensions
-  double detectorIr = 0.;
-  double detectorOr = 120.;
-  double detectorHz = 400.;
+  long double detectorIr = 0.;
+  long double detectorOr = 120.;
+  long double detectorHz = 400.;
 
   // Beam pipe
-  double beamPipeOr = 20.;
+  long double beamPipeOr = 20.;
 
   // Pixel system
-  double pixelIr = 25;
-  double pixelOr = 115;
-  double pixelEcHz = 50;
+  long double pixelIr = 25;
+  long double pixelOr = 115;
+  long double pixelEcHz = 50;
 
   auto innerBuilder =
       std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
@@ -108,7 +108,8 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   // Create  root node
   std::vector<Acts::AxisDirection> detectorBinning = {
       Acts::AxisDirection::AxisR};
-  std::vector<double> detectorBoundaries = {detectorIr, detectorOr, detectorHz};
+  std::vector<long double> detectorBoundaries = {detectorIr, detectorOr,
+                                                 detectorHz};
 
   // The root node - detector
   auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
@@ -116,21 +117,23 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
       detectorBoundaries, detectorBinning);
 
   // The beam pipe
-  std::vector<double> beamPipeBoundaries = {detectorIr, beamPipeOr, detectorHz};
+  std::vector<long double> beamPipeBoundaries = {detectorIr, beamPipeOr,
+                                                 detectorHz};
   auto beamPipe = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "beam_pipe", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       beamPipeBoundaries, innerBuilder);
   detector->add(std::move(beamPipe));
 
   // A pixel system
-  std::vector<double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
+  std::vector<long double> pixelBoundaries = {pixelIr, pixelOr, detectorHz};
   std::vector<Acts::AxisDirection> pixelBinning = {Acts::AxisDirection::AxisZ};
   auto pixel = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "pixel", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       pixelBoundaries, pixelBinning);
 
   // Nec: Small differences to check if the adjustments are made
-  std::vector<double> pixelEcBoundaries = {pixelIr, pixelOr - 5., pixelEcHz};
+  std::vector<long double> pixelEcBoundaries = {pixelIr, pixelOr - 5.,
+                                                pixelEcHz};
   std::vector<Acts::AxisDirection> pixelEcBinning = {
       Acts::AxisDirection::AxisZ};
 
@@ -141,7 +144,8 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
       Acts::VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
 
   // Add a single encap layer
-  std::vector<double> pixelNecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
+  std::vector<long double> pixelNecBoundaries = {pixelIr + 2, pixelOr - 7.,
+                                                 10.};
   auto pixelNecLayer =
       std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
           "pixelNecLayer",
@@ -152,8 +156,8 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
   pixelNec->add(std::move(pixelNecLayer));
 
   // Barrel
-  std::vector<double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
-                                               detectorHz - 2 * pixelEcHz};
+  std::vector<long double> pixelBarrelBoundaries = {pixelIr + 1, pixelOr - 1.,
+                                                    detectorHz - 2 * pixelEcHz};
   std::vector<Acts::AxisDirection> pixelBarrelBinning = {
       Acts::AxisDirection::AxisR};
 
@@ -161,15 +165,15 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
       "pixelBarrel", Acts::Transform3::Identity(),
       Acts::VolumeBounds::eCylinder, pixelBarrelBoundaries, pixelBarrelBinning);
 
-  std::vector<double> pixelBarrelL0Boundaries = {60, 65.,
-                                                 detectorHz - 2 * pixelEcHz};
+  std::vector<long double> pixelBarrelL0Boundaries = {
+      60, 65., detectorHz - 2 * pixelEcHz};
   auto pixelBarrelL0 =
       std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
           "pixelBarrelL0", Acts::Transform3::Identity(),
           Acts::VolumeBounds::eCylinder, pixelBarrelL0Boundaries, innerBuilder);
 
-  std::vector<double> pixelBarrelL1Boundaries = {100, 105.,
-                                                 detectorHz - 2 * pixelEcHz};
+  std::vector<long double> pixelBarrelL1Boundaries = {
+      100, 105., detectorHz - 2 * pixelEcHz};
   auto pixelBarrelL1 =
       std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
           "pixelBarrelL1", Acts::Transform3::Identity(),
@@ -183,7 +187,8 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapFilling) {
           Acts::Translation3(0., 0., +detectorHz - pixelEcHz),
       Acts::VolumeBounds::eCylinder, pixelEcBoundaries, pixelEcBinning);
 
-  std::vector<double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7., 10.};
+  std::vector<long double> pixelPecBoundaries = {pixelIr + 2, pixelOr - 7.,
+                                                 10.};
   auto pixelPecLayer =
       std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
           "pixelPecLayer",
@@ -266,7 +271,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapException) {
       std::make_shared<Acts::Experimental::IInternalStructureBuilder>();
 
   // The root node - detector
-  std::vector<double> detectorBoundaries = {0., 50., 100.};
+  std::vector<long double> detectorBoundaries = {0., 50., 100.};
   std::vector<Acts::AxisDirection> detectorBinning = {
       Acts::AxisDirection::AxisX};
   auto detector = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
@@ -274,7 +279,7 @@ BOOST_AUTO_TEST_CASE(BlueprintCylindricalGapException) {
       detectorBoundaries, detectorBinning);
 
   // Add a volume
-  std::vector<double> volTwoBoundaries = {0., 20., 100.};
+  std::vector<long double> volTwoBoundaries = {0., 20., 100.};
   auto vol = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       "vol", Acts::Transform3::Identity(), Acts::VolumeBounds::eCylinder,
       volTwoBoundaries, innerBuilder);

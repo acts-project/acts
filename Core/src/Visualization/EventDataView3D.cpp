@@ -22,7 +22,7 @@ class IVisualization3D;
 void Acts::EventDataView3D::drawCovarianceCartesian(
     IVisualization3D& helper, const Vector2& lposition,
     const SquareMatrix2& covariance, const Transform3& transform,
-    double locErrorScale, const ViewConfig& viewConfig) {
+    long double locErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
   std::vector<Vector3> ellipse = createEllipse(
@@ -39,15 +39,15 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
 void Acts::EventDataView3D::drawCovarianceAngular(
     IVisualization3D& helper, const Vector3& position, const Vector3& direction,
-    const ActsSquareMatrix<2>& covariance, double directionScale,
-    double angularErrorScale, const ViewConfig& viewConfig) {
+    const ActsSquareMatrix<2>& covariance, long double directionScale,
+    long double angularErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
   // Anker point
   Vector3 anker = position + directionScale * direction;
 
-  double dphi = VectorHelpers::phi(direction);
-  double dtheta = VectorHelpers::theta(direction);
+  long double dphi = VectorHelpers::phi(direction);
+  long double dtheta = VectorHelpers::theta(direction);
 
   Transform3 eplane(Translation3(anker) *
                     AngleAxis3(dphi, Vector3(0., 0., 1.)) *

@@ -23,35 +23,36 @@
 
 namespace Acts {
 
-Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
+Result<long double> SpacePointUtility::differenceOfMeasurementsChecked(
     const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
-    const double maxDistance, const double maxAngleTheta2,
-    const double maxAnglePhi2) const {
+    const long double maxDistance, const long double maxAngleTheta2,
+    const long double maxAnglePhi2) const {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > maxDistance) {
-    return Result<double>::failure(m_error);
+    return Result<long double>::failure(m_error);
   }
 
   // Calculate the angles of the vectors
-  double phi1 = VectorHelpers::phi(pos1 - posVertex);
-  double theta1 = VectorHelpers::theta(pos1 - posVertex);
-  double phi2 = VectorHelpers::phi(pos2 - posVertex);
-  double theta2 = VectorHelpers::theta(pos2 - posVertex);
+  long double phi1 = VectorHelpers::phi(pos1 - posVertex);
+  long double theta1 = VectorHelpers::theta(pos1 - posVertex);
+  long double phi2 = VectorHelpers::phi(pos2 - posVertex);
+  long double theta2 = VectorHelpers::theta(pos2 - posVertex);
   // Calculate the squared difference between the theta angles
-  double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
+  long double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
   if (diffTheta2 > maxAngleTheta2) {
-    return Result<double>::failure(m_error);
+    return Result<long double>::failure(m_error);
   }
   // Calculate the squared difference between the phi angles
-  double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
+  long double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
   if (diffPhi2 > maxAnglePhi2) {
-    return Result<double>::failure(m_error);
+    return Result<long double>::failure(m_error);
   }
   // Return the squared distance between both vector
-  return Result<double>::success(diffTheta2 + diffPhi2);
+  return Result<long double>::success(diffTheta2 + diffPhi2);
 }
 
-std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
+std::tuple<Vector3, std::optional<long double>, Vector2,
+           std::optional<long double>>
 SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
@@ -91,8 +92,8 @@ SpacePointUtility::globalCoords(
   // optionally set time
   // TODO the current condition of checking the covariance is not optional but
   // should do for now
-  std::optional<double> globalTime = par[eBoundTime];
-  std::optional<double> tcov = cov(eBoundTime, eBoundTime);
+  std::optional<long double> globalTime = par[eBoundTime];
+  std::optional<long double> tcov = cov(eBoundTime, eBoundTime);
   if (tcov.value() <= 0) {
     globalTime = std::nullopt;
     tcov = std::nullopt;
@@ -106,18 +107,18 @@ Vector2 SpacePointUtility::calcRhoZVars(
     const SourceLink& slinkBack,
     const SourceLinkSurfaceAccessor& surfaceAccessor,
     const ParamCovAccessor& paramCovAccessor, const Vector3& globalPos,
-    const double theta) const {
+    const long double theta) const {
   const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
   // strip1 and strip2 are tilted at +/- theta/2
-  double sigma = fastHypot(var1, var2);
-  double sigma_x = sigma / (2 * sin(theta * 0.5));
-  double sigma_y = sigma / (2 * cos(theta * 0.5));
+  long double sigma = fastHypot(var1, var2);
+  long double sigma_x = sigma / (2 * sin(theta * 0.5));
+  long double sigma_y = sigma / (2 * cos(theta * 0.5));
 
   // projection to the surface with strip1.
-  double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
-  double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
+  long double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
+  long double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
   SquareMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
 
@@ -156,7 +157,8 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
 Result<void> SpacePointUtility::calculateStripSPPosition(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
-    SpacePointParameters& spParams, const double stripLengthTolerance) const {
+    SpacePointParameters& spParams,
+    const long double stripLengthTolerance) const {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding Measurement on the second strip. The
   /// resulting point is a point x on the first surfaces. This point is
@@ -209,7 +211,7 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
 }
 
 Result<void> SpacePointUtility::recoverSpacePoint(
-    SpacePointParameters& spParams, double stripLengthGapTolerance) const {
+    SpacePointParameters& spParams, long double stripLengthGapTolerance) const {
   // Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
   if (stripLengthGapTolerance <= 0.) {
@@ -256,17 +258,17 @@ Result<void> SpacePointUtility::recoverSpacePoint(
 
   // Calculate the scaling factor to project lengths of the second SDE on the
   // first SDE
-  double secOnFirstScale =
+  long double secOnFirstScale =
       spParams.firstBtmToTop.dot(spParams.secondBtmToTop) /
       (spParams.mag_firstBtmToTop * spParams.mag_firstBtmToTop);
   // Check if both overshoots are in the same direction
   if (spParams.m > 1. && spParams.n > 1.) {
     // Calculate the overshoots
-    double mOvershoot = spParams.m - 1.;
-    double nOvershoot =
+    long double mOvershoot = spParams.m - 1.;
+    long double nOvershoot =
         (spParams.n - 1.) * secOnFirstScale;  // Perform projection
     // Resolve worse overshoot
-    double biggerOvershoot = std::max(mOvershoot, nOvershoot);
+    long double biggerOvershoot = std::max(mOvershoot, nOvershoot);
     // Move m and n towards 0
     spParams.m -= biggerOvershoot;
     spParams.n -= (biggerOvershoot / secOnFirstScale);
@@ -282,11 +284,11 @@ Result<void> SpacePointUtility::recoverSpacePoint(
   // Check if both overshoots are in the same direction
   if (spParams.m < -1. && spParams.n < -1.) {
     // Calculate the overshoots
-    double mOvershoot = -(spParams.m + 1.);
-    double nOvershoot =
+    long double mOvershoot = -(spParams.m + 1.);
+    long double nOvershoot =
         -(spParams.n + 1.) * secOnFirstScale;  // Perform projection
     // Resolve worse overshoot
-    double biggerOvershoot = std::max(mOvershoot, nOvershoot);
+    long double biggerOvershoot = std::max(mOvershoot, nOvershoot);
     // Move m and n towards 0
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
@@ -300,7 +302,7 @@ Result<void> SpacePointUtility::recoverSpacePoint(
   return Result<void>::failure(m_error);
 }
 
-Result<double> SpacePointUtility::calcPerpendicularProjection(
+Result<long double> SpacePointUtility::calcPerpendicularProjection(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2,
     SpacePointParameters& spParams) const {
@@ -319,18 +321,19 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
   spParams.secondBtmToTop = stripEnds2.first - stripEnds2.second;
 
   Vector3 ac = stripEnds2.first - stripEnds1.first;
-  double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
-  double denom = spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
+  long double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
+  long double denom =
+      spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
   // Check for numerical stability
   if (std::abs(denom) > 1e-6) {
     // Return lambda0
-    return Result<double>::success(
+    return Result<long double>::success(
         (ac.dot(spParams.secondBtmToTop) * qr -
          ac.dot(spParams.firstBtmToTop) *
              (spParams.secondBtmToTop).dot(spParams.secondBtmToTop)) /
         denom);
   }
-  return Result<double>::failure(m_error);
+  return Result<long double>::failure(m_error);
 }
 
 }  // namespace Acts

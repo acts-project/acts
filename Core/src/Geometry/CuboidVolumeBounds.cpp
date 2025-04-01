@@ -22,20 +22,22 @@
 
 namespace Acts {
 
-CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley, double halez)
+CuboidVolumeBounds::CuboidVolumeBounds(long double halex, long double haley,
+                                       long double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
-CuboidVolumeBounds::CuboidVolumeBounds(const std::array<double, eSize>& values)
+CuboidVolumeBounds::CuboidVolumeBounds(
+    const std::array<long double, eSize>& values)
     : m_values(values) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
 CuboidVolumeBounds::CuboidVolumeBounds(
-    std::initializer_list<std::pair<BoundValues, double>> keyValues)
+    std::initializer_list<std::pair<BoundValues, long double>> keyValues)
     : m_values({-1, -1, -1}) {
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
@@ -49,7 +51,7 @@ CuboidVolumeBounds::CuboidVolumeBounds(
   buildSurfaceBounds();
 }
 
-std::vector<double> CuboidVolumeBounds::values() const {
+std::vector<long double> CuboidVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -123,7 +125,7 @@ void CuboidVolumeBounds::buildSurfaceBounds() {
                                                        get(eHalfLengthX));
 }
 
-double CuboidVolumeBounds::referenceBorder(AxisDirection aDir) const {
+long double CuboidVolumeBounds::referenceBorder(AxisDirection aDir) const {
   if (aDir <= AxisDirection::AxisZ) {
     return m_values[toUnderlying(aDir)];
   }
@@ -136,7 +138,7 @@ double CuboidVolumeBounds::referenceBorder(AxisDirection aDir) const {
   return 0.0;
 }
 
-bool CuboidVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool CuboidVolumeBounds::inside(const Vector3& pos, long double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
@@ -150,13 +152,13 @@ void CuboidVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-void CuboidVolumeBounds::set(BoundValues bValue, double value) {
+void CuboidVolumeBounds::set(BoundValues bValue, long double value) {
   set({{bValue, value}});
 }
 
 void CuboidVolumeBounds::set(
-    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
-  std::array<double, eSize> previous = m_values;
+    std::initializer_list<std::pair<BoundValues, long double>> keyValues) {
+  std::array<long double, eSize> previous = m_values;
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
   }

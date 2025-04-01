@@ -52,14 +52,14 @@ class PrototracksToParameters final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
 
     /// The minimum magnetic field to trigger the track parameters estimation
-    double bFieldMin = 0.1 * Acts::UnitConstants::T;
+    long double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Initial covariance matrix diagonal.
-    std::array<double, 6> initialSigmas = {
+    std::array<long double, 6> initialSigmas = {
         25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
         0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
         0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    std::array<long double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();

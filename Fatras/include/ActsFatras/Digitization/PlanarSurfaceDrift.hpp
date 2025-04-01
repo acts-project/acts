@@ -42,7 +42,7 @@ struct PlanarSurfaceDrift {
   ///
   /// @return a Segment on the readout surface @note without masking
   Segment2D toReadout(const Acts::GeometryContext& gctx,
-                      const Acts::Surface& surface, double thickness,
+                      const Acts::Surface& surface, long double thickness,
                       const Acts::Vector3& pos, const Acts::Vector3& dir,
                       const Acts::Vector3& driftdir) const;
 };

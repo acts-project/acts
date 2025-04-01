@@ -1026,9 +1026,9 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
       BOOST_CHECK_EQUAL(axis12.getType(), AxisType::Variable);
       BOOST_CHECK_EQUAL(axis12.getBoundaryType(), AxisBoundaryType::Bound);
 
-      std::vector<double> expected12 = {-31.4159, -17.4533, -3.49066,
-                                        10.472,   14.6608,  18.8496,
-                                        23.0383,  27.2271,  31.4159};
+      std::vector<long double> expected12 = {-31.4159, -17.4533, -3.49066,
+                                             10.472,   14.6608,  18.8496,
+                                             23.0383,  27.2271,  31.4159};
       CHECK_CLOSE_OR_SMALL(axis12.getBinEdges(), expected12, 1e-4, 10e-10);
 
       auto portalPhi4Mod = GridPortalLink::make(
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
       // Caution: for full-azimuth cases, the ordering is preserved, you get
       // in what you get out. -> this can flip
-      std::vector<double> expected34 = {-94.2478, -47.1239, 0, 94.2478};
+      std::vector<long double> expected34 = {-94.2478, -47.1239, 0, 94.2478};
       CHECK_CLOSE_OR_SMALL(axis34.getBinEdges(), expected34, 1e-4, 10e-10);
     }
 
@@ -1082,8 +1082,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
 
-        std::vector<double> expected = {-31.4159, -17.4533, -3.49066, 10.472,
-                                        15.708,   26.1799,  31.4159};
+        std::vector<long double> expected = {
+            -31.4159, -17.4533, -3.49066, 10.472, 15.708, 26.1799, 31.4159};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
 
@@ -1114,8 +1114,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
         // Caution: for full-azimuth cases, the ordering is preserved, you get
         // in what you get out. -> this can flip
-        std::vector<double> expected = {-94.2478, -34.0339, 0,
-                                        31.4159,  62.8319,  94.2478};
+        std::vector<long double> expected = {-94.2478, -34.0339, 0,
+                                             31.4159,  62.8319,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }
@@ -1146,8 +1146,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
 
-        std::vector<double> expected = {-31.4159, -15.708, -5.23599, 10.472,
-                                        17.4533,  24.4346, 31.4159};
+        std::vector<long double> expected = {
+            -31.4159, -15.708, -5.23599, 10.472, 17.4533, 24.4346, 31.4159};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
 
@@ -1178,8 +1178,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
         // Caution: for full-azimuth cases, the ordering is preserved, you get
         // in what you get out. -> this can flip
-        std::vector<double> expected = {-94.2478, -62.8319, -31.4159,
-                                        0,        60.2139,  94.2478};
+        std::vector<long double> expected = {-94.2478, -62.8319, -31.4159,
+                                             0,        60.2139,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }
@@ -1211,8 +1211,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
         BOOST_CHECK_EQUAL(axis.getType(), AxisType::Variable);
         BOOST_CHECK_EQUAL(axis.getBoundaryType(), AxisBoundaryType::Bound);
 
-        std::vector<double> expected = {-31.4159, -13.09,  10.472,
-                                        15.708,   26.1799, 31.4159};
+        std::vector<long double> expected = {-31.4159, -13.09,  10.472,
+                                             15.708,   26.1799, 31.4159};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
 
@@ -1245,8 +1245,8 @@ BOOST_AUTO_TEST_CASE(ColinearMerge) {
 
         // Caution: for full-azimuth cases, the ordering is preserved, you get
         // in what you get out. -> this can flip
-        std::vector<double> expected = {-94.2478, -34.0339, 0,
-                                        41.8879,  52.3599,  94.2478};
+        std::vector<long double> expected = {-94.2478, -34.0339, 0,
+                                             41.8879,  52.3599,  94.2478};
         CHECK_CLOSE_OR_SMALL(axis.getBinEdges(), expected, 1e-4, 10e-10);
       }
     }

@@ -51,7 +51,8 @@ struct Node final {
   /// @param cs the children of the node
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<double>& bv, const std::vector<AxisDirection>& bss,
+       const std::vector<long double>& bv,
+       const std::vector<AxisDirection>& bss,
        std::vector<std::unique_ptr<Node>> cs = {}, const Extent& e = Extent())
       : name(n),
         transform(t),
@@ -73,7 +74,7 @@ struct Node final {
   /// @param isb the internal structure builder (optional)
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<double>& bv,
+       const std::vector<long double>& bv,
        std::shared_ptr<const IInternalStructureBuilder> isb = nullptr,
        const Extent& e = Extent())
       : name(n),
@@ -90,7 +91,7 @@ struct Node final {
   /// The boundary type
   VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
   /// The associated values
-  std::vector<double> boundaryValues = {};
+  std::vector<long double> boundaryValues = {};
   /// Parent node - nullptr for root only
   const Node* parent = nullptr;
   /// Branch definitions: children

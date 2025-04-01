@@ -53,7 +53,7 @@ TrackParameterSmearing::TrackParameterSmearing(const Config& config,
   ACTS_DEBUG(
       "initial sigmas "
       << Acts::BoundVector(
-             m_cfg.initialSigmas.value_or(std::array<double, 6>()).data())
+             m_cfg.initialSigmas.value_or(std::array<long double, 6>()).data())
              .transpose());
   ACTS_DEBUG("initial sigma pt rel " << m_cfg.initialSigmaPtRel);
   ACTS_DEBUG(
@@ -78,7 +78,7 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
 
   // setup random number generator and standard gaussian
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-  std::normal_distribution<double> stdNormal(0.0, 1.0);
+  std::normal_distribution<long double> stdNormal(0.0, 1.0);
 
   for (const auto& inputTrackParameters : inputTrackParametersContainer) {
     const auto position = inputTrackParameters.localPosition();
@@ -91,17 +91,17 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
         inputTrackParameters.particleHypothesis());
 
     // compute momentum-dependent resolutions
-    const double sigmaLoc0 =
+    const long double sigmaLoc0 =
         m_cfg.sigmaLoc0 +
         m_cfg.sigmaLoc0PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaLoc0PtB) * pt);
-    const double sigmaLoc1 =
+    const long double sigmaLoc1 =
         m_cfg.sigmaLoc1 +
         m_cfg.sigmaLoc1PtA * std::exp(-1.0 * std::abs(m_cfg.sigmaLoc1PtB) * pt);
     // shortcuts for other resolutions
-    const double sigmaTime = m_cfg.sigmaTime;
-    const double sigmaPhi = m_cfg.sigmaPhi;
-    const double sigmaTheta = m_cfg.sigmaTheta;
-    const double sigmaQOverP =
+    const long double sigmaTime = m_cfg.sigmaTime;
+    const long double sigmaPhi = m_cfg.sigmaPhi;
+    const long double sigmaTheta = m_cfg.sigmaTheta;
+    const long double sigmaQOverP =
         std::sqrt(std::pow(m_cfg.sigmaPtRel * qOverP, 2) +
                   std::pow(sigmaTheta * (qOverP * std::tan(theta)), 2));
 
@@ -139,8 +139,8 @@ ProcessCode TrackParameterSmearing::execute(const AlgorithmContext& ctx) const {
           {sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta, sigmaQOverP, sigmaTime});
 
       for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-        double sigma = sigmas[i];
-        double variance = sigma * sigma;
+        long double sigma = sigmas[i];
+        long double variance = sigma * sigma;
 
         // Inflate the initial covariance
         variance *= m_cfg.initialVarInflation[i];

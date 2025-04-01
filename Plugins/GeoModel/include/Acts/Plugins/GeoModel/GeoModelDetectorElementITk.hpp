@@ -35,7 +35,7 @@ class ITkIdentifier {
   /// Access the eta module specifier
   int etaModule() const;
 
-  /// Access the side (for double sided strip modules)
+  /// Access the side (for long double sided strip modules)
   int side() const;
 
   /// A unique identifier that represents the combination of specifiers
@@ -51,9 +51,10 @@ class GeoModelDetectorElementITk : public GeoModelDetectorElement {
  public:
   GeoModelDetectorElementITk(const PVConstLink& geoPhysVol,
                              std::shared_ptr<Surface> surface,
-                             const Transform3& sfTransform, double thickness,
-                             int hardware, int barrelEndcap, int layerWheel,
-                             int etaModule, int phiModule, int side)
+                             const Transform3& sfTransform,
+                             long double thickness, int hardware,
+                             int barrelEndcap, int layerWheel, int etaModule,
+                             int phiModule, int side)
       : GeoModelDetectorElement(geoPhysVol, std::move(surface), sfTransform,
                                 thickness),
         m_identifier(hardware, barrelEndcap, layerWheel, etaModule, phiModule,

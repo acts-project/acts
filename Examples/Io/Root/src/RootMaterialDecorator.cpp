@@ -165,13 +165,13 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Fill the matrix first
           for (int ib0 = 1; ib0 <= nbins0; ++ib0) {
             for (int ib1 = 1; ib1 <= nbins1; ++ib1) {
-              double dt = t->GetBinContent(ib0, ib1);
+              long double dt = t->GetBinContent(ib0, ib1);
               if (dt > 0.) {
-                double dx0 = x0->GetBinContent(ib0, ib1);
-                double dl0 = l0->GetBinContent(ib0, ib1);
-                double da = A->GetBinContent(ib0, ib1);
-                double dz = Z->GetBinContent(ib0, ib1);
-                double drho = rho->GetBinContent(ib0, ib1);
+                long double dx0 = x0->GetBinContent(ib0, ib1);
+                long double dl0 = l0->GetBinContent(ib0, ib1);
+                long double da = A->GetBinContent(ib0, ib1);
+                long double dz = Z->GetBinContent(ib0, ib1);
+                long double drho = rho->GetBinContent(ib0, ib1);
                 // Create material properties
                 const auto material =
                     Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -199,12 +199,12 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 
         } else {
           // Only homogeneous material present
-          double dt = t->GetBinContent(1, 1);
-          double dx0 = x0->GetBinContent(1, 1);
-          double dl0 = l0->GetBinContent(1, 1);
-          double da = A->GetBinContent(1, 1);
-          double dz = Z->GetBinContent(1, 1);
-          double drho = rho->GetBinContent(1, 1);
+          long double dt = t->GetBinContent(1, 1);
+          long double dx0 = x0->GetBinContent(1, 1);
+          long double dl0 = l0->GetBinContent(1, 1);
+          long double da = A->GetBinContent(1, 1);
+          long double dz = Z->GetBinContent(1, 1);
+          long double drho = rho->GetBinContent(1, 1);
           // Create and set the homogeneous surface material
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -293,11 +293,11 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
             Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              long double dx0 = x0->GetBinContent(p);
+              long double dl0 = l0->GetBinContent(p);
+              long double da = A->GetBinContent(p);
+              long double dz = Z->GetBinContent(p);
+              long double drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
                   Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -325,11 +325,11 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
             Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
             for (int p = 1; p <= points; p++) {
-              double dx0 = x0->GetBinContent(p);
-              double dl0 = l0->GetBinContent(p);
-              double da = A->GetBinContent(p);
-              double dz = Z->GetBinContent(p);
-              double drho = rho->GetBinContent(p);
+              long double dx0 = x0->GetBinContent(p);
+              long double dl0 = l0->GetBinContent(p);
+              long double da = A->GetBinContent(p);
+              long double dz = Z->GetBinContent(p);
+              long double drho = rho->GetBinContent(p);
               // Create material properties
               const auto material =
                   Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
@@ -343,11 +343,11 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           }
         } else {
           // Homogeneous material
-          double dx0 = x0->GetBinContent(1);
-          double dl0 = l0->GetBinContent(1);
-          double da = A->GetBinContent(1);
-          double dz = Z->GetBinContent(1);
-          double drho = rho->GetBinContent(1);
+          long double dx0 = x0->GetBinContent(1);
+          long double dl0 = l0->GetBinContent(1);
+          long double da = A->GetBinContent(1);
+          long double dz = Z->GetBinContent(1);
+          long double drho = rho->GetBinContent(1);
           // Create material properties
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);

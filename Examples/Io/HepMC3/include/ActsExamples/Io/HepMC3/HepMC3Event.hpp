@@ -27,27 +27,27 @@ namespace ActsExamples::HepMC3Event {
 /// @note The allowed units are MeV and Gev
 /// @param event event in HepMC data type
 /// @param momentumUnit new unit of momentum
-void momentumUnit(HepMC3::GenEvent& event, const double momentumUnit);
+void momentumUnit(HepMC3::GenEvent& event, const long double momentumUnit);
 
 /// @brief Sets new units for lengths
 /// @note The allowed units are mm and cm
 /// @param event event in HepMC data type
 /// @param lengthUnit new unit of length
-void lengthUnit(HepMC3::GenEvent& event, const double lengthUnit);
+void lengthUnit(HepMC3::GenEvent& event, const long double lengthUnit);
 
 /// @brief Shifts the positioning of an event in space and time
 /// @param event event in HepMC data type
 /// @param deltaPos relative spatial shift that will be applied
 /// @param deltaTime relative time shift that will be applied
 void shiftPositionBy(HepMC3::GenEvent& event, const Acts::Vector3& deltaPos,
-                     const double deltaTime);
+                     const long double deltaTime);
 
 /// @brief Shifts the positioning of an event to a paint in space and time
 /// @param event event in HepMC data type
 /// @param pos new position of the event
 /// @param time new time of the event
 void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3& pos,
-                     const double time);
+                     const long double time);
 
 /// @brief Shifts the positioning of an event to a paint in space
 /// @param event event in HepMC data type
@@ -57,7 +57,7 @@ void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3& pos);
 /// @brief Shifts the positioning of an event to a paint in time
 /// @param event event in HepMC data type
 /// @param time new time of the event
-void shiftPositionTo(HepMC3::GenEvent& event, const double time);
+void shiftPositionTo(HepMC3::GenEvent& event, const long double time);
 
 ///
 /// Adder
@@ -100,12 +100,12 @@ void removeVertex(HepMC3::GenEvent& event,
 /// @brief Getter of the unit of momentum used
 /// @param event event in HepMC data type
 /// @return unit of momentum
-double momentumUnit(const HepMC3::GenEvent& event);
+long double momentumUnit(const HepMC3::GenEvent& event);
 
 /// @brief Getter of the unit of length used
 /// @param event event in HepMC data type
 /// @return unit of length
-double lengthUnit(const HepMC3::GenEvent& event);
+long double lengthUnit(const HepMC3::GenEvent& event);
 
 /// @brief Getter of the position of the event
 /// @param event event in HepMC data type
@@ -115,7 +115,7 @@ Acts::Vector3 eventPos(const HepMC3::GenEvent& event);
 /// @brief Getter of the time of the event
 /// @param event event in HepMC data type
 /// @return time of the event
-double eventTime(const HepMC3::GenEvent& event);
+long double eventTime(const HepMC3::GenEvent& event);
 
 /// @brief Get list of particles
 /// @param event event in HepMC data type

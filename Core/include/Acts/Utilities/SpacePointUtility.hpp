@@ -46,17 +46,17 @@ struct SpacePointParameters {
   /// Cross product between secondBtmToTop and vtxToSecondMid2
   Vector3 secondBtmToTopXvtxToSecondMid2;
   /// Magnitude of SpacePointParameters::firstBtmToTop
-  double mag_firstBtmToTop = 0.;
+  long double mag_firstBtmToTop = 0.;
   /// Parameter that determines the hit position on the first SDE
-  double m = 0.;
+  long double m = 0.;
   /// Parameter that determines the hit position on the second SDE
-  double n = 0.;
+  long double n = 0.;
   /// Regular limit of the absolute values of SpacePointParameters::m and
   /// SpacePointParameters::n
-  double limit = 1.;
+  long double limit = 1.;
   /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
   /// variable vertex
-  double limitExtended = 0.;
+  long double limitExtended = 0.;
 };
 
 /// @class SpacePointUtility
@@ -76,7 +76,8 @@ class SpacePointUtility {
   /// @param par local position
   /// @param cov local covariance
   /// @return vectors of the global coordinates and covariance of the SourceLink
-  std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
+  std::tuple<Vector3, std::optional<long double>, Vector2,
+             std::optional<long double>>
   globalCoords(const GeometryContext& gctx, const SourceLink& slink,
                const SourceLinkSurfaceAccessor& surfaceAccessor,
                const BoundVector& par, const BoundSquareMatrix& cov) const;
@@ -105,7 +106,7 @@ class SpacePointUtility {
                        const SourceLink& slinkBack,
                        const SourceLinkSurfaceAccessor& surfaceAccessor,
                        const ParamCovAccessor& paramCovAccessor,
-                       const Vector3& globalPos, const double theta) const;
+                       const Vector3& globalPos, const long double theta) const;
 
   /// @brief This function performs a straight forward calculation of a space
   /// point and returns whether it was successful or not.
@@ -121,7 +122,8 @@ class SpacePointUtility {
   Result<void> calculateStripSPPosition(
       const std::pair<Vector3, Vector3>& stripEnds1,
       const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
-      SpacePointParameters& spParams, const double stripLengthTolerance) const;
+      SpacePointParameters& spParams,
+      const long double stripLengthTolerance) const;
 
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
@@ -134,7 +136,7 @@ class SpacePointUtility {
   ///
   /// @return indicator if the test was successful
   Result<void> recoverSpacePoint(SpacePointParameters& spParams,
-                                 double stripLengthGapTolerance) const;
+                                 long double stripLengthGapTolerance) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two SourceLinks
   ///
@@ -147,10 +149,10 @@ class SpacePointUtility {
   /// @param [in] maxAnglePhi2 Maximum squared phi angle between two SourceLinks
   ///
   /// @return Result with the squared sum within configuration parameters.
-  Result<double> differenceOfMeasurementsChecked(
+  Result<long double> differenceOfMeasurementsChecked(
       const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
-      const double maxDistance, const double maxAngleTheta2,
-      const double maxAnglePhi2) const;
+      const long double maxDistance, const long double maxAngleTheta2,
+      const long double maxAnglePhi2) const;
 
   /// @brief Calculates a space point without using the vertex
   /// @note This is mostly to resolve space points from cosmic data
@@ -161,7 +163,7 @@ class SpacePointUtility {
   /// 1. if it failed
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body
-  Result<double> calcPerpendicularProjection(
+  Result<long double> calcPerpendicularProjection(
       const std::pair<Vector3, Vector3>& stripEnds1,
       const std::pair<Vector3, Vector3>& stripEnds2,
       SpacePointParameters& spParams) const;

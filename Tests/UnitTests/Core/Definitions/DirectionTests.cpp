@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(DirectionTests) {
   BOOST_CHECK_EQUAL(7 * bwd, -7);
   BOOST_CHECK_EQUAL(Vector3(1., 1., 1.) * bwd, Vector3(-1., -1., -1.));
 
-  double a = 7.;
+  long double a = 7.;
   a *= fwd;
   BOOST_CHECK_EQUAL(a, 7.);
   a *= bwd;

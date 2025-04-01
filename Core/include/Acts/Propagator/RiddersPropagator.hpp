@@ -79,9 +79,9 @@ class RiddersPropagator {
  public:
   struct Config {
     /// Set of deltas which will be added to the nominal track parameters
-    std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+    std::vector<long double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
     /// See `deviations` - these are applied for disc surfaces
-    std::vector<double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
+    std::vector<long double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
   };
 
   template <typename actor_list_t = ActorList<>>
@@ -187,7 +187,7 @@ class RiddersPropagator {
   std::vector<BoundVector> wiggleParameter(
       const propagator_options_t& options, const parameters_t& start,
       unsigned int param, const Surface& target, const BoundVector& nominal,
-      const std::vector<double>& deviations) const;
+      const std::vector<long double>& deviations) const;
 
   /// @brief This function fits the jacobian with the deviations and derivatives as input.
   ///
@@ -196,7 +196,7 @@ class RiddersPropagator {
   ///
   /// @return Propagated jacobian matrix
   static Jacobian calculateJacobian(
-      const std::vector<double>& deviations,
+      const std::vector<long double>& deviations,
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives);
 
   /// @brief This function fits a linear function through the final state
@@ -206,7 +206,7 @@ class RiddersPropagator {
   /// @param [in] derivatives Vector of resulting derivatives
   ///
   /// @return Vector containing the linear fit
-  static BoundVector fitLinear(const std::vector<double>& deviations,
+  static BoundVector fitLinear(const std::vector<long double>& deviations,
                                const std::vector<BoundVector>& derivatives);
 
   propagator_t m_propagator;

@@ -56,11 +56,11 @@ std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
 BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
   ObjVisualization3D objVis;
 
-  double rmin = 10.;
-  double rmax = 11;
-  double hz = 40.;
-  double phimin = 45.;
-  double phimax = -45.;
+  long double rmin = 10.;
+  long double rmax = 11;
+  long double hz = 40.;
+  long double phimin = 45.;
+  long double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
     auto bounds = dynamic_cast<const CylinderBounds *>(&(cylinder->bounds()));
     BOOST_REQUIRE_NE(bounds, nullptr);
-    double bR = bounds->get(CylinderBounds::eR);
-    double bhZ = bounds->get(CylinderBounds::eHalfLengthZ);
+    long double bR = bounds->get(CylinderBounds::eR);
+    long double bhZ = bounds->get(CylinderBounds::eHalfLengthZ);
 
     CHECK_CLOSE_ABS(bR, 10.5, s_epsilon);
     CHECK_CLOSE_ABS(bhZ, hz, s_epsilon);
@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
       BOOST_REQUIRE_NE(boundsSegment, nullptr);
       bR = boundsSegment->get(CylinderBounds::eR);
       bhZ = boundsSegment->get(CylinderBounds::eHalfLengthZ);
-      double hphi = boundsSegment->get(CylinderBounds::eHalfPhiSector);
-      double mphi = boundsSegment->get(CylinderBounds::eAveragePhi);
+      long double hphi = boundsSegment->get(CylinderBounds::eHalfPhiSector);
+      long double mphi = boundsSegment->get(CylinderBounds::eAveragePhi);
       CHECK_CLOSE_ABS(bR, 10.5, s_epsilon);
       CHECK_CLOSE_ABS(bhZ, hz, s_epsilon);
       CHECK_CLOSE_ABS(hphi, std::numbers::pi / 4., s_epsilon);
@@ -154,11 +154,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
   ObjVisualization3D objVis;
 
-  double rmin = 5.;
-  double rmax = 25;
-  double hz = 2.;
-  double phimin = 45.;
-  double phimax = -45.;
+  long double rmin = 5.;
+  long double rmax = 25;
+  long double hz = 2.;
+  long double phimin = 45.;
+  long double phimax = -45.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
     auto bounds = dynamic_cast<const RadialBounds *>(&(disc->bounds()));
     BOOST_REQUIRE_NE(bounds, nullptr);
-    double bminr = bounds->get(RadialBounds::eMinR);
-    double bmaxr = bounds->get(RadialBounds::eMaxR);
+    long double bminr = bounds->get(RadialBounds::eMinR);
+    long double bmaxr = bounds->get(RadialBounds::eMaxR);
 
     CHECK_CLOSE_ABS(bminr, rmin, s_epsilon);
     CHECK_CLOSE_ABS(bmaxr, rmax, s_epsilon);
@@ -212,8 +212,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       BOOST_REQUIRE_NE(boundsSegment, nullptr);
       bminr = boundsSegment->get(RadialBounds::eMinR);
       bmaxr = boundsSegment->get(RadialBounds::eMaxR);
-      double hphi = boundsSegment->get(RadialBounds::eHalfPhiSector);
-      double mphi = boundsSegment->get(RadialBounds::eAveragePhi);
+      long double hphi = boundsSegment->get(RadialBounds::eHalfPhiSector);
+      long double mphi = boundsSegment->get(RadialBounds::eAveragePhi);
       CHECK_CLOSE_ABS(bminr, rmin, s_epsilon);
       CHECK_CLOSE_ABS(bmaxr, rmax, s_epsilon);
       CHECK_CLOSE_ABS(hphi, std::numbers::pi / 4., s_epsilon);

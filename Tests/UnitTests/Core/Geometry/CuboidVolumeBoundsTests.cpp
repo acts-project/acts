@@ -30,7 +30,7 @@ namespace Acts::Test {
 
 GeometryContext gctx = GeometryContext();
 
-double hx{10.}, hy{20.}, hz{30.};
+long double hx{10.}, hy{20.}, hz{30.};
 
 BOOST_AUTO_TEST_SUITE(Geometry)
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
 BOOST_AUTO_TEST_CASE(CuboidVolumeRecreation) {
   CuboidVolumeBounds original(hx, hy, hz);
   auto valvector = original.values();
-  std::array<double, CuboidVolumeBounds::eSize> values{};
+  std::array<long double, CuboidVolumeBounds::eSize> values{};
   std::copy_n(valvector.begin(), CuboidVolumeBounds::eSize, values.begin());
   CuboidVolumeBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   // Test the halflength z
   CHECK_CLOSE_ABS(box.get(CuboidVolumeBounds::eHalfLengthZ), hz, s_epsilon);
   // Test the streaming
-  std::vector<double> actvalues = box.values();
-  std::vector<double> refvalues = {hx, hy, hz};
+  std::vector<long double> actvalues = box.values();
+  std::vector<long double> refvalues = {hx, hy, hz};
   BOOST_CHECK_EQUAL_COLLECTIONS(actvalues.begin(), actvalues.end(),
                                 refvalues.begin(), refvalues.end());
 
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundsSetValues) {
   for (auto bValue :
        {CuboidVolumeBounds::eHalfLengthX, CuboidVolumeBounds::eHalfLengthY,
         CuboidVolumeBounds::eHalfLengthZ}) {
-    double target = 0.5 * box.get(bValue);
-    double previous = box.get(bValue);
+    long double target = 0.5 * box.get(bValue);
+    long double previous = box.get(bValue);
     BOOST_CHECK_THROW(box.set(bValue, -1), std::logic_error);
     BOOST_CHECK_EQUAL(box.get(bValue), previous);
     box.set(bValue, target);

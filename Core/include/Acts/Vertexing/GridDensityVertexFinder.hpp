@@ -52,12 +52,14 @@ class GridDensityVertexFinder final : public IVertexFinder {
     bool cacheGridStateForTrackRemoval = true;
 
     // Maximum d0 impact parameter significance to use a track
-    double maxD0TrackSignificance = 3.5;
+    long double maxD0TrackSignificance = 3.5;
     // Maximum z0 impact parameter significance to use a track
-    double maxZ0TrackSignificance = 12.;
+    long double maxZ0TrackSignificance = 12.;
     // The actual corresponding cut values in the algorithm
-    double d0SignificanceCut = maxD0TrackSignificance * maxD0TrackSignificance;
-    double z0SignificanceCut = maxZ0TrackSignificance * maxZ0TrackSignificance;
+    long double d0SignificanceCut =
+        maxD0TrackSignificance * maxD0TrackSignificance;
+    long double z0SignificanceCut =
+        maxZ0TrackSignificance * maxZ0TrackSignificance;
     bool estimateSeedWidth = false;
 
     // Function to extract parameters from InputTrack

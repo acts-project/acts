@@ -31,17 +31,17 @@ namespace Acts {
 namespace detail {
 
 struct GaussianComponent {
-  double weight = 0.0;
-  double mean = 0.0;
-  double var = 0.0;
+  long double weight = 0.0;
+  long double mean = 0.0;
+  long double var = 0.0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
 /// [-inf, inf]
 inline void transformComponent(const GaussianComponent &cmp,
-                               double &transformed_weight,
-                               double &transformed_mean,
-                               double &transformed_var) {
+                               long double &transformed_weight,
+                               long double &transformed_mean,
+                               long double &transformed_var) {
   const auto &[weight, mean, var] = cmp;
 
   transformed_weight = std::log(weight) - std::log(1 - weight);
@@ -51,9 +51,9 @@ inline void transformComponent(const GaussianComponent &cmp,
 
 /// Transform a gaussian component back from the [-inf, inf]-space to the usual
 /// space
-inline auto inverseTransformComponent(double transformed_weight,
-                                      double transformed_mean,
-                                      double transformed_var) {
+inline auto inverseTransformComponent(long double transformed_weight,
+                                      long double transformed_mean,
+                                      long double transformed_var) {
   GaussianComponent cmp;
   cmp.weight = 1. / (1 + std::exp(-transformed_weight));
   cmp.mean = 1. / (1 + std::exp(-transformed_mean));
@@ -73,7 +73,7 @@ struct BetheHeitlerApproxSingleCmp {
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
-  constexpr bool validXOverX0(double x) const {
+  constexpr bool validXOverX0(long double x) const {
     return x < 0.002;
     ;
   }
@@ -82,12 +82,12 @@ struct BetheHeitlerApproxSingleCmp {
   /// Bethe-Heitler-Distribution
   ///
   /// @param x pathlength in terms of the radiation length
-  static auto mixture(const double x) {
+  static auto mixture(const long double x) {
     std::array<detail::GaussianComponent, 1> ret{};
 
     ret[0].weight = 1.0;
 
-    const double c = x / std::numbers::ln2;
+    const long double c = x / std::numbers::ln2;
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
@@ -109,9 +109,9 @@ class AtlasBetheHeitlerApprox {
 
  public:
   struct PolyData {
-    std::array<double, PolyDegree + 1> weightCoeffs;
-    std::array<double, PolyDegree + 1> meanCoeffs;
-    std::array<double, PolyDegree + 1> varCoeffs;
+    std::array<long double, PolyDegree + 1> weightCoeffs;
+    std::array<long double, PolyDegree + 1> meanCoeffs;
+    std::array<long double, PolyDegree + 1> varCoeffs;
   };
 
   using Data = std::array<PolyData, NComponents>;
@@ -122,10 +122,10 @@ class AtlasBetheHeitlerApprox {
   bool m_lowTransform;
   bool m_highTransform;
 
-  constexpr static double m_noChangeLimit = 0.0001;
-  constexpr static double m_singleGaussianLimit = 0.002;
-  double m_lowLimit = 0.10;
-  double m_highLimit = 0.20;
+  constexpr static long double m_noChangeLimit = 0.0001;
+  constexpr static long double m_singleGaussianLimit = 0.002;
+  long double m_lowLimit = 0.10;
+  long double m_highLimit = 0.20;
   bool m_clampToRange = false;
 
  public:
@@ -143,8 +143,8 @@ class AtlasBetheHeitlerApprox {
   /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   constexpr AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
                                     bool lowTransform, bool highTransform,
-                                    double lowLimit = 0.1,
-                                    double highLimit = 0.2,
+                                    long double lowLimit = 0.1,
+                                    long double highLimit = 0.2,
                                     bool clampToRange = false)
       : m_lowData(lowData),
         m_highData(highData),
@@ -160,7 +160,7 @@ class AtlasBetheHeitlerApprox {
   /// Checks if an input is valid for the parameterization
   ///
   /// @param x pathlength in terms of the radiation length
-  constexpr bool validXOverX0(double x) const {
+  constexpr bool validXOverX0(long double x) const {
     if (m_clampToRange) {
       return true;
     } else {
@@ -172,7 +172,7 @@ class AtlasBetheHeitlerApprox {
   /// that the sum of all weights is 1
   ///
   /// @param x pathlength in terms of the radiation length
-  auto mixture(double x) const {
+  auto mixture(long double x) const {
     using Array =
         boost::container::static_vector<detail::GaussianComponent, NComponents>;
 
@@ -181,9 +181,9 @@ class AtlasBetheHeitlerApprox {
     }
 
     // Build a polynom
-    auto poly = [](double xx,
-                   const std::array<double, PolyDegree + 1> &coeffs) {
-      double sum{0.};
+    auto poly = [](long double xx,
+                   const std::array<long double, PolyDegree + 1> &coeffs) {
+      long double sum{0.};
       for (const auto c : coeffs) {
         sum = xx * sum + c;
       }
@@ -192,10 +192,10 @@ class AtlasBetheHeitlerApprox {
     };
 
     // Lambda which builds the components
-    auto make_mixture = [&](const Data &data, double xx, bool transform) {
+    auto make_mixture = [&](const Data &data, long double xx, bool transform) {
       // Value initialization should garanuee that all is initialized to zero
       Array ret(NComponents);
-      double weight_sum = 0;
+      long double weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
         // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
@@ -257,7 +257,8 @@ class AtlasBetheHeitlerApprox {
   /// @param clampToRange forwarded to constructor
   static auto loadFromFiles(const std::string &low_parameters_path,
                             const std::string &high_parameters_path,
-                            double lowLimit = 0.1, double highLimit = 0.2,
+                            long double lowLimit = 0.1,
+                            long double highLimit = 0.2,
                             bool clampToRange = false) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);

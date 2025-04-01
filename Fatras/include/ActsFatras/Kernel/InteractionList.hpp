@@ -83,7 +83,9 @@ template <typename process_t>
 concept PointLikeProcessConcept = requires(
     const process_t& p, std::uniform_int_distribution<unsigned int>& rng,
     const Particle& prt) {
-  { p.generatePathLimits(rng, prt) } -> std::same_as<std::pair<double, double>>;
+  {
+    p.generatePathLimits(rng, prt)
+  } -> std::same_as<std::pair<long double, long double>>;
 };
 
 template <typename process_t>
@@ -175,8 +177,8 @@ class InteractionList {
  public:
   /// Point-like interaction selection.
   struct Selection {
-    double x0Limit = std::numeric_limits<double>::infinity();
-    double l0Limit = std::numeric_limits<double>::infinity();
+    long double x0Limit = std::numeric_limits<long double>::infinity();
+    long double l0Limit = std::numeric_limits<long double>::infinity();
     std::size_t x0Process = std::numeric_limits<std::size_t>::max();
     std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };

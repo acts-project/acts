@@ -64,11 +64,11 @@ class Geant4DetectorSurfaceFactory {
   /// Nested option struct that allows per call changeable configuration
   struct Options {
     /// Convert the length scale
-    double scaleConversion = 1.;
+    long double scaleConversion = 1.;
     /// Convert the material
     bool convertMaterial = false;
     /// Converted material thickness (< 0 indicates keeping original thickness)
-    double convertedMaterialThickness = -1;
+    long double convertedMaterialThickness = -1;
     /// A selector for sensitive surfaces
     std::shared_ptr<IGeant4PhysicalVolumeSelector> sensitiveSurfaceSelector =
         nullptr;

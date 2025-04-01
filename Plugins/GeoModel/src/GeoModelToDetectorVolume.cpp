@@ -51,27 +51,27 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
   } else if (shape.typeID() == GeoSimplePolygonBrep::getClassTypeID()) {
     const GeoSimplePolygonBrep* brep =
         dynamic_cast<const GeoSimplePolygonBrep*>(&shape);
-    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
+    long double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
     brep->extent(xmin, ymin, zmin, xmax, ymax, zmax);
     bounds = std::make_shared<CuboidVolumeBounds>(
         (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
   } else if (shape.typeID() == GeoTrd::getClassTypeID()) {
     const GeoTrd* trd = dynamic_cast<const GeoTrd*>(&shape);
-    double x1 = trd->getXHalfLength1();
-    double x2 = trd->getXHalfLength2();
-    double y1 = trd->getYHalfLength1();
-    double y2 = trd->getYHalfLength2();
-    double z = trd->getZHalfLength();
+    long double x1 = trd->getXHalfLength1();
+    long double x2 = trd->getXHalfLength2();
+    long double y1 = trd->getYHalfLength1();
+    long double y2 = trd->getYHalfLength2();
+    long double z = trd->getZHalfLength();
 
     if (y1 == y2) {
       if (x1 <= x2) {
         // y axis in ACTS is z axis in geomodel
         bounds = std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
-        constexpr double rotationAngle = std::numbers::pi / 2.;
+        constexpr long double rotationAngle = std::numbers::pi / 2.;
         newTrf = trf * GeoTrf::RotateX3D(rotationAngle);
       } else {
         bounds = std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
-        constexpr double rotationAngle = std::numbers::pi;
+        constexpr long double rotationAngle = std::numbers::pi;
         newTrf = trf * GeoTrf::RotateY3D(rotationAngle) *
                  GeoTrf::RotateZ3D(rotationAngle);
       }
@@ -96,7 +96,7 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
   else if (shape.typeID() == GeoShapeUnion::getClassTypeID()) {
     const GeoShapeUnion* unionShape =
         dynamic_cast<const GeoShapeUnion*>(&shape);
-    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
+    long double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
     unionShape->extent(xmin, ymin, zmin, xmax, ymax, zmax);
     bounds = std::make_shared<CuboidVolumeBounds>(
         (xmax - xmin) / 2, (ymax - ymin) / 2, (zmax - zmin) / 2);
@@ -116,7 +116,7 @@ Volume convertVolume(const Transform3& trf, const GeoShape& shape) {
     return convertVolume(trf, *shapeA);
   } else if (shape.typeID() == GeoPcon::getClassTypeID()) {
     // Will change in future, get bounding box for now
-    double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
+    long double xmin{0}, xmax{0}, ymin{0}, ymax{0}, zmin{0}, zmax{0};
     const GeoPcon* pcon = dynamic_cast<const GeoPcon*>(&shape);
     pcon->extent(xmin, ymin, zmin, xmax, ymax, zmax);
     bounds = std::make_shared<CuboidVolumeBounds>(

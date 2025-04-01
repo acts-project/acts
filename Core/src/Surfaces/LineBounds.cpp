@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-std::vector<double> LineBounds::values() const {
+std::vector<long double> LineBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -31,8 +31,8 @@ void LineBounds::checkConsistency() noexcept(false) {
 
 bool LineBounds::inside(const Vector2& lposition,
                         const BoundaryTolerance& boundaryTolerance) const {
-  double r = get(LineBounds::eR);
-  double halfLengthZ = get(LineBounds::eHalfLengthZ);
+  long double r = get(LineBounds::eR);
+  long double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return detail::insideAlignedBox(Vector2(-r, -halfLengthZ),
                                   Vector2(r, halfLengthZ), boundaryTolerance,
                                   lposition, std::nullopt);

@@ -184,7 +184,7 @@ class GaussianGridTrackDensity {
   /// @param pos The center z-bin position
   ///
   /// @return The sum
-  double getDensitySum(const MainGridVector& mainGrid, int pos) const;
+  long double getDensitySum(const MainGridVector& mainGrid, int pos) const;
 
   Config m_cfg;
 };

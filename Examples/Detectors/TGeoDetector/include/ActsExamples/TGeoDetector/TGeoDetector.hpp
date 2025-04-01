@@ -38,13 +38,13 @@ class TGeoDetector : public Detector {
 
     std::string fileName;
     bool buildBeamPipe = false;
-    double beamPipeRadius{0};
-    double beamPipeHalflengthZ{0};
-    double beamPipeLayerThickness{0};
-    double beamPipeEnvelopeR{1.0};
-    double layerEnvelopeR{1.0};
+    long double beamPipeRadius{0};
+    long double beamPipeHalflengthZ{0};
+    long double beamPipeLayerThickness{0};
+    long double beamPipeEnvelopeR{1.0};
+    long double layerEnvelopeR{1.0};
 
-    double unitScalor = 1.0;
+    long double unitScalor = 1.0;
 
     Acts::TGeoLayerBuilder::ElementFactory elementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
@@ -106,8 +106,8 @@ class TGeoDetector : public Detector {
       LayerTriplet<std::string> sensitiveAxes;
       LayerTriplet<Options::Interval> rRange;
       LayerTriplet<Options::Interval> zRange;
-      LayerTriplet<double> splitTolR{0};
-      LayerTriplet<double> splitTolZ{0};
+      LayerTriplet<long double> splitTolR{0};
+      LayerTriplet<long double> splitTolZ{0};
       LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning0;
       LayerTriplet<std::vector<std::pair<int, Acts::BinningType>>> binning1;
 
@@ -123,7 +123,8 @@ class TGeoDetector : public Detector {
 
       bool itkModuleSplit = false;
       std::map<std::string, unsigned int> barrelMap;
-      std::map<std::string, std::vector<std::pair<double, double>>> discMap;
+      std::map<std::string, std::vector<std::pair<long double, long double>>>
+          discMap;
       /// pairs of regular expressions to match sensor names and category keys
       /// for either the barrelMap or the discMap
       std::map<std::string, std::string>

@@ -54,16 +54,17 @@ class AnnulusBounds : public DiscBounds {
   /// @param avgPhi The average phi value
   /// @note For @c morigin you need to actually calculate the cartesian
   /// offset
-  explicit AnnulusBounds(double minR, double maxR, double minPhiRel,
-                         double maxPhiRel, const Vector2& moduleOrigin = {0, 0},
-                         double avgPhi = 0) noexcept(false)
+  explicit AnnulusBounds(long double minR, long double maxR,
+                         long double minPhiRel, long double maxPhiRel,
+                         const Vector2& moduleOrigin = {0, 0},
+                         long double avgPhi = 0) noexcept(false)
       : AnnulusBounds({minR, maxR, minPhiRel, maxPhiRel, avgPhi,
                        moduleOrigin.x(), moduleOrigin.y()}) {}
 
   /// Constructor - from fixed size array
   ///
   /// @param values The bound values stored in a fixed size array
-  explicit AnnulusBounds(const std::array<double, eSize>& values) noexcept(
+  explicit AnnulusBounds(const std::array<long double, eSize>& values) noexcept(
       false);
 
   AnnulusBounds(const AnnulusBounds& source) = default;
@@ -73,7 +74,7 @@ class AnnulusBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -92,15 +93,15 @@ class AnnulusBounds : public DiscBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// @brief Returns the right angular edge of the module
   /// @return The right side angle
-  double phiMin() const { return get(eMinPhiRel) + get(eAveragePhi); }
+  long double phiMin() const { return get(eMinPhiRel) + get(eAveragePhi); }
 
   /// @brief Returns the left angular edge of the module
   /// @return The left side angle
-  double phiMax() const { return get(eMaxPhiRel) + get(eAveragePhi); }
+  long double phiMax() const { return get(eMaxPhiRel) + get(eAveragePhi); }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const final {
@@ -110,15 +111,18 @@ class AnnulusBounds : public DiscBounds {
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final {
+  bool insideRadialBounds(long double R,
+                          long double tolerance = 0.) const final {
     return ((R + tolerance) > get(eMinR) && (R - tolerance) < get(eMaxR));
   }
 
   /// Return a reference radius for binning
-  double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
+  long double binningValueR() const final {
+    return 0.5 * (get(eMinR) + get(eMaxR));
+  }
 
   /// Return a reference radius for binning
-  double binningValuePhi() const final { return get(eAveragePhi); }
+  long double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// @brief Returns moduleOrigin, but rotated out, so @c averagePhi is already
   /// considered. The module origin needs to consider the rotation introduced by
@@ -149,13 +153,13 @@ class AnnulusBounds : public DiscBounds {
       unsigned int quarterSegments = 2u) const override;
 
   /// This method returns inner radius
-  double rMin() const final { return get(eMinR); }
+  long double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
-  double rMax() const final { return get(eMaxR); }
+  long double rMax() const final { return get(eMaxR); }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   // @TODO: Does this need to be in bound values?
   Vector2 m_moduleOrigin;
@@ -192,8 +196,8 @@ class AnnulusBounds : public DiscBounds {
   /// @param tolR tolerance on the radius
   /// @param tolPhi tolerance on the polar angle phi
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2& lposition, double tolR,
-                      double tolPhi) const final;
+  virtual bool inside(const Vector2& lposition, long double tolR,
+                      long double tolPhi) const final;
 
   /// Transform the strip cartesian
   /// into the module polar system

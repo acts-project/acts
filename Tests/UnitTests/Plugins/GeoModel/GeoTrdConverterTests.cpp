@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   // Let's create a GeoFullPhysVol object
 
   // (Trapezoid object) - YZ
-  //  GeoTrd (double XHalfLength1, double XHalfLength2, double YHalfLength1,
-  //  double YHalfLength2, double ZHalfLength);
+  //  GeoTrd (long double XHalfLength1, long double XHalfLength2, long double
+  //  YHalfLength1, long double YHalfLength2, long double ZHalfLength);
   auto trapYZ = new GeoTrd(2, 2, 50, 80, 60);
   auto logYZ = new GeoLogVol("LogVolumeYZ", trapYZ, material);
   auto fphysYZ = make_intrusive<GeoFullPhysVol>(logYZ);
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   BOOST_CHECK(rotationYZ.col(2).isApprox(idRotation.col(0)));
 
   // (Trapezoid object) - YZ swapped
-  //  GeoTrd (double XHalfLength1, double XHalfLength2, double YHalfLength1,
-  //  double YHalfLength2, double ZHalfLength);
+  //  GeoTrd (long double XHalfLength1, long double XHalfLength2, long double
+  //  YHalfLength1, long double YHalfLength2, long double ZHalfLength);
   auto trapYZs = new GeoTrd(2, 2, 80, 50, 60);
   auto logYZs = new GeoLogVol("LogVolumeYZs", trapYZs, material);
   auto fphysYZs = make_intrusive<GeoFullPhysVol>(logYZs);
@@ -176,13 +176,14 @@ BOOST_AUTO_TEST_CASE(GeoTrfToSensitiveConversion) {
   BOOST_CHECK(rotationXZs.col(1).isApprox(-idRotation.col(2)));
   BOOST_CHECK(rotationXZs.col(2).isApprox(idRotation.col(1)));
 
-  // Double - trazoid -> throw exception
-  auto trapDouble = new GeoTrd(50, 80, 50, 80, 60);
-  auto logDouble = new GeoLogVol("LogVolumeDouble", trapDouble, material);
-  auto fphysDouble = make_intrusive<GeoFullPhysVol>(logDouble);
+  // long double - trazoid -> throw exception
+  auto traplong double = new GeoTrd(50, 80, 50, 80, 60);
+  auto loglong double =
+      new GeoLogVol("LogVolumelong double", traplong double, material);
+  auto fphyslong double = make_intrusive<GeoFullPhysVol>(loglong double);
 
   BOOST_CHECK_THROW(
-      Acts::GeoTrdConverter{}.toSensitiveSurface(fphysDouble, idTransform),
+      Acts::GeoTrdConverter{}.toSensitiveSurface(fphyslong double, idTransform),
       std::invalid_argument);
 }
 

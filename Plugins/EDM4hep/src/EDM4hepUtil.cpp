@@ -27,7 +27,8 @@
 namespace Acts::EDM4hepUtil {
 namespace detail {
 
-ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
+ActsSquareMatrix<6> jacobianToEdm4hep(long double theta, long double qOverP,
+                                      long double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
   // q/p) to the LCIO / edm4hep (see:
   // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
@@ -54,7 +55,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
 
   ActsSquareMatrix<6> J;
   J.setIdentity();
-  double sinTheta = std::sin(theta);
+  long double sinTheta = std::sin(theta);
   J(3, 3) = -1.0 / (sinTheta * sinTheta);
   J(4, 4) = Bz / sinTheta;  // dOmega / d(qop)
   J(4, 3) = -Bz * qOverP * std::cos(theta) /
@@ -62,8 +63,8 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   return J;
 }
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                        double Bz) {
+ActsSquareMatrix<6> jacobianFromEdm4hep(long double tanLambda,
+                                        long double omega, long double Bz) {
   // [     d      /                     pi\                                  ]
   // [------------|-atan(\tan\lambda) + --|                 0                ]
   // [d\tan\lambda\                     2 /                                  ]
@@ -116,7 +117,7 @@ void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
 }
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
-                                           double Bz,
+                                           long double Bz,
                                            const BoundTrackParameters& params) {
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
       gctx, params.parameters().template head<2>(), params.direction());
@@ -168,7 +169,7 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
 }
 
 BoundTrackParameters convertTrackParametersFromEdm4hep(
-    double Bz, const Parameters& params) {
+    long double Bz, const Parameters& params) {
   BoundVector targetPars;
 
   ActsSquareMatrix<6> J =

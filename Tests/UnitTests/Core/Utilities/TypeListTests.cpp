@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(TypeListCreation) {
   struct A {};
 
-  using MyList = Acts::TypeList<float, int, double, A>;
+  using MyList = Acts::TypeList<float, int, long double, A>;
 
   bool frontIsFloat = std::is_same_v<Acts::Types::front<MyList>, float>;
   BOOST_CHECK(frontIsFloat);

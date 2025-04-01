@@ -560,7 +560,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         // track parameters error
         Acts::BoundVector errors;
         for (Eigen::Index i = 0; i < parameters.size(); ++i) {
-          double variance = covariance(i, i);
+          long double variance = covariance(i, i);
           errors[i] = variance >= 0 ? std::sqrt(variance) : nan;
         }
         m_err_eLOC0[ipar].push_back(
@@ -641,11 +641,12 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           Acts::ActsDynamicVector res =
               state.effectiveCalibrated() - H * parameters;
 
-          double resX = res[Acts::eBoundLoc0];
-          double errX = V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
-                            ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
-                            : nan;
-          double pullX =
+          long double resX = res[Acts::eBoundLoc0];
+          long double errX =
+              V(Acts::eBoundLoc0, Acts::eBoundLoc0) >= 0
+                  ? std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0))
+                  : nan;
+          long double pullX =
               resCov(Acts::eBoundLoc0, Acts::eBoundLoc0) > 0
                   ? resX / std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0))
                   : nan;
@@ -655,14 +656,15 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
           m_pull_x_hit.push_back(static_cast<float>(pullX));
 
           if (state.calibratedSize() >= 2) {
-            double resY = res[Acts::eBoundLoc1];
-            double errY = V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
-                              ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
-                              : nan;
-            double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
-                               ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
-                                                         Acts::eBoundLoc1))
-                               : nan;
+            long double resY = res[Acts::eBoundLoc1];
+            long double errY =
+                V(Acts::eBoundLoc1, Acts::eBoundLoc1) >= 0
+                    ? std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1))
+                    : nan;
+            long double pullY = resCov(Acts::eBoundLoc1, Acts::eBoundLoc1) > 0
+                                    ? resY / std::sqrt(resCov(Acts::eBoundLoc1,
+                                                              Acts::eBoundLoc1))
+                                    : nan;
 
             m_res_y_hit.push_back(static_cast<float>(resY));
             m_err_y_hit.push_back(static_cast<float>(errY));

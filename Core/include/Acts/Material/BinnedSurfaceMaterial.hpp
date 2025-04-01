@@ -42,7 +42,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabVector fullProperties,
-                        double splitFactor = 0.,
+                        long double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
   /// Explicit constructor with only full MaterialSlab,
@@ -59,7 +59,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param mappingType is the type of surface mapping associated to the surface
   BinnedSurfaceMaterial(const BinUtility& binUtility,
                         MaterialSlabMatrix fullProperties,
-                        double splitFactor = 0.,
+                        long double splitFactor = 0.,
                         MappingType mappingType = MappingType::Default);
 
   /// Copy Move Constructor
@@ -84,7 +84,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Scale operation
   ///
   /// @param factor is the scale factor for the full material
-  BinnedSurfaceMaterial& scale(double factor) final;
+  BinnedSurfaceMaterial& scale(long double factor) final;
 
   /// Return the BinUtility
   const BinUtility& binUtility() const;

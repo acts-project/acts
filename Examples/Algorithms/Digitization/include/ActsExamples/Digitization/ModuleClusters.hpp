@@ -27,8 +27,8 @@ struct DigitizedParameters;
 
 struct ModuleValue {
   std::vector<Acts::BoundIndices> paramIndices = {};
-  std::vector<double> paramValues = {};
-  std::vector<double> paramVariances = {};
+  std::vector<long double> paramValues = {};
+  std::vector<long double> paramVariances = {};
   std::variant<Cluster, Cluster::Cell> value;
   std::set<SimHitContainer::size_type> sources = {};
   Acts::Ccl::Label label = {Acts::Ccl::NO_LABEL};
@@ -40,7 +40,7 @@ class ModuleClusters {
 
   ModuleClusters(Acts::BinUtility segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
-                 double nsigma, bool commonCorner)
+                 long double nsigma, bool commonCorner)
       : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
@@ -56,7 +56,7 @@ class ModuleClusters {
   std::vector<Acts::BoundIndices> m_geoIndices;
   std::vector<ModuleValue> m_moduleValues;
   bool m_merge;
-  double m_nsigma;
+  long double m_nsigma;
   bool m_commonCorner;
 
   std::vector<ModuleValue> createCellCollection();

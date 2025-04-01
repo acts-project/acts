@@ -51,7 +51,7 @@ using namespace Acts::UnitLiterals;
 // Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
-  double weight = 0;
+  long double weight = 0;
   Acts::ActsVector<D> boundPars;
   Acts::ActsSquareMatrix<D> boundCov;
 };
@@ -88,10 +88,10 @@ class MultivariateNormalDistribution {
 template <int D>
 auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
                             std::size_t n_samples, std::mt19937 &gen) {
-  using MultiNormal = MultivariateNormalDistribution<double, D>;
+  using MultiNormal = MultivariateNormalDistribution<long double, D>;
 
   std::vector<MultiNormal> dists;
-  std::vector<double> weights;
+  std::vector<long double> weights;
   for (const auto &cmp : cmps) {
     dists.push_back(MultiNormal(cmp.boundPars, cmp.boundCov));
     weights.push_back(cmp.weight);
@@ -209,13 +209,13 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 }
 
 // Typedef to describe local positions of 4 components
-using LocPosArray = std::array<std::pair<double, double>, 4>;
+using LocPosArray = std::array<std::pair<long double, long double>, 4>;
 
 // Test the combination for a surface type. The local positions are given from
 // the outside since their meaning differs between surface types
 template <typename angle_description_t>
 void test_surface(const Surface &surface, const angle_description_t &desc,
-                  const LocPosArray &loc_pos, double expectedError) {
+                  const LocPosArray &loc_pos, long double expectedError) {
   const auto proj = std::identity{};
 
   for (auto phi : {-175_degree, 0_degree, 175_degree}) {
@@ -324,13 +324,13 @@ BOOST_AUTO_TEST_CASE(test_plane_surface) {
 
 BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   const Transform3 trafo = Transform3::Identity();
-  const double r = 2;
-  const double halfz = 100;
+  const long double r = 2;
+  const long double halfz = 100;
 
   const auto surface = Surface::makeShared<CylinderSurface>(trafo, r, halfz);
 
-  const double z1 = -1, z2 = 1;
-  const double phi1 = 178_degree, phi2 = -176_degree;
+  const long double z1 = -1, z2 = 1;
+  const long double phi1 = 178_degree, phi2 = -176_degree;
 
   const LocPosArray p{
       {{r * phi1, z1}, {r * phi1, -z2}, {r * phi2, z1}, {r * phi2, z2}}};
@@ -347,8 +347,8 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 
   const auto surface = Surface::makeShared<DiscSurface>(trafo, 0.0, radius);
 
-  const double r1 = 0.4, r2 = 0.8;
-  const double phi1 = -178_degree, phi2 = 176_degree;
+  const long double r1 = 0.4, r2 = 0.8;
+  const long double phi1 = -178_degree, phi2 = 176_degree;
 
   const LocPosArray p{{{r1, phi1}, {r2, phi2}, {r1, phi2}, {r2, phi1}}};
 

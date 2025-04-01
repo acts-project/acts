@@ -36,15 +36,15 @@ auto createIntGrid1D() {
   return g;
 }
 
-// Helper function to create a 2D grid with double values
-auto createDoubleGrid2D() {
+// Helper function to create a 2D grid with long double values
+auto createlong doubleGrid2D() {
   Axis a(0.0, 4.0, 4u);
   Axis b(0.0, 6.0, 3u);
-  Grid g(Type<double>, std::move(a), std::move(b));
+  Grid g(Type<long double>, std::move(a), std::move(b));
 
   // Fill with values
   for (std::size_t i = 0; i < g.size(); i++) {
-    g.at(i) = static_cast<double>(i) * 1.5;
+    g.at(i) = static_cast<long double>(i) * 1.5;
   }
 
   return g;
@@ -113,70 +113,73 @@ BOOST_AUTO_TEST_CASE(IntGridReadOnlyAccess) {
 
 // Test creation of any grid view from concrete grid type
 BOOST_AUTO_TEST_CASE(CreateFromConcreteGrid) {
-  auto doubleGrid = createDoubleGrid2D();
+  auto long doubleGrid = createlong doubleGrid2D();
 
   // Create view from concrete grid
-  AnyGridView<double> view(doubleGrid);
+  AnyGridView<long double> view(long doubleGrid);
 
   // Check dimensions
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Check values
   BOOST_CHECK_CLOSE(view.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+                    1.5 * long doubleGrid.globalBinFromLocalBins({1, 1}),
+                    1e-10);
 
   // Modify through view
   view.atLocalBins({1, 1}) = 42.0;
-  BOOST_CHECK_CLOSE(doubleGrid.atLocalBins({1, 1}), 42.0, 1e-10);
+  BOOST_CHECK_CLOSE(long doubleGrid.atLocalBins({1, 1}), 42.0, 1e-10);
 }
 
 // Test creation of any grid view from IGrid type
 BOOST_AUTO_TEST_CASE(CreateFromIGrid) {
-  auto doubleGrid = createDoubleGrid2D();
-  IGrid& iGrid = doubleGrid;
+  auto long doubleGrid = createlong doubleGrid2D();
+  IGrid& iGrid = long doubleGrid;
 
   // Create view from IGrid
-  AnyGridView<double> view(iGrid);
+  AnyGridView<long double> view(iGrid);
 
   // Check dimensions
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Check values
   BOOST_CHECK_CLOSE(view.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+                    1.5 * long doubleGrid.globalBinFromLocalBins({1, 1}),
+                    1e-10);
 }
 
 // Test creation of const grid view from const IGrid type
 BOOST_AUTO_TEST_CASE(CreateConstViewFromConstIGrid) {
-  auto doubleGrid = createDoubleGrid2D();
-  const IGrid& constIGrid = doubleGrid;
+  auto long doubleGrid = createlong doubleGrid2D();
+  const IGrid& constIGrid = long doubleGrid;
 
   // Create const view from const IGrid
-  AnyGridConstView<double> constView(constIGrid);
+  AnyGridConstView<long double> constView(constIGrid);
 
   // Check dimensions
   BOOST_CHECK_EQUAL(constView.dimensions(), 2u);
 
   // Check values
   BOOST_CHECK_CLOSE(constView.atLocalBins({1, 1}),
-                    1.5 * doubleGrid.globalBinFromLocalBins({1, 1}), 1e-10);
+                    1.5 * long doubleGrid.globalBinFromLocalBins({1, 1}),
+                    1e-10);
 }
 
 // Test type mismatch handling when creating from IGrid
 BOOST_AUTO_TEST_CASE(TypeMismatchFromIGrid) {
-  auto doubleGrid = createDoubleGrid2D();
-  IGrid& iGrid = doubleGrid;
+  auto long doubleGrid = createlong doubleGrid2D();
+  IGrid& iGrid = long doubleGrid;
 
-  // Try to create int view from double grid
+  // Try to create int view from long double grid
   BOOST_CHECK_THROW((AnyGridView<int>(iGrid)), std::invalid_argument);
 }
 
 // Test type mismatch handling when creating const view from const IGrid
 BOOST_AUTO_TEST_CASE(TypeMismatchFromConstIGrid) {
-  auto doubleGrid = createDoubleGrid2D();
-  const IGrid& constIGrid = doubleGrid;
+  auto long doubleGrid = createlong doubleGrid2D();
+  const IGrid& constIGrid = long doubleGrid;
 
-  // Try to create int view from double grid
+  // Try to create int view from long double grid
   BOOST_CHECK_THROW((AnyGridConstView<int>(constIGrid)), std::invalid_argument);
 }
 
@@ -259,67 +262,67 @@ BOOST_AUTO_TEST_CASE(VectorTypeWithBothConstructions) {
 
 // Test grid properties access through view
 BOOST_AUTO_TEST_CASE(GridPropertiesAccess) {
-  auto doubleGrid = createDoubleGrid2D();
-  AnyGridView<double> view(doubleGrid);
+  auto long doubleGrid = createlong doubleGrid2D();
+  AnyGridView<long double> view(long doubleGrid);
 
   // Test dimensions
   BOOST_CHECK_EQUAL(view.dimensions(), 2u);
 
   // Test bin center
   auto center = view.binCenter({1, 1});
-  auto expectedCenter = doubleGrid.binCenter({1, 1});
+  auto expectedCenter = long doubleGrid.binCenter({1, 1});
   BOOST_CHECK_CLOSE(center[0], expectedCenter[0], 1e-10);
   BOOST_CHECK_CLOSE(center[1], expectedCenter[1], 1e-10);
 
   // Test lower left bin edge
   auto lowerLeft = view.lowerLeftBinEdge({1, 1});
-  auto expectedLowerLeft = doubleGrid.lowerLeftBinEdge({1, 1});
+  auto expectedLowerLeft = long doubleGrid.lowerLeftBinEdge({1, 1});
   BOOST_CHECK_CLOSE(lowerLeft[0], expectedLowerLeft[0], 1e-10);
   BOOST_CHECK_CLOSE(lowerLeft[1], expectedLowerLeft[1], 1e-10);
 
   // Test upper right bin edge
   auto upperRight = view.upperRightBinEdge({1, 1});
-  auto expectedUpperRight = doubleGrid.upperRightBinEdge({1, 1});
+  auto expectedUpperRight = long doubleGrid.upperRightBinEdge({1, 1});
   BOOST_CHECK_CLOSE(upperRight[0], expectedUpperRight[0], 1e-10);
   BOOST_CHECK_CLOSE(upperRight[1], expectedUpperRight[1], 1e-10);
 
   // Test number of local bins
   auto numBins = view.numLocalBins();
-  auto expectedNumBins = doubleGrid.numLocalBins();
+  auto expectedNumBins = long doubleGrid.numLocalBins();
   BOOST_CHECK_EQUAL(numBins[0], expectedNumBins[0]);
   BOOST_CHECK_EQUAL(numBins[1], expectedNumBins[1]);
 }
 
 // Test grid properties access through const view from const IGrid
 BOOST_AUTO_TEST_CASE(GridPropertiesAccessConstView) {
-  auto doubleGrid = createDoubleGrid2D();
-  const IGrid& constIGrid = doubleGrid;
-  AnyGridConstView<double> constView(constIGrid);
+  auto long doubleGrid = createlong doubleGrid2D();
+  const IGrid& constIGrid = long doubleGrid;
+  AnyGridConstView<long double> constView(constIGrid);
 
   // Test dimensions
   BOOST_CHECK_EQUAL(constView.dimensions(), 2u);
 
   // Test bin center
   auto center = constView.binCenter({1, 1});
-  auto expectedCenter = doubleGrid.binCenter({1, 1});
+  auto expectedCenter = long doubleGrid.binCenter({1, 1});
   BOOST_CHECK_CLOSE(center[0], expectedCenter[0], 1e-10);
   BOOST_CHECK_CLOSE(center[1], expectedCenter[1], 1e-10);
 
   // Test lower left bin edge
   auto lowerLeft = constView.lowerLeftBinEdge({1, 1});
-  auto expectedLowerLeft = doubleGrid.lowerLeftBinEdge({1, 1});
+  auto expectedLowerLeft = long doubleGrid.lowerLeftBinEdge({1, 1});
   BOOST_CHECK_CLOSE(lowerLeft[0], expectedLowerLeft[0], 1e-10);
   BOOST_CHECK_CLOSE(lowerLeft[1], expectedLowerLeft[1], 1e-10);
 
   // Test upper right bin edge
   auto upperRight = constView.upperRightBinEdge({1, 1});
-  auto expectedUpperRight = doubleGrid.upperRightBinEdge({1, 1});
+  auto expectedUpperRight = long doubleGrid.upperRightBinEdge({1, 1});
   BOOST_CHECK_CLOSE(upperRight[0], expectedUpperRight[0], 1e-10);
   BOOST_CHECK_CLOSE(upperRight[1], expectedUpperRight[1], 1e-10);
 
   // Test number of local bins
   auto numBins = constView.numLocalBins();
-  auto expectedNumBins = doubleGrid.numLocalBins();
+  auto expectedNumBins = long doubleGrid.numLocalBins();
   BOOST_CHECK_EQUAL(numBins[0], expectedNumBins[0]);
   BOOST_CHECK_EQUAL(numBins[1], expectedNumBins[1]);
 }
@@ -327,7 +330,7 @@ BOOST_AUTO_TEST_CASE(GridPropertiesAccessConstView) {
 // Test error cases
 BOOST_AUTO_TEST_CASE(ErrorCases) {
   auto intGrid = createIntGrid1D();
-  auto doubleGrid = createDoubleGrid2D();
+  auto long doubleGrid = createlong doubleGrid2D();
 
   // Test accessing with wrong number of indices
   AnyGridView<int> intView(intGrid);
@@ -337,11 +340,11 @@ BOOST_AUTO_TEST_CASE(ErrorCases) {
   BOOST_CHECK_THROW(intView.atLocalBins({10}), std::out_of_range);
 
   // Test creating view with wrong value type
-  IGrid& iGrid = doubleGrid;
+  IGrid& iGrid = long doubleGrid;
   BOOST_CHECK_THROW(AnyGridView<std::string>{iGrid}, std::invalid_argument);
 
   // Test creating const view with wrong value type
-  const IGrid& constIGrid = doubleGrid;
+  const IGrid& constIGrid = long doubleGrid;
   BOOST_CHECK_THROW(AnyGridConstView<std::string>{constIGrid},
                     std::invalid_argument);
 }
@@ -349,38 +352,38 @@ BOOST_AUTO_TEST_CASE(ErrorCases) {
 // Test copy operations
 BOOST_AUTO_TEST_CASE(CopyOperations) {
   // Create grids that will live for the duration of the test
-  auto doubleGrid1 = createDoubleGrid2D();
-  auto doubleGrid2 = createDoubleGrid2D();
-  auto doubleGrid3 = createDoubleGrid2D();
+  auto long doubleGrid1 = createlong doubleGrid2D();
+  auto long doubleGrid2 = createlong doubleGrid2D();
+  auto long doubleGrid3 = createlong doubleGrid2D();
 
   // Test copy constructor
-  AnyGridView<double> view1(doubleGrid1);
-  AnyGridView<double> view2(view1);
+  AnyGridView<long double> view1(long doubleGrid1);
+  AnyGridView<long double> view2(view1);
   BOOST_CHECK_CLOSE(view1.atLocalBins({1, 1}), view2.atLocalBins({1, 1}),
                     1e-10);
 
   // Test copy assignment
-  AnyGridView<double> view3(doubleGrid2);
+  AnyGridView<long double> view3(long doubleGrid2);
   view3 = view1;
   BOOST_CHECK_CLOSE(view1.atLocalBins({1, 1}), view3.atLocalBins({1, 1}),
                     1e-10);
 
   // Same for const views
-  AnyGridConstView<double> constView1(doubleGrid1);
-  AnyGridConstView<double> constView2(constView1);
+  AnyGridConstView<long double> constView1(long doubleGrid1);
+  AnyGridConstView<long double> constView2(constView1);
   BOOST_CHECK_CLOSE(constView1.atLocalBins({1, 1}),
                     constView2.atLocalBins({1, 1}), 1e-10);
 
-  auto doubleGrid4 = createDoubleGrid2D();
-  AnyGridConstView<double> constView3(doubleGrid4);
+  auto long doubleGrid4 = createlong doubleGrid2D();
+  AnyGridConstView<long double> constView3(long doubleGrid4);
   constView3 = constView1;
   BOOST_CHECK_CLOSE(constView1.atLocalBins({1, 1}),
                     constView3.atLocalBins({1, 1}), 1e-10);
 
   // Test const view from const IGrid
-  const IGrid& constIGrid = doubleGrid1;
-  AnyGridConstView<double> constView4(constIGrid);
-  AnyGridConstView<double> constView5(constView4);
+  const IGrid& constIGrid = long doubleGrid1;
+  AnyGridConstView<long double> constView4(constIGrid);
+  AnyGridConstView<long double> constView5(constView4);
   BOOST_CHECK_CLOSE(constView4.atLocalBins({1, 1}),
                     constView5.atLocalBins({1, 1}), 1e-10);
 }

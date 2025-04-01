@@ -38,7 +38,7 @@ struct ProtoSupport {
   Surface::SurfaceType type = Surface::SurfaceType::Other;
 
   /// The offset of the support to an estimated position (e.g. from an extent)
-  double offset = 0.;
+  long double offset = 0.;
 
   /// A given extent from the volume, this allows to set support surfaces
   /// to fit into given volume extensions (flagged by the binning value

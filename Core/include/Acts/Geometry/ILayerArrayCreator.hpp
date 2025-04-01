@@ -48,8 +48,8 @@ class ILayerArrayCreator {
   ///
   /// @return unique pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray> layerArray(
-      const GeometryContext& gctx, const LayerVector& layers, double min,
-      double max, BinningType btype = arbitrary,
+      const GeometryContext& gctx, const LayerVector& layers, long double min,
+      long double max, BinningType btype = arbitrary,
       AxisDirection bvalue = AxisDirection::AxisX) const = 0;
 };
 }  // namespace Acts

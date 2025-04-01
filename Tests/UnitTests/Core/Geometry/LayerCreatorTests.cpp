@@ -121,13 +121,13 @@ struct LayerCreatorFixture {
     return result;
   }
 
-  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
-                               double zbase = 0, double r = 10) {
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, long double shift = 0,
+                               long double zbase = 0, long double r = 10) {
     SrfVec res;
 
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
-      double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+      long double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
       trans.setIdentity();
@@ -146,14 +146,15 @@ struct LayerCreatorFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                                double incl = std::numbers::pi / 9.,
-                                double w = 2, double h = 1.5) {
+  SrfVec fullPhiTestSurfacesBRL(int n = 10, long double shift = 0,
+                                long double zbase = 0,
+                                long double incl = std::numbers::pi / 9.,
+                                long double w = 2, long double h = 1.5) {
     SrfVec res;
 
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (int i = 0; i < n; ++i) {
-      double z = zbase;
+      long double z = zbase;
 
       Transform3 trans;
       trans.setIdentity();
@@ -174,12 +175,12 @@ struct LayerCreatorFixture {
     return res;
   }
 
-  SrfVec makeBarrel(int nPhi, int nZ, double w, double h) {
-    double z0 = -(nZ - 1) * w;
+  SrfVec makeBarrel(int nPhi, int nZ, long double w, long double h) {
+    long double z0 = -(nZ - 1) * w;
     SrfVec res;
 
     for (int i = 0; i < nZ; i++) {
-      double z = i * w * 2 + z0;
+      long double z = i * w * 2 + z0;
       std::cout << "z=" << z << std::endl;
       SrfVec ring =
           fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
@@ -190,18 +191,18 @@ struct LayerCreatorFixture {
   }
 
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
-  makeBarrelStagger(int nPhi, int nZ, double shift = 0,
-                    double incl = std::numbers::pi / 9., double w = 2,
-                    double h = 1.5) {
-    double z0 = -(nZ - 1) * w;
+  makeBarrelStagger(int nPhi, int nZ, long double shift = 0,
+                    long double incl = std::numbers::pi / 9., long double w = 2,
+                    long double h = 1.5) {
+    long double z0 = -(nZ - 1) * w;
     SrfVec res;
 
     std::vector<std::pair<const Surface*, const Surface*>> pairs;
 
     for (int i = 0; i < nZ; i++) {
-      double z = i * w * 2 + z0;
+      long double z = i * w * 2 + z0;
 
-      double phiStep = 2 * std::numbers::pi / nPhi;
+      long double phiStep = 2 * std::numbers::pi / nPhi;
       for (int j = 0; j < nPhi; ++j) {
         Transform3 trans;
         trans.setIdentity();
@@ -243,7 +244,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
   draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
 
   // CASE I
-  double envR = 0.1, envZ = 0.5;
+  long double envR = 0.1, envZ = 0.5;
   ProtoLayer pl(tgContext, srf);
   pl.envelope[Acts::AxisDirection::AxisR] = {envR, envR};
   pl.envelope[Acts::AxisDirection::AxisZ] = {envZ, envZ};
@@ -252,7 +253,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
           p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl));
 
   //
-  double rMax = 10.6071, rMin = 9.59111;  // empirical - w/o envelopes
+  long double rMax = 10.6071, rMin = 9.59111;  // empirical - w/o envelopes
   CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2. * envR, 1e-3);
 
   const CylinderBounds* bounds = &layer->bounds();
@@ -361,11 +362,11 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
 
   // check that it's applying a rotation transform to improve phi binning
   // BOOST_CHECK_NE(bu->transform(), nullptr);
-  // double actAngle = ((*bu->transform()) * Vector3(1, 0, 0)).phi();
-  // double expAngle = -2 * std::numbers::pi / 30 / 2.;
+  // long double actAngle = ((*bu->transform()) * Vector3(1, 0, 0)).phi();
+  // long double expAngle = -2 * std::numbers::pi / 30 / 2.;
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
-  double envMinR = 1, envMaxR = 1, envZ = 5;
+  long double envMinR = 1, envMaxR = 1, envZ = 5;
   std::size_t nBinsR = 3, nBinsPhi = 30;
   ProtoLayer pl2(tgContext, surfaces);
   pl2.envelope[AxisDirection::AxisR] = {envMinR, envMaxR};
@@ -373,7 +374,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, nBinsR, nBinsPhi, pl2));
 
-  double rMin = 8, rMax = 22.0227;
+  long double rMin = 8, rMax = 22.0227;
   CHECK_CLOSE_REL(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
   bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
   CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
@@ -422,7 +423,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
   auto brl = barrel.first;
   draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 
-  double envR = 0, envZ = 0;
+  long double envR = 0, envZ = 0;
   ProtoLayer pl(tgContext, brl);
   pl.envelope[AxisDirection::AxisR] = {envR, envR};
   pl.envelope[AxisDirection::AxisZ] = {envZ, envZ};

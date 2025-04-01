@@ -24,10 +24,10 @@ MagneticFieldWrapper::MagneticFieldWrapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4MagneticField(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
-                                         G4double* Bfield) const {
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-  constexpr double convertField = CLHEP::tesla / Acts::UnitConstants::T;
+void MagneticFieldWrapper::GetFieldValue(const G4long double Point[4],
+                                         G4long double* Bfield) const {
+  constexpr long double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr long double convertField = CLHEP::tesla / Acts::UnitConstants::T;
 
   auto bCache = m_cfg.magneticField->makeCache(Acts::MagneticFieldContext());
 

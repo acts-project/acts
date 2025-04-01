@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(bitset_to_matrix_to_bitset) {
 }
 
 struct MyStruct {
-  double phi() const { return 42; }
+  long double phi() const { return 42; }
 };
 
 BOOST_AUTO_TEST_CASE(phi_helper_test) {
@@ -196,17 +196,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
 }
 
 BOOST_AUTO_TEST_CASE(range_medium) {
-  std::vector<double> ordered = {-3., -2., -1., 0., 1., 2., 3.};
+  std::vector<long double> ordered = {-3., -2., -1., 0., 1., 2., 3.};
   auto [range0, medium0] = Acts::range_medium(ordered);
 
-  CHECK_CLOSE_ABS(range0, 6., std::numeric_limits<double>::epsilon());
-  CHECK_CLOSE_ABS(medium0, 0., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(range0, 6., std::numeric_limits<long double>::epsilon());
+  CHECK_CLOSE_ABS(medium0, 0., std::numeric_limits<long double>::epsilon());
 
-  std::vector<double> unordered = {-2., -1., 0., 1., 2., 3., -3.};
+  std::vector<long double> unordered = {-2., -1., 0., 1., 2., 3., -3.};
   auto [range1, medium1] = Acts::range_medium(unordered);
 
-  CHECK_CLOSE_ABS(range1, 6., std::numeric_limits<double>::epsilon());
-  CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(range1, 6., std::numeric_limits<long double>::epsilon());
+  CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<long double>::epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(safeInverse) {
@@ -228,12 +228,12 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
   for (std::size_t i = 0; i < 3; i++) {
     Vector3 dir = Vector3::Zero();
     dir[i] = 1;
-    std::pair<double, double> angles = incidentAngles(dir, ref);
-    double expect = (i < 2) ? 0 : std::numbers::pi / 2.;
+    std::pair<long double, long double> angles = incidentAngles(dir, ref);
+    long double expect = (i < 2) ? 0 : std::numbers::pi / 2.;
     CHECK_CLOSE_ABS(angles.first, expect,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(angles.second, expect,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // 45 degree on both axes
@@ -241,9 +241,9 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = Vector3({1, 1, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // 45 degree on first axis
@@ -251,9 +251,9 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = Vector3({1, 0, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, std::numbers::pi / 2.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // 45 degree on second axis
@@ -261,9 +261,9 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = Vector3({0, 1, 1}).normalized();
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, std::numbers::pi / 2.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // Reverse crossing
@@ -271,9 +271,9 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = {0, 0, -1};
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, -std::numbers::pi / 2.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, -std::numbers::pi / 2.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // 45 degree but different quadrant
@@ -281,9 +281,9 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = {-1, -1, 1};
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, 3 * std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, 3 * std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // 45 degree but different quadrant & other side
@@ -291,35 +291,35 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
     Vector3 dir = {-1, -1, -1};
     auto [a0, a1] = incidentAngles(dir, ref);
     CHECK_CLOSE_ABS(a0, -3 * std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, -3 * std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 
   // Rotate the reference frame instead
   {
-    double s45 = std::sin(std::numbers::pi / 4.);
-    double c45 = std::cos(std::numbers::pi / 4.);
+    long double s45 = std::sin(std::numbers::pi / 4.);
+    long double c45 = std::cos(std::numbers::pi / 4.);
     RotationMatrix3 ref45;
     ref45 << c45, 0, s45, 0, 1, 0, -s45, 0, c45;
     Vector3 dir = {0, 0, 1};
     auto [a0, a1] = incidentAngles(dir, ref45);
     CHECK_CLOSE_ABS(a0, std::numbers::pi / 4.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
     CHECK_CLOSE_ABS(a1, std::numbers::pi / 2.,
-                    std::numeric_limits<double>::epsilon());
+                    std::numeric_limits<long double>::epsilon());
   }
 }
 
 BOOST_AUTO_TEST_CASE(Overloaded) {
   struct A {};
-  std::variant<int, double, A> var;
+  std::variant<int, long double, A> var;
 
   var = 42;
 
   std::visit(overloaded{
                  [](int) { BOOST_CHECK(true); },
-                 [](double) { BOOST_CHECK(false); },
+                 [](long double) { BOOST_CHECK(false); },
                  [](A) { BOOST_CHECK(false); },
              },
              var);

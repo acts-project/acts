@@ -109,8 +109,8 @@ void ActsExamples::TrackSummaryPlotTool::fill(
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto momentum = fittedParameters.momentum();
-  const double fit_eta = eta(momentum);
-  const double fit_pT = perp(momentum);
+  const long double fit_eta = eta(momentum);
+  const long double fit_pT = perp(momentum);
 
   PlotHelpers::fillProf(trackSummaryPlotCache.nStates_vs_eta, fit_eta, nStates);
   PlotHelpers::fillProf(trackSummaryPlotCache.nMeasurements_vs_eta, fit_eta,

@@ -26,7 +26,7 @@ using Acts::VectorHelpers::phi;
 Acts::DiscLayer::DiscLayer(const Transform3& transform,
                            const std::shared_ptr<const DiscBounds>& dbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,
-                           double thickness,
+                           long double thickness,
                            std::unique_ptr<ApproachDescriptor> ades,
                            LayerType laytyp)
     : DiscSurface(transform, dbounds),

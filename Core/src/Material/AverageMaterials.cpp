@@ -28,9 +28,9 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // In the case of the atomic number, the averaging is based on the log
   // to properly account for the energy loss in multiple material.
 
-  // use double for (intermediate) computations to avoid precision loss
-  const double thickness1 = static_cast<double>(slab1.thickness());
-  const double thickness2 = static_cast<double>(slab2.thickness());
+  // use long double for (intermediate) computations to avoid precision loss
+  const long double thickness1 = static_cast<long double>(slab1.thickness());
+  const long double thickness2 = static_cast<long double>(slab2.thickness());
 
   if (thickness1 == 0) {
     return slab2;
@@ -40,7 +40,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // the thickness properties are purely additive
-  const double thickness = thickness1 + thickness2;
+  const long double thickness = thickness1 + thickness2;
 
   // if the two materials are the same there is no need for additional
   // computation
@@ -49,12 +49,14 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // molar amount-of-substance assuming a unit area, i.e. volume = thickness*1*1
-  const double molarDensity1 = static_cast<double>(mat1.molarDensity());
-  const double molarDensity2 = static_cast<double>(mat2.molarDensity());
+  const long double molarDensity1 =
+      static_cast<long double>(mat1.molarDensity());
+  const long double molarDensity2 =
+      static_cast<long double>(mat2.molarDensity());
 
-  const double molarAmount1 = molarDensity1 * thickness1;
-  const double molarAmount2 = molarDensity2 * thickness2;
-  const double molarAmount = molarAmount1 + molarAmount2;
+  const long double molarAmount1 = molarDensity1 * thickness1;
+  const long double molarAmount2 = molarDensity2 * thickness2;
+  const long double molarAmount = molarAmount1 + molarAmount2;
 
   // handle vacuum specially
   if (!(0.0 < molarAmount)) {
@@ -62,13 +64,17 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   }
 
   // radiation/interaction length follows from consistency argument
-  const double thicknessX01 = static_cast<double>(slab1.thicknessInX0());
-  const double thicknessX02 = static_cast<double>(slab2.thicknessInX0());
-  const double thicknessL01 = static_cast<double>(slab1.thicknessInL0());
-  const double thicknessL02 = static_cast<double>(slab2.thicknessInL0());
+  const long double thicknessX01 =
+      static_cast<long double>(slab1.thicknessInX0());
+  const long double thicknessX02 =
+      static_cast<long double>(slab2.thicknessInX0());
+  const long double thicknessL01 =
+      static_cast<long double>(slab1.thicknessInL0());
+  const long double thicknessL02 =
+      static_cast<long double>(slab2.thicknessInL0());
 
-  const double thicknessInX0 = thicknessX01 + thicknessX02;
-  const double thicknessInL0 = thicknessL01 + thicknessL02;
+  const long double thicknessInX0 = thicknessX01 + thicknessX02;
+  const long double thicknessInL0 = thicknessL01 + thicknessL02;
 
   const float x0 = static_cast<float>(thickness / thicknessInX0);
   const float l0 = static_cast<float>(thickness / thicknessInL0);
@@ -90,11 +96,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //        = (Vi*rhoi) / (V1*rho1 + V2*rho2)
   //
   // which can be computed from the molar amount-of-substance above.
-  const double ar1 = static_cast<double>(mat1.Ar());
-  const double ar2 = static_cast<double>(mat2.Ar());
+  const long double ar1 = static_cast<long double>(mat1.Ar());
+  const long double ar2 = static_cast<long double>(mat2.Ar());
 
-  const double molarWeight1 = molarAmount1 / molarAmount;
-  const double molarWeight2 = molarAmount2 / molarAmount;
+  const long double molarWeight1 = molarAmount1 / molarAmount;
+  const long double molarWeight2 = molarAmount2 / molarAmount;
   const float ar = static_cast<float>(molarWeight1 * ar1 + molarWeight2 * ar2);
 
   // In the case of the atomic number, its main use is the computation
@@ -110,11 +116,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // To respect this the average atomic number thus need to be defined as :
   //     ln(Z)*t = ln(Z1)*t1 + ln(Z2)*t2
   //           Z = Exp( ln(Z1)*t1/t + ln(Z2)*t2/t )
-  const double z1 = static_cast<double>(mat1.Z());
-  const double z2 = static_cast<double>(mat2.Z());
+  const long double z1 = static_cast<long double>(mat1.Z());
+  const long double z2 = static_cast<long double>(mat2.Z());
 
-  const double thicknessWeight1 = thickness1 / thickness;
-  const double thicknessWeight2 = thickness2 / thickness;
+  const long double thicknessWeight1 = thickness1 / thickness;
+  const long double thicknessWeight2 = thickness2 / thickness;
   float z = 0.f;
   if (z1 > 0. && z2 > 0.) {
     z = static_cast<float>(std::exp(thicknessWeight1 * std::log(z1) +
@@ -127,9 +133,11 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // the total volume for the same unit area, i.e. volume = totalThickness*1*1
   const float molarDensity = static_cast<float>(molarAmount / thickness);
 
-  const double molarElectronAmount1 = mat1.molarElectronDensity() * thickness1;
-  const double molarElectronAmount2 = mat2.molarElectronDensity() * thickness2;
-  const double molarElectronAmount =
+  const long double molarElectronAmount1 =
+      mat1.molarElectronDensity() * thickness1;
+  const long double molarElectronAmount2 =
+      mat2.molarElectronDensity() * thickness2;
+  const long double molarElectronAmount =
       molarElectronAmount1 + molarElectronAmount2;
   const float molarElectronDensity =
       static_cast<float>(molarElectronAmount / thickness);

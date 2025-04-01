@@ -237,9 +237,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
       AngleAxis3(-std::numbers::pi / 2., Vector3::UnitZ()) *
       Transform3::Identity();
 
-  double rHx = 2.;
-  double rHy = 4.;
-  double yPs = 3.;
+  long double rHx = 2.;
+  long double rHy = 4.;
+  long double yPs = 3.;
   auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
 
   auto plane = Surface::makeShared<PlaneSurface>(
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
                   s_onSurfaceTolerance);
 
   // Now rotate
-  double alpha = 0.123;
+  long double alpha = 0.123;
   auto planeRot = Surface::makeShared<PlaneSurface>(
       Transform3(Translation3(Vector3(0., yPs, 0.)) *
                  AngleAxis3(alpha, Vector3(0., 0., 1.)) * planeZX),
@@ -290,10 +290,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 }
 
 BOOST_AUTO_TEST_CASE(RotatedTrapezoid) {
-  const double shortHalfX = 100.;
-  const double longHalfX = 200.;
-  const double halfY = 300.;
-  const double rotAngle = 45._degree;
+  const long double shortHalfX = 100.;
+  const long double longHalfX = 200.;
+  const long double halfY = 300.;
+  const long double rotAngle = 45._degree;
 
   Vector2 edgePoint{longHalfX - 10., halfY};
 
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  const double rotationAngle = std::numbers::pi / 2.;
+  const long double rotationAngle = std::numbers::pi / 2.;
   AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMisalignedAngle) {
   Translation3 offsetX{2., 0., 0.};
   Translation3 offsetY{0., 4., 0.};
 
-  double angle = std::numbers::pi / 12;
+  long double angle = std::numbers::pi / 12;
   Transform3 base(Translation3::Identity());
   Transform3 otherX = base * offsetX * AngleAxis3(angle, Vector3::UnitZ());
   Transform3 otherY = base * offsetY * AngleAxis3(angle, Vector3::UnitY());
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(SurfaceDifferentBounds) {
 }
 
 BOOST_AUTO_TEST_CASE(XYDirection) {
-  double angle = std::numbers::pi / 12;
+  long double angle = std::numbers::pi / 12;
   Translation3 offsetX{2., 0., 0.};
   Translation3 offsetY{0., 4., 0.};
 

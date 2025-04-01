@@ -164,7 +164,7 @@ class TrackingVolume : public Volume {
   /// @return plain pointer to associated with the position
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3& position,
-                                             const double tol = 0.) const;
+                                             const long double tol = 0.) const;
 
   /// @brief Visit all reachable surfaces
   ///
@@ -519,7 +519,7 @@ class TrackingVolume : public Volume {
   /// - adapts the layer dimensions to the new volumebounds + envelope
   ///
   /// @param envelope is the clearance between volume boundary and layer
-  void synchronizeLayers(double envelope = 1.) const;
+  void synchronizeLayers(long double envelope = 1.) const;
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;

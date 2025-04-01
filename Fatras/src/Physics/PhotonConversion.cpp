@@ -10,5 +10,5 @@
 
 #include "Acts/Definitions/ParticleData.hpp"
 
-const double ActsFatras::PhotonConversion::kElectronMass =
+const long double ActsFatras::PhotonConversion::kElectronMass =
     Acts::findMass(Acts::PdgParticle::eElectron).value();

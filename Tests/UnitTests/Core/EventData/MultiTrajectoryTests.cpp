@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 
   for (int t = 0; t < type_axis.size(); t++) {
     for (int c = 0; c < column_axis.size(); c++) {
-      double v = h.at(c, t);
+      long double v = h.at(c, t);
       BOOST_CHECK_EQUAL(v, 0.0);
     }
   }
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
     for (int c = 0; c < column_axis.size(); c++) {
       std::string key = column_axis.bin(c);
       BOOST_TEST_CONTEXT("column: " << key) {
-        double v = h.at(c, t);
+        long double v = h.at(c, t);
         if (t == 0) {
           BOOST_CHECK_NE(v, 0.0);
         } else {
@@ -259,14 +259,14 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 BOOST_AUTO_TEST_CASE(Accessors) {
   VectorMultiTrajectory mtj;
   mtj.addColumn<unsigned int>("ndof");
-  mtj.addColumn<double>("super_chi2");
+  mtj.addColumn<long double>("super_chi2");
 
   auto ts = mtj.makeTrackState();
 
   ProxyAccessor<unsigned int> ndof("ndof");
   ConstProxyAccessor<unsigned int> ndofConst("ndof");
-  ProxyAccessor<double> superChi2("super_chi2");
-  ConstProxyAccessor<double> superChi2Const("super_chi2");
+  ProxyAccessor<long double> superChi2("super_chi2");
+  ConstProxyAccessor<long double> superChi2Const("super_chi2");
 
   ndof(ts) = 65;
   BOOST_CHECK_EQUAL((ts.component<unsigned int, "ndof"_hash>()), 65);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(Accessors) {
   // ndofConst(ts) = 66;
 
   superChi2(ts) = 123.45;
-  BOOST_CHECK_EQUAL((ts.component<double, "super_chi2"_hash>()), 123.45);
+  BOOST_CHECK_EQUAL((ts.component<long double, "super_chi2"_hash>()), 123.45);
   BOOST_CHECK_EQUAL(superChi2Const(ts), 123.45);
 
   // should not compile
@@ -291,14 +291,15 @@ BOOST_AUTO_TEST_CASE(ChangeSourceLinkType) {
   ts.setUncalibratedSourceLink(SourceLink{value});
 
   BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<int>(), value);
-  BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<double>(),
+  BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<long double>(),
                     std::bad_any_cast);
 
-  double otherValue = 42.42;
+  long double otherValue = 42.42;
 
   // this changes the stored type
   ts.setUncalibratedSourceLink(SourceLink{otherValue});
-  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<double>(), otherValue);
+  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<long double>(),
+                    otherValue);
   BOOST_CHECK_THROW(ts.getUncalibratedSourceLink().get<int>(),
                     std::bad_any_cast);
 }

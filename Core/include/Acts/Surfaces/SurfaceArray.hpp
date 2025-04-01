@@ -122,9 +122,9 @@ class SurfaceArray {
    public:
     /// @brief Specifies the local coordinate type.
     /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
-    /// std::array<double, 1>
-    using point_t =
-        std::conditional_t<DIM == 1, std::array<double, 1>, ActsVector<DIM>>;
+    /// std::array<long double, 1>
+    using point_t = std::conditional_t<DIM == 1, std::array<long double, 1>,
+                                       ActsVector<DIM>>;
     using Grid_t = Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
@@ -135,7 +135,7 @@ class SurfaceArray {
     /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVector<DIM> else
-    ///       @c std::array<double, 1>.
+    ///       @c std::array<long double, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3&)> globalToLocal,
                       std::function<Vector3(const point_t&)> localToGlobal,
                       std::tuple<Axes...> axes,
@@ -177,8 +177,8 @@ class SurfaceArray {
                                 const SurfaceVector& surfaces) override {
       std::size_t binCompleted = 0;
       std::size_t nBins = size();
-      double minPath = 0;
-      double curPath = 0;
+      long double minPath = 0;
+      long double curPath = 0;
       const Surface* minSrf = nullptr;
 
       for (std::size_t b = 0; b < nBins; ++b) {
@@ -192,7 +192,7 @@ class SurfaceArray {
         }
 
         Vector3 binCtr = getBinCenter(b);
-        minPath = std::numeric_limits<double>::max();
+        minPath = std::numeric_limits<long double>::max();
         for (const auto& srf : surfaces) {
           curPath =
               (binCtr - srf->referencePosition(gctx, AxisDirection::AxisR))
@@ -321,7 +321,7 @@ class SurfaceArray {
 
     /// Internal method.
     /// This is here, because apparently Eigen doesn't like Vector1.
-    /// So SurfaceGridLookup internally uses std::array<double, 1> instead
+    /// So SurfaceGridLookup internally uses std::array<long double, 1> instead
     /// of Vector1 (see the point_t typedef). This needs to be switched here,
     /// so as not to
     /// attempt an initialization of Vector1 that Eigen will complain about.

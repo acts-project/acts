@@ -43,15 +43,15 @@ using namespace ActsFatras;
 
 namespace {
 
-constexpr auto tol = 4 * std::numeric_limits<double>::epsilon();
-constexpr auto inf = std::numeric_limits<double>::infinity();
+constexpr auto tol = 4 * std::numeric_limits<long double>::epsilon();
+constexpr auto inf = std::numeric_limits<long double>::infinity();
 
 struct MockDecay {
-  double properTimeLimit = inf;
+  long double properTimeLimit = inf;
 
   template <typename generator_t>
-  constexpr double generateProperTimeLimit(generator_t & /*generator*/,
-                                           const Particle &particle) const {
+  constexpr long double generateProperTimeLimit(
+      generator_t & /*generator*/, const Particle &particle) const {
     return particle.properTime() + properTimeLimit;
   }
   template <typename generator_t>
@@ -63,13 +63,13 @@ struct MockDecay {
 
 struct MockInteractionList {
   struct Selection {
-    double x0Limit = std::numeric_limits<double>::infinity();
-    double l0Limit = std::numeric_limits<double>::infinity();
+    long double x0Limit = std::numeric_limits<long double>::infinity();
+    long double l0Limit = std::numeric_limits<long double>::infinity();
     std::size_t x0Process = std::numeric_limits<std::size_t>::max();
     std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };
 
-  double energyLoss = 0;
+  long double energyLoss = 0;
 
   template <typename generator_t>
   bool runContinuous(generator_t & /*generator*/,
@@ -97,9 +97,9 @@ struct MockInteractionList {
 
 struct MockStepperState {
   Acts::Vector3 pos = Acts::Vector3::Zero();
-  double time = 0;
+  long double time = 0;
   Acts::Vector3 dir = Acts::Vector3::Zero();
-  double p = 0;
+  long double p = 0;
 };
 
 struct MockStepper {
@@ -110,13 +110,13 @@ struct MockStepper {
   auto direction(const State &state) const { return state.dir; }
   auto absoluteMomentum(const State &state) const { return state.p; }
   void update(State &state, const Acts::Vector3 &pos, const Acts::Vector3 &dir,
-              double qop, double time) {
+              long double qop, long double time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
     state.p = 1 / qop;
   }
-  void updateStepSize(State & /*state*/, double /*stepSize*/,
+  void updateStepSize(State & /*state*/, long double /*stepSize*/,
                       Acts::ConstrainedStep::Type /*stype*/) const {}
   void releaseStepSize(State & /*state*/,
                        Acts::ConstrainedStep::Type /*stype*/) const {}
@@ -168,10 +168,10 @@ struct Fixture {
   Barcode pid = Barcode().setVertexPrimary(12u).setParticle(3u);
   ProcessType proc = ProcessType::eUndefined;
   Acts::PdgParticle pdg = Acts::PdgParticle::eProton;
-  double q = 1_e;
-  double m = 1_GeV;
-  double p = 1_GeV;
-  double e;
+  long double q = 1_e;
+  long double m = 1_GeV;
+  long double p = 1_GeV;
+  long double e;
   Generator generator;
   std::shared_ptr<Acts::Surface> surface;
   Actor actor;
@@ -180,7 +180,7 @@ struct Fixture {
   MockStepper stepper;
   MockNavigator navigator;
 
-  Fixture(double energyLoss, std::shared_ptr<Acts::Surface> surface_)
+  Fixture(long double energyLoss, std::shared_ptr<Acts::Surface> surface_)
       : e(std::hypot(m, p)), generator(42), surface(std::move(surface_)) {
     const auto particle = Particle(pid, pdg, q, m)
                               .setProcess(proc)

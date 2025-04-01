@@ -81,7 +81,7 @@ struct PropagatorState : private detail::Extendable<extension_state_t...> {
   std::size_t steps = 0;
 
   /// Signed distance over which the parameters were propagated
-  double pathLength = 0.;
+  long double pathLength = 0.;
 
   /// Statistics of the propagation
   PropagatorStatistics statistics;

@@ -37,7 +37,7 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
@@ -75,7 +75,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   static constexpr std::size_t eSize = 2 * N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
-  using value_array = std::array<double, eSize>;
+  using value_array = std::array<long double, eSize>;
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 

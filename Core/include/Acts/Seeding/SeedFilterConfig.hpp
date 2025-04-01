@@ -60,7 +60,7 @@ struct SeedFilterConfig {
   /// of the detector (e.g. forward or central region) by SeedConfirmationRange.
   /// Seeds are classified as "high-quality" seeds and normal quality seeds.
   /// Normal quality seeds are only selected if no other "high-quality" seed
-  /// has been found for that inner-middle doublet.
+  /// has been found for that inner-middle long doublet.
   bool seedConfirmation = false;
   /// Contains parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
@@ -69,9 +69,9 @@ struct SeedFilterConfig {
 
   /// If seedConfirmation is true we classify seeds as "high-quality" seeds.
   /// Seeds that are not confirmed as "high-quality" are only selected if no
-  /// other "high-quality" seed has been found for that inner-middle doublet
-  /// Maximum number of normal seeds (not classified as "high-quality" seeds)
-  /// in seed confirmation
+  /// other "high-quality" seed has been found for that inner-middle long
+  /// doublet Maximum number of normal seeds (not classified as "high-quality"
+  /// seeds) in seed confirmation
   std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
   /// Maximum number of "high-quality" seeds for each inner-middle SP-dublet in
   /// seed confirmation. If the limit is reached we check if there is a normal

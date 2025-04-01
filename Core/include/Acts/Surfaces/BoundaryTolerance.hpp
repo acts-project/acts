@@ -59,11 +59,11 @@ class BoundaryTolerance {
   struct NoneParams {};
 
   struct AbsoluteBoundParams {
-    double tolerance0{};
-    double tolerance1{};
+    long double tolerance0{};
+    long double tolerance1{};
 
     AbsoluteBoundParams() = default;
-    AbsoluteBoundParams(double tolerance0_, double tolerance1_)
+    AbsoluteBoundParams(long double tolerance0_, long double tolerance1_)
         : tolerance0(tolerance0_), tolerance1(tolerance1_) {
       if (tolerance0 < 0 || tolerance1 < 0) {
         throw std::invalid_argument(
@@ -73,11 +73,11 @@ class BoundaryTolerance {
   };
 
   struct AbsoluteCartesianParams {
-    double tolerance0{};
-    double tolerance1{};
+    long double tolerance0{};
+    long double tolerance1{};
 
     AbsoluteCartesianParams() = default;
-    AbsoluteCartesianParams(double tolerance0_, double tolerance1_)
+    AbsoluteCartesianParams(long double tolerance0_, long double tolerance1_)
         : tolerance0(tolerance0_), tolerance1(tolerance1_) {
       if (tolerance0 < 0 || tolerance1 < 0) {
         throw std::invalid_argument(
@@ -91,19 +91,19 @@ class BoundaryTolerance {
   };
 
   struct AbsoluteEuclideanParams {
-    double tolerance{};
+    long double tolerance{};
 
     AbsoluteEuclideanParams() = default;
-    explicit AbsoluteEuclideanParams(double tolerance_)
+    explicit AbsoluteEuclideanParams(long double tolerance_)
         : tolerance(tolerance_) {}
   };
 
   struct Chi2BoundParams {
-    double maxChi2{};
+    long double maxChi2{};
     SquareMatrix2 weight = SquareMatrix2::Identity();
 
     Chi2BoundParams() = default;
-    Chi2BoundParams(const SquareMatrix2& weight_, double maxChi2_)
+    Chi2BoundParams(const SquareMatrix2& weight_, long double maxChi2_)
         : maxChi2(maxChi2_), weight(weight_) {}
   };
 
@@ -124,22 +124,23 @@ class BoundaryTolerance {
   static auto None() { return BoundaryTolerance{NoneParams{}}; }
 
   /// Absolute tolerance in bound coordinates
-  static auto AbsoluteBound(double tolerance0, double tolerance1) {
+  static auto AbsoluteBound(long double tolerance0, long double tolerance1) {
     return BoundaryTolerance{AbsoluteBoundParams{tolerance0, tolerance1}};
   }
 
   /// Absolute tolerance in Cartesian coordinates
-  static auto AbsoluteCartesian(double tolerance0, double tolerance1) {
+  static auto AbsoluteCartesian(long double tolerance0,
+                                long double tolerance1) {
     return BoundaryTolerance{AbsoluteCartesianParams{tolerance0, tolerance1}};
   }
 
   /// Absolute tolerance in Euclidean distance
-  static auto AbsoluteEuclidean(double tolerance) {
+  static auto AbsoluteEuclidean(long double tolerance) {
     return BoundaryTolerance{AbsoluteEuclideanParams{tolerance}};
   }
 
   /// Chi2 tolerance in bound coordinates
-  static auto Chi2Bound(const SquareMatrix2& weight, double maxChi2) {
+  static auto Chi2Bound(const SquareMatrix2& weight, long double maxChi2) {
     return BoundaryTolerance{Chi2BoundParams{weight, maxChi2}};
   }
 

@@ -47,8 +47,8 @@ void labelEvents(
       ActsExamples::detail::NuclearInteractionParametrisation;
   // Search for the highest momentum particles per event
   for (Parametrisation::EventFraction& event : events) {
-    double maxMom = 0.;
-    double maxMomOthers = 0.;
+    long double maxMom = 0.;
+    long double maxMomOthers = 0.;
     // Walk over all final state particles
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
       // Search for the maximum in particles with the same PDG ID as the
@@ -69,7 +69,7 @@ void labelEvents(
     event.soft = (maxMom > maxMomOthers);
 
     // Get the final state p_T
-    double pt = 0.;
+    long double pt = 0.;
     Acts::Vector2 ptVec(0., 0.);
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
       Acts::Vector2 particlePt =
@@ -97,15 +97,15 @@ void labelEvents(
 ///
 /// @return Tuple containing the bin borders, the non-normalised cumulative
 /// distribution and the sum over all entries
-std::tuple<std::vector<float>, std::vector<double>, double>
+std::tuple<std::vector<float>, std::vector<long double>, long double>
 buildNotNormalisedMap(TH1F const* hist) {
   // Retrieve the number of bins & borders
   const int nBins = hist->GetNbinsX();
   std::vector<float> histoBorders(nBins + 1);
 
   // Fill the cumulative histogram
-  double integral = 0.;
-  std::vector<double> temp_HistoContents(nBins);
+  long double integral = 0.;
+  std::vector<long double> temp_HistoContents(nBins);
   for (int iBin = 0; iBin < nBins; iBin++) {
     float binval = hist->GetBinContent(iBin + 1);
     // Avoid negative bin values
@@ -162,10 +162,10 @@ void reduceMap(std::vector<float>& histoBorders,
 std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
     TH1F const* hist) {
   // Build the components
-  std::tuple<std::vector<float>, std::vector<double>, double> map =
+  std::tuple<std::vector<float>, std::vector<long double>, long double> map =
       buildNotNormalisedMap(hist);
   const int nBins = hist->GetNbinsX();
-  std::vector<double>& histoContents = std::get<1>(map);
+  std::vector<long double>& histoContents = std::get<1>(map);
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
@@ -174,7 +174,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 
   // Set the bin content
   std::vector<std::uint32_t> normalisedHistoContents(nBins);
-  const double invIntegral = 1. / std::get<2>(map);
+  const long double invIntegral = 1. / std::get<2>(map);
   for (int iBin = 0; iBin < nBins; ++iBin) {
     normalisedHistoContents[iBin] =
         static_cast<unsigned int>(std::numeric_limits<std::uint32_t>::max() *
@@ -198,13 +198,13 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 ///
 /// @return Pair containing the bin borders and the bin content
 std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
-    TH1F const* hist, double integral) {
+    TH1F const* hist, long double integral) {
   // Build the components
-  std::tuple<std::vector<float>, std::vector<double>, double> map =
+  std::tuple<std::vector<float>, std::vector<long double>, long double> map =
       buildNotNormalisedMap(hist);
 
   const int nBins = hist->GetNbinsX();
-  std::vector<double>& histoContents = std::get<1>(map);
+  std::vector<long double>& histoContents = std::get<1>(map);
 
   // Fast exit if the histogram is empty
   if (histoContents.empty()) {
@@ -213,7 +213,7 @@ std::pair<std::vector<float>, std::vector<std::uint32_t>> buildMap(
 
   // Set the bin content
   std::vector<std::uint32_t> normalisedHistoContents(nBins);
-  const double invIntegral = 1. / std::max(integral, std::get<2>(map));
+  const long double invIntegral = 1. / std::max(integral, std::get<2>(map));
   for (int iBin = 0; iBin < nBins; ++iBin) {
     normalisedHistoContents[iBin] =
         static_cast<unsigned int>(std::numeric_limits<std::uint32_t>::max() *

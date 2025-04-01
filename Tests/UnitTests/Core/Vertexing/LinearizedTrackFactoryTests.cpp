@@ -59,34 +59,35 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<long double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<long double> vZDist(-20_mm, 20_mm);
 // Vertex time distribution
-std::uniform_real_distribution<double> vTDist(-1_ns, 1_ns);
+std::uniform_real_distribution<long double> vTDist(-1_ns, 1_ns);
 // Track d0 distribution
-std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<long double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<long double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<long double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
+std::uniform_real_distribution<long double> thetaDist(1.,
+                                                      std::numbers::pi - 1.);
 // Track charge helper distribution
-std::uniform_real_distribution<double> qDist(-1, 1);
+std::uniform_real_distribution<long double> qDist(-1, 1);
 // Track time distribution
-std::uniform_real_distribution<double> tDist(-0.002_ns, 0.002_ns);
+std::uniform_real_distribution<long double> tDist(-0.002_ns, 0.002_ns);
 // Track IP resolution distribution
-std::uniform_real_distribution<double> resIPDist(0., 100_um);
+std::uniform_real_distribution<long double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<double> resAngDist(0., 0.1);
+std::uniform_real_distribution<long double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<double> resQoPDist(0.0, 0.1);
+std::uniform_real_distribution<long double> resQoPDist(0.0, 0.1);
 // Track time resolution distribution
-std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
+std::uniform_real_distribution<long double> resTDist(0.1_ns, 0.2_ns);
 
 ///
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
@@ -122,14 +123,14 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Vertex position and corresponding d0 and z0
   Vector4 vtxPos;
-  double d0v{};
-  double z0v{};
-  double t0v{};
+  long double d0v{};
+  long double z0v{};
+  long double t0v{};
   {
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
-    double t = vTDist(gen);
+    long double x = vXYDist(gen);
+    long double y = vXYDist(gen);
+    long double z = vZDist(gen);
+    long double t = vTDist(gen);
     d0v = std::hypot(x, y);
     z0v = z;
     t0v = t;
@@ -142,7 +143,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Construct random track emerging from vicinity of vertex position
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
     // Random charge
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    long double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Random track parameters
     BoundVector paramVec;
@@ -150,12 +151,12 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
         thetaDist(gen), q / pTDist(gen), t0v + tDist(gen);
 
     // Resolutions
-    double resD0 = resIPDist(gen);
-    double resZ0 = resIPDist(gen);
-    double resPh = resAngDist(gen);
-    double resTh = resAngDist(gen);
-    double resQp = resQoPDist(gen);
-    double resT = resTDist(gen);
+    long double resD0 = resIPDist(gen);
+    long double resZ0 = resIPDist(gen);
+    long double resPh = resAngDist(gen);
+    long double resTh = resAngDist(gen);
+    long double resQp = resQoPDist(gen);
+    long double resT = resTDist(gen);
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -210,8 +211,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // -) have a relative difference of less than "relTol"
     // or
     // -) are both smaller than "small"
-    double relTol = 5e-4;
-    double small = 5e-4;
+    long double relTol = 5e-4;
+    long double small = 5e-4;
 
     std::shared_ptr<PerigeeSurface> perigee =
         Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));

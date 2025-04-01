@@ -35,12 +35,12 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   ActsExamples::RandomEngine rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   // Spawn some random number distributions
-  std::normal_distribution<double> gaussDist(m_cfg.gaussParameters[0],
-                                             m_cfg.gaussParameters[1]);
-  std::uniform_real_distribution<double> uniformDist(
+  std::normal_distribution<long double> gaussDist(m_cfg.gaussParameters[0],
+                                                  m_cfg.gaussParameters[1]);
+  std::uniform_real_distribution<long double> uniformDist(
       m_cfg.uniformParameters[0], m_cfg.uniformParameters[1]);
-  std::gamma_distribution<double> gammaDist(m_cfg.gammaParameters[0],
-                                            m_cfg.gammaParameters[1]);
+  std::gamma_distribution<long double> gammaDist(m_cfg.gammaParameters[0],
+                                                 m_cfg.gammaParameters[1]);
   std::poisson_distribution<int> poissonDist(m_cfg.poissonParameter);
 
   ACTS_INFO(m_cfg.drawsPerEvent << " draws per event will be done");
@@ -48,9 +48,9 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   // generate collection of random numbers
   HelloDataCollection collection;
   for (std::size_t idraw = 0; idraw < m_cfg.drawsPerEvent; ++idraw) {
-    double gauss = gaussDist(rng);
-    double uniform = uniformDist(rng);
-    double gamma = gammaDist(rng);
+    long double gauss = gaussDist(rng);
+    long double uniform = uniformDist(rng);
+    long double gamma = gammaDist(rng);
     int poisson = poissonDist(rng);
 
     ACTS_VERBOSE("Gauss   : " << gauss);

@@ -26,7 +26,7 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
-std::vector<double> CylinderBounds::values() const {
+std::vector<long double> CylinderBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -46,11 +46,11 @@ SquareMatrix2 CylinderBounds::jacobian() const {
 
 bool CylinderBounds::inside(const Vector2& lposition,
                             const BoundaryTolerance& boundaryTolerance) const {
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
+  long double bevelMinZ = get(eBevelMinZ);
+  long double bevelMaxZ = get(eBevelMaxZ);
 
-  double halfLengthZ = get(eHalfLengthZ);
-  double halfPhi = get(eHalfPhiSector);
+  long double halfLengthZ = get(eHalfLengthZ);
+  long double halfPhi = get(eHalfPhiSector);
 
   if (bevelMinZ == 0. || bevelMaxZ == 0.) {
     return detail::insideAlignedBox(
@@ -58,7 +58,7 @@ bool CylinderBounds::inside(const Vector2& lposition,
         boundaryTolerance, shifted(lposition), jacobian());
   }
 
-  double radius = get(eR);
+  long double radius = get(eR);
   // Beleved sides will unwrap to a trapezoid
   ///////////////////////////////////
   //  ________
@@ -66,7 +66,7 @@ bool CylinderBounds::inside(const Vector2& lposition,
   // \|______|/ r/phi
   // -Z   0  Z
   ///////////////////////////////////
-  double localx =
+  long double localx =
       lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
   Vector2 shiftedlposition = shifted(lposition);
   if ((std::abs(shiftedlposition[0]) <= halfPhi &&
@@ -108,10 +108,10 @@ std::vector<Vector3> CylinderBounds::circleVertices(
     const Transform3 transform, unsigned int quarterSegments) const {
   std::vector<Vector3> vertices;
 
-  double avgPhi = get(eAveragePhi);
-  double halfPhi = get(eHalfPhiSector);
+  long double avgPhi = get(eAveragePhi);
+  long double halfPhi = get(eHalfPhiSector);
 
-  std::vector<double> phiRef = {};
+  std::vector<long double> phiRef = {};
   if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
     phiRef = {avgPhi};
   }
@@ -126,13 +126,13 @@ std::vector<Vector3> CylinderBounds::circleVertices(
     vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
+  long double bevelMinZ = get(eBevelMinZ);
+  long double bevelMaxZ = get(eBevelMaxZ);
 
   // Modify the vertices position if bevel is defined
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
-    double mult{1};
+    long double mult{1};
     auto invTransform = transform.inverse();
     auto func = [&mult, &transform, &invTransform](Vector3& v) {
       v = invTransform * v;

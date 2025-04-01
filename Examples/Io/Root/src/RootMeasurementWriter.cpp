@@ -134,7 +134,7 @@ struct RootMeasurementWriter::DigitizationTree {
   /// @param qop The true q/p
   void fillTruthParameters(const Acts::Vector2& lp, const Acts::Vector4& xt,
                            const Acts::Vector3& dir,
-                           const std::pair<double, double> angles) {
+                           const std::pair<long double, long double> angles) {
     trueBound[Acts::eBoundLoc0] = lp[Acts::eBoundLoc0];
     trueBound[Acts::eBoundLoc1] = lp[Acts::eBoundLoc1];
     trueBound[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
@@ -289,7 +289,7 @@ ProcessCode RootMeasurementWriter::writeT(
         surface
             .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0), dir)
             .inverse();
-    std::pair<double, double> angles =
+    std::pair<long double, long double> angles =
         Acts::VectorHelpers::incidentAngles(dir, rot);
 
     m_outputTree->fillTruthParameters(local, pos4, dir, angles);

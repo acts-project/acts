@@ -34,7 +34,8 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 }
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<double, GenericCuboidVolumeBounds::BoundValues::eSize>&
+    const std::array<long double,
+                     GenericCuboidVolumeBounds::BoundValues::eSize>&
         values) noexcept(false)
     : m_vertices() {
   for (std::size_t iv = 0; iv < 8; ++iv) {
@@ -45,12 +46,12 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 }
 
 bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
-                                             double tol) const {
+                                             long double tol) const {
   constexpr std::array<std::size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
   bool ref = std::signbit((gpos - m_vertices[vtxs[0]]).dot(m_normals[0]));
   for (std::size_t i = 1; i < 6; i++) {
-    double dot = (gpos - m_vertices[vtxs[i]]).dot(m_normals[i]);
+    long double dot = (gpos - m_vertices[vtxs[i]]).dot(m_normals[i]);
     if (std::signbit(dot) != ref) {
       // technically outside, but how far?
       if (std::abs(dot) > tol) {
@@ -187,8 +188,8 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 }
 
-std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
-  std::vector<double> rvalues;
+std::vector<long double> Acts::GenericCuboidVolumeBounds::values() const {
+  std::vector<long double> rvalues;
   rvalues.reserve(BoundValues::eSize);
   for (std::size_t iv = 0; iv < 8; ++iv) {
     for (std::size_t ic = 0; ic < 3; ++ic) {

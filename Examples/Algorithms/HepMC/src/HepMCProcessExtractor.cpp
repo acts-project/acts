@@ -50,8 +50,8 @@ HepMC3::ConstGenParticlePtr searchProcessParticleById(
 /// @param [in, out] particle The particle that get the passed material attached
 void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
                        SimParticle& particle) {
-  double x0 = 0.;
-  double l0 = 0.;
+  long double x0 = 0.;
+  long double l0 = 0.;
   HepMC3::ConstGenParticlePtr currentParticle = nullptr;
   HepMC3::ConstGenVertexPtr currentVertex = vertex;
   // Loop backwards and test whether the track still exists
@@ -63,16 +63,16 @@ void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
                  ->value() == id) {
     // Get the step length
     currentParticle = currentVertex->particles_in()[0];
-    const double stepLength =
-        currentParticle->attribute<HepMC3::DoubleAttribute>("StepLength")
+    const long double stepLength =
+        currentParticle->attribute<HepMC3::long doubleAttribute>("StepLength")
             ->value();
     // Add the passed material
-    x0 +=
-        stepLength /
-        currentParticle->attribute<HepMC3::DoubleAttribute>("NextX0")->value();
-    l0 +=
-        stepLength /
-        currentParticle->attribute<HepMC3::DoubleAttribute>("NextL0")->value();
+    x0 += stepLength /
+          currentParticle->attribute<HepMC3::long doubleAttribute>("NextX0")
+              ->value();
+    l0 += stepLength /
+          currentParticle->attribute<HepMC3::long doubleAttribute>("NextL0")
+              ->value();
     currentVertex = currentParticle->production_vertex();
   }
   // Assign the passed material to the particle
@@ -122,8 +122,9 @@ std::vector<SimParticle> selectOutgoingParticles(
   for (const auto& att : attributes) {
     // Search for initial parameters
     if (att.find("InitialParametersOf") != std::string::npos) {
-      const std::vector<double> mom4 =
-          endVertex->attribute<HepMC3::VectorDoubleAttribute>(att)->value();
+      const std::vector<long double> mom4 =
+          endVertex->attribute<HepMC3::Vectorlong doubleAttribute>(att)
+              ->value();
       const HepMC3::FourVector& pos4 = endVertex->position();
       const int id = stoi(att.substr(att.find("-") + 1));
       HepMC3::ConstGenParticlePtr genParticle =

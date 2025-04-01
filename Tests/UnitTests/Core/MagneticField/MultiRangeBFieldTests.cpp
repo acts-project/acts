@@ -18,11 +18,11 @@ namespace Acts::Test {
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 BOOST_AUTO_TEST_CASE(TestMultiRangeBField) {
-  std::vector<std::pair<RangeXD<3, double>, Vector3>> inputs;
+  std::vector<std::pair<RangeXD<3, long double>, Vector3>> inputs;
 
-  inputs.emplace_back(RangeXD<3, double>{{0., 0., 0.}, {3., 3., 3.}},
+  inputs.emplace_back(RangeXD<3, long double>{{0., 0., 0.}, {3., 3., 3.}},
                       Vector3{0., 0., 2.});
-  inputs.emplace_back(RangeXD<3, double>{{1., 1., 1.}, {2., 2., 10.}},
+  inputs.emplace_back(RangeXD<3, long double>{{1., 1., 1.}, {2., 2., 10.}},
                       Vector3{2., 0., 0.});
 
   const MultiRangeBField bfield(std::move(inputs));

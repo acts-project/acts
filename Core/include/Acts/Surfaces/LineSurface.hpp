@@ -46,8 +46,8 @@ class LineSurface : public Surface {
   /// @param transform The transform that positions the line in the global frame
   /// @param radius The radius of the line
   /// @param halez The half length in z
-  explicit LineSurface(const Transform3& transform, double radius,
-                       double halez);
+  explicit LineSurface(const Transform3& transform, long double radius,
+                       long double halez);
 
   /// Constructor for LineSurface from Transform3 and LineBounds
   ///
@@ -183,7 +183,7 @@ class LineSurface : public Surface {
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Calculate the straight-line intersection with the line surface.
   ///
@@ -243,15 +243,16 @@ class LineSurface : public Surface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& direction) const override;
+  long double pathCorrection(const GeometryContext& gctx,
+                             const Vector3& position,
+                             const Vector3& direction) const override;
 
   /// This method returns the bounds of the surface by reference
   const SurfaceBounds& bounds() const final;

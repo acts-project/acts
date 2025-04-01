@@ -13,7 +13,7 @@
 
 // prediction function
 Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
-    std::vector<float>& inputFeatures, double decisionThreshProb) const {
+    std::vector<float>& inputFeatures, long double decisionThreshProb) const {
   // check that the decision threshold is a probability
   if (!((0. <= decisionThreshProb) && (decisionThreshProb <= 1.))) {
     throw std::invalid_argument(
@@ -35,8 +35,8 @@ Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
 }
 
 // function that checks if the predicted track label is duplicate
-bool Acts::MLTrackClassifier::isDuplicate(std::vector<float>& inputFeatures,
-                                          double decisionThreshProb) const {
+bool Acts::MLTrackClassifier::isDuplicate(
+    std::vector<float>& inputFeatures, long double decisionThreshProb) const {
   Acts::MLTrackClassifier::TrackLabels predictedLabel =
       Acts::MLTrackClassifier::predictTrackLabel(inputFeatures,
                                                  decisionThreshProb);

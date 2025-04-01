@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
   auto pTransform = Transform3(translation);
-  const double radius = 2.;
-  const double halfZ = 20.;
+  const long double radius = 2.;
+  const long double halfZ = 20.;
   BOOST_CHECK(LineSurfaceStub(pTransform, radius, halfZ).constructedOk());
 
   /// ctor with nullptr for LineBounds
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Vector3 globalPosition{0., 0., 0.};
   auto returnedRotationMatrix =
       line.referenceFrame(tgContext, globalPosition, momentum.normalized());
-  double v0 = std::cos(std::atan(2. / 3.));
-  double v1 = std::sin(std::atan(2. / 3.));
+  long double v0 = std::cos(std::atan(2. / 3.));
+  long double v1 = std::sin(std::atan(2. / 3.));
   RotationMatrix3 expectedRotationMatrix;
   expectedRotationMatrix << -v1, 0., v0, v0, 0., v1, 0., 1., -0.;
   CHECK_CLOSE_OR_SMALL(returnedRotationMatrix, expectedRotationMatrix, 1e-6,
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
       line.alignmentToPathDerivative(tgContext, globalPosition, direction);
   // The expected results
   AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
-  const double value = std::numbers::sqrt3 / 2;
+  const long double value = std::numbers::sqrt3 / 2;
   expAlignToPath << -value, value, 0, -3 * value, -value, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -276,9 +276,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
   LineSurfaceStub surface(Transform3::Identity());
 
   // eta=6 is already crashing
-  const std::vector<double> etas = {0, 1, 2, 3, 4, 5};
+  const std::vector<long double> etas = {0, 1, 2, 3, 4, 5};
 
-  for (double eta : etas) {
+  for (long double eta : etas) {
     Vector3 pca = {5, 0, 0};
     Vector3 dir = makeDirectionFromPhiEta(std::numbers::pi / 2., eta);
     Vector3 pos = pca + dir;
@@ -297,13 +297,13 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
 BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   using namespace Acts::UnitLiterals;
 
-  double eps = 1e-10;
+  long double eps = 1e-10;
 
   Vector3 direction = Vector3(1, 1, 100).normalized();
   BoundVector boundVector;
   boundVector << 1_cm, 1_cm, VectorHelpers::phi(direction),
       VectorHelpers::theta(direction), 1, 0;
-  double pathLimit = 1_cm;
+  long double pathLimit = 1_cm;
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 

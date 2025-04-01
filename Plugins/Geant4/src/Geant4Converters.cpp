@@ -89,70 +89,74 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   return transform(g4Transform);
 }
 
-std::tuple<std::shared_ptr<Acts::CylinderBounds>, double>
+std::tuple<std::shared_ptr<Acts::CylinderBounds>, long double>
 Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   using B = Acts::CylinderBounds;
 
-  std::array<double, B::eSize> tArray = {};
-  tArray[B::eR] =
-      static_cast<double>(g4Tubs.GetInnerRadius() + g4Tubs.GetOuterRadius()) *
-      0.5;
-  tArray[B::eHalfLengthZ] = static_cast<double>(g4Tubs.GetZHalfLength());
+  std::array<long double, B::eSize> tArray = {};
+  tArray[B::eR] = static_cast<long double>(g4Tubs.GetInnerRadius() +
+                                           g4Tubs.GetOuterRadius()) *
+                  0.5;
+  tArray[B::eHalfLengthZ] = static_cast<long double>(g4Tubs.GetZHalfLength());
   tArray[B::eHalfPhiSector] =
-      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
+      0.5 * static_cast<long double>(g4Tubs.GetDeltaPhiAngle());
   // Geant fiddles around with user given values, i.e. it would not allow [-PI,
   // +PI) as a full segment (has to be [0, 2PI)])
   if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
-      std::numeric_limits<double>::epsilon()) {
+      std::numeric_limits<long double>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
-    tArray[B::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle()) +
-                             tArray[B::eHalfPhiSector];
+    tArray[B::eAveragePhi] =
+        static_cast<long double>(g4Tubs.GetStartPhiAngle()) +
+        tArray[B::eHalfPhiSector];
   }
-  double thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
+  long double thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
   auto cBounds = std::make_shared<CylinderBounds>(tArray);
   return {std::move(cBounds), thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::RadialBounds>, double>
+std::tuple<std::shared_ptr<Acts::RadialBounds>, long double>
 Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   using B = Acts::RadialBounds;
 
-  std::array<double, B::eSize> tArray = {};
-  tArray[B::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());
-  tArray[B::eMaxR] = static_cast<double>(g4Tubs.GetOuterRadius());
+  std::array<long double, B::eSize> tArray = {};
+  tArray[B::eMinR] = static_cast<long double>(g4Tubs.GetInnerRadius());
+  tArray[B::eMaxR] = static_cast<long double>(g4Tubs.GetOuterRadius());
   tArray[B::eHalfPhiSector] =
-      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
+      0.5 * static_cast<long double>(g4Tubs.GetDeltaPhiAngle());
   // Geant fiddles around with user given values, i.e. it would not allow [-PI,
   // +PI) as a full segment (has to be [0, 2PI)])
   if (std::abs(tArray[B::eHalfPhiSector] - std::numbers::pi) <
-      std::numeric_limits<double>::epsilon()) {
+      std::numeric_limits<long double>::epsilon()) {
     tArray[B::eAveragePhi] = 0.;
   } else {
-    tArray[B::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle()) +
-                             tArray[B::eHalfPhiSector];
+    tArray[B::eAveragePhi] =
+        static_cast<long double>(g4Tubs.GetStartPhiAngle()) +
+        tArray[B::eHalfPhiSector];
   }
-  double thickness = g4Tubs.GetZHalfLength() * 2;
+  long double thickness = g4Tubs.GetZHalfLength() * 2;
   auto rBounds = std::make_shared<RadialBounds>(tArray);
   return {std::move(rBounds), thickness};
 }
 
 std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
     const G4Tubs& g4Tubs) {
-  auto r = static_cast<double>(g4Tubs.GetOuterRadius());
-  auto hlZ = static_cast<double>(g4Tubs.GetZHalfLength());
+  auto r = static_cast<long double>(g4Tubs.GetOuterRadius());
+  auto hlZ = static_cast<long double>(g4Tubs.GetZHalfLength());
   return std::make_shared<LineBounds>(r, hlZ);
 }
 
-std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>, double>
+std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
+           long double>
 Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
-  std::vector<double> hG4XYZ = {static_cast<double>(g4Box.GetXHalfLength()),
-                                static_cast<double>(g4Box.GetYHalfLength()),
-                                static_cast<double>(g4Box.GetZHalfLength())};
+  std::vector<long double> hG4XYZ = {
+      static_cast<long double>(g4Box.GetXHalfLength()),
+      static_cast<long double>(g4Box.GetYHalfLength()),
+      static_cast<long double>(g4Box.GetZHalfLength())};
 
   auto minAt = std::min_element(hG4XYZ.begin(), hG4XYZ.end());
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
-  double thickness = 2. * hG4XYZ[minPos];
+  long double thickness = 2. * hG4XYZ[minPos];
 
   std::array<int, 2u> rAxes = {};
   switch (minPos) {
@@ -177,24 +181,26 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   return {std::move(rBounds), rAxes, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
+std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+           long double>
 Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   // primary parameters
-  double hlX0 = static_cast<double>(g4Trd.GetXHalfLength1());
-  double hlX1 = static_cast<double>(g4Trd.GetXHalfLength2());
-  double hlY0 = static_cast<double>(g4Trd.GetYHalfLength1());
-  double hlY1 = static_cast<double>(g4Trd.GetYHalfLength2());
-  double hlZ = static_cast<double>(g4Trd.GetZHalfLength());
+  long double hlX0 = static_cast<long double>(g4Trd.GetXHalfLength1());
+  long double hlX1 = static_cast<long double>(g4Trd.GetXHalfLength2());
+  long double hlY0 = static_cast<long double>(g4Trd.GetYHalfLength1());
+  long double hlY1 = static_cast<long double>(g4Trd.GetYHalfLength2());
+  long double hlZ = static_cast<long double>(g4Trd.GetZHalfLength());
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::vector<long double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5,
+                                   hlZ};
 
   auto minAt = std::min_element(dXYZ.begin(), dXYZ.end());
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
-  double thickness = 2. * dXYZ[minPos];
+  long double thickness = 2. * dXYZ[minPos];
 
-  double halfLengthXminY = 0.;
-  double halfLengthXmaxY = 0.;
-  double halfLengthY = 0.;
+  long double halfLengthXminY = 0.;
+  long double halfLengthXmaxY = 0.;
+  long double halfLengthY = 0.;
 
   std::array<int, 2u> rAxes = {};
   switch (minPos) {
@@ -230,34 +236,36 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   return {std::move(tBounds), rAxes, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>, double>
+std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
+           long double>
 Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   // primary parameters
-  auto y1 = static_cast<double>(g4Trap.GetYHalfLength1());
-  auto y2 = static_cast<double>(g4Trap.GetYHalfLength2());
-  auto x1 = static_cast<double>(g4Trap.GetXHalfLength1());
-  auto x2 = static_cast<double>(g4Trap.GetXHalfLength2());
-  auto x3 = static_cast<double>(g4Trap.GetXHalfLength3());
-  auto x4 = static_cast<double>(g4Trap.GetXHalfLength4());
-  auto phi = static_cast<double>(g4Trap.GetPhi());
-  auto theta = static_cast<double>(g4Trap.GetTheta());
-  auto z = static_cast<double>(g4Trap.GetZHalfLength());
+  auto y1 = static_cast<long double>(g4Trap.GetYHalfLength1());
+  auto y2 = static_cast<long double>(g4Trap.GetYHalfLength2());
+  auto x1 = static_cast<long double>(g4Trap.GetXHalfLength1());
+  auto x2 = static_cast<long double>(g4Trap.GetXHalfLength2());
+  auto x3 = static_cast<long double>(g4Trap.GetXHalfLength3());
+  auto x4 = static_cast<long double>(g4Trap.GetXHalfLength4());
+  auto phi = static_cast<long double>(g4Trap.GetPhi());
+  auto theta = static_cast<long double>(g4Trap.GetTheta());
+  auto z = static_cast<long double>(g4Trap.GetZHalfLength());
 
-  double hlX0 = (x1 + x2) * 0.5;
-  double hlX1 = 2 * z * tan(theta) * cos(phi) + (x3 + x4) * 0.5;
-  double hlY0 = y1;
-  double hlY1 = y2 + 2 * z * tan(theta) * sin(phi);
-  double hlZ = z;
+  long double hlX0 = (x1 + x2) * 0.5;
+  long double hlX1 = 2 * z * tan(theta) * cos(phi) + (x3 + x4) * 0.5;
+  long double hlY0 = y1;
+  long double hlY1 = y2 + 2 * z * tan(theta) * sin(phi);
+  long double hlZ = z;
 
-  std::vector<double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5, hlZ};
+  std::vector<long double> dXYZ = {(hlX0 + hlX1) * 0.5, (hlY0 + hlY1) * 0.5,
+                                   hlZ};
 
   auto minAt = std::ranges::min_element(dXYZ);
   std::size_t minPos = std::distance(dXYZ.begin(), minAt);
-  double thickness = 2. * dXYZ[minPos];
+  long double thickness = 2. * dXYZ[minPos];
 
-  double halfLengthXminY = 0.;
-  double halfLengthXmaxY = 0.;
-  double halfLengthY = 0.;
+  long double halfLengthXminY = 0.;
+  long double halfLengthXmaxY = 0.;
+  long double halfLengthY = 0.;
 
   std::array<int, 2u> rAxes = {};
   switch (minPos) {
@@ -296,7 +304,8 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trap& g4Trap) {
   return std::make_tuple(std::move(tBounds), rAxes, thickness);
 }
 
-std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>, double>
+std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>,
+           long double>
 Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {
@@ -312,7 +321,7 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
 
   std::shared_ptr<Acts::PlanarBounds> pBounds = nullptr;
   std::array<int, 2u> rAxes = {};
-  double rThickness = 0.;
+  long double rThickness = 0.;
   return {std::move(pBounds), rAxes, rThickness};
 }
 
@@ -338,13 +347,13 @@ Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
 
 std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
     const G4VPhysicalVolume& g4PhysVol, const Transform3& toGlobal,
-    bool convertMaterial, double compressed) {
+    bool convertMaterial, long double compressed) {
   // Get the logical volume
   auto g4LogVol = g4PhysVol.GetLogicalVolume();
   auto g4Solid = g4LogVol->GetSolid();
 
-  auto assignMaterial = [&](Acts::Surface& sf, double moriginal,
-                            double mcompressed) -> void {
+  auto assignMaterial = [&](Acts::Surface& sf, long double moriginal,
+                            long double mcompressed) -> void {
     auto g4Material = g4LogVol->GetMaterial();
     if (convertMaterial && g4Material != nullptr) {
       if (compressed < 0.) {
@@ -413,10 +422,10 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   // Into a Cylinder, disc or line
   auto g4Tubs = dynamic_cast<const G4Tubs*>(g4Solid);
   if (g4Tubs != nullptr) {
-    double diffR = g4Tubs->GetOuterRadius() - g4Tubs->GetInnerRadius();
-    double diffZ = 2 * g4Tubs->GetZHalfLength();
+    long double diffR = g4Tubs->GetOuterRadius() - g4Tubs->GetInnerRadius();
+    long double diffZ = 2 * g4Tubs->GetZHalfLength();
     // Detect if cylinder or disc case
-    double original = 0.;
+    long double original = 0.;
     if (forcedType == Surface::SurfaceType::Cylinder ||
         (diffR < diffZ && forcedType == Surface::SurfaceType::Other)) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.cylinderBounds(*g4Tubs);
@@ -445,7 +454,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
 }
 
 Acts::Material Acts::Geant4MaterialConverter::material(
-    const G4Material& g4Material, double compression) {
+    const G4Material& g4Material, long double compression) {
   auto X0 = g4Material.GetRadlen();
   auto L0 = g4Material.GetNuclearInterLength();
   auto Rho = g4Material.GetDensity();
@@ -455,8 +464,8 @@ Acts::Material Acts::Geant4MaterialConverter::material(
   auto g4Elements = g4Material.GetElementVector();
   auto g4Fraction = g4Material.GetFractionVector();
   auto g4NElements = g4Material.GetNumberOfElements();
-  double Ar = 0;
-  double Z = 0;
+  long double Ar = 0;
+  long double Z = 0;
   if (g4NElements == 1) {
     Ar = g4Elements->at(0)->GetN();
     Z = g4Material.GetZ();
@@ -473,9 +482,9 @@ Acts::Material Acts::Geant4MaterialConverter::material(
 
 std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
 Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
-                                               double original,
-                                               double compressed) {
-  double compression = original / compressed;
+                                               long double original,
+                                               long double compressed) {
+  long double compression = original / compressed;
   return std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab(material(g4Material, compression), compressed));
 }
@@ -484,13 +493,13 @@ std::shared_ptr<Acts::CylinderVolumeBounds>
 Acts::Geant4VolumeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
   using C = Acts::CylinderVolumeBounds;
 
-  std::array<double, C::eSize> tArray = {};
-  tArray[C::eMinR] = static_cast<double>(g4Tubs.GetInnerRadius());
-  tArray[C::eMaxR] = static_cast<double>(g4Tubs.GetOuterRadius());
-  tArray[C::eHalfLengthZ] = static_cast<double>(g4Tubs.GetZHalfLength());
+  std::array<long double, C::eSize> tArray = {};
+  tArray[C::eMinR] = static_cast<long double>(g4Tubs.GetInnerRadius());
+  tArray[C::eMaxR] = static_cast<long double>(g4Tubs.GetOuterRadius());
+  tArray[C::eHalfLengthZ] = static_cast<long double>(g4Tubs.GetZHalfLength());
   tArray[C::eHalfPhiSector] =
-      0.5 * static_cast<double>(g4Tubs.GetDeltaPhiAngle());
-  tArray[C::eAveragePhi] = static_cast<double>(g4Tubs.GetStartPhiAngle());
+      0.5 * static_cast<long double>(g4Tubs.GetDeltaPhiAngle());
+  tArray[C::eAveragePhi] = static_cast<long double>(g4Tubs.GetStartPhiAngle());
 
   return std::make_shared<CylinderVolumeBounds>(tArray);
 }

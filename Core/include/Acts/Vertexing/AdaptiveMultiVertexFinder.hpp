@@ -70,19 +70,19 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// reliable, but the fit would be still able to converge
     /// towards the right vertex. If you cut too soft, you
     /// consider a lot of tracks which just slow down the fit.
-    double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
+    long double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
     /// Maximum allowed significance of track position to vertex seed to
     /// consider track as compatible to vertex. If useTime is set to true, the
     /// time coordinate also contributes to the significance and
     /// tracksMaxSignificance needs to be increased. 5 corresponds to a p-value
     /// of ~0.92 using `chi2(x=5,ndf=2)`
-    double tracksMaxSignificance = 5.;
+    long double tracksMaxSignificance = 5.;
 
     /// Max chi2 value for which tracks are considered compatible with
     /// the fitted vertex. These tracks are removed from the seedTracks
     /// after the fit has been performed.
-    double maxVertexChi2 = 18.42;
+    long double maxVertexChi2 = 18.42;
 
     /// Perform a 'real' multi-vertex fit as intended by the algorithm.
     /// If switched to true, always all (!) tracks are considered to be
@@ -101,13 +101,13 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     /// Maximum significance on the distance between two vertices
     /// to allow merging of two vertices.
     /// 3 corresponds to a p-value of ~0.92 using `chi2(x=3,ndf=1)`
-    double maxMergeVertexSignificance = 3.;
+    long double maxMergeVertexSignificance = 3.;
 
     /// Minimum weight a track has to have to be considered a compatible
     /// track with a vertex candidate.
     ///
     /// Note: This value has to be the same as the one in the AMVFitter.
-    double minWeight = 0.0001;
+    long double minWeight = 0.0001;
 
     /// Maximal number of iterations in the finding procedure
     int maxIterations = 100;
@@ -124,7 +124,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
     bool doFullSplitting = false;
 
     /// Maximum vertex contamination value
-    double maximumVertexContamination = 0.5;
+    long double maximumVertexContamination = 0.5;
 
     /// Use seed vertex as a constraint for the fit
     bool useSeedConstraint = true;
@@ -135,7 +135,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
 
     /// Default fitQuality for constraint vertex in case no beamspot
     /// constraint is provided
-    std::pair<double, double> defaultConstrFitQuality{0., -3.};
+    std::pair<long double, long double> defaultConstrFitQuality{0., -3.};
 
     /// Use the full available vertex covariance information after
     /// seeding for the IP estimation. In original implementation
@@ -257,7 +257,7 @@ class AdaptiveMultiVertexFinder final : public IVertexFinder {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return The IP significance
-  Result<double> getIPSignificance(
+  Result<long double> getIPSignificance(
       const InputTrack& track, const Vertex& vtx,
       const VertexingOptions& vertexingOptions) const;
 

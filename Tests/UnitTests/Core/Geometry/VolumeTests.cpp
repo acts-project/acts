@@ -25,14 +25,14 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(VolumeTest) {
   using namespace Acts::UnitLiterals;
-  double eps = std::numeric_limits<double>::epsilon();
+  long double eps = std::numeric_limits<long double>::epsilon();
 
   // Build a translation
   Vector3 translation{1_mm, 2_mm, 3_mm};
 
   // Build a translation
   SquareMatrix3 rotation = RotationMatrix3::Identity();
-  double rotationAngle = 60_degree;
+  long double rotationAngle = 60_degree;
   Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
   Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));

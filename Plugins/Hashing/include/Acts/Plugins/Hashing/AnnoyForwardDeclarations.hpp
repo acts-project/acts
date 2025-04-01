@@ -23,6 +23,7 @@ class AnnoyIndexSingleThreadedBuildPolicy;  // Build policy
 namespace Acts {
 using AnnoyMetric = Annoy::AngularEuclidean;
 using AnnoyModel =
-    Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
+    Annoy::AnnoyIndex<unsigned int, long double, AnnoyMetric,
+                      Annoy::Kiss32Random,
                       Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 }  // namespace Acts

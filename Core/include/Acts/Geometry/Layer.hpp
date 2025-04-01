@@ -120,7 +120,7 @@ class Layer : public virtual GeometryObject {
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
-  double thickness() const;
+  long double thickness() const;
 
   /// geometrical isOnLayer() method
   ///
@@ -220,7 +220,7 @@ class Layer : public virtual GeometryObject {
   /// @param ades oapproach descriptor
   /// @param laytyp is the layer type if active or passive
   explicit Layer(std::unique_ptr<SurfaceArray> surfaceArray,
-                 double thickness = 0.,
+                 long double thickness = 0.,
                  std::unique_ptr<ApproachDescriptor> ades = nullptr,
                  LayerType laytyp = passive);
 
@@ -250,7 +250,7 @@ class Layer : public virtual GeometryObject {
   std::unique_ptr<const SurfaceArray> m_surfaceArray = nullptr;
 
   /// Thickness of the Layer
-  double m_layerThickness = 0.;
+  long double m_layerThickness = 0.;
 
   /// descriptor for surface on approach
   ///

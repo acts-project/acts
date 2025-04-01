@@ -128,7 +128,7 @@ concept MutableMultiTrajectoryBackend =
       { v.template addColumn_impl<std::int32_t>(col) };
       { v.template addColumn_impl<std::int64_t>(col) };
       { v.template addColumn_impl<float>(col) };
-      { v.template addColumn_impl<double>(col) };
+      { v.template addColumn_impl<long double>(col) };
 
       {
         v.allocateCalibrated_impl(istate, ActsVector<1>{},

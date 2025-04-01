@@ -172,7 +172,7 @@ class CombinatorialKalmanFilter {
         m_updaterLogger{m_logger->cloneWithSuffix("Updater")} {}
 
  private:
-  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, long double>;
   using TrackStateContainerBackend =
       typename track_container_t::TrackStateContainerBackend;
   using TrackProxy = typename track_container_t::TrackProxy;
@@ -193,14 +193,15 @@ class CombinatorialKalmanFilter {
   /// be sorted along the track.
   class Actor {
    public:
-    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+    using BoundState =
+        std::tuple<BoundTrackParameters, BoundMatrix, long double>;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<track_container_t>;
 
     using BranchStopperResult = CombinatorialKalmanFilterBranchStopperResult;
 
     /// The target surface aborter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached{std::numeric_limits<long double>::lowest()};
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -246,7 +247,7 @@ class CombinatorialKalmanFilter {
 
       // Initialize path limit reached aborter
       if (result.pathLimitReached.internalLimit ==
-          std::numeric_limits<double>::max()) {
+          std::numeric_limits<long double>::max()) {
         detail::setupLoopProtection(state, stepper, result.pathLimitReached,
                                     true, logger());
       }
@@ -821,7 +822,7 @@ class CombinatorialKalmanFilter {
   /// Void path limit reached aborter to replace the default since the path
   /// limit is handled in the CKF actor internally.
   struct StubPathLimitReached {
-    double internalLimit{};
+    long double internalLimit{};
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>

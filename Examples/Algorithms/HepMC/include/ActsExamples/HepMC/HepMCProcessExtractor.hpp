@@ -44,7 +44,7 @@ class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {
     /// Maximum absolute value of considered PDG IDs
     int absPdgMax = 2212;
     /// Minimum momentum of considered particles
-    double pMin = 50. * Acts::UnitConstants::MeV;
+    long double pMin = 50. * Acts::UnitConstants::MeV;
   };
 
   /// Constructor

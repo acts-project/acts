@@ -73,10 +73,10 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
       const auto& boundaries =
           multiLink.indexedUpdater.grid.axes()[0u]->getBinEdges();
 
-      double refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
+      long double refC = 0.5 * (boundaries[il + 1u] + boundaries[il]);
 
       if (bValue == Acts::AxisDirection::AxisR) {
-        double phi = Acts::VectorHelpers::phi(refPosition);
+        long double phi = Acts::VectorHelpers::phi(refPosition);
         position = Acts::Vector3(refC * std::cos(phi), refC * std::sin(phi),
                                  refPosition.z());
       } else if (bValue == Acts::AxisDirection::AxisZ) {
@@ -84,7 +84,7 @@ std::vector<Acts::Svg::ProtoLink> convertMultiLink(
         refC += surface.transform(gctx).translation().z();
         position[2] = refC;
       } else if (bValue == Acts::AxisDirection::AxisPhi) {
-        double r = Acts::VectorHelpers::perp(refPosition);
+        long double r = Acts::VectorHelpers::perp(refPosition);
         position = Acts::Vector3(r * std::cos(refC), r * std::sin(refC),
                                  refPosition.z());
       } else {
@@ -119,15 +119,15 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
   switch (surfaceType) {
     case SurfaceBounds::eCylinder: {
       // Get phi
-      double r = boundValues[0u];
-      double aphi = boundValues[3u];
+      long double r = boundValues[0u];
+      long double aphi = boundValues[3u];
       rPos = Vector3(r * std::cos(aphi), r * std::sin(aphi),
                      surfaceTranslation.z());
     } break;
     case SurfaceBounds::eDisc: {
       // Get phi
-      double r = 0.5 * (boundValues[0u] + boundValues[1u]);
-      double aphi = boundValues[3u];
+      long double r = 0.5 * (boundValues[0u] + boundValues[1u]);
+      long double aphi = boundValues[3u];
       rPos = Vector3(r * std::cos(aphi), r * std::sin(aphi),
                      surfaceTranslation.z());
     } break;

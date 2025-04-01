@@ -55,13 +55,14 @@ namespace Acts::detail {
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
+Result<std::tuple<BoundTrackParameters, BoundMatrix, long double>> boundState(
     const GeometryContext& geoContext, const Surface& surface,
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath, const FreeToBoundCorrection& freeToBoundCorrection);
+    long double accumulatedPath,
+    const FreeToBoundCorrection& freeToBoundCorrection);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -84,12 +85,12 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<BoundTrackParameters, BoundMatrix, double> curvilinearState(
+std::tuple<BoundTrackParameters, BoundMatrix, long double> curvilinearState(
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& transportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath);
+    long double accumulatedPath);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to
 ///        another bound representation.

@@ -34,20 +34,20 @@ struct Color {
   /// @param values The rgb values
   constexpr explicit Color(std::array<int, 3> values) : rgb(values) {}
 
-  /// Constructor from array of double rgb values [0, 1]
+  /// Constructor from array of long double rgb values [0, 1]
   /// @param values The rgb values
-  constexpr explicit Color(std::array<double, 3> values) {
+  constexpr explicit Color(std::array<long double, 3> values) {
     rgb[0] = static_cast<int>(values[0] * 255);
     rgb[1] = static_cast<int>(values[1] * 255);
     rgb[2] = static_cast<int>(values[2] * 255);
   }
 
-  /// Constructor from raw double dgb values [0, 1]
+  /// Constructor from raw long double dgb values [0, 1]
   /// @param r The red component
   /// @param g The green component
   /// @param b The blue component
-  constexpr Color(double r, double g, double b)
-      : Color{std::array<double, 3>{r, g, b}} {}
+  constexpr Color(long double r, long double g, long double b)
+      : Color{std::array<long double, 3>{r, g, b}} {}
 
  private:
   constexpr static int hexToInt(std::string_view hex) {
@@ -124,11 +124,11 @@ struct ViewConfig {
   /// The color for this object
   Color color = {250, 0, 0};
   /// Out of plane drawing parameter for objects
-  double offset = 0.1;
+  long double offset = 0.1;
   /// The visual line thickness for this object
-  double lineThickness = 0.15;
+  long double lineThickness = 0.15;
   /// The visual surface thickness for this object
-  double surfaceThickness = 0.15;
+  long double surfaceThickness = 0.15;
   /// The number of segments to approximate a quarter of the circle
   unsigned int quarterSegments = 72;
   /// Whether to triangulate or not

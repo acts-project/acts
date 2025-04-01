@@ -126,9 +126,9 @@ ProcessCode MaterialMapping::execute(const AlgorithmContext& context) const {
   return ProcessCode::SUCCESS;
 }
 
-std::vector<std::pair<double, int>> MaterialMapping::scoringParameters(
+std::vector<std::pair<long double, int>> MaterialMapping::scoringParameters(
     std::uint64_t surfaceID) {
-  std::vector<std::pair<double, int>> scoringParameters;
+  std::vector<std::pair<long double, int>> scoringParameters;
 
   if (m_cfg.materialSurfaceMapper) {
     auto surfaceAccumulatedMaterial = m_mappingState.accumulatedMaterial.find(

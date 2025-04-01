@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_SUITE(SafeInverse)
 ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeInverse", logLevel))
 
 BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
-  Eigen::Matrix<double, 2, 2> m;
+  Eigen::Matrix<long double, 2, 2> m;
   m << 1, 2, 3, 4;
 
-  Eigen::Matrix<double, 2, 2> mInvRef;
+  Eigen::Matrix<long double, 2, 2> mInvRef;
   mInvRef << -2, 1, 1.5, -0.5;
 
   auto mInv = Acts::safeInverse(m);
@@ -44,7 +44,8 @@ BOOST_AUTO_TEST_CASE(SafeInverseSmallMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(safeInverseLargeMatrix) {
-  const Eigen::Matrix<double, 5, 5> identity{Eigen::MatrixXd::Identity(5, 5)};
+  const Eigen::Matrix<long double, 5, 5> identity{
+      Eigen::MatrixXd::Identity(5, 5)};
   auto identityInv = Acts::safeInverse(identity);
 
   BOOST_CHECK(identityInv);
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(safeInverseDynamicMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseBadSmallMatrix) {
-  Eigen::Matrix<double, 2, 2> m;
+  Eigen::Matrix<long double, 2, 2> m;
   m << 1, 1, 2, 2;
 
   auto mInv = Acts::safeInverse(m);
@@ -70,14 +71,14 @@ BOOST_AUTO_TEST_CASE(SafeInverseBadSmallMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(safeInverseBadLargeMatrix) {
-  const Eigen::Matrix<double, 5, 5> m{Eigen::MatrixXd::Zero(5, 5)};
+  const Eigen::Matrix<long double, 5, 5> m{Eigen::MatrixXd::Zero(5, 5)};
   auto mInv = Acts::safeInverse(m);
 
   BOOST_CHECK(!mInv);
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
-  Eigen::Matrix<double, 4, 4> m =
+  Eigen::Matrix<long double, 4, 4> m =
       Eigen::MatrixXd::Identity(4, 4) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPESmallMatrix) {
 }
 
 BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
-  Eigen::Matrix<double, 5, 5> m =
+  Eigen::Matrix<long double, 5, 5> m =
       Eigen::MatrixXd::Identity(5, 5) * std::numeric_limits<std::size_t>::max();
   m(1, 1) = 1;
 
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(SafeInverseFPELargeMatrix) {
 
 /// This test should not compile
 // BOOST_AUTO_TEST_CASE(SafeInverseNonsquareMatrix) {
-//   Eigen::Matrix<double, 2, 3> m;
+//   Eigen::Matrix<long double, 2, 3> m;
 //   m << 1, 2, 3, 4, 5, 6;
 //
 //   auto mInv = Acts::safeInverse(m);
@@ -121,8 +122,8 @@ BOOST_AUTO_TEST_SUITE(SafeExp)
 
 ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("SafeExp", logLevel))
 
-BOOST_AUTO_TEST_CASE(safeExpDouble) {
-  using FloatType = double;
+BOOST_AUTO_TEST_CASE(safeExplong double) {
+  using FloatType = long double;
 
   // Values within the safe range
   BOOST_CHECK_CLOSE(safeExp<FloatType>(0.0), std::exp(0.0), 1e-8);

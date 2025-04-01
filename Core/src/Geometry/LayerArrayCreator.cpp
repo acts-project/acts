@@ -29,8 +29,9 @@
 #include <vector>
 
 std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
-    const GeometryContext& gctx, const LayerVector& layersInput, double min,
-    double max, BinningType bType, AxisDirection aDir) const {
+    const GeometryContext& gctx, const LayerVector& layersInput,
+    long double min, long double max, BinningType bType,
+    AxisDirection aDir) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
                                         << " layers at input.");
   ACTS_VERBOSE("       min/max provided : " << min << " / " << max);
@@ -72,8 +73,8 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       std::vector<float> boundaries;
       // initial step
       boundaries.push_back(min);
-      double layerValue = 0.;
-      double layerThickness = 0.;
+      long double layerValue = 0.;
+      long double layerThickness = 0.;
       std::shared_ptr<const Layer> navLayer = nullptr;
       std::shared_ptr<const Layer> lastLayer = nullptr;
       // loop over layers
@@ -85,8 +86,9 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
         boundaries.push_back(layerValue - 0.5 * layerThickness);
         boundaries.push_back(layerValue + 0.5 * layerThickness);
         // calculate the layer value for the offset
-        double navigationValue = 0.5 * ((layerValue - 0.5 * layerThickness) +
-                                        boundaries.at(boundaries.size() - 3));
+        long double navigationValue =
+            0.5 * ((layerValue - 0.5 * layerThickness) +
+                   boundaries.at(boundaries.size() - 3));
         // if layers are attached to each other bail out - navigation will not
         // work anymore
         if (navigationValue == (layerValue - 0.5 * layerThickness)) {
@@ -131,7 +133,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       }
       // a final navigation layer
       // calculate the layer value for the offset
-      double navigationValue =
+      long double navigationValue =
           0.5 * (boundaries.at(boundaries.size() - 1) + max);
       // create navigation layer only when necessary
       if (navigationValue != max && lastLayer != nullptr) {
@@ -171,7 +173,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
 
 std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
     const GeometryContext& gctx, const Layer& layer, AxisDirection aDir,
-    double offset) const {
+    long double offset) const {
   // surface reference
   const Surface& layerSurface = layer.surfaceRepresentation();
   // translation to be applied
@@ -221,8 +223,8 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
     // get the bounds
     const CylinderBounds* cBounds =
         dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
-    double navigationR = cBounds->get(CylinderBounds::eR) + offset;
-    double halflengthZ = cBounds->get(CylinderBounds::eHalfLengthZ);
+    long double navigationR = cBounds->get(CylinderBounds::eR) + offset;
+    long double halflengthZ = cBounds->get(CylinderBounds::eHalfLengthZ);
     // new navigation layer
     auto cylinderBounds =
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);

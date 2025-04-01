@@ -73,10 +73,10 @@ BinningData phiData_arb(closed, AxisDirection::AxisPhi, phiValues);
 // the binnings - arbitrary when switching to binary search - for boundary
 // sizes >= 50
 std::size_t nBins_binary = 59;
-double valueMin = 0.;
-double phiMin = -std::numbers::pi;
-double delta = 0.5;
-double phiDelta = 0.1064;
+long double valueMin = 0.;
+long double phiMin = -std::numbers::pi;
+long double delta = 0.5;
+long double phiDelta = 0.1064;
 
 // the binning - substructure
 std::vector<float> sstr = {0., 1., 1.5, 2., 3.};

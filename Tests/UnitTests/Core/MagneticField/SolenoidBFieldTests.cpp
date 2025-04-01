@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // std::ofstream outf("solenoid.csv");
   // outf << "x;y;z;B_x;B_y;B_z" << std::endl;
 
-  double tol = 1e-6;
-  double tol_B = 1e-6_T;
+  long double tol = 1e-6;
+  long double tol_B = 1e-6_T;
   std::size_t steps = 20;
   for (std::size_t i = 0; i < steps; i++) {
-    double r = 1.5 * cfg.radius / steps * i;
+    long double r = 1.5 * cfg.radius / steps * i;
     BOOST_TEST_CONTEXT("r=" << r) {
       Vector3 B1 = bField.getField({r, 0, 0}, cache).value();
       Vector3 B2 = bField.getField({-r, 0, 0}, cache).value();
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
 
       // at this point in r, go along the length
       for (std::size_t j = 0; j <= steps; j++) {
-        // double z = cfg.L/steps * j - (cfg.L/2.);
-        double z = (1.5 * cfg.length / 2.) / steps * j;
+        // long double z = cfg.L/steps * j - (cfg.L/2.);
+        long double z = (1.5 * cfg.length / 2.) / steps * j;
         BOOST_TEST_CONTEXT("z=" << z) {
           Vector3 B_zp_rp = bField.getField({r, 0, z}, cache).value();
           Vector3 B_zn_rp = bField.getField({r, 0, -z}, cache).value();

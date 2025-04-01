@@ -108,7 +108,7 @@ void addDetector(Context& ctx) {
 
     py::class_<Options::Interval>(mex, "Interval")
         .def(py::init<>())
-        .def(py::init<std::optional<double>, std::optional<double>>())
+        .def(py::init<std::optional<long double>, std::optional<long double>>())
         .def_readwrite("lower", &Options::Interval::lower)
         .def_readwrite("upper", &Options::Interval::upper);
 
@@ -157,7 +157,7 @@ void addDetector(Context& ctx) {
     regTriplet("LayerTripletString", std::string{""});
     regTriplet("LayerTripletVectorString", std::vector<std::string>{});
     regTriplet("LayerTripletInterval", Options::Interval{});
-    regTriplet("LayerTripletDouble", double{5.5});
+    regTriplet("LayerTripletlong double", long double{5.5});
     regTriplet("LayerTripletVectorBinning",
                std::vector<std::pair<int, Acts::BinningType>>{});
 

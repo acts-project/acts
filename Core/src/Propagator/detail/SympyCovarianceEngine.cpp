@@ -17,7 +17,7 @@ namespace Acts::detail {
 
 /// Some type defs
 using Jacobian = BoundMatrix;
-using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+using BoundState = std::tuple<BoundTrackParameters, Jacobian, long double>;
 
 Result<BoundState> sympy::boundState(
     const GeometryContext& geoContext, const Surface& surface,
@@ -25,7 +25,7 @@ Result<BoundState> sympy::boundState(
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, FreeVector& freeParameters,
     const ParticleHypothesis& particleHypothesis, bool covTransport,
-    double accumulatedPath,
+    long double accumulatedPath,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Create the bound parameters
   Result<BoundVector> bv =
@@ -54,14 +54,12 @@ Result<BoundState> sympy::boundState(
       fullTransportJacobian, accumulatedPath);
 }
 
-BoundState sympy::curvilinearState(BoundSquareMatrix& boundCovariance,
-                                   BoundMatrix& fullTransportJacobian,
-                                   FreeMatrix& freeTransportJacobian,
-                                   FreeVector& freeToPathDerivatives,
-                                   BoundToFreeMatrix& boundToFreeJacobian,
-                                   const FreeVector& freeParameters,
-                                   const ParticleHypothesis& particleHypothesis,
-                                   bool covTransport, double accumulatedPath) {
+BoundState sympy::curvilinearState(
+    BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
+    FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
+    BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
+    const ParticleHypothesis& particleHypothesis, bool covTransport,
+    long double accumulatedPath) {
   const Vector3& direction = freeParameters.segment<3>(eFreeDir0);
 
   // Covariance transport

@@ -35,25 +35,26 @@ G4VPhysicalVolume* TelescopeG4DetectorConstruction::Construct() {
     return m_world;
   }
 
-  G4double center =
+  G4long double center =
       (m_cfg.positions.back() + m_cfg.positions.front()) * 0.5 * mm;
-  G4double length = (m_cfg.positions.back() - m_cfg.positions.front()) * mm;
+  G4long double length =
+      (m_cfg.positions.back() - m_cfg.positions.front()) * mm;
 
   // Get nist material manager
   G4NistManager* nist = G4NistManager::Instance();
 
   // World
   //
-  G4double worldSize =
+  G4long double worldSize =
       std::max({std::abs(m_cfg.offsets[0]) + m_cfg.bounds[0] * 0.5,
                 std::abs(m_cfg.offsets[1]) + m_cfg.bounds[1] * 0.5,
                 m_cfg.positions.back() + m_cfg.thickness});
 
   // Envelope parameters
   //
-  G4double envSizeX = m_cfg.bounds[0] * mm;
-  G4double envSizeY = m_cfg.bounds[1] * mm;
-  G4double envSizeZ = length + m_cfg.thickness * mm;
+  G4long double envSizeX = m_cfg.bounds[0] * mm;
+  G4long double envSizeY = m_cfg.bounds[1] * mm;
+  G4long double envSizeZ = length + m_cfg.thickness * mm;
 
   // Option to switch on/off checking of volumes overlaps
   //

@@ -47,7 +47,7 @@ void addTGeo(Context& ctx) {
     tgeo.def("_convertToElements",
              [](const std::string& rootFileName,
                 const std::vector<std::string>& sensitiveMatches,
-                const std::string& localAxes, double scaleConversion) {
+                const std::string& localAxes, long double scaleConversion) {
                // Return vector
                std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
                    tgElements;

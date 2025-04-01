@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK(epabAssign.getAxis() == epab.getAxis());
 
   // Create a grid from a single proto axis
-  auto grid1D = Acts::makeGrid<double>(epab);
+  auto grid1D = Acts::makeGrid<long double>(epab);
   BOOST_CHECK(grid1D != nullptr);
   BOOST_CHECK_EQUAL(grid1D->axes().size(), 1);
   auto axis1D =
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
   // Create a 2D grid from a two proto axes
-  auto grid2D = Acts::makeGrid<double>(epab, epao);
+  auto grid2D = Acts::makeGrid<long double>(epab, epao);
   BOOST_CHECK(grid2D != nullptr);
   auto grid2Daxes = grid2D->axes();
   BOOST_CHECK_EQUAL(grid2Daxes.size(), 2);
@@ -92,7 +92,8 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK(axis2D2 != nullptr);
 
   // Invalid grid construction with two proto axis in the same direction
-  BOOST_CHECK_THROW(Acts::makeGrid<double>(epab, epab), std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::makeGrid<long double>(epab, epab),
+                    std::invalid_argument);
 
   // Invalid constructor, min > max
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 1.0, 0.0, 10),
@@ -154,22 +155,24 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK(epaAssign.getAxis() == epa.getAxis());
 
   // Invalid 1D grid construction with autorange axis
-  BOOST_CHECK_THROW(Acts::makeGrid<double>(epa), std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::makeGrid<long double>(epa), std::invalid_argument);
 
   // Invalid 2D grid construction with autorange axis
   Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
-  BOOST_CHECK_THROW(Acts::makeGrid<double>(epao, epa), std::invalid_argument);
-  BOOST_CHECK_THROW(Acts::makeGrid<double>(epa, epao), std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::makeGrid<long double>(epao, epa),
+                    std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::makeGrid<long double>(epa, epao),
+                    std::invalid_argument);
 
   // Set the range now
   epa.setRange(0.0, 20.0);
   BOOST_CHECK(!epa.isAutorange());
 
   // 1D Grid consstruction works now
-  BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa));
+  BOOST_CHECK_NO_THROW(Acts::makeGrid<long double>(epa));
 
   // 2D Grid consstruction works now
-  BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa, epao));
+  BOOST_CHECK_NO_THROW(Acts::makeGrid<long double>(epa, epao));
 
   // Invalid constructor, closed with something else than phi or rphi
   BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
@@ -234,7 +237,7 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   CHECK_CLOSE_ABS(vpab.getAxis().getMax(), 9.5, 1e-15);
 
   // Invalid constructor, min > max
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, std::vector<double>{2.}),
+  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, std::vector<long double>{2.}),
                     std::invalid_argument);
 
   // Invalid constructor, nbins < 1

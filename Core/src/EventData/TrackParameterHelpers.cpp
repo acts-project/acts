@@ -14,8 +14,8 @@
 #include <numbers>
 
 bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
-                              double epsilon, double maxAbsEta) {
-  constexpr auto pi = std::numbers::pi_v<double>;
+                              long double epsilon, long double maxAbsEta) {
+  constexpr auto pi = std::numbers::pi_v<long double>;
 
   bool loc0Valid = std::isfinite(v[eBoundLoc0]);
   bool loc1Valid = std::isfinite(v[eBoundLoc1]);
@@ -33,7 +33,7 @@ bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
 
   bool etaValid = true;
   if (std::isfinite(maxAbsEta)) {
-    double eta = AngleHelpers::etaFromTheta(v[eBoundTheta]);
+    long double eta = AngleHelpers::etaFromTheta(v[eBoundTheta]);
     etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
   }
 
@@ -41,8 +41,8 @@ bool Acts::isBoundVectorValid(const BoundVector& v, bool validateAngleRange,
          timeValid && etaValid;
 }
 
-bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,
-                             double maxAbsEta) {
+bool Acts::isFreeVectorValid(const FreeVector& v, long double epsilon,
+                             long double maxAbsEta) {
   bool pos0Valid = std::isfinite(v[eFreePos0]);
   bool pos1Valid = std::isfinite(v[eFreePos1]);
   bool pos2Valid = std::isfinite(v[eFreePos2]);
@@ -55,7 +55,7 @@ bool Acts::isFreeVectorValid(const FreeVector& v, double epsilon,
 
   bool etaValid = true;
   if (std::isfinite(maxAbsEta)) {
-    double eta = VectorHelpers::eta(v.segment<3>(eFreeDir0));
+    long double eta = VectorHelpers::eta(v.segment<3>(eFreeDir0));
     etaValid = std::isfinite(eta) && (std::abs(eta) - epsilon <= maxAbsEta);
   }
 

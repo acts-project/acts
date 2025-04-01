@@ -40,7 +40,7 @@ namespace Acts {
 /// The hierarchy is:
 /// - Overstepping resolution / backpropagation
 /// - Convergence
-/// - Step into the void with `std::numeric_limits<double>::max()`
+/// - Step into the void with `std::numeric_limits<long double>::max()`
 class ConstrainedStep {
  public:
   /// the types of constraints
@@ -53,7 +53,7 @@ class ConstrainedStep {
 
   /// constructor
   /// @param v is the user given initial value
-  constexpr explicit ConstrainedStep(double v) { setUser(v); }
+  constexpr explicit ConstrainedStep(long double v) { setUser(v); }
 
   /// set accuracy
   ///
@@ -61,7 +61,7 @@ class ConstrainedStep {
   /// exposed to the Propagator
   ///
   /// @param v is the new accuracy value
-  constexpr void setAccuracy(double v) {
+  constexpr void setAccuracy(long double v) {
     assert(v > 0 && "ConstrainedStep accuracy must be > 0.");
     // set the accuracy value
     m_accuracy = v;
@@ -70,7 +70,7 @@ class ConstrainedStep {
   /// set user
   ///
   /// @param v is the new user value
-  constexpr void setUser(double v) {
+  constexpr void setUser(long double v) {
     // TODO enable assert; see https://github.com/acts-project/acts/issues/2543
     // assert(v != 0 && "ConstrainedStep user must be != 0.");
     // set the user value
@@ -78,22 +78,22 @@ class ConstrainedStep {
   }
 
   /// returns the min step size
-  constexpr double value() const {
-    double min = *std::min_element(m_values.begin(), m_values.end());
+  constexpr long double value() const {
+    long double min = *std::min_element(m_values.begin(), m_values.end());
     // accuracy is always positive and therefore handled separately
-    double result = std::min(std::abs(min), m_accuracy);
+    long double result = std::min(std::abs(min), m_accuracy);
     return std::signbit(min) ? -result : result;
   }
 
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
-  constexpr double value(Type type) const {
+  constexpr long double value(Type type) const {
     return m_values[toUnderlying(type)];
   }
 
   /// Access the accuracy value
-  constexpr double accuracy() const { return m_accuracy; }
+  constexpr long double accuracy() const { return m_accuracy; }
 
   /// release a certain constraint value
   ///
@@ -110,7 +110,7 @@ class ConstrainedStep {
   ///
   /// @param v is the new value to be updated
   /// @param type is the constraint type
-  constexpr void update(double v, Type type) {
+  constexpr void update(long double v, Type type) {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
     if (std::abs(v) < std::abs(value(type))) {
@@ -123,7 +123,7 @@ class ConstrainedStep {
 
   std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
-    auto streamValue = [&](double v) {
+    auto streamValue = [&](long double v) {
       os << std::setw(5);
       if (std::abs(v) == kNotSet) {
         os << (v > 0 ? "+∞" : "-∞");
@@ -152,14 +152,14 @@ class ConstrainedStep {
   }
 
  private:
-  static constexpr auto kNotSet = std::numeric_limits<double>::max();
+  static constexpr auto kNotSet = std::numeric_limits<long double>::max();
 
   /// the step size tuple
-  std::array<double, 3> m_values = {kNotSet, kNotSet, kNotSet};
+  std::array<long double, 3> m_values = {kNotSet, kNotSet, kNotSet};
   /// the accuracy value - this can vary up and down given a good step estimator
-  double m_accuracy = kNotSet;
+  long double m_accuracy = kNotSet;
 
-  constexpr void setValue(Type type, double v) {
+  constexpr void setValue(Type type, long double v) {
     m_values[toUnderlying(type)] = v;
   }
 };

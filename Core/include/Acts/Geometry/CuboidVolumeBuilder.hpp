@@ -53,11 +53,11 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Attached material
     std::shared_ptr<const ISurfaceMaterial> surMat = nullptr;
     // Thickness
-    double thickness = 0.;
+    long double thickness = 0.;
     // Constructor function for optional detector elements
     // Arguments are transform, rectangle bounds and thickness.
     std::function<DetectorElementBase*(
-        const Transform3&, std::shared_ptr<const RectangleBounds>, double)>
+        const Transform3&, std::shared_ptr<const RectangleBounds>, long double)>
         detElementConstructor;
   };
 
@@ -74,11 +74,11 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Bins in Z direction
     std::size_t binsZ = 1;
     // Envelope in X
-    std::array<double, 2u> envelopeX{0, 0};
+    std::array<long double, 2u> envelopeX{0, 0};
     // Envelope in Y
-    std::array<double, 2u> envelopeY{0, 0};
+    std::array<long double, 2u> envelopeY{0, 0};
     // Envelope in Z
-    std::array<double, 2u> envelopeZ{0, 0};
+    std::array<long double, 2u> envelopeZ{0, 0};
     // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
     // Dimension for the binning
@@ -172,8 +172,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @return Pair containing the minimum and maximum along the binning
   /// direction
-  std::pair<double, double> binningRange(const GeometryContext& gctx,
-                                         const VolumeConfig& cfg) const;
+  std::pair<long double, long double> binningRange(
+      const GeometryContext& gctx, const VolumeConfig& cfg) const;
 
   void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3>>& tapVec,
                    AxisDirection bValue) const;

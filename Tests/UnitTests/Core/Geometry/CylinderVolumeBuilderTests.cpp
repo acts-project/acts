@@ -22,22 +22,28 @@ BOOST_DATA_TEST_CASE(
     CylinderVolumeBuilder_wraps,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-15., -11.))) ^
+                       std::uniform_real_distribution<long double>(-15.,
+                                                                   -11.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(11., 15.))) ^
+                           std::uniform_real_distribution<long double>(11.,
+                                                                       15.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 4.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       4.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(11., 15.))) ^
+                           std::uniform_real_distribution<long double>(11.,
+                                                                       15.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(10., 15.))) ^
+                           std::uniform_real_distribution<long double>(10.,
+                                                                       15.))) ^
         bdata::xrange(100),
     left, right, central, inner, outer, length, index) {
   (void)index;
@@ -114,22 +120,28 @@ BOOST_DATA_TEST_CASE(
     CylinderVolumeBuilder_containes,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-15., -11.))) ^
+                       std::uniform_real_distribution<long double>(-15.,
+                                                                   -11.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(11., 15.))) ^
+                           std::uniform_real_distribution<long double>(11.,
+                                                                       15.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 4.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       4.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(10., 15.))) ^
+                           std::uniform_real_distribution<long double>(10.,
+                                                                       15.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(10., 15.))) ^
+                           std::uniform_real_distribution<long double>(10.,
+                                                                       15.))) ^
         bdata::xrange(100),
     left, right, central, inner, outer, length, index) {
   (void)index;
@@ -215,12 +227,13 @@ BOOST_DATA_TEST_CASE(
 /// function of the CylinderVolumeBuilder
 BOOST_DATA_TEST_CASE(
     CylinderVolumeBuilder_overlapsInR,
-    bdata::random((
-        bdata::engine = std::mt19937(), bdata::seed = 1,
-        bdata::distribution = std::uniform_real_distribution<double>(0., 4.))) ^
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0., 4.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(11., 15.))) ^
+                           std::uniform_real_distribution<long double>(11.,
+                                                                       15.))) ^
         bdata::xrange(100),
     inner, outer, index) {
   (void)index;
@@ -285,13 +298,16 @@ BOOST_DATA_TEST_CASE(
     CylinderVolumeBuilder_overlapsInZ,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-15., -11.))) ^
+                       std::uniform_real_distribution<long double>(-15.,
+                                                                   -11.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(11., 15.))) ^
+                           std::uniform_real_distribution<long double>(11.,
+                                                                       15.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 4.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       4.))) ^
         bdata::xrange(100),
     left, right, inner, index) {
   (void)index;

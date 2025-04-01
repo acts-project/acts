@@ -40,7 +40,7 @@ namespace Acts::Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-void step(Vector3& pos, const Vector3& dir, double stepSize) {
+void step(Vector3& pos, const Vector3& dir, long double stepSize) {
   pos += stepSize * dir;
 }
 
@@ -104,7 +104,7 @@ bool testNavigatorStatePointers(Navigator::State& state,
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-const double Bz = 2_T;
+const long double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 Acts::Logging::Level logLevel = Acts::Logging::INFO;
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
       target.surface->intersect(tgContext, position, direction)
           .closestForward();
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navLayer().first.position());
+  long double beamPipeR = perp(state.navLayer().first.position());
   // step size has been updated
   CHECK_CLOSE_ABS(targetIntersection.pathLength(), beamPipeR,
                   s_onSurfaceTolerance);

@@ -219,8 +219,8 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 template <typename T>
 struct ExpSafeLimit {};
 template <>
-struct ExpSafeLimit<double> {
-  constexpr static double value = 500.0;
+struct ExpSafeLimit<long double> {
+  constexpr static long double value = 500.0;
 };
 template <>
 struct ExpSafeLimit<float> {

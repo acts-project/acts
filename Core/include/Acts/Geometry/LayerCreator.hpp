@@ -48,9 +48,9 @@ class LayerCreator {
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance: it counts as same z, if ...
-    double cylinderZtolerance{10.};
+    long double cylinderZtolerance{10.};
     /// cylinder module phi tolerance: it counts as same phi, if ...
-    double cylinderPhiTolerance{0.1};
+    long double cylinderPhiTolerance{0.1};
     /// Default z envelope. Can be overridden by proto layer
     Envelope defaultEnvelopeZ = zeroEnvelope;
     /// Default r envelope. Can be overridden by proto layer

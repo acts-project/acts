@@ -31,7 +31,7 @@ struct PropagationSummary {
   std::size_t nStepTrials = 0;
 
   /// Path length
-  double pathLength = 0;
+  long double pathLength = 0;
 
   /// Steps
   std::vector<Acts::detail::Step> steps;

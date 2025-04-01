@@ -70,7 +70,7 @@ const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
 const CalibrationContext calCtx;
 
-std::normal_distribution<double> normalDist(0., 1.);
+std::normal_distribution<long double> normalDist(0., 1.);
 std::default_random_engine rng(42);
 
 KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
@@ -114,8 +114,8 @@ struct TelescopeDetector {
     using namespace UnitLiterals;
 
     unsigned int nLayers = 6;
-    std::vector<double> positions = {-500_mm, -300_mm, -100_mm,
-                                     100_mm,  300_mm,  500_mm};
+    std::vector<long double> positions = {-500_mm, -300_mm, -100_mm,
+                                          100_mm,  300_mm,  500_mm};
     auto length = positions.back() - positions.front();
 
     std::vector<LayerPtr> layers(nLayers);
@@ -189,7 +189,7 @@ StraightPropagator makeStraightPropagator(
 
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const TrackingGeometry> geo, double bz,
+    std::shared_ptr<const TrackingGeometry> geo, long double bz,
     std::unique_ptr<const Logger> logger) {
   Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;

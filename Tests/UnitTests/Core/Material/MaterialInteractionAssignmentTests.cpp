@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(AssignToClosest) {
 
   // Check that it is assigned to the closest surface always
   for (const auto& mi : assigned) {
-    double minDistance = std::numeric_limits<double>::max();
+    long double minDistance = std::numeric_limits<long double>::max();
     const Surface* closestSurface = nullptr;
     for (const auto& [surface, position, direction] : intersectedSurfaces) {
-      double distance = (mi.position - position).norm();
+      long double distance = (mi.position - position).norm();
       if (distance < minDistance) {
         minDistance = distance;
         closestSurface = surface;
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(AssignToClosest_withGlobalVeto) {
 
   // Veto everything above 40 mm
   struct RadialVeto {
-    double rMax = 40.0;
+    long double rMax = 40.0;
     bool operator()(const MaterialInteraction& mi) const {
       return VectorHelpers::perp(mi.position) > rMax;
     }

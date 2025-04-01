@@ -58,26 +58,26 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     const vertex_array_type& d = ray.dir();
 
-    double tmin = -INFINITY, tmax = INFINITY;
+    long double tmin = -INFINITY, tmax = INFINITY;
     if (d.x() != 0.0) {
-      double tx1 = (box.min().x() - origin.x()) / d.x();
-      double tx2 = (box.max().x() - origin.x()) / d.x();
+      long double tx1 = (box.min().x() - origin.x()) / d.x();
+      long double tx2 = (box.max().x() - origin.x()) / d.x();
 
       tmin = std::max(tmin, std::min(tx1, tx2));
       tmax = std::min(tmax, std::max(tx1, tx2));
     }
 
     if (d.y() != 0.0) {
-      double ty1 = (box.min().y() - origin.y()) / d.y();
-      double ty2 = (box.max().y() - origin.y()) / d.y();
+      long double ty1 = (box.min().y() - origin.y()) / d.y();
+      long double ty2 = (box.max().y() - origin.y()) / d.y();
 
       tmin = std::max(tmin, std::min(ty1, ty2));
       tmax = std::min(tmax, std::max(ty1, ty2));
     }
 
     if (d.z() != 0.0) {
-      double tz1 = (box.min().z() - origin.z()) / d.z();
-      double tz2 = (box.max().z() - origin.z()) / d.z();
+      long double tz1 = (box.min().z() - origin.z()) / d.z();
+      long double tz2 = (box.max().z() - origin.z()) / d.z();
 
       tmin = std::max(tmin, std::min(tz1, tz2));
       tmax = std::min(tmax, std::max(tz1, tz2));
@@ -92,14 +92,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     const vertex_array_type& d = ray.dir();
 
-    double tmin = -INFINITY, tmax = INFINITY;
+    long double tmin = -INFINITY, tmax = INFINITY;
 
     for (std::size_t i = 0; i < 3; i++) {
       if (d[i] == 0.0) {
         continue;
       }
-      double t1 = (box.min()[i] - origin[i]) / d[i];
-      double t2 = (box.max()[i] - origin[i]) / d[i];
+      long double t1 = (box.min()[i] - origin[i]) / d[i];
+      long double t2 = (box.max()[i] - origin[i]) / d[i];
       tmin = std::max(tmin, std::min(t1, t2));
       tmax = std::min(tmax, std::max(t1, t2));
     }
@@ -112,18 +112,18 @@ int main(int /*argc*/, char** /*argv[]*/) {
         const VertexType& origin = ray.origin();
         const vertex_array_type& d = ray.dir();
 
-        double tx1 = (box.min().x() - origin.x()) / d.x();
-        double tx2 = (box.max().x() - origin.x()) / d.x();
-        double tmin = std::min(tx1, tx2);
-        double tmax = std::max(tx1, tx2);
+        long double tx1 = (box.min().x() - origin.x()) / d.x();
+        long double tx2 = (box.max().x() - origin.x()) / d.x();
+        long double tmin = std::min(tx1, tx2);
+        long double tmax = std::max(tx1, tx2);
 
-        double ty1 = (box.min().y() - origin.y()) / d.y();
-        double ty2 = (box.max().y() - origin.y()) / d.y();
+        long double ty1 = (box.min().y() - origin.y()) / d.y();
+        long double ty2 = (box.max().y() - origin.y()) / d.y();
         tmin = std::max(tmin, std::min(ty1, ty2));
         tmax = std::min(tmax, std::max(ty1, ty2));
 
-        double tz1 = (box.min().z() - origin.z()) / d.z();
-        double tz2 = (box.max().z() - origin.z()) / d.z();
+        long double tz1 = (box.min().z() - origin.z()) / d.z();
+        long double tz2 = (box.max().z() - origin.z()) / d.z();
         tmin = std::max(tmin, std::min(tz1, tz2));
         tmax = std::min(tmax, std::max(tz1, tz2));
 
@@ -135,18 +135,18 @@ int main(int /*argc*/, char** /*argv[]*/) {
     const VertexType& origin = ray.origin();
     const vertex_array_type& id = ray.idir();
 
-    double tx1 = (box.min().x() - origin.x()) * id.x();
-    double tx2 = (box.max().x() - origin.x()) * id.x();
-    double tmin = std::min(tx1, tx2);
-    double tmax = std::max(tx1, tx2);
+    long double tx1 = (box.min().x() - origin.x()) * id.x();
+    long double tx2 = (box.max().x() - origin.x()) * id.x();
+    long double tmin = std::min(tx1, tx2);
+    long double tmax = std::max(tx1, tx2);
 
-    double ty1 = (box.min().y() - origin.y()) * id.y();
-    double ty2 = (box.max().y() - origin.y()) * id.y();
+    long double ty1 = (box.min().y() - origin.y()) * id.y();
+    long double ty2 = (box.max().y() - origin.y()) * id.y();
     tmin = std::max(tmin, std::min(ty1, ty2));
     tmax = std::min(tmax, std::max(ty1, ty2));
 
-    double tz1 = (box.min().z() - origin.z()) * id.z();
-    double tz2 = (box.max().z() - origin.z()) * id.z();
+    long double tz1 = (box.min().z() - origin.z()) * id.z();
+    long double tz2 = (box.max().z() - origin.z()) * id.z();
     tmin = std::max(tmin, std::min(tz1, tz2));
     tmax = std::min(tmax, std::max(tz1, tz2));
 
@@ -157,11 +157,11 @@ int main(int /*argc*/, char** /*argv[]*/) {
                                                   const Ray<float, 3>& ray) {
     const VertexType& origin = ray.origin();
     const vertex_array_type& id = ray.idir();
-    double tmin = -INFINITY, tmax = INFINITY;
+    long double tmin = -INFINITY, tmax = INFINITY;
 
     for (std::size_t i = 0; i < 3; i++) {
-      double t1 = (box.min()[i] - origin[i]) * id[i];
-      double t2 = (box.max()[i] - origin[i]) * id[i];
+      long double t1 = (box.min()[i] - origin[i]) * id[i];
+      long double t2 = (box.max()[i] - origin[i]) * id[i];
       tmin = std::max(tmin, std::min(t1, t2));
       tmax = std::min(tmax, std::max(t1, t2));
     }

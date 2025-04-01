@@ -209,7 +209,7 @@ struct MaterialInteractor {
 
     Vector3 shift = stepper.position(state.stepping) -
                     result.materialInteractions.back().position;
-    double momentum = stepper.direction(state.stepping).norm();
+    long double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
     result.materialInteractions.back().materialSlab.scaleThickness(

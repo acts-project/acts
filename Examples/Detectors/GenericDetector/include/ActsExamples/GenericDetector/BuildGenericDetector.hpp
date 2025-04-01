@@ -53,8 +53,8 @@ namespace ActsExamples::Generic {
 /// @param lOverlap is the overlap of the modules (longitudinal)
 /// @binningSchema is the way the bins are laid out rphi x z
 std::vector<Acts::Vector3> modulePositionsCylinder(
-    double radius, double zStagger, double moduleHalfLength, double lOverlap,
-    const std::pair<int, int>& binningSchema);
+    long double radius, long double zStagger, long double moduleHalfLength,
+    long double lOverlap, const std::pair<int, int>& binningSchema);
 
 /// Helper method for positioning
 /// @param z is the z position of the ring
@@ -62,9 +62,10 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 /// @param phiStagger is the radial staggering along phi
 /// @param lOverlap is the overlap of the modules
 /// @param nPhiBins is the number of bins in phi
-std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
-                                               double phiStagger,
-                                               double phiSubStagger,
+std::vector<Acts::Vector3> modulePositionsRing(long double z,
+                                               long double radius,
+                                               long double phiStagger,
+                                               long double phiSubStagger,
                                                int nPhiBins);
 
 /// Helper method for positioning
@@ -78,10 +79,10 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
 /// @param discBinning is the binning setup in r, phi
 /// @param moduleHalfLength is pair of phibins and module length
 std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
-    double z, double ringStagger, std::vector<double> phiStagger,
-    std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<std::size_t>& discBinning,
-    const std::vector<double>& moduleHalfLength);
+    long double z, long double ringStagger, std::vector<long double> phiStagger,
+    std::vector<long double> phiSubStagger, long double innerRadius,
+    long double outerRadius, const std::vector<std::size_t>& discBinning,
+    const std::vector<long double>& moduleHalfLength);
 
 /// Global method to build the generic tracking geometry
 ///
@@ -190,9 +191,9 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   // configure the beam pipe layer builder
   Acts::PassiveLayerBuilder::Config bplConfig;
   bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
-  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 3000.);
-  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8);
+  bplConfig.centralLayerRadii = std::vector<long double>(1, 19.);
+  bplConfig.centralLayerHalflengthZ = std::vector<long double>(1, 3000.);
+  bplConfig.centralLayerThickness = std::vector<long double>(1, 0.8);
   bplConfig.centralLayerMaterial = {beamPipeMaterial};
   auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
       bplConfig, Acts::getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
@@ -217,10 +218,10 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   //-------------------------------------------------------------------------------------
   // some prep work
   // envelope for layers
-  std::pair<double, double> pcEnvelope(2., 2.);
+  std::pair<long double, long double> pcEnvelope(2., 2.);
 
-  double pCentralModuleT = 0.15;
-  double pEndcapModuleT = 0.15;
+  long double pCentralModuleT = 0.15;
+  long double pEndcapModuleT = 0.15;
 
   // Module material properties - X0, L0, A, Z, Rho
   // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
@@ -304,24 +305,26 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
       1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
       1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
       1. * Acts::UnitConstants::mm};
-  std::vector<double> perHX = {8.4, 8.4};     // half length x
-  std::vector<double> perHY = {36., 36.};     // half length y
-  std::vector<std::size_t> perBP = {40, 68};  // bins in phi
-  std::vector<double> perT = {pEndcapModuleT,
-                              pEndcapModuleT};    // module thickness
-  std::vector<std::size_t> perBX = {336, 336};    // bins in x
-  std::vector<std::size_t> perBY = {1280, 1280};  // bins in y
-  std::vector<int> perRS = {-1, -1};              // readout side
-  std::vector<double> perLA = {0., 0.};           // lorentz angle
+  std::vector<long double> perHX = {8.4, 8.4};  // half length x
+  std::vector<long double> perHY = {36., 36.};  // half length y
+  std::vector<std::size_t> perBP = {40, 68};    // bins in phi
+  std::vector<long double> perT = {pEndcapModuleT,
+                                   pEndcapModuleT};  // module thickness
+  std::vector<std::size_t> perBX = {336, 336};       // bins in x
+  std::vector<std::size_t> perBY = {1280, 1280};     // bins in y
+  std::vector<int> perRS = {-1, -1};                 // readout side
+  std::vector<long double> perLA = {0., 0.};         // lorentz angle
   std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> perM = {
       pEndcapModuleMaterial, pEndcapModuleMaterial};  // material
 
-  pplConfig.posnegModuleMinHalfX = std::vector<std::vector<double>>(7, perHX);
+  pplConfig.posnegModuleMinHalfX =
+      std::vector<std::vector<long double>>(7, perHX);
   pplConfig.posnegModuleMaxHalfX = {};
-  pplConfig.posnegModuleHalfY = std::vector<std::vector<double>>(7, perHY);
+  pplConfig.posnegModuleHalfY = std::vector<std::vector<long double>>(7, perHY);
   pplConfig.posnegModulePhiBins =
       std::vector<std::vector<std::size_t>>(7, perBP);
-  pplConfig.posnegModuleThickness = std::vector<std::vector<double>>(7, perT);
+  pplConfig.posnegModuleThickness =
+      std::vector<std::vector<long double>>(7, perT);
   pplConfig.posnegModuleMaterial =
       std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
           7, perM);
@@ -400,9 +403,9 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // Configuration
     Acts::PassiveLayerBuilder::Config pstConfig;
     pstConfig.layerIdentification = "PST";
-    pstConfig.centralLayerRadii = std::vector<double>(1, 200.);
-    pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 2800.);
-    pstConfig.centralLayerThickness = std::vector<double>(1, 1.8);
+    pstConfig.centralLayerRadii = std::vector<long double>(1, 200.);
+    pstConfig.centralLayerHalflengthZ = std::vector<long double>(1, 2800.);
+    pstConfig.centralLayerThickness = std::vector<long double>(1, 1.8);
     pstConfig.centralLayerMaterial = {pstMaterial};
     auto pstBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         pstConfig, Acts::getDefaultLogger("PSTBuilder", layerLLevel));
@@ -427,10 +430,10 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     //-------------------------------------------------------------------------------------
     // some prep work
 
-    double ssCentralModuleT = 0.25;
-    double ssEndcapModuleT = 0.25;
-    // envelope double
-    std::pair<double, double> ssEnvelope(2., 2.);
+    long double ssCentralModuleT = 0.25;
+    long double ssEndcapModuleT = 0.25;
+    // envelope long double
+    std::pair<long double, long double> ssEnvelope(2., 2.);
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material sscMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
@@ -499,13 +502,13 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.centralModulePositions = ssplCentralModulePositions;
 
     // configure the endcaps
-    std::vector<double> mrMinHx = {16.4, 24.2, 32.2};
-    std::vector<double> mrMaxHx = {24.2, 32.2, 40.0};
-    std::vector<double> mrHy = {78., 78., 78.};
+    std::vector<long double> mrMinHx = {16.4, 24.2, 32.2};
+    std::vector<long double> mrMaxHx = {24.2, 32.2, 40.0};
+    std::vector<long double> mrHy = {78., 78., 78.};
 
     std::vector<std::size_t> mPhiBins = {54, 56, 60};
-    std::vector<double> mThickness = {ssEndcapModuleT, ssEndcapModuleT,
-                                      ssEndcapModuleT};
+    std::vector<long double> mThickness = {ssEndcapModuleT, ssEndcapModuleT,
+                                           ssEndcapModuleT};
     std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
         ssEndcapModuleMaterial, ssEndcapModuleMaterial, ssEndcapModuleMaterial};
 
@@ -514,18 +517,18 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     ssplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
                                         2150., 2550., 2950.};
     std::size_t nposnegs = ssplConfig.posnegLayerPositionsZ.size();
-    ssplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
+    ssplConfig.posnegLayerEnvelopeR = std::vector<long double>(nposnegs, 5.);
 
     ssplConfig.posnegModuleMinHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMinHx);
+        std::vector<std::vector<long double>>(nposnegs, mrMinHx);
     ssplConfig.posnegModuleMaxHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMaxHx);
+        std::vector<std::vector<long double>>(nposnegs, mrMaxHx);
     ssplConfig.posnegModuleHalfY =
-        std::vector<std::vector<double>>(nposnegs, mrHy);
+        std::vector<std::vector<long double>>(nposnegs, mrHy);
     ssplConfig.posnegModulePhiBins =
         std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     ssplConfig.posnegModuleThickness =
-        std::vector<std::vector<double>>(nposnegs, mThickness);
+        std::vector<std::vector<long double>>(nposnegs, mThickness);
 
     ssplConfig.posnegModuleMaterial =
         std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
@@ -602,11 +605,11 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     //-------------------------------------------------------------------------------------
 
     // some prep work
-    // envelope double
-    std::pair<double, double> lsEnvelope(2., 2.);
+    // envelope long double
+    std::pair<long double, long double> lsEnvelope(2., 2.);
 
-    double lsCentralModuleT = 0.35;
-    double lsEndcapModuleT = 0.35;
+    long double lsCentralModuleT = 0.35;
+    long double lsEndcapModuleT = 0.35;
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
@@ -683,18 +686,18 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     lsplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
                                         2150., 2550., 2950.};
     nposnegs = lsplConfig.posnegLayerPositionsZ.size();
-    lsplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
+    lsplConfig.posnegLayerEnvelopeR = std::vector<long double>(nposnegs, 5.);
 
     lsplConfig.posnegModuleMinHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMinHx);
+        std::vector<std::vector<long double>>(nposnegs, mrMinHx);
     lsplConfig.posnegModuleMaxHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMaxHx);
+        std::vector<std::vector<long double>>(nposnegs, mrMaxHx);
     lsplConfig.posnegModuleHalfY =
-        std::vector<std::vector<double>>(nposnegs, mrHy);
+        std::vector<std::vector<long double>>(nposnegs, mrHy);
     lsplConfig.posnegModulePhiBins =
         std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
     lsplConfig.posnegModuleThickness =
-        std::vector<std::vector<double>>(nposnegs, mThickness);
+        std::vector<std::vector<long double>>(nposnegs, mThickness);
 
     lsplConfig.posnegModuleMaterial =
         std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(

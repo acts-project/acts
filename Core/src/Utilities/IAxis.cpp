@@ -14,7 +14,8 @@
 #include <stdexcept>
 
 std::unique_ptr<Acts::IAxis> Acts::IAxis::createEquidistant(
-    AxisBoundaryType aBoundaryType, double min, double max, std::size_t nbins) {
+    AxisBoundaryType aBoundaryType, long double min, long double max,
+    std::size_t nbins) {
   using enum AxisType;
   using enum AxisBoundaryType;
 
@@ -43,7 +44,7 @@ std::unique_ptr<Acts::IAxis> Acts::IAxis::createEquidistant(
 }
 
 std::unique_ptr<Acts::IAxis> Acts::IAxis::createVariable(
-    AxisBoundaryType aBoundaryType, const std::vector<double>& edges) {
+    AxisBoundaryType aBoundaryType, const std::vector<long double>& edges) {
   using enum AxisType;
   using enum AxisBoundaryType;
 

@@ -26,33 +26,37 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @brief unit test for construction of constant magnetic field
 ///
 /// Tests the correct behavior and consistency of
-/// -# ConstantBField::ConstantBField(double Bx,double By,double Bz)
+/// -# ConstantBField::ConstantBField(long double Bx,long double By,long double
+/// Bz)
 /// -# ConstantBField::ConstantBField(Vector3 B)
-/// -# ConstantBField::getField(const double* xyz, double* B) const
+/// -# ConstantBField::getField(const long double* xyz, long double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
 BOOST_DATA_TEST_CASE(
     ConstantBField_components,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-2_T, 2_T))) ^
+                       std::uniform_real_distribution<long double>(-2_T,
+                                                                   2_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-1_T, 4_T))) ^
+                           std::uniform_real_distribution<long double>(-1_T,
+                                                                       4_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0_T, 10_T))) ^
+                           std::uniform_real_distribution<long double>(0_T,
+                                                                       10_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::xrange(10),
     x, y, z, bx, by, bz, index) {
   (void)index;
@@ -72,33 +76,36 @@ BOOST_DATA_TEST_CASE(
 /// @brief unit test for update of constant magnetic field
 ///
 /// Tests the correct behavior and consistency of
-/// -# ConstantBField::setField(double Bx, double By, double Bz)
+/// -# ConstantBField::setField(long double Bx, long double By, long double Bz)
 /// -# ConstantBField::setField(const Vector3& B)
-/// -# ConstantBField::getField(const double* xyz, double* B) const
+/// -# ConstantBField::getField(const long double* xyz, long double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
 BOOST_DATA_TEST_CASE(
     ConstantBField_update,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-2_T, 2_T))) ^
+                       std::uniform_real_distribution<long double>(-2_T,
+                                                                   2_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-1_T, 4_T))) ^
+                           std::uniform_real_distribution<long double>(-1_T,
+                                                                       4_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0_T, 10_T))) ^
+                           std::uniform_real_distribution<long double>(0_T,
+                                                                       10_T))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10_m,
-                                                                  10_m))) ^
+                           std::uniform_real_distribution<long double>(-10_m,
+                                                                       10_m))) ^
         bdata::xrange(10),
     x, y, z, bx, by, bz, index) {
   (void)index;

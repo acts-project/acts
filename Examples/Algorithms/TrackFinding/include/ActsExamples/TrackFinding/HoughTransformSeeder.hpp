@@ -95,18 +95,19 @@ namespace ActsExamples {
 struct AlgorithmContext;
 }  // namespace ActsExamples
 
-using ResultDouble = Acts::Result<double>;
+using Resultlong double = Acts::Result<long double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
 
-using FieldCorrector = Acts::Delegate<ResultDouble(
-    unsigned, double, double)>;  // (unsigned region, double y, double r)
+using FieldCorrector = Acts::Delegate<Resultlong double(
+    unsigned, long double,
+    long double)>;  // (unsigned region, long double y, long double r)
 using LayerIDFinder = Acts::Delegate<ResultUnsigned(
-    double)>;  // (double r) this function will map the r of a measurement to a
-               // layer.
+    long double)>;  // (long double r) this function will map the r of a
+                    // measurement to a layer.
 using SliceTester = Acts::Delegate<ResultBool(
-    double, unsigned, int)>;  // (double z,unsigned layer, int slice) returns
-                              // true if measurement in slice
+    long double, unsigned, int)>;  // (long double z,unsigned layer, int slice)
+                                   // returns true if measurement in slice
 
 namespace Acts {
 class TrackingGeometry;
@@ -139,13 +140,14 @@ enum HoughHitType { SP = 0, MEASUREMENT = 1 };
 /// contains the needed information
 struct HoughMeasurementStruct {
   unsigned layer;
-  double phi;
-  double radius;
-  double z;
+  long double phi;
+  long double radius;
+  long double z;
   std::vector<Index> indices;
   HoughHitType type;
-  HoughMeasurementStruct(unsigned l, double p, double r, double thez,
-                         std::vector<Index>& i, HoughHitType t)
+  HoughMeasurementStruct(unsigned l, long double p, long double r,
+                         long double thez, std::vector<Index>& i,
+                         HoughHitType t)
       : layer(l), phi(p), radius(r), z(thez), indices(i), type(t) {}
 };
 
@@ -160,7 +162,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     ///
     /// We allow multiple space point collections to allow different parts of
     /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// e.g. single-hit space points for pixel-like detectors or long double-hit
     /// space points for strip-like detectors.
     /// Note that we don't *need* spacepoints (measurements can be used instead)
     std::vector<std::string> inputSpacePoints;
@@ -227,10 +229,11 @@ class HoughTransformSeeder final : public IAlgorithm {
 
     int localMaxWindowSize = 0;  // Only create candidates from a local maximum
 
-    double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
-                         // this with fieldCorrection function
-                         // This 3e-4 comes from the 2T field when converted to
-                         // units of GeV / (c*mm*e)
+    long double kA =
+        0.0003;  // Assume B = 2T constant. Can apply corrections to
+                 // this with fieldCorrection function
+                 // This 3e-4 comes from the 2T field when converted to
+                 // units of GeV / (c*mm*e)
 
     // it's up to the user to connect these to the functions they want to use
     FieldCorrector fieldCorrector;
@@ -253,18 +256,18 @@ class HoughTransformSeeder final : public IAlgorithm {
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
-  double getMinX() const { return m_cfg.xMin; }
-  double getMaxX() const { return m_cfg.xMax; }
-  double getMinY() const { return m_cfg.yMin; }
-  double getMaxY() const { return m_cfg.yMax; }
+  long double getMinX() const { return m_cfg.xMin; }
+  long double getMaxX() const { return m_cfg.xMax; }
+  long double getMinY() const { return m_cfg.yMin; }
+  long double getMaxY() const { return m_cfg.yMax; }
   unsigned getThreshold() const {
     return m_cfg.threshold[0];  // for now this is just one number in the
                                 // vector, can be more in the future
   }
   std::vector<int> getSubRegions() const { return m_cfg.subRegions; }
 
-  double yToX(double y, double r,
-              double phi) const;  // calculate the hough equation
+  long double yToX(long double y, long double r,
+                   long double phi) const;  // calculate the hough equation
 
  private:
   Config m_cfg;
@@ -282,12 +285,12 @@ class HoughTransformSeeder final : public IAlgorithm {
   ////////////////////////////////////////////////////////////////////////
   /// Convenience
 
-  double m_step_x;  // step size of the bin boundaries in x
-  double m_step_y;  // step size of the bin boundaries in y
+  long double m_step_x;  // step size of the bin boundaries in x
+  long double m_step_y;  // step size of the bin boundaries in y
   /// Bin boundaries, where m_bins_x[i] is the lower bound of bin i.
   /// These are calculated from m_xMin/m_xMax
-  std::vector<double> m_bins_x;  // size == m_houghHistSize_x + 1.
-  std::vector<double> m_bins_y;  // size == m_houghHistSize_y + 1
+  std::vector<long double> m_bins_x;  // size == m_houghHistSize_x + 1.
+  std::vector<long double> m_bins_y;  // size == m_houghHistSize_y + 1
 
   ///////////////////////////////////////////////////////////////////////
   // Core functions, the second/ one calls the first one per layer
@@ -297,8 +300,8 @@ class HoughTransformSeeder final : public IAlgorithm {
   ///////////////////////////////////////////////////////////////////////
   // Helpers
   std::pair<unsigned, unsigned> yToXBins(std::size_t yBin_min,
-                                         std::size_t yBin_max, double r,
-                                         double phi,
+                                         std::size_t yBin_max, long double r,
+                                         long double phi,
                                          unsigned layer)
       const;  // given y bins, return x bins passed that need to be filled in
               // the HoughHist, including extensions

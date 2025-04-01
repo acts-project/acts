@@ -25,15 +25,15 @@ class Seed {
  public:
   Seed();
   Seed(const SpacePoint* /*b*/, const SpacePoint* /*m*/,
-       const SpacePoint* /*u*/, const double /*vertex*/);
+       const SpacePoint* /*u*/, const long double /*vertex*/);
   Seed(const Seed& /*s*/);
   Seed& operator=(const Seed& /*s*/);
   virtual ~Seed();
   void erase();
   void add(const SpacePoint*& /*sp*/);
-  void setZVertex(const double& /*z*/);
+  void setZVertex(const long double& /*z*/);
   const std::list<const SpacePoint*>& spacePoints() const;
-  const double& zVertex() const;
+  const long double& zVertex() const;
 
   /////////////////////////////////////////////////////////////////////////////////
   // Protected data members
@@ -41,7 +41,7 @@ class Seed {
 
  protected:
   std::list<const SpacePoint*> m_spacepoints;
-  double m_zvertex = 0;
+  long double m_zvertex = 0;
 };
 
 /// @cond
@@ -67,12 +67,12 @@ inline void Seed<SpacePoint>::add(const SpacePoint*& p) {
 }
 
 template <typename SpacePoint>
-inline void Seed<SpacePoint>::setZVertex(const double& z) {
+inline void Seed<SpacePoint>::setZVertex(const long double& z) {
   m_zvertex = z;
 }
 
 template <typename SpacePoint>
-inline const double& Seed<SpacePoint>::zVertex() const {
+inline const long double& Seed<SpacePoint>::zVertex() const {
   return m_zvertex;
 }
 
@@ -98,7 +98,7 @@ Seed<SpacePoint>::Seed() = default;
 
 template <typename SpacePoint>
 Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
-                       const SpacePoint* u, const double vertex) {
+                       const SpacePoint* u, const long double vertex) {
   m_zvertex = vertex;
   m_spacepoints.push_back(b);
   m_spacepoints.push_back(m);

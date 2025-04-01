@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 
     auto ptBorders = vm["pt-borders"].as<VariableReals>().values;
     if (ptBorders.empty()) {
-      ptBorders = {0., std::numeric_limits<double>::infinity()};
+      ptBorders = {0., std::numeric_limits<long double>::infinity()};
     }
 
     TApplication* tApp =

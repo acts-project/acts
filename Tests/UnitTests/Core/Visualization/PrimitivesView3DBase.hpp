@@ -75,9 +75,9 @@ static inline std::string run(IVisualization3D& helper) {
   errorVis.lineThickness = 0.025;
 
   SquareMatrix2 cov = SquareMatrix2::Identity();
-  double s0 = 0.75;
-  double s1 = 1.99;
-  double r01 = 0.78;
+  long double s0 = 0.75;
+  long double s1 = 1.99;
+  long double r01 = 0.78;
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
   Vector2 lcentered{0., 0.};
@@ -99,7 +99,7 @@ static inline std::string run(IVisualization3D& helper) {
   Vector3 origin{0., 0., 0.};
   Vector3 direction = Vector3(1., 3., 15.).normalized();
 
-  double directionScale = 5.;
+  long double directionScale = 5.;
 
   Acts::EventDataView3D::drawCovarianceAngular(helper, origin, direction, cov,
                                                directionScale, 10., errorVis);

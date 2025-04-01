@@ -78,15 +78,16 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param halex is the half length of the cube in x
   /// @param haley is the half length of the cube in y
   /// @param halez is the half length of the cube in z
-  CuboidVolumeBounds(double halex, double haley, double halez) noexcept(false);
+  CuboidVolumeBounds(long double halex, long double haley,
+                     long double halez) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  explicit CuboidVolumeBounds(const std::array<double, eSize>& values);
+  explicit CuboidVolumeBounds(const std::array<long double, eSize>& values);
 
   CuboidVolumeBounds(
-      std::initializer_list<std::pair<BoundValues, double>> keyValues);
+      std::initializer_list<std::pair<BoundValues, long double>> keyValues);
 
   /// Copy Constructor
   ///
@@ -105,14 +106,14 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, long double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -145,26 +146,27 @@ class CuboidVolumeBounds : public VolumeBounds {
     return {AxisX, AxisY, AxisZ};
   };
 
-  /// Binning borders in double
+  /// Binning borders in long double
   ///
   /// @param aDir is the axis direction for which the
   /// reference border is requested
   ///
   /// @return float offset to be used for the binning
-  double referenceBorder(AxisDirection aDir) const final;
+  long double referenceBorder(AxisDirection aDir) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value
   /// @param bValue the bound value identifier
   /// @param value the value to be set
-  void set(BoundValues bValue, double value);
+  void set(BoundValues bValue, long double value);
 
   /// Set a range of bound values
   /// @param keyValues the initializer list of key value pairs
-  void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
+  void set(
+      std::initializer_list<std::pair<BoundValues, long double>> keyValues);
 
   /// Convert axis direction to a corresponding bound value
   /// in local coordinate convention
@@ -188,7 +190,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
  private:
   /// The bound values ordered in a fixed size array
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
   std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};

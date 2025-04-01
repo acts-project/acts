@@ -153,8 +153,8 @@ class DetectorElementStub : public DetectorElementBase {
   Surface& surface() override { throw std::runtime_error("Not implemented"); }
 
   /// Returns the thickness of the module
-  /// @return double that indicates the thickness of the module
-  double thickness() const override { return 0; }
+  /// @return long double that indicates the thickness of the module
+  long double thickness() const override { return 0; }
 
  private:
   Transform3 m_transform;

@@ -41,7 +41,8 @@ class StrawSurface : public LineSurface {
   /// frame
   /// @param radius is the straw radius
   /// @param halez is the half length in z
-  StrawSurface(const Transform3& transform, double radius, double halez);
+  StrawSurface(const Transform3& transform, long double radius,
+               long double halez);
 
   /// Constructor from Transform3 and a shared bounds object
   ///

@@ -73,7 +73,7 @@ Vector3 PlaneSurface::localToGlobal(const GeometryContext& gctx,
 
 Result<Vector2> PlaneSurface::globalToLocal(const GeometryContext& gctx,
                                             const Vector3& position,
-                                            double tolerance) const {
+                                            long double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -154,9 +154,9 @@ Vector3 PlaneSurface::referencePosition(const GeometryContext& gctx,
   return center(gctx);
 }
 
-double PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                    const Vector3& /*position*/,
-                                    const Vector3& direction) const {
+long double PlaneSurface::pathCorrection(const GeometryContext& gctx,
+                                         const Vector3& /*position*/,
+                                         const Vector3& direction) const {
   // We can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
 }
@@ -164,7 +164,7 @@ double PlaneSurface::pathCorrection(const GeometryContext& gctx,
 SurfaceMultiIntersection PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
+    long double tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -241,14 +241,14 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
 
   bool mergeX = direction == AxisDirection::AxisX;
 
-  double thisHalfMerge =
+  long double thisHalfMerge =
       mergeX ? thisBounds->halfLengthX() : thisBounds->halfLengthY();
-  double otherHalfMerge =
+  long double otherHalfMerge =
       mergeX ? otherBounds->halfLengthX() : otherBounds->halfLengthY();
 
-  double thisHalfNonMerge =
+  long double thisHalfNonMerge =
       mergeX ? thisBounds->halfLengthY() : thisBounds->halfLengthX();
-  double otherHalfNonMerge =
+  long double otherHalfNonMerge =
       mergeX ? otherBounds->halfLengthY() : otherBounds->halfLengthX();
 
   if (std::abs(thisHalfNonMerge - otherHalfNonMerge) > tolerance) {
@@ -261,7 +261,8 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
   Vector3 otherTranslation = otherLocal.translation();
 
   // No translation in non-merging direction/z is allowed
-  double nonMergeShift = mergeX ? otherTranslation.y() : otherTranslation.x();
+  long double nonMergeShift =
+      mergeX ? otherTranslation.y() : otherTranslation.x();
 
   if (std::abs(nonMergeShift) > tolerance ||
       std::abs(otherTranslation.z()) > tolerance) {
@@ -272,13 +273,13 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
         "PlaneSurface::merge: surfaces have relative translation in y/z");
   }
 
-  double mergeShift = mergeX ? otherTranslation.x() : otherTranslation.y();
+  long double mergeShift = mergeX ? otherTranslation.x() : otherTranslation.y();
 
-  double thisMinMerge = -thisHalfMerge;
-  double thisMaxMerge = thisHalfMerge;
+  long double thisMinMerge = -thisHalfMerge;
+  long double thisMaxMerge = thisHalfMerge;
 
-  double otherMinMerge = mergeShift - otherHalfMerge;
-  double otherMaxMerge = mergeShift + otherHalfMerge;
+  long double otherMinMerge = mergeShift - otherHalfMerge;
+  long double otherMaxMerge = mergeShift + otherHalfMerge;
 
   // Surfaces have to "touch" along merging direction
   if (std::abs(thisMaxMerge - otherMinMerge) > tolerance &&
@@ -290,11 +291,11 @@ std::pair<std::shared_ptr<PlaneSurface>, bool> PlaneSurface::mergedWith(
         "PlaneSurface::merge: surfaces have incompatible merge bound location");
   }
 
-  double newMaxMerge = std::max(thisMaxMerge, otherMaxMerge);
-  double newMinMerge = std::min(thisMinMerge, otherMinMerge);
+  long double newMaxMerge = std::max(thisMaxMerge, otherMaxMerge);
+  long double newMinMerge = std::min(thisMinMerge, otherMinMerge);
 
-  double newHalfMerge = std::midpoint(newMaxMerge, -newMinMerge);
-  double newMidMerge = std::midpoint(newMaxMerge, newMinMerge);
+  long double newHalfMerge = std::midpoint(newMaxMerge, -newMinMerge);
+  long double newMidMerge = std::midpoint(newMaxMerge, newMinMerge);
 
   auto newBounds =
       mergeX

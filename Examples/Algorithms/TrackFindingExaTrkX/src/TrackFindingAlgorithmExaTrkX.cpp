@@ -113,7 +113,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using Clock = std::chrono::high_resolution_clock;
-  using Duration = std::chrono::duration<double, std::milli>;
+  using Duration = std::chrono::duration<long double, std::milli>;
   auto t0 = Clock::now();
 
   // Setup hooks

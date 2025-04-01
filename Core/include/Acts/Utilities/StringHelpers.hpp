@@ -20,7 +20,7 @@
 namespace Acts {
 
 namespace detail {
-inline double roundWithPrecision(double val, int precision) {
+inline long double roundWithPrecision(long double val, int precision) {
   if (val < 0 && std::abs(val) * std::pow(10, precision) < 1.) {
     return -val;
   }
@@ -44,7 +44,7 @@ inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
   if (matrix.cols() == 1) {
     sout << "(";
     for (int i = 0; i < matrix.rows(); ++i) {
-      double val = detail::roundWithPrecision(matrix(i, 0), precision);
+      long double val = detail::roundWithPrecision(matrix(i, 0), precision);
       sout << val;
       if (i != matrix.rows() - 1) {
         sout << ", ";
@@ -57,7 +57,7 @@ inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
         if (j == 0) {
           sout << "(";
         }
-        double val = detail::roundWithPrecision(matrix(i, j), precision);
+        long double val = detail::roundWithPrecision(matrix(i, j), precision);
         sout << val;
         if (j == matrix.cols() - 1) {
           sout << ")";
@@ -104,10 +104,10 @@ inline std::string toString(const Acts::Transform3& transform,
   return sout.str();
 }
 
-/// Print out a vector of double
+/// Print out a vector of long double
 /// @param pVector The vector to print
 /// @param precision Numeric output precision
-inline std::string toString(const std::vector<double>& pVector,
+inline std::string toString(const std::vector<long double>& pVector,
                             int precision = 4) {
   std::ostringstream sout;
   sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);

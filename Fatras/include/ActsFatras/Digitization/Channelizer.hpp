@@ -37,7 +37,7 @@ class Channelizer {
   Acts::Result<std::vector<Segmentizer::ChannelSegment>> channelize(
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
-      const Acts::BinUtility& segmentation, double thickness) const {
+      const Acts::BinUtility& segmentation, long double thickness) const {
     auto driftedSegment = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
 
@@ -54,7 +54,7 @@ class Channelizer {
     // Go from 2D-path to 3D-path by applying thickness
     const auto path2D = std::accumulate(
         segments.begin(), segments.end(), 0.0,
-        [](double sum, const auto& seg) { return sum + seg.activation; });
+        [](long double sum, const auto& seg) { return sum + seg.activation; });
 
     for (auto& seg : segments) {
       auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;

@@ -33,7 +33,7 @@ namespace detail::AnnulusBoundsHelper {
 ///
 /// @return AnnulusBounds
 std::tuple<std::shared_ptr<AnnulusBounds>, Transform3> create(
-    const Transform3& transform, double rMin, double rMax,
+    const Transform3& transform, long double rMin, long double rMax,
     std::vector<Vector2> vertices);
 
 }  // namespace detail::AnnulusBoundsHelper

@@ -23,7 +23,7 @@ namespace Acts {
 using VectorHelpers::perp;
 using VectorHelpers::phi;
 
-std::vector<double> EllipseBounds::values() const {
+std::vector<long double> EllipseBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -52,12 +52,12 @@ bool EllipseBounds::inside(const Vector2& lposition,
 
   if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
       absoluteBound.has_value()) {
-    double tol0 = absoluteBound->tolerance0;
-    double tol1 = absoluteBound->tolerance1;
+    long double tol0 = absoluteBound->tolerance0;
+    long double tol1 = absoluteBound->tolerance1;
 
-    double phi =
+    long double phi =
         detail::radian_sym(VectorHelpers::phi(lposition) - get(eAveragePhi));
-    double phiHalf = get(eHalfPhiSector) + tol1;
+    long double phiHalf = get(eHalfPhiSector) + tol1;
 
     bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
     bool insideInner = (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||

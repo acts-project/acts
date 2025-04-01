@@ -25,8 +25,10 @@ DigitizationCoordinatesConverter::DigitizationCoordinatesConverter(
   }
 }
 
-std::tuple<double, double> DigitizationCoordinatesConverter::globalToLocal(
-    std::uint64_t moduleId, double x, double y, double z) const {
+std::tuple<long double, long double>
+DigitizationCoordinatesConverter::globalToLocal(std::uint64_t moduleId,
+                                                long double x, long double y,
+                                                long double z) const {
   const Acts::GeometryIdentifier moduleGeoId(moduleId);
   auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
   if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {
@@ -44,9 +46,10 @@ std::tuple<double, double> DigitizationCoordinatesConverter::globalToLocal(
   return {pos2Local.x(), pos2Local.y()};
 }
 
-std::tuple<double, double, double>
+std::tuple<long double, long double, long double>
 DigitizationCoordinatesConverter::localToGlobal(std::uint64_t moduleId,
-                                                double x, double y) const {
+                                                long double x,
+                                                long double y) const {
   const Acts::GeometryIdentifier moduleGeoId{moduleId};
   auto surfaceItr = m_cfg.surfaceByIdentifier.find(moduleGeoId);
   if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {

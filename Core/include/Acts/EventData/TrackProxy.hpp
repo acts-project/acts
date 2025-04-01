@@ -255,27 +255,27 @@ class TrackProxy {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  double theta() const { return parameters()[eBoundTheta]; }
+  long double theta() const { return parameters()[eBoundTheta]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  double phi() const { return parameters()[eBoundPhi]; }
+  long double phi() const { return parameters()[eBoundPhi]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  double loc0() const { return parameters()[eBoundLoc0]; }
+  long double loc0() const { return parameters()[eBoundLoc0]; }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  double loc1() const { return parameters()[eBoundLoc1]; }
+  long double loc1() const { return parameters()[eBoundLoc1]; }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  double time() const { return parameters()[eBoundTime]; }
+  long double time() const { return parameters()[eBoundTime]; }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  double qOverP() const { return parameters()[eBoundQOverP]; }
+  long double qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
@@ -296,17 +296,17 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  long double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
-  double absoluteMomentum() const {
+  long double absoluteMomentum() const {
     return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
   /// @return The track transverse momentum value
-  double transverseMomentum() const {
+  long double transverseMomentum() const {
     return std::sin(theta()) * absoluteMomentum();
   }
 

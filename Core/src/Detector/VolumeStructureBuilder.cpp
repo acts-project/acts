@@ -50,7 +50,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
 
   // The transform from the extent
   auto eTransform = Transform3::Identity();
-  std::vector<double> boundValues = m_cfg.boundValues;
+  std::vector<long double> boundValues = m_cfg.boundValues;
 
   // This code dispatches into the dedicated volume types
   switch (m_cfg.boundsType) {
@@ -64,8 +64,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
             "object. It needs at least 5 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray =
-          toArray<ConeVolumeBounds::BoundValues::eSize, double>(boundValues);
+      auto bArray = toArray<ConeVolumeBounds::BoundValues::eSize, long double>(
+          boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCuboid: {

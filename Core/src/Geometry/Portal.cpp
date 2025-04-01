@@ -324,8 +324,8 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  std::vector<double> aValues = a.bounds().values();
-  std::vector<double> bValues = b.bounds().values();
+  std::vector<long double> aValues = a.bounds().values();
+  std::vector<long double> bValues = b.bounds().values();
   bool different = false;
   for (auto [aVal, bVal] : zip(aValues, bValues)) {
     if (std::abs(aVal - bVal) > s_onSurfaceTolerance) {

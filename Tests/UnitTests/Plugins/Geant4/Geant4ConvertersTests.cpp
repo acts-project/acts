@@ -40,7 +40,7 @@
 #include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
 
-double rho = 1.2345;
+long double rho = 1.2345;
 G4Material* g4Material = new G4Material("Material", 6., 12., rho);
 
 BOOST_AUTO_TEST_SUITE(Geant4Plugin)
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
-  double thickness = 2.;
+  long double thickness = 2.;
 
   G4Box* g4Box = new G4Box("Box", 23., 34., 0.5 * thickness);
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 1.2);
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
                   materialSlab.thicknessInX0(), 0.1);
 
   // Convert with compression
-  double compression = 4.;
+  long double compression = 4.;
   planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
       g4BoxPhys, Acts::Transform3::Identity(), true, thickness / compression);
   BOOST_REQUIRE_NE(planeSurface, nullptr);
@@ -332,9 +332,9 @@ BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
-  double radius = 45.;
-  double thickness = 1.;
-  double halfLengthZ = 200;
+  long double radius = 45.;
+  long double thickness = 1.;
+  long double halfLengthZ = 200;
 
   G4Tubs* g4Tube = new G4Tubs("Tube", radius, radius + thickness, halfLengthZ,
                               -std::numbers::pi * CLHEP::radian,
@@ -376,9 +376,9 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
-  double innerRadius = 45.;
-  double outerRadius = 75.;
-  double thickness = 2.;
+  long double innerRadius = 45.;
+  long double outerRadius = 75.;
+  long double thickness = 2.;
 
   G4Tubs* g4Tube = new G4Tubs("Disc", innerRadius, outerRadius, 0.5 * thickness,
                               -std::numbers::pi * CLHEP::radian,
@@ -409,9 +409,9 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
-  double innerRadius = 0.;
-  double outerRadius = 20.;
-  double thickness = 400.;
+  long double innerRadius = 0.;
+  long double outerRadius = 20.;
+  long double thickness = 400.;
 
   G4Tubs* g4Tube = new G4Tubs("Line", innerRadius, outerRadius, 0.5 * thickness,
                               -std::numbers::pi * CLHEP::radian,

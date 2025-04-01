@@ -22,16 +22,16 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
     const std::vector<InputTrack>& trackVector,
     const VertexingOptions& vertexingOptions,
     IVertexFinder::State& /*state*/) const {
-  double ZResult = 0.;
+  long double ZResult = 0.;
   // Prepare the vector of points, on which the 3d mode has later to be
   // calculated
-  std::vector<std::pair<double, double>> zPositions;
+  std::vector<std::pair<long double, long double>> zPositions;
 
   for (const auto& iTrk : trackVector) {
     // Extract BoundTrackParameters from InputTrack_t object
     const BoundTrackParameters& params = m_cfg.extractParameters(iTrk);
 
-    std::pair<double, double> z0AndWeight;
+    std::pair<long double, long double> z0AndWeight;
     ImpactParametersAndSigma ipas;
     if (vertexingOptions.useConstraintInFit &&
         vertexingOptions.constraint.covariance()(0, 0) != 0) {
@@ -50,7 +50,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
       z0AndWeight.first = ipas.z0 + vertexingOptions.constraint.position().z();
 
       // calculate chi2 of IP
-      double chi2IP = std::pow(ipas.d0 / ipas.sigmaD0, 2);
+      long double chi2IP = std::pow(ipas.d0 / ipas.sigmaD0, 2);
 
       if (!m_cfg.disableAllWeights) {
         z0AndWeight.second =
@@ -74,7 +74,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::ZScanVertexFinder::find(
 
     // apply pT weighting as/if configured
     if (!m_cfg.disableAllWeights && (m_cfg.usePt || m_cfg.useLogPt)) {
-      double Pt =
+      long double Pt =
           std::abs(1. / params.parameters()[BoundIndices::eBoundQOverP]) *
           std::sin(params.parameters()[BoundIndices::eBoundTheta]);
       if (m_cfg.usePt) {

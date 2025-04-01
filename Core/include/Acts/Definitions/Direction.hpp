@@ -45,7 +45,7 @@ class Direction final {
   /// @param scalar is the signed value
   ///
   /// @return a direction enum
-  static constexpr Direction fromScalar(double scalar) {
+  static constexpr Direction fromScalar(long double scalar) {
     assert(scalar != 0);
     return scalar >= 0 ? Positive() : Negative();
   }
@@ -57,7 +57,7 @@ class Direction final {
   /// @param scalar is the signed value
   ///
   /// @return a direction enum
-  static constexpr Direction fromScalarZeroAsPositive(double scalar) {
+  static constexpr Direction fromScalarZeroAsPositive(long double scalar) {
     return scalar >= 0 ? Positive() : Negative();
   }
 
@@ -116,7 +116,7 @@ constexpr float operator*(Direction dir, float value) {
   return dir.sign() * value;
 }
 
-constexpr double operator*(Direction dir, double value) {
+constexpr long double operator*(Direction dir, long double value) {
   return dir.sign() * value;
 }
 
@@ -134,7 +134,7 @@ constexpr float operator*(float value, Direction dir) {
   return value * dir.sign();
 }
 
-constexpr double operator*(double value, Direction dir) {
+constexpr long double operator*(long double value, Direction dir) {
   return value * dir.sign();
 }
 
@@ -154,7 +154,7 @@ constexpr float operator*=(float& value, Direction dir) {
   return value;
 }
 
-constexpr double operator*=(double& value, Direction dir) {
+constexpr long double operator*=(long double& value, Direction dir) {
   value *= dir.sign();
   return value;
 }

@@ -78,7 +78,7 @@ std::ostream& operator<<(std::ostream& os, const Ray<T, D>& ray) {
   return os;
 }
 
-using Ray3D = Ray<double, 3>;
+using Ray3D = Ray<long double, 3>;
 
 }  // namespace Acts
 

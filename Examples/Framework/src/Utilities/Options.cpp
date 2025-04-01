@@ -127,21 +127,19 @@ void print(std::ostream& os, std::size_t size, const value_t* values) {
 
 // fixed and variable number of generic values
 
-void ActsExamples::Options::detail::parseDoublesFixed(std::istream& is,
-                                                      std::size_t size,
-                                                      double* values) {
+void ActsExamples::Options::detail::parselong doublesFixed(
+    std::istream& is, std::size_t size, long double* values) {
   parseFixed(is, size, values,
              [](const std::string& s) { return std::stod(s); });
 }
 
-void ActsExamples::Options::detail::parseDoublesVariable(
-    std::istream& is, std::vector<double>& values) {
+void ActsExamples::Options::detail::parselong doublesVariable(
+    std::istream& is, std::vector<long double>& values) {
   parseVariable(is, values, [](const std::string& s) { return std::stod(s); });
 }
 
-void ActsExamples::Options::detail::printDoubles(std::ostream& os,
-                                                 std::size_t size,
-                                                 const double* values) {
+void ActsExamples::Options::detail::printlong doubles(
+    std::ostream& os, std::size_t size, const long double* values) {
   print(os, size, values);
 }
 

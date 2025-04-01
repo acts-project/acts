@@ -23,11 +23,11 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    double lengthUnit, double BFieldUnit, bool firstQuadrant) {
+    long double lengthUnit, long double BFieldUnit, bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
-  std::vector<double> rPos;
-  std::vector<double> zPos;
+  std::vector<long double> rPos;
+  std::vector<long double> zPos;
   // components of magnetic field on grid points
   std::vector<Acts::Vector2> bField;
   // [1] Read in file and fill values
@@ -41,8 +41,8 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   }
   Int_t entries = tree->GetEntries();
 
-  double r = 0, z = 0;
-  double Br = 0, Bz = 0;
+  long double r = 0, z = 0;
+  long double Br = 0, Bz = 0;
 
   tree->SetBranchAddress("r", &r);
   tree->SetBranchAddress("z", &z);
@@ -72,12 +72,12 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    double lengthUnit, double BFieldUnit, bool firstOctant) {
+    long double lengthUnit, long double BFieldUnit, bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
-  std::vector<double> xPos;
-  std::vector<double> yPos;
-  std::vector<double> zPos;
+  std::vector<long double> xPos;
+  std::vector<long double> yPos;
+  std::vector<long double> zPos;
   // components of magnetic field on grid points
   std::vector<Acts::Vector3> bField;
   // [1] Read in file and fill values
@@ -91,8 +91,8 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   }
   Int_t entries = tree->GetEntries();
 
-  double x = 0, y = 0, z = 0;
-  double Bx = 0, By = 0, Bz = 0;
+  long double x = 0, y = 0, z = 0;
+  long double Bx = 0, By = 0, Bz = 0;
 
   tree->SetBranchAddress("x", &x);
   tree->SetBranchAddress("y", &y);

@@ -25,7 +25,7 @@ using Acts::detail::radian_sym;
 namespace bd = boost::unit_test::data;
 
 namespace {
-constexpr auto tol = std::numeric_limits<double>::epsilon();
+constexpr auto tol = std::numeric_limits<long double>::epsilon();
 }
 
 namespace {
@@ -33,7 +33,7 @@ namespace {
 //
 //     lhs, rhs, periodic range, expected difference
 //
-constexpr std::tuple<double, double, double, double>
+constexpr std::tuple<long double, long double, long double, long double>
     kDifferencePeriodicDataset[] = {
         // lhs,rhs are exactly n periods apart
         {0.0, 1.0, 1.0, 0.0},

@@ -35,14 +35,14 @@ Acts::ProtoAxis Acts::ProtoAxisJsonConverter::fromJson(
     if (j.at("autorange").get<bool>()) {
       return ProtoAxis(axisDir, axisBoundaryType, nbins);
     }
-    auto min = j.at("axis").at("range").at(0).get<double>();
-    auto max = j.at("axis").at("range").at(1).get<double>();
+    auto min = j.at("axis").at("range").at(0).get<long double>();
+    auto max = j.at("axis").at("range").at(1).get<long double>();
     if (min >= max) {
       throw std::invalid_argument("Invalid range: min must be less than max");
     }
     return ProtoAxis(axisDir, axisBoundaryType, min, max, nbins);
   }
-  auto binEdges = j.at("axis").at("boundaries").get<std::vector<double>>();
+  auto binEdges = j.at("axis").at("boundaries").get<std::vector<long double>>();
   if (binEdges.size() < 2) {
     throw std::invalid_argument("At least two bin edges required");
   }

@@ -25,7 +25,7 @@ class LayerStub : virtual public SurfaceStub, public Layer {
   LayerStub(const LayerStub& otherLayer) = delete;
   /// constructor with pointer to SurfaceArray (protected in Layer baseclass)
   explicit LayerStub(std::unique_ptr<SurfaceArray> surfaceArray,
-                     double thickness = 0,
+                     long double thickness = 0,
                      std::unique_ptr<ApproachDescriptor> ad = nullptr,
                      LayerType ltype = passive)
       : SurfaceStub(),

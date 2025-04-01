@@ -49,7 +49,7 @@ ActsExamples::MuonHoughSeeder::MuonHoughSeeder(
   m_inputSimHits.initialize(m_cfg.inSimHits);
 }
 
-using PatternSeed = std::pair<double, double>;  // y0, tan theta
+using PatternSeed = std::pair<long double, long double>;  // y0, tan theta
 
 ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     const AlgorithmContext& ctx) const {
@@ -76,18 +76,20 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   // Note that there are two solutions for each drift circle and angle
 
   // left solution
-  auto houghParam_fromDC_left = [](double tanTheta, const DriftCircle& DC) {
+  auto houghParam_fromDC_left = [](long double tanTheta,
+                                   const DriftCircle& DC) {
     return DC.y() - tanTheta * DC.z() -
            DC.rDrift() / std::cos(std::atan(tanTheta));
   };
   // right solution
-  auto houghParam_fromDC_right = [](double tanTheta, const DriftCircle& DC) {
+  auto houghParam_fromDC_right = [](long double tanTheta,
+                                    const DriftCircle& DC) {
     return DC.y() - tanTheta * DC.z() +
            DC.rDrift() / std::cos(std::atan(tanTheta));
   };
 
   // create the function parametrising the drift radius uncertainty
-  auto houghWidth_fromDC = [](double, const DriftCircle& DC) {
+  auto houghWidth_fromDC = [](long double, const DriftCircle& DC) {
     // scale reported errors up to at least 1mm or 3 times the reported error as
     // drift circle calib not fully reliable at this stage
     return std::min(DC.rDriftError() * 3., 1.0);

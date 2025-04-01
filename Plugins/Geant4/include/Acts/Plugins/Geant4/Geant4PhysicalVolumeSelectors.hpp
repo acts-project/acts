@@ -66,12 +66,13 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
 /// @note Careful with axis conventions as
 /// Geant4 uses a different one than Acts
 struct PositionSelector : public IGeant4PhysicalVolumeSelector {
-  std::map<unsigned int, std::tuple<double, double>> m_ranges;
+  std::map<unsigned int, std::tuple<long double, long double>> m_ranges;
 
   /// Constructor with arguments
   /// @param ranges the provided map of axes of ranges
   explicit PositionSelector(
-      const std::map<unsigned int, std::tuple<double, double>>& ranges)
+      const std::map<unsigned int, std::tuple<long double, long double>>&
+          ranges)
       : m_ranges(ranges) {}
 
   /// Secect function for the volume

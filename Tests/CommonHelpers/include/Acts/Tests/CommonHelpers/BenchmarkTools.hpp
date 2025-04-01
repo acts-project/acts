@@ -179,7 +179,7 @@ inline void assumeWritten(T& clobber) {
 // statistical information about them.
 //
 struct MicroBenchmarkResult {
-  using Duration = std::chrono::duration<double, std::nano>;
+  using Duration = std::chrono::duration<long double, std::nano>;
 
   std::size_t iters_per_run = 0;
   std::vector<Duration> run_timings;

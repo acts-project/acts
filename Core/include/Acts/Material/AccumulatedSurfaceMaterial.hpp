@@ -37,7 +37,7 @@ class AccumulatedSurfaceMaterial {
   /// Default Constructor - for homogeneous material
   ///
   /// @param splitFactor is the pre/post splitting directive
-  explicit AccumulatedSurfaceMaterial(double splitFactor = 0.);
+  explicit AccumulatedSurfaceMaterial(long double splitFactor = 0.);
 
   /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
@@ -50,7 +50,7 @@ class AccumulatedSurfaceMaterial {
   /// @param binUtility defines the binning structure on the surface
   /// @param splitFactor is the pre/post splitting directive
   explicit AccumulatedSurfaceMaterial(const BinUtility& binUtility,
-                                      double splitFactor = 0.);
+                                      long double splitFactor = 0.);
 
   /// Copy Constructor
   ///
@@ -89,7 +89,7 @@ class AccumulatedSurfaceMaterial {
   /// @return the bin triple to which the material was assigned
   std::array<std::size_t, 3> accumulate(const Vector2& lp,
                                         const MaterialSlab& mp,
-                                        double pathCorrection = 1.);
+                                        long double pathCorrection = 1.);
 
   /// Assign a material properties object
   ///
@@ -100,7 +100,7 @@ class AccumulatedSurfaceMaterial {
   /// @return the bin triple to which the material was assigned
   std::array<std::size_t, 3> accumulate(const Vector3& gp,
                                         const MaterialSlab& mp,
-                                        double pathCorrection = 1.);
+                                        long double pathCorrection = 1.);
 
   /// Use the accumulated material to update the material variance
   ///
@@ -141,14 +141,14 @@ class AccumulatedSurfaceMaterial {
   const AccumulatedMatrix& accumulatedMaterial() const;
 
   /// Access to the split factor
-  double splitFactor() const;
+  long double splitFactor() const;
 
  private:
   /// The helper for the bin finding
   BinUtility m_binUtility{};
 
   /// the split factor
-  double m_splitFactor{0.};
+  long double m_splitFactor{0.};
 
   /// The stored accumulated material matrix
   AccumulatedMatrix m_accumulatedMaterial;
@@ -163,7 +163,7 @@ AccumulatedSurfaceMaterial::accumulatedMaterial() const {
   return (m_accumulatedMaterial);
 }
 
-inline double AccumulatedSurfaceMaterial::splitFactor() const {
+inline long double AccumulatedSurfaceMaterial::splitFactor() const {
   return m_splitFactor;
 }
 }  // namespace Acts

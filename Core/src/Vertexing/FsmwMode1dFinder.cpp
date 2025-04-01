@@ -14,11 +14,12 @@
 #include <cmath>
 #include <limits>
 
-Acts::FsmwMode1dFinder::FsmwMode1dFinder(double firstFraction, double fraction)
+Acts::FsmwMode1dFinder::FsmwMode1dFinder(long double firstFraction,
+                                         long double fraction)
     : m_firstFraction(firstFraction), m_fraction(fraction) {}
 
-Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
-    std::vector<std::pair<double, double>> inputVector) const {
+Acts::Result<long double> Acts::FsmwMode1dFinder::getMode(
+    std::vector<std::pair<long double, long double>> inputVector) const {
   if (inputVector.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -26,7 +27,7 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
     return inputVector.begin()->first;
   }
 
-  // first of all order the vector according to the double value
+  // first of all order the vector according to the long double value
 
   std::ranges::sort(inputVector, {}, [](const auto& i) { return i.first; });
 
@@ -34,16 +35,16 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
   auto begin = inputVector.begin();
   auto end = inputVector.end();
 
-  double overallweight(0.);
+  long double overallweight(0.);
   auto best_begin = begin;
   auto best_end = end;
 
-  double last_value = std::numeric_limits<double>::max();
+  long double last_value = std::numeric_limits<long double>::max();
 
   bool isthelast = false;
 
   int counter = 0;
-  double fraction = m_firstFraction;
+  long double fraction = m_firstFraction;
   while (!isthelast) {
     counter += 1;
     if (counter == 2) {
@@ -66,7 +67,8 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
       // calculate the weight the interval should be divided into
       overallweight += i_last->second;
 
-      double new_value = ((i + step - 1)->first - i->first) / overallweight;
+      long double new_value =
+          ((i + step - 1)->first - i->first) / overallweight;
       if (new_value < last_value) {
         last_value = ((i + step - 1)->first - i->first) / overallweight;
         best_begin = i;
@@ -78,7 +80,7 @@ Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
     // assign the new begin and end...
     begin = best_begin;
     end = best_end;
-    last_value = std::numeric_limits<double>::max();
+    last_value = std::numeric_limits<long double>::max();
 
     // Now it should have returned the value with smallest (x2-x1)/weight
     if (best_end - best_begin <= 2) {

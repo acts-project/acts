@@ -103,9 +103,10 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     dd4hep::DetElement worldDetElement, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
-    double layerEnvelopeZ = UnitConstants::mm,
-    double defaultLayerThickness = UnitConstants::fm,
+    BinningType bTypeZ = equidistant,
+    long double layerEnvelopeR = UnitConstants::mm,
+    long double layerEnvelopeZ = UnitConstants::mm,
+    long double defaultLayerThickness = UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext(),
@@ -154,9 +155,10 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
-    double layerEnvelopeZ = UnitConstants::mm,
-    double defaultLayerThickness = UnitConstants::fm);
+    BinningType bTypeZ = equidistant,
+    long double layerEnvelopeR = UnitConstants::mm,
+    long double layerEnvelopeZ = UnitConstants::mm,
+    long double defaultLayerThickness = UnitConstants::fm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder

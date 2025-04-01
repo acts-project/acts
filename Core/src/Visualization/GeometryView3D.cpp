@@ -73,7 +73,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
     helper.clear();
   }
 
-  double thickness = gridConfig.lineThickness;
+  long double thickness = gridConfig.lineThickness;
   // Draw the grid itself
   auto binning = surfaceArray.binningValues();
   auto axes = surfaceArray.getAxes();
@@ -81,14 +81,15 @@ void Acts::GeometryView3D::drawSurfaceArray(
     // Cylinder surface array
     if (binning[0] == AxisDirection::AxisPhi &&
         binning[1] == AxisDirection::AxisZ) {
-      double R = arrayExtent.medium(AxisDirection::AxisR) + gridConfig.offset;
+      long double R =
+          arrayExtent.medium(AxisDirection::AxisR) + gridConfig.offset;
       auto phiValues = axes[0]->getBinEdges();
       auto zValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
       // Longitudinal lines
       for (auto phi : phiValues) {
-        double cphi = std::cos(phi);
-        double sphi = std::sin(phi);
+        long double cphi = std::cos(phi);
+        long double sphi = std::sin(phi);
         Vector3 p1(R * cphi, R * sphi, axes[1]->getMin());
         Vector3 p0(R * cphi, R * sphi, axes[1]->getMax());
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
@@ -105,7 +106,8 @@ void Acts::GeometryView3D::drawSurfaceArray(
 
     } else if (binning[0] == AxisDirection::AxisR &&
                binning[1] == AxisDirection::AxisPhi) {
-      double z = arrayExtent.medium(AxisDirection::AxisZ) + gridConfig.offset;
+      long double z =
+          arrayExtent.medium(AxisDirection::AxisZ) + gridConfig.offset;
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
@@ -119,11 +121,11 @@ void Acts::GeometryView3D::drawSurfaceArray(
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
-      double rMin = axes[0]->getMin();
-      double rMax = axes[0]->getMax();
+      long double rMin = axes[0]->getMin();
+      long double rMax = axes[0]->getMax();
       for (auto phi : phiValues) {
-        double cphi = std::cos(phi);
-        double sphi = std::sin(phi);
+        long double cphi = std::cos(phi);
+        long double sphi = std::sin(phi);
         Vector3 p1(rMax * cphi, rMax * sphi, z);
         Vector3 p0(rMin * cphi, rMin * sphi, z);
         drawSegment(helper, transform * p0, transform * p1, gridConfig);
@@ -299,14 +301,14 @@ void Acts::GeometryView3D::drawTrackingVolume(
 void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
                                            const Vector3& start,
                                            const Vector3& end, int arrows,
-                                           double arrowLength,
-                                           double arrowWidth,
+                                           long double arrowLength,
+                                           long double arrowWidth,
                                            const ViewConfig& viewConfig) {
-  double thickness = viewConfig.lineThickness;
+  long double thickness = viewConfig.lineThickness;
 
   // Draw the parameter shaft and cone
   auto direction = Vector3(end - start).normalized();
-  double hlength = 0.5 * Vector3(end - start).norm();
+  long double hlength = 0.5 * Vector3(end - start).norm();
 
   auto unitVectors = createCurvilinearUnitVectors(direction);
   RotationMatrix3 lrotation;
@@ -315,7 +317,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   lrotation.col(2) = direction;
 
   Vector3 lcenter = 0.5 * (start + end);
-  double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
+  long double alength = (thickness > 0.) ? arrowLength * thickness : 2.;
   if (alength > hlength) {
     alength = hlength;
   }
@@ -344,8 +346,8 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
 
   // Arrowheads - if configured
   if (arrows != 0) {
-    double awith = thickness * arrowWidth;
-    double alpha = atan2(thickness * arrowWidth, alength);
+    long double awith = thickness * arrowWidth;
+    long double alpha = atan2(thickness * arrowWidth, alength);
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
@@ -394,22 +396,29 @@ void Acts::GeometryView3D::drawSegment(IVisualization3D& helper,
   drawSegmentBase(helper, start, end, 0, 0., 0., viewConfig);
 }
 
-void Acts::GeometryView3D::drawArrowBackward(
-    IVisualization3D& helper, const Vector3& start, const Vector3& end,
-    double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
+void Acts::GeometryView3D::drawArrowBackward(IVisualization3D& helper,
+                                             const Vector3& start,
+                                             const Vector3& end,
+                                             long double arrowLength,
+                                             long double arrowWidth,
+                                             const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, -1, arrowLength, arrowWidth, viewConfig);
 }
 
-void Acts::GeometryView3D::drawArrowForward(
-    IVisualization3D& helper, const Vector3& start, const Vector3& end,
-    double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
+void Acts::GeometryView3D::drawArrowForward(IVisualization3D& helper,
+                                            const Vector3& start,
+                                            const Vector3& end,
+                                            long double arrowLength,
+                                            long double arrowWidth,
+                                            const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 1, arrowLength, arrowWidth, viewConfig);
 }
 
 void Acts::GeometryView3D::drawArrowsBoth(IVisualization3D& helper,
                                           const Vector3& start,
                                           const Vector3& end,
-                                          double arrowLength, double arrowWidth,
+                                          long double arrowLength,
+                                          long double arrowWidth,
                                           const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 2, arrowLength, arrowWidth, viewConfig);
 }

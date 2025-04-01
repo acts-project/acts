@@ -121,7 +121,7 @@ void addOutput(Context& ctx) {
     py::class_<Color>(m, "Color")
         .def(py::init<>())
         .def(py::init<int, int, int>())
-        .def(py::init<double, double, double>())
+        .def(py::init<long double, long double, long double>())
         .def(py::init<std::string_view>())
         .def_readonly("rgb", &Color::rgb);
   }
@@ -150,9 +150,10 @@ void addOutput(Context& ctx) {
   // Bindings for the binning in e.g., TrackFinderPerformanceWriter
   {
     py::class_<PlotHelpers::Binning>(mex, "Binning")
-        .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
-             "bMin"_a, "bMax"_a)
-        .def(py::init<std::string, std::vector<double>>(), "title"_a, "bins"_a);
+        .def(py::init<std::string, int, long double, long double>(), "title"_a,
+             "bins"_a, "bMin"_a, "bMax"_a)
+        .def(py::init<std::string, std::vector<long double>>(), "title"_a,
+             "bins"_a);
 
     py::class_<EffPlotTool::Config>(mex, "EffPlotToolConfig")
         .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),

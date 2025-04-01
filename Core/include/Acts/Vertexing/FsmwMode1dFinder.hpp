@@ -40,19 +40,19 @@ class FsmwMode1dFinder {
   ///
   /// @param firstFraction first fraction in FSMW algorithm
   /// @param fraction all other fractions in FSMW algorithm
-  FsmwMode1dFinder(double firstFraction, double fraction);
+  FsmwMode1dFinder(long double firstFraction, long double fraction);
 
   /// @brief Function to calculate mode with FSMW algorithm
   ///
   /// @param inputVector Input collection to calculate mode from
   ///
   /// @return mode value
-  Result<double> getMode(
-      std::vector<std::pair<double, double>> inputVector) const;
+  Result<long double> getMode(
+      std::vector<std::pair<long double, long double>> inputVector) const;
 
  private:
-  double m_firstFraction = 0.5;
-  double m_fraction = 0.5;
+  long double m_firstFraction = 0.5;
+  long double m_fraction = 0.5;
 };
 
 }  // namespace Acts

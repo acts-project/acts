@@ -42,9 +42,9 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   for (auto& tVolume : volumes) {
     // get the binning position
     Vector3 referencePosition = tVolume->referencePosition(gctx, aDir);
-    double referenceBorder = tVolume->volumeBounds().referenceBorder(aDir);
+    long double referenceBorder = tVolume->volumeBounds().referenceBorder(aDir);
     // get the center value according to the bin
-    double value = tVolume->referencePositionValue(gctx, aDir);
+    long double value = tVolume->referencePositionValue(gctx, aDir);
     // for the first one take low and high boundary
     if (boundaries.empty()) {
       boundaries.push_back(value - referenceBorder);

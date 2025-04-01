@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-std::vector<double> DiamondBounds::values() const {
+std::vector<long double> DiamondBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -37,12 +37,12 @@ bool DiamondBounds::inside(const Vector2& lposition,
                            const BoundaryTolerance& boundaryTolerance) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
-  double x1 = get(DiamondBounds::eHalfLengthXnegY);
-  double y1 = get(DiamondBounds::eHalfLengthYneg);
-  double x2 = get(DiamondBounds::eHalfLengthXzeroY);
-  double y2 = 0.;
-  double x3 = get(DiamondBounds::eHalfLengthXposY);
-  double y3 = get(DiamondBounds::eHalfLengthYpos);
+  long double x1 = get(DiamondBounds::eHalfLengthXnegY);
+  long double y1 = get(DiamondBounds::eHalfLengthYneg);
+  long double x2 = get(DiamondBounds::eHalfLengthXzeroY);
+  long double y2 = 0.;
+  long double x3 = get(DiamondBounds::eHalfLengthXposY);
+  long double y3 = get(DiamondBounds::eHalfLengthYpos);
   Vector2 vertices[] = {{-x1, -y1}, {x1, -y1}, {x2, y2},
                         {x3, y3},   {-x3, y3}, {-x2, y2}};
   return detail::insidePolygon(vertices, boundaryTolerance, lposition,
@@ -53,12 +53,12 @@ std::vector<Vector2> DiamondBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
-  double x1 = get(DiamondBounds::eHalfLengthXnegY);
-  double y1 = get(DiamondBounds::eHalfLengthYneg);
-  double x2 = get(DiamondBounds::eHalfLengthXzeroY);
-  double y2 = 0.;
-  double x3 = get(DiamondBounds::eHalfLengthXposY);
-  double y3 = get(DiamondBounds::eHalfLengthYpos);
+  long double x1 = get(DiamondBounds::eHalfLengthXnegY);
+  long double y1 = get(DiamondBounds::eHalfLengthYneg);
+  long double x2 = get(DiamondBounds::eHalfLengthXzeroY);
+  long double y2 = 0.;
+  long double x3 = get(DiamondBounds::eHalfLengthXposY);
+  long double y3 = get(DiamondBounds::eHalfLengthYpos);
   return {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}};
 }
 

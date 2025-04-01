@@ -75,23 +75,24 @@ struct PlaneSelector {
 BOOST_DATA_TEST_CASE(
     test_extrapolation_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 1,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
@@ -117,23 +118,24 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     test_surface_collection_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 10,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 11,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 12,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 13,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
@@ -183,23 +185,24 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     test_material_interactor_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 21,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
@@ -230,23 +233,24 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     loop_protection_test,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.1_GeV, 0.5_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.1_GeV,
+                                                                   0.5_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 21,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
@@ -269,7 +273,7 @@ BOOST_DATA_TEST_CASE(
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
   auto bCache = bField->makeCache(mfContext);
-  double pmax =
+  long double pmax =
       options.pathLimit *
       bField->getField(start.position(tgContext), bCache).value().norm() /
       std::numbers::pi;

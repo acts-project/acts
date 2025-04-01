@@ -42,14 +42,14 @@ struct GeometricConfig {
   Acts::BinUtility segmentation;
 
   /// The thickness of the sensor
-  double thickness = 0.;
+  long double thickness = 0.;
 
   /// The charge smearer
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
       chargeSmearer = Digitization::Exact(0);
 
   /// The threshold below a cell activation is ignored
-  double threshold = 0.;
+  long double threshold = 0.;
 
   /// Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
@@ -59,10 +59,10 @@ struct GeometricConfig {
   bool componentDigital = true;
 
   /// The variances for this digitization
-  std::map<Acts::BoundIndices, std::vector<double>> varianceMap = {};
+  std::map<Acts::BoundIndices, std::vector<long double>> varianceMap = {};
 
   /// Charge generation (configurable via the chargeSmearer)
-  double charge(double path, RandomEngine &rng) const {
+  long double charge(long double path, RandomEngine &rng) const {
     if (!chargeSmearer) {
       return path;
     }
@@ -83,8 +83,9 @@ struct GeometricConfig {
   /// @param cmins is the cluster minimum in the different dimensions
   ///
   /// @return a vector of variances for the cluster
-  std::vector<double> variances(const std::array<std::size_t, 2u> &csizes,
-                                const std::array<std::size_t, 2u> &cmins) const;
+  std::vector<long double> variances(
+      const std::array<std::size_t, 2u> &csizes,
+      const std::array<std::size_t, 2u> &cmins) const;
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine

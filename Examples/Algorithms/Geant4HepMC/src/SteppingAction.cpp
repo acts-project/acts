@@ -65,9 +65,9 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   ::HepMC3::GenEvent& event = EventAction::instance()->event();
 
   // Unit conversions G4->::HepMC3
-  constexpr double convertLength = 1. / CLHEP::mm;
-  constexpr double convertEnergy = 1. / CLHEP::GeV;
-  constexpr double convertTime = 1. / CLHEP::s;
+  constexpr long double convertLength = 1. / CLHEP::mm;
+  constexpr long double convertEnergy = 1. / CLHEP::GeV;
+  constexpr long double convertTime = 1. / CLHEP::s;
 
   // The particle after the step
   auto* track = step->GetTrack();
@@ -110,9 +110,9 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
               step->GetPreStepPoint()->GetMomentum() * convertEnergy;
           auto preStepEnergy =
               step->GetPreStepPoint()->GetTotalEnergy() * convertEnergy;
-          auto preMom4 = std::make_shared<::HepMC3::VectorDoubleAttribute>(
-              std::vector<double>{preStepMomentum[0], preStepMomentum[1],
-                                  preStepMomentum[2], preStepEnergy});
+          auto preMom4 = std::make_shared<::HepMC3::Vectorlong doubleAttribute>(
+              std::vector<long double>{preStepMomentum[0], preStepMomentum[1],
+                                       preStepMomentum[2], preStepEnergy});
           vertex->add_attribute("InitialParametersOf-" + trackId, preMom4);
         }
       }
@@ -149,16 +149,17 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   postParticle->add_attribute(
       "ParentID",
       std::make_shared<::HepMC3::IntAttribute>(track->GetParentID()));
-  const double X0 = track->GetMaterial()->GetRadlen() * convertLength;
-  const double L0 =
+  const long double X0 = track->GetMaterial()->GetRadlen() * convertLength;
+  const long double L0 =
       track->GetMaterial()->GetNuclearInterLength() * convertLength;
-  const double stepLength = track->GetStepLength();
-  postParticle->add_attribute("NextX0",
-                              std::make_shared<::HepMC3::DoubleAttribute>(X0));
-  postParticle->add_attribute("NextL0",
-                              std::make_shared<::HepMC3::DoubleAttribute>(L0));
+  const long double stepLength = track->GetStepLength();
   postParticle->add_attribute(
-      "StepLength", std::make_shared<::HepMC3::DoubleAttribute>(stepLength));
+      "NextX0", std::make_shared<::HepMC3::long doubleAttribute>(X0));
+  postParticle->add_attribute(
+      "NextL0", std::make_shared<::HepMC3::long doubleAttribute>(L0));
+  postParticle->add_attribute(
+      "StepLength",
+      std::make_shared<::HepMC3::long doubleAttribute>(stepLength));
   postParticle->set_status(1);
 
   // Stop tracking the vertex if the particle dies

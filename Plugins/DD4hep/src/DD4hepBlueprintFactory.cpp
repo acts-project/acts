@@ -31,7 +31,7 @@ Acts::Experimental::DD4hepBlueprintFactory::create(
              << dd4hepElement.name() << "'.");
 
   // Create the root node
-  std::vector<double> bValues = {0., 150., 1000.};
+  std::vector<long double> bValues = {0., 150., 1000.};
   std::vector<AxisDirection> binning = {Acts::AxisDirection::AxisR};
   auto root = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
       dd4hepElement.name(), Acts::Transform3::Identity(),
@@ -154,7 +154,8 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
 }
 
 std::tuple<Acts::Transform3, Acts::VolumeBounds::BoundsType,
-           std::vector<double>, std::vector<Acts::AxisDirection>, std::string>
+           std::vector<long double>, std::vector<Acts::AxisDirection>,
+           std::string>
 Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
     [[maybe_unused]] const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const std::string& baseName,
@@ -169,7 +170,7 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
       getParamOr<int>(baseName + "_type", dd4hepElement,
                       static_cast<int>(VolumeBounds::BoundsType::eOther));
   auto bValueType = static_cast<VolumeBounds::BoundsType>(bValueInt);
-  std::vector<double> bValues = {};
+  std::vector<long double> bValues = {};
 
   // Get the bound values from parsed internals if possible
   if (extOpt.has_value() && bValueType == VolumeBounds::BoundsType::eCylinder) {
@@ -181,12 +182,14 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
       bValues[1u] = std::ceil(parsedExtent.max(AxisDirection::AxisR));
     }
     if (parsedExtent.constrains(AxisDirection::AxisZ)) {
-      double minZ = parsedExtent.min(AxisDirection::AxisZ) > 0.
-                        ? std::floor(parsedExtent.min(AxisDirection::AxisZ))
-                        : std::ceil(parsedExtent.min(AxisDirection::AxisZ));
-      double maxZ = parsedExtent.max(AxisDirection::AxisZ) > 0.
-                        ? std::floor(parsedExtent.max(AxisDirection::AxisZ))
-                        : std::ceil(parsedExtent.max(AxisDirection::AxisZ));
+      long double minZ =
+          parsedExtent.min(AxisDirection::AxisZ) > 0.
+              ? std::floor(parsedExtent.min(AxisDirection::AxisZ))
+              : std::ceil(parsedExtent.min(AxisDirection::AxisZ));
+      long double maxZ =
+          parsedExtent.max(AxisDirection::AxisZ) > 0.
+              ? std::floor(parsedExtent.max(AxisDirection::AxisZ))
+              : std::ceil(parsedExtent.max(AxisDirection::AxisZ));
       bValues[2u] = 0.5 * (maxZ - minZ);
       transform.translation().z() = 0.5 * (maxZ + minZ);
     }
@@ -196,8 +199,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractExternals(
 
   // Get the bounds values from the series if not found before
   if (bValues.empty()) {
-    bValues =
-        extractSeries<double>(dd4hepElement, baseName + "_bvalues", unitLength);
+    bValues = extractSeries<long double>(dd4hepElement, baseName + "_bvalues",
+                                         unitLength);
     ACTS_VERBOSE(" - cylindrical determined from variant parameters as "
                  << toString(bValues));
   }
@@ -255,8 +258,8 @@ Acts::Experimental::DD4hepBlueprintFactory::extractInternals(
           baseName + "_internals_measure", dd4hepElement, "");
       auto internalsClearance =
           unitLength *
-          Acts::getParamOr<double>(baseName + "_internals_clearance",
-                                   dd4hepElement, 0.);
+          Acts::getParamOr<long double>(baseName + "_internals_clearance",
+                                        dd4hepElement, 0.);
       auto internalAxisDirections = stringToAxisDirections(interenalsMeasure);
       if (!internalAxisDirections.empty()) {
         ACTS_VERBOSE(" - internals extent measurement requested");

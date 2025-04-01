@@ -37,8 +37,8 @@ ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
 
 BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   // Build a material cell
-  std::array<double, dim> lowerLeft{{0., 0.}};
-  std::array<double, dim> upperRight{{1., 1.}};
+  std::array<long double, dim> lowerLeft{{0., 0.}};
+  std::array<long double, dim> upperRight{{1., 1.}};
   Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
   std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   BOOST_CHECK_EQUAL(nBins[1], 3u);
 
   // Test the lower limits
-  std::vector<double> limits = matMap.getMin();
+  std::vector<long double> limits = matMap.getMin();
   CHECK_CLOSE_ABS(limits[0], 0., 1e-4);
   CHECK_CLOSE_ABS(limits[1], 0., 1e-4);
 
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
 
   // Test the material getter with a cache
   // Build a material cell
-  std::array<double, dim> lowerLeft{{0., 0.}};
-  std::array<double, dim> upperRight{{1., 1.}};
+  std::array<long double, dim> lowerLeft{{0., 0.}};
+  std::array<long double, dim> upperRight{{1., 1.}};
   std::array<Acts::Material::ParametersVector, 4> matArray = {mat, mat, mat,
                                                               mat};
 

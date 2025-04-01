@@ -36,9 +36,9 @@ class AdaptiveGridTrackDensity {
   using DensityMap = boost::container::flat_map<Bin, float>;
   /// Coordinates in the z-t plane; the t value will be set to 0 if time
   /// vertex seeding is disabled
-  using ZTPosition = std::pair<double, double>;
+  using ZTPosition = std::pair<long double, long double>;
   /// z-t position of a maximum and its width
-  using ZTPositionAndWidth = std::pair<ZTPosition, double>;
+  using ZTPositionAndWidth = std::pair<ZTPosition, long double>;
   /// Optional grid size range
   using GridSizeRange =
       std::pair<std::optional<std::uint32_t>, std::optional<std::uint32_t>>;
@@ -47,24 +47,24 @@ class AdaptiveGridTrackDensity {
   struct Config {
     /// Spatial extent of a bin in d0 and z0 direction, should always be set to
     /// a positive value
-    double spatialBinExtent = 15 * UnitConstants::um;
+    long double spatialBinExtent = 15 * UnitConstants::um;
 
     /// Number of standard deviations that the grid covers in z direction
-    double nSpatialTrkSigmas = 3.0;
+    long double nSpatialTrkSigmas = 3.0;
 
     /// Temporal extent of a bin, not used if useTime == true
-    double temporalBinExtent = 19 * UnitConstants::mm;
+    long double temporalBinExtent = 19 * UnitConstants::mm;
 
     /// Number of standard deviations that the grid covers in t direction, not
     /// used if useTime == true
-    double nTemporalTrkSigmas = 3.0;
+    long double nTemporalTrkSigmas = 3.0;
 
     /// Spatial window for filling the density map
-    std::pair<double, double> spatialWindow = {-250 * UnitConstants::mm,
-                                               250 * UnitConstants::mm};
+    std::pair<long double, long double> spatialWindow = {
+        -250 * UnitConstants::mm, 250 * UnitConstants::mm};
     /// Temporal window for filling the density map
-    std::pair<double, double> temporalWindow = {-10 * UnitConstants::ns,
-                                                10 * UnitConstants::ns};
+    std::pair<long double, long double> temporalWindow = {
+        -10 * UnitConstants::ns, 10 * UnitConstants::ns};
 
     /// Optional minimal and maximal number of bins in z direction
     GridSizeRange spatialTrkGridSizeRange = {std::nullopt, std::nullopt};
@@ -84,7 +84,7 @@ class AdaptiveGridTrackDensity {
     /// The maximum relative density deviation from the main
     /// maximum to consider the second and third maximum for
     /// the highest-sum approach from above
-    double maxRelativeDensityDev = 0.01;
+    long double maxRelativeDensityDev = 0.01;
   };
 
   /// Constructor
@@ -135,7 +135,7 @@ class AdaptiveGridTrackDensity {
   /// @param bin Bin number
   /// @param binExtent Bin extent
   /// @return Bin center
-  static double getBinCenter(std::int32_t bin, double binExtent);
+  static long double getBinCenter(std::int32_t bin, long double binExtent);
 
  private:
   Config m_cfg;
@@ -144,7 +144,7 @@ class AdaptiveGridTrackDensity {
   /// @param value d, z, or time value
   /// @param binExtent Bin extent
   /// @return Bin number
-  static std::int32_t getBin(double value, double binExtent);
+  static std::int32_t getBin(long double value, long double binExtent);
 
   /// @brief Calculates the grid size in z or time direction
   /// @param sigma Standard deviation of the track density
@@ -154,36 +154,36 @@ class AdaptiveGridTrackDensity {
   /// @param trkGridSizeRange Optional minimal and maximal number of bins
   ///        in z or time direction
   /// @return Grid size
-  static std::uint32_t getTrkGridSize(double sigma, double trkSigmas,
-                                      double binExtent,
+  static std::uint32_t getTrkGridSize(long double sigma, long double trkSigmas,
+                                      long double binExtent,
                                       const GridSizeRange& trkGridSizeRange);
 
   /// @brief Calculates the bin number corresponding to a z value
   /// @param value z value
   /// @return Bin number
-  std::int32_t getSpatialBin(double value) const;
+  std::int32_t getSpatialBin(long double value) const;
   /// @brief Calculates the bin number corresponding to a time value
   /// @param value Time value
   /// @return Bin number
-  std::int32_t getTemporalBin(double value) const;
+  std::int32_t getTemporalBin(long double value) const;
 
   /// @brief Calculates the spatial bin center corresponding to a bin number
   /// @param bin Bin number
   /// @return Bin center
-  double getSpatialBinCenter(std::int32_t bin) const;
+  long double getSpatialBinCenter(std::int32_t bin) const;
   /// @brief Calculates the temporal bin center corresponding to a bin number
   /// @param bin Bin number
   /// @return Bin center
-  double getTemporalBinCenter(std::int32_t bin) const;
+  long double getTemporalBinCenter(std::int32_t bin) const;
 
   /// @brief Calculates the grid size in z direction
   /// @param sigma Standard deviation of the track density
   /// @return Grid size
-  std::uint32_t getSpatialTrkGridSize(double sigma) const;
+  std::uint32_t getSpatialTrkGridSize(long double sigma) const;
   /// @brief Calculates the grid size in time direction
   /// @param sigma Standard deviation of the track density
   /// @return Grid size
-  std::uint32_t getTemporalTrkGridSize(double sigma) const;
+  std::uint32_t getTemporalTrkGridSize(long double sigma) const;
 
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between bins and corresponding density
@@ -219,8 +219,8 @@ class AdaptiveGridTrackDensity {
   /// @param maxZT z-t position of the maximum density value
   ///
   /// @return The width
-  Result<double> estimateSeedWidth(const DensityMap& densityMap,
-                                   const ZTPosition& maxZT) const;
+  Result<long double> estimateSeedWidth(const DensityMap& densityMap,
+                                        const ZTPosition& maxZT) const;
 
   /// @brief Checks (up to) first three density maxima that have a
   /// maximum relative deviation of 'relativeDensityDev' from the
@@ -239,7 +239,7 @@ class AdaptiveGridTrackDensity {
   /// @param bin Bin whose neighbors in z we want to sum up
   ///
   /// @return The density sum
-  double getDensitySum(const DensityMap& densityMap, const Bin& bin) const;
+  long double getDensitySum(const DensityMap& densityMap, const Bin& bin) const;
 };
 
 }  // namespace Acts

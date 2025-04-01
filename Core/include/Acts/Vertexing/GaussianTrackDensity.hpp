@@ -34,8 +34,9 @@ class GaussianTrackDensity {
     /// @param c2_ Quadratic coefficient in exponent
     /// @param lowerBound_ The lower bound
     /// @param upperBound_ The upper bound
-    TrackEntry(double z_, double c0_, double c1_, double c2_,
-               double lowerBound_, double upperBound_)
+    TrackEntry(long double z_, long double c0_, long double c1_,
+               long double c2_, long double lowerBound_,
+               long double upperBound_)
         : z(z_),
           c0(c0_),
           c1(c1_),
@@ -43,23 +44,23 @@ class GaussianTrackDensity {
           lowerBound(lowerBound_),
           upperBound(upperBound_) {}
 
-    double z = 0;
+    long double z = 0;
     // Cached information for a single track
     // z-independent term in exponent
-    double c0 = 0;
+    long double c0 = 0;
     // linear coefficient in exponent
-    double c1 = 0;
+    long double c1 = 0;
     // quadratic coefficient in exponent
-    double c2 = 0;
+    long double c2 = 0;
     // The lower bound
-    double lowerBound = 0;
+    long double lowerBound = 0;
     // The upper bound
-    double upperBound = 0;
+    long double upperBound = 0;
   };
 
   /// @brief The Config struct
   struct Config {
-    explicit Config(double d0Sig = 3.5, double z0Sig = 12.)
+    explicit Config(long double d0Sig = 3.5, long double z0Sig = 12.)
         : d0MaxSignificance(d0Sig),
           z0MaxSignificance(z0Sig),
           d0SignificanceCut(d0Sig * d0Sig),
@@ -70,12 +71,12 @@ class GaussianTrackDensity {
     bool isGaussianShaped = true;
 
     // Maximum d0 impact parameter significance to use a track
-    double d0MaxSignificance;
+    long double d0MaxSignificance;
     // Maximum z0 impact parameter significance to use a track
-    double z0MaxSignificance;
+    long double z0MaxSignificance;
     // Corresponding cut values
-    double d0SignificanceCut;
-    double z0SignificanceCut;
+    long double d0SignificanceCut;
+    long double z0SignificanceCut;
 
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
@@ -115,8 +116,9 @@ class GaussianTrackDensity {
   /// @param trackList All input tracks
   ///
   /// @return Pair of position of global maximum and Gaussian width
-  Result<std::optional<std::pair<double, double>>> globalMaximumWithWidth(
-      State& state, const std::vector<InputTrack>& trackList) const;
+  Result<std::optional<std::pair<long double, long double>>>
+  globalMaximumWithWidth(State& state,
+                         const std::vector<InputTrack>& trackList) const;
 
   /// @brief Calculates the z position of the global maximum
   ///
@@ -124,7 +126,7 @@ class GaussianTrackDensity {
   /// @param trackList All input tracks
   ///
   /// @return z position of the global maximum
-  Result<std::optional<double>> globalMaximum(
+  Result<std::optional<long double>> globalMaximum(
       State& state, const std::vector<InputTrack>& trackList) const;
 
  private:
@@ -145,8 +147,8 @@ class GaussianTrackDensity {
   /// @param z z-position along the beamline
   ///
   /// @return Track density, first and second derivatives
-  std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
-                                                                double z) const;
+  std::tuple<long double, long double, long double> trackDensityAndDerivatives(
+      State& state, long double z) const;
 
   /// @brief Update the current maximum values
   ///
@@ -158,9 +160,10 @@ class GaussianTrackDensity {
   /// @param maxSecondDerivative Maximum of the second derivative
   /// @return The max z position, the max value at z position, the max second
   /// derivative
-  std::tuple<double, double, double> updateMaximum(
-      double newZ, double newValue, double newSecondDerivative, double maxZ,
-      double maxValue, double maxSecondDerivative) const;
+  std::tuple<long double, long double, long double> updateMaximum(
+      long double newZ, long double newValue, long double newSecondDerivative,
+      long double maxZ, long double maxValue,
+      long double maxSecondDerivative) const;
 
   /// @brief Calculates the step size
   ///
@@ -169,29 +172,30 @@ class GaussianTrackDensity {
   /// @param ddy Second derivative
   ///
   /// @return The step size
-  double stepSize(double y, double dy, double ddy) const;
+  long double stepSize(long double y, long double dy, long double ddy) const;
 
   // Helper class to evaluate and store track density at specific position
   class GaussianTrackDensityStore {
    public:
     // Initialise at the z coordinate at which the density is to be evaluated
-    explicit GaussianTrackDensityStore(double z_coordinate)
+    explicit GaussianTrackDensityStore(long double z_coordinate)
         : m_z(z_coordinate) {}
 
     // Add the contribution of a single track to the density
     void addTrackToDensity(const TrackEntry& entry);
 
     // Return density, first and second derivatives
-    inline std::tuple<double, double, double> densityAndDerivatives() const {
+    inline std::tuple<long double, long double, long double>
+    densityAndDerivatives() const {
       return {m_density, m_firstDerivative, m_secondDerivative};
     }
 
    private:
     // Store density and derivatives for z position m_z
-    double m_z;
-    double m_density{0};
-    double m_firstDerivative{0};
-    double m_secondDerivative{0};
+    long double m_z;
+    long double m_density{0};
+    long double m_firstDerivative{0};
+    long double m_secondDerivative{0};
   };
 };
 

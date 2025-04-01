@@ -33,8 +33,8 @@ struct DigitizationCsvOutput {
   /// @param r The radius of the arc
   /// @param phiMin The minimum phi
   /// @param phiMin The maximum phi
-  void writeArc(std::ostream& outf, double r, double phiMin,
-                double phiMax) const {
+  void writeArc(std::ostream& outf, long double r, long double phiMin,
+                long double phiMax) const {
     outf << "a," << r << "," << r << "," << phiMin << "," << phiMax << "\n";
   };
 

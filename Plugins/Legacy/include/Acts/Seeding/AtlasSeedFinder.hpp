@@ -29,16 +29,16 @@ class AtlasSeedFinder {
     // UNIT AS RETURNED BY m_fieldService->getField() default value in ATLAS
     // was
     // 5. Unit is kilo-Tesla
-    //  double bFieldInZ = 5.;
-    double bFieldInZ = 0.00208;
+    //  long double bFieldInZ = 5.;
+    long double bFieldInZ = 0.00208;
 
-    double SCT_rMin = 200.;
+    long double SCT_rMin = 200.;
 
-    double beamPosX = 0;
-    double beamPosY = 0;
-    double beamPosZ = 0;
-    double beamTiltX = 0;
-    double beamTiltY = 0;
+    long double beamPosX = 0;
+    long double beamPosY = 0;
+    long double beamPosZ = 0;
+    long double beamTiltX = 0;
+    long double beamTiltY = 0;
   };
   ///////////////////////////////////////////////////////////////////
   // Public methods:

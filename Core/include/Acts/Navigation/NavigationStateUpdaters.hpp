@@ -50,7 +50,7 @@ inline void intitializeCandidates(const GeometryContext& gctx,
     const Surface& surface =
         sc.surface != nullptr ? *sc.surface : sc.portal->surface();
     // Only allow overstepping if it's not a portal
-    double overstepTolerance =
+    long double overstepTolerance =
         sc.portal != nullptr ? s_onSurfaceTolerance : nState.overstepTolerance;
     // Boundary tolerance is forced to 0 for portals
     BoundaryTolerance boundaryTolerance =

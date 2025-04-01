@@ -109,7 +109,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
     for (auto [iv, value] : enumerate(valuesEntry)) {
       // Get the binning value
       AxisDirection bValue = bvCyl.at(iv);
-      double val = std::numeric_limits<double>::max();
+      long double val = std::numeric_limits<long double>::max();
       bool isMin = (iv % 2 == 0);
       // Case "e" : external extent
       if (value == "e") {
@@ -121,7 +121,7 @@ Acts::detail::GeoModelExentHelper::extentFromTable(
         val = isMin ? externalExtent.min(bValue) : externalExtent.max(bValue);
       } else if (value == "i" || value[0u] == 'i') {
         // Add the envelope
-        double envelope = 0.;
+        long double envelope = 0.;
         if (value.size() > 2u) {
           std::vector<std::string> valEntry;
           boost::split(valEntry, value, boost::is_any_of("+"));

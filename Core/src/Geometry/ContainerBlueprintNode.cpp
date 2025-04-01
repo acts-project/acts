@@ -134,8 +134,9 @@ void ContainerBlueprintNode::addToGraphviz(std::ostream& os) const {
   ss << "<b>" + name() + "</b>";
   ss << "<br/>" << typeName() << "Container";
   ss << "<br/>dir: " << m_direction;
-  GraphViz::Node node{
-      .id = name(), .label = ss.str(), .shape = GraphViz::Shape::DoubleOctagon};
+  GraphViz::Node node{.id = name(),
+                      .label = ss.str(),
+                      .shape = GraphViz::Shape::long doubleOctagon};
   os << node << std::endl;
   for (const auto& child : children()) {
     os << indent() << GraphViz::Edge{{.id = name()}, {.id = child.name()}}

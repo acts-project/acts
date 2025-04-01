@@ -27,7 +27,7 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
                                           const Transform3& absTransform,
                                           bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr double unitLength =
+  static constexpr long double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -35,9 +35,9 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   transform.translation() = unitLength * absTransform.translation();
   auto rotation = absTransform.rotation();
   // Get the half lengths
-  std::vector<double> halfLengths = {geoBox.getXHalfLength(),
-                                     geoBox.getYHalfLength(),
-                                     geoBox.getZHalfLength()};
+  std::vector<long double> halfLengths = {geoBox.getXHalfLength(),
+                                          geoBox.getYHalfLength(),
+                                          geoBox.getZHalfLength()};
   // Create the surface
   auto minElement = std::min_element(halfLengths.begin(), halfLengths.end());
   auto zIndex = std::distance(halfLengths.begin(), minElement);
@@ -53,8 +53,8 @@ Acts::detail::GeoBoxConverter::operator()(const PVConstLink& geoPV,
   transform.linear() = rotation;
 
   // Create the surface bounds
-  double halfX = unitLength * halfLengths[xIndex];
-  double halfY = unitLength * halfLengths[yIndex];
+  long double halfX = unitLength * halfLengths[xIndex];
+  long double halfY = unitLength * halfLengths[yIndex];
   auto rectangleBounds = std::make_shared<Acts::RectangleBounds>(halfX, halfY);
   if (!sensitive) {
     auto surface =

@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
+  long double time = 4.;
   Vector3 direction{sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)};
-  double qop = 0.125;
+  long double qop = 0.125;
   FreeVector parameters, startParameters;
   parameters << position[0], position[1], position[2], time, direction[0],
       direction[1], direction[2], qop;
@@ -227,7 +227,7 @@ BoundMatrix numericalBoundToBoundJacobian(const propagator_t& prop,
                                           const BoundVector& parA,
                                           const Surface& srfA,
                                           const Surface& srfB) {
-  double h = 1e-4;
+  long double h = 1e-4;
   BoundMatrix J;
   for (std::size_t i = 0; i < 6; i++) {
     for (std::size_t j = 0; j < 6; j++) {
@@ -249,10 +249,10 @@ unsigned int getNextSeed() {
   return ++seed;
 }
 
-auto makeDist(double a, double b) {
-  return bdata::random(
-      (bdata::engine = std::mt19937{}, bdata::seed = getNextSeed(),
-       bdata::distribution = std::uniform_real_distribution<double>(a, b)));
+auto makeDist(long double a, long double b) {
+  return bdata::random((
+      bdata::engine = std::mt19937{}, bdata::seed = getNextSeed(),
+      bdata::distribution = std::uniform_real_distribution<long double>(a, b)));
 }
 
 const auto locDist = makeDist(-5_mm, 5_mm);
@@ -346,7 +346,7 @@ BOOST_DATA_TEST_CASE(CovarianceConversionRotatedPlane,
       boundToBound(parA, covA, *planeSurfaceA, *planeSurfaceB, bField);
   BoundVector exp = parA;
   // loc0 and loc1 are rotated
-  exp.head<2>() = Eigen::Rotation2D<double>(-angle) * parA.head<2>();
+  exp.head<2>() = Eigen::Rotation2D<long double>(-angle) * parA.head<2>();
 
   CHECK_CLOSE_ABS(exp, parB, 1e-9);
 

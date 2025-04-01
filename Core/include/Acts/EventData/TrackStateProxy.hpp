@@ -83,14 +83,15 @@ struct FixedSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
   // single items
-  using Coefficients = Eigen::Matrix<double, Size, 1, Flags>;
-  using Covariance = Eigen::Matrix<double, Size, Size, Flags>;
+  using Coefficients = Eigen::Matrix<long double, Size, 1, Flags>;
+  using Covariance = Eigen::Matrix<long double, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 
-  using DynamicCoefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
+  using DynamicCoefficients =
+      Eigen::Matrix<long double, Eigen::Dynamic, 1, Flags>;
   using DynamicCovariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using DynamicCoefficientsMap =
       Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
   using DynamicCovarianceMap =
@@ -103,9 +104,9 @@ template <bool ReadOnlyMaps = true>
 struct DynamicSizeTypes {
   constexpr static auto Flags = Eigen::ColMajor | Eigen::AutoAlign;
 
-  using Coefficients = Eigen::Matrix<double, Eigen::Dynamic, 1, Flags>;
+  using Coefficients = Eigen::Matrix<long double, Eigen::Dynamic, 1, Flags>;
   using Covariance =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+      Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
 };
@@ -387,16 +388,16 @@ class TrackStateProxy {
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return Mutable reference to the pathlength.
-  double& pathLength()
+  long double& pathLength()
     requires(!ReadOnly)
   {
-    return component<double, hashString("pathLength")>();
+    return component<long double, hashString("pathLength")>();
   }
 
   /// Getter for the path length. Returns a copy of the path length value.
   /// @return The path length of this track state
-  double pathLength() const {
-    return component<double, hashString("pathLength")>();
+  long double pathLength() const {
+    return component<long double, hashString("pathLength")>();
   }
 
   /// Getter for the type flags associated with the track state.

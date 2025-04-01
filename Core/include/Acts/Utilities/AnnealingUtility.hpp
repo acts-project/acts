@@ -32,21 +32,21 @@ class AnnealingUtility {
   struct Config {
     Config();
 
-    Config(double cutOff_, std::vector<double> setOfTemperatures_)
+    Config(long double cutOff_, std::vector<long double> setOfTemperatures_)
         : cutOff(cutOff_), setOfTemperatures(std::move(setOfTemperatures_)) {}
 
     // Insensitivity of calculated weight at cutoff
-    double cutOff{9.};
+    long double cutOff{9.};
 
     // Set of temperatures, annealing starts at setOfTemperatures[0]
     // and anneals towards setOfTemperatures[last]
-    std::vector<double> setOfTemperatures{64., 16., 4., 2., 1.5, 1.};
+    std::vector<long double> setOfTemperatures{64., 16., 4., 2., 1.5, 1.};
   };
 
   /// Constructor
   explicit AnnealingUtility(const Config& cfg = Config()) : m_cfg(cfg) {
     // Set Gaussian cut-off terms for each temperature
-    for (double temp : cfg.setOfTemperatures) {
+    for (long double temp : cfg.setOfTemperatures) {
       m_gaussCutTempVec.push_back(std::exp(-cfg.cutOff / (2. * temp)));
     }
   }
@@ -63,8 +63,8 @@ class AnnealingUtility {
   /// of current track to all vertices it is currently attached to
   ///
   /// @return Calculated weight according to Eq.(5.46) in Ref.(1)
-  double getWeight(State& state, double chi2,
-                   const std::vector<double>& allChi2) const;
+  long double getWeight(State& state, long double chi2,
+                        const std::vector<long double>& allChi2) const;
 
   /// @brief Weight access
   ///
@@ -72,7 +72,7 @@ class AnnealingUtility {
   /// @param chi2 Chi^2
   ///
   /// @return Calculated weight
-  double getWeight(State& state, double chi2) const;
+  long double getWeight(State& state, long double chi2) const;
 
  private:
   /// Configuration object
@@ -80,6 +80,6 @@ class AnnealingUtility {
 
   // For each temperature, a Gaussian term with the chi2 cut-off value
   // is calculated and stored here
-  std::vector<double> m_gaussCutTempVec;
+  std::vector<long double> m_gaussCutTempVec;
 };
 }  // namespace Acts

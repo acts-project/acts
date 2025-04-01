@@ -125,12 +125,12 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
 }
 
 BOOST_AUTO_TEST_CASE(Range1DRoundTrip) {
-  Range1D<double> r(-10., 100.);
+  Range1D<long double> r(-10., 100.);
 
   nlohmann::json jrange;
   jrange["range"] = r;
 
-  Range1D<double> rIn = jrange["range"];
+  Range1D<long double> rIn = jrange["range"];
 
   CHECK_CLOSE_ABS(rIn.min(), -10., 10e-5);
   CHECK_CLOSE_ABS(rIn.max(), 100., 10e-5);

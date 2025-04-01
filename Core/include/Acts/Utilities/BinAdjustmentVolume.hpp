@@ -34,12 +34,12 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
-  double minR = cBounds.get(CylinderVolumeBounds::eMinR);
-  double maxR = cBounds.get(CylinderVolumeBounds::eMaxR);
-  double minPhi = -cBounds.get(CylinderVolumeBounds::eHalfPhiSector);
-  double maxPhi = cBounds.get(CylinderVolumeBounds::eHalfPhiSector);
-  double minZ = -cBounds.get(CylinderVolumeBounds::eHalfLengthZ);
-  double maxZ = cBounds.get(CylinderVolumeBounds::eHalfLengthZ);
+  long double minR = cBounds.get(CylinderVolumeBounds::eMinR);
+  long double maxR = cBounds.get(CylinderVolumeBounds::eMaxR);
+  long double minPhi = -cBounds.get(CylinderVolumeBounds::eHalfPhiSector);
+  long double maxPhi = cBounds.get(CylinderVolumeBounds::eHalfPhiSector);
+  long double minZ = -cBounds.get(CylinderVolumeBounds::eHalfLengthZ);
+  long double maxZ = cBounds.get(CylinderVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions
@@ -90,12 +90,12 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cutout cylinder bounds
-  double minR = cBounds.get(CutoutCylinderVolumeBounds::eMinR);
-  double maxR = cBounds.get(CutoutCylinderVolumeBounds::eMaxR);
-  double minPhi = -std::numbers::pi;
-  double maxPhi = std::numbers::pi;
-  double minZ = -cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
-  double maxZ = cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
+  long double minR = cBounds.get(CutoutCylinderVolumeBounds::eMinR);
+  long double maxR = cBounds.get(CutoutCylinderVolumeBounds::eMaxR);
+  long double minPhi = -std::numbers::pi;
+  long double maxPhi = std::numbers::pi;
+  long double minZ = -cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
+  long double maxZ = cBounds.get(CutoutCylinderVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions
@@ -146,12 +146,12 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
-  double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
-  double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
-  double minY = -cBounds.get(CuboidVolumeBounds::eHalfLengthY);
-  double maxY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
-  double minZ = -cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
-  double maxZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
+  long double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
+  long double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
+  long double minY = -cBounds.get(CuboidVolumeBounds::eHalfLengthY);
+  long double maxY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
+  long double minZ = -cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
+  long double maxZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions

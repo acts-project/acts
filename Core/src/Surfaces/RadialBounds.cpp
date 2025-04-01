@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-std::vector<double> RadialBounds::values() const {
+std::vector<long double> RadialBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 

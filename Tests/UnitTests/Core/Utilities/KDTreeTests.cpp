@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace {
-std::vector<std::pair<std::array<double, 3>, int>> test_vector{
+std::vector<std::pair<std::array<long double, 3>, int>> test_vector{
     {{-8.5, 2.3, -1.6}, 84},   {{-9.7, -1.4, 7.6}, -56},
     {{6.4, 2.7, -1.0}, -94},   {{-2.2, -9.3, 3.6}, 56},
     {{-9.2, -2.8, -2.5}, -90}, {{3.8, 0.9, 7.2}, 43},
@@ -76,17 +76,17 @@ std::vector<std::pair<std::array<double, 3>, int>> test_vector{
 
 namespace Acts::Test {
 
-struct TreeFixture1DDoubleInt1 {
-  TreeFixture1DDoubleInt1()
-      : tree(std::vector<std::pair<std::array<double, 1>, int>>{
+struct TreeFixture1Dlong doubleInt1 {
+  TreeFixture1Dlong doubleInt1()
+      : tree(std::vector<std::pair<std::array<long double, 1>, int>>{
             {{1.0}, 5}, {{2.0}, 6}, {{-1.2}, 2}, {{0.9}, 10}}) {}
 
-  Acts::KDTree<1, int, double> tree;
+  Acts::KDTree<1, int, long double> tree;
 };
 
-struct TreeFixture1DDoubleInt2 {
-  TreeFixture1DDoubleInt2()
-      : tree(std::vector<std::pair<std::array<double, 1>, int>>{
+struct TreeFixture1Dlong doubleInt2 {
+  TreeFixture1Dlong doubleInt2()
+      : tree(std::vector<std::pair<std::array<long double, 1>, int>>{
             {{1.0}, 5},
             {{2.0}, 6},
             {{-1.2}, 2},
@@ -95,20 +95,20 @@ struct TreeFixture1DDoubleInt2 {
             {{110.0}, 1},
             {{-1000.0}, 3}}) {}
 
-  Acts::KDTree<1, int, double> tree;
+  Acts::KDTree<1, int, long double> tree;
 };
 
-struct TreeFixture2DDoubleInt1 {
-  TreeFixture2DDoubleInt1()
-      : tree(std::vector<std::pair<std::array<double, 2>, int>>{
+struct TreeFixture2Dlong doubleInt1 {
+  TreeFixture2Dlong doubleInt1()
+      : tree(std::vector<std::pair<std::array<long double, 2>, int>>{
             {{1.0, 5.0}, 5}, {{2.0, -2.5}, 6}}) {}
 
-  Acts::KDTree<2, int, double> tree;
+  Acts::KDTree<2, int, long double> tree;
 };
 
-struct TreeFixture3DDoubleInt1 {
-  TreeFixture3DDoubleInt1()
-      : tree(std::vector<std::pair<std::array<double, 3>, int>>{
+struct TreeFixture3Dlong doubleInt1 {
+  TreeFixture3Dlong doubleInt1()
+      : tree(std::vector<std::pair<std::array<long double, 3>, int>>{
             {{-4.7, -2.0, -1.7}, 63}, {{8.2, -0.0, 9.5}, -82},
             {{7.1, -3.6, -4.0}, -49}, {{-9.9, -4.6, 2.9}, 86},
             {{5.0, -3.8, -2.8}, -12}, {{-4.8, -1.8, -1.6}, -60},
@@ -120,19 +120,20 @@ struct TreeFixture3DDoubleInt1 {
             {{-2.8, 8.8, -7.2}, 62},  {{-0.1, 3.5, 5.5}, -95},
             {{-1.3, 6.9, 5.3}, -23},  {{6.2, 6.6, 7.1}, -84}}) {}
 
-  Acts::KDTree<3, int, double> tree;
+  Acts::KDTree<3, int, long double> tree;
 };
 
-struct TreeFixture3DDoubleInt2 {
-  TreeFixture3DDoubleInt2()
-      : tree(std::vector<std::pair<std::array<double, 3>, int>>(test_vector)) {}
+struct TreeFixture3Dlong doubleInt2 {
+  TreeFixture3Dlong doubleInt2()
+      : tree(std::vector<std::pair<std::array<long double, 3>, int>>(
+            test_vector)) {}
 
-  Acts::KDTree<3, int, double> tree;
+  Acts::KDTree<3, int, long double> tree;
 };
 
-struct TreeFixture3DDoubleInt3 {
-  TreeFixture3DDoubleInt3()
-      : tree(std::vector<std::pair<std::array<double, 3>, int>>{
+struct TreeFixture3Dlong doubleInt3 {
+  TreeFixture3Dlong doubleInt3()
+      : tree(std::vector<std::pair<std::array<long double, 3>, int>>{
             {{-100.0, -1.1, -1.7}, 0},
             {{100.0, -0.0, 9.5}, 4},
             {{-100.0, -0.6, -1.0}, 1},
@@ -142,12 +143,12 @@ struct TreeFixture3DDoubleInt3 {
             {{-100.0, -1.0, -0.2}, 3},
             {{100.0, 1.9, 8.8}, 7}}) {}
 
-  Acts::KDTree<3, int, double> tree;
+  Acts::KDTree<3, int, long double> tree;
 };
 
-struct TreeFixture10DDoubleInt1 {
-  TreeFixture10DDoubleInt1()
-      : tree(std::vector<std::pair<std::array<double, 10>, int>>{
+struct TreeFixture10Dlong doubleInt1 {
+  TreeFixture10Dlong doubleInt1()
+      : tree(std::vector<std::pair<std::array<long double, 10>, int>>{
             {{5.6, 7.5, -9.8, 9.6, 3.3, -7.3, 2.0, 4.7, -2.1, 5.9}, 32},
             {{1.2, -1.5, -0.2, 0.9, 1.1, -1.4, -8.9, -1.2, -9.0, 7.4}, -66},
             {{1.6, 6.2, 9.9, -2.5, 4.0, 8.9, 3.9, 8.4, -1.2, -4.1}, -51},
@@ -159,12 +160,12 @@ struct TreeFixture10DDoubleInt1 {
             {{8.4, -4.0, 6.3, 1.1, -5.7, 8.1, -8.0, -2.5, -0.5, 3.2}, -56},
             {{2.3, 5.8, 1.4, 4.0, 9.0, -6.4, 1.0, -7.8, 4.3, -5.3}, -83}}) {}
 
-  Acts::KDTree<10, int, double> tree;
+  Acts::KDTree<10, int, long double> tree;
 };
 
-struct TreeFixture3DDoubleString1 {
-  TreeFixture3DDoubleString1()
-      : tree(std::vector<std::pair<std::array<double, 3>, std::string>>{
+struct TreeFixture3Dlong doubleString1 {
+  TreeFixture3Dlong doubleString1()
+      : tree(std::vector<std::pair<std::array<long double, 3>, std::string>>{
             {{-0.2, -0.2, -3.8}, "string0"},
             {{4.9, -7.8, -10.0}, "string1"},
             {{3.5, -10.0, -8.1}, "string2"},
@@ -176,7 +177,7 @@ struct TreeFixture3DDoubleString1 {
             {{-2.7, -5.9, -7.3}, "string8"},
             {{3.1, -9.4, -2.5}, "string9"}}) {}
 
-  Acts::KDTree<3, std::string, double> tree;
+  Acts::KDTree<3, std::string, long double> tree;
 };
 
 struct TreeFixture1DIntInt1 {
@@ -199,27 +200,27 @@ BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_SUITE(KDTree)
 
-BOOST_FIXTURE_TEST_CASE(size_1, TreeFixture1DDoubleInt1) {
+BOOST_FIXTURE_TEST_CASE(size_1, TreeFixture1Dlong doubleInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 4);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_2, TreeFixture1DDoubleInt2) {
+BOOST_FIXTURE_TEST_CASE(size_2, TreeFixture1Dlong doubleInt2) {
   BOOST_CHECK_EQUAL(tree.size(), 7);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_3, TreeFixture2DDoubleInt1) {
+BOOST_FIXTURE_TEST_CASE(size_3, TreeFixture2Dlong doubleInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 2);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_4, TreeFixture3DDoubleInt1) {
+BOOST_FIXTURE_TEST_CASE(size_4, TreeFixture3Dlong doubleInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 20);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_5, TreeFixture10DDoubleInt1) {
+BOOST_FIXTURE_TEST_CASE(size_5, TreeFixture10Dlong doubleInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 10);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_6, TreeFixture3DDoubleString1) {
+BOOST_FIXTURE_TEST_CASE(size_6, TreeFixture3Dlong doubleString1) {
   BOOST_CHECK_EQUAL(tree.size(), 10);
 }
 
@@ -227,12 +228,12 @@ BOOST_FIXTURE_TEST_CASE(size_7, TreeFixture1DIntInt1) {
   BOOST_CHECK_EQUAL(tree.size(), 4);
 }
 
-BOOST_FIXTURE_TEST_CASE(size_8, TreeFixture3DDoubleInt2) {
+BOOST_FIXTURE_TEST_CASE(size_8, TreeFixture3Dlong doubleInt2) {
   BOOST_CHECK_EQUAL(tree.size(), 100);
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_1, TreeFixture1DDoubleInt2) {
-  RangeXD<1, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_1, TreeFixture1Dlong doubleInt2) {
+  RangeXD<1, long double> range;
   range[0].shrink(0.0, 2.5);
 
   std::vector<int> result = tree.rangeSearch(range);
@@ -245,8 +246,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_1, TreeFixture1DDoubleInt2) {
   BOOST_CHECK(!rangeContainsValue(result, 9));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_2, TreeFixture1DDoubleInt2) {
-  RangeXD<1, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_2, TreeFixture1Dlong doubleInt2) {
+  RangeXD<1, long double> range;
   range[0].shrink(-10000.0, 10000.0);
 
   std::vector<int> result = tree.rangeSearch(range);
@@ -260,16 +261,16 @@ BOOST_FIXTURE_TEST_CASE(range_search_2, TreeFixture1DDoubleInt2) {
   BOOST_CHECK(rangeContainsValue(result, 10));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_3, TreeFixture1DDoubleInt2) {
-  RangeXD<1, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_3, TreeFixture1Dlong doubleInt2) {
+  RangeXD<1, long double> range;
   range[0].shrink(5000.0, 10000.0);
 
   std::vector<int> result = tree.rangeSearch(range);
   BOOST_CHECK_EQUAL(result.size(), 0);
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_4, TreeFixture2DDoubleInt1) {
-  RangeXD<2, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_4, TreeFixture2Dlong doubleInt1) {
+  RangeXD<2, long double> range;
   range[0].shrink(0.0, 10.0);
   range[1].shrink(0.0, 10.0);
 
@@ -278,8 +279,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_4, TreeFixture2DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, 5));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_5, TreeFixture2DDoubleInt1) {
-  RangeXD<2, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_5, TreeFixture2Dlong doubleInt1) {
+  RangeXD<2, long double> range;
   range[0].shrink(0.0, 10.0);
   range[1].shrink(-10.0, 10.0);
 
@@ -289,8 +290,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_5, TreeFixture2DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, 6));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_6, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_6, TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[0].shrink(0.0, 5.0);
 
   std::vector<int> result = tree.rangeSearch(range);
@@ -302,8 +303,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_6, TreeFixture10DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, -83));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_7, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_7, TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[9].shrink(0.0, 5.0);
 
   std::vector<int> result = tree.rangeSearch(range);
@@ -312,8 +313,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_7, TreeFixture10DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, -56));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_8, TreeFixture3DDoubleString1) {
-  RangeXD<3, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_8, TreeFixture3Dlong doubleString1) {
+  RangeXD<3, long double> range;
   range[0].shrink(-5.0, 5.0);
   range[1].shrink(-5.0, 5.0);
   range[2].shrink(-5.0, 5.0);
@@ -323,8 +324,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_8, TreeFixture3DDoubleString1) {
   BOOST_CHECK(rangeContainsValue(result, "string0"));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_9, TreeFixture3DDoubleString1) {
-  RangeXD<3, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_9, TreeFixture3Dlong doubleString1) {
+  RangeXD<3, long double> range;
   range[0].shrink(-10.0, 10.0);
   range[1].shrink(-10.0, 10.0);
   range[2].shrink(-5.0, 5.0);
@@ -357,8 +358,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_11, TreeFixture2DIntInt1) {
   BOOST_CHECK(rangeContainsValue(result, 6));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_inplace_1, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_inplace_1, TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[0].shrink(0.0, 5.0);
 
   std::vector<int> result;
@@ -372,8 +373,9 @@ BOOST_FIXTURE_TEST_CASE(range_search_inplace_1, TreeFixture10DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, -83));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_inserter_1, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_inserter_1,
+                        TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[0].shrink(0.0, 5.0);
 
   std::vector<int> result;
@@ -387,13 +389,14 @@ BOOST_FIXTURE_TEST_CASE(range_search_inserter_1, TreeFixture10DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, -83));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_map_1, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_map_1, TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[0].shrink(0.0, 5.0);
 
   std::vector<int> result = tree.rangeSearchMap<int>(
-      range,
-      [](const std::array<double, 10>&, const int& i) -> int { return 2 * i; });
+      range, [](const std::array<long double, 10>&, const int& i) -> int {
+        return 2 * i;
+      });
 
   BOOST_CHECK_EQUAL(result.size(), 5);
   BOOST_CHECK(rangeContainsValue(result, -132));
@@ -403,15 +406,16 @@ BOOST_FIXTURE_TEST_CASE(range_search_map_1, TreeFixture10DDoubleInt1) {
   BOOST_CHECK(rangeContainsValue(result, -166));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_map_inserter_1, TreeFixture10DDoubleInt1) {
-  RangeXD<10, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_map_inserter_1,
+                        TreeFixture10Dlong doubleInt1) {
+  RangeXD<10, long double> range;
   range[0].shrink(0.0, 5.0);
 
   std::vector<std::string> result;
 
   tree.rangeSearchMapInserter<std::string>(
       range,
-      [](const std::array<double, 10>&, const int& i) -> std::string {
+      [](const std::array<long double, 10>&, const int& i) -> std::string {
         return std::to_string(i);
       },
       std::back_inserter(result));
@@ -455,26 +459,28 @@ BOOST_FIXTURE_TEST_CASE(range_search_map_discard_1, TreeFixture2DIntInt1) {
   BOOST_CHECK_EQUAL(result, 24);
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_map_discard_2, TreeFixture3DDoubleInt2) {
-  RangeXD<3, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_map_discard_2,
+                        TreeFixture3Dlong doubleInt2) {
+  RangeXD<3, long double> range;
   range[0].shrinkMin(0.0);
 
   int result = 0;
 
-  tree.rangeSearchMapDiscard(range, [&result](const std::array<double, 3>&,
+  tree.rangeSearchMapDiscard(range, [&result](const std::array<long double, 3>&,
                                               const int& i) { result += i; });
 
   BOOST_CHECK_EQUAL(result, 555);
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_combinatorial, TreeFixture3DDoubleInt2) {
-  for (double xmin = -10.0; xmin <= 10.0; xmin += 2.0) {
-    for (double xmax = -10.0; xmax <= 10.0; xmax += 2.0) {
-      for (double ymin = -10.0; ymin <= 10.0; ymin += 2.0) {
-        for (double ymax = -10.0; ymax <= 10.0; ymax += 2.0) {
-          for (double zmin = -10.0; zmin <= 10.0; zmin += 2.0) {
-            for (double zmax = -10.0; zmax <= 10.0; zmax += 2.0) {
-              RangeXD<3, double> range;
+BOOST_FIXTURE_TEST_CASE(range_search_combinatorial,
+                        TreeFixture3Dlong doubleInt2) {
+  for (long double xmin = -10.0; xmin <= 10.0; xmin += 2.0) {
+    for (long double xmax = -10.0; xmax <= 10.0; xmax += 2.0) {
+      for (long double ymin = -10.0; ymin <= 10.0; ymin += 2.0) {
+        for (long double ymax = -10.0; ymax <= 10.0; ymax += 2.0) {
+          for (long double zmin = -10.0; zmin <= 10.0; zmin += 2.0) {
+            for (long double zmax = -10.0; zmax <= 10.0; zmax += 2.0) {
+              RangeXD<3, long double> range;
 
               range[0].shrink(xmin, xmax);
               range[1].shrink(ymin, ymax);
@@ -504,8 +510,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_combinatorial, TreeFixture3DDoubleInt2) {
   }
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_dominate1, TreeFixture3DDoubleInt3) {
-  RangeXD<3, double> range1;
+BOOST_FIXTURE_TEST_CASE(range_search_dominate1, TreeFixture3Dlong doubleInt3) {
+  RangeXD<3, long double> range1;
   range1[0].shrink(-200, 0);
 
   std::vector<int> result = tree.rangeSearch(range1);
@@ -516,8 +522,8 @@ BOOST_FIXTURE_TEST_CASE(range_search_dominate1, TreeFixture3DDoubleInt3) {
   BOOST_CHECK(rangeContainsValue(result, 3));
 }
 
-BOOST_FIXTURE_TEST_CASE(range_search_dominate2, TreeFixture3DDoubleInt3) {
-  RangeXD<3, double> range1;
+BOOST_FIXTURE_TEST_CASE(range_search_dominate2, TreeFixture3Dlong doubleInt3) {
+  RangeXD<3, long double> range1;
   range1[0].shrink(0, 200);
 
   std::vector<int> result = tree.rangeSearch(range1);
@@ -531,28 +537,28 @@ BOOST_FIXTURE_TEST_CASE(range_search_dominate2, TreeFixture3DDoubleInt3) {
 BOOST_AUTO_TEST_CASE(range_search_very_big) {
   int q = 0;
 
-  std::vector<std::pair<std::array<double, 3>, int>> points;
+  std::vector<std::pair<std::array<long double, 3>, int>> points;
 
-  for (double x = -10.0; x < 10.0; x += 0.5) {
-    for (double y = -10.0; y < 10.0; y += 0.5) {
-      for (double z = -10.0; z < 10.0; z += 0.5) {
+  for (long double x = -10.0; x < 10.0; x += 0.5) {
+    for (long double y = -10.0; y < 10.0; y += 0.5) {
+      for (long double z = -10.0; z < 10.0; z += 0.5) {
         points.push_back({{x, y, z}, q++});
       }
     }
   }
 
-  std::vector<std::pair<std::array<double, 3>, int>> copy(points);
+  std::vector<std::pair<std::array<long double, 3>, int>> copy(points);
 
-  Acts::KDTree<3, int, double> tree(std::move(copy));
+  Acts::KDTree<3, int, long double> tree(std::move(copy));
 
-  for (double xmin = -10.0; xmin <= 10.0; xmin += 1.0) {
-    for (double ymin = -10.0; ymin <= 10.0; ymin += 1.0) {
-      for (double zmin = -10.0; zmin <= 10.0; zmin += 1.0) {
-        RangeXD<3, double> range;
+  for (long double xmin = -10.0; xmin <= 10.0; xmin += 1.0) {
+    for (long double ymin = -10.0; ymin <= 10.0; ymin += 1.0) {
+      for (long double zmin = -10.0; zmin <= 10.0; zmin += 1.0) {
+        RangeXD<3, long double> range;
 
-        double xmax = xmin + 1.0;
-        double ymax = ymin + 1.0;
-        double zmax = zmin + 1.0;
+        long double xmax = xmin + 1.0;
+        long double ymax = ymin + 1.0;
+        long double zmax = zmin + 1.0;
 
         range[0].shrink(xmin, xmax);
         range[1].shrink(ymin, ymax);
@@ -560,8 +566,8 @@ BOOST_AUTO_TEST_CASE(range_search_very_big) {
 
         std::vector<int> valid;
 
-        for (const std::pair<std::array<double, 3>, int>& i : points) {
-          const std::array<double, 3>& c = i.first;
+        for (const std::pair<std::array<long double, 3>, int>& i : points) {
+          const std::array<long double, 3>& c = i.first;
           if (xmin <= c[0] && c[0] < xmax && ymin <= c[1] && c[1] < ymax &&
               zmin <= c[2] && c[2] < zmax) {
             valid.push_back(i.second);
@@ -583,7 +589,7 @@ BOOST_AUTO_TEST_CASE(range_search_very_big) {
 BOOST_AUTO_TEST_CASE(range_search_many_same) {
   int q = 0;
 
-  std::vector<std::pair<std::array<double, 3>, int>> points;
+  std::vector<std::pair<std::array<long double, 3>, int>> points;
 
   for (std::size_t i = 0; i < 50; ++i) {
     points.push_back({{64.0, 64.0, 64.0}, q++});
@@ -593,14 +599,14 @@ BOOST_AUTO_TEST_CASE(range_search_many_same) {
     points.push_back({{-64.0, -64.0, -64.0}, q++});
   }
 
-  Acts::KDTree<3, int, double> tree(std::move(points));
+  Acts::KDTree<3, int, long double> tree(std::move(points));
 
-  RangeXD<3, double> range1;
+  RangeXD<3, long double> range1;
   range1[0].shrink(50.0, 70.0);
   range1[1].shrink(50.0, 70.0);
   range1[2].shrink(50.0, 70.0);
 
-  RangeXD<3, double> range2;
+  RangeXD<3, long double> range2;
   range2[0].shrink(-70.0, -50.0);
   range2[1].shrink(-70.0, -50.0);
   range2[2].shrink(-70.0, -50.0);

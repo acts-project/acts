@@ -52,11 +52,11 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     }
     // The lines channel segment lines along x
     if (bstart[0] != bend[0]) {
-      double k = segment2d.y() / segment2d.x();
-      double d = start.y() - k * start.x();
+      long double k = segment2d.y() / segment2d.x();
+      long double d = start.y() - k * start.x();
 
       const auto& xboundaries = segmentation.binningData()[0].boundaries();
-      std::vector<double> xbbounds = {
+      std::vector<long double> xbbounds = {
           xboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
           xboundaries.begin() + std::max(bstart[0], bend[0]) + 1};
       for (const auto x : xbbounds) {
@@ -66,10 +66,10 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     }
     // The lines channel segment lines along y
     if (bstart[1] != bend[1]) {
-      double k = segment2d.x() / segment2d.y();
-      double d = start.x() - k * start.y();
+      long double k = segment2d.x() / segment2d.y();
+      long double d = start.x() - k * start.y();
       const auto& yboundaries = segmentation.binningData()[1].boundaries();
-      std::vector<double> ybbounds = {
+      std::vector<long double> ybbounds = {
           yboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
           yboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
       for (const auto y : ybbounds) {
@@ -95,13 +95,13 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
       return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
     }
 
-    double phistart = pstart[1];
-    double phiend = pend[1];
+    long double phistart = pstart[1];
+    long double phiend = pend[1];
 
     // The radial boundaries
     if (bstart[0] != bend[0]) {
       const auto& rboundaries = segmentation.binningData()[0].boundaries();
-      std::vector<double> rbbounds = {
+      std::vector<long double> rbbounds = {
           rboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
           rboundaries.begin() + std::max(bstart[0], bend[0]) + 1};
       for (const auto& r : rbbounds) {
@@ -116,11 +116,11 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     }
     // The phi boundaries
     if (bstart[1] != bend[1]) {
-      double referenceR =
+      long double referenceR =
           surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
-      std::vector<double> phibbounds = {
+      std::vector<long double> phibbounds = {
           phiboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
           phiboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
 
@@ -149,11 +149,11 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   Bin2D currentBin = {bstart[0], bstart[1]};
   BinDelta2D lastDelta = {0, 0};
   Acts::Vector2 lastIntersect = start;
-  double lastPath = 0.;
+  long double lastPath = 0.;
   for (auto& cStep : cSteps) {
     currentBin[0] += lastDelta[0];
     currentBin[1] += lastDelta[1];
-    double path = cStep.path - lastPath;
+    long double path = cStep.path - lastPath;
     cSegments.push_back(
         ChannelSegment(currentBin, {lastIntersect, cStep.intersect}, path));
     lastPath = cStep.path;

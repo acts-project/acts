@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(MeasurementVisualizationPly) {
 BOOST_AUTO_TEST_CASE(MeasurementVisualizationFaultySettings) {
   ObjVisualization3D obj;
 
-  double localErrorScale = 0.;
+  long double localErrorScale = 0.;
   BOOST_CHECK_THROW(EventDataView3DTest::testMeasurement(obj, localErrorScale),
                     std::invalid_argument);
 

@@ -74,7 +74,7 @@ TrackingVolume& TrackingVolume::operator=(TrackingVolume&&) noexcept = default;
 
 const TrackingVolume* TrackingVolume::lowestTrackingVolume(
     const GeometryContext& gctx, const Vector3& position,
-    const double tol) const {
+    const long double tol) const {
   if (!inside(position, tol)) {
     return nullptr;
   }
@@ -299,7 +299,7 @@ GlueVolumesDescriptor& TrackingVolume::glueVolumesDescriptor() {
   return *m_glueVolumeDescriptor;
 }
 
-void TrackingVolume::synchronizeLayers(double envelope) const {
+void TrackingVolume::synchronizeLayers(long double envelope) const {
   // case a : Layers exist
   // msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of
   // TrackingVolume '" << volumeName() << "'." << endreq;
@@ -375,8 +375,8 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
   boost::container::small_vector<BoundaryIntersection, 4> intersections;
 
   // The limits for this navigation step
-  double nearLimit = options.nearLimit;
-  double farLimit = options.farLimit;
+  long double nearLimit = options.nearLimit;
+  long double farLimit = options.farLimit;
 
   // Helper function to test intersection
   auto checkIntersection =

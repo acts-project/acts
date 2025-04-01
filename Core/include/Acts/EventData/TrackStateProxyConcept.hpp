@@ -134,7 +134,7 @@ concept TrackStateProxyConcept =
 
       { cv.chi2() } -> std::same_as<float>;
 
-      { cv.pathLength() } -> std::same_as<double>;
+      { cv.pathLength() } -> std::same_as<long double>;
 
       { cv.typeFlags() } -> std::same_as<ConstTrackStateType>;
     };
@@ -172,9 +172,9 @@ concept ConstTrackStateProxyConcept =
         v.effectiveCalibratedCovariance()
       } -> std::same_as<detail::ConstDynamicMeasurementCovariance>;
 
-      { v.chi2() } -> std::same_as<double>;
+      { v.chi2() } -> std::same_as<long double>;
 
-      { v.pathLength() } -> std::same_as<double>;
+      { v.pathLength() } -> std::same_as<long double>;
 
       { v.typeFlags() } -> std::same_as<ConstTrackStateType>;
     };
@@ -184,7 +184,7 @@ concept MutableTrackStateProxyConcept =
     TrackStateProxyConcept<T> &&
     requires(T v, HashedString key, TrackStatePropMask mask,
              TrackIndexType index, std::shared_ptr<const Surface> surface,
-             Eigen::Matrix<double, 3, 6> projector,
+             Eigen::Matrix<long double, 3, 6> projector,
              ProjectorBitset projectorBitset, SourceLink sl,
              std::size_t measdim) {
       { v.shareFrom(mask, mask) };
@@ -249,9 +249,9 @@ concept MutableTrackStateProxyConcept =
                              ActsSquareMatrix<eBoundSize>{})
       };
 
-      { v.chi2() } -> std::same_as<double&>;
+      { v.chi2() } -> std::same_as<long double&>;
 
-      { v.pathLength() } -> std::same_as<double&>;
+      { v.pathLength() } -> std::same_as<long double&>;
 
       { v.typeFlags() } -> std::same_as<TrackStateType>;
     };

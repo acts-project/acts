@@ -69,7 +69,7 @@ class CsvBFieldWriter {
     /// For each dimension, contains two optional values: the minimum and
     /// maximum in that dimension. If any value is non-extant, the gridded
     /// field's internal contents are used as a default.
-    std::array<std::array<Functor<double>, 2>, NDims> range{};
+    std::array<std::array<Functor<long double>, 2>, NDims> range{};
 
     /// @brief Number of bins in the output vector field.
     ///

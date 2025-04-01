@@ -22,7 +22,7 @@ namespace Acts {
 /// This is the condition that the pathLimit has been reached
 struct PathLimitReached {
   /// Boolean switch for Loop protection
-  double internalLimit = std::numeric_limits<double>::max();
+  long double internalLimit = std::numeric_limits<long double>::max();
 
   /// boolean operator for abort condition without using the result
   ///
@@ -41,9 +41,9 @@ struct PathLimitReached {
     (void)navigator;
 
     // Check if the maximum allowed step size has to be updated
-    double distance =
+    long double distance =
         std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
-    double tolerance = state.options.surfaceTolerance;
+    long double tolerance = state.options.surfaceTolerance;
     bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("PathLimit aborter | " << "Path limit reached at distance "
@@ -69,10 +69,10 @@ struct SurfaceReached {
   /// Distance limit to discard intersections "behind us"
   /// @note this is only necessary because some surfaces have more than one
   ///       intersection
-  double nearLimit = -100 * UnitConstants::um;
+  long double nearLimit = -100 * UnitConstants::um;
 
   SurfaceReached() = default;
-  explicit SurfaceReached(double nLimit) : nearLimit(nLimit) {}
+  explicit SurfaceReached(long double nLimit) : nearLimit(nLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -102,8 +102,8 @@ struct SurfaceReached {
     // for perigee surfaces
     // note: the near limit is necessary for surfaces with more than one
     // intersection in order to discard the ones which are behind us
-    const double farLimit = std::numeric_limits<double>::max();
-    const double tolerance = state.options.surfaceTolerance;
+    const long double farLimit = std::numeric_limits<long double>::max();
+    const long double tolerance = state.options.surfaceTolerance;
 
     const auto sIntersection = surface->intersect(
         state.geoContext, stepper.position(state.stepping),
@@ -114,7 +114,7 @@ struct SurfaceReached {
     bool reached = false;
 
     if (closest.status() == IntersectionStatus::onSurface) {
-      const double distance = closest.pathLength();
+      const long double distance = closest.pathLength();
       ACTS_VERBOSE(
           "SurfaceReached aborter | "
           "Target surface reached at distance (tolerance) "
@@ -153,7 +153,7 @@ struct SurfaceReached {
 /// This can be used to force the propagation to the target surface.
 struct ForcedSurfaceReached : SurfaceReached {
   ForcedSurfaceReached()
-      : SurfaceReached(std::numeric_limits<double>::lowest()) {}
+      : SurfaceReached(std::numeric_limits<long double>::lowest()) {}
 };
 
 /// This is the condition that the end of world has been reached

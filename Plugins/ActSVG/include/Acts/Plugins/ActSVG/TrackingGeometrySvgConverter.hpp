@@ -69,8 +69,8 @@ struct Options {
 
   TrackingGeometryConverter::Options trackingGeometryOptions;
 
-  std::array<std::array<double, 2>, 2> rzAxes;
-  std::vector<double> rzEtaLines;
+  std::array<std::array<long double, 2>, 2> rzAxes;
+  std::vector<long double> rzEtaLines;
 };
 
 /// Convert into xy and zr projections only

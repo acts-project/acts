@@ -30,8 +30,8 @@ ParticleKillAction::ParticleKillAction(
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
 void ParticleKillAction::UserSteppingAction(const G4Step* step) {
-  constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
+  constexpr long double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  constexpr long double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
   G4Track* track = step->GetTrack();
 

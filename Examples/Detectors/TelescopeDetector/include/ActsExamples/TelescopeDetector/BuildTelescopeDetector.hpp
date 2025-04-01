@@ -47,10 +47,11 @@ std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
-    const std::vector<double>& positions,
-    const std::vector<double>& stereoAngles,
-    const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, TelescopeSurfaceType surfaceType,
+    const std::vector<long double>& positions,
+    const std::vector<long double>& stereoAngles,
+    const std::array<long double, 2>& offsets,
+    const std::array<long double, 2>& bounds, long double thickness,
+    TelescopeSurfaceType surfaceType,
     Acts::AxisDirection binValue = Acts::AxisDirection::AxisZ);
 
 }  // namespace ActsExamples

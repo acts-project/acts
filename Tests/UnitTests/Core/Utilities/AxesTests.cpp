@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(AxisVisit) {
         (std::is_same_v<std::decay_t<decltype(axis)>, Axis<Variable, Closed>>));
   });
 
-  std::vector<double> edges =
+  std::vector<long double> edges =
       varClosed.visit([](const auto& axis) { return axis.getBinEdges(); });
   BOOST_CHECK_EQUAL(edges.size(), varClosed.getBinEdges().size());
 
@@ -579,11 +579,11 @@ BOOST_AUTO_TEST_CASE(AxisVisit) {
   BOOST_CHECK_EQUAL(typeValue, 6);  // Should be Variable, Closed
 
   // Test return value using axis properties
-  double minValue =
+  long double minValue =
       eqOpen.visit([](const auto& axis) { return axis.getMin(); });
   BOOST_CHECK_EQUAL(minValue, 0.0);
 
-  double maxValue =
+  long double maxValue =
       eqBound.visit([](const auto& axis) { return axis.getMax(); });
   BOOST_CHECK_EQUAL(maxValue, 10.0);
 
@@ -630,11 +630,11 @@ BOOST_AUTO_TEST_CASE(IAxis_Factories) {
   BOOST_CHECK_THROW(IAxis::createEquidistant(Bound, 0., 10., 0.),
                     std::invalid_argument);
   // #edges < 2
-  BOOST_CHECK_THROW(IAxis::createVariable(Bound, std::vector<double>{2.}),
+  BOOST_CHECK_THROW(IAxis::createVariable(Bound, std::vector<long double>{2.}),
                     std::invalid_argument);
   // edges not ordered
   BOOST_CHECK_THROW(
-      IAxis::createVariable(Bound, std::vector<double>{2., 1.5, 1.}),
+      IAxis::createVariable(Bound, std::vector<long double>{2., 1.5, 1.}),
       std::invalid_argument);
 
   // Test memory management

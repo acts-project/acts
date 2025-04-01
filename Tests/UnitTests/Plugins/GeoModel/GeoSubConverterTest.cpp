@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GeoSubToSensitiveConversion) {
   GeoIntrusivePtr<GeoMaterial> material(new GeoMaterial("Material", 1.0));
 
   // BOX object
-  double hlX = 200, hlY = 100, hlZ = 2;
+  long double hlX = 200, hlY = 100, hlZ = 2;
   GeoIntrusivePtr<GeoBox> shapeA(new GeoBox(hlX, hlY, hlZ));
   // Trapezoid object
   GeoIntrusivePtr<GeoTrd> shapeB(new GeoTrd(2, 2, 50, 80, 60));

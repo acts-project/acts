@@ -79,11 +79,11 @@ class NumericalTrackLinearizer {
 
     /// Tolerance determining how close we need to get to a surface to
     /// reach it during propagation
-    double targetTolerance = 1e-12;
+    long double targetTolerance = 1e-12;
 
     /// Setting size of the perturbation delta for calculation of numerical
     /// derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
-    double delta = 1e-8;
+    long double delta = 1e-8;
   };
 
   /// @brief Constructor
@@ -109,7 +109,7 @@ class NumericalTrackLinearizer {
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
-      const BoundTrackParameters& params, double linPointTime,
+      const BoundTrackParameters& params, long double linPointTime,
       const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
       const Acts::MagneticFieldContext& mctx,
       MagneticFieldProvider::Cache& /*fieldCache*/) const;

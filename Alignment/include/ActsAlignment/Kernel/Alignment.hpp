@@ -53,8 +53,8 @@ struct AlignmentOptions {
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
-      double chi2CutOff = 0.5,
-      const std::pair<std::size_t, double>& deltaChi2CutOff = {5, 0.01},
+      long double chi2CutOff = 0.5,
+      const std::pair<std::size_t, long double>& deltaChi2CutOff = {5, 0.01},
       std::size_t maxIters = 5,
       const std::map<unsigned int, AlignmentMask>& iterState = {})
       : fitOptions(fOptions),
@@ -75,11 +75,11 @@ struct AlignmentOptions {
   std::vector<Acts::DetectorElementBase*> alignedDetElements;
 
   // The alignment tolerance to determine if the alignment is covered
-  double averageChi2ONdfCutOff = 0.5;
+  long double averageChi2ONdfCutOff = 0.5;
 
   // The delta of average chi2/ndf within a couple of iterations to determine if
   // alignment is converged
-  std::pair<std::size_t, double> deltaAverageChi2ONdfCutOff = {5, 0.01};
+  std::pair<std::size_t, long double> deltaAverageChi2ONdfCutOff = {5, 0.01};
 
   // The maximum number of iterations to run alignment
   std::size_t maxIterations = 5;
@@ -102,13 +102,13 @@ struct AlignmentResult {
   Acts::ActsDynamicMatrix alignmentCovariance;
 
   // The average chi2/ndf (ndf is the measurement dim)
-  double averageChi2ONdf = std::numeric_limits<double>::max();
+  long double averageChi2ONdf = std::numeric_limits<long double>::max();
 
   // The delta chi2
-  double deltaChi2 = std::numeric_limits<double>::max();
+  long double deltaChi2 = std::numeric_limits<long double>::max();
 
   // The chi2
-  double chi2 = 0;
+  long double chi2 = 0;
 
   // The measurement dimension from all tracks
   std::size_t measurementDim = 0;

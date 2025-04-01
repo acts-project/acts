@@ -46,8 +46,8 @@ class DetectorElementBase {
   virtual Surface& surface() = 0;
 
   /// Returns the thickness of the module
-  /// @return double that indicates the thickness of the module
-  virtual double thickness() const = 0;
+  /// @return long double that indicates the thickness of the module
+  virtual long double thickness() const = 0;
 };
 
 }  // namespace Acts

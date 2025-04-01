@@ -320,7 +320,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
 std::shared_ptr<Acts::TGeoDetectorElement>
 Acts::TGeoLayerBuilder::defaultElementFactory(
     const TGeoDetectorElement::Identifier& identifier, const TGeoNode& tGeoNode,
-    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    const TGeoMatrix& tGeoMatrix, const std::string& axes, long double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   return std::make_shared<TGeoDetectorElement>(
       identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));

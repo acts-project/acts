@@ -67,7 +67,7 @@ void ActsExamples::EffPlotTool::write(
 
 void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
                                      const SimParticleState& truthParticle,
-                                     double deltaR, bool status) const {
+                                     long double deltaR, bool status) const {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();

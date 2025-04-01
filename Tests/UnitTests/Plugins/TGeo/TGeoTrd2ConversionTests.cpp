@@ -50,10 +50,10 @@ ViewConfig blue{.color = {0, 0, 200}};
 BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   ObjVisualization3D objVis;
 
-  double hxmin = 10.;
-  double hxmax = 30.;
-  double ht = 1.;  // this is the half thickness
-  double hy = 40.;
+  long double hxmin = 10.;
+  long double hxmax = 30.;
+  long double ht = 1.;  // this is the half thickness
+  long double hy = 40.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
     BOOST_REQUIRE_NE(bounds, nullptr);
-    double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
-    double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
-    double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
+    long double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
+    long double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
+    long double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
 
     CHECK_CLOSE_ABS(hxmin, std::min(hXminY, hXmaxY), s_epsilon);
     CHECK_CLOSE_ABS(hxmax, std::max(hXminY, hXmaxY), s_epsilon);
@@ -117,10 +117,10 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
 BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   ObjVisualization3D objVis;
 
-  double hxmin = 10.;
-  double hxmax = 30.;
-  double ht = 1.;  // this is the half thickness
-  double hy = 40.;
+  long double hxmin = 10.;
+  long double hxmax = 30.;
+  long double ht = 1.;  // this is the half thickness
+  long double hy = 40.;
 
   new TGeoManager("trd1", "poza9");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -144,9 +144,9 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
     BOOST_REQUIRE_NE(bounds, nullptr);
-    double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
-    double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
-    double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
+    long double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
+    long double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
+    long double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
 
     CHECK_CLOSE_ABS(hxmin, std::min(hXminY, hXmaxY), s_epsilon);
     CHECK_CLOSE_ABS(hxmax, std::max(hXminY, hXmaxY), s_epsilon);

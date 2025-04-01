@@ -55,8 +55,8 @@ PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
 
 void PrimaryGeneratorAction::prepareParticleGun(
     const ActsExamples::SimParticle& part) {
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-  constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
+  constexpr long double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr long double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
 
   // Particle type
   G4ParticleDefinition* particle = m_particleTable->FindParticle(part.pdg());

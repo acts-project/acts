@@ -61,27 +61,27 @@ class ParticleSelector final : public IAlgorithm {
     std::string outputParticles;
 
     // Minimum/maximum distance from the origin in the transverse plane.
-    double rhoMin = 0;
-    double rhoMax = std::numeric_limits<double>::infinity();
+    long double rhoMin = 0;
+    long double rhoMax = std::numeric_limits<long double>::infinity();
     // Minimum/maximum absolute distance from the origin along z.
-    double absZMin = 0;
-    double absZMax = std::numeric_limits<double>::infinity();
+    long double absZMin = 0;
+    long double absZMax = std::numeric_limits<long double>::infinity();
     // Minimum/maximum particle time.
-    double timeMin = -std::numeric_limits<double>::infinity();
-    double timeMax = std::numeric_limits<double>::infinity();
+    long double timeMin = -std::numeric_limits<long double>::infinity();
+    long double timeMax = std::numeric_limits<long double>::infinity();
     // Direction cuts.
-    double phiMin = -std::numeric_limits<double>::infinity();
-    double phiMax = std::numeric_limits<double>::infinity();
-    double etaMin = -std::numeric_limits<double>::infinity();
-    double etaMax = std::numeric_limits<double>::infinity();
-    double absEtaMin = 0;
-    double absEtaMax = std::numeric_limits<double>::infinity();
+    long double phiMin = -std::numeric_limits<long double>::infinity();
+    long double phiMax = std::numeric_limits<long double>::infinity();
+    long double etaMin = -std::numeric_limits<long double>::infinity();
+    long double etaMax = std::numeric_limits<long double>::infinity();
+    long double absEtaMin = 0;
+    long double absEtaMax = std::numeric_limits<long double>::infinity();
     // Momentum cuts.
-    double ptMin = 0;
-    double ptMax = std::numeric_limits<double>::infinity();
+    long double ptMin = 0;
+    long double ptMax = std::numeric_limits<long double>::infinity();
     // Rest mass cuts
-    double mMin = 0;
-    double mMax = std::numeric_limits<double>::infinity();
+    long double mMin = 0;
+    long double mMax = std::numeric_limits<long double>::infinity();
     // Hit count cuts
     std::size_t hitsMin = 0;
     std::size_t hitsMax = std::numeric_limits<std::size_t>::max();

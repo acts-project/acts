@@ -16,14 +16,14 @@ namespace ActsExamples {
 
 /// The ScalableBField-specific magnetic field context.
 struct ScalableBFieldContext {
-  double scalor = 1.;
+  long double scalor = 1.;
 };
 
 /// A constant magnetic field that is scaled depending on the event context.
 class ScalableBField final : public Acts::MagneticFieldProvider {
  public:
   struct Cache {
-    double scalor = 1.;
+    long double scalor = 1.;
 
     /// @brief constructor with context
     explicit Cache(const Acts::MagneticFieldContext& mctx) {
@@ -41,7 +41,8 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  explicit ScalableBField(double Bx = 0, double By = 0, double Bz = 0)
+  explicit ScalableBField(long double Bx = 0, long double By = 0,
+                          long double Bz = 0)
       : m_BField(Bx, By, Bz) {}
 
   /// @brief retrieve magnetic field value
@@ -77,7 +78,9 @@ class ScalableBField final : public Acts::MagneticFieldProvider {
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  void setField(double Bx, double By, double Bz) { m_BField << Bx, By, Bz; }
+  void setField(long double Bx, long double By, long double Bz) {
+    m_BField << Bx, By, Bz;
+  }
 
   /// @brief update magnetic field vector
   ///

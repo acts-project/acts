@@ -24,7 +24,7 @@ namespace Acts {
 /// @class DiamondBounds
 ///
 /// @image html DiamondBounds.svg
-/// Bounds for a double trapezoidal ("diamond"), planar Surface.
+/// Bounds for a long double trapezoidal ("diamond"), planar Surface.
 class DiamondBounds : public PlanarBounds {
  public:
   enum BoundValues {
@@ -43,8 +43,9 @@ class DiamondBounds : public PlanarBounds {
   /// @param halfXposY is the halflength in x at maximal y
   /// @param halfYneg is the halflength into y < 0
   /// @param halfYpos is the halflength into y > 0
-  DiamondBounds(double halfXnegY, double halfXzeroY, double halfXposY,
-                double halfYneg, double halfYpos) noexcept(false)
+  DiamondBounds(long double halfXnegY, long double halfXzeroY,
+                long double halfXposY, long double halfYneg,
+                long double halfYpos) noexcept(false)
       : m_values({halfXnegY, halfXzeroY, halfXposY, halfYneg, halfYpos}),
         m_boundingBox(
             Vector2{
@@ -58,7 +59,7 @@ class DiamondBounds : public PlanarBounds {
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  explicit DiamondBounds(const std::array<double, eSize>& values) noexcept(
+  explicit DiamondBounds(const std::array<long double, eSize>& values) noexcept(
       false)
       : m_values(values),
         m_boundingBox(
@@ -72,7 +73,7 @@ class DiamondBounds : public PlanarBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -102,10 +103,10 @@ class DiamondBounds : public PlanarBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 
   /// Check the input values for consistency, will throw a logic_exception

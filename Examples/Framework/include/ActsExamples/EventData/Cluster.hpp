@@ -34,10 +34,10 @@ struct Cluster {
   float etaAngle = 0.f;
   float phiAngle = 0.f;
 
-  double sumActivations() const {
+  long double sumActivations() const {
     return std::accumulate(
         channels.begin(), channels.end(), 0.0,
-        [](double s, const Cluster::Cell& c) { return s + c.activation; });
+        [](long double s, const Cluster::Cell& c) { return s + c.activation; });
   }
 };
 

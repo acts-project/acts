@@ -72,40 +72,40 @@ struct SeedFinderConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
-  /// Seeding parameters used to define the cuts on space-point doublets
+  /// Seeding parameters used to define the cuts on space-point long doublets
 
-  /// Minimum radial distance between two doublet components (prefer
+  /// Minimum radial distance between two long doublet components (prefer
   /// deltaRMinTopSP and deltaRMinBottomSP to set separate values for outer and
   /// inner space-points)
   float deltaRMin = 5 * Acts::UnitConstants::mm;
-  /// Maximum radial distance between two doublet components (prefer
+  /// Maximum radial distance between two long doublet components (prefer
   /// deltaRMaxTopSP and deltaRMacBottomSP to set separate values for outer and
   /// inner space-points)
   float deltaRMax = 270 * Acts::UnitConstants::mm;
-  /// Minimum radial distance between middle-outer doublet components
+  /// Minimum radial distance between middle-outer long doublet components
   float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
-  /// Maximum radial distance between middle-outer doublet components
+  /// Maximum radial distance between middle-outer long doublet components
   float deltaRMaxTopSP = std::numeric_limits<float>::quiet_NaN();
-  /// Minimum radial distance between inner-middle doublet components
+  /// Minimum radial distance between inner-middle long doublet components
   float deltaRMinBottomSP = std::numeric_limits<float>::quiet_NaN();
-  /// Maximum radial distance between inner-middle doublet components
+  /// Maximum radial distance between inner-middle long doublet components
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
 
-  /// Maximum value of z-distance between space-points in doublet
+  /// Maximum value of z-distance between space-points in long doublet
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
-  /// Maximum allowed cotTheta between two space-points in doublet, used to
+  /// Maximum allowed cotTheta between two space-points in long doublet, used to
   /// check if forward angle is within bounds
   float cotThetaMax = 10.01788;  // equivalent to eta = 3 (pseudorapidity)
 
-  /// Limiting location of collision region in z-axis used to check if doublet
-  /// origin is within reasonable bounds
+  /// Limiting location of collision region in z-axis used to check if long
+  /// doublet origin is within reasonable bounds
   float collisionRegionMin = -150 * Acts::UnitConstants::mm;
   float collisionRegionMax = +150 * Acts::UnitConstants::mm;
 
-  /// Enable cut on the compatibility between interaction point and doublet,
-  /// this is an useful approximation to speed up the seeding
+  /// Enable cut on the compatibility between interaction point and long
+  /// doublet, this is an useful approximation to speed up the seeding
   bool interactionPointCut = false;
 
   /// Seeding parameters used to define the cuts on space-point triplets
@@ -139,7 +139,7 @@ struct SeedFinderConfig {
   /// of the detector (e.g. forward or central region) by SeedConfirmationRange.
   /// Seeds are classified as "high-quality" seeds and normal quality seeds.
   /// Normal quality seeds are only selected if no other "high-quality" seeds
-  /// has been found for that inner-middle doublet.
+  /// has been found for that inner-middle long doublet.
   bool seedConfirmation = false;
   /// Contains parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
@@ -171,12 +171,11 @@ struct SeedFinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
-  /// Delegates for accessors to detailed information on double measurement that
-  /// produced the space point.
-  /// This is mainly referring to space points produced when combining
-  /// measurement from strips on back-to-back modules.
+  /// Delegates for accessors to detailed information on long double measurement
+  /// that produced the space point. This is mainly referring to space points
+  /// produced when combining measurement from strips on back-to-back modules.
   /// Enables setting of the following delegates.
-  bool useDetailedDoubleMeasurementInfo = false;
+  bool useDetailedlong doubleMeasurementInfo = false;
 
   Delegate<bool(const SpacePoint&)> spacePointSelector{
       DelegateFuncTag<voidSpacePointSelector>{}};
@@ -188,7 +187,7 @@ struct SeedFinderConfig {
   /// strip modules
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
-  // Delegate to apply experiment specific cuts during doublet finding
+  // Delegate to apply experiment specific cuts during long doublet finding
   Delegate<bool(float /*bottomRadius*/, float /*cotTheta*/)> experimentCuts{
       DelegateFuncTag<&noopExperimentCuts>{}};
 

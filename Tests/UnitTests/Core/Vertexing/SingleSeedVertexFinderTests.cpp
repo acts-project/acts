@@ -19,22 +19,24 @@
 
 /// @brief SpacePoint definition to be used for the unit tests. Implements all the relevant methods.
 struct SpacePoint4SSVFT {
-  SpacePoint4SSVFT(double x, double y, double z) : m_x(x), m_y(y), m_z(z) {}
-  double m_x;
-  double m_y;
-  double m_z;
-  double x() const { return m_x; }
-  double y() const { return m_y; }
-  double z() const { return m_z; }
-  double r() const { return std::sqrt(m_x * m_x + m_y * m_y); }
+  SpacePoint4SSVFT(long double x, long double y, long double z)
+      : m_x(x), m_y(y), m_z(z) {}
+  long double m_x;
+  long double m_y;
+  long double m_z;
+  long double x() const { return m_x; }
+  long double y() const { return m_y; }
+  long double z() const { return m_z; }
+  long double r() const { return std::sqrt(m_x * m_x + m_y * m_y); }
 };
 
-/// @brief Provides random double number between $from and $to
+/// @brief Provides random long double number between $from and $to
 /// @param gen random number generator
 /// @param from lower threshold
 /// @param to upper threshold
 /// @return random number in [from,to)
-double getRndDouble(std::mt19937& gen, double from, double to) {
+long double getRndlong double(std::mt19937& gen, long double from,
+                              long double to) {
   return gen() / 4294967296. * (to - from) + from;
 }
 
@@ -50,9 +52,9 @@ int getRndInt(std::mt19937& gen, int from, int to) {
 /// @brief Calculates equation of the plane (alpha*x + beta*y + gamma*z + delta = 0), given the three points
 /// @param a,b,c The three points
 /// @return Parameters of the plane {alpha,beta,gamma,delta}
-std::vector<double> makePlaneFromTriplet(SpacePoint4SSVFT aa,
-                                         SpacePoint4SSVFT bb,
-                                         SpacePoint4SSVFT cc) {
+std::vector<long double> makePlaneFromTriplet(SpacePoint4SSVFT aa,
+                                              SpacePoint4SSVFT bb,
+                                              SpacePoint4SSVFT cc) {
   Acts::Vector3 a{aa.x(), aa.y(), aa.z()};
   Acts::Vector3 b{bb.x(), bb.y(), bb.z()};
   Acts::Vector3 c{cc.x(), cc.y(), cc.z()};
@@ -60,7 +62,7 @@ std::vector<double> makePlaneFromTriplet(SpacePoint4SSVFT aa,
   Acts::Vector3 ba = b - a, ca = c - a;
 
   Acts::Vector3 abg = ba.cross(ca).normalized();
-  double delta = -1. * abg.dot(a);
+  long double delta = -1. * abg.dot(a);
 
   // plane (alpha*x + beta*y + gamma*z + delta = 0)
   return {abg[0], abg[1], abg[2], delta};
@@ -93,11 +95,11 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_small_planes_test) {
   Acts::SingleSeedVertexFinder<SpacePoint4SSVFT> SingleSeedVertexFinder(
       singleSeedVtxCfg);
 
-  double vtxX = 1.;
-  double vtxY = -1.;
-  double vtxZ = 10;
+  long double vtxX = 1.;
+  long double vtxY = -1.;
+  long double vtxZ = 10;
 
-  std::vector<std::vector<double>> positions = {
+  std::vector<std::vector<long double>> positions = {
       {10.8, 0., 7.},      {20.9, 0.7, 4.},
       {30.5, 1.9, 1.},  // plane ((-0.25,-0.25,-0.9), 9.0)
       {2.1, 10.6, 15.2},   {2.7, 19.36666, 19.5},
@@ -171,11 +173,11 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_small_rays_test) {
   Acts::SingleSeedVertexFinder<SpacePoint4SSVFT> SingleSeedVertexFinder(
       singleSeedVtxCfg);
 
-  double vtxX = 1.;
-  double vtxY = -1.;
-  double vtxZ = 10;
+  long double vtxX = 1.;
+  long double vtxY = -1.;
+  long double vtxZ = 10;
 
-  std::vector<std::vector<double>> positions = {
+  std::vector<std::vector<long double>> positions = {
       {11., 0., 7.},      {21., 1., 4.},
       {31., 2., 1.},  // this ray is Ok
       {2., 9., 15.},      {3., 19., 20.},
@@ -252,9 +254,9 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
   int vtxFound = 0;
   int nEvents = 5;
   for (int event = 0; event < nEvents; event++) {
-    double vtxX = getRndDouble(gen, -1., 1.);
-    double vtxY = getRndDouble(gen, -1., 1.);
-    double vtxZ = getRndDouble(gen, -10., 10.);
+    long double vtxX = getRndlong double(gen, -1., 1.);
+    long double vtxY = getRndlong double(gen, -1., 1.);
+    long double vtxZ = getRndlong double(gen, -10., 10.);
 
     std::vector<SpacePoint4SSVFT> inputSpacepoints;
 
@@ -262,42 +264,42 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
     int nTracks = getRndInt(gen, 200, 400);
     for (int track = 0; track < nTracks; ++track) {
       // initial position of the track
-      double posX = vtxX;
-      double posY = vtxY;
-      double posZ = vtxZ;
+      long double posX = vtxX;
+      long double posY = vtxY;
+      long double posZ = vtxZ;
 
       // initial direction of the track
-      double dirX = getRndDouble(gen, -1., 1.);
-      double dirY = getRndDouble(gen, -1., 1.);
-      double dirZ = getRndDouble(gen, -1., 1.);
+      long double dirX = getRndlong double(gen, -1., 1.);
+      long double dirY = getRndlong double(gen, -1., 1.);
+      long double dirZ = getRndlong double(gen, -1., 1.);
       // rotation of the track
-      double theta = getRndDouble(gen, 0.03, 0.09) *
-                     (getRndDouble(gen, -1., 1.) > 0 ? 1 : -1);
-      double sgn = std::copysign(1., dirY);
+      long double theta = getRndlong double(gen, 0.03, 0.09) *
+                          (getRndlong double(gen, -1., 1.) > 0 ? 1 : -1);
+      long double sgn = std::copysign(1., dirY);
 
       for (int i = 1; i <= 3; ++i) {
         if (i != 1) {
           // rotate direction, not for the first time
-          double dirXtmp = cos(theta) * dirX - sin(theta) * dirY;
-          double dirYtmp = sin(theta) * dirX + cos(theta) * dirY;
+          long double dirXtmp = cos(theta) * dirX - sin(theta) * dirY;
+          long double dirYtmp = sin(theta) * dirX + cos(theta) * dirY;
           dirX = dirXtmp;
           dirY = dirYtmp;
         }
 
-        // double sgn=std::copysign(1.,dirY);
-        double dirR2 = dirX * dirX + dirY * dirY;
-        double D = posX * (posY + dirY) - posY * (posX + dirX);
+        // long double sgn=std::copysign(1.,dirY);
+        long double dirR2 = dirX * dirX + dirY * dirY;
+        long double D = posX * (posY + dirY) - posY * (posX + dirX);
         // add some smearing to the layers
         // layers are (9-11), (19-21), and (29-31)
-        double r = i * 10. + getRndDouble(gen, -1., 1.);
+        long double r = i * 10. + getRndlong double(gen, -1., 1.);
         // intersection of the layer and the straigh line
-        double x1 =
+        long double x1 =
             (D * dirY + sgn * dirX * std::sqrt(r * r * dirR2 - D * D)) / dirR2;
-        double y1 =
+        long double y1 =
             (-D * dirX + std::abs(dirY) * std::sqrt(r * r * dirR2 - D * D)) /
             dirR2;
         // how many units from the vertex to the intersection
-        double zDist = std::abs((x1 - posX) / dirX);
+        long double zDist = std::abs((x1 - posX) / dirX);
 
         // position of the new spacepoint
         posX = x1;
@@ -384,9 +386,9 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_rays_test) {
   int vtxFound = 0;
   int nEvents = 5;
   for (int event = 0; event < nEvents; event++) {
-    double vtxX = getRndDouble(gen, -1., 1.);
-    double vtxY = getRndDouble(gen, -1., 1.);
-    double vtxZ = getRndDouble(gen, -10., 10.);
+    long double vtxX = getRndlong double(gen, -1., 1.);
+    long double vtxY = getRndlong double(gen, -1., 1.);
+    long double vtxZ = getRndlong double(gen, -10., 10.);
 
     std::vector<SpacePoint4SSVFT> inputSpacepoints;
 
@@ -394,28 +396,28 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_rays_test) {
     int nTracks = getRndInt(gen, 200, 400);
     for (int track = 0; track < nTracks; ++track) {
       // direction of the track
-      double dirX = getRndDouble(gen, -1., 1.);
-      double dirY = getRndDouble(gen, -1., 1.);
-      double dirZ = getRndDouble(gen, -1., 1.);
+      long double dirX = getRndlong double(gen, -1., 1.);
+      long double dirY = getRndlong double(gen, -1., 1.);
+      long double dirZ = getRndlong double(gen, -1., 1.);
       // use upper or lower intersection?
-      int part = (getRndDouble(gen, -1., 1.) > 0 ? 1 : -1);
+      int part = (getRndlong double(gen, -1., 1.) > 0 ? 1 : -1);
 
       for (int rIndx = 1; rIndx <= 3; rIndx += 1) {
-        double sgn = std::copysign(1., dirY);
-        double dirR2 = dirX * dirX + dirY * dirY;
-        double D = vtxX * (vtxY + dirY) - vtxY * (vtxX + dirX);
+        long double sgn = std::copysign(1., dirY);
+        long double dirR2 = dirX * dirX + dirY * dirY;
+        long double D = vtxX * (vtxY + dirY) - vtxY * (vtxX + dirX);
         // add some smearing to the layers
         // layers are (9-11), (19-21), and (29-31)
-        double r = rIndx * 10 + getRndDouble(gen, -1., 1.);
+        long double r = rIndx * 10 + getRndlong double(gen, -1., 1.);
         // intersection of the layer and the straigh line
-        double x1 =
+        long double x1 =
             (D * dirY + part * sgn * dirX * std::sqrt(r * r * dirR2 - D * D)) /
             dirR2;
-        double y1 = (-D * dirX +
-                     part * std::abs(dirY) * std::sqrt(r * r * dirR2 - D * D)) /
-                    dirR2;
+        long double y1 = (-D * dirX + part * std::abs(dirY) *
+                                          std::sqrt(r * r * dirR2 - D * D)) /
+                         dirR2;
         // how many units from the vertex to the intersection
-        double zDist = std::abs((x1 - vtxX) / dirX);
+        long double zDist = std::abs((x1 - vtxX) / dirX);
         // use the same amount of units for distance in Z
         inputSpacepoints.emplace_back(x1, y1, zDist * dirZ + vtxZ);
       }

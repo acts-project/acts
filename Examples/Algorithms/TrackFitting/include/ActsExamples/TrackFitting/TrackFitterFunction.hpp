@@ -65,10 +65,10 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
-    double reverseFilteringMomThreshold = 0.0,
+    long double reverseFilteringMomThreshold = 0.0,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
-    double chi2Cut = std::numeric_limits<double>::infinity(),
+    long double chi2Cut = std::numeric_limits<long double>::infinity(),
     const Acts::Logger& logger = *Acts::getDefaultLogger("Kalman",
                                                          Acts::Logging::INFO));
 
@@ -95,7 +95,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    long double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     const Acts::Logger& logger);
 
@@ -115,7 +115,7 @@ std::shared_ptr<TrackFitterFunction> makeGlobalChiSquareFitterFunction(
     bool multipleScattering = true, bool energyLoss = true,
     Acts::FreeToBoundCorrection freeToBoundCorrection =
         Acts::FreeToBoundCorrection(),
-    std::size_t nUpdateMax = 5, double relChi2changeCutOff = 1e-7,
+    std::size_t nUpdateMax = 5, long double relChi2changeCutOff = 1e-7,
     const Acts::Logger& logger = *Acts::getDefaultLogger("Gx2f",
                                                          Acts::Logging::INFO));
 

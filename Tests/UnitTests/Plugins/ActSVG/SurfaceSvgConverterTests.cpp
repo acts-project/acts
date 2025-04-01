@@ -53,10 +53,11 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   auto svgObject =
       Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyObject = Acts::Svg::View::xy(svgObject, identification);
-  auto xyAxes = Acts::Svg::axesXY(static_cast<double>(xyObject._x_range[0]),
-                                  static_cast<double>(xyObject._x_range[1]),
-                                  static_cast<double>(xyObject._y_range[0]),
-                                  static_cast<double>(xyObject._y_range[1]));
+  auto xyAxes =
+      Acts::Svg::axesXY(static_cast<long double>(xyObject._x_range[0]),
+                        static_cast<long double>(xyObject._x_range[1]),
+                        static_cast<long double>(xyObject._y_range[0]),
+                        static_cast<long double>(xyObject._y_range[1]));
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
@@ -92,8 +93,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  double phi = std::numbers::pi / 8.;
-  double radius = 150.;
+  long double phi = std::numbers::pi / 8.;
+  long double radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
   Acts::Vector3 localY(std::cos(phi), std::sin(phi), 0.);
@@ -194,10 +195,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfaces) {
   runPlanarTests(*sectoralDisc, discStyle, "full_disc");
 
   // Annulus shape
-  double minRadius = 7.2;
-  double maxRadius = 12.0;
-  double minPhi = 0.74195;
-  double maxPhi = 1.33970;
+  long double minRadius = 7.2;
+  long double maxRadius = 12.0;
+  long double minPhi = 0.74195;
+  long double maxPhi = 1.33970;
 
   Acts::Vector2 offset{-3., 2.};
 

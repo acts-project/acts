@@ -49,8 +49,8 @@ using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
 /// Construct initial track parameters.
-BoundTrackParameters makeParameters(double phi, double theta, double p,
-                                    double q) {
+BoundTrackParameters makeParameters(long double phi, long double theta,
+                                    long double p, long double q) {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -69,7 +69,7 @@ BoundTrackParameters makeParameters(double phi, double theta, double p,
 std::pair<Vector3, Vector3> stripEnds(
     const std::shared_ptr<const TrackingGeometry>& geo,
     const GeometryContext& gctx, const SourceLink& slink,
-    const double stripFrac = 0.4) {
+    const long double stripFrac = 0.4) {
   auto testslink = slink.get<TestSourceLink>();
   const auto lpos = testslink.parameters;
 
@@ -77,11 +77,11 @@ std::pair<Vector3, Vector3> stripEnds(
   const auto geoId = testslink.m_geometryId;
   const Surface* surface = geo->findSurface(geoId);
 
-  const double stripLength = 40.;
-  const double end1x = lpos[0] + stripLength * stripFrac;
-  const double end1y = lpos[1];
-  const double end2x = lpos[0] - stripLength * (1 - stripFrac);
-  const double end2y = lpos[1];
+  const long double stripLength = 40.;
+  const long double end1x = lpos[0] + stripLength * stripFrac;
+  const long double end1y = lpos[1];
+  const long double end2x = lpos[0] - stripLength * (1 - stripFrac);
+  const long double end2y = lpos[1];
   const Vector2 lpos1(end1x, end1y);
   const Vector2 lpos2(end2x, end2y);
 
@@ -119,10 +119,10 @@ std::default_random_engine rng(42);
 BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   (void)index;
 
-  double phi = 5._degree;
-  double theta = 95._degree;
-  double p = 50._GeV;
-  double q = 1;
+  long double phi = 5._degree;
+  long double theta = 95._degree;
+  long double p = 50._GeV;
+  long double q = 1;
 
   Navigator navigator({
       geometry,
@@ -170,9 +170,10 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
   Vector3 vertex = Vector3(-3_m, 0., 0.);
 
-  auto spConstructor = [](const Vector3& pos, const std::optional<double>& t,
-                          const Vector2& cov, const std::optional<double>& covT,
-                          boost::container::static_vector<SourceLink, 2> slinks)
+  auto spConstructor =
+      [](const Vector3& pos, const std::optional<long double>& t,
+         const Vector2& cov, const std::optional<long double>& covT,
+         boost::container::static_vector<SourceLink, 2> slinks)
       -> TestSpacePoint {
     return TestSpacePoint(pos, t, cov[0], cov[1], covT, std::move(slinks));
   };

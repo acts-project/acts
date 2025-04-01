@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ConstructionFromVolume) {
           .value(),
       nullptr);
 
-  auto anglePoint = [](double angle, double r, double z) {
+  auto anglePoint = [](long double angle, long double r, long double z) {
     return Vector3{r * std::cos(angle), r * std::sin(angle), z};
   };
 

@@ -32,8 +32,9 @@ template <typename spacepoint_t>
 class SpacePointBuilder {
  public:
   using BuilderFunction = std::function<spacepoint_t(
-      Acts::Vector3, std::optional<double>, Acts::Vector2,
-      std::optional<double>, boost::container::static_vector<SourceLink, 2>)>;
+      Acts::Vector3, std::optional<long double>, Acts::Vector2,
+      std::optional<long double>,
+      boost::container::static_vector<SourceLink, 2>)>;
 
   // Constructor
   /// @param cfg The configuration for the space point builder

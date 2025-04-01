@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = std::numbers::pi / 2.;
+    long double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.detElementConstructor =
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
+           long double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.position = {-i * UnitConstants::m, 0., 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = std::numbers::pi / 2.;
+    long double rotationAngle = std::numbers::pi / 2.;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));

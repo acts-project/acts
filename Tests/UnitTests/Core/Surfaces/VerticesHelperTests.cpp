@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 
 BOOST_AUTO_TEST_CASE(GeneratePhiSegments) {
   // Case (1): a small segment is given, no cartesian maximum vertex
-  double minPhi = 0.1;
-  double maxPhi = 0.3;
+  long double minPhi = 0.1;
+  long double maxPhi = 0.3;
 
   auto phis = VerticesHelper::phiSegments(minPhi, maxPhi);
   BOOST_CHECK_EQUAL(phis.size(), 2u);
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_CASE(GeneratePhiSegments) {
 BOOST_AUTO_TEST_CASE(GenerateSegmentVertices) {
   // Case (1): a small segment is given, no cartesian maximum vertex & 1 step
   // segment
-  double rx = 10.;
-  double ry = 10.;
-  double minPhi = 0.1;
-  double maxPhi = 0.3;
+  long double rx = 10.;
+  long double ry = 10.;
+  long double minPhi = 0.1;
+  long double maxPhi = 0.3;
 
   auto vertices = VerticesHelper::segmentVertices<Vector3, Transform3>(
       {rx, ry}, minPhi, maxPhi, {}, 1);
@@ -185,8 +185,8 @@ BOOST_AUTO_TEST_CASE(GenerateSegmentVertices) {
 
 BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
   // Case (1): A full disc
-  double ri = 0.;
-  double ro = 10.;
+  long double ri = 0.;
+  long double ro = 10.;
 
   // Extreme points in phi - only outer radius
   auto vertices =
@@ -211,8 +211,8 @@ BOOST_AUTO_TEST_CASE(GenerateCircleEllipseVertices) {
   BOOST_CHECK_EQUAL(vertices.size(), expectedVertices);
 
   // Now ellipsoid
-  double riy = 4.;
-  double roy = 14.;
+  long double riy = 4.;
+  long double roy = 14.;
   vertices = VerticesHelper::ellipsoidVertices(ri, riy, ro, roy, 0.,
                                                std::numbers::pi, 10u);
   expectedVertices = 41u;  // 4 sectors + 1 overlap at (-pi/pi)

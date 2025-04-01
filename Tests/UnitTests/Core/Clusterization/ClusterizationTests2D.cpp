@@ -127,13 +127,13 @@ bool clHashComp(const Cluster2D& left, const Cluster2D& right) {
 
 template <typename RNG>
 void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
-                 std::vector<Cell2D>& cells, RNG& rng, double startp = 0.5,
-                 double decayp = 0.9) {
+                 std::vector<Cell2D>& cells, RNG& rng, long double startp = 0.5,
+                 long double decayp = 0.9) {
   std::vector<Cell2D> add;
 
   auto maybe_add = [&](int x_, int y_) {
     Cell2D c(x_, y_);
-    if (std::uniform_real_distribution<double>()(rng) < startp &&
+    if (std::uniform_real_distribution<long double>()(rng) < startp &&
         !rangeContainsValue(cells, c)) {
       cells.push_back(c);
       add.push_back(c);
@@ -181,7 +181,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
 
 template <typename RNG>
 Cluster2D gencluster(int x0, int y0, int x1, int y1, RNG& rng,
-                     double startp = 0.5, double decayp = 0.9) {
+                     long double startp = 0.5, long double decayp = 0.9) {
   int x0_ = x0 + 1;
   int x1_ = x1 - 1;
   int y0_ = y0 + 1;

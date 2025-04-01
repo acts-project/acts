@@ -110,7 +110,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(double xmin, double xmax, std::size_t nBins)
+  Axis(long double xmin, long double xmax, std::size_t nBins)
       : m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
@@ -125,7 +125,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, double xmin, double xmax,
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, long double xmin, long double xmax,
        std::size_t nBins)
       : Axis(xmin, xmax, nBins) {
     static_cast<void>(typeTag);
@@ -307,7 +307,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(long double x) const {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -315,7 +315,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   /// @brief get bin width
   ///
   /// @return constant width for all bins
-  double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
+  long double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
   /// @brief get lower bound of bin
   ///
@@ -327,7 +327,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const {
+  long double getBinLowerBound(std::size_t bin) const {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
@@ -341,7 +341,7 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const {
+  long double getBinUpperBound(std::size_t bin) const {
     return getMin() + bin * getBinWidth();
   }
 
@@ -352,19 +352,19 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  long double getBinCenter(std::size_t bin) const {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const override { return m_max; }
+  long double getMax() const override { return m_max; }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const override { return m_min; }
+  long double getMin() const override { return m_min; }
 
   /// @brief get total number of bins
   ///
@@ -378,12 +378,12 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   ///
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const { return (m_min <= x) && (x < m_max); }
+  bool isInside(long double x) const { return (m_min <= x) && (x < m_max); }
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override {
-    std::vector<double> binEdges;
+  std::vector<long double> getBinEdges() const override {
+    std::vector<long double> binEdges;
     for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
     }
@@ -404,11 +404,11 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
 
  private:
   /// minimum of binning range
-  double m_min{};
+  long double m_min{};
   /// maximum of binning range
-  double m_max{};
+  long double m_max{};
   /// constant bin width
-  double m_width{};
+  long double m_width{};
   /// number of bins (excluding under-/overflow bins)
   std::size_t m_bins{};
 };
@@ -429,7 +429,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  explicit Axis(std::vector<double> binEdges)
+  explicit Axis(std::vector<long double> binEdges)
       : m_binEdges(std::move(binEdges)) {}
 
   /// @param [in] typeTag boundary type tag
@@ -440,7 +440,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges)
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<long double> binEdges)
       : Axis(std::move(binEdges)) {
     static_cast<void>(typeTag);
   }
@@ -619,7 +619,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(double x) const {
+  std::size_t getBin(long double x) const {
     const auto it =
         std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
     return wrapBin(std::distance(std::begin(m_binEdges), it));
@@ -632,7 +632,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinWidth(std::size_t bin) const {
+  long double getBinWidth(std::size_t bin) const {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
@@ -646,7 +646,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  double getBinLowerBound(std::size_t bin) const {
+  long double getBinLowerBound(std::size_t bin) const {
     return m_binEdges.at(bin - 1);
   }
 
@@ -660,7 +660,9 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
+  long double getBinUpperBound(std::size_t bin) const {
+    return m_binEdges.at(bin);
+  }
 
   /// @brief get bin center
   ///
@@ -669,19 +671,19 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  double getBinCenter(std::size_t bin) const {
+  long double getBinCenter(std::size_t bin) const {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  double getMax() const override { return m_binEdges.back(); }
+  long double getMax() const override { return m_binEdges.back(); }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  double getMin() const override { return m_binEdges.front(); }
+  long double getMin() const override { return m_binEdges.front(); }
 
   /// @brief get total number of bins
   ///
@@ -695,13 +697,13 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   ///
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(double x) const {
+  bool isInside(long double x) const {
     return (m_binEdges.front() <= x) && (x < m_binEdges.back());
   }
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<double> getBinEdges() const override { return m_binEdges; }
+  std::vector<long double> getBinEdges() const override { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
     os << "Axis<Variable, " << bdt << ">(";
@@ -718,6 +720,6 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
 
  private:
   /// vector of bin edges (sorted in ascending order)
-  std::vector<double> m_binEdges;
+  std::vector<long double> m_binEdges;
 };
 }  // namespace Acts

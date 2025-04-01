@@ -31,7 +31,7 @@ using ProtoGrid = actsvg::proto::grid;
 namespace GridConverter {
 
 // An optional range and binning value
-using AxisBound = std::tuple<std::array<double, 2u>, AxisDirection>;
+using AxisBound = std::tuple<std::array<long double, 2u>, AxisDirection>;
 
 /// Nested Options struct
 struct Options {
@@ -65,8 +65,8 @@ ProtoGrid convert(const grid_type& grid,
 
   // The edge values - these need to follow the ACTSVG convention,
   // so there could be swapping when necessary
-  std::vector<double> edges0;
-  std::vector<double> edges1;
+  std::vector<long double> edges0;
+  std::vector<long double> edges1;
 
   // 1D case (more to be filled in later)
   if constexpr (grid_type::DIM == 1u) {

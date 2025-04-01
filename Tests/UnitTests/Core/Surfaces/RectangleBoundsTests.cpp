@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <vector>
 
-const double inf = std::numeric_limits<double>::infinity();
+const long double inf = std::numeric_limits<long double>::infinity();
 
 namespace Acts::Test {
 
@@ -28,17 +28,17 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 /// Unit test for creating compliant/non-compliant RectangleBounds object
 BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
-  const double halfX = 10.;
-  const double halfY = 5.;
+  const long double halfX = 10.;
+  const long double halfY = 5.;
   RectangleBounds twentyByTenRectangle(halfX, halfY);
   BOOST_CHECK_EQUAL(twentyByTenRectangle.type(),
                     Acts::SurfaceBounds::eRectangle);
 
   // nonsensical bounds are also permitted, but maybe should not be
-  const double zeroHalfX = 0.;
-  const double zeroHalfY = 0.;
-  const double infHalfX = inf;
-  const double infHalfY = inf;
+  const long double zeroHalfX = 0.;
+  const long double zeroHalfY = 0.;
+  const long double infHalfX = inf;
+  const long double infHalfY = inf;
 
   // Initialise with zero dimensions
   RectangleBounds zeroDimensionsRectangle(zeroHalfX, zeroHalfY);
@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsConstruction) {
 
 /// Recreation
 BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
-  const double halfX = 10.;
-  const double halfY = 2.;  // != 5.
+  const long double halfX = 10.;
+  const long double halfY = 2.;  // != 5.
 
   RectangleBounds original(halfX, halfY);
 
   auto valvector = original.values();
-  std::array<double, RectangleBounds::eSize> values{};
+  std::array<long double, RectangleBounds::eSize> values{};
   std::copy_n(valvector.begin(), RectangleBounds::eSize, values.begin());
   RectangleBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
 
 // Exception tests
 BOOST_AUTO_TEST_CASE(RadialBoundsException) {
-  const double halfX = 10.;
-  const double halfY = 2.;  // != 5.
+  const long double halfX = 10.;
+  const long double halfY = 2.;  // != 5.
 
   // Negative x half length
   BOOST_CHECK_THROW(RectangleBounds(-halfX, halfY), std::logic_error);
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(RadialBoundsException) {
 /// Unit test for testing RectangleBounds properties
 BOOST_TEST_DECORATOR(*boost::unit_test::tolerance(1e-10))
 BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
-  const double halfX = 10.;
-  const double halfY = 5.;
+  const long double halfX = 10.;
+  const long double halfY = 5.;
 
   RectangleBounds rect(halfX, halfY);
   BOOST_CHECK_EQUAL(rect.halfLengthX(), halfX);
@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   BOOST_CHECK(rect.inside(pointA, tolerance));
 }
 BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
-  const double halfX = 10.;
-  const double halfY = 2.;  // != 5.
+  const long double halfX = 10.;
+  const long double halfY = 2.;  // != 5.
 
   RectangleBounds rectA(halfX, halfY);
   RectangleBounds rectB(0., 0.);

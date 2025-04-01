@@ -29,8 +29,8 @@ namespace ActsFatras {
 /// @tparam generator_t The type of the random generator.
 template <typename generator_t>
 using SingleParameterSmearFunction =
-    std::function<Acts::Result<std::pair<double, double>>(double,
-                                                          generator_t&)>;
+    std::function<Acts::Result<std::pair<long double, long double>>(
+        long double, generator_t&)>;
 
 /// Uncorrelated smearing algorithm for fast digitisation of bound parameters.
 ///

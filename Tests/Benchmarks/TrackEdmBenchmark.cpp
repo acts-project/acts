@@ -122,7 +122,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         trackState.jacobian().setZero();
         trackState.jacobian().row(j % eBoundSize).setOnes();
 
-        double crit = typeDist(rng);
+        long double crit = typeDist(rng);
 
         if (crit < 0.1) {
           // hole

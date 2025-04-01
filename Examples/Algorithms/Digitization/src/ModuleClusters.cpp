@@ -186,12 +186,12 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
       for (ModuleValue& thisval : thisvec) {
         // Loop over non-geometric dimensions
         for (auto k : nonGeoEntries(thisval.paramIndices)) {
-          double p_i = thisval.paramValues.at(k);
-          double p_j = values.at(j).paramValues.at(k);
-          double v_i = thisval.paramVariances.at(k);
-          double v_j = values.at(j).paramVariances.at(k);
+          long double p_i = thisval.paramValues.at(k);
+          long double p_j = values.at(j).paramValues.at(k);
+          long double v_i = thisval.paramVariances.at(k);
+          long double v_j = values.at(j).paramVariances.at(k);
 
-          double left = 0, right = 0;
+          long double left = 0, right = 0;
           if (p_i < p_j) {
             left = p_i + m_nsigma * std::sqrt(v_i);
             right = p_j - m_nsigma * std::sqrt(v_j);
@@ -225,9 +225,9 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
 
 ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
   ModuleValue mval;
-  double tot = 0;
-  double tot2 = 0;
-  std::vector<double> weights;
+  long double tot = 0;
+  long double tot2 = 0;
+  std::vector<long double> weights;
 
   // First, start by computing cell weights
   for (ModuleValue& other : values) {
@@ -253,8 +253,8 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
           mval.paramValues.push_back(0);
           mval.paramVariances.push_back(0);
         }
-        double f = weights.at(i) / (tot > 0 ? tot : 1);
-        double f2 = weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
+        long double f = weights.at(i) / (tot > 0 ? tot : 1);
+        long double f2 = weights.at(i) * weights.at(i) / (tot2 > 0 ? tot2 : 1);
         mval.paramValues.at(j) += f * other.paramValues.at(j);
         mval.paramVariances.at(j) += f2 * other.paramVariances.at(j);
       }

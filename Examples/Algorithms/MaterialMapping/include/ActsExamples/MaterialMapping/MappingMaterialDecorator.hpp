@@ -248,7 +248,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
             Acts::AxisDirection::AxisY);
       }
       if (trapezoidBounds != nullptr) {
-        double halfLengthX = std::max(
+        long double halfLengthX = std::max(
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
             trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
         bUtility += Acts::BinUtility(binning.first,

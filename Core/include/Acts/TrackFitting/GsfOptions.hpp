@@ -29,7 +29,7 @@ enum class ComponentMergeMethod { eMean, eMaxWeight };
 ///
 /// Encapsulates a component of a Gaussian mixture as used by the GSF
 struct GsfComponent {
-  double weight = 0;
+  long double weight = 0;
   BoundVector boundPars = BoundVector::Zero();
   BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
 };
@@ -106,7 +106,7 @@ struct GsfOptions {
 
   std::size_t maxComponents = 4;
 
-  double weightCutoff = 1.e-4;
+  long double weightCutoff = 1.e-4;
 
   bool abortOnError = false;
 

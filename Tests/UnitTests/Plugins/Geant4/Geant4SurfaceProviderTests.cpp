@@ -54,11 +54,11 @@ const int nLayers = 5;
 const int nChips = 5;
 const int nArms = 2;
 
-const double cellDimX = 0.4 * cm;
-const double cellDimY = 0.3 * cm;
-const double cellDimZ = 0.1 * cm;
+const long double cellDimX = 0.4 * cm;
+const long double cellDimY = 0.3 * cm;
+const long double cellDimZ = 0.1 * cm;
 
-const double armOffset = 10 * cm;
+const long double armOffset = 10 * cm;
 
 const std::filesystem::path gdmlPath = "two-arms-telescope.gdml";
 
@@ -76,8 +76,8 @@ ConstructGeant4World() {
   //
   // World
   //
-  G4double worldSizeXY = 50 * cm;
-  G4double worldSizeZ = 50 * cm;
+  G4long double worldSizeXY = 50 * cm;
+  G4long double worldSizeZ = 50 * cm;
   G4Material* worldMat = nist->FindOrBuildMaterial("G4_Galactic");
 
   auto solidWorld = new G4Box("World", 0.5 * worldSizeXY, 0.5 * worldSizeXY,
@@ -95,9 +95,9 @@ ConstructGeant4World() {
     for (int nLayer = 0; nLayer < nLayers; nLayer++) {
       for (int nChip = 0; nChip < nChips; nChip++) {
         int sign = (nArm == 0) ? 1 : -1;
-        double posX = sign * (armOffset + nChip * cm);
-        double posY = 0;
-        double posZ = nLayer * cm;
+        long double posX = sign * (armOffset + nChip * cm);
+        long double posY = 0;
+        long double posZ = nLayer * cm;
         G4ThreeVector pos = G4ThreeVector(posX, posY, posZ);
         G4ThreeVector dims = G4ThreeVector(cellDimX, cellDimY, cellDimZ);
 
@@ -161,9 +161,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
     for (int nLayer = 0; nLayer < nLayers; nLayer++) {
       for (int nChip = 0; nChip < nChips; nChip++) {
         int sign = (nArm == 0) ? 1 : -1;
-        double posX = sign * (armOffset + nChip * cm);
-        double posY = 0;
-        double posZ = nLayer * cm;
+        long double posX = sign * (armOffset + nChip * cm);
+        long double posY = 0;
+        long double posZ = nLayer * cm;
         Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
         BOOST_CHECK_EQUAL(
@@ -201,9 +201,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderNames) {
   BOOST_CHECK_EQUAL(sLeftArm.size(), leftArmNames.size());
   for (int nLayer = 0; nLayer < nLayers; nLayer++) {
     for (int nChip = 0; nChip < nChips; nChip++) {
-      double posX = armOffset + nChip * cm;
-      double posY = 0;
-      double posZ = nLayer * cm;
+      long double posX = armOffset + nChip * cm;
+      long double posY = 0;
+      long double posZ = nLayer * cm;
       Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
       BOOST_CHECK_EQUAL(sLeftArm.at(nChips * nLayer + nChip)->center(gctx),
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   sp1DCfg.g4World = world;
 
   auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
-  kdt1DOpt.range = Acts::RangeXD<1, double>();
+  kdt1DOpt.range = Acts::RangeXD<1, long double>();
   kdt1DOpt.range[0].set(8, 12);
   kdt1DOpt.binningValues = {Acts::AxisDirection::AxisZ};
 
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   for (int nArm = 0; nArm < nArms; nArm++) {
     for (int nChip = 0; nChip < nChips; nChip++) {
       int sign = (nArm == 0) ? 1 : -1;
-      double posX = sign * (armOffset + nChip * cm);
-      double posY = 0;
-      double posZ = 10;
+      long double posX = sign * (armOffset + nChip * cm);
+      long double posY = 0;
+      long double posZ = 10;
       Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
       BOOST_CHECK_EQUAL(s1D.at(nChips * nArm + nChip)->center(gctx), pos);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   sp2DCfg.g4World = world;
 
   auto kdt2DOpt = Acts::Experimental::Geant4SurfaceProvider<2>::kdtOptions();
-  kdt2DOpt.range = Acts::RangeXD<2, double>();
+  kdt2DOpt.range = Acts::RangeXD<2, long double>();
   kdt2DOpt.range[0].set(8, 12);
   kdt2DOpt.range[1].set(armOffset - 5, armOffset + 100);
   kdt2DOpt.binningValues = {Acts::AxisDirection::AxisZ};
@@ -275,8 +275,8 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
 
   BOOST_CHECK_EQUAL(s2D.size(), nChips);
   for (int nChip = 0; nChip < nChips; nChip++) {
-    double posX = armOffset + nChip * cm;
-    double posY = 0, posZ = 10;
+    long double posX = armOffset + nChip * cm;
+    long double posY = 0, posZ = 10;
     Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
     BOOST_CHECK_EQUAL(s2D.at(nChip)->center(gctx), pos);
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
   // and select only the second row
   auto sp2DPosCfg = Acts::Experimental::Geant4SurfaceProvider<1>::Config();
   sp2DPosCfg.g4World = world;
-  std::map<unsigned int, std::tuple<double, double>> ranges;
+  std::map<unsigned int, std::tuple<long double, long double>> ranges;
 
   std::array<unsigned int, 3> g4Axes{0};
   for (auto& bv : {Acts::AxisDirection::AxisX, Acts::AxisDirection::AxisY,
@@ -315,9 +315,9 @@ BOOST_AUTO_TEST_CASE(Geant4SurfaceProviderRanges) {
 
   BOOST_CHECK_EQUAL(s2DPos.size(), nChips);
   for (int nChip = 0; nChip < nChips; nChip++) {
-    double posX = armOffset + nChip * cm;
-    double posY = 0;
-    double posZ = 10;
+    long double posX = armOffset + nChip * cm;
+    long double posY = 0;
+    long double posZ = 10;
     Acts::Vector3 pos = Acts::Vector3(posX, posY, posZ);
 
     BOOST_CHECK_EQUAL(s2DPos.at(nChip)->center(gctx), pos);
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(Geant4RectangleFromGDML) {
           std::vector<std::string>{"b_pv"}, true);
 
   auto kdt1DOpt = Acts::Experimental::Geant4SurfaceProvider<1>::kdtOptions();
-  kdt1DOpt.range = Acts::RangeXD<1, double>();
+  kdt1DOpt.range = Acts::RangeXD<1, long double>();
   kdt1DOpt.range[0].set(-100, 100);
   kdt1DOpt.binningValues = {Acts::AxisDirection::AxisZ};
 

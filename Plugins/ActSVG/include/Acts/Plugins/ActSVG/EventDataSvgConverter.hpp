@@ -23,8 +23,8 @@ namespace Acts::Svg::EventDataConverter {
 /// @param idx the running index
 ///
 /// @return a vector of svg objects
-actsvg::svg::object pointXY(const Vector3& pos, double size, const Style& style,
-                            unsigned int idx = 0);
+actsvg::svg::object pointXY(const Vector3& pos, long double size,
+                            const Style& style, unsigned int idx = 0);
 
 /// Write/create a 3D point in ZR view
 ///
@@ -34,8 +34,8 @@ actsvg::svg::object pointXY(const Vector3& pos, double size, const Style& style,
 /// @param indx the running index
 ///
 /// @return a vector of svg objects
-actsvg::svg::object pointZR(const Vector3& pos, double size, const Style& style,
-                            unsigned int idx = 0);
+actsvg::svg::object pointZR(const Vector3& pos, long double size,
+                            const Style& style, unsigned int idx = 0);
 
 /// Write/create a 3D point in a given view
 ///
@@ -46,8 +46,8 @@ actsvg::svg::object pointZR(const Vector3& pos, double size, const Style& style,
 ///
 /// @return a vector of svg objects
 template <typename view_type>
-actsvg::svg::object point(const Vector3& pos, double size, const Style& style,
-                          unsigned int idx) {
+actsvg::svg::object point(const Vector3& pos, long double size,
+                          const Style& style, unsigned int idx) {
   view_type view;
   std::vector<Vector3> ps = {pos};
   auto ppos = view(ps)[0];

@@ -56,9 +56,9 @@ constexpr TrackStatePropMask trackStateMask = TrackStatePropMask::Smoothed |
 
 // A projector used for scattering. By using Jacobian * phiThetaProjector one
 // gets only the derivatives for the variables phi and theta.
-const Eigen::Matrix<double, eBoundSize, 2> phiThetaProjector = [] {
-  Eigen::Matrix<double, eBoundSize, 2> m =
-      Eigen::Matrix<double, eBoundSize, 2>::Zero();
+const Eigen::Matrix<long double, eBoundSize, 2> phiThetaProjector = [] {
+  Eigen::Matrix<long double, eBoundSize, 2> m =
+      Eigen::Matrix<long double, eBoundSize, 2>::Zero();
   m(eBoundPhi, 0) = 1.0;
   m(eBoundTheta, 1) = 1.0;
   return m;
@@ -134,7 +134,7 @@ struct Gx2FitterOptions {
                    const FreeToBoundCorrection& freeToBoundCorrection_ =
                        FreeToBoundCorrection(false),
                    const std::size_t nUpdateMax_ = 5,
-                   double relChi2changeCutOff_ = 1e-5)
+                   long double relChi2changeCutOff_ = 1e-5)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -179,7 +179,7 @@ struct Gx2FitterOptions {
   std::size_t nUpdateMax = 5;
 
   /// Check for convergence (abort condition). Set to 0 to skip.
-  double relChi2changeCutOff = 1e-7;
+  long double relChi2changeCutOff = 1e-7;
 };
 
 template <typename traj_t>
@@ -246,7 +246,7 @@ struct ScatteringProperties {
   /// @param invCovarianceMaterial_ The inverse covariance of the material.
   /// @param materialIsValid_ A boolean flag indicating whether the material is valid.
   ScatteringProperties(const BoundVector& scatteringAngles_,
-                       const double invCovarianceMaterial_,
+                       const long double invCovarianceMaterial_,
                        const bool materialIsValid_)
       : m_scatteringAngles(scatteringAngles_),
         m_invCovarianceMaterial(invCovarianceMaterial_),
@@ -259,7 +259,7 @@ struct ScatteringProperties {
   BoundVector& scatteringAngles() { return m_scatteringAngles; }
 
   // Accessor for the inverse covariance of the material.
-  double invCovarianceMaterial() const { return m_invCovarianceMaterial; }
+  long double invCovarianceMaterial() const { return m_invCovarianceMaterial; }
 
   // Accessor for the material validity flag.
   bool materialIsValid() const { return m_materialIsValid; }
@@ -271,7 +271,7 @@ struct ScatteringProperties {
 
   /// Inverse covariance of the material. Compute with e.g. the Highland
   /// formula.
-  double m_invCovarianceMaterial;
+  long double m_invCovarianceMaterial;
 
   /// Flag indicating whether the material is valid. Commonly vacuum and zero
   /// thickness material will be ignored.
@@ -296,10 +296,10 @@ struct Gx2fSystem {
   std::size_t nDims() const { return m_nDims; }
 
   // Accessor for chi2
-  double chi2() const { return m_chi2; }
+  long double chi2() const { return m_chi2; }
 
   // Modifier for chi2
-  double& chi2() { return m_chi2; }
+  long double& chi2() { return m_chi2; }
 
   // Accessor for the matrix.
   const Eigen::MatrixXd& aMatrix() const { return m_aMatrix; }
@@ -344,7 +344,7 @@ struct Gx2fSystem {
   std::size_t m_nDims;
 
   /// Sum of chi-squared values.
-  double m_chi2 = 0.;
+  long double m_chi2 = 0.;
 
   /// Extended matrix for accumulation.
   Eigen::MatrixXd m_aMatrix;
@@ -441,7 +441,7 @@ void addMaterialToGx2fSums(
         "No scattering angles found for material surface.");
   }
 
-  const double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
+  const long double sinThetaLoc = std::sin(trackState.smoothed()[eBoundTheta]);
 
   // The position, where we need to insert the values in aMatrix and bVector
   const std::size_t deltaPosition = eBoundSize + 2 * nMaterialsHandled;
@@ -449,7 +449,7 @@ void addMaterialToGx2fSums(
   const BoundVector& scatteringAngles =
       scatteringMapId->second.scatteringAngles();
 
-  const double invCov = scatteringMapId->second.invCovarianceMaterial();
+  const long double invCov = scatteringMapId->second.invCovarianceMaterial();
 
   // Phi contribution
   extendedSystem.aMatrix()(deltaPosition, deltaPosition) +=
@@ -826,13 +826,13 @@ class Gx2Fitter {
           // We need to evaluate the material to create the correct slab
           const bool slabIsValid = interaction.evaluateMaterialSlab(
               state, navigator, MaterialUpdateStage::FullUpdate);
-          double invSigma2 = 0.;
+          long double invSigma2 = 0.;
           if (slabIsValid) {
             const auto& particle =
                 parametersWithHypothesis->particleHypothesis();
 
-            const double sigma =
-                static_cast<double>(Acts::computeMultipleScatteringTheta0(
+            const long double sigma =
+                static_cast<long double>(Acts::computeMultipleScatteringTheta0(
                     interaction.slab, particle.absolutePdg(), particle.mass(),
                     static_cast<float>(
                         parametersWithHypothesis->parameters()[eBoundQOverP]),
@@ -1193,8 +1193,8 @@ class Gx2Fitter {
     using PropagatorOptions = typename propagator_t::template Options<Actors>;
 
     start_parameters_t params = sParameters;
-    double chi2sum = 0;
-    double oldChi2sum = std::numeric_limits<double>::max();
+    long double chi2sum = 0;
+    long double oldChi2sum = std::numeric_limits<long double>::max();
 
     // We need to create a temporary track container. We create several times a
     // new track and delete it after updating the parameters. However, if we

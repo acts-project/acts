@@ -23,10 +23,10 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const double minRadius = 7.2;
-const double maxRadius = 12.0;
-const double minPhi = 0.74195;
-const double maxPhi = 1.33970;
+const long double minRadius = 7.2;
+const long double maxRadius = 12.0;
+const long double minPhi = 0.74195;
+const long double maxPhi = 1.33970;
 
 const Vector2 offset(-2., 2.);
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsRecreation) {
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
   auto valvector = original.values();
-  std::array<double, AnnulusBounds::eSize> values{};
+  std::array<long double, AnnulusBounds::eSize> values{};
   std::copy_n(valvector.begin(), AnnulusBounds::eSize, values.begin());
   AnnulusBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
 
   auto toStripFrame = [&](const Vector2& xy) -> Vector2 {
     auto shifted = xy + offset;
-    double r = VectorHelpers::perp(shifted);
-    double phi = VectorHelpers::phi(shifted);
+    long double r = VectorHelpers::perp(shifted);
+    long double phi = VectorHelpers::phi(shifted);
     return Vector2(r, phi);
   };
 
@@ -143,15 +143,15 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsVertices) {
 
 BOOST_AUTO_TEST_CASE(AnnulusBoundsNegativeTolerance) {
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
-  double phiAverage = (minPhi + maxPhi) / 2;
+  long double phiAverage = (minPhi + maxPhi) / 2;
 
   auto check = [&](const BoundaryTolerance& tolerance, const Vector2& point) {
     Vector2 pointAverage(point[0], phiAverage + point[1]);
     return aBounds.inside(pointAverage, tolerance);
   };
 
-  double midRadius = (minRadius + maxRadius) / 2;
-  double hlPhi = (maxPhi - minPhi) / 2;
+  long double midRadius = (minRadius + maxRadius) / 2;
+  long double hlPhi = (maxPhi - minPhi) / 2;
 
   {
     auto tolerance = BoundaryTolerance::AbsoluteEuclidean(1);

@@ -170,7 +170,8 @@ struct GeometryView3D {
   /// @param viewConfig The drawing configuration for this segment
   static void drawSegmentBase(IVisualization3D& helper, const Vector3& start,
                               const Vector3& end, int arrows = 0,
-                              double arrowLength = 0., double arrowWidth = 0.,
+                              long double arrowLength = 0.,
+                              long double arrowWidth = 0.,
                               const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : line
@@ -192,8 +193,8 @@ struct GeometryView3D {
   /// @param arrowWidth wrt thickness
   /// @param viewConfig The drawing configuration for this segment
   static void drawArrowBackward(IVisualization3D& helper, const Vector3& start,
-                                const Vector3& end, double arrowLength,
-                                double arrowWidth,
+                                const Vector3& end, long double arrowLength,
+                                long double arrowWidth,
                                 const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing forward
@@ -205,8 +206,8 @@ struct GeometryView3D {
   /// @param arrowWidth wrt thickness
   /// @param viewConfig The drawing configuration for this segment
   static void drawArrowForward(IVisualization3D& helper, const Vector3& start,
-                               const Vector3& end, double arrowLength,
-                               double arrowWidth,
+                               const Vector3& end, long double arrowLength,
+                               long double arrowWidth,
                                const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing both directions
@@ -218,8 +219,8 @@ struct GeometryView3D {
   /// @param arrowWidth wrt thickness
   /// @param viewConfig The drawing configuration for this segment
   static void drawArrowsBoth(IVisualization3D& helper, const Vector3& start,
-                             const Vector3& end, double arrowLength,
-                             double arrowWidth,
+                             const Vector3& end, long double arrowLength,
+                             long double arrowWidth,
                              const ViewConfig& viewConfig = s_viewLine);
 };
 

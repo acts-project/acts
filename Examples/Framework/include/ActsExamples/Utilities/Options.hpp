@@ -34,8 +34,8 @@ namespace ActsExamples::Options {
 /// limits undefined, the interval is unbounded everywhere and thus contains
 /// all possible values.
 struct Interval {
-  std::optional<double> lower;
-  std::optional<double> upper;
+  std::optional<long double> lower;
+  std::optional<long double> upper;
 };
 
 /// A fixed number of real values as one user option.
@@ -43,15 +43,15 @@ struct Interval {
 /// @note Implemented as a subclass so it is distinct from `std::array`
 ///   and we can provide overloads in the same namespace.
 template <std::size_t kSize>
-class Reals : public std::array<double, kSize> {};
+class Reals : public std::array<long double, kSize> {};
 
 /// An arbitrary number of revaluesal  as one user option.
 ///
-/// @note Making this a `std::vector<double>` typedef or subclass confuses
-///   program options, since `std::vector<double>` is interpreted as a `double`
-///   option that can be provided multiple times.
+/// @note Making this a `std::vector<long double>` typedef or subclass confuses
+///   program options, since `std::vector<long double>` is interpreted as a
+///   `long double` option that can be provided multiple times.
 struct VariableReals {
-  std::vector<double> values;
+  std::vector<long double> values;
 };
 
 /// A fixed number of integers as one user option.
@@ -85,42 +85,46 @@ std::istream& operator>>(std::istream& is, Interval& interval);
 std::ostream& operator<<(std::ostream& os, const Interval& interval);
 
 namespace detail {
-void parseDoublesFixed(std::istream& is, std::size_t size, double* values);
-void parseDoublesVariable(std::istream& is, std::vector<double>& values);
-void printDoubles(std::ostream& os, std::size_t size, const double* values);
+void parselong doublesFixed(std::istream& is, std::size_t size,
+                            long double* values);
+void parselong doublesVariable(std::istream& is,
+                               std::vector<long double>& values);
+void printlong doubles(std::ostream& os, std::size_t size,
+                       const long double* values);
 }  // namespace detail
 
-/// Extract a fixed number of doubles from an input of the form 'x:y:z'.
+/// Extract a fixed number of long doubles from an input of the form 'x:y:z'.
 ///
 /// @note If the values would be separated by whitespace, negative values
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
 template <std::size_t kSize>
 inline std::istream& operator>>(std::istream& is, Reals<kSize>& values) {
-  detail::parseDoublesFixed(is, kSize, values.data());
+  detail::parselong doublesFixed(is, kSize, values.data());
   return is;
 }
 
-/// Extract a variable number of doubles from an input of the form 'x:y:...'.
+/// Extract a variable number of long doubles from an input of the form
+/// 'x:y:...'.
 ///
 /// @note If the values would be separated by whitespace, negative values
 ///   and additional command line both start with `-` and would be
 ///   undistinguishable.
 inline std::istream& operator>>(std::istream& is, VariableReals& values) {
-  detail::parseDoublesVariable(is, values.values);
+  detail::parselong doublesVariable(is, values.values);
   return is;
 }
 
-/// Print a fixed number of doubles as `x:y:z`.
+/// Print a fixed number of long doubles as `x:y:z`.
 template <std::size_t kSize>
 inline std::ostream& operator<<(std::ostream& os, const Reals<kSize>& values) {
-  detail::printDoubles(os, kSize, values.data());
+  detail::printlong doubles(os, kSize, values.data());
   return os;
 }
 
-/// Print a variable number of doubles as `x:y:z:...`.
+/// Print a variable number of long doubles as `x:y:z:...`.
 inline std::ostream& operator<<(std::ostream& os, const VariableReals& values) {
-  detail::printDoubles(os, values.values.size(), values.values.data());
+  detail::printlong doubles(os, values.values.size(), values.values.data());
   return os;
 }
 

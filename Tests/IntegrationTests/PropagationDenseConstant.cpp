@@ -75,7 +75,7 @@ inline std::shared_ptr<const Acts::TrackingGeometry> makeDetector() {
   return detector;
 }
 
-inline Propagator makePropagator(double bz) {
+inline Propagator makePropagator(long double bz) {
   using namespace Acts;
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
@@ -87,7 +87,7 @@ inline Propagator makePropagator(double bz) {
       logger->cloneWithSuffix("Prop"));
 }
 
-inline RiddersPropagator makeRiddersPropagator(double bz) {
+inline RiddersPropagator makeRiddersPropagator(long double bz) {
   using namespace Acts;
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));

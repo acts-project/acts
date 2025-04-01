@@ -58,10 +58,10 @@ class GenericBoundTrackParameters {
   /// successfully be converted to on-surface parameters.
   static Result<GenericBoundTrackParameters> create(
       const GeometryContext& geoCtx, std::shared_ptr<const Surface> surface,
-      const Vector4& pos4, const Vector3& dir, double qOverP,
+      const Vector4& pos4, const Vector3& dir, long double qOverP,
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis,
-      double tolerance = s_onSurfaceTolerance) {
+      long double tolerance = s_onSurfaceTolerance) {
     Result<BoundVector> bound =
         transformFreeToBoundParameters(pos4.segment<3>(ePos0), pos4[eTime], dir,
                                        qOverP, *surface, geoCtx, tolerance);
@@ -83,7 +83,7 @@ class GenericBoundTrackParameters {
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   static GenericBoundTrackParameters createCurvilinear(
-      const Vector4& pos4, const Vector3& dir, double qOverP,
+      const Vector4& pos4, const Vector3& dir, long double qOverP,
       std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis) {
     return GenericBoundTrackParameters(
@@ -101,8 +101,8 @@ class GenericBoundTrackParameters {
   /// @param cov Curvilinear bound parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   static GenericBoundTrackParameters createCurvilinear(
-      const Vector4& pos4, double phi, double theta, double qOverP,
-      std::optional<CovarianceMatrix> cov,
+      const Vector4& pos4, long double phi, long double theta,
+      long double qOverP, std::optional<CovarianceMatrix> cov,
       ParticleHypothesis particleHypothesis) {
     return GenericBoundTrackParameters(
         CurvilinearSurface(pos4.segment<3>(ePos0),
@@ -202,7 +202,7 @@ class GenericBoundTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <BoundIndices kIndex>
-  double get() const {
+  long double get() const {
     return m_params[kIndex];
   }
 
@@ -237,14 +237,14 @@ class GenericBoundTrackParameters {
     return m_surface->localToGlobal(geoCtx, localPosition(), direction());
   }
   /// Time coordinate.
-  double time() const { return m_params[eBoundTime]; }
+  long double time() const { return m_params[eBoundTime]; }
 
   /// Phi direction.
-  double phi() const { return m_params[eBoundPhi]; }
+  long double phi() const { return m_params[eBoundPhi]; }
   /// Theta direction.
-  double theta() const { return m_params[eBoundTheta]; }
+  long double theta() const { return m_params[eBoundTheta]; }
   /// Charge over momentum.
-  double qOverP() const { return m_params[eBoundQOverP]; }
+  long double qOverP() const { return m_params[eBoundQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
@@ -253,18 +253,18 @@ class GenericBoundTrackParameters {
                                      m_params[eBoundTheta]);
   }
   /// Absolute momentum.
-  double absoluteMomentum() const {
+  long double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eBoundQOverP]);
   }
   /// Transverse momentum.
-  double transverseMomentum() const {
+  long double transverseMomentum() const {
     return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
   }
   /// Momentum three-vector.
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
-  double charge() const {
+  long double charge() const {
     return m_particleHypothesis.extractCharge(get<eBoundQOverP>());
   }
 

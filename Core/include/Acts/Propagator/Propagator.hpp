@@ -110,9 +110,10 @@ class Propagator final
                 "parameters concept.");
 
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
+  using BoundState =
+      std::tuple<StepperBoundTrackParameters, Jacobian, long double>;
   using CurvilinearState =
-      std::tuple<StepperCurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<StepperCurvilinearTrackParameters, Jacobian, long double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");

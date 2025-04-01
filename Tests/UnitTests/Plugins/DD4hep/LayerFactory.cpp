@@ -44,18 +44,20 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
   if (x_layer.hasChild(_Unicode(acts_volume))) {
     xml_comp_t actsVolume = x_layer.child(_Unicode(acts_volume));
     layerParams.set<bool>("acts_volume", true);
-    layerParams.set<double>("acts_volume_z",
-                            Acts::getAttrValueOr<double>(actsVolume, "cz", 0.));
+    layerParams.set<long double>(
+        "acts_volume_z",
+        Acts::getAttrValueOr<long double>(actsVolume, "cz", 0.));
     layerParams.set<int>("acts_volume_type", 3);
     layerParams.set<int>("acts_volume_bvalues_n", 3);
-    layerParams.set<double>(
+    layerParams.set<long double>(
         "acts_volume_bvalues_0",
-        Acts::getAttrValueOr<double>(actsVolume, "rmin", 0.));
-    layerParams.set<double>(
+        Acts::getAttrValueOr<long double>(actsVolume, "rmin", 0.));
+    layerParams.set<long double>(
         "acts_volume_bvalues_1",
-        Acts::getAttrValueOr<double>(actsVolume, "rmax", 0.));
-    layerParams.set<double>("acts_volume_bvalues_2",
-                            Acts::getAttrValueOr<double>(actsVolume, "dz", 0.));
+        Acts::getAttrValueOr<long double>(actsVolume, "rmax", 0.));
+    layerParams.set<long double>(
+        "acts_volume_bvalues_2",
+        Acts::getAttrValueOr<long double>(actsVolume, "dz", 0.));
 
     layerParams.set<bool>("acts_volume_internals", true);
     layerParams.set<std::string>("acts_volume_internals_type", "layer");
@@ -162,18 +164,20 @@ DetElement addDiscLayer(Detector &dd, Assembly &dAssembly,
   if (x_layer.hasChild(_Unicode(acts_volume))) {
     xml_comp_t actsVolume = x_layer.child(_Unicode(acts_volume));
     layerParams.set<bool>("acts_volume", true);
-    layerParams.set<double>("acts_volume_z",
-                            Acts::getAttrValueOr<double>(actsVolume, "cz", 0.));
+    layerParams.set<long double>(
+        "acts_volume_z",
+        Acts::getAttrValueOr<long double>(actsVolume, "cz", 0.));
     layerParams.set<int>("acts_volume_type", 3);
     layerParams.set<int>("acts_volume_bvalues_n", 3);
-    layerParams.set<double>(
+    layerParams.set<long double>(
         "acts_volume_bvalues_0",
-        Acts::getAttrValueOr<double>(actsVolume, "rmin", 0.));
-    layerParams.set<double>(
+        Acts::getAttrValueOr<long double>(actsVolume, "rmin", 0.));
+    layerParams.set<long double>(
         "acts_volume_bvalues_1",
-        Acts::getAttrValueOr<double>(actsVolume, "rmax", 0.));
-    layerParams.set<double>("acts_volume_bvalues_2",
-                            Acts::getAttrValueOr<double>(actsVolume, "dz", 0.));
+        Acts::getAttrValueOr<long double>(actsVolume, "rmax", 0.));
+    layerParams.set<long double>(
+        "acts_volume_bvalues_2",
+        Acts::getAttrValueOr<long double>(actsVolume, "dz", 0.));
 
     layerParams.set<bool>("acts_volume_internals", true);
     layerParams.set<std::string>("acts_volume_internals_type", "layer");

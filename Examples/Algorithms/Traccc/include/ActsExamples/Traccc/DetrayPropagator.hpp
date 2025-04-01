@@ -104,7 +104,8 @@ class DetrayPropagator : public PropagatorInterface {
                             DetrayInspector>;
 
       using MaterialTracer =
-          detray::material_validator::material_tracer<double, vecmem::vector>;
+          detray::material_validator::material_tracer<long double,
+                                                      vecmem::vector>;
 
       // Propagator with empty actor chain (for the moment)
       using Propagator =

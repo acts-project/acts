@@ -37,11 +37,11 @@ namespace Acts::Test {
 
 struct Object {};
 
-using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, double, 3>;
+using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, long double, 3>;
 
-using Vector2F = Eigen::Matrix<double, 2, 1>;
-using Vector3F = Eigen::Matrix<double, 3, 1>;
-using AngleAxis3F = Eigen::AngleAxis<double>;
+using Vector2F = Eigen::Matrix<long double, 2, 1>;
+using Vector3F = Eigen::Matrix<long double, 3, 1>;
+using AngleAxis3F = Eigen::AngleAxis<long double>;
 
 std::filesystem::path tmp_path = []() {
   auto tmpPath = std::filesystem::temp_directory_path() / "acts_unit_tests";
@@ -57,11 +57,11 @@ std::ofstream tmp(const std::string& path) {
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {
     Object o;
-    using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
+    using Box = Acts::AxisAlignedBoundingBox<Object, long double, 2>;
     Box bb(&o, {-1, -1}, {2, 2});
 
     typename Box::transform_type rot;
-    rot = Eigen::Rotation2D<double>(std::numbers::pi / 7.);
+    rot = Eigen::Rotation2D<long double>(std::numbers::pi / 7.);
     Box bb_rot = bb.transformed(rot);
 
     CHECK_CLOSE_ABS(bb_rot.min(), Vector2F(-1.76874, -1.33485), 1e-4);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(box_construction) {
 
   BOOST_TEST_CONTEXT("3D") {
     Object o;
-    using Box = Acts::AxisAlignedBoundingBox<Object, double, 3>;
+    using Box = Acts::AxisAlignedBoundingBox<Object, long double, 3>;
     Box bb(&o, {-1, -1, -1}, {2, 2, 2});
 
     typename Box::transform_type rot;
@@ -139,14 +139,14 @@ BOOST_AUTO_TEST_CASE(intersect_points) {
 
 BOOST_AUTO_TEST_CASE(intersect_rays) {
   BOOST_TEST_CONTEXT("2D") {
-    using Box = AxisAlignedBoundingBox<Object, double, 2>;
+    using Box = AxisAlignedBoundingBox<Object, long double, 2>;
 
     Object o;
     Box bb(&o, {-1, -1}, {1, 1});
 
     // ray in positive x direction
 
-    Ray<double, 2> ray({-2, 0}, {1, 0});
+    Ray<long double, 2> ray({-2, 0}, {1, 0});
     BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 2}, {1, 0}};
@@ -271,10 +271,10 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 
     // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
-    Ray<double, 3> ray3({0, 0, -2}, {0, 0, 1});
+    Ray<long double, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
 
-    PlyVisualization3D<double> ply;
+    PlyVisualization3D<long double> ply;
 
     ray3.draw(ply);
     auto os = tmp("ray3d.ply");
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 
     // let's make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
-    Ray<double, 3> ray3({0, 0, -2}, {0, 0, 1});
+    Ray<long double, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
 
     // facing away from box
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 }  // namespace Test
 
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
-  using Ray = Ray<double, 3>;
+  using Ray = Ray<long double, 3>;
 
   std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   Volume vol(trf, cubo);
 
-  PlyVisualization3D<double> ply;
+  PlyVisualization3D<long double> ply;
 
   Transform3 trl = Transform3::Identity();
   trl.translation() = trf.translation();
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       return os;
     };
 
-    using Frustum2 = Frustum<double, 2, 2>;
+    using Frustum2 = Frustum<long double, 2, 2>;
 
     std::ofstream os;
 
@@ -458,18 +458,18 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     const std::size_t nSteps = 10;
 
     // Visualise the parameters
-    const double min = -20;
-    const double max = 20;
+    const long double min = -20;
+    const long double max = 20;
     os = make_svg("frust2d_parameters.svg", svgWidth, svgHeight);
 
-    const double step = (max - min) / nSteps;
+    const long double step = (max - min) / nSteps;
     for (std::size_t i = 0; i <= nSteps; i++) {
       for (std::size_t j = 0; j <= nSteps; j++) {
         Vector2F dir(1, 0);
         Vector2F origin(min + step * i, min + step * j);
         origin.x() *= 1.10;
-        Eigen::Rotation2D<double> rot(2 * std::numbers::pi / nSteps * i);
-        double angle = std::numbers::pi / 2. / nSteps * j;
+        Eigen::Rotation2D<long double> rot(2 * std::numbers::pi / nSteps * i);
+        long double angle = std::numbers::pi / 2. / nSteps * j;
         Frustum2 fr(origin, rot * dir, angle);
         fr.svg(os, svgWidth, svgHeight, 2);
       }
@@ -478,18 +478,18 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     os << "</svg>";
     os.close();
 
-    const double unit = 20.;
+    const long double unit = 20.;
 
-    using Box = AxisAlignedBoundingBox<Object, double, 2>;
+    using Box = AxisAlignedBoundingBox<Object, long double, 2>;
     Object o;
-    Box::Size size(Eigen::Matrix<double, 2, 1>(2, 2));
+    Box::Size size(Eigen::Matrix<long double, 2, 1>(2, 2));
 
-    const double minX = -20.;
-    const double minY = -20.;
-    const double maxX = 20.;
-    const double maxY = 20.;
-    const double stepX = (maxX - minX) / nSteps;
-    const double stepY = (maxY - minY) / nSteps;
+    const long double minX = -20.;
+    const long double minY = -20.;
+    const long double maxX = 20.;
+    const long double maxY = 20.;
+    const long double stepX = (maxX - minX) / nSteps;
+    const long double stepY = (maxY - minY) / nSteps;
 
     std::set<std::size_t> idxsAct;
 
@@ -576,10 +576,10 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       boxes.reserve((nSteps + 1) * (nSteps + 1));
       for (std::size_t i = 0; i <= nSteps; i++) {
         for (std::size_t j = 0; j <= nSteps; j++) {
-          boxes.emplace_back(
-              &o,
-              Eigen::Matrix<double, 2, 1>{minX + i * stepX, minY + j * stepY},
-              size);
+          boxes.emplace_back(&o,
+                             Eigen::Matrix<long double, 2, 1>{minX + i * stepX,
+                                                              minY + j * stepY},
+                             size);
           std::stringstream st;
           st << boxes.size() - 1;
 
@@ -602,21 +602,21 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     }
   }
 
-  PlyVisualization3D<double> helper;
+  PlyVisualization3D<long double> helper;
   BOOST_TEST_CONTEXT("3D - 3 Sides") {
-    using Frustum3 = Frustum<double, 3, 3>;
+    using Frustum3 = Frustum<long double, 3, 3>;
     std::ofstream os;
     std::size_t n = 10;
     const std::size_t nSteps = 5;
-    double min = -10;
-    double max = 10;
-    double step = (max - min) / nSteps;
+    long double min = -10;
+    long double max = 10;
+    long double step = (max - min) / nSteps;
 
     // Visualise the parameters
-    auto make = [&](double angle, const Vector3F& origin,
+    auto make = [&](long double angle, const Vector3F& origin,
                     std::ofstream& osTmp) {
       helper.clear();
-      double far = 1.;
+      long double far = 1.;
       Frustum3 fr(origin, {0, 0, 1}, angle);
       fr.draw(helper, far);
       fr = Frustum3(origin, {0, 0, -1}, angle);
@@ -652,7 +652,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     for (std::size_t i = 0; i <= n; i++) {
       Vector3F origin(i * 4, 0, 0);
       AngleAxis3F rot(std::numbers::pi / n * i, Vector3F::UnitY());
-      double angle = (std::numbers::pi / 2.) / n * (1 + i);
+      long double angle = (std::numbers::pi / 2.) / n * (1 + i);
       Vector3F dir(1, 0, 0);
       Frustum3 fr(origin, rot * dir, angle);
       fr.draw(helper, 2);
@@ -847,16 +847,16 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       step = (max - min) / n;
 
       Object o;
-      using Box = AxisAlignedBoundingBox<Object, double, 3>;
-      Box::Size size(Eigen::Matrix<double, 3, 1>(2, 2, 2));
+      using Box = AxisAlignedBoundingBox<Object, long double, 3>;
+      Box::Size size(Eigen::Matrix<long double, 3, 1>(2, 2, 2));
 
       std::size_t idx = 0;
 
       for (std::size_t i = 0; i <= n; i++) {
         for (std::size_t j = 0; j <= n; j++) {
           for (std::size_t k = 0; k <= n; k++) {
-            Eigen::Matrix<double, 3, 1> pos(min + i * step, min + j * step,
-                                            min + k * step);
+            Eigen::Matrix<long double, 3, 1> pos(min + i * step, min + j * step,
+                                                 min + k * step);
             Box bb(&o, pos, size);
 
             Color color = {255, 0, 0};
@@ -880,26 +880,26 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   }
 
   BOOST_TEST_CONTEXT("3D - 4 Sides") {
-    using Frustum34 = Frustum<double, 3, 4>;
+    using Frustum34 = Frustum<long double, 3, 4>;
     const std::size_t n = 10;
-    double min = -10;
-    double max = 10;
+    long double min = -10;
+    long double max = 10;
     const std::size_t s = 5;
-    double step = (max - min) / s;
+    long double step = (max - min) / s;
     std::ofstream os;
 
     // Visualise the parameters
     helper.clear();
     os = tmp("frust3d-4s_dir.ply");
 
-    const double constAngle = std::numbers::pi / 4.;
+    const long double constAngle = std::numbers::pi / 4.;
     for (std::size_t i = 0; i <= s; i++) {
       for (std::size_t j = 0; j <= s; j++) {
         for (std::size_t k = 0; k <= s; k++) {
           Vector3F origin(min + i * step, min + j * step, min + k * step);
           Vector3F dir(1, 0, 0);
 
-          double piOverS = std::numbers::pi / s;
+          long double piOverS = std::numbers::pi / s;
           AngleAxis3F rot;
           rot = AngleAxis3F(piOverS * i, Vector3F::UnitX()) *
                 AngleAxis3F(piOverS * j, Vector3F::UnitY()) *
@@ -920,7 +920,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     for (std::size_t i = 0; i <= n; i++) {
       Vector3F origin(i * 4, 0, 0);
       AngleAxis3F rot(std::numbers::pi / n * i, Vector3F::UnitY());
-      const double angle = (std::numbers::pi / 2.) / n * (1 + i);
+      const long double angle = (std::numbers::pi / 2.) / n * (1 + i);
       Vector3F dir(1, 0, 0);
       Frustum34 fr(origin, rot * dir, angle);
       fr.draw(helper, 2);
@@ -1101,15 +1101,15 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       fr.draw(helper, 50);
 
       Object o;
-      using Box = AxisAlignedBoundingBox<Object, double, 3>;
-      Box::Size size(Eigen::Matrix<double, 3, 1>(2, 2, 2));
+      using Box = AxisAlignedBoundingBox<Object, long double, 3>;
+      Box::Size size(Eigen::Matrix<long double, 3, 1>(2, 2, 2));
 
       std::size_t idx = 0;
       for (std::size_t i = 0; i <= n; i++) {
         for (std::size_t j = 0; j <= n; j++) {
           for (std::size_t k = 0; k <= n; k++) {
-            Eigen::Matrix<double, 3, 1> pos(min + i * step, min + j * step,
-                                            min + k * step);
+            Eigen::Matrix<long double, 3, 1> pos(min + i * step, min + j * step,
+                                                 min + k * step);
             Box bb(&o, pos, size);
 
             Color color = {255, 0, 0};
@@ -1133,13 +1133,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   }
 
   BOOST_TEST_CONTEXT("3D - 5 Sides") {
-    using Frustum = Frustum<double, 3, 5>;
-    using Box = AxisAlignedBoundingBox<Object, double, 3>;
+    using Frustum = Frustum<long double, 3, 5>;
+    using Box = AxisAlignedBoundingBox<Object, long double, 3>;
     Box::Size size(Acts::Vector3(2, 2, 2));
 
     Object o;
 
-    PlyVisualization3D<double> ply;
+    PlyVisualization3D<long double> ply;
 
     Frustum fr({0, 0, 0}, {0, 0, 1}, std::numbers::pi / 8.);
     fr.draw(ply, 10);
@@ -1155,13 +1155,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   }
 
   BOOST_TEST_CONTEXT("3D - 10 Sides") {
-    using Frustum = Frustum<double, 3, 10>;
-    using Box = AxisAlignedBoundingBox<Object, double, 3>;
+    using Frustum = Frustum<long double, 3, 10>;
+    using Box = AxisAlignedBoundingBox<Object, long double, 3>;
     Box::Size size(Acts::Vector3(2, 2, 2));
 
     Object o;
 
-    PlyVisualization3D<double> ply;
+    PlyVisualization3D<long double> ply;
 
     Acts::Vector3 pos = {-12.4205, 29.3578, 44.6207};
     Acts::Vector3 dir = {-0.656862, 0.48138, 0.58035};
@@ -1179,12 +1179,12 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   }
 
   BOOST_TEST_CONTEXT("3D - 4 Sides - Big box") {
-    using Frustum = Frustum<double, 3, 4>;
-    using Box = AxisAlignedBoundingBox<Object, double, 3>;
+    using Frustum = Frustum<long double, 3, 4>;
+    using Box = AxisAlignedBoundingBox<Object, long double, 3>;
 
     Object o;
 
-    PlyVisualization3D<double> ply;
+    PlyVisualization3D<long double> ply;
 
     Acts::Vector3 pos = {0, 0, 0};
     Acts::Vector3 dir = {0, 0, 1};
@@ -1205,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
 BOOST_AUTO_TEST_CASE(ostream_operator) {
   Object o;
-  using Box = Acts::AxisAlignedBoundingBox<Object, double, 2>;
+  using Box = Acts::AxisAlignedBoundingBox<Object, long double, 2>;
   Box bb(&o, {-1, -1}, {2, 2});
 
   std::stringstream ss;

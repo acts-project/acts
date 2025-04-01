@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_CHECK_EQUAL(solidCone.innerRmax(), 0.);
   BOOST_CHECK_EQUAL(solidCone.outerTanAlpha(), std::tan(0.45));
 
-  double outerRmax = 100_mm * solidCone.outerTanAlpha();
+  long double outerRmax = 100_mm * solidCone.outerTanAlpha();
   BOOST_CHECK_EQUAL(solidCone.outerRmin(), 0.);
   BOOST_CHECK_EQUAL(solidCone.outerRmax(), outerRmax);
 

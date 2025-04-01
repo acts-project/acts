@@ -37,12 +37,12 @@ void DD4hepTestsHelper::decodeBinning(
       variantParams.set<int>(bname + "_" + bv + "_n", nBins);
       // Set min/max parameter
       if (!autoRange) {
-        variantParams.set<double>(
+        variantParams.set<long double>(
             bname + "_" + bv + "_min",
-            xmlBinning.attr<double>((bv + "min").c_str()));
-        variantParams.set<double>(
+            xmlBinning.attr<long double>((bv + "min").c_str()));
+        variantParams.set<long double>(
             bname + "_" + bv + "_max",
-            xmlBinning.attr<double>((bv + "max").c_str()));
+            xmlBinning.attr<long double>((bv + "max").c_str()));
       }
     } else {
       // Variable binning detected
@@ -54,21 +54,22 @@ void DD4hepTestsHelper::decodeBinning(
       auto end = boundaries.find(del);
       int ib = 0;
       // Unit conversion
-      double unitScalar = 1.;
+      long double unitScalar = 1.;
       if (bv != "phi") {
         unitScalar = Acts::UnitConstants::mm / dd4hep::millimeter;
       }
       // Split and convert
       while (end != std::string::npos) {
-        double bR = unitScalar * dd4hep::_toFloat(boundaries.substr(0, end));
-        variantParams.set<double>(
+        long double bR =
+            unitScalar * dd4hep::_toFloat(boundaries.substr(0, end));
+        variantParams.set<long double>(
             bname + "_" + bv + "_b" + std::to_string(ib++), bR);
         boundaries.erase(boundaries.begin(), boundaries.begin() + end + 1);
         end = boundaries.find(del);
       }
-      double bR = unitScalar * std::stod(boundaries.substr(0, end));
-      variantParams.set<double>(bname + "_" + bv + "_b" + std::to_string(ib),
-                                bR);
+      long double bR = unitScalar * std::stod(boundaries.substr(0, end));
+      variantParams.set<long double>(
+          bname + "_" + bv + "_b" + std::to_string(ib), bR);
       // The number of bins are needed to unpack the data
       variantParams.set<int>(bname + "_" + bv + "_n", ib);
     }
@@ -78,24 +79,24 @@ void DD4hepTestsHelper::decodeBinning(
 dd4hep::Transform3D DD4hepTestsHelper::createTransform(
     const xml_comp_t& x_det_comp) {
   // Build the transform - center def
-  double cx = Acts::getAttrValueOr<double>(x_det_comp, "cx", 0.);
-  double cy = Acts::getAttrValueOr<double>(x_det_comp, "cy", 0.);
-  double cz = Acts::getAttrValueOr<double>(x_det_comp, "cz", 0.);
+  long double cx = Acts::getAttrValueOr<long double>(x_det_comp, "cx", 0.);
+  long double cy = Acts::getAttrValueOr<long double>(x_det_comp, "cy", 0.);
+  long double cz = Acts::getAttrValueOr<long double>(x_det_comp, "cz", 0.);
 
-  double xx = Acts::getAttrValueOr<double>(x_det_comp, "xx", 1.);
-  double xy = Acts::getAttrValueOr<double>(x_det_comp, "xy", 0.);
-  double xz = Acts::getAttrValueOr<double>(x_det_comp, "xz", 0.);
+  long double xx = Acts::getAttrValueOr<long double>(x_det_comp, "xx", 1.);
+  long double xy = Acts::getAttrValueOr<long double>(x_det_comp, "xy", 0.);
+  long double xz = Acts::getAttrValueOr<long double>(x_det_comp, "xz", 0.);
 
-  double yx = Acts::getAttrValueOr<double>(x_det_comp, "yx", 0.);
-  double yy = Acts::getAttrValueOr<double>(x_det_comp, "yy", 1.);
-  double yz = Acts::getAttrValueOr<double>(x_det_comp, "yz", 0.);
+  long double yx = Acts::getAttrValueOr<long double>(x_det_comp, "yx", 0.);
+  long double yy = Acts::getAttrValueOr<long double>(x_det_comp, "yy", 1.);
+  long double yz = Acts::getAttrValueOr<long double>(x_det_comp, "yz", 0.);
 
   Position xAxis(xx, xy, xz);
   Position yAxis(yx, yy, yz);
   Position zAxis = xAxis.Cross(yAxis);
-  double zx = zAxis.X();
-  double zy = zAxis.Y();
-  double zz = zAxis.Z();
+  long double zx = zAxis.X();
+  long double zy = zAxis.Y();
+  long double zz = zAxis.Z();
 
   // Create the transform
   return Transform3D(xx, yx, zx, cx, xy, yy, zy, cy, xz, yz, zz, cz);
@@ -133,9 +134,9 @@ std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
   switch (surface.bounds().type()) {
     case Acts::SurfaceBounds::eRectangle: {
       sxml << "<box ";
-      double dx = (boundValues[2u] - boundValues[0u]);
-      double dy = (boundValues[3u] - boundValues[1u]);
-      double dz = 0.125;
+      long double dx = (boundValues[2u] - boundValues[0u]);
+      long double dy = (boundValues[3u] - boundValues[1u]);
+      long double dz = 0.125;
       sxml << "dx=\"" << dx << "*mm\" ";
       sxml << "dy=\"" << dy << "*mm\" ";
       sxml << "dz=\"" << dz << "*mm\" ";
@@ -144,10 +145,10 @@ std::string DD4hepTestsHelper::surfaceToXML(const Acts::GeometryContext& gctx,
       axes = {2, 0};
 
       sxml << "<trap ";
-      double hxmin = boundValues[0u];
-      double hxmax = boundValues[1u];
-      double dy = 2 * boundValues[2u];
-      double dz = 0.125;
+      long double hxmin = boundValues[0u];
+      long double hxmax = boundValues[1u];
+      long double dy = 2 * boundValues[2u];
+      long double dz = 0.125;
       sxml << "x1=\"" << hxmin << "*mm\" ";
       sxml << "x2=\"" << hxmax << "*mm\" ";
       sxml << "dy=\"" << dy << "*mm\" ";

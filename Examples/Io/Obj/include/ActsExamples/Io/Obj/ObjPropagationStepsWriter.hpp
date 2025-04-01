@@ -34,7 +34,7 @@ class ObjPropagationStepsWriter : public WriterT<PropagationSummaries> {
     /// where to place output files
     std::string outputDir;
     /// scale output values
-    double outputScalor = 1.0;
+    long double outputScalor = 1.0;
     /// floating point precision
     std::size_t outputPrecision = 6;
   };

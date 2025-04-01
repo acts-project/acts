@@ -336,8 +336,8 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
   const auto& binningData = geoCfg.segmentation.binningData();
 
   // For digital readout, the weight needs to be split in x and y
-  std::array<double, 2u> pos = {0., 0.};
-  std::array<double, 2u> totalWeight = {0., 0.};
+  std::array<long double, 2u> pos = {0., 0.};
+  std::array<long double, 2u> totalWeight = {0., 0.};
   std::array<std::size_t, 2u> bmin = {std::numeric_limits<std::size_t>::max(),
                                       std::numeric_limits<std::size_t>::max()};
   std::array<std::size_t, 2u> bmax = {0, 0};
@@ -348,10 +348,10 @@ DigitizedParameters DigitizationAlgorithm::localParameters(
   // Combine the channels
   for (const auto& ch : channels) {
     auto bin = ch.bin;
-    double charge = geoCfg.charge(ch.activation, rng);
+    long double charge = geoCfg.charge(ch.activation, rng);
     // Loop and check
     if (charge > geoCfg.threshold) {
-      double weight = geoCfg.digital ? 1. : charge;
+      long double weight = geoCfg.digital ? 1. : charge;
       for (std::size_t ib = 0; ib < 2; ++ib) {
         if (geoCfg.digital && geoCfg.componentDigital) {
           // only fill component of this row/column if not yet filled

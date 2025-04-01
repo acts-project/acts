@@ -53,8 +53,8 @@ nlohmann::json toJsonDetray(const SurfaceBounds& bounds, bool portal = false);
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
   const std::size_t kValues = bounds_t::BoundValues::eSize;
-  std::array<double, kValues> bValues{};
-  std::vector<double> bVector = j["values"];
+  std::array<long double, kValues> bValues{};
+  std::vector<long double> bVector = j["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_shared<const bounds_t>(bValues);
 }

@@ -270,8 +270,8 @@ void addGeometry(Context& ctx) {
         py::class_<Acts::CylinderVolumeBounds,
                    std::shared_ptr<Acts::CylinderVolumeBounds>,
                    Acts::VolumeBounds>(m, "CylinderVolumeBounds")
-            .def(py::init<double, double, double, double, double, double,
-                          double>(),
+            .def(py::init<long double, long double, long double, long double,
+                          long double, long double, long double>(),
                  "rmin"_a, "rmax"_a, "halfz"_a, "halfphi"_a = std::numbers::pi,
                  "avgphi"_a = 0., "bevelMinZ"_a = 0., "bevelMaxZ"_a = 0.);
 
@@ -360,12 +360,12 @@ void addGeometry(Context& ctx) {
            py::arg("envelope") = ExtentEnvelope::Zero())
       .def("range",
            [](const Acts::Extent& self,
-              Acts::AxisDirection bval) -> std::array<double, 2> {
+              Acts::AxisDirection bval) -> std::array<long double, 2> {
              return {self.min(bval), self.max(bval)};
            })
       .def("setRange",
            [](Extent& self, Acts::AxisDirection bval,
-              const std::array<double, 2>& range) {
+              const std::array<long double, 2>& range) {
              self.set(bval, range[0], range[1]);
            })
       .def("__str__", &Extent::toString);
@@ -464,10 +464,10 @@ void addExperimentalGeometry(Context& ctx) {
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
         .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
-                      const std::vector<double>&>(),
+                      const std::vector<long double>&>(),
              "bValue"_a, "bType"_a, "e"_a)
-        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, double,
-                      double, std::size_t>(),
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, long double,
+                      long double, std::size_t>(),
              "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
                       std::size_t>(),
@@ -511,13 +511,13 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim1 = Acts::RangeXD<1u, double>;
+    using RangeXDDim1 = Acts::RangeXD<1u, long double>;
     using KdtSurfacesDim1Bin100 = Acts::Experimental::KdtSurfaces<1u, 100u>;
     using KdtSurfacesProviderDim1Bin100 =
         Acts::Experimental::KdtSurfacesProvider<1u, 100u>;
 
     py::class_<RangeXDDim1>(m, "RangeXDDim1")
-        .def(py::init([](const std::array<double, 2u>& irange) {
+        .def(py::init([](const std::array<long double, 2u>& irange) {
           RangeXDDim1 range;
           range[0].shrink(irange[0], irange[1]);
           return range;
@@ -539,14 +539,14 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim2 = Acts::RangeXD<2u, double>;
+    using RangeXDDim2 = Acts::RangeXD<2u, long double>;
     using KdtSurfacesDim2Bin100 = Acts::Experimental::KdtSurfaces<2u, 100u>;
     using KdtSurfacesProviderDim2Bin100 =
         Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
 
     py::class_<RangeXDDim2>(m, "RangeXDDim2")
-        .def(py::init([](const std::array<double, 2u>& range0,
-                         const std::array<double, 2u>& range1) {
+        .def(py::init([](const std::array<long double, 2u>& range0,
+                         const std::array<long double, 2u>& range1) {
           RangeXDDim2 range;
           range[0].shrink(range0[0], range0[1]);
           range[1].shrink(range1[0], range1[1]);
@@ -569,12 +569,12 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
-    using RangeXDDim3 = Acts::RangeXD<3u, double>;
+    using RangeXDDim3 = Acts::RangeXD<3u, long double>;
 
     py::class_<RangeXDDim3>(m, "RangeXDDim3")
-        .def(py::init([](const std::array<double, 2u>& range0,
-                         const std::array<double, 2u>& range1,
-                         const std::array<double, 2u>& range2) {
+        .def(py::init([](const std::array<long double, 2u>& range0,
+                         const std::array<long double, 2u>& range1,
+                         const std::array<long double, 2u>& range2) {
           RangeXDDim3 range;
           range[0].shrink(range0[0], range0[1]);
           range[1].shrink(range1[0], range1[1]);

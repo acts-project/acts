@@ -80,8 +80,8 @@ inline auto generateParametersCovariance(generator_t& rng)
 
 struct GenerateBoundDirectionOptions {
   /// Low, high (exclusive) for the transverse direction angle.
-  double phiMin = -std::numbers::pi;
-  double phiMax = std::numbers::pi;
+  long double phiMin = -std::numbers::pi;
+  long double phiMax = std::numbers::pi;
 
   /// Low, high (inclusive) for  the longitudinal direction angle.
   ///
@@ -92,16 +92,16 @@ struct GenerateBoundDirectionOptions {
   /// classification, where a flat distribution in eta can be useful,
   /// this can be set by the etaUniform flag;
   ///
-  double thetaMin = AngleHelpers::thetaFromEta(6.0);
-  double thetaMax = AngleHelpers::thetaFromEta(-6.0);
+  long double thetaMin = AngleHelpers::thetaFromEta(6.0);
+  long double thetaMax = AngleHelpers::thetaFromEta(-6.0);
 
   bool etaUniform = true;
 };
 
 template <typename generator_t>
-inline std::pair<double, double> generateBoundDirection(
+inline std::pair<long double, long double> generateBoundDirection(
     generator_t& rng, const GenerateBoundDirectionOptions& options) {
-  using UniformReal = std::uniform_real_distribution<double>;
+  using UniformReal = std::uniform_real_distribution<long double>;
   assert(options.thetaMin >= 0.f);
   assert(options.thetaMax <= std::numbers::pi);
   assert(options.thetaMin <= options.thetaMax);
@@ -111,29 +111,29 @@ inline std::pair<double, double> generateBoundDirection(
   // https://mathworld.wolfram.com/SpherePointPicking.html
   // Get cosThetaMin from thetaMax and vice versa, because cos is
   // monothonical decreasing between [0, pi]
-  double cosThetaMin = std::cos(options.thetaMax);
+  long double cosThetaMin = std::cos(options.thetaMax);
   // ensure upper bound is included. see e.g.
   // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-  double cosThetaMax = std::nextafter(std::cos(options.thetaMin),
-                                      std::numeric_limits<double>::max());
+  long double cosThetaMax = std::nextafter(
+      std::cos(options.thetaMin), std::numeric_limits<long double>::max());
 
   // in case we force uniform eta generation
-  double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
-  double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
+  long double etaMin = Acts::AngleHelpers::etaFromTheta(options.thetaMax);
+  long double etaMax = Acts::AngleHelpers::etaFromTheta(options.thetaMin);
 
   UniformReal phiDist(options.phiMin, options.phiMax);
   UniformReal cosThetaDist(cosThetaMin, cosThetaMax);
   UniformReal etaDist(etaMin, etaMax);
 
   // draw parameters
-  double phi = phiDist(rng);
+  long double phi = phiDist(rng);
 
-  double theta = 0;
+  long double theta = 0;
   if (!options.etaUniform) {
-    const double cosTheta = cosThetaDist(rng);
+    const long double cosTheta = cosThetaDist(rng);
     theta = std::acos(cosTheta);
   } else {
-    const double eta = etaDist(rng);
+    const long double eta = etaDist(rng);
     theta = AngleHelpers::thetaFromEta(eta);
   }
 
@@ -142,8 +142,8 @@ inline std::pair<double, double> generateBoundDirection(
 
 struct GenerateQoverPOptions {
   /// Low, high (exclusive) for absolute/transverse momentum.
-  double pMin = 1 * UnitConstants::GeV;
-  double pMax = 100 * UnitConstants::GeV;
+  long double pMin = 1 * UnitConstants::GeV;
+  long double pMax = 100 * UnitConstants::GeV;
 
   /// Indicate if the momentum referse to transverse momentum
   bool pTransverse = true;
@@ -152,21 +152,22 @@ struct GenerateQoverPOptions {
   bool pLogUniform = false;
 
   /// Charge of the parameters.
-  double charge = 1;
+  long double charge = 1;
 
   /// Randomize the charge and flip the PDG particle number sign accordingly.
   bool randomizeCharge = true;
 };
 
 template <typename generator_t>
-inline double generateQoverP(generator_t& rng,
-                             const GenerateQoverPOptions& options,
-                             double theta) {
+inline long double generateQoverP(generator_t& rng,
+                                  const GenerateQoverPOptions& options,
+                                  long double theta) {
   using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
-  using UniformReal = std::uniform_real_distribution<double>;
+  using UniformReal = std::uniform_real_distribution<long double>;
 
-  auto drawP = [&options](generator_t& rng_, double theta_) -> double {
-    const double pTransverseScaling =
+  auto drawP = [&options](generator_t& rng_,
+                          long double theta_) -> long double {
+    const long double pTransverseScaling =
         options.pTransverse ? 1. / std::sin(theta_) : 1.;
 
     if (options.pLogUniform) {
@@ -182,31 +183,31 @@ inline double generateQoverP(generator_t& rng,
   // the upper limit of the distribution is inclusive
   UniformIndex particleTypeChoice(0u, options.randomizeCharge ? 1u : 0u);
   // (anti-)particle choice is one random draw but defines two properties
-  const double qChoices[] = {
+  const long double qChoices[] = {
       options.charge,
       -options.charge,
   };
 
   // draw parameters
   const std::uint8_t type = particleTypeChoice(rng);
-  const double q = qChoices[type];
+  const long double q = qChoices[type];
 
-  const double p = drawP(rng, theta);
-  const double qOverP = (q != 0) ? q / p : 1 / p;
+  const long double p = drawP(rng, theta);
+  const long double qOverP = (q != 0) ? q / p : 1 / p;
 
   return qOverP;
 }
 
 struct GenerateBoundParametersOptions {
   struct {
-    double loc0Mean = 0 * UnitConstants::mm;
-    double loc0Std = 1 * UnitConstants::mm;
+    long double loc0Mean = 0 * UnitConstants::mm;
+    long double loc0Std = 1 * UnitConstants::mm;
 
-    double loc1Mean = 0 * UnitConstants::mm;
-    double loc1Std = 1 * UnitConstants::mm;
+    long double loc1Mean = 0 * UnitConstants::mm;
+    long double loc1Std = 1 * UnitConstants::mm;
 
-    double timeMean = 0 * UnitConstants::ns;
-    double timeStd = 1 * UnitConstants::ns;
+    long double timeMean = 0 * UnitConstants::ns;
+    long double timeStd = 1 * UnitConstants::ns;
   } position;
 
   GenerateBoundDirectionOptions direction;
@@ -221,18 +222,18 @@ inline BoundVector someBoundParametersA() {
 template <typename generator_t>
 inline BoundVector generateBoundParameters(
     generator_t& rng, const GenerateBoundParametersOptions& options) {
-  std::normal_distribution<double> standardNormal(0, 1);
+  std::normal_distribution<long double> standardNormal(0, 1);
 
-  const double loc0 = options.position.loc0Mean +
-                      options.position.loc0Std * standardNormal(rng);
-  const double loc1 = options.position.loc1Mean +
-                      options.position.loc1Std * standardNormal(rng);
+  const long double loc0 = options.position.loc0Mean +
+                           options.position.loc0Std * standardNormal(rng);
+  const long double loc1 = options.position.loc1Mean +
+                           options.position.loc1Std * standardNormal(rng);
 
   auto [phi, theta] = generateBoundDirection(rng, options.direction);
   auto qOverP = generateQoverP(rng, options.qOverP, theta);
 
-  const double time = options.position.timeMean +
-                      options.position.timeStd * standardNormal(rng);
+  const long double time = options.position.timeMean +
+                           options.position.timeStd * standardNormal(rng);
 
   return {loc0, loc1, phi, theta, qOverP, time};
 }
@@ -241,23 +242,23 @@ template <typename generator_t>
 inline std::pair<BoundVector, BoundMatrix> generateBoundParametersCovariance(
     generator_t& rng, const GenerateBoundParametersOptions& options) {
   auto params = generateBoundParameters(rng, options);
-  auto cov = generateCovariance<double, eBoundSize>(rng);
+  auto cov = generateCovariance<long double, eBoundSize>(rng);
   return {params, cov};
 }
 
 struct GenerateFreeParametersOptions {
   struct {
-    double xMean = 0 * UnitConstants::mm;
-    double xStd = 1 * UnitConstants::mm;
+    long double xMean = 0 * UnitConstants::mm;
+    long double xStd = 1 * UnitConstants::mm;
 
-    double yMean = 0 * UnitConstants::mm;
-    double yStd = 1 * UnitConstants::mm;
+    long double yMean = 0 * UnitConstants::mm;
+    long double yStd = 1 * UnitConstants::mm;
 
-    double zMean = 0 * UnitConstants::mm;
-    double zStd = 1 * UnitConstants::mm;
+    long double zMean = 0 * UnitConstants::mm;
+    long double zStd = 1 * UnitConstants::mm;
 
-    double timeMean = 0 * UnitConstants::ns;
-    double timeStd = 1 * UnitConstants::ns;
+    long double timeMean = 0 * UnitConstants::ns;
+    long double timeStd = 1 * UnitConstants::ns;
   } position;
 
   GenerateBoundDirectionOptions direction;
@@ -272,16 +273,16 @@ inline FreeVector someFreeParametersA() {
 template <typename generator_t>
 inline FreeVector generateFreeParameters(
     generator_t& rng, const GenerateFreeParametersOptions& options) {
-  std::normal_distribution<double> standardNormal(0, 1);
+  std::normal_distribution<long double> standardNormal(0, 1);
 
-  const double x =
+  const long double x =
       options.position.xMean + options.position.xStd * standardNormal(rng);
-  const double y =
+  const long double y =
       options.position.yMean + options.position.yStd * standardNormal(rng);
-  const double z =
+  const long double z =
       options.position.zMean + options.position.zStd * standardNormal(rng);
-  const double time = options.position.timeMean +
-                      options.position.timeStd * standardNormal(rng);
+  const long double time = options.position.timeMean +
+                           options.position.timeStd * standardNormal(rng);
 
   auto [phi, theta] = generateBoundDirection(rng, options.direction);
 
@@ -298,7 +299,7 @@ template <typename generator_t>
 inline std::pair<FreeVector, FreeMatrix> generateFreeParametersCovariance(
     generator_t& rng, const GenerateFreeParametersOptions& options) {
   auto params = generateFreeParameters(rng, options);
-  auto cov = generateCovariance<double, eFreeSize>(rng);
+  auto cov = generateCovariance<long double, eFreeSize>(rng);
   return {params, cov};
 }
 

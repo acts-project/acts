@@ -34,7 +34,7 @@ class NavigationLayer : public Layer {
   /// @param sRepresentation is the representation for extrapolation
   /// @param thickness is the thickness for the binning
   static LayerPtr create(std::shared_ptr<const Surface> sRepresentation,
-                         double thickness = 0.) {
+                         long double thickness = 0.) {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
 
@@ -99,7 +99,7 @@ class NavigationLayer : public Layer {
   /// @param surfaceRepresentation is the surface of the layer
   /// @param thickness ithe layer thickness
   NavigationLayer(std::shared_ptr<const Surface> surfaceRepresentation,
-                  double thickness);
+                  long double thickness);
 
   /// for the navigation Volume the surface
   ///

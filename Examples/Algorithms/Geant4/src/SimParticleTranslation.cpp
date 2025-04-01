@@ -69,9 +69,9 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // We are looping through the particles and flush per vertex
   std::optional<Acts::Vector4> lastVertex;
 
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
-  constexpr double convertTime = CLHEP::ns / Acts::UnitConstants::ns;
-  constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
+  constexpr long double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr long double convertTime = CLHEP::ns / Acts::UnitConstants::ns;
+  constexpr long double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
 
   unsigned int pCounter = 0;
   unsigned int trackId = 1;
@@ -99,8 +99,8 @@ void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Particle properties, may be forced to specific value
     G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());
-    G4double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
-    G4double particleMass =
+    G4long double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
+    G4long double particleMass =
         m_cfg.forcedMass.value_or(part.mass() * convertEnergy);
 
     // Check if it is a Geantino / ChargedGeantino

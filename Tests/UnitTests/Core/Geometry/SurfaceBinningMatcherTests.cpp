@@ -31,12 +31,12 @@ GeometryContext tgContext = GeometryContext();
 BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
   auto identity = Transform3::Identity();
 
-  double rMin = 5.;
-  double rMax = 10.;
-  double rMinTol = 0.1;
-  double rMaxTol = 0.5;
+  long double rMin = 5.;
+  long double rMax = 10.;
+  long double rMinTol = 0.1;
+  long double rMaxTol = 0.5;
 
-  double phiTol = 0.1;
+  long double phiTol = 0.1;
 
   auto oneBounds =
       std::make_shared<RadialBounds>(rMin, rMax, std::numbers::pi / 16., 0.);

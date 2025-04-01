@@ -16,7 +16,7 @@
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
+    long double splitFactor, Acts::MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_binUtility(binUtility) {
   // fill the material with deep copy
   m_fullMaterial.push_back(std::move(fullProperties));
@@ -24,12 +24,13 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabMatrix fullProperties,
-    double splitFactor, Acts::MappingType mappingType)
+    long double splitFactor, Acts::MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType),
       m_binUtility(binUtility),
       m_fullMaterial(std::move(fullProperties)) {}
 
-Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(double factor) {
+Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::scale(
+    long double factor) {
   for (auto& materialVector : m_fullMaterial) {
     for (auto& materialBin : materialVector) {
       materialBin.scaleThickness(factor);

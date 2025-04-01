@@ -25,7 +25,7 @@ struct Helper {
   Acts::BinUtility segmentation;
 
   Acts::GeometryContext gctx{};
-  double thickness = 125_um;
+  long double thickness = 125_um;
   Acts::Vector3 driftDir = Acts::Vector3::Zero();
 
   ActsFatras::Channelizer channelizer;
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(test_upright_particle) {
 BOOST_AUTO_TEST_CASE(test_tilted_particle) {
   Helper helper;
 
-  const double disp = 10_um;
+  const long double disp = 10_um;
 
   Acts::Vector3 hitPosition = Acts::Vector3{10_um, 10_um, 0.0};
   Acts::Vector3 hitDirection =
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_tilted_particle) {
 BOOST_AUTO_TEST_CASE(test_more_tilted_particle) {
   Helper helper;
 
-  const double disp = 50_um;
+  const long double disp = 50_um;
 
   Acts::Vector3 hitPosition = Acts::Vector3{10_um, 10_um, 0.0};
   Acts::Vector3 hitDirection =
@@ -104,9 +104,9 @@ BOOST_AUTO_TEST_CASE(test_more_tilted_particle) {
   auto segments = helper.channelize(hitPosition, hitDirection);
 
   BOOST_CHECK_EQUAL(segments.size(), 2);
-  auto sum =
-      std::accumulate(segments.begin(), segments.end(), 0.0,
-                      [](double s, auto seg) { return s + seg.activation; });
+  auto sum = std::accumulate(
+      segments.begin(), segments.end(), 0.0,
+      [](long double s, auto seg) { return s + seg.activation; });
   BOOST_CHECK_CLOSE(sum, std::hypot(disp, helper.thickness), 1.e-8);
 }
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(test_pathological_upright_particle) {
 BOOST_AUTO_TEST_CASE(test_pathological_tilted_particle) {
   Helper helper;
 
-  double disp = 2.0_um;
+  long double disp = 2.0_um;
 
   Acts::Vector3 hitPosition = Acts::Vector3{-0.5 * disp, 10_um, 0.0};
   Acts::Vector3 hitDirection =
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(test_pathological_tilted_particle) {
   }
 
   BOOST_CHECK_EQUAL(segments.size(), 2);
-  auto sum =
-      std::accumulate(segments.begin(), segments.end(), 0.0,
-                      [](double s, auto seg) { return s + seg.activation; });
+  auto sum = std::accumulate(
+      segments.begin(), segments.end(), 0.0,
+      [](long double s, auto seg) { return s + seg.activation; });
   BOOST_CHECK_CLOSE(sum, std::hypot(disp, helper.thickness), 1.e-8);
 }

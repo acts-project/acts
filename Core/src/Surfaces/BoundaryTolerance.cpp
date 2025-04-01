@@ -154,7 +154,7 @@ bool BoundaryTolerance::isTolerated(
   if (const auto* chi2Bound = getVariantPtr<Chi2BoundParams>();
       chi2Bound != nullptr) {
     // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
-    double chi2 = distance.transpose() * chi2Bound->weight * distance;
+    long double chi2 = distance.transpose() * chi2Bound->weight * distance;
     if (chi2Bound->maxChi2 < 0) {
       return chi2 > 2 * std::abs(chi2Bound->maxChi2);
     } else {

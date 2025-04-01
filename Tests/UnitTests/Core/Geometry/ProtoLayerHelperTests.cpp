@@ -45,13 +45,13 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   CylindricalTrackingGeometry::DetectorStore dStore;
 
   /// Cylindrical section ---------------------------------------------------
-  std::vector<double> layerRadii = {32., 72., 116., 172.};
+  std::vector<long double> layerRadii = {32., 72., 116., 172.};
   std::vector<std::pair<int, int>> layerBinning = {
       {16, 14}, {32, 14}, {52, 14}, {78, 14}};
-  std::vector<double> moduleTiltPhi = {0.145, 0.145, 0.145, 0.145};
-  std::vector<double> moduleHalfX = {8.4, 8.4, 8.4, 8.4};
-  std::vector<double> moduleHalfY = {36., 36., 36., 36.};
-  std::vector<double> moduleThickness = {0.15, 0.15, 0.15, 0.15};
+  std::vector<long double> moduleTiltPhi = {0.145, 0.145, 0.145, 0.145};
+  std::vector<long double> moduleHalfX = {8.4, 8.4, 8.4, 8.4};
+  std::vector<long double> moduleHalfY = {36., 36., 36., 36.};
+  std::vector<long double> moduleThickness = {0.15, 0.15, 0.15, 0.15};
 
   std::vector<const Surface*> cylinderSurfaces;
   for (std::size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
@@ -101,15 +101,15 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   /// Disc section ---------------------------------------------------
   std::vector<const Surface*> discSurfaces;
 
-  std::vector<double> discZ = {-350., -250., -150., -100.};
-  std::vector<double> discRadii = {55., 55., 55., 55.};
+  std::vector<long double> discZ = {-350., -250., -150., -100.};
+  std::vector<long double> discRadii = {55., 55., 55., 55.};
   std::vector<int> discModules = {22, 22, 22, 22};
 
-  std::vector<double> dModuleHalfXMinY = {6.4, 6.4, 6.4, 6.4};
-  std::vector<double> dModuleHalfXMaxY = {12.4, 12.4, 12.4, 12.4};
-  std::vector<double> dModuleHalfY = {36., 36., 36., 36.};
-  std::vector<double> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
-  std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
+  std::vector<long double> dModuleHalfXMinY = {6.4, 6.4, 6.4, 6.4};
+  std::vector<long double> dModuleHalfXMaxY = {12.4, 12.4, 12.4, 12.4};
+  std::vector<long double> dModuleHalfY = {36., 36., 36., 36.};
+  std::vector<long double> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
+  std::vector<long double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
@@ -150,17 +150,17 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   /// Ring layout section ---------------------------------------------------
   std::vector<const Surface*> ringSurfaces;
 
-  std::vector<double> ringZ = {-350., -250., -150., -100., -360., -255.,
-                               -120., -330., -260., -150., -95.};
-  std::vector<double> ringRadii = {32., 32., 32., 32., 58., 58.,
-                                   58., 84., 84., 84., 84.};
+  std::vector<long double> ringZ = {-350., -250., -150., -100., -360., -255.,
+                                    -120., -330., -260., -150., -95.};
+  std::vector<long double> ringRadii = {32., 32., 32., 32., 58., 58.,
+                                        58., 84., 84., 84., 84.};
   std::vector<int> ringModules = {22, 22, 22, 22, 32, 32, 32, 44, 44, 44, 44};
 
-  std::vector<double> rModuleHalfXMinY(11, 6.4);
-  std::vector<double> rModuleHalfXMaxY(11, 6.4);
-  std::vector<double> rModuleHalfY(11, 10.);
-  std::vector<double> rModuleTilt(11, 0.075);
-  std::vector<double> rModuleThickness(11, 0.15);
+  std::vector<long double> rModuleHalfXMinY(11, 6.4);
+  std::vector<long double> rModuleHalfXMaxY(11, 6.4);
+  std::vector<long double> rModuleHalfY(11, 10.);
+  std::vector<long double> rModuleTilt(11, 0.075);
+  std::vector<long double> rModuleThickness(11, 0.15);
 
   for (std::size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(

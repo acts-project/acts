@@ -53,7 +53,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
   // The surfaces for the KDTree structure
   std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces;
   // Fill Discs
-  std::vector<double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
+  std::vector<long double> pixelDiscs = {-800., -700., -600., 600., 700., 800.};
   for (const auto& z : pixelDiscs) {
     auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                             55., z, 2., 22u);
@@ -62,7 +62,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
                          urSurfaces.end());
   }
   // Fill Barrels
-  std::vector<double> pixelBarrels = {32., 72., 116., 172.};
+  std::vector<long double> pixelBarrels = {32., 72., 116., 172.};
   std::vector<std::pair<int, int>> pixelBinning = {
       {16, 14}, {32, 14}, {52, 14}, {78, 14}};
   for (auto [ir, r] : enumerate(pixelBarrels)) {

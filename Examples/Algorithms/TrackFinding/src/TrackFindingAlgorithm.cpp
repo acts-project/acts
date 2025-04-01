@@ -203,8 +203,8 @@ class BranchStopper {
             return &config;
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
-            double theta = trackState.parameters()[Acts::eBoundTheta];
-            double eta = Acts::AngleHelpers::etaFromTheta(theta);
+            long double theta = trackState.parameters()[Acts::eBoundTheta];
+            long double eta = Acts::AngleHelpers::etaFromTheta(theta);
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
@@ -697,8 +697,8 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
   ACTS_INFO("- failed smoothing: " << m_nFailedSmoothing);
   ACTS_INFO("- failed extrapolation: " << m_nFailedExtrapolation);
-  ACTS_INFO("- failure ratio seeds: " << static_cast<double>(m_nFailedSeeds) /
-                                             m_nTotalSeeds);
+  ACTS_INFO("- failure ratio seeds: "
+            << static_cast<long double>(m_nFailedSeeds) / m_nTotalSeeds);
   ACTS_INFO("- found tracks: " << m_nFoundTracks);
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);

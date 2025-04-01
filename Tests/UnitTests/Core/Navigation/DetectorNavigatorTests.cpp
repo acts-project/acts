@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsInitialization) {
 BOOST_AUTO_TEST_CASE(DetectorNavigatorTestsForwardBackward) {
   // Construct a cubic detector with 3 volumes
   Acts::RotationMatrix3 rotation;
-  double angle = 90_degree;
+  long double angle = 90_degree;
   Acts::Vector3 xPos(cos(angle), 0., sin(angle));
   Acts::Vector3 yPos(0., 1., 0.);
   Acts::Vector3 zPos(-sin(angle), 0., cos(angle));

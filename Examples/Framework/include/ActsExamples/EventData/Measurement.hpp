@@ -172,8 +172,8 @@ class MeasurementContainer {
 
   std::vector<Acts::GeometryIdentifier> m_geometryIds;
   std::vector<std::uint8_t> m_subspaceIndices;
-  std::vector<double> m_parameters;
-  std::vector<double> m_covariances;
+  std::vector<long double> m_parameters;
+  std::vector<long double> m_covariances;
 
   OrderedIndices m_orderedIndices;
 };
@@ -191,7 +191,7 @@ class MeasurementProxyBase {
  public:
   using Index = MeasurementContainer::Index;
   using SubspaceIndex = std::uint8_t;
-  using Scalar = double;
+  using Scalar = long double;
 
   using FullVector = Acts::ActsVector<FullSize>;
   using FullSquareMatrix = Acts::ActsSquareMatrix<FullSize>;

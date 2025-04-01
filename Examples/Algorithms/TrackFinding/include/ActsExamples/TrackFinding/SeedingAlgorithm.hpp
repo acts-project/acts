@@ -45,7 +45,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     ///
     /// We allow multiple space point collections to allow different parts of
     /// the detector to use different algorithms for space point construction,
-    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// e.g. single-hit space points for pixel-like detectors or long double-hit
     /// space points for strip-like detectors.
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
@@ -72,7 +72,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     // used to search for SPs
     int numPhiNeighbors = 1;
 
-    // Connect custom selections on the space points or to the doublet
+    // Connect custom selections on the space points or to the long doublet
     // compatibility
     bool useExtraCuts = false;
   };

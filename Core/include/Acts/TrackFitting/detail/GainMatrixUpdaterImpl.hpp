@@ -18,9 +18,10 @@
 namespace Acts {
 
 template <std::size_t N>
-std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
-    InternalTrackState trackState, const Logger& logger) const {
-  double chi2 = 0;
+std::tuple<long double, std::error_code>
+GainMatrixUpdater::visitMeasurementImpl(InternalTrackState trackState,
+                                        const Logger& logger) const {
+  long double chi2 = 0;
 
   constexpr std::size_t kMeasurementSize = N;
   using ParametersVector = ActsVector<kMeasurementSize>;
@@ -85,7 +86,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurementImpl(
 // Ensure thet the compiler does not implicitly instantiate the template
 
 #define _EXTERN(N)                                                          \
-  extern template std::tuple<double, std::error_code>                       \
+  extern template std::tuple<long double, std::error_code>                  \
   GainMatrixUpdater::visitMeasurementImpl<N>(InternalTrackState trackState, \
                                              const Logger& logger) const
 

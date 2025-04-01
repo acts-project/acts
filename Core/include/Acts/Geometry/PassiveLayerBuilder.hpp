@@ -35,17 +35,17 @@ class PassiveLayerBuilder : public ILayerBuilder {
     /// string based identification
     std::string layerIdentification;
 
-    std::vector<double> centralLayerRadii;        ///< central layer specs
-    std::vector<double> centralLayerHalflengthZ;  ///< central layer specs
-    std::vector<double> centralLayerThickness;    ///< central layer specs
+    std::vector<long double> centralLayerRadii;        ///< central layer specs
+    std::vector<long double> centralLayerHalflengthZ;  ///< central layer specs
+    std::vector<long double> centralLayerThickness;    ///< central layer specs
     std::vector<std::shared_ptr<const ISurfaceMaterial>>
         centralLayerMaterial;  ///< central layer specs
 
     // the layers at p/e side
-    std::vector<double> posnegLayerPositionZ;  ///< p/n layer specs
-    std::vector<double> posnegLayerRmin;       ///< p/n layer specs
-    std::vector<double> posnegLayerRmax;       ///< p/n layer specs
-    std::vector<double> posnegLayerThickness;  ///< p/n layer specs
+    std::vector<long double> posnegLayerPositionZ;  ///< p/n layer specs
+    std::vector<long double> posnegLayerRmin;       ///< p/n layer specs
+    std::vector<long double> posnegLayerRmax;       ///< p/n layer specs
+    std::vector<long double> posnegLayerThickness;  ///< p/n layer specs
     std::vector<std::shared_ptr<const ISurfaceMaterial>>
         posnegLayerMaterial;  ///< p/n  layer specs
   };

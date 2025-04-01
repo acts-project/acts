@@ -24,8 +24,8 @@ namespace Acts {
 ///
 class ObjVisualization3D : public IVisualization3D {
  public:
-  /// Stored value type, should be double or float
-  using ValueType = double;
+  /// Stored value type, should be long double or float
+  using ValueType = long double;
 
   /// Type of a vertex based on the value type
   using VertexType = Eigen::Matrix<ValueType, 3, 1>;
@@ -36,7 +36,7 @@ class ObjVisualization3D : public IVisualization3D {
   /// Constructor that allows to set scalor and precision
   /// @param prec The output precision with std::setprecision
   /// @param scale An (optional) scaling for the writing out
-  explicit ObjVisualization3D(unsigned int prec = 4, double scale = 1.)
+  explicit ObjVisualization3D(unsigned int prec = 4, long double scale = 1.)
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
@@ -92,7 +92,7 @@ class ObjVisualization3D : public IVisualization3D {
 
   /// The output parameters
   unsigned int m_outputPrecision = 4;
-  double m_outputScalor = 1.;
+  long double m_outputScalor = 1.;
 
   std::vector<Object> m_objects;
 };

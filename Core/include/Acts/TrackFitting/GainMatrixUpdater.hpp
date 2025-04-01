@@ -27,8 +27,8 @@ class GainMatrixUpdater {
   struct InternalTrackState {
     unsigned int calibratedSize;
     // This is used to build a covariance matrix view in the .cpp file
-    const double* calibrated;
-    const double* calibratedCovariance;
+    const long double* calibrated;
+    const long double* calibratedCovariance;
     BoundSubspaceIndices projector;
 
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -94,11 +94,11 @@ class GainMatrixUpdater {
   }
 
  private:
-  std::tuple<double, std::error_code> visitMeasurement(
+  std::tuple<long double, std::error_code> visitMeasurement(
       InternalTrackState trackState, const Logger& logger) const;
 
   template <std::size_t N>
-  std::tuple<double, std::error_code> visitMeasurementImpl(
+  std::tuple<long double, std::error_code> visitMeasurementImpl(
       InternalTrackState trackState, const Logger& logger) const;
 };
 

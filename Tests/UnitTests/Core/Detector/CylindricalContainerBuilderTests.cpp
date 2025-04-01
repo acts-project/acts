@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   barrelPhiCfg.binning = {AxisDirection::AxisPhi};
 
   unsigned int phiSectors = 5;
-  double phiHalfSector = std::numbers::pi / phiSectors;
+  long double phiHalfSector = std::numbers::pi / phiSectors;
 
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {

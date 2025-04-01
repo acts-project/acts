@@ -50,20 +50,21 @@ struct SeedFinderGbtsConfig {
   // for runGbts_TrackFinder
   bool m_useEtaBinning =
       true;  // bool to use eta binning from geometry structure
-  bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
-  float m_minDeltaRadius = 2.0;   // min dr for doublet
-  float m_tripletD0Max = 4.0;     // D0 cut for triplets
+  bool m_long doubletFilterRZ =
+      true;                      // bool applies new Z cuts on long doublets
+  float m_minDeltaRadius = 2.0;  // min dr for long doublet
+  float m_tripletD0Max = 4.0;    // D0 cut for triplets
   unsigned int m_maxTripletBufferLength =
       3;                        // maximum number of space points per triplet
-  int MaxEdges = 2000000;       // max number of Gbts edges/doublets
+  int MaxEdges = 2000000;       // max number of Gbts edges/long doublets
   float cut_dphi_max = 0.012;   // phi cut for triplets
   float cut_dcurv_max = 0.001;  // curv cut for triplets
-  float cut_tau_ratio_max = 0.007;  // tau cut for doublets and triplets
-  float maxOuterRadius = 550.0;     // used to calculate Z cut on doublets
+  float cut_tau_ratio_max = 0.007;  // tau cut for long doublets and triplets
+  float maxOuterRadius = 550.0;     // used to calculate Z cut on long doublets
   float m_PtMin = 1000.0;
   float m_tripletPtMinFrac = 0.3;
   float m_tripletPtMin = m_PtMin * m_tripletPtMinFrac;  // Limit on triplet pt
-  double ptCoeff =
+  long double ptCoeff =
       0.29997 * 1.9972 / 2.0;  // ~0.3*B/2 - assumes nominal field of 2*T
 
   // ROI:

@@ -80,7 +80,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
 
   // only need to average if there are at least two inputs
   if (2u <= n) {
-    double scale = 1.0 / n;
+    long double scale = 1.0 / n;
     avgLocal *= scale;
     avgPos4 *= scale;
     avgDir.normalize();

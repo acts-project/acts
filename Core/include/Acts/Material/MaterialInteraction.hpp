@@ -63,17 +63,17 @@ struct MaterialInteraction {
   /// The particle position at the interaction.
   Vector3 position = Vector3(0., 0., 0);
   /// The particle time at the interaction.
-  double time = 0.0;
+  long double time = 0.0;
   /// The particle direction at the interaction.
   Vector3 direction = Vector3(0., 0., 0);
   /// The momentum change due to the interaction.
-  double deltaP = 0.0;
+  long double deltaP = 0.0;
   /// Expected phi variance due to the interactions.
-  double sigmaPhi2 = 0.0;
+  long double sigmaPhi2 = 0.0;
   /// Expected theta variance due to the interactions.
-  double sigmaTheta2 = 0.0;
+  long double sigmaTheta2 = 0.0;
   /// Expected q/p variance due to the interactions.
-  double sigmaQoP2 = 0.0;
+  long double sigmaQoP2 = 0.0;
   /// The position where the interaction occurred.
   Vector3 intersection = Vector3(0., 0., 0);
   /// The ID where the interaction occurred.
@@ -85,7 +85,7 @@ struct MaterialInteraction {
   /// Update the volume step to implement the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection = 1.;
+  long double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
   MaterialSlab materialSlab = MaterialSlab::Nothing();
 };
@@ -95,9 +95,9 @@ struct MaterialInteraction {
 /// created for every propagation/extrapolation step
 struct RecordedMaterial {
   // The accumulated materialInX0
-  double materialInX0 = 0.;
+  long double materialInX0 = 0.;
   /// The accumulated materialInL0
-  double materialInL0 = 0.;
+  long double materialInL0 = 0.;
   /// This one is only filled when recordInteractions is switched on
   std::vector<MaterialInteraction> materialInteractions;
 };

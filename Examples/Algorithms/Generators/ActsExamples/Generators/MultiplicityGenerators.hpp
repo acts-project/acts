@@ -27,8 +27,8 @@ struct FixedMultiplicityGenerator
 
 struct PoissonMultiplicityGenerator
     : public EventGenerator::MultiplicityGenerator {
-  double mean = 1;
-  explicit PoissonMultiplicityGenerator(double _mean) : mean{_mean} {}
+  long double mean = 1;
+  explicit PoissonMultiplicityGenerator(long double _mean) : mean{_mean} {}
   PoissonMultiplicityGenerator() = default;
 
   std::size_t operator()(RandomEngine& rng) const override {

@@ -48,16 +48,16 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param maxR outer radius
   /// @param avgPhi average phi value
   /// @param stereo optional stero angle applied
-  explicit DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
-                               double maxR,
-                               double avgPhi = std::numbers::pi / 2.,
-                               double stereo = 0.) noexcept(false);
+  explicit DiscTrapezoidBounds(long double halfXminR, long double halfXmaxR,
+                               long double minR, long double maxR,
+                               long double avgPhi = std::numbers::pi / 2.,
+                               long double stereo = 0.) noexcept(false);
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
   explicit DiscTrapezoidBounds(
-      const std::array<double, eSize>& values) noexcept(false)
+      const std::array<long double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
   }
@@ -67,7 +67,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
@@ -84,41 +84,41 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// This method returns inner radius
-  double rMin() const final { return get(eMinR); }
+  long double rMin() const final { return get(eMinR); }
 
   /// This method returns outer radius
-  double rMax() const final { return get(eMaxR); }
+  long double rMax() const final { return get(eMaxR); }
 
   /// This method returns the center radius
-  double rCenter() const {
-    double rmin = get(eMinR);
-    double rmax = get(eMaxR);
-    double hxmin = get(eHalfLengthXminR);
-    double hxmax = get(eHalfLengthXmaxR);
+  long double rCenter() const {
+    long double rmin = get(eMinR);
+    long double rmax = get(eMaxR);
+    long double hxmin = get(eHalfLengthXminR);
+    long double hxmax = get(eHalfLengthXmaxR);
     auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
     auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
     return 0.5 * (hmin + hmax);
   }
 
   /// This method returns the stereo angle
-  double stereo() const { return get(eStereo); }
+  long double stereo() const { return get(eStereo); }
 
   /// This method returns the halfPhiSector which is covered by the disc
-  double halfPhiSector() const {
+  long double halfPhiSector() const {
     auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
     auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
     return std::max(minHalfPhi, maxHalfPhi);
   }
 
   /// This method returns the half length in Y (this is Rmax -Rmin)
-  double halfLengthY() const {
-    double rmin = get(eMinR);
-    double rmax = get(eMaxR);
-    double hxmin = get(eHalfLengthXminR);
-    double hxmax = get(eHalfLengthXmaxR);
+  long double halfLengthY() const {
+    long double rmin = get(eMinR);
+    long double rmax = get(eMaxR);
+    long double hxmin = get(eHalfLengthXminR);
+    long double hxmax = get(eHalfLengthXmaxR);
     auto hmin = std::sqrt(rmin * rmin - hxmin * hxmin);
     auto hmax = std::sqrt(rmax * rmax - hxmax * hxmax);
     return 0.5 * (hmax - hmin);
@@ -129,15 +129,18 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final {
+  bool insideRadialBounds(long double R,
+                          long double tolerance = 0.) const final {
     return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
   }
 
   /// Return a reference radius for binning
-  double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
+  long double binningValueR() const final {
+    return 0.5 * (get(eMinR) + get(eMaxR));
+  }
 
   /// Return a reference phi for binning
-  double binningValuePhi() const final { return get(eAveragePhi); }
+  long double binningValuePhi() const final { return get(eAveragePhi); }
 
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in xy)
@@ -149,10 +152,10 @@ class DiscTrapezoidBounds : public DiscBounds {
   std::vector<Vector2> vertices(unsigned int ignoredSegments = 0u) const final;
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   /// Dreived maximum y value
-  double m_ymax = 0;
+  long double m_ymax = 0;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

@@ -18,7 +18,7 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating RealQuadraticEquation object
 BOOST_AUTO_TEST_CASE(RealQuadraticEquationConstruction) {
-  double a(1.0), b(-3.), c(2.);
+  long double a(1.0), b(-3.), c(2.);
   // test default construction: not deleted, not written
   // RealQuadraticEquation defaultConstructedRealQuadraticEquation;
   //
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(RealQuadraticEquationConstruction) {
 }
 /// Unit test for RealQuadraticEquation properties
 BOOST_AUTO_TEST_CASE(RealQuadraticEquationProperties) {
-  double a(1.0), b(-3.), c(2.);
+  long double a(1.0), b(-3.), c(2.);
   //
   /// Test construction with parameters
   RealQuadraticEquation equation(a, b, c);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(RealQuadraticEquationProperties) {
 
 /// Unit test for testing RealQuadraticEquation assignment
 BOOST_AUTO_TEST_CASE(RealQuadraticEquationAssignment) {
-  double a(1.0), b(-3.), c(2.);
+  long double a(1.0), b(-3.), c(2.);
   RealQuadraticEquation realQuadraticEquationObject(a, b, c);
   // operator == not implemented in this class
   //

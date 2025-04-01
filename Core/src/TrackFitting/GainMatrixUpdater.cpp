@@ -22,14 +22,14 @@
 
 namespace Acts {
 
-std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
+std::tuple<long double, std::error_code> GainMatrixUpdater::visitMeasurement(
     InternalTrackState trackState, const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
 
   return visit_measurement(
       trackState.calibratedSize,
       [&, this]<std::size_t N>(std::integral_constant<std::size_t, N>)
-          -> std::tuple<double, std::error_code> {
+          -> std::tuple<long double, std::error_code> {
         return visitMeasurementImpl<N>(trackState, logger);
       });
 }

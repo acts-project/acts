@@ -33,9 +33,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   // definition of dummy BField
   struct BField {
-    static Vector3 value(const std::array<double, 2>& rz) {
-      double r = rz.at(0);
-      double z = rz.at(1);
+    static Vector3 value(const std::array<long double, 2>& rz) {
+      long double r = rz.at(0);
+      long double z = rz.at(1);
       // linear in r and z so interpolation should be exact
       return Vector3(r * z, 3 * r, -2 * z);
     }
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   auto bCacheAny = b.makeCache(mfContext);
   BField_t::Cache& bCache = bCacheAny.as<BField_t::Cache>();
 
-  auto check = [&](double i) {
+  auto check = [&](long double i) {
     BOOST_CHECK(b.isInside({0, 0, i * 4.9}));
     BOOST_CHECK(!b.isInside({0, 0, i * 5.1}));
 

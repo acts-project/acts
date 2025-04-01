@@ -31,34 +31,34 @@ class HitSelector final : public IAlgorithm {
     std::string outputHits;
 
     /// Min x cut
-    double minX = -std::numeric_limits<double>::max();
+    long double minX = -std::numeric_limits<long double>::max();
     /// Max x cut
-    double maxX = std::numeric_limits<double>::max();
+    long double maxX = std::numeric_limits<long double>::max();
 
     /// Min y cut
-    double minY = -std::numeric_limits<double>::max();
+    long double minY = -std::numeric_limits<long double>::max();
     /// Max y cut
-    double maxY = std::numeric_limits<double>::max();
+    long double maxY = std::numeric_limits<long double>::max();
 
     /// Min z cut
-    double minZ = -std::numeric_limits<double>::max();
+    long double minZ = -std::numeric_limits<long double>::max();
     /// Max z cut
-    double maxZ = std::numeric_limits<double>::max();
+    long double maxZ = std::numeric_limits<long double>::max();
 
     /// Min r cut
-    double minR = 0.0;
+    long double minR = 0.0;
     /// Max r cut
-    double maxR = std::numeric_limits<double>::max();
+    long double maxR = std::numeric_limits<long double>::max();
 
     /// Min time cut
-    double minTime = -std::numeric_limits<double>::max();
+    long double minTime = -std::numeric_limits<long double>::max();
     /// Max time cut
-    double maxTime = std::numeric_limits<double>::max();
+    long double maxTime = std::numeric_limits<long double>::max();
 
     /// Min energy loss cut
-    double minEnergyLoss = 0;
+    long double minEnergyLoss = 0;
     /// Max energy loss cut
-    double maxEnergyLoss = std::numeric_limits<double>::max();
+    long double maxEnergyLoss = std::numeric_limits<long double>::max();
 
     /// Min primary vertex ID cut
     std::uint64_t minPrimaryVertexId = 0;

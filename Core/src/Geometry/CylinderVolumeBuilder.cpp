@@ -265,26 +265,26 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     if (m_cfg.checkRingLayout) {
       ACTS_DEBUG("Configured to check for ring layout - parsing layers.");
       // Parsing loop for ring layout
-      std::vector<double> innerRadii = {};
-      std::vector<double> outerRadii = {};
+      std::vector<long double> innerRadii = {};
+      std::vector<long double> outerRadii = {};
       for (const auto& elay : endcapConfig.layers) {
         auto discBounds = dynamic_cast<const RadialBounds*>(
             &(elay->surfaceRepresentation().bounds()));
         if (discBounds != nullptr) {
-          double tolerance = m_cfg.ringTolerance;
+          long double tolerance = m_cfg.ringTolerance;
           // Search for the rmin value  - and insert if necessary
-          double rMin = discBounds->rMin();
-          auto innerSearch = std::ranges::find_if(innerRadii, [&](double r) {
-            return std::abs(rMin - r) < tolerance;
-          });
+          long double rMin = discBounds->rMin();
+          auto innerSearch = std::ranges::find_if(
+              innerRadii,
+              [&](long double r) { return std::abs(rMin - r) < tolerance; });
           if (innerSearch == innerRadii.end()) {
             innerRadii.push_back(rMin);
           }
           // Search for the rmax value - and insert if necessary
-          double rMax = discBounds->rMax();
-          auto outerSearch = std::ranges::find_if(outerRadii, [&](double r) {
-            return std::abs(rMax - r) < tolerance;
-          });
+          long double rMax = discBounds->rMax();
+          auto outerSearch = std::ranges::find_if(
+              outerRadii,
+              [&](long double r) { return std::abs(rMax - r) < tolerance; });
           if (outerSearch == outerRadii.end()) {
             outerRadii.push_back(rMax);
           }
@@ -298,7 +298,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
       ACTS_DEBUG("Inner radii:" << [&]() {
         std::stringstream ss;
-        for (double f : innerRadii) {
+        for (long double f : innerRadii) {
           ss << " " << f;
         }
         return ss.str();
@@ -306,7 +306,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
       ACTS_DEBUG("Outer radii:" << [&]() {
         std::stringstream ss;
-        for (double f : outerRadii) {
+        for (long double f : outerRadii) {
           ss << " " << f;
         }
         return ss.str();
@@ -316,7 +316,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
         bool consistent = true;
         // The inter volume radii
         ACTS_VERBOSE("Checking ring radius consistency");
-        std::vector<double> interRadii = {};
+        std::vector<long double> interRadii = {};
         for (std::size_t ir = 1; ir < innerRadii.size(); ++ir) {
           // Check whether inner/outer radii are consistent
           ACTS_VERBOSE(
@@ -335,7 +335,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           ACTS_DEBUG("Ring layout detection: " << innerRadii.size()
                                                << " volumes.");
           // Separate the Layers into volumes
-          std::vector<std::pair<double, double>> volumeRminRmax = {};
+          std::vector<std::pair<long double, long double>> volumeRminRmax = {};
           for (unsigned int ii = 0; ii < interRadii.size(); ++ii) {
             if (ii == 0) {
               volumeRminRmax.push_back({endcapConfig.rMin, interRadii[ii]});
@@ -351,8 +351,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
           // Filling loop
           for (const auto& elay : endcapConfig.layers) {
             // Getting the reference radius
-            double test = elay->surfaceRepresentation().referencePositionValue(
-                gctx, AxisDirection::AxisR);
+            long double test =
+                elay->surfaceRepresentation().referencePositionValue(
+                    gctx, AxisDirection::AxisR);
             // Find the right bin
             auto ringVolume =
                 std::ranges::find_if(volumeRminRmax, [&](const auto& vrr) {
@@ -566,7 +567,7 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
     // loop over the layer
     for (auto& layer : lVector) {
       // the thickness of the layer needs to be taken into account
-      double thickness = layer->thickness();
+      long double thickness = layer->thickness();
       // get the center of the layer
       const Vector3& center = layer->surfaceRepresentation().center(gctx);
       // check if it is a cylinder layer
@@ -574,14 +575,14 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
           dynamic_cast<const CylinderLayer*>(layer.get());
       if (cLayer != nullptr) {
         // now we have access to all the information
-        double rMinC =
+        long double rMinC =
             cLayer->surfaceRepresentation().bounds().get(CylinderBounds::eR) -
             0.5 * thickness;
-        double rMaxC =
+        long double rMaxC =
             cLayer->surfaceRepresentation().bounds().get(CylinderBounds::eR) +
             0.5 * thickness;
 
-        double hZ = cLayer->surfaceRepresentation().bounds().get(
+        long double hZ = cLayer->surfaceRepresentation().bounds().get(
             CylinderBounds::eHalfLengthZ);
         lConfig.rMin =
             std::min(lConfig.rMin, rMinC - m_cfg.layerEnvelopeR.first);
@@ -597,10 +598,10 @@ Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
           &(layer->surfaceRepresentation().bounds()));
       if (dBounds != nullptr) {
         // now we have access to all the information
-        double rMinD = dBounds->rMin();
-        double rMaxD = dBounds->rMax();
-        double zMinD = center.z() - 0.5 * thickness;
-        double zMaxD = center.z() + 0.5 * thickness;
+        long double rMinD = dBounds->rMin();
+        long double rMaxD = dBounds->rMax();
+        long double zMinD = center.z() - 0.5 * thickness;
+        long double zMaxD = center.z() + 0.5 * thickness;
         lConfig.rMin =
             std::min(lConfig.rMin, rMinD - m_cfg.layerEnvelopeR.first);
         lConfig.rMax =

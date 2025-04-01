@@ -35,8 +35,8 @@ class SimParticle final {
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, double charge,
-              double mass)
+  SimParticle(SimBarcode particleId, Acts::PdgParticle pdg, long double charge,
+              long double mass)
       : m_initial(particleId, pdg, charge, mass),
         m_final(particleId, pdg, charge, mass) {}
 
@@ -85,13 +85,13 @@ class SimParticle final {
     return *this;
   }
   /// Set the charge.
-  SimParticle& setCharge(double charge) {
+  SimParticle& setCharge(long double charge) {
     initial().setCharge(charge);
     final().setCharge(charge);
     return *this;
   }
   /// Set the mass.
-  SimParticle& setMass(double mass) {
+  SimParticle& setMass(long double mass) {
     initial().setMass(mass);
     final().setMass(mass);
     return *this;
@@ -112,11 +112,11 @@ class SimParticle final {
   /// Absolute PDG particle number that identifies the type.
   Acts::PdgParticle absolutePdg() const { return initial().absolutePdg(); }
   /// Particle charge.
-  double charge() const { return initial().charge(); }
+  long double charge() const { return initial().charge(); }
   /// Particle absolute charge.
-  double absoluteCharge() const { return initial().absoluteCharge(); }
+  long double absoluteCharge() const { return initial().absoluteCharge(); }
   /// Particle mass.
-  double mass() const { return initial().mass(); }
+  long double mass() const { return initial().mass(); }
 
   /// Check if this is a secondary particle.
   bool isSecondary() const { return initial().isSecondary(); }
@@ -124,38 +124,42 @@ class SimParticle final {
   /// Particle hypothesis.
   Acts::ParticleHypothesis hypothesis() const { return initial().hypothesis(); }
   /// Particl qOverP.
-  double qOverP() const { return initial().qOverP(); }
+  long double qOverP() const { return initial().qOverP(); }
 
   /// Space-time position four-vector.
   const Acts::Vector4& fourPosition() const { return initial().fourPosition(); }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return initial().position(); }
   /// Time coordinate.
-  double time() const { return initial().time(); }
+  long double time() const { return initial().time(); }
   /// Energy-momentum four-vector.
   Acts::Vector4 fourMomentum() const { return initial().fourMomentum(); }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Acts::Vector3& direction() const { return initial().direction(); }
   /// Polar angle.
-  double theta() const { return initial().theta(); }
+  long double theta() const { return initial().theta(); }
   /// Azimuthal angle.
-  double phi() const { return initial().phi(); }
+  long double phi() const { return initial().phi(); }
   /// Absolute momentum in the x-y plane.
-  double transverseMomentum() const { return initial().transverseMomentum(); }
+  long double transverseMomentum() const {
+    return initial().transverseMomentum();
+  }
   /// Absolute momentum.
-  double absoluteMomentum() const { return initial().absoluteMomentum(); }
+  long double absoluteMomentum() const { return initial().absoluteMomentum(); }
   /// Absolute momentum.
   Acts::Vector3 momentum() const { return initial().momentum(); }
   /// Total energy, i.e. norm of the four-momentum.
-  double energy() const { return initial().energy(); }
+  long double energy() const { return initial().energy(); }
 
   /// Energy loss over the particles lifetime or simulation time.
-  double energyLoss() const { return initial().energy() - final().energy(); }
+  long double energyLoss() const {
+    return initial().energy() - final().energy();
+  }
 
   /// Accumulated path within material measured in radiation lengths.
-  double pathInX0() const { return final().pathInX0(); }
+  long double pathInX0() const { return final().pathInX0(); }
   /// Accumulated path within material measured in interaction lengths.
-  double pathInL0() const { return final().pathInL0(); }
+  long double pathInL0() const { return final().pathInL0(); }
 
   /// Number of hits.
   std::uint32_t numberOfHits() const { return final().numberOfHits(); }

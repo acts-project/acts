@@ -51,7 +51,7 @@ struct Cache {
 /// @param[out] cache A cache to store the results of this function
 template <unsigned int nDimVertex>
 void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
-                     const double trackWeight, const int sign,
+                     const long double trackWeight, const int sign,
                      Cache<nDimVertex>& cache) {
   constexpr unsigned int nBoundParams = nDimVertex + 2;
   using ParameterVector = ActsVector<nBoundParams>;
@@ -113,8 +113,8 @@ void calculateUpdate(const Vertex& vtx, const Acts::LinearizedTrack& linTrack,
 }
 
 template <unsigned int nDimVertex>
-double vertexPositionChi2Update(const Vector4& oldVtxPos,
-                                const Cache<nDimVertex>& cache) {
+long double vertexPositionChi2Update(const Vector4& oldVtxPos,
+                                     const Cache<nDimVertex>& cache) {
   ActsVector<nDimVertex> posDiff =
       cache.newVertexPos - oldVtxPos.template head<nDimVertex>();
 
@@ -123,8 +123,8 @@ double vertexPositionChi2Update(const Vector4& oldVtxPos,
 }
 
 template <unsigned int nDimVertex>
-double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const Cache<nDimVertex>& cache) {
+long double trackParametersChi2(const LinearizedTrack& linTrack,
+                                const Cache<nDimVertex>& cache) {
   constexpr unsigned int nBoundParams = nDimVertex + 2;
   using ParameterVector = ActsVector<nBoundParams>;
   using ParameterMatrix = ActsSquareMatrix<nBoundParams>;
@@ -218,7 +218,7 @@ Acts::BoundMatrix calculateTrackCovariance(
   freeToBoundJac(0, 0) = -std::sin(newTrkParams[2]);
   freeToBoundJac(0, 1) = std::cos(newTrkParams[2]);
 
-  double tanTheta = std::tan(newTrkParams[3]);
+  long double tanTheta = std::tan(newTrkParams[3]);
 
   // Second row
   freeToBoundJac(1, 0) = -freeToBoundJac(0, 1) / tanTheta;
@@ -245,7 +245,7 @@ void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {
         "coordinates) or 4 (when fitting the spatial coordinates + time).");
   }
 
-  double trackWeight = trk.trackWeight;
+  long double trackWeight = trk.trackWeight;
 
   // Set up cache where entire content is set to 0
   Cache<nDimVertex> cache;
@@ -257,10 +257,11 @@ void updateVertexWithTrackImpl(Vertex& vtx, TrackAtVertex& trk, int sign) {
   auto [chi2, ndf] = vtx.fitQuality();
 
   // Chi2 of the track parameters
-  double trkChi2 = trackParametersChi2(trk.linearizedState, cache);
+  long double trkChi2 = trackParametersChi2(trk.linearizedState, cache);
 
   // Update of the chi2 of the vertex position
-  double vtxPosChi2Update = vertexPositionChi2Update(vtx.fullPosition(), cache);
+  long double vtxPosChi2Update =
+      vertexPositionChi2Update(vtx.fullPosition(), cache);
 
   // Calculate new chi2
   chi2 += sign * (vtxPosChi2Update + trackWeight * trkChi2);
@@ -375,7 +376,7 @@ void updateTrackWithVertexImpl(TrackAtVertex& track, const Vertex& vtx) {
       trkParams - (constTerm + posJac * vtxPos + momJac * newTrkMomentum);
 
   // New chi2 to be set later
-  double chi2 =
+  long double chi2 =
       posDiff.dot(
           cache.newVertexWeight.template block<nDimVertex, nDimVertex>(0, 0) *
           posDiff) +

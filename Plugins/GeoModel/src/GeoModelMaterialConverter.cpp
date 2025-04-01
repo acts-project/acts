@@ -13,21 +13,21 @@
 #include "GeoModelKernel/GeoMaterial.h"
 #include "GeoModelKernel/Units.h"
 namespace {
-constexpr double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
+constexpr long double s_densityCnvFactor = 1. / GeoModelKernelUnits::gram;
 }
 Acts::Material Acts::GeoModel::geoMaterialConverter(const GeoMaterial& gm,
                                                     bool useMolarDensity) {
-  double x0 = gm.getRadLength();
-  double l0 = gm.getIntLength();
-  double density = gm.getDensity() * s_densityCnvFactor;
-  double A = 0.;
-  double Z = 0.;
+  long double x0 = gm.getRadLength();
+  long double l0 = gm.getIntLength();
+  long double density = gm.getDensity() * s_densityCnvFactor;
+  long double A = 0.;
+  long double Z = 0.;
   // Get number elements
   int numberOfElements = gm.getNumElements();
   // Loop
   for (int iEl = 0; iEl < numberOfElements; ++iEl) {
     const GeoElement* geoEl = gm.getElement(iEl);
-    double fraction = gm.getFraction(iEl);
+    long double fraction = gm.getFraction(iEl);
     A += fraction * (geoEl->getA() / GeoModelKernelUnits::gram);
     Z += fraction * geoEl->getZ();
   }

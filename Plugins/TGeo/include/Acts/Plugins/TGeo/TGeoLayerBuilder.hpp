@@ -58,9 +58,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
-    using RangeConfig = std::pair<AxisDirection, std::pair<double, double>>;
+    using RangeConfig =
+        std::pair<AxisDirection, std::pair<long double, long double>>;
 
-    using SplitConfig = std::pair<AxisDirection, double>;
+    using SplitConfig = std::pair<AxisDirection, long double>;
 
     /// Identify the search volume by name
     std::string volumeName = "";
@@ -73,8 +74,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Layer splitting: parameter and tolerance
     std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
-    std::pair<double, double> envelope = {1 * UnitConstants::mm,
-                                          1 * UnitConstants::mm};
+    std::pair<long double, long double> envelope = {1 * UnitConstants::mm,
+                                                    1 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
     std::vector<std::pair<int, BinningType>> binning0 = {{-1, equidistant}};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
@@ -85,19 +86,19 @@ class TGeoLayerBuilder : public ILayerBuilder {
         : volumeName(""),
           sensorNames({}),
           localAxes("XZY"),
-          envelope(std::pair<double, double>(1 * UnitConstants::mm,
-                                             1 * UnitConstants::mm)) {}
+          envelope(std::pair<long double, long double>(
+              1 * UnitConstants::mm, 1 * UnitConstants::mm)) {}
   };
 
   using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
       const TGeoDetectorElement::Identifier&, const TGeoNode&,
-      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+      const TGeoMatrix& tGeoMatrix, const std::string& axes, long double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
 
   static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
       const TGeoDetectorElement::Identifier& identifier,
       const TGeoNode& tGeoNode, const TGeoMatrix& tGeoMatrix,
-      const std::string& axes, double scalor,
+      const std::string& axes, long double scalor,
       std::shared_ptr<const Acts::ISurfaceMaterial> material);
 
   /// @struct Config
@@ -106,7 +107,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// String based identification
     std::string configurationName = "undefined";
     /// Unit conversion
-    double unit = 1 * UnitConstants::cm;
+    long double unit = 1 * UnitConstants::cm;
     /// Create an identifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Split TGeoElement if a splitter is provided
@@ -121,9 +122,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Configuration is always | n | c | p |
     std::array<std::vector<LayerConfig>, 3> layerConfigurations;
     /// Split tolerances in R
-    std::array<double, 3> layerSplitToleranceR = {-1., -1., -1.};
+    std::array<long double, 3> layerSplitToleranceR = {-1., -1., -1.};
     /// Split tolerances in Z
-    std::array<double, 3> layerSplitToleranceZ = {-1., -1., -1.};
+    std::array<long double, 3> layerSplitToleranceZ = {-1., -1., -1.};
     /// Automated binning & tolerances
     bool autoSurfaceBinning = false;
     /// The surface binning matcher
@@ -201,13 +202,14 @@ class TGeoLayerBuilder : public ILayerBuilder {
                    int type = 0);
 
   /// Private helper method : register splitting input
-  void registerSplit(std::vector<double>& parameters, double test,
-                     double tolerance, std::pair<double, double>& range) const;
+  void registerSplit(std::vector<long double>& parameters, long double test,
+                     long double tolerance,
+                     std::pair<long double, long double>& range) const;
 };
 
 inline void TGeoLayerBuilder::registerSplit(
-    std::vector<double>& parameters, double test, double tolerance,
-    std::pair<double, double>& range) const {
+    std::vector<long double>& parameters, long double test,
+    long double tolerance, std::pair<long double, long double>& range) const {
   bool found = false;
   // min/max setting
   range.first = std::min(range.first, test);

@@ -38,7 +38,7 @@ class ParticleKillAction : public G4UserSteppingAction {
     /// particles outside this volume will be terminated
     std::shared_ptr<const Acts::Volume> volume;
     /// particles that exceed this global time limit will be terminated
-    double maxTime = std::numeric_limits<double>::infinity();
+    long double maxTime = std::numeric_limits<long double>::infinity();
     /// secondary particles will be terminated
     bool secondaries = false;
   };

@@ -17,7 +17,7 @@
 
 using namespace Acts::UnitLiterals;
 
-static auto eps = std::numeric_limits<double>::epsilon();
+static auto eps = std::numeric_limits<long double>::epsilon();
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Acts::Neutral)
 BOOST_TEST_DONT_PRINT_LOG_VALUE(Acts::SinglyCharged)

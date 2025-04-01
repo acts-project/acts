@@ -61,8 +61,9 @@ class DiscSurface : public RegularSurface {
   /// @param rmax The outer radius of the disc surface
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
-  explicit DiscSurface(const Transform3& transform, double rmin, double rmax,
-                       double hphisec = std::numbers::pi);
+  explicit DiscSurface(const Transform3& transform, long double rmin,
+                       long double rmax,
+                       long double hphisec = std::numbers::pi);
 
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -75,9 +76,9 @@ class DiscSurface : public RegularSurface {
   /// @param maxR The inner radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
-  explicit DiscSurface(const Transform3& transform, double minhalfx,
-                       double maxhalfx, double minR, double maxR,
-                       double avephi = 0., double stereo = 0.);
+  explicit DiscSurface(const Transform3& transform, long double minhalfx,
+                       long double maxhalfx, long double minR, long double maxR,
+                       long double avephi = 0., long double stereo = 0.);
 
   /// Constructor for Discs from Transform3 and shared DiscBounds
   ///
@@ -158,8 +159,8 @@ class DiscSurface : public RegularSurface {
   /// @note This calls the parent method except for AxisR
   ///
   /// @return float to be used for the binning schema
-  double referencePositionValue(const GeometryContext& gctx,
-                                AxisDirection aDir) const final;
+  long double referencePositionValue(const GeometryContext& gctx,
+                                     AxisDirection aDir) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -187,7 +188,7 @@ class DiscSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
@@ -232,7 +233,7 @@ class DiscSurface : public RegularSurface {
   /// @return value is a local polar
   Vector2 globalToLocalCartesian(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 double tol = 0.) const;
+                                 long double tol = 0.) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -264,8 +265,9 @@ class DiscSurface : public RegularSurface {
   /// @param position The global position as a starting point
   /// @param direction The global momentum direction at the starting point
   /// @return The correction factor due to incident
-  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& direction) const final;
+  long double pathCorrection(const GeometryContext& gctx,
+                             const Vector3& position,
+                             const Vector3& direction) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -298,7 +300,7 @@ class DiscSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Return properly formatted class name for screen output
   std::string name() const override;

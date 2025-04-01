@@ -55,7 +55,7 @@ using Jacobian = BoundMatrix;
 using Stepper = Acts::AtlasStepper;
 
 // epsilon for floating point comparisons
-static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
+static constexpr auto eps = 1024 * std::numeric_limits<long double>::epsilon();
 
 // propagation settings
 static constexpr auto stepSize = 10_mm;
@@ -387,8 +387,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Construct the parameters
   Vector3 newPos(1.5, -2.5, 3.5);
   auto newAbsMom = 4.2 * absMom;
-  double newTime = 7.5;
-  double newCharge = 1.;
+  long double newTime = 7.5;
+  long double newCharge = 1.;
   BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
   cp = BoundTrackParameters::createCurvilinear(makeVector4(newPos, newTime),
                                                unitDir, newCharge / newAbsMom,

@@ -53,10 +53,11 @@ GeometryContext gctx;
 inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
     const Transform3& base,
     std::vector<std::unique_ptr<DetectorElementBase>>& elements,
-    double r = 300_mm, std::size_t nSensors = 8, double thickness = 0) {
+    long double r = 300_mm, std::size_t nSensors = 8,
+    long double thickness = 0) {
   auto recBounds = std::make_shared<RectangleBounds>(40_mm, 60_mm);
 
-  double deltaPhi = 2 * std::numbers::pi / nSensors;
+  long double deltaPhi = 2 * std::numbers::pi / nSensors;
   std::vector<std::shared_ptr<Surface>> surfaces;
   for (std::size_t i = 0; i < nSensors; i++) {
     // Create a fan of sensors
@@ -81,17 +82,18 @@ inline std::vector<std::shared_ptr<Surface>> makeFanLayer(
 inline std::vector<std::shared_ptr<Surface>> makeBarrelLayer(
     const Transform3& base,
     std::vector<std::unique_ptr<DetectorElementBase>>& elements,
-    double r = 300_mm, std::size_t nStaves = 10, int nSensorsPerStave = 8,
-    double thickness = 0, double hlPhi = 40_mm, double hlZ = 60_mm) {
+    long double r = 300_mm, std::size_t nStaves = 10, int nSensorsPerStave = 8,
+    long double thickness = 0, long double hlPhi = 40_mm,
+    long double hlZ = 60_mm) {
   auto recBounds = std::make_shared<RectangleBounds>(hlPhi, hlZ);
 
-  double deltaPhi = 2 * std::numbers::pi / nStaves;
+  long double deltaPhi = 2 * std::numbers::pi / nStaves;
   std::vector<std::shared_ptr<Surface>> surfaces;
 
   for (std::size_t istave = 0; istave < nStaves; istave++) {
     for (int isensor = -nSensorsPerStave; isensor <= nSensorsPerStave;
          isensor++) {
-      double z = isensor * (2 * hlZ + 5_mm);
+      long double z = isensor * (2 * hlZ + 5_mm);
 
       Transform3 trf = base * Translation3(Vector3::UnitZ() * z) *
                        AngleAxis3{deltaPhi * istave, Vector3::UnitZ()} *
@@ -255,8 +257,8 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   Transform3 base{Transform3::Identity()};
 
   std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
-  auto makeFan = [&](const Transform3& layerBase, auto&&..., double r,
-                     std::size_t nSensors, double thickness) {
+  auto makeFan = [&](const Transform3& layerBase, auto&&..., long double r,
+                     std::size_t nSensors, long double thickness) {
     return makeFanLayer(layerBase, detectorElements, r, nSensors, thickness);
   };
 
@@ -317,7 +319,7 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
               brl.setAttachmentStrategy(VolumeAttachmentStrategy::Gap)
                   .setResizeStrategy(VolumeResizeStrategy::Gap);
 
-              auto makeLayer = [&](const std::string& name, double r,
+              auto makeLayer = [&](const std::string& name, long double r,
                                    std::size_t nStaves, int nSensorsPerStave) {
                 brl.addLayer(name, [&](auto& layer) {
                   std::vector<std::shared_ptr<Surface>> surfaces =
@@ -386,16 +388,16 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
 
   std::uniform_real_distribution<> dist{-1, 1};
 
-  double etaWidth = 3;
-  double thetaMin = 2 * std::atan(std::exp(-etaWidth));
-  double thetaMax = 2 * std::atan(std::exp(etaWidth));
+  long double etaWidth = 3;
+  long double thetaMin = 2 * std::atan(std::exp(-etaWidth));
+  long double thetaMax = 2 * std::atan(std::exp(etaWidth));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace Acts::UnitLiterals;
 
   for (std::size_t i = 0; i < 5000; i++) {
-    double theta = thetaDist(rnd);
-    double phi = 2 * std::numbers::pi * dist(rnd);
+    long double theta = thetaDist(rnd);
+    long double phi = 2 * std::numbers::pi * dist(rnd);
 
     Vector3 direction;
     direction[0] = std::sin(theta) * std::cos(phi);

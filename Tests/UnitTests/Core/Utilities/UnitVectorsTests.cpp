@@ -20,7 +20,7 @@
 using Acts::Vector3;
 
 namespace {
-constexpr auto eps = std::numeric_limits<double>::epsilon();
+constexpr auto eps = std::numeric_limits<long double>::epsilon();
 }
 
 BOOST_AUTO_TEST_SUITE(UnitVectors)
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(DirectionPhiEta) {
   CHECK_CLOSE_REL(yNeg2.norm(), 1, eps);
   CHECK_CLOSE_REL(yNeg2.dot(Vector3(0, -1, 0)), 1, eps);
 
-  const auto inf = std::numeric_limits<double>::infinity();
+  const auto inf = std::numeric_limits<long double>::infinity();
   // along positive z
   const auto zPos1 = makeDirectionFromPhiEta(0.0, inf);
   CHECK_CLOSE_REL(zPos1.norm(), 1, eps);

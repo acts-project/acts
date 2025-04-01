@@ -59,23 +59,24 @@ bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
          b.get<ActsExamples::IndexSourceLink>().index();
 }
 
-bool doubleHolesFilter(const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
-                                              Acts::ConstVectorMultiTrajectory,
-                                              std::shared_ptr, true>& track) {
-  bool doubleFlag = false;
+bool long doubleHolesFilter(
+    const Acts::TrackProxy<Acts::ConstVectorTrackContainer,
+                           Acts::ConstVectorMultiTrajectory, std::shared_ptr,
+                           true>& track) {
+  bool long doubleFlag = false;
   int counter = 0;
   for (const auto& ts : track.trackStatesReversed()) {
     auto iTypeFlags = ts.typeFlags();
     if (!iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      doubleFlag = false;
+      long doubleFlag = false;
     }
 
     if (iTypeFlags.test(Acts::TrackStateFlag::HoleFlag)) {
-      if (doubleFlag) {
+      if (long doubleFlag) {
         counter++;
-        doubleFlag = false;
+        long doubleFlag = false;
       } else {
-        doubleFlag = true;
+        long doubleFlag = true;
       };
     }
   }
@@ -112,7 +113,7 @@ ActsExamples::ScoreBasedAmbiguityResolutionAlgorithm::execute(
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
   Acts::ScoreBasedAmbiguityResolution::Optionals<ConstTrackProxy> optionals;
-  optionals.cuts.push_back(doubleHolesFilter);
+  optionals.cuts.push_back(long doubleHolesFilter);
   std::vector<int> goodTracks = m_ambi.solveAmbiguity(
       tracks, &sourceLinkHash, &sourceLinkEquality, optionals);
   // Prepare the output track collection from the IDs

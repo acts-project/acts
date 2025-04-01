@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE(OrientedLayer) {
 
   std::vector<std::unique_ptr<DetectorElementBase>> detectorElements;
 
-  auto makeFan = [&](double yrot, double thickness = 0) {
+  auto makeFan = [&](long double yrot, long double thickness = 0) {
     detectorElements.clear();
 
     std::size_t nSensors = 8;
-    double deltaPhi = 2 * std::numbers::pi / nSensors;
-    double r = 20_mm;
+    long double deltaPhi = 2 * std::numbers::pi / nSensors;
+    long double r = 20_mm;
     std::vector<std::shared_ptr<const Surface>> surfaces;
     for (std::size_t i = 0; i < nSensors; i++) {
       // Create a fan of sensors

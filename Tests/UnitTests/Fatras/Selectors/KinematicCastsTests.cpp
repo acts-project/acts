@@ -22,7 +22,7 @@ using namespace ActsFatras::Casts;
 
 namespace {
 // TODO why does this have to be so high to avoid failure in eta tests?
-constexpr auto eps = 128 * std::numeric_limits<double>::epsilon();
+constexpr auto eps = 128 * std::numeric_limits<long double>::epsilon();
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasKinematicCasts)

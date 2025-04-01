@@ -90,14 +90,14 @@ std::unique_ptr<GridPortalLink> makeGrid(
 
 std::unique_ptr<GridPortalLink> mergeVariable(
     const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
-    const IAxis& axisB, double /*tolerance*/, AxisDirection direction,
+    const IAxis& axisB, long double /*tolerance*/, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("Variable merge: direction is " << direction);
 
   ACTS_VERBOSE("~> axis a: " << axisA);
   ACTS_VERBOSE("~> axis b: " << axisB);
 
-  std::vector<double> binEdges;
+  std::vector<long double> binEdges;
 
   binEdges.reserve(axisA.getNBins() + axisB.getNBins() + 1);
 
@@ -109,23 +109,23 @@ std::unique_ptr<GridPortalLink> mergeVariable(
 
   } else {
     ACTS_VERBOSE("Performing symmetrized merge");
-    double halfWidth =
+    long double halfWidth =
         (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
         2.0;
     ACTS_VERBOSE("    ~> half width: " << halfWidth);
 
-    double shift = axisA.getMax() - halfWidth;
+    long double shift = axisA.getMax() - halfWidth;
     ACTS_VERBOSE("    ~> shift: " << shift);
 
     std::ranges::transform(edgesA, std::back_inserter(binEdges),
-                           [&](double edge) { return edge + shift; });
+                           [&](long double edge) { return edge + shift; });
   }
 
-  double stitchPoint = binEdges.back();
+  long double stitchPoint = binEdges.back();
   auto edgesB = axisB.getBinEdges();
   std::transform(
       std::next(edgesB.begin()), edgesB.end(), std::back_inserter(binEdges),
-      [&](double edge) { return edge - axisB.getMin() + stitchPoint; });
+      [&](long double edge) { return edge - axisB.getMin() + stitchPoint; });
 
   return makeGrid(mergedSurface, direction, logger,
                   std::tuple{std::move(binEdges)}, otherAxis, prepend);
@@ -133,25 +133,25 @@ std::unique_ptr<GridPortalLink> mergeVariable(
 
 std::unique_ptr<GridPortalLink> mergeEquidistant(
     const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
-    const IAxis& axisB, double tolerance, AxisDirection direction,
+    const IAxis& axisB, long double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   ACTS_VERBOSE("===> potentially equidistant merge: checking bin widths");
 
   ACTS_VERBOSE("~> axis a: " << axisA);
   ACTS_VERBOSE("~> axis b: " << axisB);
 
-  double binsWidthA =
-      (axisA.getMax() - axisA.getMin()) / static_cast<double>(axisA.getNBins());
-  double binsWidthB =
-      (axisB.getMax() - axisB.getMin()) / static_cast<double>(axisB.getNBins());
+  long double binsWidthA = (axisA.getMax() - axisA.getMin()) /
+                           static_cast<long double>(axisA.getNBins());
+  long double binsWidthB = (axisB.getMax() - axisB.getMin()) /
+                           static_cast<long double>(axisB.getNBins());
 
   ACTS_VERBOSE("  ~> binWidths: " << binsWidthA << " vs " << binsWidthB);
 
   if (std::abs(binsWidthA - binsWidthB) < tolerance) {
     ACTS_VERBOSE("==> binWidths same: " << binsWidthA);
 
-    double min = std::numeric_limits<double>::signaling_NaN();
-    double max = std::numeric_limits<double>::signaling_NaN();
+    long double min = std::numeric_limits<long double>::signaling_NaN();
+    long double max = std::numeric_limits<long double>::signaling_NaN();
 
     if (direction == AxisDirection::AxisR) {
       ACTS_VERBOSE("Performing asymmetric merge");
@@ -160,7 +160,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
     } else {
       ACTS_VERBOSE("Performing symmetrized merge");
 
-      double halfWidth =
+      long double halfWidth =
           (axisA.getMax() - axisA.getMin() + axisB.getMax() - axisB.getMin()) /
           2.0;
 
@@ -185,7 +185,7 @@ std::unique_ptr<GridPortalLink> mergeEquidistant(
 
 std::unique_ptr<GridPortalLink> colinearMerge(
     const std::shared_ptr<RegularSurface>& mergedSurface, const IAxis& axisA,
-    const IAxis& axisB, double tolerance, AxisDirection direction,
+    const IAxis& axisB, long double tolerance, AxisDirection direction,
     const Logger& logger, const IAxis* otherAxis, bool prepend) {
   AxisType aType = axisA.getType();
   AxisType bType = axisB.getType();

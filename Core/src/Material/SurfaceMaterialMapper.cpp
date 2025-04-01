@@ -293,8 +293,8 @@ void SurfaceMaterialMapper::mapInteraction(
     // Material not inside current volume
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      double distVol = (volIter->position - mTrack.first.first).norm();
-      double distMat = (rmIter->position - mTrack.first.first).norm();
+      long double distVol = (volIter->position - mTrack.first.first).norm();
+      long double distMat = (rmIter->position - mTrack.first.first).norm();
       // Material past the entry point to the current volume
       if (distMat - distVol > s_epsilon) {
         // Switch to next material volume

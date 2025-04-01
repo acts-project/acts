@@ -26,7 +26,7 @@
 namespace Acts::HoughTransformUtils {
 
 /// this type is responsible for encoding the parameters of our hough space
-using CoordType = double;
+using CoordType = long double;
 
 // this type is used to encode hit counts.
 // Floating point to allow hit weights to be applied
@@ -63,7 +63,8 @@ struct HoughAxisRanges {
 /// @return the bin number.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-inline int binIndex(double min, double max, unsigned nSteps, double val) {
+inline int binIndex(long double min, long double max, unsigned nSteps,
+                    long double val) {
   return static_cast<int>((val - min) / (max - min) * nSteps);
 }
 // Returns the lower bound of the bin specified by step
@@ -74,8 +75,8 @@ inline int binIndex(double min, double max, unsigned nSteps, double val) {
 /// @return the parameter value at the lower bin edge.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-inline double lowerBinEdge(double min, double max, unsigned nSteps,
-                           std::size_t binIndex) {
+inline long double lowerBinEdge(long double min, long double max,
+                                unsigned nSteps, std::size_t binIndex) {
   return min + (max - min) * binIndex / nSteps;
 }
 // Returns the lower bound of the bin specified by step
@@ -86,8 +87,8 @@ inline double lowerBinEdge(double min, double max, unsigned nSteps,
 /// @return the parameter value at the bin center.
 /// No special logic to prevent over-/underflow, checking these is
 /// left to the caller
-inline double binCenter(double min, double max, unsigned nSteps,
-                        std::size_t binIndex) {
+inline long double binCenter(long double min, long double max, unsigned nSteps,
+                             std::size_t binIndex) {
   return min + (max - min) * 0.5 * (2 * binIndex + 1) / nSteps;
 }
 
@@ -283,7 +284,8 @@ class HoughPlane {
   /// @param layer: layer index
   /// @param w: optional hit weight
   void fillBin(std::size_t binX, std::size_t binY,
-               const identifier_t& identifier, unsigned layer, double w = 1.0f);
+               const identifier_t& identifier, unsigned layer,
+               long double w = 1.0f);
 
   YieldType m_maxHits = 0.0f;    // track the maximum number of hits seen
   YieldType m_maxLayers = 0.0f;  // track the maximum number of layers seen

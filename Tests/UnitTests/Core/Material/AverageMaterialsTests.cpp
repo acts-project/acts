@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsPercent) {
   BOOST_CHECK(!slab.isVacuum());
   BOOST_CHECK(!slab.material().isVacuum());
   BOOST_CHECK_EQUAL(slab.material(), percent.material());
-  // thickness-like properties must double
+  // thickness-like properties must long double
   BOOST_CHECK_EQUAL(slab.thickness(), 2 * percent.thickness());
   BOOST_CHECK_EQUAL(slab.thicknessInX0(), 2 * percent.thicknessInX0());
   BOOST_CHECK_EQUAL(slab.thicknessInL0(), 2 * percent.thicknessInL0());
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnit) {
   BOOST_CHECK(!slab.isVacuum());
   BOOST_CHECK(!slab.material().isVacuum());
   BOOST_CHECK_EQUAL(slab.material(), unit.material());
-  // thickness-like properties must double
+  // thickness-like properties must long double
   BOOST_CHECK_EQUAL(slab.thickness(), 2 * unit.thickness());
   BOOST_CHECK_EQUAL(slab.thicknessInX0(), 2 * unit.thicknessInX0());
   BOOST_CHECK_EQUAL(slab.thicknessInL0(), 2 * unit.thicknessInL0());

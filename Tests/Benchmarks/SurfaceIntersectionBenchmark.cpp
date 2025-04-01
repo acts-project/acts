@@ -68,13 +68,13 @@ Vector3 origin(0., 0., 0.);
 Vector3 originStraw(0.3_m, -0.2_m, 11_m);
 
 template <typename surface_t>
-MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
-                                      double theta) {
+MicroBenchmarkResult intersectionTest(const surface_t& surface, long double phi,
+                                      long double theta) {
   // Shoot at it
-  double cosPhi = std::cos(phi);
-  double sinPhi = std::sin(phi);
-  double cosTheta = std::cos(theta);
-  double sinTheta = std::sin(theta);
+  long double cosPhi = std::cos(phi);
+  long double sinPhi = std::sin(phi);
+  long double cosTheta = std::cos(theta);
+  long double sinTheta = std::sin(theta);
 
   Vector3 direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
 
@@ -88,12 +88,14 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 
 BOOST_DATA_TEST_CASE(
     benchmark_surface_intersections,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       -std::numbers::pi, std::numbers::pi))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<long double>(
+             -std::numbers::pi, std::numbers::pi))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-0.3, 0.3))) ^
+                           std::uniform_real_distribution<long double>(-0.3,
+                                                                       0.3))) ^
         bdata::xrange(ntests),
     phi, theta, index) {
   (void)index;

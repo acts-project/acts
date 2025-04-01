@@ -176,7 +176,7 @@ ProcessCode RootMaterialTrackWriter::writeT(
       std::vector<Acts::MaterialInteraction> collapsed;
 
       Acts::Vector3 positionSum = Acts::Vector3::Zero();
-      double pathCorrectionSum = 0;
+      long double pathCorrectionSum = 0;
 
       for (std::size_t start = 0, end = 0; end < materialInteractions.size();
            ++end) {

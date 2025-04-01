@@ -53,11 +53,11 @@ BOOST_DATA_TEST_CASE(
 
   // Test for similar invariant masses
   Acts::Vector4 sum = p1 + k;
-  double s = sum(Acts::eEnergy) * sum(Acts::eEnergy) -
-             sum.template segment<3>(Acts::eMom0).norm() *
-                 sum.template segment<3>(Acts::eMom0).norm();
-  double s0 = p0(Acts::eEnergy) * p0(Acts::eEnergy) -
-              p0.template segment<3>(Acts::eMom0).norm() *
-                  p0.template segment<3>(Acts::eMom0).norm();
+  long double s = sum(Acts::eEnergy) * sum(Acts::eEnergy) -
+                  sum.template segment<3>(Acts::eMom0).norm() *
+                      sum.template segment<3>(Acts::eMom0).norm();
+  long double s0 = p0(Acts::eEnergy) * p0(Acts::eEnergy) -
+                   p0.template segment<3>(Acts::eMom0).norm() *
+                       p0.template segment<3>(Acts::eMom0).norm();
   CHECK_CLOSE_OR_SMALL(s, s0, 1e-2, 1e-2);
 }

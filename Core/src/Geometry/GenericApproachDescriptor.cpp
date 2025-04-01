@@ -27,7 +27,7 @@ void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
 Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double nearLimit, double farLimit) const {
+    long double nearLimit, long double farLimit) const {
   // almost always 2
   boost::container::small_vector<SurfaceIntersection, 4> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());

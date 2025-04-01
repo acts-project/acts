@@ -170,7 +170,7 @@ Result<void> smoothTracks(
 /// @return The result of the search containing the track state
 ///         and the distance to the reference surface
 template <TrackProxyConcept track_proxy_t>
-Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, double>>
+Result<std::pair<typename track_proxy_t::ConstTrackStateProxy, long double>>
 findTrackStateForExtrapolation(
     const GeometryContext &geoContext, const track_proxy_t &track,
     const Surface &referenceSurface, TrackExtrapolationStrategy strategy,
@@ -208,7 +208,7 @@ findTrackStateForExtrapolation(
       SurfaceIntersection intersection = intersect(*first);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
-        return Result<std::pair<TrackStateProxy, double>>::failure(
+        return Result<std::pair<TrackStateProxy, long double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
@@ -228,7 +228,7 @@ findTrackStateForExtrapolation(
       SurfaceIntersection intersection = intersect(*last);
       if (!intersection.isValid()) {
         ACTS_ERROR("no intersection found");
-        return Result<std::pair<TrackStateProxy, double>>::failure(
+        return Result<std::pair<TrackStateProxy, long double>>::failure(
             TrackExtrapolationError::ReferenceSurfaceUnreachable);
       }
 
@@ -254,8 +254,8 @@ findTrackStateForExtrapolation(
       SurfaceIntersection intersectionFirst = intersect(*first);
       SurfaceIntersection intersectionLast = intersect(*last);
 
-      double absDistanceFirst = std::abs(intersectionFirst.pathLength());
-      double absDistanceLast = std::abs(intersectionLast.pathLength());
+      long double absDistanceFirst = std::abs(intersectionFirst.pathLength());
+      long double absDistanceLast = std::abs(intersectionLast.pathLength());
 
       if (intersectionFirst.isValid() && absDistanceFirst <= absDistanceLast) {
         ACTS_VERBOSE("using first track state with intersection at "
@@ -270,13 +270,13 @@ findTrackStateForExtrapolation(
       }
 
       ACTS_ERROR("no intersection found");
-      return Result<std::pair<TrackStateProxy, double>>::failure(
+      return Result<std::pair<TrackStateProxy, long double>>::failure(
           TrackExtrapolationError::ReferenceSurfaceUnreachable);
     }
   }
 
   // unreachable
-  return Result<std::pair<TrackStateProxy, double>>::failure(
+  return Result<std::pair<TrackStateProxy, long double>>::failure(
       TrackExtrapolationError::CompatibleTrackStateNotFound);
 }
 
@@ -638,7 +638,7 @@ calculateSmoothedResidual(track_state_proxy_t trackState) {
 /// @param trackState the track state to calculate the chi2 from
 /// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
-double calculatePredictedChi2(track_state_proxy_t trackState) {
+long double calculatePredictedChi2(track_state_proxy_t trackState) {
   if (!trackState.hasPredicted()) {
     throw std::invalid_argument("track state has no predicted parameters");
   }
@@ -649,7 +649,7 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
   return visit_measurement(
       trackState.calibratedSize(),
       [&]<std::size_t measdim>(
-          std::integral_constant<std::size_t, measdim>) -> double {
+          std::integral_constant<std::size_t, measdim>) -> long double {
         auto [residual, residualCovariance] =
             calculatePredictedResidual<measdim>(trackState);
 
@@ -663,7 +663,7 @@ double calculatePredictedChi2(track_state_proxy_t trackState) {
 /// @param trackState the track state to calculate the chi2 from
 /// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
-double calculateFilteredChi2(track_state_proxy_t trackState) {
+long double calculateFilteredChi2(track_state_proxy_t trackState) {
   if (!trackState.hasFiltered()) {
     throw std::invalid_argument("track state has no filtered parameters");
   }
@@ -674,7 +674,7 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
   return visit_measurement(
       trackState.calibratedSize(),
       [&]<std::size_t measdim>(
-          std::integral_constant<std::size_t, measdim>) -> double {
+          std::integral_constant<std::size_t, measdim>) -> long double {
         auto [residual, residualCovariance] =
             calculateFilteredResidual<measdim>(trackState);
 
@@ -688,7 +688,7 @@ double calculateFilteredChi2(track_state_proxy_t trackState) {
 /// @param trackState the track state to calculate the chi2 from
 /// @return the chi2
 template <TrackStateProxyConcept track_state_proxy_t>
-double calculateSmoothedChi2(track_state_proxy_t trackState) {
+long double calculateSmoothedChi2(track_state_proxy_t trackState) {
   if (!trackState.hasSmoothed()) {
     throw std::invalid_argument("track state has no smoothed parameters");
   }
@@ -699,7 +699,7 @@ double calculateSmoothedChi2(track_state_proxy_t trackState) {
   return visit_measurement(
       trackState.calibratedSize(),
       [&]<std::size_t measdim>(
-          std::integral_constant<std::size_t, measdim>) -> double {
+          std::integral_constant<std::size_t, measdim>) -> long double {
         auto [residual, residualCovariance] =
             calculateSmoothedResidual<measdim>(trackState);
 

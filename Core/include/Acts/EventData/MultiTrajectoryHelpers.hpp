@@ -28,9 +28,9 @@ struct TrajectoryState {
   std::size_t nMeasurements = 0;
   std::size_t nOutliers = 0;
   std::size_t nHoles = 0;
-  double chi2Sum = 0;
-  std::vector<double> measurementChi2 = {};
-  std::vector<double> outlierChi2 = {};
+  long double chi2Sum = 0;
+  std::vector<long double> measurementChi2 = {};
+  std::vector<long double> outlierChi2 = {};
   std::size_t NDF = 0;
   std::vector<unsigned int> measurementVolume = {};
   std::vector<unsigned int> measurementLayer = {};

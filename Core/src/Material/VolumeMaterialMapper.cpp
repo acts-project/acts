@@ -421,8 +421,8 @@ void VolumeMaterialMapper::mapMaterialTrack(
       // Check if the material point is past the entry point to the current
       // volume (this prevents switching volume before the first volume has been
       // reached)
-      double distVol = (volIter->position - mTrack.first.first).norm();
-      double distMat = (rmIter->position - mTrack.first.first).norm();
+      long double distVol = (volIter->position - mTrack.first.first).norm();
+      long double distMat = (rmIter->position - mTrack.first.first).norm();
       if (distMat - distVol > s_epsilon) {
         // Switch to next material volume
         ++volIter;
@@ -471,8 +471,10 @@ void VolumeMaterialMapper::mapMaterialTrack(
               ((volIter + 1) != mappingVolumes.end() &&
                sfIter->surface->geometryId().volume() ==
                    (volIter + 1)->volume->geometryId().volume())) {
-            double distVol = (volIter->position - mTrack.first.first).norm();
-            double distSur = (sfIter->position - mTrack.first.first).norm();
+            long double distVol =
+                (volIter->position - mTrack.first.first).norm();
+            long double distSur =
+                (sfIter->position - mTrack.first.first).norm();
             if (distSur - distVol > s_epsilon) {
               float vacuumThickness =
                   (sfIter->position - lastPositionEnd).norm();

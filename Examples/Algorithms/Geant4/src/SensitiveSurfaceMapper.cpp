@@ -68,7 +68,7 @@ void writeG4Polyhedron(
     Acts::IVisualization3D& visualizer, const G4Polyhedron& polyhedron,
     const Acts::Transform3& trafo = Acts::Transform3::Identity(),
     Acts::Color color = {0, 0, 0}) {
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr long double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   for (int i = 1; i <= polyhedron.GetNoFacets(); ++i) {
     // This is a bit ugly but I didn't find an easy way to compute this
@@ -141,7 +141,7 @@ void SensitiveSurfaceMapper::remapSensitiveNames(
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform) const {
   // Make sure the unit conversion is correct
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr long double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   auto g4ToActsVector = [](const G4ThreeVector& g4vec) {
     return Acts::Vector3(g4vec[0] * convertLength, g4vec[1] * convertLength,

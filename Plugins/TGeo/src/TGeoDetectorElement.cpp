@@ -28,19 +28,19 @@
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
 
-using Line2D = Eigen::Hyperplane<double, 2>;
+using Line2D = Eigen::Hyperplane<long double, 2>;
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    const TGeoMatrix& tGeoMatrix, const std::string& axes, long double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_identifier(identifier) {
   // Create temporary local non const surface (to allow setting the
   // material)
-  const Double_t* translation = tGeoMatrix.GetTranslation();
-  const Double_t* rotation = tGeoMatrix.GetRotationMatrix();
+  const long double_t* translation = tGeoMatrix.GetTranslation();
+  const long double_t* rotation = tGeoMatrix.GetRotationMatrix();
 
   auto sensor = m_detElement->GetVolume();
   auto tgShape = sensor->GetShape();
@@ -90,7 +90,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
-    const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
+    const std::shared_ptr<const PlanarBounds>& tgBounds,
+    long double tgThickness)
     : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
@@ -103,7 +104,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const Transform3& tgTransform,
-    const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
+    const std::shared_ptr<const DiscBounds>& tgBounds, long double tgThickness)
     : Acts::DetectorElementBase(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),

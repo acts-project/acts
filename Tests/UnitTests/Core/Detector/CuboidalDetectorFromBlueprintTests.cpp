@@ -85,18 +85,18 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   // Blueprint starts here ----------------
 
   // Detector dimensions
-  double detectorX = 100.;
-  double detectorY = 100.;
-  double detectorZ = 100.;
+  long double detectorX = 100.;
+  long double detectorY = 100.;
+  long double detectorZ = 100.;
 
   // Pixel system
-  double pixelX = 20;
-  double pixelY = 100;
-  double pixelZ = 10;
+  long double pixelX = 20;
+  long double pixelY = 100;
+  long double pixelZ = 10;
 
   // Create  root node
   std::vector<Acts::AxisDirection> detectorBins = {Acts::AxisDirection::AxisX};
-  std::vector<double> detectorBounds = {detectorX, detectorY, detectorZ};
+  std::vector<long double> detectorBounds = {detectorX, detectorY, detectorZ};
 
   // The root node - detector
   auto detectorBpr = std::make_unique<Acts::Experimental::Gen2Blueprint::Node>(
@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       detectorBounds, detectorBins);
 
   // Left arm
-  std::vector<double> leftArmBounds = {detectorX * 0.5, detectorY, detectorZ};
+  std::vector<long double> leftArmBounds = {detectorX * 0.5, detectorY,
+                                            detectorZ};
 
   std::vector<Acts::AxisDirection> leftArmBins = {Acts::AxisDirection::AxisZ};
 
@@ -117,7 +118,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       leftArmBins);
 
   // Pixel layer L1
-  std::vector<double> pixelL1Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<long double> pixelL1Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelL1Transform =
       Acts::Transform3::Identity() *
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       pixelL1Boundaries, pixelL1Structure);
 
   // Pixel layer L2
-  std::vector<double> pixelL2Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<long double> pixelL2Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelL2Transform =
       Acts::Transform3::Identity() *
@@ -151,7 +152,8 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
   detectorBpr->add(std::move(leftArm));
 
   // Right arm
-  std::vector<double> rightArmBounds = {detectorX * 0.5, detectorY, detectorZ};
+  std::vector<long double> rightArmBounds = {detectorX * 0.5, detectorY,
+                                             detectorZ};
 
   std::vector<Acts::AxisDirection> rightArmBins = {Acts::AxisDirection::AxisZ};
 
@@ -163,7 +165,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       rightArmBounds, rightArmBins);
 
   // Pixel layer R1
-  std::vector<double> pixelR1Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<long double> pixelR1Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelR1Transform =
       Acts::Transform3::Identity() *
@@ -177,7 +179,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
       pixelR1Boundaries, pixelR1Structure);
 
   // Pixel layer R2
-  std::vector<double> pixelR2Boundaries = {pixelX, pixelY, pixelZ};
+  std::vector<long double> pixelR2Boundaries = {pixelX, pixelY, pixelZ};
 
   Acts::Transform3 pixelR2Transform =
       Acts::Transform3::Identity() *
@@ -255,7 +257,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
 
   // Volumes have to be contained within the
   // initial detector bounds
-  double internalStretchLeftZ =
+  long double internalStretchLeftZ =
       detector->volumes()[0]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
@@ -272,7 +274,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisZ)];
 
-  double internalStretchRightZ =
+  long double internalStretchRightZ =
       detector->volumes()[5]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisZ)] +
@@ -289,7 +291,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisZ)];
 
-  double internalStretchX1 =
+  long double internalStretchX1 =
       detector->volumes()[0]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
@@ -297,7 +299,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)];
 
-  double internalStretchX2 =
+  long double internalStretchX2 =
       detector->volumes()[1]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
@@ -305,7 +307,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)];
 
-  double internalStretchX3 =
+  long double internalStretchX3 =
       detector->volumes()[2]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
@@ -313,7 +315,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)];
 
-  double internalStretchX4 =
+  long double internalStretchX4 =
       detector->volumes()[3]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)] +
@@ -321,7 +323,7 @@ BOOST_AUTO_TEST_CASE(CuboidalDetectorFromBlueprintTest) {
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)];
 
-  double internalStretchX5 =
+  long double internalStretchX5 =
       detector->volumes()[4]
           ->volumeBounds()
           .values()[toUnderlying(Acts::AxisDirection::AxisX)] +

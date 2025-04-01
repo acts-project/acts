@@ -310,7 +310,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- measurement states: " << fwdGsfResult.measurementStates);
 
     std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler.val();
-    double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0.val();
+    long double maxPathXOverX0 = fwdGsfResult.maxPathXOverX0.val();
 
     //////////////////
     // Backward pass
@@ -477,12 +477,14 @@ struct GaussianSumFitter {
 
     if (trackContainer.hasColumn(
             hashString(GsfConstants::kFwdMaxMaterialXOverX0))) {
-      track.template component<double>(GsfConstants::kFwdMaxMaterialXOverX0) =
+      track.template component<long double>(
+          GsfConstants::kFwdMaxMaterialXOverX0) =
           fwdGsfResult.maxPathXOverX0.val();
     }
     if (trackContainer.hasColumn(
             hashString(GsfConstants::kFwdSumMaterialXOverX0))) {
-      track.template component<double>(GsfConstants::kFwdSumMaterialXOverX0) =
+      track.template component<long double>(
+          GsfConstants::kFwdSumMaterialXOverX0) =
           fwdGsfResult.sumPathXOverX0.val();
     }
 

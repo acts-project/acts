@@ -48,8 +48,8 @@ const auto parameters =
 const auto parametersPhotonConversion = momentumPhi * momentumTheta ^ rngSeed;
 
 // utility function to build a particle from the dataset parameters
-inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,
-                                         double theta, double p) {
+inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, long double phi,
+                                         long double theta, long double p) {
   const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0, 0, 0, 0)

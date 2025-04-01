@@ -32,7 +32,7 @@ class MLTrackClassifier : public OnnxRuntimeBase {
   ///
   /// @return The predicted track label of the trajectory
   TrackLabels predictTrackLabel(std::vector<float>& inputFeatures,
-                                double decisionThreshProb) const;
+                                long double decisionThreshProb) const;
 
   /// @brief Check if the predicted track label is 'duplicate'
   ///
@@ -43,7 +43,7 @@ class MLTrackClassifier : public OnnxRuntimeBase {
   ///
   /// @return If the predicted track label is 'duplicate'
   bool isDuplicate(std::vector<float>& inputFeatures,
-                   double decisionThreshProb) const;
+                   long double decisionThreshProb) const;
 };
 
 }  // namespace Acts

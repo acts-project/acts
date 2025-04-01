@@ -60,13 +60,13 @@ class TryAllNavigatorBase {
         : NavigatorPlainOptions(gctx) {}
 
     /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
+    long double surfaceTolerance = s_onSurfaceTolerance;
 
     /// The near limit to resolve surfaces
-    double nearLimit = s_onSurfaceTolerance;
+    long double nearLimit = s_onSurfaceTolerance;
 
     /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+    long double farLimit = std::numeric_limits<long double>::max();
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
@@ -324,8 +324,8 @@ class TryAllNavigator : public TryAllNavigatorBase {
     // Navigator preStep always resets the current surface
     state.currentSurface = nullptr;
 
-    double nearLimit = state.options.nearLimit;
-    double farLimit = state.options.farLimit;
+    long double nearLimit = state.options.nearLimit;
+    long double farLimit = state.options.farLimit;
 
     // handle overstepping
     if (!state.currentCandidates.empty()) {
@@ -665,14 +665,14 @@ class TryAllOverstepNavigator : public TryAllNavigatorBase {
       Vector3 stepStart = state.lastPosition.value();
       Vector3 stepEnd = position;
       Vector3 step = stepEnd - stepStart;
-      double stepDistance = step.norm();
-      if (stepDistance < std::numeric_limits<double>::epsilon()) {
+      long double stepDistance = step.norm();
+      if (stepDistance < std::numeric_limits<long double>::epsilon()) {
         ACTS_ERROR(volInfo(state) << "Step distance is zero. " << stepDistance);
       }
       Vector3 stepDirection = step.normalized();
 
-      double nearLimit = -stepDistance + state.options.surfaceTolerance;
-      double farLimit = 0;
+      long double nearLimit = -stepDistance + state.options.surfaceTolerance;
+      long double farLimit = 0;
 
       state.lastPosition.reset();
       state.activeCandidates.clear();

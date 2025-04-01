@@ -40,22 +40,22 @@ struct ProtoLayerBase {
   /// Get the parameters : min
   /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double min(AxisDirection aDir, bool addenv = true) const;
+  long double min(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double max(AxisDirection aDir, bool addenv = true) const;
+  long double max(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : medium
   /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double medium(AxisDirection aDir, bool addenv = true) const;
+  long double medium(AxisDirection aDir, bool addenv = true) const;
 
   // Get the  parameters : range
   /// @param aDir The accessed axis direction
   /// @param addenv The steering if enevlope is added or not
-  double range(AxisDirection aDir, bool addenv = true) const;
+  long double range(AxisDirection aDir, bool addenv = true) const;
 
   /// Output to ostream
   /// @param sl the input ostream

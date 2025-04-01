@@ -318,19 +318,19 @@ struct SpacepointData {
 };
 
 struct TrackParameterData {
-  double d0;
-  double z0;
-  double phi;
-  double theta;
-  double qop;
+  long double d0;
+  long double z0;
+  long double phi;
+  long double theta;
+  long double qop;
 
-  double var_d0, var_z0, var_phi, var_theta, var_qop;
+  long double var_d0, var_z0, var_phi, var_theta, var_qop;
 
-  double cov_d0z0, cov_d0phi, cov_d0theta, cov_d0qop;
-  double cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop;
-  double cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop;
-  double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
-  double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
+  long double cov_d0z0, cov_d0phi, cov_d0theta, cov_d0qop;
+  long double cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop;
+  long double cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop;
+  long double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
+  long double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
 
   DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
                  var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
@@ -343,7 +343,7 @@ struct TrackParameterData {
 struct ProtoTrackData {
   std::size_t trackId;
   Index measurementId;
-  double x, y, z;
+  long double x, y, z;
 
   DFE_NAMEDTUPLE(ProtoTrackData, trackId, measurementId, x, y, z);
 };

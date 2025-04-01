@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   testDetectorVolumeUpdate(*cTubePortals[3], innerPos, -innerDir, nullptr);
 
   // Sectoral tube cylinder
-  double alpha = std::numbers::pi / 4.;
-  double r = 50;
+  long double alpha = std::numbers::pi / 4.;
+  long double r = 50;
 
   Acts::Vector3 negPhiSecPos(r * std::cos(-alpha), r * std::sin(-alpha), 0.);
   Acts::Vector3 negPhiSecDir(-r * std::cos(-alpha), r * std::sin(-alpha), 0.);

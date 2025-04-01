@@ -33,19 +33,20 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
 
   struct {
     std::size_t numUniformRandomNumbers = 0;
-    double first = std::numeric_limits<double>::quiet_NaN();
-    double last = std::numeric_limits<double>::quiet_NaN();
+    long double first = std::numeric_limits<long double>::quiet_NaN();
+    long double last = std::numeric_limits<long double>::quiet_NaN();
   } statistics;
 
   Pythia8RandomEngineWrapper() = default;
 
-  double flat() override {
+  long double flat() override {
     if (rng == nullptr) {
       throw std::runtime_error(
           "Pythia8RandomEngineWrapper: no random engine set");
     }
 
-    double value = std::uniform_real_distribution<double>(0.0, 1.0)(*rng);
+    long double value =
+        std::uniform_real_distribution<long double>(0.0, 1.0)(*rng);
     if (statistics.numUniformRandomNumbers == 0) {
       statistics.first = value;
     }

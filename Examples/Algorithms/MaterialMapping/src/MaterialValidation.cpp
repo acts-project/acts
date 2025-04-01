@@ -35,10 +35,10 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
       m_cfg.randomNumberSvc->spawnGenerator(context);
 
   // Setup random number distributions for some quantities
-  std::uniform_real_distribution<double> phiDist(m_cfg.phiRange.first,
-                                                 m_cfg.phiRange.second);
-  std::uniform_real_distribution<double> etaDist(m_cfg.etaRange.first,
-                                                 m_cfg.etaRange.second);
+  std::uniform_real_distribution<long double> phiDist(m_cfg.phiRange.first,
+                                                      m_cfg.phiRange.second);
+  std::uniform_real_distribution<long double> etaDist(m_cfg.etaRange.first,
+                                                      m_cfg.etaRange.second);
 
   // The output recorded material track collection
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>
@@ -47,9 +47,9 @@ ProcessCode MaterialValidation::execute(const AlgorithmContext& context) const {
   // Loop over the number of tracks
   for (std::size_t iTrack = 0; iTrack < m_cfg.ntracks; ++iTrack) {
     // Generate a random phi and eta
-    double phi = phiDist(rng);
-    double eta = etaDist(rng);
-    double theta = 2 * std::atan(std::exp(-eta));
+    long double phi = phiDist(rng);
+    long double eta = etaDist(rng);
+    long double theta = 2 * std::atan(std::exp(-eta));
     Acts::Vector3 direction(std::cos(phi) * std::sin(theta),
                             std::sin(phi) * std::sin(theta), std::cos(theta));
 

@@ -14,7 +14,7 @@
 
 Acts::Result<Acts::LinearizedTrack>
 Acts::HelicalTrackLinearizer::linearizeTrack(
-    const BoundTrackParameters& params, double linPointTime,
+    const BoundTrackParameters& params, long double linPointTime,
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache) const {
@@ -67,40 +67,40 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
-  double d0 = paramsAtPCA(BoundIndices::eBoundLoc0);
+  long double d0 = paramsAtPCA(BoundIndices::eBoundLoc0);
 
-  double phi = paramsAtPCA(BoundIndices::eBoundPhi);
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
+  long double phi = paramsAtPCA(BoundIndices::eBoundPhi);
+  long double sinPhi = std::sin(phi);
+  long double cosPhi = std::cos(phi);
 
-  double theta = paramsAtPCA(BoundIndices::eBoundTheta);
-  double sinTheta = std::sin(theta);
-  double tanTheta = std::tan(theta);
+  long double theta = paramsAtPCA(BoundIndices::eBoundTheta);
+  long double sinTheta = std::sin(theta);
+  long double tanTheta = std::tan(theta);
 
   // q over p
-  double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
+  long double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
   // Rest mass
-  double m0 = params.particleHypothesis().mass();
+  long double m0 = params.particleHypothesis().mass();
   // Momentum
-  double p = params.particleHypothesis().extractMomentum(qOvP);
+  long double p = params.particleHypothesis().extractMomentum(qOvP);
 
   // Speed in units of c
-  double beta = p / fastHypot(p, m0);
+  long double beta = p / fastHypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
-  double betaT = beta * sinTheta;
+  long double betaT = beta * sinTheta;
 
   // Momentum direction at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
 
   // Particle charge
-  double absoluteCharge = params.particleHypothesis().absoluteCharge();
+  long double absoluteCharge = params.particleHypothesis().absoluteCharge();
 
   // get the z-component of the B-field at the PCA
   auto field = m_cfg.bField->getField(VectorHelpers::position(pca), fieldCache);
   if (!field.ok()) {
     return field.error();
   }
-  double Bz = (*field)[eZ];
+  long double Bz = (*field)[eZ];
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
   ActsMatrix<eBoundSize, eLinSize> completeJacobian =
@@ -141,24 +141,24 @@ Acts::HelicalTrackLinearizer::linearizeTrack(
     completeJacobian(eBoundTime, eLinPhi) = -d0 / betaT;
   } else {
     // Helix radius
-    double rho = sinTheta * (1. / qOvP) / Bz;
+    long double rho = sinTheta * (1. / qOvP) / Bz;
     // Sign of helix radius
-    double h = (rho < 0.) ? -1 : 1;
+    long double h = (rho < 0.) ? -1 : 1;
 
     // Quantities from Eq. 5.34 in Ref. (1) (see .hpp)
-    double X = pca(0) - perigeeSurface.center(gctx).x() + rho * sinPhi;
-    double Y = pca(1) - perigeeSurface.center(gctx).y() - rho * cosPhi;
-    double S2 = (X * X + Y * Y);
+    long double X = pca(0) - perigeeSurface.center(gctx).x() + rho * sinPhi;
+    long double Y = pca(1) - perigeeSurface.center(gctx).y() - rho * cosPhi;
+    long double S2 = (X * X + Y * Y);
     // S is the 2D distance from the helix center to the reference point
     // in the x-y plane
-    double S = std::sqrt(S2);
+    long double S = std::sqrt(S2);
 
-    double XoverS2 = X / S2;
-    double YoverS2 = Y / S2;
-    double rhoCotTheta = rho / tanTheta;
-    double rhoOverBetaT = rho / betaT;
+    long double XoverS2 = X / S2;
+    long double YoverS2 = Y / S2;
+    long double rhoCotTheta = rho / tanTheta;
+    long double rhoOverBetaT = rho / betaT;
     // Absolute value of rho over S
-    double absRhoOverS = h * rho / S;
+    long double absRhoOverS = h * rho / S;
 
     // Derivatives can be found in Eq. 5.36 in Ref. (1)
     // Since we propagated to the PCA (point P in Ref. (1)), the points

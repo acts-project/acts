@@ -22,7 +22,7 @@
 namespace Acts {
 
 struct SpacePointContainerConfig {
-  bool useDetailedDoubleMeasurementInfo = false;
+  bool useDetailedlong doubleMeasurementInfo = false;
   bool isInInternalUnits = false;
 
   SpacePointContainerConfig toInternalUnits() const {

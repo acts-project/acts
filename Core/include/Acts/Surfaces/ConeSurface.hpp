@@ -48,7 +48,7 @@ class ConeSurface : public RegularSurface {
   /// @param transform is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
-  ConeSurface(const Transform3& transform, double alpha,
+  ConeSurface(const Transform3& transform, long double alpha,
               bool symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
@@ -58,8 +58,8 @@ class ConeSurface : public RegularSurface {
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the opening angle for cone ssectors
-  ConeSurface(const Transform3& transform, double alpha, double zmin,
-              double zmax, double halfPhi = std::numbers::pi);
+  ConeSurface(const Transform3& transform, long double alpha, long double zmin,
+              long double zmax, long double halfPhi = std::numbers::pi);
 
   /// Constructor from HepTransform and ConeBounds
   ///
@@ -163,7 +163,7 @@ class ConeSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
   ///
@@ -181,7 +181,7 @@ class ConeSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// The pathCorrection for derived classes with thickness
   ///
@@ -189,8 +189,9 @@ class ConeSurface : public RegularSurface {
   /// @param position is the global potion at the correction point
   /// @param direction is the momentum direction at the correction point
   /// @return is the path correction due to incident angle
-  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& direction) const final;
+  long double pathCorrection(const GeometryContext& gctx,
+                             const Vector3& position,
+                             const Vector3& direction) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

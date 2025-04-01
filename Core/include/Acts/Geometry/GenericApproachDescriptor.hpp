@@ -64,7 +64,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   SurfaceIntersection approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-      double nearLimit, double farLimit) const override;
+      long double nearLimit, long double farLimit) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>& containedSurfaces() const override;

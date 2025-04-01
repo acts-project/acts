@@ -31,7 +31,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param splitFactor is the split for pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
   explicit HomogeneousSurfaceMaterial(
-      const MaterialSlab& full, double splitFactor = 1.,
+      const MaterialSlab& full, long double splitFactor = 1.,
       MappingType mappingType = MappingType::Default);
 
   /// Copy Constructor
@@ -63,7 +63,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// - it is effectively a thickness scaling
   ///
   /// @param factor is the scale factor
-  HomogeneousSurfaceMaterial& scale(double factor) final;
+  HomogeneousSurfaceMaterial& scale(long double factor) final;
 
   /// @copydoc ISurfaceMaterial::materialSlab(const Vector2&) const
   ///

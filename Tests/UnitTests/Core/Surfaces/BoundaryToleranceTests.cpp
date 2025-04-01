@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
     Vector2 ll(-1, -1);
     Vector2 ur(1, 1);
     auto tolerance = BoundaryTolerance::AbsoluteBound(
-        1.5, std::numeric_limits<double>::infinity());
+        1.5, std::numeric_limits<long double>::infinity());
     BOOST_CHECK(
         detail::insideAlignedBox(ll, ur, tolerance, {0, 0}, std::nullopt));
     BOOST_CHECK(

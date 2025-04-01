@@ -43,8 +43,8 @@ class Particle {
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  Particle(Barcode particleId, Acts::PdgParticle pdg, double charge,
-           double mass)
+  Particle(Barcode particleId, Acts::PdgParticle pdg, long double charge,
+           long double mass)
       : m_particleId(particleId), m_pdg(pdg), m_charge(charge), m_mass(mass) {}
   /// Construct a particle at rest from a PDG particle number.
   ///
@@ -80,12 +80,12 @@ class Particle {
     return *this;
   }
   /// Set the charge.
-  Particle setCharge(double charge) {
+  Particle setCharge(long double charge) {
     m_charge = charge;
     return *this;
   }
   /// Set the mass.
-  Particle setMass(double mass) {
+  Particle setMass(long double mass) {
     m_mass = mass;
     return *this;
   }
@@ -100,13 +100,14 @@ class Particle {
     return *this;
   }
   /// Set the space-time position four-vector from three-position and time.
-  Particle &setPosition4(const Acts::Vector3 &position, double time) {
+  Particle &setPosition4(const Acts::Vector3 &position, long double time) {
     m_position4.segment<3>(Acts::ePos0) = position;
     m_position4[Acts::eTime] = time;
     return *this;
   }
   /// Set the space-time position four-vector from scalar components.
-  Particle &setPosition4(double x, double y, double z, double time) {
+  Particle &setPosition4(long double x, long double y, long double z,
+                         long double time) {
     m_position4[Acts::ePos0] = x;
     m_position4[Acts::ePos1] = y;
     m_position4[Acts::ePos2] = z;
@@ -120,7 +121,7 @@ class Particle {
     return *this;
   }
   /// Set the direction three-vector from scalar components.
-  Particle &setDirection(double dx, double dy, double dz) {
+  Particle &setDirection(long double dx, long double dy, long double dz) {
     m_direction[Acts::ePos0] = dx;
     m_direction[Acts::ePos1] = dy;
     m_direction[Acts::ePos2] = dz;
@@ -128,7 +129,7 @@ class Particle {
     return *this;
   }
   /// Set the absolute momentum.
-  Particle &setAbsoluteMomentum(double absMomentum) {
+  Particle &setAbsoluteMomentum(long double absMomentum) {
     m_absMomentum = absMomentum;
     return *this;
   }
@@ -138,7 +139,7 @@ class Particle {
   /// Energy loss corresponds to a negative change. If the updated energy
   /// would result in an unphysical value, the particle is put to rest, i.e.
   /// its absolute momentum is set to zero.
-  Particle &correctEnergy(double delta) {
+  Particle &correctEnergy(long double delta) {
     const auto newEnergy = std::hypot(m_mass, m_absMomentum) + delta;
     if (newEnergy <= m_mass) {
       m_absMomentum = 0.;
@@ -159,11 +160,11 @@ class Particle {
     return Acts::makeAbsolutePdgParticle(pdg());
   }
   /// Particle charge.
-  double charge() const { return m_charge; }
+  long double charge() const { return m_charge; }
   /// Particle absolute charge.
-  double absoluteCharge() const { return std::abs(m_charge); }
+  long double absoluteCharge() const { return std::abs(m_charge); }
   /// Particle mass.
-  double mass() const { return m_mass; }
+  long double mass() const { return m_mass; }
 
   /// Particle hypothesis.
   Acts::ParticleHypothesis hypothesis() const {
@@ -172,7 +173,7 @@ class Particle {
         Acts::AnyCharge{static_cast<float>(absoluteCharge())});
   }
   /// Particl qOverP.
-  double qOverP() const {
+  long double qOverP() const {
     return hypothesis().qOverP(absoluteMomentum(), charge());
   }
 
@@ -181,7 +182,7 @@ class Particle {
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
-  double time() const { return m_position4[Acts::eTime]; }
+  long double time() const { return m_position4[Acts::eTime]; }
   /// Energy-momentum four-vector.
   Acts::Vector4 fourMomentum() const {
     Acts::Vector4 mom4;
@@ -195,19 +196,19 @@ class Particle {
   /// Unit three-direction, i.e. the normalized momentum three-vector.
   const Acts::Vector3 &direction() const { return m_direction; }
   /// Polar angle.
-  double theta() const { return Acts::VectorHelpers::theta(direction()); }
+  long double theta() const { return Acts::VectorHelpers::theta(direction()); }
   /// Azimuthal angle.
-  double phi() const { return Acts::VectorHelpers::phi(direction()); }
+  long double phi() const { return Acts::VectorHelpers::phi(direction()); }
   /// Absolute momentum in the x-y plane.
-  double transverseMomentum() const {
+  long double transverseMomentum() const {
     return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
-  double absoluteMomentum() const { return m_absMomentum; }
+  long double absoluteMomentum() const { return m_absMomentum; }
   /// Absolute momentum.
   Acts::Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
-  double energy() const { return std::hypot(m_mass, m_absMomentum); }
+  long double energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
   bool isAlive() const { return 0. < m_absMomentum; }
@@ -223,26 +224,26 @@ class Particle {
   /// Set the proper time in the particle rest frame.
   ///
   /// @param properTime passed proper time in the rest frame
-  Particle &setProperTime(double properTime) {
+  Particle &setProperTime(long double properTime) {
     m_properTime = properTime;
     return *this;
   }
   /// Proper time in the particle rest frame.
-  double properTime() const { return m_properTime; }
+  long double properTime() const { return m_properTime; }
 
   /// Set the accumulated material measured in radiation/interaction lengths.
   ///
   /// @param pathInX0 accumulated material measured in radiation lengths
   /// @param pathInL0 accumulated material measured in interaction lengths
-  Particle &setMaterialPassed(double pathInX0, double pathInL0) {
+  Particle &setMaterialPassed(long double pathInX0, long double pathInL0) {
     m_pathInX0 = pathInX0;
     m_pathInL0 = pathInL0;
     return *this;
   }
   /// Accumulated path within material measured in radiation lengths.
-  double pathInX0() const { return m_pathInX0; }
+  long double pathInX0() const { return m_pathInX0; }
   /// Accumulated path within material measured in interaction lengths.
-  double pathInL0() const { return m_pathInL0; }
+  long double pathInL0() const { return m_pathInL0; }
 
   /// Set the reference surface.
   ///
@@ -312,17 +313,17 @@ class Particle {
   /// PDG particle number.
   Acts::PdgParticle m_pdg = Acts::PdgParticle::eInvalid;
   // Particle charge and mass.
-  double m_charge = 0.;
-  double m_mass = 0.;
+  long double m_charge = 0.;
+  long double m_mass = 0.;
   // kinematics, i.e. things that change over the particle lifetime.
   Acts::Vector3 m_direction = Acts::Vector3::UnitZ();
-  double m_absMomentum = 0.;
+  long double m_absMomentum = 0.;
   Acts::Vector4 m_position4 = Acts::Vector4::Zero();
   /// proper time in the particle rest frame
-  double m_properTime = 0.;
+  long double m_properTime = 0.;
   // accumulated material
-  double m_pathInX0 = 0.;
-  double m_pathInL0 = 0.;
+  long double m_pathInX0 = 0.;
+  long double m_pathInL0 = 0.;
   /// number of hits
   std::uint32_t m_numberOfHits = 0;
   /// reference surface

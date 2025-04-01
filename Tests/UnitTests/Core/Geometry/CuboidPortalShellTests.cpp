@@ -229,11 +229,13 @@ BOOST_DATA_TEST_CASE(XYZDirection,
 
   using enum CuboidVolumeBounds::Face;
   auto bounds1 = std::make_shared<CuboidVolumeBounds>(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+      std::initializer_list<
+          std::pair<CuboidVolumeBounds::BoundValues, long double>>{
           {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
   auto bounds2 = std::make_shared<CuboidVolumeBounds>(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+      std::initializer_list<
+          std::pair<CuboidVolumeBounds::BoundValues, long double>>{
           {boundDir, 100_mm}, {boundDirOrth1, 30_mm}, {boundDirOrth2, 100_mm}});
 
   TrackingVolume vol1(Transform3{Translation3{Vector3::Unit(dirIdx) * -100_mm}},

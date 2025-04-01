@@ -10,7 +10,7 @@
 
 ActsFatras::StandardChargedElectroMagneticInteractions
 ActsFatras::makeStandardChargedElectroMagneticInteractions(
-    double minimumAbsMomentum) {
+    long double minimumAbsMomentum) {
   StandardChargedElectroMagneticInteractions pl;
   pl.get<detail::StandardBetheBloch>().selectOutputParticle.valMin =
       minimumAbsMomentum;

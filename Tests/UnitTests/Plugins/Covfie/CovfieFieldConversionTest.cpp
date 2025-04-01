@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField1) {
             binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
   };
 
-  std::vector<double> xPos = {0., 1., 2., 3.};
-  std::vector<double> yPos = {0., 1., 2., 3.};
-  std::vector<double> zPos = {0., 1., 2., 3.};
+  std::vector<long double> xPos = {0., 1., 2., 3.};
+  std::vector<long double> yPos = {0., 1., 2., 3.};
+  std::vector<long double> zPos = {0., 1., 2., 3.};
 
   std::vector<Acts::Vector3> bField_xyz;
   for (int i = 0; i < 64; i++) {
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedMagneticField2) {
             binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
   };
 
-  std::vector<double> xPos = {8., 12., 16., 20.};
-  std::vector<double> yPos = {8., 12., 16., 20.};
-  std::vector<double> zPos = {8., 12., 16., 20.};
+  std::vector<long double> xPos = {8., 12., 16., 20.};
+  std::vector<long double> yPos = {8., 12., 16., 20.};
+  std::vector<long double> zPos = {8., 12., 16., 20.};
 
   std::vector<Acts::Vector3> bField_xyz;
   for (int i = 0; i < 64; i++) {

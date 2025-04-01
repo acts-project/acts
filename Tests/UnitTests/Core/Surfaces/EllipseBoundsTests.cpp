@@ -26,15 +26,15 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const double innerRx = 10.;
-const double innerRy = 15.;
-const double phiSector = std::numbers::pi / 2.;
-const double averagePhi = 0.;
+const long double innerRx = 10.;
+const long double innerRy = 15.;
+const long double phiSector = std::numbers::pi / 2.;
+const long double averagePhi = 0.;
 
 /// Unit test for creating compliant/non-compliant EllipseBounds object
 BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
-  const double outerRx = 25.;
-  const double outerRy = 30.;
+  const long double outerRx = 25.;
+  const long double outerRy = 30.;
 
   /// Test default construction
   // default construction is deleted
@@ -54,13 +54,13 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
 
 // Streaning and recreation test
 BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
-  const double outerRx = 25.;
-  const double outerRy = 30.;
+  const long double outerRx = 25.;
+  const long double outerRy = 30.;
 
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
   auto valvector = original.values();
-  std::array<double, EllipseBounds::eSize> values{};
+  std::array<long double, EllipseBounds::eSize> values{};
   std::copy_n(valvector.begin(), EllipseBounds::eSize, values.begin());
   EllipseBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);
@@ -68,8 +68,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
 
 // Unit tests for AnnulusBounds exception throwing
 BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
-  const double outerRx = 25.;
-  const double outerRy = 30.;
+  const long double outerRx = 25.;
+  const long double outerRy = 30.;
 
   // Exception for innerRx < 0
   BOOST_CHECK_THROW(
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
 
 /// Unit tests for EllipseBounds properties
 BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
-  const double outerRx = 15.;  // != 25
-  const double outerRy = 20.;  // != 30
+  const long double outerRx = 15.;  // != 25
+  const long double outerRy = 20.;  // != 30
 
   /// Test clone
   EllipseBounds ellipseBoundsObject(innerRx, innerRy, outerRx, outerRy,
@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 }
 /// Unit test for testing EllipseBounds assignment
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {
-  const double outerRx = 15.;  // != 25
-  const double outerRy = 20.;  // != 30
+  const long double outerRx = 15.;  // != 25
+  const long double outerRy = 20.;  // != 30
 
   EllipseBounds ellipseBoundsObject(innerRx, outerRx, innerRy, outerRy,
                                     averagePhi, phiSector);

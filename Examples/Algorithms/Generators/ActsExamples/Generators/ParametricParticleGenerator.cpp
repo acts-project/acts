@@ -38,32 +38,32 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
   m_phiDist = UniformReal(m_cfg.phiMin, m_cfg.phiMax);
 
   if (m_cfg.etaUniform) {
-    double etaMin = Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMin);
-    double etaMax = Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMax);
+    long double etaMin = Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMin);
+    long double etaMax = Acts::AngleHelpers::etaFromTheta(m_cfg.thetaMax);
 
     UniformReal etaDist(etaMin, etaMax);
 
     m_sinCosThetaDist =
-        [=](RandomEngine& rng) mutable -> std::pair<double, double> {
-      const double eta = etaDist(rng);
-      const double theta = Acts::AngleHelpers::thetaFromEta(eta);
+        [=](RandomEngine& rng) mutable -> std::pair<long double, long double> {
+      const long double eta = etaDist(rng);
+      const long double theta = Acts::AngleHelpers::thetaFromEta(eta);
       return {std::sin(theta), std::cos(theta)};
     };
   } else {
     // since we want to draw the direction uniform on the unit sphere, we must
     // draw from cos(theta) instead of theta. see e.g.
     // https://mathworld.wolfram.com/SpherePointPicking.html
-    double cosThetaMin = std::cos(m_cfg.thetaMin);
+    long double cosThetaMin = std::cos(m_cfg.thetaMin);
     // ensure upper bound is included. see e.g.
     // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-    double cosThetaMax = std::nextafter(std::cos(m_cfg.thetaMax),
-                                        std::numeric_limits<double>::max());
+    long double cosThetaMax = std::nextafter(
+        std::cos(m_cfg.thetaMax), std::numeric_limits<long double>::max());
 
     UniformReal cosThetaDist(cosThetaMin, cosThetaMax);
 
     m_sinCosThetaDist =
-        [=](RandomEngine& rng) mutable -> std::pair<double, double> {
-      const double cosTheta = cosThetaDist(rng);
+        [=](RandomEngine& rng) mutable -> std::pair<long double, long double> {
+      const long double cosTheta = cosThetaDist(rng);
       return {std::sqrt(1 - cosTheta * cosTheta), cosTheta};
     };
   }
@@ -72,14 +72,14 @@ ParametricParticleGenerator::ParametricParticleGenerator(const Config& cfg)
     // distributes p or pt uniformly in log space
     UniformReal dist(std::log(m_cfg.pMin), std::log(m_cfg.pMax));
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+    m_somePDist = [=](RandomEngine& rng) mutable -> long double {
       return std::exp(dist(rng));
     };
   } else {
     // distributes p or pt uniformly
     UniformReal dist(m_cfg.pMin, m_cfg.pMax);
 
-    m_somePDist = [=](RandomEngine& rng) mutable -> double {
+    m_somePDist = [=](RandomEngine& rng) mutable -> long double {
       return dist(rng);
     };
   }
@@ -103,16 +103,16 @@ ParametricParticleGenerator::operator()(RandomEngine& rng) {
     // draw parameters
     const unsigned int type = m_particleTypeChoice(rng);
     const Acts::PdgParticle pdg = m_pdgChoices[type];
-    const double q = m_qChoices[type];
-    const double phi = m_phiDist(rng);
-    const double someP = m_somePDist(rng);
+    const long double q = m_qChoices[type];
+    const long double phi = m_phiDist(rng);
+    const long double someP = m_somePDist(rng);
 
     const auto [sinTheta, cosTheta] = m_sinCosThetaDist(rng);
     // we already have sin/cos theta. they can be used directly
     const Acts::Vector3 dir = {sinTheta * std::cos(phi),
                                sinTheta * std::sin(phi), cosTheta};
 
-    const double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
+    const long double p = someP * (m_cfg.pTransverse ? 1. / sinTheta : 1.);
 
     // construct the particle;
     SimParticleState particle(pid, pdg, q, m_mass);

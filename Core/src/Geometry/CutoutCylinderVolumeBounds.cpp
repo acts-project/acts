@@ -28,7 +28,7 @@
 
 namespace Acts {
 
-std::vector<double> CutoutCylinderVolumeBounds::values() const {
+std::vector<long double> CutoutCylinderVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -46,11 +46,12 @@ void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool CutoutCylinderVolumeBounds::inside(const Vector3& gpos, double tol) const {
+bool CutoutCylinderVolumeBounds::inside(const Vector3& gpos,
+                                        long double tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  double ros = perp(gpos);
+  long double ros = perp(gpos);
 
   bool insideR = (ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol);
   bool insideZ = std::abs(gpos.z()) <= get(eHalfLengthZ) + tol;
@@ -90,8 +91,8 @@ std::vector<OrientedSurface> CutoutCylinderVolumeBounds::orientedSurfaces(
       OrientedSurface{std::move(cutoutInner), Direction::AlongNormal()};
 
   // z position of the pos and neg choke points
-  double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
-  double zChoke = get(eHalfLengthZcutout) + hlChoke;
+  long double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
+  long double zChoke = get(eHalfLengthZcutout) + hlChoke;
 
   if (m_innerCylinderBounds != nullptr) {
     auto posChokeTrf = transform * Translation3(Vector3(0, 0, zChoke));
@@ -166,7 +167,7 @@ std::ostream& CutoutCylinderVolumeBounds::toStream(std::ostream& sl) const {
 
 void CutoutCylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
-    double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
+    long double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
     m_innerCylinderBounds =
         std::make_shared<CylinderBounds>(get(eMinR), hlChoke);
   }

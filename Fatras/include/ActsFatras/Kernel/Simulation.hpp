@@ -38,9 +38,9 @@ struct SingleParticleSimulation {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
   /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
+  long double maxStepSize = std::numeric_limits<long double>::max();
   /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
+  long double pathLimit = std::numeric_limits<long double>::max();
   /// Decay module.
   decay_t decay;
   /// Interaction list containing the simulated interactions.

@@ -117,21 +117,21 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
   reference.pretranslate(Vector3(1., 2., 3.));
   reference.rotate(Eigen::AngleAxis(0.12334, Vector3(1., 2., 3).normalized()));
 
-  std::vector<double> referenceT = {1., 2., 3.};
-  std::vector<double> referenceR = {0.992946,   -0.0975562, 0.0673888,
-                                    0.0997267,  0.994574,   -0.0296247,
-                                    -0.0641331, 0.0361362,  0.997287};
+  std::vector<long double> referenceT = {1., 2., 3.};
+  std::vector<long double> referenceR = {0.992946,   -0.0975562, 0.0673888,
+                                         0.0997267,  0.994574,   -0.0296247,
+                                         -0.0641331, 0.0361362,  0.997287};
 
   // Test standard writing
   Transform3JsonConverter::Options standardOptions{true, false};
   nlohmann::json standardOut =
       Transform3JsonConverter::toJson(reference, standardOptions);
   // Check translation read back in
-  BOOST_CHECK(standardOut["translation"].get<std::vector<double>>() ==
+  BOOST_CHECK(standardOut["translation"].get<std::vector<long double>>() ==
               referenceT);
   // Check rotation read back in - not transposed
-  std::vector<double> readR =
-      standardOut["rotation"].get<std::vector<double>>();
+  std::vector<long double> readR =
+      standardOut["rotation"].get<std::vector<long double>>();
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[i], rr, 1e-5);
   }
@@ -141,12 +141,12 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
   nlohmann::json transposeOut =
       Transform3JsonConverter::toJson(reference, transposeOptions);
   // Check translation read back in
-  BOOST_CHECK(transposeOut["translation"].get<std::vector<double>>() ==
+  BOOST_CHECK(transposeOut["translation"].get<std::vector<long double>>() ==
               referenceT);
 
   // Check rotation read back in - transposed
   std::vector<std::size_t> transposedIndices = {0, 3, 6, 1, 4, 7, 2, 5, 8};
-  readR = transposeOut["rotation"].get<std::vector<double>>();
+  readR = transposeOut["rotation"].get<std::vector<long double>>();
   for (auto [i, rr] : Acts::enumerate(referenceR)) {
     CHECK_CLOSE_ABS(readR[transposedIndices[i]], rr, 1e-5);
   }

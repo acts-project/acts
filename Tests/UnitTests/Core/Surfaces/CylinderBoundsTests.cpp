@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
   /// Test default construction
   // default construction is deleted
 
-  const double radius = 0.5;
-  const double halfZ = 10.;
-  const double halfPhi = std::numbers::pi / 2.;
-  const double averagePhi = std::numbers::pi / 2.;
-  const double bevelMinZ = -std::numbers::pi / 4.;
-  const double bevelMaxZ = std::numbers::pi / 6.;
+  const long double radius = 0.5;
+  const long double halfZ = 10.;
+  const long double halfPhi = std::numbers::pi / 2.;
+  const long double averagePhi = std::numbers::pi / 2.;
+  const long double bevelMinZ = -std::numbers::pi / 4.;
+  const long double bevelMaxZ = std::numbers::pi / 6.;
 
   BOOST_CHECK_EQUAL(CylinderBounds(radius, halfZ).type(),
                     SurfaceBounds::eCylinder);
@@ -58,23 +58,23 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsConstruction) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderBoundsRecreation) {
-  const double radius = 0.5;
-  const double halfZ = 10.;
+  const long double radius = 0.5;
+  const long double halfZ = 10.;
 
   // Test construction with radii and default sector
   auto original = CylinderBounds(radius, halfZ);
   auto valvector = original.values();
-  std::array<double, CylinderBounds::eSize> values{};
+  std::array<long double, CylinderBounds::eSize> values{};
   std::copy_n(valvector.begin(), CylinderBounds::eSize, values.begin());
   CylinderBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderBoundsException) {
-  const double radius = 0.5;
-  const double halfZ = 10.;
-  const double halfPhi = std::numbers::pi / 2.;
-  const double averagePhi = std::numbers::pi / 2.;
+  const long double radius = 0.5;
+  const long double halfZ = 10.;
+  const long double halfPhi = std::numbers::pi / 2.;
+  const long double averagePhi = std::numbers::pi / 2.;
 
   /// Negative radius
   BOOST_CHECK_THROW(CylinderBounds(-radius, halfZ, halfPhi, averagePhi),
@@ -100,12 +100,12 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsException) {
 /// Unit tests for CylinderBounds properties
 BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   // CylinderBounds object of radius 0.5 and halfZ 20
-  const double radius = 0.5;
-  const double halfZ = 20.;                        // != 10.
-  const double halfPhi = std::numbers::pi / 4.;    // != pi/2
-  const double averagePhi = 0.;                    // != pi/2
-  const double bevelMinZ = std::numbers::pi / 4.;  // != -pi/4
-  const double bevelMaxZ = std::numbers::pi / 6.;
+  const long double radius = 0.5;
+  const long double halfZ = 20.;                        // != 10.
+  const long double halfPhi = std::numbers::pi / 4.;    // != pi/2
+  const long double averagePhi = 0.;                    // != pi/2
+  const long double bevelMinZ = std::numbers::pi / 4.;  // != -pi/4
+  const long double bevelMaxZ = std::numbers::pi / 6.;
 
   CylinderBounds cylinderBoundsObject(radius, halfZ);
   CylinderBounds cylinderBoundsSegment(radius, halfZ, halfPhi, averagePhi);
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
 
 /// Unit test for testing CylinderBounds assignment
 BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment) {
-  const double radius = 0.5;
-  const double halfZ = 20.;  // != 10.
+  const long double radius = 0.5;
+  const long double halfZ = 20.;  // != 10.
 
   CylinderBounds cylinderBoundsObject(radius, halfZ);
   CylinderBounds assignedCylinderBounds(10.5, 6.6);

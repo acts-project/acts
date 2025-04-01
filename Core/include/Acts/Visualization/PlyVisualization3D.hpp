@@ -21,15 +21,15 @@
 
 namespace Acts {
 
-template <typename T = double>
+template <typename T = long double>
 
 /// @brief Helper to write out PlyVisualization3D visualization format
 class PlyVisualization3D : public IVisualization3D {
  public:
-  static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
-                "Use either double or float");
+  static_assert(std::is_same_v<T, long double> || std::is_same_v<T, float>,
+                "Use either long double or float");
 
-  /// Stored value type, should be double or float
+  /// Stored value type, should be long double or float
   using ValueType = T;
 
   /// Type of a vertex based on the value type

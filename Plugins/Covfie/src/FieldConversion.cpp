@@ -35,10 +35,10 @@ auto newBuilder(const magnetic_field_t& magneticField,
   // as a half-open interval. Has the potential to introduce very minor
   // floating point errors, but no easy way to fix this right now.
   // TODO: Fix the aforementioned problem.
-  std::vector<double> maxima = {
-      std::nexttoward(max[0], -std::numeric_limits<double>::infinity()),
-      std::nexttoward(max[1], -std::numeric_limits<double>::infinity()),
-      std::nexttoward(max[1], -std::numeric_limits<double>::infinity()),
+  std::vector<long double> maxima = {
+      std::nexttoward(max[0], -std::numeric_limits<long double>::infinity()),
+      std::nexttoward(max[1], -std::numeric_limits<long double>::infinity()),
+      std::nexttoward(max[1], -std::numeric_limits<long double>::infinity()),
   };
 
   Field field(covfie::make_parameter_pack(
@@ -46,7 +46,7 @@ auto newBuilder(const magnetic_field_t& magneticField,
 
   Field::view_t view(field);
 
-  std::array<double, 3> sampleSpacing = {
+  std::array<long double, 3> sampleSpacing = {
       (max.x() - min.x()) / (nPoints[0] - 1),
       (max.y() - min.y()) / (nPoints[1] - 1),
       (max.z() - min.z()) / (nPoints[2] - 1)};
@@ -168,8 +168,8 @@ InterpolatedField covfieField(
     const Acts::InterpolatedMagneticField& magneticField) {
   Acts::MagneticFieldContext ctx;
   auto cache = magneticField.makeCache(ctx);
-  const std::vector<double>& old_min = magneticField.getMin();
-  const std::vector<double>& old_max = magneticField.getMax();
+  const std::vector<long double>& old_min = magneticField.getMin();
+  const std::vector<long double>& old_max = magneticField.getMax();
   const std::vector<std::size_t>& old_nbins = magneticField.getNBins();
   Acts::Vector3 min{old_min.at(0), old_min.at(1), old_min.at(2)};
   Acts::Vector3 max{old_max.at(0), old_max.at(1), old_max.at(2)};

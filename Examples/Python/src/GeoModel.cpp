@@ -100,14 +100,14 @@ void addGeoModel(Context& ctx) {
         .def("toSensitiveSurface", &Acts::GeoTubeConverter::toSensitiveSurface)
         .def("toPassiveSurface", &Acts::GeoTubeConverter::toPassiveSurface);
 
-    py::class_<Acts::GeoUnionDoubleTrdConverter, Acts::IGeoShapeConverter,
-               std::shared_ptr<Acts::GeoUnionDoubleTrdConverter>>(
-        gm, "GeoUnionDoubleTrdConverter")
+    py::class_<Acts::GeoUnionlong doubleTrdConverter, Acts::IGeoShapeConverter,
+               std::shared_ptr<Acts::GeoUnionlong doubleTrdConverter>>(
+        gm, "GeoUnionlong doubleTrdConverter")
         .def(py::init<>())
         .def("toSensitiveSurface",
-             &Acts::GeoUnionDoubleTrdConverter::toSensitiveSurface)
+             &Acts::GeoUnionlong doubleTrdConverter::toSensitiveSurface)
         .def("toPassiveSurface",
-             &Acts::GeoUnionDoubleTrdConverter::toPassiveSurface);
+             &Acts::GeoUnionlong doubleTrdConverter::toPassiveSurface);
 
     py::class_<Acts::GeoIntersectionAnnulusConverter, Acts::IGeoShapeConverter,
                std::shared_ptr<Acts::GeoIntersectionAnnulusConverter>>(
@@ -239,7 +239,7 @@ void addGeoModel(Context& ctx) {
       "splitDiscModule",
       [](const Acts::GeometryContext& gctx,
          std::shared_ptr<const GeoModelDetectorElement> detElement,
-         const std::vector<std::pair<double, double>>& patterns,
+         const std::vector<std::pair<long double, long double>>& patterns,
          Acts::Logging::Level logLevel) {
         auto logger = Acts::getDefaultLogger("ITkSlitBarrel", logLevel);
         auto name = detElement->databaseEntryName();

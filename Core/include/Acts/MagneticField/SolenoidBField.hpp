@@ -76,15 +76,15 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// Config struct for the SolenoidBfield.
   struct Config {
     /// Radius at which the coils are located.
-    double radius;
+    long double radius;
     /// Extent of the solenoid in z. It goes from
     /// -length/2 to +length/2 by convention
-    double length;
+    long double length;
     /// The number of coils that make up the solenoid
     std::size_t nCoils;
     /// The target magnetic field strength at the center.
     /// This will be used to scale coefficients
-    double bMagCenter;
+    long double bMagCenter;
   };
 
   /// @brief the constructor with a shared pointer
@@ -112,19 +112,19 @@ class SolenoidBField final : public MagneticFieldProvider {
 
  private:
   Config m_cfg;
-  double m_scale;
-  double m_dz;
-  double m_R2;
+  long double m_scale;
+  long double m_dz;
+  long double m_R2;
 
-  Vector2 multiCoilField(const Vector2& pos, double scale) const;
+  Vector2 multiCoilField(const Vector2& pos, long double scale) const;
 
-  Vector2 singleCoilField(const Vector2& pos, double scale) const;
+  Vector2 singleCoilField(const Vector2& pos, long double scale) const;
 
-  double B_r(const Vector2& pos, double scale) const;
+  long double B_r(const Vector2& pos, long double scale) const;
 
-  double B_z(const Vector2& pos, double scale) const;
+  long double B_z(const Vector2& pos, long double scale) const;
 
-  double k2(double r, double z) const;
+  long double k2(long double r, long double z) const;
 };
 
 }  // namespace Acts

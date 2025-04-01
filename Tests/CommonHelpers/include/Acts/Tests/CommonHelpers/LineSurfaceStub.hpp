@@ -18,7 +18,8 @@ class LineSurfaceStub : public LineSurface {
  public:
   LineSurfaceStub() = delete;
   //
-  LineSurfaceStub(const Transform3& htrans, double radius, double halfz)
+  LineSurfaceStub(const Transform3& htrans, long double radius,
+                  long double halfz)
       : GeometryObject(), LineSurface(htrans, radius, halfz) { /* nop */ }
   //
   explicit LineSurfaceStub(const Transform3& htrans,

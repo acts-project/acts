@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // RectangleBounds) to construct
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
+  const long double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
   auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
   BOOST_CHECK_EQUAL(pPlaneLayer->layerType(), LayerType::active);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
-  const double thickness(1.0);
+  const long double thickness(1.0);
   SurfaceArrayCreator sac;
   std::size_t binsX(2), binsY(4);
   auto pSurfaceArray = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX,
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
 BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
+  const long double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
   auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
   // auto planeSurface = pPlaneLayer->surfaceRepresentation();

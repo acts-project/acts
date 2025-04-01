@@ -121,7 +121,8 @@ Acts::Vector3 HepMC3Vertex::position(
   return vec;
 }
 
-double HepMC3Vertex::time(const std::shared_ptr<HepMC3::GenVertex>& vertex) {
+long double HepMC3Vertex::time(
+    const std::shared_ptr<HepMC3::GenVertex>& vertex) {
   return vertex->position().t();
 }
 
@@ -164,7 +165,7 @@ void HepMC3Vertex::position(const std::shared_ptr<HepMC3::GenVertex>& vertex,
 }
 
 void HepMC3Vertex::time(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-                        double time) {
+                        long double time) {
   HepMC3::FourVector fVec(vertex->position().x(), vertex->position().y(),
                           vertex->position().z(), time);
   vertex->set_position(fVec);

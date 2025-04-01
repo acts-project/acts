@@ -24,12 +24,12 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const double minHalfX = 1.;
-const double maxHalfX = 5.;
-const double rMin = 2.;
-const double rMax = 6.;
-const double averagePhi = 0.;
-const double stereo = 0.1;
+const long double minHalfX = 1.;
+const long double maxHalfX = 5.;
+const long double rMin = 2.;
+const long double rMax = 6.;
+const long double averagePhi = 0.;
+const long double stereo = 0.1;
 
 /// Unit tests for DiscTrapezoidBounds constructors
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsRecreation) {
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi,
                                stereo);
   auto valvector = original.values();
-  std::array<double, DiscTrapezoidBounds::eSize> values{};
+  std::array<long double, DiscTrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), DiscTrapezoidBounds::eSize, values.begin());
   DiscTrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);

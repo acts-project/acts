@@ -43,18 +43,19 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param halfXposY maximal half length X, definition at positive Y
   /// @param halfY half length Y - defined at x=0
   /// @param rotAngle: rotation angle of the bounds w.r.t coordinate axes
-  explicit TrapezoidBounds(double halfXnegY, double halfXposY, double halfY,
-                           double rotAngle = 0.) noexcept(false);
+  explicit TrapezoidBounds(long double halfXnegY, long double halfXposY,
+                           long double halfY,
+                           long double rotAngle = 0.) noexcept(false);
 
   /// Constructor for symmetric Trapezoid - from fixed size array
   ///
   /// @param values the values to be stream in
-  explicit TrapezoidBounds(const std::array<double, eSize>& values) noexcept(
-      false);
+  explicit TrapezoidBounds(
+      const std::array<long double, eSize>& values) noexcept(false);
 
   BoundsType type() const final { return SurfaceBounds::eTrapezoid; }
 
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -120,10 +121,10 @@ class TrapezoidBounds : public PlanarBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
   RectangleBounds m_boundingBox;
 
   void rotateBoundingBox() noexcept(false);

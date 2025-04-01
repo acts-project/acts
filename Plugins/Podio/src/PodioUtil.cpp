@@ -44,7 +44,7 @@ std::shared_ptr<const bounds_t> createBounds(
   throw_assert(surface.boundValuesSize == S,
                "Unexpected number of bound values");
 
-  std::array<double, S> values{};
+  std::array<long double, S> values{};
   for (std::size_t i = 0; i < S; i++) {
     values.at(i) = surface.boundValues.at(i);
   }
@@ -219,9 +219,9 @@ void recoverDynamicColumns(
         dynamic) {
   // See
   // https://github.com/AIDASoft/podio/blob/858c0ff0b841705d1b18aafd57569fcbd1beda91/include/podio/UserDataCollection.h#L30-L31
-  using types = TypeList<float, double, std::int8_t, std::int16_t, std::int32_t,
-                         std::int64_t, std::uint8_t, std::uint16_t,
-                         std::uint32_t, std::uint64_t>;
+  using types = TypeList<float, long double, std::int8_t, std::int16_t,
+                         std::int32_t, std::int64_t, std::uint8_t,
+                         std::uint16_t, std::uint32_t, std::uint64_t>;
 
   std::vector<std::string> available = frame.getAvailableCollections();
 

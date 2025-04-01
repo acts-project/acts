@@ -178,7 +178,7 @@ struct Fixture {
   Acts::MeasurementSelector::Config measurementSelectorCfg = {
       // global default: no chi2 cut, only one measurement per surface
       {Acts::GeometryIdentifier(),
-       {{}, {std::numeric_limits<double>::max()}, {1u}}},
+       {{}, {std::numeric_limits<long double>::max()}, {1u}}},
   };
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
@@ -193,7 +193,7 @@ struct Fixture {
 
   std::unique_ptr<const Acts::Logger> logger;
 
-  explicit Fixture(double bz)
+  explicit Fixture(long double bz)
       : detector(geoCtx),
         ckf(makeConstantFieldPropagator(detector.geometry, bz)),
         logger(Acts::getDefaultLogger("CkfTest", Acts::Logging::INFO)) {
@@ -260,7 +260,7 @@ struct Fixture {
 
   // Construct a propagator using a constant magnetic field along z.
   static ConstantFieldPropagator makeConstantFieldPropagator(
-      std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
+      std::shared_ptr<const Acts::TrackingGeometry> geo, long double bz) {
     Acts::Navigator::Config cfg{std::move(geo)};
     cfg.resolvePassive = false;
     cfg.resolveMaterial = true;

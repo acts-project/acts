@@ -31,9 +31,9 @@ using namespace Acts::UnitLiterals;
 
 struct BenchmarkStepper {
   unsigned int toys{};
-  double ptInGeV{};
-  double BzInT{};
-  double maxPathInM{};
+  long double ptInGeV{};
+  long double BzInT{};
+  long double maxPathInM{};
   unsigned int lvl{};
   bool withCov{};
 
@@ -44,9 +44,9 @@ struct BenchmarkStepper {
       desc.add_options()
         ("help", "produce help message")
         ("toys",po::value<unsigned int>(&toys)->default_value(20000),"number of tracks to propagate")
-        ("pT",po::value<double>(&ptInGeV)->default_value(1),"transverse momentum in GeV")
-        ("B",po::value<double>(&BzInT)->default_value(2),"z-component of B-field in T")
-        ("path",po::value<double>(&maxPathInM)->default_value(5),"maximum path length in m")
+        ("pT",po::value<long double>(&ptInGeV)->default_value(1),"transverse momentum in GeV")
+        ("B",po::value<long double>(&BzInT)->default_value(2),"z-component of B-field in T")
+        ("path",po::value<long double>(&maxPathInM)->default_value(5),"maximum path length in m")
         ("cov",po::value<bool>(&withCov)->default_value(true),"propagation with covariance matrix")
         ("verbose",po::value<unsigned int>(&lvl)->default_value(Acts::Logging::INFO),"logging level");
       // clang-format on
@@ -111,7 +111,7 @@ struct BenchmarkStepper {
     BoundTrackParameters pars = BoundTrackParameters::createCurvilinear(
         pos4, dir, +1 / ptInGeV, covOpt, ParticleHypothesis::pion());
 
-    double totalPathLength = 0;
+    long double totalPathLength = 0;
     std::size_t numSteps = 0;
     std::size_t numStepTrials = 0;
     std::size_t numIters = 0;

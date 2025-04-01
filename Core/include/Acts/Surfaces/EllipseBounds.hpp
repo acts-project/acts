@@ -50,9 +50,10 @@ class EllipseBounds : public PlanarBounds {
   /// @param outerRy The outer ellipse radius in y
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
-  explicit EllipseBounds(double innerRx, double innerRy, double outerRx,
-                         double outerRy, double halfPhi = std::numbers::pi,
-                         double averagePhi = 0.) noexcept(false)
+  explicit EllipseBounds(long double innerRx, long double innerRy,
+                         long double outerRx, long double outerRy,
+                         long double halfPhi = std::numbers::pi,
+                         long double averagePhi = 0.) noexcept(false)
       : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
         m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();
@@ -61,7 +62,7 @@ class EllipseBounds : public PlanarBounds {
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  explicit EllipseBounds(const std::array<double, eSize>& values) noexcept(
+  explicit EllipseBounds(const std::array<long double, eSize>& values) noexcept(
       false)
       : m_values(values), m_boundingBox(values[eInnerRy], values[eOuterRy]) {
     checkConsistency();
@@ -72,7 +73,7 @@ class EllipseBounds : public PlanarBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
@@ -104,10 +105,10 @@ class EllipseBounds : public PlanarBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
   RectangleBounds m_boundingBox;
 
   /// Check the input values for consistency, will throw a logic_exception

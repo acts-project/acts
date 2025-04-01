@@ -53,13 +53,13 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
       Surface::makeShared<CylinderSurface>(hTransform, 15., 800.));
 
   // Pixel Surfaces
-  std::vector<double> pLayerRadii = {32., 72., 116., 172.};
+  std::vector<long double> pLayerRadii = {32., 72., 116., 172.};
   std::vector<std::pair<int, int>> pLayerBinning = {
       {16, 14}, {32, 14}, {52, 14}, {78, 14}};
-  std::vector<double> pModuleTiltPhi = {0.145, 0.145, 0.145, 0.145};
-  std::vector<double> pModuleHalfX = {8.4, 8.4, 8.4, 8.4};
-  std::vector<double> pModuleHalfY = {36., 36., 36., 36.};
-  std::vector<double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
+  std::vector<long double> pModuleTiltPhi = {0.145, 0.145, 0.145, 0.145};
+  std::vector<long double> pModuleHalfX = {8.4, 8.4, 8.4, 8.4};
+  std::vector<long double> pModuleHalfY = {36., 36., 36., 36.};
+  std::vector<long double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   // Fill surfaces from cylinder layers
   for (std::size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
@@ -76,15 +76,15 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   }
 
   // Fill surfaces for disc layers
-  std::vector<double> discZ = {-700., -600., 600., 700.};
-  std::vector<double> discRadii = {60., 60., 60., 60.};
+  std::vector<long double> discZ = {-700., -600., 600., 700.};
+  std::vector<long double> discRadii = {60., 60., 60., 60.};
   std::vector<int> discModules = {22, 22, 22, 22};
 
-  std::vector<double> dModuleHalfXMinY = {6.4, 6.4, 6.4, 6.4};
-  std::vector<double> dModuleHalfXMaxY = {12.4, 12.4, 12.4, 12.4};
-  std::vector<double> dModuleHalfY = {36., 36., 36., 36.};
-  std::vector<double> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
-  std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
+  std::vector<long double> dModuleHalfXMinY = {6.4, 6.4, 6.4, 6.4};
+  std::vector<long double> dModuleHalfXMaxY = {12.4, 12.4, 12.4, 12.4};
+  std::vector<long double> dModuleHalfY = {36., 36., 36., 36.};
+  std::vector<long double> dModuleTilt = {0.075, 0.075, 0.075, 0.075};
+  std::vector<long double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (std::size_t ilp = 0; ilp < discZ.size(); ++ilp) {
     std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(

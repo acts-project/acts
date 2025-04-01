@@ -31,7 +31,7 @@ namespace Acts {
 /// It also buils up the global transform for the conversion
 /// into an ACTS Surface
 struct TGeoParser {
-  using ParseRange = std::pair<double, double>;
+  using ParseRange = std::pair<long double, long double>;
 
   struct SelectedNode {
     // The selected geo node
@@ -67,7 +67,7 @@ struct TGeoParser {
     /// The local axis definition of TGeo object wrt Acts::Surface
     std::string localAxes = "XYZ";
     /// Scaling from TGeo to ROOT
-    double unit = 1 * UnitConstants::cm;
+    long double unit = 1 * UnitConstants::cm;
     /// Parse restrictions, several can apply
     std::vector<std::pair<AxisDirection, ParseRange> > parseRanges = {};
   };

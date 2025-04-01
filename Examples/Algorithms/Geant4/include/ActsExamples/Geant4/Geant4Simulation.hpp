@@ -138,7 +138,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
     std::string physicsList = "FTFP_BERT";
 
     std::shared_ptr<const Acts::Volume> killVolume;
-    double killAfterTime = std::numeric_limits<double>::infinity();
+    long double killAfterTime = std::numeric_limits<long double>::infinity();
     bool killSecondaries = false;
 
     bool recordHitsOfCharged = true;

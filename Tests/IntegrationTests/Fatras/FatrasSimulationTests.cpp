@@ -34,7 +34,7 @@ namespace {
 
 /// Mock-up process that splits a particle into two above a momentum threshold.
 struct SplitEnergyLoss {
-  double splitMomentumMin = 5_GeV;
+  long double splitMomentumMin = 5_GeV;
 
   template <typename generator_t>
   bool operator()(generator_t& /*generator*/,
@@ -96,19 +96,19 @@ const auto rangePdg =
         Acts::PdgParticle::ePionPlus,
         Acts::PdgParticle::ePionZero,
     });
-const auto rangePhi = boost::unit_test::data::make(std::vector<double>{
+const auto rangePhi = boost::unit_test::data::make(std::vector<long double>{
     -135_degree,
     -45_degree,
     45_degree,
     135_degree,
 });
-const auto rangeEta = boost::unit_test::data::make(std::vector<double>{
+const auto rangeEta = boost::unit_test::data::make(std::vector<long double>{
     -1.0,
     0.0,
     1.0,
     3.0,
 });
-const auto rangeP = boost::unit_test::data::make(std::vector<double>{
+const auto rangeP = boost::unit_test::data::make(std::vector<long double>{
     1_GeV,
     10_GeV,
 });

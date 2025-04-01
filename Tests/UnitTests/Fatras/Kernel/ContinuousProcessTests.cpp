@@ -50,7 +50,7 @@ struct MockEverything {
 
 /// Mock particle selector for particles with momenta equal or above 10GeV.
 struct MockHighP {
-  double minP = 10_GeV;
+  long double minP = 10_GeV;
 
   bool operator()(const ActsFatras::Particle &particle) const {
     return (minP <= particle.absoluteMomentum());

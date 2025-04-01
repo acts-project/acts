@@ -44,7 +44,7 @@ const std::vector<std::tuple<std::string, unsigned int>> testModes = {
     {"Triangulate", 18}, {"Extrema", 1}};
 
 const Transform3 transform = Transform3::Identity();
-const double epsAbs = 1e-12;
+const long double epsAbs = 1e-12;
 
 BOOST_AUTO_TEST_SUITE(PolyhedronSurfaces)
 
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
       Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: ConeSurfacePolyhedrons");
 
-  const double hzPos = 35_mm;
-  const double hzNeg = -20_mm;
-  const double alpha = 0.234;
+  const long double hzPos = 35_mm;
+  const long double hzNeg = -20_mm;
+  const long double alpha = 0.234;
 
-  const double rMax = hzPos * std::tan(alpha);
+  const long double rMax = hzPos * std::tan(alpha);
 
   for (const auto& [mode, segments] : testModes) {
     ACTS_INFO("\tMode: " << mode);
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
 
     /// The full cone on one side
     {
-      const double hzpMin = 10_mm;
-      const double rMin = hzpMin * std::tan(alpha);
+      const long double hzpMin = 10_mm;
+      const long double rMin = hzpMin * std::tan(alpha);
 
       auto conePiece = std::make_shared<ConeBounds>(alpha, hzpMin, hzPos);
       auto oneConePiece =
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
 
     /// A centered sectoral cone on both sides
     {
-      const double phiSector = 0.358;
+      const long double phiSector = 0.358;
 
       auto sectoralBoth =
           std::make_shared<ConeBounds>(alpha, hzNeg, hzPos, phiSector, 0.);
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
       Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: CylinderSurfacePolyhedrons");
 
-  const double r = 25_mm;
-  const double hZ = 35_mm;
+  const long double r = 25_mm;
+  const long double hZ = 35_mm;
 
   for (const auto& mode : testModes) {
     ACTS_INFO("\tMode: " << std::get<std::string>(mode));
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
 
     /// The full cone on one side
     {
-      const double phiSector = 0.458;
+      const long double phiSector = 0.458;
 
       auto sectorCentered = std::make_shared<CylinderBounds>(r, hZ, phiSector);
       auto centerSectoredCylinder =
@@ -232,9 +232,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
       Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: DiscSurfacePolyhedrons");
 
-  const double innerR = 10_mm;
-  const double outerR = 25_mm;
-  const double phiSector = 0.345;
+  const long double innerR = 10_mm;
+  const long double outerR = 25_mm;
+  const long double phiSector = 0.345;
 
   for (const auto& mode : testModes) {
     ACTS_INFO("\tMode: " << std::get<std::string>(mode));
@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
     /// Trapezoid for a disc
     {
-      const double halfXmin = 10_mm;
-      const double halfXmax = 20_mm;
+      const long double halfXmin = 10_mm;
+      const long double halfXmax = 20_mm;
 
       auto trapezoidDisc = std::make_shared<DiscTrapezoidBounds>(
           halfXmin, halfXmax, innerR, outerR, 0.);
@@ -357,10 +357,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
     /// AnnulusBounds for a disc
     {
-      const double minRadius = 7.;
-      const double maxRadius = 12.;
-      const double minPhiA = 0.75;
-      const double maxPhiA = 1.4;
+      const long double minRadius = 7.;
+      const long double maxRadius = 12.;
+      const long double minPhiA = 0.75;
+      const long double maxPhiA = 1.4;
       const Vector2 offset(0., 0.);
 
       auto annulus = std::make_shared<AnnulusBounds>(minRadius, maxRadius,
@@ -391,8 +391,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
     /// Rectangular Plane
     {
-      const double rhX = 10_mm;
-      const double rhY = 25_mm;
+      const long double rhX = 10_mm;
+      const long double rhY = 25_mm;
 
       auto rectangular = std::make_shared<RectangleBounds>(rhX, rhY);
       auto rectangularPlane =
@@ -420,9 +420,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
     /// Trapezoidal Plane
     {
-      const double thX1 = 10_mm;
-      const double thX2 = 25_mm;
-      const double thY = 35_mm;
+      const long double thX1 = 10_mm;
+      const long double thX2 = 25_mm;
+      const long double thY = 35_mm;
 
       auto trapezoid = std::make_shared<TrapezoidBounds>(thX1, thX2, thY);
       auto trapezoidalPlane =
@@ -452,10 +452,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
     /// Ring-like ellipsoidal plane
     {
-      const double rMinX = 0_mm;
-      const double rMinY = 0_mm;
-      const double rMaxX = 30_mm;
-      const double rMaxY = 40_mm;
+      const long double rMinX = 0_mm;
+      const long double rMinY = 0_mm;
+      const long double rMaxX = 30_mm;
+      const long double rMaxY = 40_mm;
       auto ellipse =
           std::make_shared<EllipseBounds>(rMinX, rMinY, rMaxX, rMaxY);
       auto ellipsoidPlane =
@@ -477,10 +477,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     }
 
     {
-      const double rMinX = 10_mm;
-      const double rMinY = 20_mm;
-      const double rMaxX = 30_mm;
-      const double rMaxY = 40_mm;
+      const long double rMinX = 10_mm;
+      const long double rMinY = 20_mm;
+      const long double rMaxX = 30_mm;
+      const long double rMaxY = 40_mm;
       auto ellipseRing =
           std::make_shared<EllipseBounds>(rMinX, rMinY, rMaxX, rMaxY);
       auto ellipsoidRingPlane =
@@ -527,11 +527,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
 
     /// Diamond shaped plane
     {
-      const double hMinX = 10_mm;
-      const double hMedX = 20_mm;
-      const double hMaxX = 15_mm;
-      const double hMinY = 40_mm;
-      const double hMaxY = 50_mm;
+      const long double hMinX = 10_mm;
+      const long double hMedX = 20_mm;
+      const long double hMaxX = 15_mm;
+      const long double hMinY = 40_mm;
+      const long double hMaxY = 50_mm;
 
       auto diamond =
           std::make_shared<DiamondBounds>(hMinX, hMedX, hMaxX, hMinY, hMaxY);
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
       Acts::getDefaultLogger("PolyhedronSurfacesTests", logLevel));
   ACTS_INFO("Test: ShiftedSurfacePolyhedrons");
 
-  const double shiftY = 50_mm;
+  const long double shiftY = 50_mm;
   Vector3 shift(0., shiftY, 0.);
   Transform3 shiftedTransform = Transform3::Identity();
   shiftedTransform.pretranslate(shift);
@@ -573,8 +573,8 @@ BOOST_AUTO_TEST_CASE(ShiftedSurfacePolyhedrons) {
 
     /// Rectangular Plane
     {
-      const double rhX = 10_mm;
-      const double rhY = 25_mm;
+      const long double rhX = 10_mm;
+      const long double rhY = 25_mm;
 
       auto rectangular = std::make_shared<RectangleBounds>(rhX, rhY);
       auto rectangularPlane =

@@ -38,20 +38,20 @@ namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
-static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
+static constexpr auto eps = 2 * std::numeric_limits<long double>::epsilon();
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   // Set up some variables
   GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
-  double stepSize = 123.;
+  long double stepSize = 123.;
 
   Vector3 pos(1., 2., 3.);
   Vector3 dir(4., 5., 6.);
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  long double time = 7.;
+  long double absMom = 8.;
+  long double charge = -1.;
 
   StraightLineStepper::Options slsOptions(tgContext, mfContext);
   slsOptions.maxStepSize = stepSize;
@@ -104,14 +104,14 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
   Direction navDir = Direction::Backward();
-  double stepSize = 123.;
+  long double stepSize = 123.;
 
   // Construct the parameters
   Vector3 pos(1., 2., 3.);
   Vector3 dir = Vector3(4., 5., 6.).normalized();
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  long double time = 7.;
+  long double absMom = 8.;
+  long double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), dir, charge / absMom, cov,
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the update method
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
-  double newTime(321.);
+  long double newTime(321.);
   sls.update(slsState, newPos, newMom.normalized(), charge / newMom.norm(),
              newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   slsState.cov = cov;
 
   slsState.covTransport = false;
-  double h = sls.step(slsState, navDir, nullptr).value();
+  long double h = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), h * navDir);
   CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.jacTransport, FreeMatrix::Identity());
 
   slsState.covTransport = true;
-  double h2 = sls.step(slsState, navDir, nullptr).value();
+  long double h2 = sls.step(slsState, navDir, nullptr).value();
   BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(slsState.cov, cov, 1e-6);
@@ -210,9 +210,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Construct the parameters
   Vector3 pos2(1.5, -2.5, 3.5);
   Vector3 dir2 = Vector3(4.5, -5.5, 6.5).normalized();
-  double time2 = 7.5;
-  double absMom2 = 8.5;
-  double charge2 = 1.;
+  long double time2 = 7.5;
+  long double absMom2 = 8.5;
+  long double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
   BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,

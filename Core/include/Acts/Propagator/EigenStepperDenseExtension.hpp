@@ -31,28 +31,28 @@ struct EigenStepperDenseExtension {
   EigenStepperDefaultExtension defaultExtension;
 
   /// Momentum at a certain point
-  double currentMomentum = 0.;
+  long double currentMomentum = 0.;
   /// Particles momentum at k1
-  double initialMomentum = 0.;
+  long double initialMomentum = 0.;
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material = Material::Vacuum();
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<double, 4> dLdl{};
+  std::array<long double, 4> dLdl{};
   /// q/p at each sub-step
-  std::array<double, 4> qop{};
+  std::array<long double, 4> qop{};
   /// Derivatives dPds at each sub-step
-  std::array<double, 4> dPds{};
+  std::array<long double, 4> dPds{};
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
-  double dgdqopValue = 0.;
+  long double dgdqopValue = 0.;
   /// Derivative dEds at the initial point
-  double g = 0.;
+  long double g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<double, 4> tKi{};
+  std::array<long double, 4> tKi{};
   /// Lambda''_i
-  std::array<double, 4> Lambdappi{};
+  std::array<long double, 4> Lambdappi{};
   /// Energy at each sub-step
-  std::array<double, 4> energy{};
+  std::array<long double, 4> energy{};
 
   /// @brief Evaluator of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
@@ -73,8 +73,8 @@ struct EigenStepperDenseExtension {
   template <int i, typename stepper_t>
   bool k(const typename stepper_t::State& state, const stepper_t& stepper,
          const IVolumeMaterial* volumeMaterial, Vector3& knew,
-         const Vector3& bField, std::array<double, 4>& kQoP,
-         const double h = 0., const Vector3& kprev = Vector3::Zero())
+         const Vector3& bField, std::array<long double, 4>& kQoP,
+         const long double h = 0., const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
     if (volumeMaterial == nullptr) {
@@ -82,7 +82,7 @@ struct EigenStepperDenseExtension {
                                             knew, bField, kQoP, h, kprev);
     }
 
-    double q = stepper.charge(state);
+    long double q = stepper.charge(state);
     const auto& particleHypothesis = stepper.particleHypothesis(state);
     float mass = particleHypothesis.mass();
 
@@ -90,7 +90,8 @@ struct EigenStepperDenseExtension {
     if constexpr (i == 0) {
       // Set up for energy loss
       Vector3 position = stepper.position(state);
-      material = volumeMaterial->material(position.template cast<double>());
+      material =
+          volumeMaterial->material(position.template cast<long double>());
       initialMomentum = stepper.absoluteMomentum(state);
       currentMomentum = initialMomentum;
       qop[0] = stepper.qOverP(state);
@@ -134,7 +135,8 @@ struct EigenStepperDenseExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
-                const IVolumeMaterial* volumeMaterial, const double h) const {
+                const IVolumeMaterial* volumeMaterial,
+                const long double h) const {
     if (volumeMaterial == nullptr) {
       return defaultExtension.finalize(state, stepper, volumeMaterial, h);
     }
@@ -185,7 +187,7 @@ struct EigenStepperDenseExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
-                const IVolumeMaterial* volumeMaterial, const double h,
+                const IVolumeMaterial* volumeMaterial, const long double h,
                 FreeMatrix& D) const {
     if (volumeMaterial == nullptr) {
       return defaultExtension.finalize(state, stepper, volumeMaterial, h, D);
@@ -209,7 +211,7 @@ struct EigenStepperDenseExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename stepper_t>
   bool transportMatrix(typename stepper_t::State& state,
-                       const stepper_t& stepper, const double h,
+                       const stepper_t& stepper, const long double h,
                        FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
@@ -237,7 +239,7 @@ struct EigenStepperDenseExtension {
     float mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
-    const double half_h = h * 0.5;
+    const long double half_h = h * 0.5;
 
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) zero
@@ -258,7 +260,7 @@ struct EigenStepperDenseExtension {
     Vector3 dk4dL = Vector3::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
-    std::array<double, 4> jdL{};
+    std::array<long double, 4> jdL{};
 
     // Evaluation of the rightmost column without the last term.
     jdL[0] = dLdl[0];
@@ -309,29 +311,29 @@ struct EigenStepperDenseExtension {
     // The following comment lines refer to the application of the time being
     // treated as a position. Since t and qop are treated independently for now,
     // this just serves as entry point for building their relation
-    //~ double dtpp1dl = -mass * mass * qop[0] * qop[0] *
+    //~ long double dtpp1dl = -mass * mass * qop[0] * qop[0] *
     //~ (3. * g + qop[0] * dgdqop(energy[0], .mass,
     //~ absPdg, meanEnergyLoss));
 
-    double dtp1dl = qop[0] * mass * mass / fastHypot(1, qop[0] * mass);
-    double qopNew = qop[0] + half_h * Lambdappi[0];
+    long double dtp1dl = qop[0] * mass * mass / fastHypot(1, qop[0] * mass);
+    long double qopNew = qop[0] + half_h * Lambdappi[0];
 
-    //~ double dtpp2dl = -mass * mass * qopNew *
+    //~ long double dtpp2dl = -mass * mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[0]) +
     //~ qopNew * dgdqop(energy[1], mass, absPdgCode, meanEnergyLoss));
 
-    double dtp2dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
+    long double dtp2dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
     qopNew = qop[0] + half_h * Lambdappi[1];
 
-    //~ double dtpp3dl = -mass * mass * qopNew *
+    //~ long double dtpp3dl = -mass * mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[1]) +
     //~ qopNew * dgdqop(energy[2], mass, absPdg, meanEnergyLoss));
 
-    double dtp3dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
+    long double dtp3dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
     qopNew = qop[0] + half_h * Lambdappi[2];
-    double dtp4dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
+    long double dtp4dl = qopNew * mass * mass / fastHypot(1, qopNew * mass);
 
     //~ D(3, 7) = h * mass * mass * qop[0] /
     //~ std::hypot(1., mass * qop[0])
@@ -404,7 +406,7 @@ struct EigenStepperDenseExtension {
   /// @param [in] stepper Stepper of the propagator
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_t>
-  void updateEnergyLoss(const double mass, const double h,
+  void updateEnergyLoss(const long double mass, const long double h,
                         const typename stepper_t::State& state,
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum

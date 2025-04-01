@@ -96,7 +96,7 @@ ProcessCode ExternalAlignmentDecorator::decorate(AlgorithmContext& context) {
 
 void ExternalAlignmentDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
-  // Double-visit - first count
+  // long double-visit - first count
   std::size_t nTransforms = 0;
   tGeometry.visitSurfaces([&nTransforms](const auto*) { ++nTransforms; });
 

@@ -37,7 +37,8 @@ class MultiComponentBoundTrackParameters {
   using CovarianceMatrix = typename Parameters::CovarianceMatrix;
 
  private:
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+  std::vector<
+      std::tuple<long double, BoundVector, std::optional<BoundSquareMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
 
@@ -66,8 +67,9 @@ class MultiComponentBoundTrackParameters {
   }
 
  public:
-  using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
-                                       double, CovarianceMatrix>;
+  using ConstructionTuple =
+      std::tuple<long double, Acts::Vector4, Acts::Vector3, long double,
+                 CovarianceMatrix>;
 
   /// We need this helper function in order to construct the base class properly
   static MultiComponentBoundTrackParameters createCurvilinear(
@@ -85,7 +87,8 @@ class MultiComponentBoundTrackParameters {
     std::shared_ptr<PlaneSurface> s =
         CurvilinearSurface(avgPos, avgDir).planeSurface();
 
-    std::vector<std::tuple<double, ParametersVector, CovarianceMatrix>> bound;
+    std::vector<std::tuple<long double, ParametersVector, CovarianceMatrix>>
+        bound;
     bound.reserve(curvi.size());
 
     // Project the position onto the surface, keep everything else as is
@@ -112,8 +115,8 @@ class MultiComponentBoundTrackParameters {
   template <typename covariance_t>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, ParametersVector, covariance_t>>&
-          cmps,
+      const std::vector<
+          std::tuple<long double, ParametersVector, covariance_t>>& cmps,
       ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
@@ -173,9 +176,9 @@ class MultiComponentBoundTrackParameters {
   const Surface& referenceSurface() const { return *m_surface; }
 
   /// Get the weight and a GenericBoundTrackParameters object for one component
-  std::pair<double, Parameters> operator[](std::size_t i) const {
+  std::pair<long double, Parameters> operator[](std::size_t i) const {
     return {
-        std::get<double>(m_components[i]),
+        std::get<long double>(m_components[i]),
         Parameters(m_surface, std::get<ParametersVector>(m_components[i]),
                    std::get<std::optional<CovarianceMatrix>>(m_components[i]),
                    m_particleHypothesis)};
@@ -203,7 +206,7 @@ class MultiComponentBoundTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <BoundIndices kIndex>
-  double get() const {
+  long double get() const {
     return reduce([&](const Parameters& p) { return p.get<kIndex>(); });
   }
 
@@ -224,7 +227,7 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Time coordinate.
-  double time() const {
+  long double time() const {
     return reduce([](const Parameters& p) { return p.time(); });
   }
 
@@ -236,21 +239,21 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Phi direction.
-  double phi() const { return VectorHelpers::phi(direction()); }
+  long double phi() const { return VectorHelpers::phi(direction()); }
 
   /// Theta direction.
-  double theta() const { return VectorHelpers::theta(direction()); }
+  long double theta() const { return VectorHelpers::theta(direction()); }
 
   /// Charge over momentum.
-  double qOverP() const { return get<eBoundQOverP>(); }
+  long double qOverP() const { return get<eBoundQOverP>(); }
 
   /// Absolute momentum.
-  double absoluteMomentum() const {
+  long double absoluteMomentum() const {
     return reduce([](const Parameters& p) { return p.absoluteMomentum(); });
   }
 
   /// Transverse momentum.
-  double transverseMomentum() const {
+  long double transverseMomentum() const {
     return reduce([](const Parameters& p) { return p.transverseMomentum(); });
   }
 
@@ -260,7 +263,7 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Particle electric charge.
-  double charge() const {
+  long double charge() const {
     return reduce([](const Parameters& p) { return p.charge(); });
   }
 

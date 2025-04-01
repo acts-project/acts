@@ -20,27 +20,28 @@
 
 namespace Acts {
 
-ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
-                       double avphi) noexcept(false)
-    : m_values({alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
-                std::numeric_limits<double>::infinity(), halfphi, avphi}),
+ConeBounds::ConeBounds(long double alpha, bool symm, long double halfphi,
+                       long double avphi) noexcept(false)
+    : m_values({alpha, symm ? -std::numeric_limits<long double>::infinity() : 0,
+                std::numeric_limits<long double>::infinity(), halfphi, avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
 }
 
-ConeBounds::ConeBounds(double alpha, double minz, double maxz, double halfphi,
-                       double avphi) noexcept(false)
+ConeBounds::ConeBounds(long double alpha, long double minz, long double maxz,
+                       long double halfphi, long double avphi) noexcept(false)
     : m_values({alpha, minz, maxz, halfphi, avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
 }
 
-ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(false)
+ConeBounds::ConeBounds(const std::array<long double, eSize>& values) noexcept(
+    false)
     : m_values(values), m_tanAlpha(std::tan(values[eAlpha])) {
   checkConsistency();
 }
 
-std::vector<double> ConeBounds::values() const {
+std::vector<long double> ConeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 

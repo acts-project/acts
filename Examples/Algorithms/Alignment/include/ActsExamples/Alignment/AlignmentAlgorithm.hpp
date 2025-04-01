@@ -102,9 +102,9 @@ class AlignmentAlgorithm final : public IAlgorithm {
     /// The alignment mask at each iteration
     std::map<unsigned int, std::bitset<6>> iterationState;
     /// Cutoff value for average chi2/ndf
-    double chi2ONdfCutOff = 0.10;
+    long double chi2ONdfCutOff = 0.10;
     /// Cutoff value for delta of average chi2/ndf within a couple of iterations
-    std::pair<std::size_t, double> deltaChi2ONdfCutOff = {10, 0.00001};
+    std::pair<std::size_t, long double> deltaChi2ONdfCutOff = {10, 0.00001};
     /// Maximum number of iterations
     std::size_t maxNumIterations = 100;
     /// Number of tracks to be used for alignment

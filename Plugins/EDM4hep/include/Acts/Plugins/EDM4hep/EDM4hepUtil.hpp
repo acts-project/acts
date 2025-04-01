@@ -46,20 +46,21 @@ struct Parameters {
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
+ActsSquareMatrix<6> jacobianToEdm4hep(long double theta, long double qOverP,
+                                      long double Bz);
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                        double Bz);
+ActsSquareMatrix<6> jacobianFromEdm4hep(long double tanLambda,
+                                        long double omega, long double Bz);
 
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
 void packCovariance(const ActsSquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
-                                           double Bz,
+                                           long double Bz,
                                            const BoundTrackParameters& params);
 
 BoundTrackParameters convertTrackParametersFromEdm4hep(
-    double Bz, const Parameters& params);
+    long double Bz, const Parameters& params);
 
 }  // namespace detail
 
@@ -71,7 +72,7 @@ void setParticle(edm4hep::MutableSimTrackerHit& hit,
 
 template <TrackProxyConcept track_proxy_t>
 void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
-                edm4hep::MutableTrack to, double Bz,
+                edm4hep::MutableTrack to, long double Bz,
                 const Logger& logger = getDummyLogger()) {
   ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
@@ -170,7 +171,7 @@ void writeTrack(const Acts::GeometryContext& gctx, track_proxy_t track,
 }
 
 template <TrackProxyConcept track_proxy_t>
-void readTrack(const edm4hep::Track& from, track_proxy_t& track, double Bz,
+void readTrack(const edm4hep::Track& from, track_proxy_t& track, long double Bz,
                const Logger& logger = getDummyLogger()) {
   ACTS_VERBOSE("Reading track from EDM4hep");
   TrackStatePropMask mask = TrackStatePropMask::Smoothed;

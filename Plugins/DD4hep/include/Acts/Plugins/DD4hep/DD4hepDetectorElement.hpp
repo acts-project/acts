@@ -79,7 +79,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @param material Optional material of detector element
   explicit DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
-      double scalor = 1., bool isDisc = false,
+      long double scalor = 1., bool isDisc = false,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;

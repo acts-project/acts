@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
                           return sum + cmp.weight * cmp.boundPars;
                         });
 
-    const double sumOfWeights = std::accumulate(
+    const long double sumOfWeights = std::accumulate(
         cmps.begin(), cmps.end(), 0.0,
         [](auto sum, const auto &cmp) { return sum + cmp.weight; });
 

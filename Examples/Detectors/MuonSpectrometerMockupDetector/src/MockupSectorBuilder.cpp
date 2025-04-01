@@ -128,12 +128,12 @@ MockupSectorBuilder::buildChamber(
   Acts::Vector3 maxValues = {min_max[0].second, min_max[1].second,
                              min_max[2].second};
 
-  double hx =
+  long double hx =
       strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
-  double hy = 0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
-              mCfg.toleranceOverlap;
-  double hz = 0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
-              mCfg.toleranceOverlap;
+  long double hy = 0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
+                   mCfg.toleranceOverlap;
+  long double hz = 0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
+                   mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_shared<Acts::CuboidVolumeBounds>(hx, hy, hz);
@@ -188,9 +188,9 @@ MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  double sectorAngle = std::numbers::pi;
+  long double sectorAngle = std::numbers::pi;
 
-  double halfPhi = std::numbers::pi / mCfg.NumberOfSectors;
+  long double halfPhi = std::numbers::pi / mCfg.NumberOfSectors;
 
   if (mCfg.NumberOfSectors == 1) {
     halfPhi = (phiB - phiA) / 2;

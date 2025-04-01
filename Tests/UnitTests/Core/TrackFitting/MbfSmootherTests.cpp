@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(Smooth) {
   BOOST_CHECK(ts1.hasSmoothed());
   BOOST_CHECK_NE(ts1.filtered(), ts1.smoothed());
 
-  double tol = 1e-6;
+  long double tol = 1e-6;
 
   ParametersVector expPars;
   expPars << 0.301, 0.503, 1.5707963, 0.0, 0.01, 0.0;

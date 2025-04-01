@@ -47,15 +47,16 @@ DiscSurface::DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
       RegularSurface(gctx, other, shift),
       m_bounds(other.m_bounds) {}
 
-DiscSurface::DiscSurface(const Transform3& transform, double rmin, double rmax,
-                         double hphisec)
+DiscSurface::DiscSurface(const Transform3& transform, long double rmin,
+                         long double rmax, long double hphisec)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
-DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
-                         double maxhalfx, double minR, double maxR,
-                         double avephi, double stereo)
+DiscSurface::DiscSurface(const Transform3& transform, long double minhalfx,
+                         long double maxhalfx, long double minR,
+                         long double maxR, long double avephi,
+                         long double stereo)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
@@ -98,7 +99,7 @@ Vector3 DiscSurface::localToGlobal(const GeometryContext& gctx,
 
 Result<Vector2> DiscSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
-                                           double tolerance) const {
+                                           long double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
@@ -111,8 +112,8 @@ Vector2 DiscSurface::localPolarToLocalCartesian(const Vector2& locpol) const {
   const DiscTrapezoidBounds* dtbo =
       dynamic_cast<const DiscTrapezoidBounds*>(&(bounds()));
   if (dtbo != nullptr) {
-    double rMedium = dtbo->rCenter();
-    double phi = dtbo->get(DiscTrapezoidBounds::eAveragePhi);
+    long double rMedium = dtbo->rCenter();
+    long double phi = dtbo->get(DiscTrapezoidBounds::eAveragePhi);
 
     Vector2 polarCenter(rMedium, phi);
     Vector2 cartCenter = localPolarToCartesian(polarCenter);
@@ -134,7 +135,7 @@ Vector3 DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
 
 Vector2 DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
                                             const Vector3& position,
-                                            double /*direction*/) const {
+                                            long double /*direction*/) const {
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
@@ -210,10 +211,10 @@ BoundToFreeMatrix DiscSurface::boundToFreeJacobian(
 
   // calculate the transformation to local coordinates
   const Vector3 posLoc = transform(gctx).inverse() * position;
-  const double lr = perp(posLoc);
-  const double lphi = phi(posLoc);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  const long double lr = perp(posLoc);
+  const long double lphi = phi(posLoc);
+  const long double lcphi = std::cos(lphi);
+  const long double lsphi = std::sin(lphi);
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
@@ -246,10 +247,10 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
 
   // calculate the transformation to local coordinates
   const Vector3 posLoc = transform(gctx).inverse() * position;
-  const double lr = perp(posLoc);
-  const double lphi = phi(posLoc);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  const long double lr = perp(posLoc);
+  const long double lphi = phi(posLoc);
+  const long double lcphi = std::cos(lphi);
+  const long double lsphi = std::sin(lphi);
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
@@ -271,7 +272,7 @@ FreeToBoundMatrix DiscSurface::freeToBoundJacobian(
 SurfaceMultiIntersection DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
+    long double tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
@@ -287,7 +288,7 @@ SurfaceMultiIntersection DiscSurface::intersect(
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt();
         absoluteBound.has_value() && m_bounds->coversFullAzimuth()) {
-      double modifiedTolerance = tolerance + absoluteBound->tolerance0;
+      long double modifiedTolerance = tolerance + absoluteBound->tolerance0;
       if (!m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                         modifiedTolerance)) {
         status = IntersectionStatus::unreachable;
@@ -311,10 +312,10 @@ ActsMatrix<2, 3> DiscSurface::localCartesianToBoundLocalDerivative(
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
-  const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  const long double lr = perp(localPos);
+  const long double lphi = phi(localPos);
+  const long double lcphi = std::cos(lphi);
+  const long double lsphi = std::sin(lphi);
   ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, -lsphi / lr, lcphi / lr, 0;
 
@@ -340,15 +341,15 @@ Vector3 DiscSurface::normal(const GeometryContext& gctx) const {
 Vector3 DiscSurface::referencePosition(const GeometryContext& gctx,
                                        AxisDirection aDir) const {
   if (aDir == AxisDirection::AxisR || aDir == AxisDirection::AxisPhi) {
-    double r = m_bounds->binningValueR();
-    double phi = m_bounds->binningValuePhi();
+    long double r = m_bounds->binningValueR();
+    long double phi = m_bounds->binningValuePhi();
     return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
   }
   return center(gctx);
 }
 
-double DiscSurface::referencePositionValue(const GeometryContext& gctx,
-                                           AxisDirection aDir) const {
+long double DiscSurface::referencePositionValue(const GeometryContext& gctx,
+                                                AxisDirection aDir) const {
   if (aDir == AxisDirection::AxisR) {
     return VectorHelpers::perp(referencePosition(gctx, aDir));
   }
@@ -359,9 +360,9 @@ double DiscSurface::referencePositionValue(const GeometryContext& gctx,
   return GeometryObject::referencePositionValue(gctx, aDir);
 }
 
-double DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                   const Vector3& /*position*/,
-                                   const Vector3& direction) const {
+long double DiscSurface::pathCorrection(const GeometryContext& gctx,
+                                        const Vector3& /*position*/,
+                                        const Vector3& direction) const {
   // we can ignore the global position here
   return 1. / std::abs(normal(gctx).dot(direction));
 }
@@ -417,25 +418,25 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
         "DiscSurface::merge: surfaces have bounds other than radial");
   }
 
-  double minR = bounds->get(RadialBounds::eMinR);
-  double maxR = bounds->get(RadialBounds::eMaxR);
+  long double minR = bounds->get(RadialBounds::eMinR);
+  long double maxR = bounds->get(RadialBounds::eMaxR);
 
-  double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
-  double avgPhi = bounds->get(RadialBounds::eAveragePhi);
-  double minPhi = detail::radian_sym(-hlPhi + avgPhi);
-  double maxPhi = detail::radian_sym(hlPhi + avgPhi);
+  long double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+  long double avgPhi = bounds->get(RadialBounds::eAveragePhi);
+  long double minPhi = detail::radian_sym(-hlPhi + avgPhi);
+  long double maxPhi = detail::radian_sym(hlPhi + avgPhi);
 
   ACTS_VERBOSE(" this: r =   [" << minR << ", " << maxR << "]");
   ACTS_VERBOSE("       phi = ["
                << minPhi / 1_degree << ", " << maxPhi / 1_degree << "] ~> "
                << avgPhi / 1_degree << " +- " << hlPhi / 1_degree);
 
-  double otherMinR = otherBounds->get(RadialBounds::eMinR);
-  double otherMaxR = otherBounds->get(RadialBounds::eMaxR);
-  double otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
-  double otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
-  double otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
-  double otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
+  long double otherMinR = otherBounds->get(RadialBounds::eMinR);
+  long double otherMaxR = otherBounds->get(RadialBounds::eMaxR);
+  long double otherAvgPhi = otherBounds->get(RadialBounds::eAveragePhi);
+  long double otherHlPhi = otherBounds->get(RadialBounds::eHalfPhiSector);
+  long double otherMinPhi = detail::radian_sym(-otherHlPhi + otherAvgPhi);
+  long double otherMaxPhi = detail::radian_sym(otherHlPhi + otherAvgPhi);
 
   ACTS_VERBOSE("other: r =   [" << otherMinR << ", " << otherMaxR << "]");
   ACTS_VERBOSE("       phi = [" << otherMinPhi / 1_degree << ", "
@@ -473,8 +474,8 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
           "DiscSurface::merge: surfaces have different half phi sector");
     }
 
-    double newMinR = std::min(minR, otherMinR);
-    double newMaxR = std::max(maxR, otherMaxR);
+    long double newMinR = std::min(minR, otherMinR);
+    long double newMaxR = std::max(maxR, otherMaxR);
     ACTS_VERBOSE("  new: r =   [" << newMinR << ", " << newMaxR << "]");
 
     auto newBounds =
@@ -494,7 +495,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
 
     // Figure out signed relative rotation
     Vector2 rotatedX = otherLocal.linear().col(eX).head<2>();
-    double zrotation = std::atan2(rotatedX[1], rotatedX[0]);
+    long double zrotation = std::atan2(rotatedX[1], rotatedX[0]);
 
     ACTS_VERBOSE("this:  [" << avgPhi / 1_degree << " +- " << hlPhi / 1_degree
                             << "]");
@@ -503,7 +504,7 @@ std::pair<std::shared_ptr<DiscSurface>, bool> DiscSurface::mergedWith(
 
     ACTS_VERBOSE("Relative rotation around local z: " << zrotation / 1_degree);
 
-    double prevOtherAvgPhi = otherAvgPhi;
+    long double prevOtherAvgPhi = otherAvgPhi;
     otherAvgPhi = detail::radian_sym(otherAvgPhi + zrotation);
     ACTS_VERBOSE("~> local other average phi: "
                  << otherAvgPhi / 1_degree

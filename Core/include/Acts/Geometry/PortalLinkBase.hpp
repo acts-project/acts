@@ -51,7 +51,7 @@ class PortalLinkBase {
   /// @return The tracking volume or null if no connection was found
   virtual Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      long double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Resolve a volume given a local position. The local position is assumed to
   /// be on surface.
@@ -62,7 +62,7 @@ class PortalLinkBase {
   /// @return The tracking volume or null if no connection was found
   virtual Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      long double tolerance = s_onSurfaceTolerance) const = 0;
 
   //// Merge two portal link into a single one. The merge can resolve
   /// combinations of difference derived classes, and will try to flatten and

@@ -53,9 +53,12 @@ BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
 namespace {
 
 std::array<Acts::Vector4, 4u> kinematicsOfStep(const G4Step* step) {
-  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
-  static constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
+  static constexpr long double convertLength =
+      Acts::UnitConstants::mm / CLHEP::mm;
+  static constexpr long double convertEnergy =
+      Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr long double convertTime =
+      Acts::UnitConstants::ns / CLHEP::ns;
 
   const G4StepPoint* preStepPoint = step->GetPreStepPoint();
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
@@ -115,8 +118,10 @@ SensitiveSteppingAction::SensitiveSteppingAction(
 
 void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   // Unit conversions G4->::ACTS
-  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  static constexpr long double convertLength =
+      Acts::UnitConstants::mm / CLHEP::mm;
+  static constexpr long double convertEnergy =
+      Acts::UnitConstants::GeV / CLHEP::GeV;
 
   // The particle after the step
   G4Track* track = step->GetTrack();
@@ -128,7 +133,8 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   // Bail out if charged & configured to do so
-  G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
+  G4long double absCharge =
+      std::abs(track->GetParticleDefinition()->GetPDGCharge());
   if (!m_cfg.charged && absCharge > 0.) {
     return;
   }
@@ -210,13 +216,13 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
   } else if (m_cfg.stepLogging) {
     if (!eventStore().propagationRecords.contains(track->GetTrackID())) {
       // Create the propagation summary
-      double xVtx = track->GetVertexPosition().x() * convertLength;
-      double yVtx = track->GetVertexPosition().y() * convertLength;
-      double zVtx = track->GetVertexPosition().z() * convertLength;
-      double xDirVtx = track->GetVertexMomentumDirection().x();
-      double yDirVtx = track->GetVertexMomentumDirection().y();
-      double zDirVtx = track->GetVertexMomentumDirection().z();
-      double absMomentum = track->GetMomentum().mag() * convertEnergy;
+      long double xVtx = track->GetVertexPosition().x() * convertLength;
+      long double yVtx = track->GetVertexPosition().y() * convertLength;
+      long double zVtx = track->GetVertexPosition().z() * convertLength;
+      long double xDirVtx = track->GetVertexMomentumDirection().x();
+      long double yDirVtx = track->GetVertexMomentumDirection().y();
+      long double zDirVtx = track->GetVertexMomentumDirection().z();
+      long double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
       PropagationSummary iSummary(Acts::BoundTrackParameters::createCurvilinear(
           Acts::Vector4(xVtx, yVtx, zVtx, 0.),
@@ -231,8 +237,8 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
     // Increase the step counter
     pSummary.nSteps += 1;
 
-    double currentTrackLength = track->GetTrackLength() * convertLength;
-    double currentStepLength = currentTrackLength - pSummary.pathLength;
+    long double currentTrackLength = track->GetTrackLength() * convertLength;
+    long double currentStepLength = currentTrackLength - pSummary.pathLength;
     pSummary.pathLength = currentTrackLength;
 
     // Create a new step for the step logging

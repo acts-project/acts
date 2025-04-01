@@ -53,7 +53,7 @@ class HelicalTrackLinearizer {
 
     /// Tolerance determining how close we need to get to the Perigee surface to
     /// reach it during propagation
-    double targetTolerance = 1e-12;
+    long double targetTolerance = 1e-12;
   };
 
   /// @brief Constructor
@@ -84,7 +84,7 @@ class HelicalTrackLinearizer {
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
-      const BoundTrackParameters& params, double linPointTime,
+      const BoundTrackParameters& params, long double linPointTime,
       const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
       const Acts::MagneticFieldContext& mctx,
       MagneticFieldProvider::Cache& fieldCache) const;

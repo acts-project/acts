@@ -46,7 +46,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// @return The target volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector2& position,
-      double tolerance = s_onSurfaceTolerance) const override;
+      long double tolerance = s_onSurfaceTolerance) const override;
 
   /// Resolve the volume for a 3D position
   /// @note Always returns the single target volume
@@ -57,7 +57,7 @@ class TrivialPortalLink final : public PortalLinkBase {
   /// @note The position is assumed to be on the associated surface.
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const override;
+      long double tolerance = s_onSurfaceTolerance) const override;
 
   /// Get the single volume that this trivial portal link is associated with
   /// @return The target volume

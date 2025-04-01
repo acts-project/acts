@@ -55,7 +55,7 @@ Volume& Volume::operator=(const Volume& vol) {
   return *this;
 }
 
-bool Volume::inside(const Vector3& gpos, double tol) const {
+bool Volume::inside(const Vector3& gpos, long double tol) const {
   Vector3 posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }

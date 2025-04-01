@@ -23,10 +23,11 @@ namespace Acts {
 
 ///  helper function to create a cylinder
 TrackingVolumePtr constructCylinderVolume(
-    const GeometryContext& gctx, double surfaceHalfLengthZ, double surfaceR,
-    double surfaceRstagger, double surfaceZoverlap, double layerEnvelope,
-    double volumeEnvelope, double innerVolumeR, double outerVolumeR,
-    const std::string& name) {
+    const GeometryContext& gctx, long double surfaceHalfLengthZ,
+    long double surfaceR, long double surfaceRstagger,
+    long double surfaceZoverlap, long double layerEnvelope,
+    long double volumeEnvelope, long double innerVolumeR,
+    long double outerVolumeR, const std::string& name) {
   ///  the surface transforms
   auto sfnPosition = Vector3(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
   auto sfnTransform = Transform3(Translation3(sfnPosition));
@@ -47,8 +48,8 @@ TrackingVolumePtr constructCylinderVolume(
   ///  prepare the surfaces
 
   ///  make the binned array
-  double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
-  double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
+  long double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
+  long double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
 
   std::vector<std::shared_ptr<const Surface>> surfaces_only = {{sfn, sfc, sfp}};
   std::vector<const Surface*> surfaces_only_raw = {
@@ -57,9 +58,9 @@ TrackingVolumePtr constructCylinderVolume(
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axis(
       bUmin, bUmax, surfaces_only.size());
   auto g2l = [](const Vector3& glob) {
-    return std::array<double, 1>({{glob.z()}});
+    return std::array<long double, 1>({{glob.z()}});
   };
-  auto l2g = [](const std::array<double, 1>& loc) {
+  auto l2g = [](const std::array<long double, 1>& loc) {
     return Vector3(0, 0, loc[0]);
   };
   auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
@@ -90,8 +91,8 @@ TrackingVolumePtr constructCylinderVolume(
 MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
                                                   TrackingVolumePtr iVolume,
                                                   TrackingVolumePtr oVolume,
-                                                  double hVolumeR,
-                                                  double hVolumeHalflength,
+                                                  long double hVolumeR,
+                                                  long double hVolumeHalflength,
                                                   const std::string& name) {
   ///  create the volume array
   using VAP = std::pair<TrackingVolumePtr, Vector3>;

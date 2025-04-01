@@ -15,8 +15,9 @@
 #include <DD4hep/Volumes.h>
 
 Acts::DD4hepDetectorElement::DD4hepDetectorElement(
-    const dd4hep::DetElement detElement, const std::string& axes, double scalor,
-    bool /*isDisc*/, std::shared_ptr<const ISurfaceMaterial> material)
+    const dd4hep::DetElement detElement, const std::string& axes,
+    long double scalor, bool /*isDisc*/,
+    std::shared_ptr<const ISurfaceMaterial> material)
     : TGeoDetectorElement(
           static_cast<TGeoDetectorElement::Identifier>(detElement.volumeID()),
           *(detElement.placement().ptr()),

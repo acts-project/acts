@@ -50,16 +50,17 @@ ActsExamples::ProcessCode ActsExamples::SeedFilterMLAlgorithm::execute(
 
   Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
       networkInput(seeds.size(), 14);
-  std::vector<std::array<double, 4>> clusteringParams;
+  std::vector<std::array<long double, 4>> clusteringParams;
   // Loop over the seed and parameters to fill the input for the clustering
   // and the NN
   for (std::size_t i = 0; i < seeds.size(); i++) {
     // Compute the track parameters
-    double pT = std::abs(1.0 / params[i].parameters()[Acts::eBoundQOverP]) *
-                std::sin(params[i].parameters()[Acts::eBoundTheta]);
-    double eta =
+    long double pT =
+        std::abs(1.0 / params[i].parameters()[Acts::eBoundQOverP]) *
+        std::sin(params[i].parameters()[Acts::eBoundTheta]);
+    long double eta =
         std::atanh(std::cos(params[i].parameters()[Acts::eBoundTheta]));
-    double phi = params[i].parameters()[Acts::eBoundPhi];
+    long double phi = params[i].parameters()[Acts::eBoundPhi];
 
     // Fill and weight the clustering inputs
     clusteringParams.push_back(

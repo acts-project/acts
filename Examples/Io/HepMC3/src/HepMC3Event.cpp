@@ -90,7 +90,7 @@ bool compareVertices(const std::shared_ptr<SimVertex>& actsVertex,
 ///
 
 void HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
-                               const double momentumUnit) {
+                               const long double momentumUnit) {
   // Check, if the momentum unit fits Acts::UnitConstants::MeV or _GeV
   HepMC3::Units::MomentumUnit mom = HepMC3::Units::MomentumUnit::GEV;
   if (momentumUnit == Acts::UnitConstants::MeV) {
@@ -106,7 +106,8 @@ void HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
   event.set_units(mom, event.length_unit());
 }
 
-void HepMC3Event::lengthUnit(HepMC3::GenEvent& event, const double lengthUnit) {
+void HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
+                             const long double lengthUnit) {
   // Check, if the length unit fits Acts::UnitConstants::mm or _cm
   HepMC3::Units::LengthUnit len = HepMC3::Units::LengthUnit::MM;
   if (lengthUnit == Acts::UnitConstants::mm) {
@@ -125,7 +126,7 @@ void HepMC3Event::lengthUnit(HepMC3::GenEvent& event, const double lengthUnit) {
 
 void HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
                                   const Acts::Vector3& deltaPos,
-                                  const double deltaTime) {
+                                  const long double deltaTime) {
   // Create HepMC3::FourVector from position and time for shift
   const HepMC3::FourVector vec(deltaPos(0), deltaPos(1), deltaPos(2),
                                deltaTime);
@@ -133,7 +134,8 @@ void HepMC3Event::shiftPositionBy(HepMC3::GenEvent& event,
 }
 
 void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
-                                  const Acts::Vector3& pos, const double time) {
+                                  const Acts::Vector3& pos,
+                                  const long double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), time);
   event.shift_position_to(vec);
@@ -146,7 +148,8 @@ void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
   event.shift_position_to(vec);
 }
 
-void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event, const double time) {
+void HepMC3Event::shiftPositionTo(HepMC3::GenEvent& event,
+                                  const long double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(event.event_pos().x(), event.event_pos().y(),
                                event.event_pos().z(), time);
@@ -204,14 +207,14 @@ void HepMC3Event::removeVertex(HepMC3::GenEvent& event,
 /// Getter
 ///
 
-double HepMC3Event::momentumUnit(const HepMC3::GenEvent& event) {
+long double HepMC3Event::momentumUnit(const HepMC3::GenEvent& event) {
   // HepMC allows only MEV and GEV. This allows an easy identification.
   return (event.momentum_unit() == HepMC3::Units::MomentumUnit::MEV
               ? Acts::UnitConstants::MeV
               : Acts::UnitConstants::GeV);
 }
 
-double HepMC3Event::lengthUnit(const HepMC3::GenEvent& event) {
+long double HepMC3Event::lengthUnit(const HepMC3::GenEvent& event) {
   // HepMC allows only MM and CM. This allows an easy identification.
   return (event.length_unit() == HepMC3::Units::LengthUnit::MM
               ? Acts::UnitConstants::mm
@@ -227,7 +230,7 @@ Acts::Vector3 HepMC3Event::eventPos(const HepMC3::GenEvent& event) {
   return vec;
 }
 
-double HepMC3Event::eventTime(const HepMC3::GenEvent& event) {
+long double HepMC3Event::eventTime(const HepMC3::GenEvent& event) {
   // Extract the time from HepMC3::FourVector
   return event.event_pos().t();
 }

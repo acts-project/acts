@@ -68,7 +68,7 @@ class Hit {
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_pos4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
-  double time() const { return m_pos4[Acts::eTime]; }
+  long double time() const { return m_pos4[Acts::eTime]; }
 
   /// Particle four-momentum before the hit.
   const Acts::Vector4& momentum4Before() const { return m_before4; }
@@ -92,7 +92,7 @@ class Hit {
   ///
   /// @retval positive if the particle lost energy when it passed the surface
   /// @retval negative if magic was involved
-  double depositedEnergy() const {
+  long double depositedEnergy() const {
     return m_before4[Acts::eEnergy] - m_after4[Acts::eEnergy];
   }
 

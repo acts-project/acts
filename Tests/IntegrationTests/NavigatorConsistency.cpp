@@ -41,7 +41,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-const double Bz = 2_T;
+const long double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
 
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
@@ -353,24 +353,26 @@ Reference2StraightLinePropagator refslpropagator2(
                             getDefaultLogger("ref2_sl_nav", Logging::INFO)),
     getDefaultLogger("ref2_sl_prop", Logging::INFO));
 
-auto eventGen =
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       -std::numbers::pi, std::numbers::pi))) ^
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       1., std::numbers::pi - 1.))) ^
-    bdata::random(
-        (bdata::engine = std::mt19937(), bdata::seed = 23,
-         bdata::distribution = std::uniform_int_distribution<int>(0, 1)));
+auto eventGen = bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                               bdata::distribution =
+                                   std::uniform_real_distribution<long double>(
+                                       0.5_GeV, 10_GeV))) ^
+                bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                               bdata::distribution =
+                                   std::uniform_real_distribution<long double>(
+                                       -std::numbers::pi, std::numbers::pi))) ^
+                bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
+                               bdata::distribution =
+                                   std::uniform_real_distribution<long double>(
+                                       1., std::numbers::pi - 1.))) ^
+                bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                               bdata::distribution =
+                                   std::uniform_int_distribution<int>(0, 1)));
 
-BoundTrackParameters createStartParameters(double pT, double phi, double theta,
-                                           int charge) {
-  double p = pT / std::sin(theta);
-  double q = -1 + 2 * charge;
+BoundTrackParameters createStartParameters(long double pT, long double phi,
+                                           long double theta, int charge) {
+  long double p = pT / std::sin(theta);
+  long double q = -1 + 2 * charge;
   return BoundTrackParameters::createCurvilinear(Vector4::Zero(), phi, theta,
                                                  q / p, std::nullopt,
                                                  ParticleHypothesis::pion());

@@ -127,8 +127,8 @@ class CuboidVolumeStack : public VolumeStack {
   /// @param volumes is the vector of volumes
   /// @param logger is the logger
   /// @return tuple of the minimum and maximum radii
-  std::pair<double, double> synchronizeBounds(std::vector<VolumeTuple>& volumes,
-                                              const Logger& logger);
+  std::pair<long double, long double> synchronizeBounds(
+      std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   /// Directions orthogonal to the
   /// merging direction of the stack

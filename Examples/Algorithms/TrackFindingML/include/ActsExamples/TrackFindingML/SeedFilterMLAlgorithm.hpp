@@ -44,13 +44,13 @@ class SeedFilterMLAlgorithm : public IAlgorithm {
     /// Minimum score a seed need to be selected
     float minSeedScore = 0.1;
     /// Clustering parameters weight for phi used before the DBSCAN
-    double clusteringWeighPhi = 1.0;
+    long double clusteringWeighPhi = 1.0;
     /// Clustering parameters weight for eta used before the DBSCAN
-    double clusteringWeighEta = 1.0;
+    long double clusteringWeighEta = 1.0;
     /// Clustering parameters weight for z used before the DBSCAN
-    double clusteringWeighZ = 50.0;
+    long double clusteringWeighZ = 50.0;
     /// Clustering parameters weight for pT used before the DBSCAN
-    double clusteringWeighPt = 1.0;
+    long double clusteringWeighPt = 1.0;
   };
 
   /// Construct the seed filter algorithm.

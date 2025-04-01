@@ -30,7 +30,7 @@ void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
     const auto* regSurface = dynamic_cast<const RegularSurface*>(sf);
     if (element != nullptr && regSurface != nullptr) {
       // Take the thickness in account if necessary
-      double thickness = element->thickness();
+      long double thickness = element->thickness();
       // We need a translation along and opposite half thickness
       Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
       for (const auto& dT : {-0.5 * thickness, 0.5 * thickness}) {
@@ -43,25 +43,25 @@ void ProtoLayerBase::measureImpl(const GeometryContext& gctx,
   }
 }
 
-double ProtoLayerBase::min(AxisDirection aDir, bool addenv) const {
+long double ProtoLayerBase::min(AxisDirection aDir, bool addenv) const {
   if (addenv) {
     return extent.min(aDir) - envelope[aDir][0u];
   }
   return extent.min(aDir);
 }
 
-double ProtoLayerBase::max(AxisDirection aDir, bool addenv) const {
+long double ProtoLayerBase::max(AxisDirection aDir, bool addenv) const {
   if (addenv) {
     return extent.max(aDir) + envelope[aDir][1u];
   }
   return extent.max(aDir);
 }
 
-double ProtoLayerBase::medium(AxisDirection aDir, bool addenv) const {
+long double ProtoLayerBase::medium(AxisDirection aDir, bool addenv) const {
   return 0.5 * (min(aDir, addenv) + max(aDir, addenv));
 }
 
-double ProtoLayerBase::range(AxisDirection aDir, bool addenv) const {
+long double ProtoLayerBase::range(AxisDirection aDir, bool addenv) const {
   return std::abs(max(aDir, addenv) - min(aDir, addenv));
 }
 

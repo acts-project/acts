@@ -29,7 +29,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr auto eps = std::numeric_limits<double>::epsilon();
+constexpr auto eps = std::numeric_limits<long double>::epsilon();
 }
 
 BOOST_AUTO_TEST_SUITE(TransformBoundToFree)

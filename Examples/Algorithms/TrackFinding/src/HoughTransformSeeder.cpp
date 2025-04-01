@@ -33,8 +33,10 @@
 #include <stdexcept>
 #include <variant>
 
-static inline int quant(double min, double max, unsigned nSteps, double val);
-static inline double unquant(double min, double max, unsigned nSteps, int step);
+static inline int quant(long double min, long double max, unsigned nSteps,
+                        long double val);
+static inline long double unquant(long double min, long double max,
+                                  unsigned nSteps, int step);
 template <typename T>
 static inline std::string to_string(std::vector<T> v);
 
@@ -325,13 +327,14 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
 
 // Quantizes val, given a range [min, max) split into nSteps. Returns the bin
 // below.
-static inline int quant(double min, double max, unsigned nSteps, double val) {
+static inline int quant(long double min, long double max, unsigned nSteps,
+                        long double val) {
   return static_cast<int>((val - min) / (max - min) * nSteps);
 }
 
 // Returns the lower bound of the bin specified by step
-static inline double unquant(double min, double max, unsigned nSteps,
-                             int step) {
+static inline long double unquant(long double min, long double max,
+                                  unsigned nSteps, int step) {
   return min + (max - min) * step / nSteps;
 }
 
@@ -347,10 +350,11 @@ static inline std::string to_string(std::vector<T> v) {
   return oss.str();
 }
 
-double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
-                                                double phi) const {
-  double d0 = 0;  // d0 correction TO DO allow for this
-  double x =
+long double ActsExamples::HoughTransformSeeder::yToX(long double y,
+                                                     long double r,
+                                                     long double phi) const {
+  long double d0 = 0;  // d0 correction TO DO allow for this
+  long double x =
       asin(r * ActsExamples::HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
 
   if (m_cfg.fieldCorrector.connected()) {
@@ -364,10 +368,10 @@ double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
 // Note this assumes yToX is monotonic. Returns {0, 0} if hit lies out of
 // bounds.
 std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
-    std::size_t yBin_min, std::size_t yBin_max, double r, double phi,
+    std::size_t yBin_min, std::size_t yBin_max, long double r, long double phi,
     unsigned layer) const {
-  double x_min = yToX(m_bins_y[yBin_min], r, phi);
-  double x_max = yToX(m_bins_y[yBin_max], r, phi);
+  long double x_min = yToX(m_bins_y[yBin_min], r, phi);
+  long double x_max = yToX(m_bins_y[yBin_max], r, phi);
   if (x_min > x_max) {
     std::swap(x_min, x_max);
   }
@@ -473,8 +477,8 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = Acts::fastHypot(sp.x(), sp.y());
-      double z = sp.z();
+      long double r = Acts::fastHypot(sp.x(), sp.y());
+      long double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
       if (!(hitlayer.ok())) {
@@ -543,9 +547,10 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
             surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        double r = globalPos.head<2>().norm();
-        double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
-        double z = globalPos[Acts::ePos2];
+        long double r = globalPos.head<2>().norm();
+        long double phi =
+            std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
+        long double z = globalPos[Acts::ePos2];
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);
         if (hitlayer.ok()) {
           std::vector<Index> index;

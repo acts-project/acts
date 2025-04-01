@@ -48,15 +48,14 @@
 #include "TGeoTube.h"
 
 std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3,
-           double>
-Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
-                                               const Double_t* rotation,
-                                               const Double_t* translation,
-                                               const std::string& axes,
-                                               double scalor) noexcept(false) {
+           long double>
+Acts::TGeoSurfaceConverter::cylinderComponents(
+    const TGeoShape& tgShape, const long double_t* rotation,
+    const long double_t* translation, const std::string& axes,
+    long double scalor) noexcept(false) {
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
   Transform3 transform = Transform3::Identity();
-  double thickness = 0.;
+  long double thickness = 0.;
 
   // Check if it's a tube (segment)
   auto tube = dynamic_cast<const TGeoTube*>(&tgShape);
@@ -81,20 +80,20 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                         : ys * Vector3(rotation[1], rotation[4], rotation[7]);
     Vector3 az = ax.cross(ay);
 
-    double minR = tube->GetRmin() * scalor;
-    double maxR = tube->GetRmax() * scalor;
-    double deltaR = maxR - minR;
-    double medR = 0.5 * (minR + maxR);
-    double halfZ = tube->GetDz() * scalor;
+    long double minR = tube->GetRmin() * scalor;
+    long double maxR = tube->GetRmax() * scalor;
+    long double deltaR = maxR - minR;
+    long double medR = 0.5 * (minR + maxR);
+    long double halfZ = tube->GetDz() * scalor;
     if (halfZ > deltaR) {
       transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
-      double halfPhi = std::numbers::pi;
-      double avgPhi = 0.;
+      long double halfPhi = std::numbers::pi;
+      long double avgPhi = 0.;
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
+        long double phi1 = toRadian(tubeSeg->GetPhi1());
+        long double phi2 = toRadian(tubeSeg->GetPhi2());
         if (std::abs(phi2 - phi1) < std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
@@ -115,17 +114,17 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
 }
 
 std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3,
-           double>
+           long double>
 Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
-                                           const Double_t* rotation,
-                                           const Double_t* translation,
+                                           const long double_t* rotation,
+                                           const long double_t* translation,
                                            const std::string& axes,
-                                           double scalor) noexcept(false) {
-  using Line2D = Eigen::Hyperplane<double, 2>;
+                                           long double scalor) noexcept(false) {
+  using Line2D = Eigen::Hyperplane<long double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
   Transform3 transform = Transform3::Identity();
 
-  double thickness = 0.;
+  long double thickness = 0.;
   // Special test for composite shape of silicon
   auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
   if (compShape != nullptr) {
@@ -149,13 +148,13 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     if (interNode != nullptr) {
       auto baseTube = dynamic_cast<TGeoTubeSeg*>(interNode->GetLeftShape());
       if (baseTube != nullptr) {
-        double rMin = baseTube->GetRmin() * scalor;
-        double rMax = baseTube->GetRmax() * scalor;
+        long double rMin = baseTube->GetRmin() * scalor;
+        long double rMax = baseTube->GetRmax() * scalor;
         auto maskShape = dynamic_cast<TGeoArb8*>(interNode->GetRightShape());
         if (maskShape != nullptr) {
           auto maskTransform = interNode->GetRightMatrix();
           // Get the only vertices
-          const Double_t* polyVrt = maskShape->GetVertices();
+          const long double_t* polyVrt = maskShape->GetVertices();
           // Apply the whole transformation stored for the
           // polyhedron, since there is a translation and
           // also a side flip that needs to be applied.
@@ -163,8 +162,9 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           // the transformation ?
           std::vector<Vector2> vertices;
           for (unsigned int v = 0; v < 8; v += 2) {
-            std::array<double, 3> local{polyVrt[v + 0], polyVrt[v + 1], 0.};
-            std::array<double, 3> global{};
+            std::array<long double, 3> local{polyVrt[v + 0], polyVrt[v + 1],
+                                             0.};
+            std::array<long double, 3> global{};
             maskTransform->LocalToMaster(local.data(), global.data());
             Vector2 vtx = Vector2(global[0] * scalor, global[1] * scalor);
             vertices.push_back(vtx);
@@ -175,7 +175,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
             Vector2 a = vertices.at(i);
             Vector2 b = vertices.at((i + 1) % vertices.size());
             Vector2 ab = b - a;
-            double phi = VectorHelpers::phi(ab);
+            long double phi = VectorHelpers::phi(ab);
 
             if (std::abs(phi) > 3 * std::numbers::pi / 4. ||
                 std::abs(phi) < std::numbers::pi / 4.) {
@@ -204,13 +204,13 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           // Update transform by prepending the origin shift translation
           transform = transform * originTranslation;
           // Transform phi line point to new origin and get phi
-          double phi1 =
+          long double phi1 =
               VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
-          double phi2 =
+          long double phi2 =
               VectorHelpers::phi(boundLines[1].second - boundLines[1].first);
-          double phiMax = std::max(phi1, phi2);
-          double phiMin = std::min(phi1, phi2);
-          double phiShift = 0.;
+          long double phiMax = std::max(phi1, phi2);
+          long double phiMin = std::min(phi1, phi2);
+          long double phiShift = 0.;
 
           // Create the bounds
           auto annulusBounds = std::make_shared<const AnnulusBounds>(
@@ -244,16 +244,16 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       Vector3 az = ax.cross(ay);
       transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
 
-      double minR = tube->GetRmin() * scalor;
-      double maxR = tube->GetRmax() * scalor;
-      double halfZ = tube->GetDz() * scalor;
-      double halfPhi = std::numbers::pi;
-      double avgPhi = 0.;
+      long double minR = tube->GetRmin() * scalor;
+      long double maxR = tube->GetRmax() * scalor;
+      long double halfZ = tube->GetDz() * scalor;
+      long double halfPhi = std::numbers::pi;
+      long double avgPhi = 0.;
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
+        long double phi1 = toRadian(tubeSeg->GetPhi1());
+        long double phi2 = toRadian(tubeSeg->GetPhi2());
         if (std::abs(phi2 - phi1) < 2 * std::numbers::pi * (1. - s_epsilon)) {
           if (!boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
@@ -274,12 +274,11 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
 }
 
 std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3,
-           double>
-Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
-                                            const Double_t* rotation,
-                                            const Double_t* translation,
-                                            const std::string& axes,
-                                            double scalor) noexcept(false) {
+           long double>
+Acts::TGeoSurfaceConverter::planeComponents(
+    const TGeoShape& tgShape, const long double_t* rotation,
+    const long double_t* translation, const std::string& axes,
+    long double scalor) noexcept(false) {
   // Create translation and rotation
   Vector3 t(scalor * translation[0], scalor * translation[1],
             scalor * translation[2]);
@@ -338,7 +337,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   }
 
   // The thickness will be filled
-  double thickness = 0.;
+  long double thickness = 0.;
 
   // The sign of the axes
   int xs = std::islower(axes.at(0)) != 0 ? -1 : 1;
@@ -349,13 +348,13 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   Vector3 cy = ys * ay;
   if (boost::istarts_with(axes, "XY")) {
     if (trapezoid2 != nullptr) {
-      double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
+      long double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
+      long double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDy1());
       thickness = 2 * scalor * trapezoid2->GetDz();
     } else if (polygon8 != nullptr) {
-      Double_t* tgverts = polygon8->GetVertices();
+      long double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
         pVertices.push_back(Vector2(scalor * xs * tgverts[ivtx * 2],
@@ -375,8 +374,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       throw std::invalid_argument(
           "TGeoTrd1 can only be converted with '(x/X)(z/Z)(y/Y)' axes");
     } else if (trapezoid2 != nullptr) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
+      long double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
+      long double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
       thickness = 2 * scalor * trapezoid2->GetDx1();
@@ -397,14 +396,14 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
     cx = xs * ax;
     cy = ys * az;
     if (trapezoid1 != nullptr) {
-      double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
+      long double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
+      long double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid1->GetDz());
       thickness = 2 * scalor * trapezoid1->GetDy();
     } else if (trapezoid2 != nullptr) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDx2() : trapezoid2->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDx1() : trapezoid2->GetDx2();
+      long double dx1 = (ys < 0) ? trapezoid2->GetDx2() : trapezoid2->GetDx1();
+      long double dx2 = (ys < 0) ? trapezoid2->GetDx1() : trapezoid2->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
       thickness = 2 * scalor * trapezoid2->GetDy1();
@@ -417,13 +416,13 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
     cx = xs * ay;
     cy = ys * ax;
     if (trapezoid2 != nullptr) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
+      long double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
+      long double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDx1());
       thickness = 2 * scalor * trapezoid2->GetDz();
     } else if (polygon8 != nullptr) {
-      const Double_t* tgverts = polygon8->GetVertices();
+      const long double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2> pVertices;
       for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
         pVertices.push_back(Vector2(scalor * xs * tgverts[ivtx * 2 + 1],
@@ -457,14 +456,14 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::Surface>, double>
+std::tuple<std::shared_ptr<Acts::Surface>, long double>
 Acts::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
                                       const TGeoMatrix& tgMatrix,
                                       const std::string& axes,
-                                      double scalor) noexcept(false) {
+                                      long double scalor) noexcept(false) {
   // Get the placement and orientation in respect to its mother
-  const Double_t* rotation = tgMatrix.GetRotationMatrix();
-  const Double_t* translation = tgMatrix.GetTranslation();
+  const long double_t* rotation = tgMatrix.GetRotationMatrix();
+  const long double_t* translation = tgMatrix.GetTranslation();
 
   auto [cBounds, cTransform, cThickness] =
       cylinderComponents(tgShape, rotation, translation, axes, scalor);

@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
   // Let's create a GeoFullPhysVol object
 
   // (BOX object) - XY
-  std::vector<double> hls = {100, 200, 2};
+  std::vector<long double> hls = {100, 200, 2};
   auto box = new GeoBox(hls[0], hls[1], hls[2]);
   auto logBox = new GeoLogVol("Box", box, material);
   auto physBox = make_intrusive<GeoFullPhysVol>(logBox);
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
       gmCache.boundingBoxes[0];
   const auto* bounds =
       dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
-  std::vector<double> convHls = bounds->values();
+  std::vector<long double> convHls = bounds->values();
   for (std::size_t i = 0; i < hls.size(); i++) {
     BOOST_CHECK(hls[i] == convHls[i]);
   }

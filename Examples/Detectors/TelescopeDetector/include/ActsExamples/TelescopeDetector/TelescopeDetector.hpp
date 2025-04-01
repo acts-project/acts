@@ -26,11 +26,11 @@ namespace ActsExamples {
 class TelescopeDetector : public Detector {
  public:
   struct Config {
-    std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
-    std::vector<double> stereos{{0, 0, 0, 0, 0, 0}};
-    std::array<double, 2> offsets{{0, 0}};
-    std::array<double, 2> bounds{{25, 100}};
-    double thickness{80 * Acts::UnitConstants::um};
+    std::vector<long double> positions{{0, 30, 60, 120, 150, 180}};
+    std::vector<long double> stereos{{0, 0, 0, 0, 0, 0}};
+    std::array<long double, 2> offsets{{0, 0}};
+    std::array<long double, 2> bounds{{25, 100}};
+    long double thickness{80 * Acts::UnitConstants::um};
     int surfaceType{0};
     int binValue{2};
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;

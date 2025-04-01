@@ -40,14 +40,15 @@ ConeSurface::ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
       RegularSurface(gctx, other, shift),
       m_bounds(other.m_bounds) {}
 
-ConeSurface::ConeSurface(const Transform3& transform, double alpha,
+ConeSurface::ConeSurface(const Transform3& transform, long double alpha,
                          bool symmetric)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
-ConeSurface::ConeSurface(const Transform3& transform, double alpha, double zmin,
-                         double zmax, double halfPhi)
+ConeSurface::ConeSurface(const Transform3& transform, long double alpha,
+                         long double zmin, long double zmax,
+                         long double halfPhi)
     : GeometryObject(),
       RegularSurface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
@@ -117,17 +118,17 @@ RotationMatrix3 ConeSurface::referenceFrame(
 Vector3 ConeSurface::localToGlobal(const GeometryContext& gctx,
                                    const Vector2& lposition) const {
   // create the position in the local 3d frame
-  double r = lposition[1] * bounds().tanAlpha();
-  double phi = lposition[0] / r;
+  long double r = lposition[1] * bounds().tanAlpha();
+  long double phi = lposition[0] / r;
   Vector3 loc3Dframe(r * cos(phi), r * sin(phi), lposition[1]);
   return transform(gctx) * loc3Dframe;
 }
 
 Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
-                                           double tolerance) const {
+                                           long double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
-  double r = loc3Dframe.z() * bounds().tanAlpha();
+  long double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -135,19 +136,19 @@ Result<Vector2> ConeSurface::globalToLocal(const GeometryContext& gctx,
       Vector2(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()));
 }
 
-double ConeSurface::pathCorrection(const GeometryContext& gctx,
-                                   const Vector3& position,
-                                   const Vector3& direction) const {
+long double ConeSurface::pathCorrection(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3 posLocal = transform(gctx).inverse() * position;
-  double phi = VectorHelpers::phi(posLocal);
-  double sgn = posLocal.z() > 0. ? -1. : +1.;
-  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
-  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
+  long double phi = VectorHelpers::phi(posLocal);
+  long double sgn = posLocal.z() > 0. ? -1. : +1.;
+  long double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  long double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   normalC = transform(gctx) * normalC;
   // Back to the global frame
-  double cAlpha = normalC.dot(direction);
+  long double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
 }
 
@@ -158,10 +159,10 @@ std::string ConeSurface::name() const {
 Vector3 ConeSurface::normal(const GeometryContext& gctx,
                             const Vector2& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  double phi = lposition[0] / (bounds().r(lposition[1])),
-         sgn = lposition[1] > 0 ? -1. : +1.;
-  double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
-  double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
+  long double phi = lposition[0] / (bounds().r(lposition[1])),
+              sgn = lposition[1] > 0 ? -1. : +1.;
+  long double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
+  long double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   return Vector3(transform(gctx).linear() * localNormal);
 }
@@ -186,11 +187,11 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
-  double minZ = bounds().get(ConeBounds::eMinZ);
-  double maxZ = bounds().get(ConeBounds::eMaxZ);
+  long double minZ = bounds().get(ConeBounds::eMinZ);
+  long double maxZ = bounds().get(ConeBounds::eMaxZ);
 
-  if (minZ == -std::numeric_limits<double>::infinity() ||
-      maxZ == std::numeric_limits<double>::infinity()) {
+  if (minZ == -std::numeric_limits<long double>::infinity() ||
+      maxZ == std::numeric_limits<long double>::infinity()) {
     throw std::domain_error(
         "Polyhedron representation of boundless surface is not possible");
   }
@@ -205,15 +206,15 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   }
 
   // Cone parameters
-  double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
-  double avgPhi = bounds().get(ConeBounds::eAveragePhi);
-  std::vector<double> refPhi = {};
+  long double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
+  long double avgPhi = bounds().get(ConeBounds::eAveragePhi);
+  std::vector<long double> refPhi = {};
   if (bool fullCone = (hPhiSec == std::numbers::pi); !fullCone) {
     refPhi = {avgPhi};
   }
 
   // Add the cone sizes
-  std::vector<double> coneSides;
+  std::vector<long double> coneSides;
   if (std::abs(minZ) > s_onSurfaceTolerance) {
     coneSides.push_back(minZ);
   }
@@ -224,7 +225,7 @@ Polyhedron ConeSurface::polyhedronRepresentation(
   for (auto& z : coneSides) {
     std::size_t firstIv = vertices.size();
     // Radius and z offset
-    double r = std::abs(z) * bounds().tanAlpha();
+    long double r = std::abs(z) * bounds().tanAlpha();
     Vector3 zoffset(0., 0., z);
     auto svertices = detail::VerticesHelper::segmentVertices(
         {r, r}, avgPhi - hPhiSec, avgPhi + hPhiSec, refPhi, quarterSegments,
@@ -264,13 +265,13 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   Vector3 dir1 = invTrans.linear() * direction;
 
   // See file header for the formula derivation
-  double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
-         A = dir1.x() * dir1.x() + dir1.y() * dir1.y() -
-             tan2Alpha * dir1.z() * dir1.z(),
-         B = 2 * (dir1.x() * point1.x() + dir1.y() * point1.y() -
-                  tan2Alpha * dir1.z() * point1.z()),
-         C = point1.x() * point1.x() + point1.y() * point1.y() -
-             tan2Alpha * point1.z() * point1.z();
+  long double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
+              A = dir1.x() * dir1.x() + dir1.y() * dir1.y() -
+                  tan2Alpha * dir1.z() * dir1.z(),
+              B = 2 * (dir1.x() * point1.x() + dir1.y() * point1.y() -
+                       tan2Alpha * dir1.z() * point1.z()),
+              C = point1.x() * point1.x() + point1.y() * point1.y() -
+                  tan2Alpha * point1.z() * point1.z();
   if (A == 0.) {
     A += 1e-16;  // avoid division by zero
   }
@@ -281,7 +282,7 @@ detail::RealQuadraticEquation ConeSurface::intersectionSolver(
 SurfaceMultiIntersection ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
+    long double tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -382,12 +383,12 @@ ActsMatrix<2, 3> ConeSurface::localCartesianToBoundLocalDerivative(
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
-  const double lr = perp(localPos);
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  const long double lr = perp(localPos);
+  const long double lphi = phi(localPos);
+  const long double lcphi = std::cos(lphi);
+  const long double lsphi = std::sin(lphi);
   // Solve for radius R
-  const double R = localPos.z() * bounds().tanAlpha();
+  const long double R = localPos.z() * bounds().tanAlpha();
   ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr,
       lphi * bounds().tanAlpha(), 0, 0, 1;

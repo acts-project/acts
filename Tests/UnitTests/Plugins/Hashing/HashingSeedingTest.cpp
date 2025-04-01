@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(HashingBucketCreationTest) {
   unsigned int phiBins = 0;
 
   /// Layer selection
-  double layerRMin = 25;
-  double layerRMax = 40;
-  double layerZMin = -550;
-  double layerZMax = 550;
+  long double layerRMin = 25;
+  long double layerRMax = 40;
+  long double layerZMin = -550;
+  long double layerZMax = 550;
 
   Acts::HashingAlgorithmConfig hashingConfig;
   hashingConfig.bucketSize = bucketSize;
@@ -142,10 +142,10 @@ BOOST_AUTO_TEST_CASE(HashingBucketContentTest) {
   unsigned int phiBins = 0;
 
   /// Layer selection
-  double layerRMin = 25;
-  double layerRMax = 40;
-  double layerZMin = -550;
-  double layerZMax = 550;
+  long double layerRMin = 25;
+  long double layerRMax = 40;
+  long double layerZMin = -550;
+  long double layerZMax = 550;
 
   Acts::HashingAlgorithmConfig hashingConfig;
   hashingConfig.bucketSize = bucketSize;

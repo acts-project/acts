@@ -45,7 +45,8 @@ class MagneticFieldWrapper : public G4MagneticField {
   /// @param Point is the field request point
   /// @param Bfield [in,out] is the field value
   ///
-  void GetFieldValue(const G4double Point[4], G4double* Bfield) const final;
+  void GetFieldValue(const G4long double Point[4],
+                     G4long double* Bfield) const final;
 
  protected:
   Config m_cfg;

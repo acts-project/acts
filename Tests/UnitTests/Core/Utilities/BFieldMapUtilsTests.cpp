@@ -31,10 +31,10 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
-  std::vector<double> rPos = {0., 1., 2., 3.};
-  std::vector<double> xPos = {0., 1., 2., 3.};
-  std::vector<double> yPos = {0., 1., 2., 3.};
-  std::vector<double> zPos = {0., 1., 2., 3.};
+  std::vector<long double> rPos = {0., 1., 2., 3.};
+  std::vector<long double> xPos = {0., 1., 2., 3.};
+  std::vector<long double> yPos = {0., 1., 2., 3.};
+  std::vector<long double> zPos = {0., 1., 2., 3.};
 
   // create b field in rz
   std::vector<Acts::Vector2> bField_rz;
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
       Acts::fieldMapRZ(localToGlobalBin_rz, rPos, zPos, bField_rz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_rz = {rPos.size(), zPos.size()};
-  std::vector<double> minima_rz = {0., 0.};
-  std::vector<double> maxima_rz = {3., 3.};
+  std::vector<long double> minima_rz = {0., 0.};
+  std::vector<long double> maxima_rz = {3., 3.};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
                                    bField_xyz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
-  std::vector<double> minima_xyz = {0., 0., 0.};
-  std::vector<double> maxima_xyz = {3., 3., 3.};
+  std::vector<long double> minima_xyz = {0., 0., 0.};
+  std::vector<long double> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(map_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -147,10 +147,10 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
 
 BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // create grid values
-  std::vector<double> rPos = {0., 1., 2.};
-  std::vector<double> xPos = {0., 1., 2.};
-  std::vector<double> yPos = {0., 1., 2.};
-  std::vector<double> zPos = {0., 1., 2.};
+  std::vector<long double> rPos = {0., 1., 2.};
+  std::vector<long double> xPos = {0., 1., 2.};
+  std::vector<long double> yPos = {0., 1., 2.};
+  std::vector<long double> zPos = {0., 1., 2.};
   // the bfield values in rz
   std::vector<Acts::Vector2> bField_rz;
   for (int i = 0; i < 9; i++) {
@@ -166,8 +166,8 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
 
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
-  std::vector<double> minima_rz = {0., -2.};
-  std::vector<double> maxima_rz = {2., 2.};
+  std::vector<long double> minima_rz = {0., -2.};
+  std::vector<long double> maxima_rz = {2., 2.};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
   auto vec = map_rz.getNBins();
   auto vec0 = map_rz.getMin();
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_xyz = {
       2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
-  std::vector<double> minima_xyz = {-2., -2., -2.};
-  std::vector<double> maxima_xyz = {2., 2., 2.};
+  std::vector<long double> minima_xyz = {-2., -2., -2.};
+  std::vector<long double> maxima_xyz = {2., 2., 2.};
   BOOST_CHECK(map_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -246,30 +246,33 @@ BOOST_DATA_TEST_CASE(
     bfield_symmetry_random,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                    bdata::distribution =
-                       std::uniform_real_distribution<double>(-10., 10.))) ^
+                       std::uniform_real_distribution<long double>(-10.,
+                                                                   10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-20., 20.))) ^
+                           std::uniform_real_distribution<long double>(-20.,
+                                                                       20.))) ^
         bdata::xrange(10),
     x, y, z, index) {
   (void)index;
 
-  std::vector<double> rPos;
-  std::vector<double> xPos;
-  std::vector<double> yPos;
-  std::vector<double> zPos;
-  double maxR = 20.;
-  double maxZ = 30.;
-  double maxBr = 10.;
-  double maxBz = 20.;
+  std::vector<long double> rPos;
+  std::vector<long double> xPos;
+  std::vector<long double> yPos;
+  std::vector<long double> zPos;
+  long double maxR = 20.;
+  long double maxZ = 30.;
+  long double maxBr = 10.;
+  long double maxBz = 20.;
   std::size_t nBins = 10;
-  double stepR = maxR / nBins;
-  double stepZ = maxZ / nBins;
-  double bStepR = maxBr / nBins;
-  double bStepZ = maxBz / nBins;
+  long double stepR = maxR / nBins;
+  long double stepZ = maxZ / nBins;
+  long double bStepR = maxBr / nBins;
+  long double bStepZ = maxBz / nBins;
 
   for (std::size_t i = 0; i < nBins; i++) {
     rPos.push_back(i * stepR);
@@ -292,8 +295,9 @@ BOOST_DATA_TEST_CASE(
 
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
-  std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_rz = {(nBins - 1) * stepR, (nBins - 1) * stepZ};
+  std::vector<long double> minima_rz = {0., -((nBins - 1) * stepZ)};
+  std::vector<long double> maxima_rz = {(nBins - 1) * stepR,
+                                        (nBins - 1) * stepZ};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -318,10 +322,10 @@ BOOST_DATA_TEST_CASE(
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_xyz = {
       2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
-  std::vector<double> minima_xyz = {
+  std::vector<long double> minima_xyz = {
       -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_xyz = {(nBins - 1) * stepR, (nBins - 1) * stepR,
-                                    (nBins - 1) * stepZ};
+  std::vector<long double> maxima_xyz = {
+      (nBins - 1) * stepR, (nBins - 1) * stepR, (nBins - 1) * stepZ};
   BOOST_CHECK(map_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)

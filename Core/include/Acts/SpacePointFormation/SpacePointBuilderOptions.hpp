@@ -29,9 +29,9 @@ struct SpacePointBuilderOptions {
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
   /// Allowed increase of strip length
-  double stripLengthTolerance = 0.01;
+  long double stripLengthTolerance = 0.01;
   /// Allowed increase of strip length wrt gaps between strips
-  double stripLengthGapTolerance = 0.01;
+  long double stripLengthGapTolerance = 0.01;
 };
 
 struct StripPairOptions {
@@ -40,11 +40,11 @@ struct StripPairOptions {
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
   /// Accepted squared difference in theta for two clusters
-  double diffTheta2 = 1.;
+  long double diffTheta2 = 1.;
   /// Accepted squared difference in phi for two clusters
-  double diffPhi2 = 1.;
+  long double diffPhi2 = 1.;
   /// Accepted distance between two clusters
-  double diffDist = 100. * UnitConstants::mm;
+  long double diffDist = 100. * UnitConstants::mm;
 };
 
 }  // namespace Acts

@@ -44,10 +44,11 @@ BOOST_DATA_TEST_CASE(NoPhoton, Dataset::parametersPhotonConversion, phi, theta,
   ActsFatras::PhotonConversion pc;
 
   // No limits should be set
-  std::pair<double, double> limits;
+  std::pair<long double, long double> limits;
   limits = pc.generatePathLimits(gen, particle);
-  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(limits.second, std::numeric_limits<double>::infinity());
+  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<long double>::infinity());
+  BOOST_CHECK_EQUAL(limits.second,
+                    std::numeric_limits<long double>::infinity());
 
   // No particles should be generated
   std::vector<ActsFatras::Particle> generated;
@@ -76,9 +77,11 @@ BOOST_DATA_TEST_CASE(DeadPhoton, Dataset::parametersPhotonConversion, phi,
   ActsFatras::PhotonConversion pc;
 
   // No limits should be set - momentum too low
-  std::pair<double, double> limits = pc.generatePathLimits(gen, particle);
-  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(limits.second, std::numeric_limits<double>::infinity());
+  std::pair<long double, long double> limits =
+      pc.generatePathLimits(gen, particle);
+  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<long double>::infinity());
+  BOOST_CHECK_EQUAL(limits.second,
+                    std::numeric_limits<long double>::infinity());
 
   // No particles should be generated - momentum too low
   std::vector<ActsFatras::Particle> generated;
@@ -107,9 +110,11 @@ BOOST_DATA_TEST_CASE(LowMomentumPhoton, Dataset::parametersPhotonConversion,
   ActsFatras::PhotonConversion pc;
 
   // No limits should be set - momentum too low
-  std::pair<double, double> limits = pc.generatePathLimits(gen, particle);
-  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(limits.second, std::numeric_limits<double>::infinity());
+  std::pair<long double, long double> limits =
+      pc.generatePathLimits(gen, particle);
+  BOOST_CHECK_EQUAL(limits.first, std::numeric_limits<long double>::infinity());
+  BOOST_CHECK_EQUAL(limits.second,
+                    std::numeric_limits<long double>::infinity());
 
   // No particles should be generated - momentum too low
   std::vector<ActsFatras::Particle> generated;
@@ -138,9 +143,11 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
   ActsFatras::PhotonConversion pc;
 
   // No limits should be set - momentum too low
-  std::pair<double, double> limits = pc.generatePathLimits(gen, particle);
-  BOOST_CHECK_NE(limits.first, std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(limits.second, std::numeric_limits<double>::infinity());
+  std::pair<long double, long double> limits =
+      pc.generatePathLimits(gen, particle);
+  BOOST_CHECK_NE(limits.first, std::numeric_limits<long double>::infinity());
+  BOOST_CHECK_EQUAL(limits.second,
+                    std::numeric_limits<long double>::infinity());
 
   // No particles should be generated - momentum too low
   std::vector<ActsFatras::Particle> generated;
@@ -160,11 +167,11 @@ BOOST_DATA_TEST_CASE(HighMomentumPhoton, Dataset::parametersPhotonConversion,
   Acts::Vector4 momSum =
       generated[0].fourMomentum() + generated[1].fourMomentum();
   Acts::Vector3 momVector = momSum.template segment<3>(Acts::eMom0);
-  double sSum = momSum[Acts::eEnergy] * momSum[Acts::eEnergy] -
-                momVector.norm() * momVector.norm();
+  long double sSum = momSum[Acts::eEnergy] * momSum[Acts::eEnergy] -
+                     momVector.norm() * momVector.norm();
   BOOST_CHECK(std::isfinite(sSum));
 
-  double sParticle =
+  long double sParticle =
       particleInit.energy() * particleInit.energy() -
       particleInit.absoluteMomentum() * particleInit.absoluteMomentum();
   BOOST_CHECK(std::isfinite(sParticle));

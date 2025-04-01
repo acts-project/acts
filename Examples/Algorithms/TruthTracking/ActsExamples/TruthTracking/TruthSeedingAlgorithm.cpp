@@ -153,14 +153,14 @@ ProcessCode TruthSeedingAlgorithm::execute(const AlgorithmContext& ctx) const {
     // @todo add the check of deltaZ
     bool seedFound = false;
     std::array<std::size_t, 3> bestSPIndices{};
-    double maxDeltaR = std::numeric_limits<double>::min();
+    long double maxDeltaR = std::numeric_limits<long double>::min();
     for (std::size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (std::size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
         for (std::size_t it = im + 1; it < spacePointsOnTrack.size(); ++it) {
-          double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
-                                     spacePointsOnTrack[ib]->r());
-          double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
-                                     spacePointsOnTrack[im]->r());
+          long double bmDeltaR = std::abs(spacePointsOnTrack[im]->r() -
+                                          spacePointsOnTrack[ib]->r());
+          long double mtDeltaR = std::abs(spacePointsOnTrack[it]->r() -
+                                          spacePointsOnTrack[im]->r());
           if (bmDeltaR >= m_cfg.deltaRMin && bmDeltaR <= m_cfg.deltaRMax &&
               mtDeltaR >= m_cfg.deltaRMin && mtDeltaR <= m_cfg.deltaRMax) {
             if ((bmDeltaR + mtDeltaR) > maxDeltaR) {

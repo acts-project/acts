@@ -114,7 +114,7 @@ void writeMeasurement(const ConstVariableBoundMeasurementProxy& from,
 /// Inpersistent information:
 /// - trajectory state incomplete
 /// - relation to the particles
-void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
+void writeTrajectory(const Acts::GeometryContext& gctx, long double Bz,
                      const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const Acts::ParticleHypothesis& particleHypothesis,

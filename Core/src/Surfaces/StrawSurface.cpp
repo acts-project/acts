@@ -20,8 +20,8 @@
 
 namespace Acts {
 
-StrawSurface::StrawSurface(const Transform3& transform, double radius,
-                           double halez)
+StrawSurface::StrawSurface(const Transform3& transform, long double radius,
+                           long double halez)
     : GeometryObject(), LineSurface(transform, radius, halez) {}
 
 StrawSurface::StrawSurface(const Transform3& transform,
@@ -57,7 +57,7 @@ Polyhedron StrawSurface::polyhedronRepresentation(
   const Transform3& ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (quarterSegments > 0u) {
-    double r = m_bounds->get(LineBounds::eR);
+    long double r = m_bounds->get(LineBounds::eR);
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {

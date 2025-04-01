@@ -57,28 +57,29 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<long double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<long double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<long double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<long double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<long double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
+std::uniform_real_distribution<long double> thetaDist(1.,
+                                                      std::numbers::pi - 1.);
 // Track charge helper distribution
-std::uniform_real_distribution<double> qDist(-1, 1);
+std::uniform_real_distribution<long double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<double> resIPDist(0., 100_um);
+std::uniform_real_distribution<long double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<double> resAngDist(0., 0.1);
+std::uniform_real_distribution<long double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<long double> resQoPDist(-0.01, 0.01);
 
 ///
 /// @brief Unit test for ZScanVertexFinder
@@ -108,13 +109,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
+    long double x = vXYDist(gen);
+    long double y = vXYDist(gen);
+    long double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = std::hypot(x, y);
-    double z0_v = z;
+    long double d0_v = std::hypot(x, y);
+    long double z0_v = z;
 
     // Start constructing nTracks tracks in the following
     std::vector<BoundTrackParameters> tracks;
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      long double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
       BoundVector paramVec = BoundVector::Zero();
@@ -134,11 +135,11 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
       paramVec[eBoundQOverP] = q / pTDist(gen);
 
       // Resolutions
-      double resD0 = resIPDist(gen);
-      double resZ0 = resIPDist(gen);
-      double resPh = resAngDist(gen);
-      double resTh = resAngDist(gen);
-      double resQp = resQoPDist(gen);
+      long double resD0 = resIPDist(gen);
+      long double resZ0 = resIPDist(gen);
+      long double resPh = resAngDist(gen);
+      long double resTh = resAngDist(gen);
+      long double resQp = resQoPDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
       Covariance covMat;
@@ -226,13 +227,13 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
+    long double x = vXYDist(gen);
+    long double y = vXYDist(gen);
+    long double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = std::hypot(x, y);
-    double z0_v = z;
+    long double d0_v = std::hypot(x, y);
+    long double z0_v = z;
 
     // Start constructing nTracks tracks in the following
     std::vector<InputTrackStub> tracks;
@@ -241,20 +242,20 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Vector to store track objects used for vertex fit
     for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
       // Construct positive or negative charge randomly
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      long double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Construct random track parameters
       BoundVector paramVec;
-      double z0track = z0_v + z0Dist(gen);
+      long double z0track = z0_v + z0Dist(gen);
       paramVec << d0_v + d0Dist(gen), z0track, phiDist(gen), thetaDist(gen),
           q / pTDist(gen), 0.;
 
       // Resolutions
-      double resD0 = resIPDist(gen);
-      double resZ0 = resIPDist(gen);
-      double resPh = resAngDist(gen);
-      double resTh = resAngDist(gen);
-      double resQp = resQoPDist(gen);
+      long double resD0 = resIPDist(gen);
+      long double resZ0 = resIPDist(gen);
+      long double resPh = resAngDist(gen);
+      long double resTh = resAngDist(gen);
+      long double resQp = resQoPDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
       Covariance covMat;

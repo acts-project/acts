@@ -43,27 +43,27 @@ namespace bd = boost::unit_test::data;
 using RandomGenerator = std::default_random_engine;
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(value + 0., 0.));
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomGenerator& /*rng*/) {
+    return Acts::Result<std::pair<long double, long double>>(
+        std::make_pair<long double, long double>(value + 0., 0.));
   }
 };
 
 struct AddSmearer {
-  double offset = 1.0;
+  long double offset = 1.0;
 
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(value + offset, 3.));
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomGenerator& /*rng*/) {
+    return Acts::Result<std::pair<long double, long double>>(
+        std::make_pair<long double, long double>(value + offset, 3.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
-                                                     RandomGenerator& /*rng*/) {
-    return Acts::Result<std::pair<double, double>>(
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double /*ignored*/, RandomGenerator& /*rng*/) {
+    return Acts::Result<std::pair<long double, long double>>(
         ActsFatras::DigitizationError::SmearingError);
   }
 };
@@ -128,7 +128,7 @@ const Acts::FreeIndices freeIndices[] = {
     Acts::eFreeDir0, Acts::eFreeDir1, Acts::eFreeDir2,
 };
 
-constexpr auto tol = 128 * std::numeric_limits<double>::epsilon();
+constexpr auto tol = 128 * std::numeric_limits<long double>::epsilon();
 
 }  // namespace
 

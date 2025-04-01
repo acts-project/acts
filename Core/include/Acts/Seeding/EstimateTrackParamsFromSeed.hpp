@@ -78,8 +78,8 @@ FreeVector estimateTrackParamsFromSeed(spacepoint_range_t spRange,
   // The global positions of the bottom, middle and space points
   std::array<Vector3, 3> spPositions = {Vector3::Zero(), Vector3::Zero(),
                                         Vector3::Zero()};
-  std::array<std::optional<double>, 3> spTimes = {std::nullopt, std::nullopt,
-                                                  std::nullopt};
+  std::array<std::optional<long double>, 3> spTimes = {
+      std::nullopt, std::nullopt, std::nullopt};
   // The first, second and third space point are assumed to be bottom, middle
   // and top space point, respectively
   for (auto [sp, spPosition, spTime] :
@@ -163,13 +163,13 @@ struct EstimateTrackParamCovarianceConfig {
                                1. * UnitConstants::ns};
 
   /// The initial relative uncertainty of the q/pt
-  double initialSigmaPtRel = 0.1;
+  long double initialSigmaPtRel = 0.1;
 
   /// The inflation factors for the variances of the track parameters
   BoundVector initialVarInflation = {1., 1., 1., 1., 1., 1.};
   /// The inflation factor for time uncertainty if the time parameter was not
   /// estimated
-  double noTimeVarInflation = 100.;
+  long double noTimeVarInflation = 100.;
 };
 
 /// Estimate the covariance matrix of the given track parameters based on the

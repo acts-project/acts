@@ -63,7 +63,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// @param thickness is the module thickness
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
                            const std::shared_ptr<const PlanarBounds>& pBounds,
-                           double thickness)
+                           long double thickness)
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),
         m_elementThickness(thickness) {
@@ -87,7 +87,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  long double thickness() const override;
 
  private:
   /// the transform for positioning in 3D space
@@ -95,7 +95,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// the surface represented by it
   std::shared_ptr<Surface> m_elementSurface{nullptr};
   /// the element thickness
-  double m_elementThickness{0.};
+  long double m_elementThickness{0.};
 };
 
 inline const Transform3& AlignableDetectorElement::transform(
@@ -116,7 +116,7 @@ inline Surface& AlignableDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-inline double AlignableDetectorElement::thickness() const {
+inline long double AlignableDetectorElement::thickness() const {
   return m_elementThickness;
 }
 

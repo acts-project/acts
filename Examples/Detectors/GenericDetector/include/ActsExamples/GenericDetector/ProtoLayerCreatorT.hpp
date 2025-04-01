@@ -62,64 +62,64 @@ class ProtoLayerCreatorT {
   /// Nested configuration struct for the ProtoLayerCreatorT
   struct Config {
     /// a single parameter for the approach surface envelope
-    double approachSurfaceEnvelope = 0.5;
+    long double approachSurfaceEnvelope = 0.5;
     /// central layer specification
     /// bin multipliers in rphi,z for finer module binning
     std::pair<int, int> centralLayerBinMultipliers;
     /// layer radii for the sensitive layers
-    std::vector<double> centralLayerRadii;
+    std::vector<long double> centralLayerRadii;
     /// the (additional) layer envelope in R/Z
-    std::vector<std::pair<double, double>> centralLayerEnvelopes;
+    std::vector<std::pair<long double, long double>> centralLayerEnvelopes;
     /// the binning schema: nPhi x nZ
     std::vector<std::pair<int, int>> centralModuleBinningSchema;
     /// the module center positions
     std::vector<std::vector<Acts::Vector3>> centralModulePositions;
     /// the module tilt for this layer
-    std::vector<double> centralModuleTiltPhi;
+    std::vector<long double> centralModuleTiltPhi;
     /// the module bounds: local x
-    std::vector<double> centralModuleHalfX;
+    std::vector<long double> centralModuleHalfX;
     /// the module bounds: local y
-    std::vector<double> centralModuleHalfY;
+    std::vector<long double> centralModuleHalfY;
     /// the module bounds: local z -> thickness
-    std::vector<double> centralModuleThickness;
+    std::vector<long double> centralModuleThickness;
     /// the module material
     std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>
         centralModuleMaterial;
     /// the module front side stereo (if exists)
-    std::vector<double> centralModuleFrontsideStereo;
+    std::vector<long double> centralModuleFrontsideStereo;
     /// the module back side stereo (if exists)
-    std::vector<double> centralModuleBacksideStereo;
+    std::vector<long double> centralModuleBacksideStereo;
     /// the module gap between frontside and backside
-    std::vector<double> centralModuleBacksideGap;
+    std::vector<long double> centralModuleBacksideGap;
 
     /// the layers at p/e side
     /// bin multipliers in r,phi for finer module binning
     std::pair<int, int> posnegLayerBinMultipliers;
     /// layer positions in Z
-    std::vector<double> posnegLayerPositionsZ;
+    std::vector<long double> posnegLayerPositionsZ;
     /// the envelope definitions
-    std::vector<double> posnegLayerEnvelopeR;
+    std::vector<long double> posnegLayerEnvelopeR;
     /// the module center positions
     std::vector<std::vector<std::vector<Acts::Vector3>>> posnegModulePositions;
     /// the phi binning
     std::vector<std::vector<std::size_t>> posnegModulePhiBins;
     /// the module bounds: min halfx
-    std::vector<std::vector<double>> posnegModuleMinHalfX;
+    std::vector<std::vector<long double>> posnegModuleMinHalfX;
     /// the module bounds: max halfx
-    std::vector<std::vector<double>> posnegModuleMaxHalfX;
+    std::vector<std::vector<long double>> posnegModuleMaxHalfX;
     /// the module bounds: local y
-    std::vector<std::vector<double>> posnegModuleHalfY;
+    std::vector<std::vector<long double>> posnegModuleHalfY;
     /// the module bounds: local z -> thickness
-    std::vector<std::vector<double>> posnegModuleThickness;
+    std::vector<std::vector<long double>> posnegModuleThickness;
     /// the module material
     std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>
         posnegModuleMaterial;
     /// the module front side stereo (if exists)
-    std::vector<std::vector<double>> posnegModuleFrontsideStereo;
+    std::vector<std::vector<long double>> posnegModuleFrontsideStereo;
     /// the module back side stereo (if exists)
-    std::vector<std::vector<double>> posnegModuleBacksideStereo;
+    std::vector<std::vector<long double>> posnegModuleBacksideStereo;
     /// the module gap between frontside and backside
-    std::vector<std::vector<double>> posnegModuleBacksideGap;
+    std::vector<std::vector<long double>> posnegModuleBacksideGap;
   };
 
   /// Constructor
@@ -198,22 +198,22 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
     // loop through
     for (std::size_t icl = 0; icl < numcLayers; ++icl) {
       // layer R/Z
-      double layerR = m_cfg.centralLayerRadii.at(icl);
+      long double layerR = m_cfg.centralLayerRadii.at(icl);
       // some screen output
       ACTS_DEBUG("Build layer " << icl << " with target radius = " << layerR);
 
       // prepare the Surface vector
       std::vector<std::shared_ptr<const Acts::Surface>> sVector;
       // assign the current envelope
-      double layerEnvelopeCoverZ =
+      long double layerEnvelopeCoverZ =
           !m_cfg.centralLayerEnvelopes.empty()
               ? m_cfg.centralLayerEnvelopes.at(icl).second
               : 0.;
       // module size & tilt
-      double modulePhiTilt = m_cfg.centralModuleTiltPhi.at(icl);
-      double moduleHalfX = m_cfg.centralModuleHalfX.at(icl);
-      double moduleHalfY = m_cfg.centralModuleHalfY.at(icl);
-      double moduleThickness = m_cfg.centralModuleThickness.at(icl);
+      long double modulePhiTilt = m_cfg.centralModuleTiltPhi.at(icl);
+      long double moduleHalfX = m_cfg.centralModuleHalfX.at(icl);
+      long double moduleHalfY = m_cfg.centralModuleHalfY.at(icl);
+      long double moduleThickness = m_cfg.centralModuleThickness.at(icl);
       // create the shared module
       auto moduleBounds =
           std::make_shared<Acts::RectangleBounds>(moduleHalfX, moduleHalfY);
@@ -246,7 +246,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
       // loop over the position, create the modules
       for (auto& moduleCenter : m_cfg.centralModulePositions.at(icl)) {
         // create the association transform
-        double modulePhi = phi(moduleCenter);
+        long double modulePhi = phi(moduleCenter);
         // the local z axis is the normal vector
         Acts::Vector3 moduleLocalZ(cos(modulePhi + modulePhiTilt),
                                    sin(modulePhi + modulePhiTilt), 0.);
@@ -268,7 +268,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         if (!m_cfg.centralModuleFrontsideStereo.empty() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
           // twist by the stereo angle
-          double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
+          long double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
           (*mutableModuleTransform) *=
               Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
         }
@@ -288,7 +288,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         layerStore.push_back(moduleElement);
         // register the surface
         sVector.push_back(moduleElement->surface().getSharedPtr());
-        // IF double modules exist
+        // IF long double modules exist
         // and the backside one (if configured to do so)
         if (!m_cfg.centralModuleBacksideGap.empty()) {
           // create the module identifier
@@ -303,7 +303,8 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
           // apply the stereo
           if (!m_cfg.centralModuleBacksideStereo.empty()) {
             // twist by the stereo angle
-            double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
+            long double stereoBackSide =
+                m_cfg.centralModuleBacksideStereo.at(icl);
             (*mutableModuleTransform) *=
                 Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
           }
@@ -392,7 +393,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                    << side * m_cfg.posnegLayerPositionsZ.at(ipnl));
       /// some preparation work
       // define the layer envelope
-      double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
+      long double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
       // prepare for the r binning
       std::vector<std::shared_ptr<const Acts::Surface>> esVector;
       // now fill the vectors
@@ -401,14 +402,16 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
         ACTS_VERBOSE("- building ring " << ipnR << " for this layer.");
         // now prepare all the shared stuff
         // (0) module specifications
-        double moduleThickness = m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
-        double moduleMinHalfX = m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
-        double moduleMaxHalfX = 0.;
+        long double moduleThickness =
+            m_cfg.posnegModuleThickness.at(ipnl).at(ipnR);
+        long double moduleMinHalfX =
+            m_cfg.posnegModuleMinHalfX.at(ipnl).at(ipnR);
+        long double moduleMaxHalfX = 0.;
         if (m_cfg.posnegModuleMaxHalfX.size() > ipnl &&
             m_cfg.posnegModuleMaxHalfX.at(ipnl).size() > ipnR) {
           moduleMaxHalfX = m_cfg.posnegModuleMaxHalfX.at(ipnl).at(ipnR);
         }
-        double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
+        long double moduleHalfY = m_cfg.posnegModuleHalfY.at(ipnl).at(ipnR);
         // (1) module bounds
         // create the bounds
         std::shared_ptr<const Acts::PlanarBounds> moduleBounds;
@@ -431,7 +434,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
         // low loop over the phi positions and build the stuff
         for (auto& ringModulePosition : discModulePositions) {
           // the module transform from the position
-          double modulePhi = phi(ringModulePosition);
+          long double modulePhi = phi(ringModulePosition);
           // the center position of the modules
           Acts::Vector3 moduleCenter(ringModulePosition);
           moduleCenter.z() *= side;
@@ -476,7 +479,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
             // apply the stereo
             if (!m_cfg.posnegModuleBacksideStereo.empty()) {
               // twist by the stereo angle
-              double stereoBackSide =
+              long double stereoBackSide =
                   m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
               (*mutableModuleTransform) *=
                   Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());

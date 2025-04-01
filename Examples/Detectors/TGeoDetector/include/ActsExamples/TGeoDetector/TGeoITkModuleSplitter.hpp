@@ -33,7 +33,7 @@ namespace ActsExamples {
 /// Split Itk modules into submodules, depending on the sensor type
 class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
  public:
-  using SplitRange = std::pair<double, double>;
+  using SplitRange = std::pair<long double, long double>;
 
   /// Nested configuration struct
   struct Config {

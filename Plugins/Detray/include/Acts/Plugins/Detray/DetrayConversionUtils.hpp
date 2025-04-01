@@ -25,7 +25,7 @@ namespace Experimental {
 class DetectorVolume;
 }
 
-using DetrayMetaData = detray::default_metadata<detray::array<double>>;
+using DetrayMetaData = detray::default_metadata<detray::array<long double>>;
 
 using DetrayHostDetector = detray::detector<DetrayMetaData>;
 

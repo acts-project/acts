@@ -23,13 +23,13 @@ std::unique_ptr<GridPortalLink> TrivialPortalLink::makeGrid(
 
 Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
     const GeometryContext& /*gctx*/, const Vector2& /*position*/,
-    double /*tolerance*/) const {
+    long double /*tolerance*/) const {
   return m_volume;
 }
 
 Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector3& position,
-    double tolerance) const {
+    long double tolerance) const {
   static_cast<void>(gctx);
   static_cast<void>(position);
   static_cast<void>(tolerance);

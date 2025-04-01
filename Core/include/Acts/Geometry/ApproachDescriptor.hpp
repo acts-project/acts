@@ -49,7 +49,7 @@ class ApproachDescriptor {
   virtual SurfaceIntersection approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-      double nearLimit, double farLimit) const = 0;
+      long double nearLimit, long double farLimit) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor

@@ -17,28 +17,28 @@ namespace ActsFatras::Casts {
 
 /// Retrieve the transverse absolute distance of the position to the origin.
 struct Vrho {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     return std::hypot(particle.position().x(), particle.position().y());
   }
 };
 
 /// Retrieve the longitudinal distance of the position to the origin.
 struct Vz {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     return particle.position().z();
   }
 };
 
 /// Retrieve the longitudinal absolute distance of the position to the origin.
 struct AbsVz {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     return std::abs(particle.position().z());
   }
 };
 
 /// Retrieve the direction pseudo-rapidity.
 struct Eta {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dz = pz / p
     return std::atanh(particle.direction().z());
   }
@@ -46,7 +46,7 @@ struct Eta {
 
 /// Retrieve the direction absolute pseudo-rapidity.
 struct AbsEta {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dz = pz / p
     return std::atanh(std::abs(particle.direction().z()));
   }
@@ -54,7 +54,7 @@ struct AbsEta {
 
 /// Retrieve the transverse momentum.
 struct Pt {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     // particle direction is always normalized, i.e. dt²+dz²=1 w/ dt²=dx²+dy²
     return particle.absoluteMomentum() *
            Acts::VectorHelpers::perp(particle.direction());
@@ -63,14 +63,14 @@ struct Pt {
 
 /// Retrieve the absolute momentum.
 struct P {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     return particle.absoluteMomentum();
   }
 };
 
 /// Retrieve the total energy.
 struct E {
-  double operator()(const Particle& particle) const {
+  long double operator()(const Particle& particle) const {
     return particle.energy();
   }
 };

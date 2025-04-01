@@ -134,7 +134,7 @@ auto makeParameters() {
   Acts::BoundVector deltaQOP = Acts::BoundVector::Zero();
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps = {
+  std::vector<std::tuple<long double, BoundVector, BoundSquareMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},

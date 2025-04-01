@@ -36,7 +36,7 @@ using MaterialGrid2D =
 using MaterialGrid3D =
     Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
-using MaterialGridAxisData = std::tuple<double, double, std::size_t>;
+using MaterialGridAxisData = std::tuple<long double, long double, std::size_t>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -70,7 +70,7 @@ Grid3D createGrid(MaterialGridAxisData gridAxis1,
 /// @param [in] type Type of bin
 ///
 /// @return a coordinate transform function
-std::function<double(Acts::Vector3)> globalToLocalFromBin(
+std::function<long double(Acts::Vector3)> globalToLocalFromBin(
     Acts::AxisDirection& type);
 
 /// @brief Create a 2DGrid using a BinUtility.

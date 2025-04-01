@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
   std::cout << "nop (10x iters): " << nop_x10 << std::endl;
   const auto nop_x100 = microBenchmark(nop, 100 * bench_iters);
   std::cout << "nop (100x iters): " << nop_x100 << std::endl;
-  const double nop_x10_iter_ns = nop_x10.iterTimeAverage().count();
-  const double nop_x100_iter_ns = nop_x100.iterTimeAverage().count();
+  const long double nop_x10_iter_ns = nop_x10.iterTimeAverage().count();
+  const long double nop_x100_iter_ns = nop_x100.iterTimeAverage().count();
   CHECK_CLOSE_REL(nop_x10_iter_ns, nop_x100_iter_ns, 0.1);
 
 // These tests reason about the performance characteristics of _optimized_ code,
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
   // elimination. For example, this sqrt throughput microbenchmark works,
   // because microBenchmark forces the compiler to assume that "x", "y" and "z"
   // are modified on every benchmark iteration...
-  const double x = 1.2, y = 3.4, z = 5.6;
+  const long double x = 1.2, y = 3.4, z = 5.6;
   auto sqrt = microBenchmark(
       [&] { return std::sqrt(x * y) + std::sqrt(y * z) + std::sqrt(z * x); },
       bench_iters);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(assume_read) {
   //
   // For example, these two computations are almost equivalent. Notice that
   // assumeRead can be used on temporaries.
-  const double x = 1.2, y = 3.4, z = 5.6;
+  const long double x = 1.2, y = 3.4, z = 5.6;
   const auto tuple_return = microBenchmark(
       [&] {
         return std::make_tuple(
@@ -258,8 +258,9 @@ BOOST_AUTO_TEST_CASE(assume_read) {
       },
       bench_iters);
   std::cout << "assumeRead: " << assumeread << std::endl;
-  const double tuple_return_iter_ns = tuple_return.iterTimeAverage().count();
-  const double assumeRead_iter_ns = assumeread.iterTimeAverage().count();
+  const long double tuple_return_iter_ns =
+      tuple_return.iterTimeAverage().count();
+  const long double assumeRead_iter_ns = assumeread.iterTimeAverage().count();
   CHECK_CLOSE_REL(tuple_return_iter_ns, assumeRead_iter_ns, 1e-2);
 }
 #endif
@@ -272,14 +273,15 @@ BOOST_AUTO_TEST_CASE(assume_written) {
   //
   // Since assumeWritten operates on variables in memory, it cannot be used on
   // temporaries, but only on mutable variables.
-  double x = 1.2, y = 3.4, z = 5.6;
+  long double x = 1.2, y = 3.4, z = 5.6;
   auto sqrt_sum = microBenchmark(
       [&] { return std::sqrt(x * y) + std::sqrt(y * z) + std::sqrt(z * x); },
       bench_iters);
   std::cout << "sqrt sum: " << sqrt_sum << std::endl;
   auto sqrt_2sums = microBenchmark(
       [&] {
-        double tmp = std::sqrt(x * y) + std::sqrt(y * z) + std::sqrt(z * x);
+        long double tmp =
+            std::sqrt(x * y) + std::sqrt(y * z) + std::sqrt(z * x);
         assumeWritten(x);
         assumeWritten(y);
         assumeWritten(z);
@@ -287,8 +289,8 @@ BOOST_AUTO_TEST_CASE(assume_written) {
       },
       bench_iters);
   std::cout << "2x(sqrt sum): " << sqrt_2sums << std::endl;
-  const double sqrt_sum_iter_ns = sqrt_sum.iterTimeAverage().count();
-  const double sqrt_2sums_iter_ns = sqrt_2sums.iterTimeAverage().count();
+  const long double sqrt_sum_iter_ns = sqrt_sum.iterTimeAverage().count();
+  const long double sqrt_2sums_iter_ns = sqrt_2sums.iterTimeAverage().count();
   CHECK_CLOSE_REL(2. * sqrt_sum_iter_ns, sqrt_2sums_iter_ns, 1e-2);
 }
 

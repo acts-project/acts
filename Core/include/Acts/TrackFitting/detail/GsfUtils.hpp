@@ -30,15 +30,15 @@
 namespace Acts {
 
 /// The tolerated difference to 1 to accept weights as normalized
-constexpr static double s_normalizationTolerance = 1.e-4;
+constexpr static long double s_normalizationTolerance = 1.e-4;
 
 namespace detail {
 
 template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
                           const projector_t &proj,
-                          double tol = s_normalizationTolerance) {
-  double sumOfWeights = 0.0;
+                          long double tol = s_normalizationTolerance) {
+  long double sumOfWeights = 0.0;
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     sumOfWeights += proj(*it);
@@ -49,7 +49,7 @@ bool weightsAreNormalized(const component_range_t &cmps,
 
 template <typename component_range_t, typename projector_t>
 void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
-  double sumOfWeights = 0.0;
+  long double sumOfWeights = 0.0;
 
   // we need decltype(auto) here to support proxy-types with reference
   // semantics, otherwise there is a `cannot bind ... to ...` error
@@ -76,7 +76,7 @@ class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
   const navigator_t &m_navigator;
-  double m_p_initial;
+  long double m_p_initial;
   const Logger &m_logger;
 
   const Logger &logger() const { return m_logger; }
@@ -151,8 +151,8 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 };
 
-double calculateDeterminant(
-    const double *fullCalibratedCovariance,
+long double calculateDeterminant(
+    const long double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
     BoundSubspaceIndices projector, unsigned int calibratedSize);
@@ -164,7 +164,7 @@ double calculateDeterminant(
 template <typename traj_t>
 void computePosteriorWeights(
     const traj_t &mt, const std::vector<MultiTrajectoryTraits::IndexType> &tips,
-    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
+    std::map<MultiTrajectoryTraits::IndexType, long double> &weights) {
   // Helper Function to compute detR
 
   // Find minChi2, this can be used to factor some things later in the
@@ -180,8 +180,8 @@ void computePosteriorWeights(
   // Loop over the tips and compute new weights
   for (auto tip : tips) {
     const auto state = mt.getTrackState(tip);
-    const double chi2 = state.chi2() - minChi2;
-    const double detR = calculateDeterminant(
+    const long double chi2 = state.chi2() - minChi2;
+    const long double detR = calculateDeterminant(
         // This abuses an incorrectly sized vector / matrix to access the
         // data pointer! This works (don't use the matrix as is!), but be
         // careful!
@@ -224,7 +224,7 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
   const traj_t &mt;
-  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
+  const std::map<MultiTrajectoryTraits::IndexType, long double> &weights;
 
   auto operator()(MultiTrajectoryTraits::IndexType idx) const {
     const auto proxy = mt.getTrackState(idx);

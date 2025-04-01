@@ -26,12 +26,12 @@ class LandauDistribution {
     /// Location parameter.
     ///
     /// @warning This is neither the mean nor the most probable value.
-    double location = 0.0;
+    long double location = 0.0;
     /// Scale parameter.
-    double scale = 1.0;
+    long double scale = 1.0;
 
     /// Construct from parameters.
-    param_type(double location_, double scale_)
+    param_type(long double location_, long double scale_)
         : location(location_), scale(scale_) {}
     // Explicitly defaulted construction and assignment
     param_type() = default;
@@ -46,10 +46,11 @@ class LandauDistribution {
     }
   };
   /// The type of the generated values.
-  using result_type = double;
+  using result_type = long double;
 
   /// Construct directly from the distribution parameters.
-  LandauDistribution(double location, double scale) : m_cfg(location, scale) {}
+  LandauDistribution(long double location, long double scale)
+      : m_cfg(location, scale) {}
   /// Construct from a parameter object.
   explicit LandauDistribution(const param_type &cfg) : m_cfg(cfg) {}
   // Explicitlely defaulted construction and assignment
@@ -67,9 +68,13 @@ class LandauDistribution {
   void param(const param_type &cfg) { m_cfg = cfg; }
 
   /// The minimum value the distribution generates.
-  result_type min() const { return -std::numeric_limits<double>::infinity(); }
+  result_type min() const {
+    return -std::numeric_limits<long double>::infinity();
+  }
   /// The maximum value the distribution generates.
-  result_type max() const { return std::numeric_limits<double>::infinity(); }
+  result_type max() const {
+    return std::numeric_limits<long double>::infinity();
+  }
 
   /// Generate a random number from the configured Landau distribution.
   template <typename Generator>
@@ -79,7 +84,7 @@ class LandauDistribution {
   /// Generate a random number from the given Landau distribution.
   template <typename Generator>
   result_type operator()(Generator &generator, const param_type &params) {
-    const auto z = std::uniform_real_distribution<double>()(generator);
+    const auto z = std::uniform_real_distribution<long double>()(generator);
     return params.location + params.scale * quantile(z);
   }
 
@@ -92,7 +97,7 @@ class LandauDistribution {
  private:
   param_type m_cfg;
 
-  static double quantile(double z);
+  static long double quantile(long double z);
 };
 
 }  // namespace ActsFatras

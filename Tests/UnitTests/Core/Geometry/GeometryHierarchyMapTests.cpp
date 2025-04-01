@@ -28,7 +28,7 @@ GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 
 // example value type stored in the geometry hierarchy map
 struct Thing {
-  double value = 1.0;
+  long double value = 1.0;
 };
 
 using Container = Acts::GeometryHierarchyMap<Thing>;

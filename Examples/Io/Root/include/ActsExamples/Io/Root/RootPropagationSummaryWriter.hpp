@@ -111,8 +111,8 @@ class RootPropagationSummaryWriter : public WriterT<PropagationSummaries> {
   std::size_t m_nRejectedSteps = 0;
   std::size_t m_nSuccessfulSteps = 0;
   std::size_t m_nReverseSteps = 0;
-  double m_pathLength = 0;
-  double m_absolutePathLength = 0;
+  long double m_pathLength = 0;
+  long double m_absolutePathLength = 0;
 
   // navigator statistics
   std::size_t m_nRenavigations = 0;

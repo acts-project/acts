@@ -43,19 +43,19 @@ struct EventDataView3D {
   /// Helper to find the eigen values and corr angle
   ///
   /// @param covariance The covariance matrix
-  static inline std::array<double, 3> decomposeCovariance(
+  static inline std::array<long double, 3> decomposeCovariance(
       const ActsSquareMatrix<2>& covariance) {
-    double c00 = covariance(eBoundLoc0, eBoundLoc0);
-    double c01 = covariance(eBoundLoc0, eBoundLoc1);
-    double c11 = covariance(eBoundLoc1, eBoundLoc1);
+    long double c00 = covariance(eBoundLoc0, eBoundLoc0);
+    long double c01 = covariance(eBoundLoc0, eBoundLoc1);
+    long double c11 = covariance(eBoundLoc1, eBoundLoc1);
 
-    double cdsq = std::pow((c00 - c11), 2) / 4.;
-    double cosq = c01 * c01;
+    long double cdsq = std::pow((c00 - c11), 2) / 4.;
+    long double cosq = c01 * c01;
 
     // Calculate the eigen values w.r.t reference frame
-    double lambda0 = (c00 + c11) / 2. + std::sqrt(cdsq + cosq);
-    double lambda1 = (c00 + c11) / 2. - std::sqrt(cdsq + cosq);
-    double theta = atan2(lambda0 - c00, c01);
+    long double lambda0 = (c00 + c11) / 2. + std::sqrt(cdsq + cosq);
+    long double lambda1 = (c00 + c11) / 2. - std::sqrt(cdsq + cosq);
+    long double theta = atan2(lambda0 - c00, c01);
 
     return {lambda0, lambda1, theta};
   }
@@ -70,25 +70,28 @@ struct EventDataView3D {
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
   static inline std::vector<Vector3> createEllipse(
-      double lambda0, double lambda1, double theta, std::size_t lseg,
-      double offset, const Vector2& lposition = Vector2(0., 0.),
+      long double lambda0, long double lambda1, long double theta,
+      std::size_t lseg, long double offset,
+      const Vector2& lposition = Vector2(0., 0.),
       const Transform3& transform = Transform3::Identity()) {
-    double ctheta = std::cos(theta);
-    double stheta = std::sin(theta);
+    long double ctheta = std::cos(theta);
+    long double stheta = std::sin(theta);
 
-    double l1sq = std::sqrt(lambda0);
-    double l2sq = std::sqrt(lambda1);
+    long double l1sq = std::sqrt(lambda0);
+    long double l2sq = std::sqrt(lambda1);
 
     // Now generate the ellipse points
     std::vector<Vector3> ellipse;
     ellipse.reserve(lseg);
-    double thetaStep = 2 * std::numbers::pi / lseg;
+    long double thetaStep = 2 * std::numbers::pi / lseg;
     for (std::size_t it = 0; it < lseg; ++it) {
-      double phi = -std::numbers::pi + it * thetaStep;
-      double cphi = std::cos(phi);
-      double sphi = std::sin(phi);
-      double x = lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);
-      double y = lposition.y() + (l1sq * stheta * cphi + l2sq * ctheta * sphi);
+      long double phi = -std::numbers::pi + it * thetaStep;
+      long double cphi = std::cos(phi);
+      long double sphi = std::sin(phi);
+      long double x =
+          lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);
+      long double y =
+          lposition.y() + (l1sq * stheta * cphi + l2sq * ctheta * sphi);
       ellipse.push_back(transform * Vector3(x, y, offset));
     }
     return ellipse;
@@ -105,7 +108,8 @@ struct EventDataView3D {
   static void drawCovarianceCartesian(
       IVisualization3D& helper, const Vector2& lposition,
       const SquareMatrix2& covariance, const Transform3& transform,
-      double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
+      long double locErrorScale = 1,
+      const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
   ///
@@ -119,7 +123,7 @@ struct EventDataView3D {
   static void drawCovarianceAngular(
       IVisualization3D& helper, const Vector3& position,
       const Vector3& direction, const ActsSquareMatrix<2>& covariance,
-      double directionScale = 1, double angularErrorScale = 1,
+      long double directionScale = 1, long double angularErrorScale = 1,
       const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw bound parameters object
@@ -137,8 +141,8 @@ struct EventDataView3D {
   static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
       const GeometryContext& gctx = GeometryContext(),
-      double momentumScale = 1., double locErrorScale = 1.,
-      double angularErrorScale = 1.,
+      long double momentumScale = 1., long double locErrorScale = 1.,
+      long double angularErrorScale = 1.,
       const ViewConfig& parConfig = s_viewParameter,
       const ViewConfig& covConfig = s_viewParameter,
       const ViewConfig& surfConfig = s_viewSensitive) {
@@ -150,7 +154,7 @@ struct EventDataView3D {
     // Draw the parameter shaft and cone
     auto position = parameters.position(gctx);
     auto direction = parameters.direction();
-    double p = parameters.absoluteMomentum();
+    long double p = parameters.absoluteMomentum();
 
     ViewConfig lparConfig = parConfig;
     lparConfig.lineThickness = 0.05;
@@ -192,7 +196,7 @@ struct EventDataView3D {
   static void drawMeasurement(
       IVisualization3D& helper, const Vector2& lposition,
       const SquareMatrix2& covariance, const Transform3& transform,
-      const double locErrorScale = 1.,
+      const long double locErrorScale = 1.,
       const ViewConfig& measurementConfig = s_viewMeasurement) {
     if (locErrorScale <= 0) {
       throw std::invalid_argument("locErrorScale must be > 0");
@@ -225,8 +229,8 @@ struct EventDataView3D {
       IVisualization3D& helper, const traj_t& multiTraj,
       const std::size_t& entryIndex,
       const GeometryContext& gctx = GeometryContext(),
-      double momentumScale = 1., double locErrorScale = 1.,
-      double angularErrorScale = 1.,
+      long double momentumScale = 1., long double locErrorScale = 1.,
+      long double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
       const ViewConfig& measurementConfig = s_viewMeasurement,
       const ViewConfig& predictedConfig = s_viewPredicted,

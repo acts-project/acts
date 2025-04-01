@@ -47,8 +47,8 @@ nlohmann::json toJson(const VolumeBounds& bounds);
 template <typename bounds_t>
 std::unique_ptr<bounds_t> fromJson(const nlohmann::json& jVolumeBounds) {
   constexpr std::size_t kValues = bounds_t::BoundValues::eSize;
-  std::array<double, kValues> bValues{};
-  std::vector<double> bVector = jVolumeBounds["values"];
+  std::array<long double, kValues> bValues{};
+  std::vector<long double> bVector = jVolumeBounds["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_unique<bounds_t>(bValues);
 }

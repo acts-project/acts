@@ -48,8 +48,8 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
     }
   }
 
-  constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  constexpr double convertDensity =
+  constexpr long double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  constexpr long double convertDensity =
       (Acts::UnitConstants::g / Acts::UnitConstants::mm3) /
       (CLHEP::gram / CLHEP::mm3);
 
@@ -57,17 +57,17 @@ void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
                << convertLength * step->GetStepLength());
 
   // Quantities valid for elemental materials and mixtures
-  double X0 = convertLength * material->GetRadlen();
-  double L0 = convertLength * material->GetNuclearInterLength();
-  double rho = convertDensity * material->GetDensity();
+  long double X0 = convertLength * material->GetRadlen();
+  long double L0 = convertLength * material->GetNuclearInterLength();
+  long double rho = convertDensity * material->GetDensity();
 
   // Get{A,Z} is only meaningful for single-element materials (according to
   // the Geant4 docs). Need to compute average manually.
   const G4ElementVector* elements = material->GetElementVector();
-  const G4double* fraction = material->GetFractionVector();
+  const G4long double* fraction = material->GetFractionVector();
   std::size_t nElements = material->GetNumberOfElements();
-  double Ar = 0.;
-  double Z = 0.;
+  long double Ar = 0.;
+  long double Z = 0.;
   if (nElements == 1) {
     Ar = material->GetA() / (CLHEP::gram / CLHEP::mole);
     Z = material->GetZ();

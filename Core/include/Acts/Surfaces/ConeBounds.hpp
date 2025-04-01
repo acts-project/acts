@@ -50,8 +50,9 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, bool symm, double halfphi = std::numbers::pi,
-             double avphi = 0.) noexcept(false);
+  ConeBounds(long double alpha, bool symm,
+             long double halfphi = std::numbers::pi,
+             long double avphi = 0.) noexcept(false);
 
   /// Constructor - open cone with alpha, minz and maxz, by
   /// default a full cone but can optionally make it a conical section
@@ -62,21 +63,22 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, double minz, double maxz,
-             double halfphi = std::numbers::pi,
-             double avphi = 0.) noexcept(false);
+  ConeBounds(long double alpha, long double minz, long double maxz,
+             long double halfphi = std::numbers::pi,
+             long double avphi = 0.) noexcept(false);
 
   /// Constructor - from parameters array
   ///
   /// @param values The parameter array
-  explicit ConeBounds(const std::array<double, eSize>& values) noexcept(false);
+  explicit ConeBounds(const std::array<long double, eSize>& values) noexcept(
+      false);
 
   BoundsType type() const final { return SurfaceBounds::eCone; }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// inside method for local position
   ///
@@ -97,18 +99,18 @@ class ConeBounds : public SurfaceBounds {
   ///
   /// @param z is the z value for which r is requested
   /// @return is the r value associated with z
-  double r(double z) const { return std::abs(z * m_tanAlpha); }
+  long double r(long double z) const { return std::abs(z * m_tanAlpha); }
 
   /// Return tangent of alpha (pre-computed)
-  double tanAlpha() const { return m_tanAlpha; }
+  long double tanAlpha() const { return m_tanAlpha; }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
-  double m_tanAlpha;
+  std::array<long double, eSize> m_values;
+  long double m_tanAlpha;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

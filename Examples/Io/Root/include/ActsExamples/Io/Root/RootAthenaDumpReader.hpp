@@ -89,7 +89,7 @@ class RootAthenaDumpReader : public IReader {
     /// When projecting measurements on ACTS surfaces, which euclidean boundary
     /// tolerance should be allowed. If a value above zero is needed, this
     /// indicates that the ACTS surfaces do not 100% include the athena surfaces
-    double absBoundaryTolerance = 0.0;
+    long double absBoundaryTolerance = 0.0;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -191,9 +191,9 @@ class RootAthenaDumpReader : public IReader {
 
   // Clusters
   std::vector<std::string> *CLhardware{};
-  Double_t CLx[maxCL] = {};           //[nCL]
-  Double_t CLy[maxCL] = {};           //[nCL]
-  Double_t CLz[maxCL] = {};           //[nCL]
+  long double_t CLx[maxCL] = {};      //[nCL]
+  long double_t CLy[maxCL] = {};      //[nCL]
+  long double_t CLz[maxCL] = {};      //[nCL]
   Int_t CLbarrel_endcap[maxCL] = {};  //[nCL]
   Int_t CLlayer_disk[maxCL] = {};     //[nCL]
   Int_t CLeta_module[maxCL] = {};     //[nCL]
@@ -207,24 +207,24 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<int>> *CLphis{};
   std::vector<std::vector<int>> *CLetas{};
   std::vector<std::vector<int>> *CLtots{};
-  Double_t CLloc_direction1[maxCL] = {};      //[nCL]
-  Double_t CLloc_direction2[maxCL] = {};      //[nCL]
-  Double_t CLloc_direction3[maxCL] = {};      //[nCL]
-  Double_t CLJan_loc_direction1[maxCL] = {};  //[nCL]
-  Double_t CLJan_loc_direction2[maxCL] = {};  //[nCL]
-  Double_t CLJan_loc_direction3[maxCL] = {};  //[nCL]
-  Int_t CLpixel_count[maxCL] = {};            //[nCL]
-  Float_t CLcharge_count[maxCL] = {};         //[nCL]
-  Float_t CLloc_eta[maxCL] = {};              //[nCL]
-  Float_t CLloc_phi[maxCL] = {};              //[nCL]
-  Float_t CLglob_eta[maxCL] = {};             //[nCL]
-  Float_t CLglob_phi[maxCL] = {};             //[nCL]
-  Double_t CLeta_angle[maxCL] = {};           //[nCL]
-  Double_t CLphi_angle[maxCL] = {};           //[nCL]
-  Float_t CLnorm_x[maxCL] = {};               //[nCL]
-  Float_t CLnorm_y[maxCL] = {};               //[nCL]
-  Float_t CLnorm_z[maxCL] = {};               //[nCL]
-  std::vector<std::vector<double>> *CLlocal_cov{};
+  long double_t CLloc_direction1[maxCL] = {};      //[nCL]
+  long double_t CLloc_direction2[maxCL] = {};      //[nCL]
+  long double_t CLloc_direction3[maxCL] = {};      //[nCL]
+  long double_t CLJan_loc_direction1[maxCL] = {};  //[nCL]
+  long double_t CLJan_loc_direction2[maxCL] = {};  //[nCL]
+  long double_t CLJan_loc_direction3[maxCL] = {};  //[nCL]
+  Int_t CLpixel_count[maxCL] = {};                 //[nCL]
+  Float_t CLcharge_count[maxCL] = {};              //[nCL]
+  Float_t CLloc_eta[maxCL] = {};                   //[nCL]
+  Float_t CLloc_phi[maxCL] = {};                   //[nCL]
+  Float_t CLglob_eta[maxCL] = {};                  //[nCL]
+  Float_t CLglob_phi[maxCL] = {};                  //[nCL]
+  long double_t CLeta_angle[maxCL] = {};           //[nCL]
+  long double_t CLphi_angle[maxCL] = {};           //[nCL]
+  Float_t CLnorm_x[maxCL] = {};                    //[nCL]
+  Float_t CLnorm_y[maxCL] = {};                    //[nCL]
+  Float_t CLnorm_z[maxCL] = {};                    //[nCL]
+  std::vector<std::vector<long double>> *CLlocal_cov{};
 
   // Particles
   Int_t nPartEVT = 0;
@@ -252,18 +252,18 @@ class RootAthenaDumpReader : public IReader {
 
   // Spacepoints
   Int_t nSP = 0;
-  Int_t SPindex[maxSP] = {};        //[nSP]
-  Double_t SPx[maxSP] = {};         //[nSP]
-  Double_t SPy[maxSP] = {};         //[nSP]
-  Double_t SPz[maxSP] = {};         //[nSP]
-  Int_t SPCL1_index[maxSP] = {};    //[nSP]
-  Int_t SPCL2_index[maxSP] = {};    //[nSP]
-  Int_t SPisOverlap[maxSP] = {};    //[nSP]
-  double SPradius[maxSP] = {};      //[nSP]
-  double SPcovr[maxSP] = {};        //[nSP]
-  double SPcovz[maxSP] = {};        //[nSP]
-  float SPhl_topstrip[maxSP] = {};  //[nSP]
-  float SPhl_botstrip[maxSP] = {};  //[nSP]
+  Int_t SPindex[maxSP] = {};         //[nSP]
+  long double_t SPx[maxSP] = {};     //[nSP]
+  long double_t SPy[maxSP] = {};     //[nSP]
+  long double_t SPz[maxSP] = {};     //[nSP]
+  Int_t SPCL1_index[maxSP] = {};     //[nSP]
+  Int_t SPCL2_index[maxSP] = {};     //[nSP]
+  Int_t SPisOverlap[maxSP] = {};     //[nSP]
+  long double SPradius[maxSP] = {};  //[nSP]
+  long double SPcovr[maxSP] = {};    //[nSP]
+  long double SPcovz[maxSP] = {};    //[nSP]
+  float SPhl_topstrip[maxSP] = {};   //[nSP]
+  float SPhl_botstrip[maxSP] = {};   //[nSP]
   std::vector<std::vector<float>> *SPtopStripDirection{};
   std::vector<std::vector<float>> *SPbottomStripDirection{};
   std::vector<std::vector<float>> *SPstripCenterDistance{};
@@ -283,8 +283,8 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index{};
   std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index{};
   Int_t TRKcharge[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<double>> *TRKperigee_position{};
-  std::vector<std::vector<double>> *TRKperigee_momentum{};
+  std::vector<std::vector<long double>> *TRKperigee_position{};
+  std::vector<std::vector<long double>> *TRKperigee_momentum{};
   Int_t TTCindex[maxTRK] = {};          //[nTRK]
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]

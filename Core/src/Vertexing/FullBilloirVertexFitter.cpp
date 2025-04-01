@@ -27,7 +27,7 @@ struct BilloirTrack {
   BilloirTrack(const BilloirTrack& arg) = default;
 
   Acts::InputTrack originalTrack;
-  double chi2 = 0;
+  long double chi2 = 0;
 
   // We drop the summation index i from Ref. (1) for better readability
   Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W;  // Wi weight matrix
@@ -62,7 +62,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
     const VertexingOptions& vertexingOptions,
     MagneticFieldProvider::Cache& fieldCache) const {
   unsigned int nTracks = paramVector.size();
-  double chi2 = std::numeric_limits<double>::max();
+  long double chi2 = std::numeric_limits<long double>::max();
 
   if (nTracks == 0) {
     return Vertex(Vector3(0., 0., 0.));
@@ -97,7 +97,7 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
     billoirTracks.clear();
-    double newChi2 = 0;
+    long double newChi2 = 0;
     BilloirVertex billoirVertex;
 
     Vector3 linPointPos = VectorHelpers::position(linPoint);
@@ -122,12 +122,12 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
 
       const auto& linTrack = *result;
       const auto& parametersAtPCA = linTrack.parametersAtPCA;
-      double d0 = parametersAtPCA[BoundIndices::eBoundLoc0];
-      double z0 = parametersAtPCA[BoundIndices::eBoundLoc1];
-      double phi = parametersAtPCA[BoundIndices::eBoundPhi];
-      double theta = parametersAtPCA[BoundIndices::eBoundTheta];
-      double qOverP = parametersAtPCA[BoundIndices::eBoundQOverP];
-      double t0 = parametersAtPCA[BoundIndices::eBoundTime];
+      long double d0 = parametersAtPCA[BoundIndices::eBoundLoc0];
+      long double z0 = parametersAtPCA[BoundIndices::eBoundLoc1];
+      long double phi = parametersAtPCA[BoundIndices::eBoundPhi];
+      long double theta = parametersAtPCA[BoundIndices::eBoundTheta];
+      long double qOverP = parametersAtPCA[BoundIndices::eBoundQOverP];
+      long double t0 = parametersAtPCA[BoundIndices::eBoundTime];
 
       // Take the track momenta at the PCA as an initial estimate of the track
       // momenta at the vertex
@@ -138,10 +138,10 @@ Acts::Result<Acts::Vertex> Acts::FullBilloirVertexFitter::fit(
       // Calculate F(V_0,p_0), i.e., the track parameters estimated from the
       // vertex position and the track momenta. fD0 = fZ0 = 0 because the track
       // originates at the vertex in the Billoir model.
-      double fPhi = trackMomenta[iTrack][0];
-      double fTheta = trackMomenta[iTrack][1];
-      double fQOvP = trackMomenta[iTrack][2];
-      double fTime = linPoint[FreeIndices::eFreeTime];
+      long double fPhi = trackMomenta[iTrack][0];
+      long double fTheta = trackMomenta[iTrack][1];
+      long double fQOvP = trackMomenta[iTrack][2];
+      long double fTime = linPoint[FreeIndices::eFreeTime];
       BilloirTrack billoirTrack(trackContainer);
 
       billoirTrack.deltaQ << d0, z0, phi - fPhi, theta - fTheta, qOverP - fQOvP,

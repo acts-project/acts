@@ -17,7 +17,7 @@
 namespace ActsFatras {
 
 /// A single cell definition: index, cell central value
-using Cell = std::pair<unsigned int, double>;
+using Cell = std::pair<unsigned int, long double>;
 
 /// A channel definition: Cell identification, readout word, links
 ///
@@ -28,7 +28,7 @@ struct Channel {
   /// The cell identification in sizeof..(kParameters) dimensions
   std::array<Cell, kSize> cellId;
   /// The signal value, as complex as possible,
-  /// but need += operator and double() cast for the weight
+  /// but need += operator and long double() cast for the weight
   signal_t value = 0;
   /// The potential (truth) links
   std::unordered_set<unsigned int> links = {};

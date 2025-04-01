@@ -46,7 +46,7 @@ namespace Acts::Test {
 
 using Covariance = BoundSquareMatrix;
 
-static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
+static constexpr auto eps = 3 * std::numeric_limits<long double>::epsilon();
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -57,7 +57,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 ///
 struct EndOfWorld {
   /// Maximum value in x-direction of the detector
-  double maxX = 1_m;
+  long double maxX = 1_m;
 
   /// @brief Constructor
   EndOfWorld() = default;
@@ -78,7 +78,7 @@ struct EndOfWorld {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
-    const double tolerance = state.options.surfaceTolerance;
+    const long double tolerance = state.options.surfaceTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
         std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
@@ -132,9 +132,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
 
   Vector3 pos(1., 2., 3.);
   Vector3 dir(4., 5., 6.);
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  long double time = 7.;
+  long double absMom = 8.;
+  long double charge = -1.;
 
   SympyStepper::Options esOptions(tgContext, mfContext);
 
@@ -179,16 +179,16 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_state_test) {
 BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Set up some variables for the state
   Direction navDir = Direction::Backward();
-  double stepSize = 123.;
+  long double stepSize = 123.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
   auto bCache = bField->makeCache(mfContext);
 
   // Construct the parameters
   Vector3 pos(1., 2., 3.);
   Vector3 dir = Vector3(4., 5., 6.).normalized();
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  long double time = 7.;
+  long double absMom = 8.;
+  long double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   BoundTrackParameters cp = BoundTrackParameters::createCurvilinear(
       makeVector4(pos, time), dir, charge / absMom, cov,
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Test the update method
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
-  double newTime(321.);
+  long double newTime(321.);
   es.update(esState, newPos, newMom.normalized(), charge / newMom.norm(),
             newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
@@ -283,9 +283,9 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
   // Construct the parameters
   Vector3 pos2(1.5, -2.5, 3.5);
   Vector3 dir2 = Vector3(4.5, -5.5, 6.5).normalized();
-  double time2 = 7.5;
-  double absMom2 = 8.5;
-  double charge2 = 1.;
+  long double time2 = 7.5;
+  long double absMom2 = 8.5;
+  long double charge2 = 1.;
   BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
   BoundTrackParameters cp2 = BoundTrackParameters::createCurvilinear(
       makeVector4(pos2, time2), dir2, charge2 / absMom2, cov2,
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(sympy_stepper_test) {
 
   // Test a case where no step size adjustment is required
   esState.options.stepTolerance = 2. * 4.4258e+09;
-  double h0 = esState.stepSize.value();
+  long double h0 = esState.stepSize.value();
   es.step(esState, Direction::Forward(), nullptr);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 }

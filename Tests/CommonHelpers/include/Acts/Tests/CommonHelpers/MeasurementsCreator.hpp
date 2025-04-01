@@ -34,7 +34,7 @@ enum class MeasurementType {
 struct MeasurementResolution {
   MeasurementType type = MeasurementType::eLoc0;
   // Depending on the type, only the first value is used.
-  std::array<double, 2> stddev = {50 * UnitConstants::um, 0};
+  std::array<long double, 2> stddev = {50 * UnitConstants::um, 0};
 };
 
 /// Measurement resolution configuration for a full detector geometry.
@@ -56,7 +56,7 @@ struct MeasurementsCreator {
   std::default_random_engine* rng = nullptr;
   std::size_t sourceId = 0;
   // how far away from the measurements the outliers should be
-  double distanceOutlier = 10 * Acts::UnitConstants::mm;
+  long double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
   /// @brief Operator that is callable by an ActorList. The function
   /// collects the surfaces
@@ -110,7 +110,7 @@ struct MeasurementsCreator {
     parameters[eBoundTime] = state.stepping.pars[eFreeTime];
     result.truthParameters.push_back(std::move(parameters));
 
-    std::normal_distribution<double> normalDist(0., 1.);
+    std::normal_distribution<long double> normalDist(0., 1.);
 
     // compute covariance for all components, might contain bogus values
     // depending on the configuration. but those remain unused.
@@ -118,8 +118,8 @@ struct MeasurementsCreator {
     SquareMatrix2 cov = stddev.cwiseProduct(stddev).asDiagonal();
 
     if (resolution.type == MeasurementType::eLoc0) {
-      double val = loc[0] + stddev[0] * normalDist(*rng);
-      double out = val + distanceOutlier;
+      long double val = loc[0] + stddev[0] * normalDist(*rng);
+      long double out = val + distanceOutlier;
       result.sourceLinks.emplace_back(eBoundLoc0, val, cov(0, 0), geoId,
                                       sourceId);
       result.outlierSourceLinks.emplace_back(eBoundLoc0, out, cov(0, 0), geoId,
@@ -127,8 +127,8 @@ struct MeasurementsCreator {
     } else if (resolution.type == MeasurementType::eLoc1) {
       // yes, using stddev[0] and cov(0,0) is correct here. this accesses the
       // first configuration parameter not the first local coordinate.
-      double val = loc[1] + stddev[0] * normalDist(*rng);
-      double out = val + distanceOutlier;
+      long double val = loc[1] + stddev[0] * normalDist(*rng);
+      long double out = val + distanceOutlier;
       result.sourceLinks.emplace_back(eBoundLoc1, val, cov(0, 0), geoId,
                                       sourceId);
       result.outlierSourceLinks.emplace_back(eBoundLoc1, out, cov(0, 0), geoId,

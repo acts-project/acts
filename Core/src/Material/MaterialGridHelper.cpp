@@ -25,15 +25,15 @@ Acts::Grid2D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
   std::size_t nBinsAxis2 = std::get<2>(gridAxis2);
 
   // get the minimum and maximum
-  double minAxis1 = std::get<0>(gridAxis1);
-  double minAxis2 = std::get<0>(gridAxis2);
-  double maxAxis1 = std::get<1>(gridAxis1);
-  double maxAxis2 = std::get<1>(gridAxis2);
+  long double minAxis1 = std::get<0>(gridAxis1);
+  long double minAxis2 = std::get<0>(gridAxis2);
+  long double maxAxis1 = std::get<1>(gridAxis1);
+  long double maxAxis2 = std::get<1>(gridAxis2);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
-  double stepAxis1 = std::abs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::abs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
+  long double stepAxis1 = std::abs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
+  long double stepAxis2 = std::abs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
 
@@ -54,20 +54,20 @@ Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
   std::size_t nBinsAxis3 = std::get<2>(gridAxis3);
 
   // get the minimum and maximum
-  double minAxis1 = std::get<0>(gridAxis1);
-  double minAxis2 = std::get<0>(gridAxis2);
-  double minAxis3 = std::get<0>(gridAxis3);
-  double maxAxis1 = std::get<1>(gridAxis1);
-  double maxAxis2 = std::get<1>(gridAxis2);
-  double maxAxis3 = std::get<1>(gridAxis3);
+  long double minAxis1 = std::get<0>(gridAxis1);
+  long double minAxis2 = std::get<0>(gridAxis2);
+  long double minAxis3 = std::get<0>(gridAxis3);
+  long double maxAxis1 = std::get<1>(gridAxis1);
+  long double maxAxis2 = std::get<1>(gridAxis2);
+  long double maxAxis3 = std::get<1>(gridAxis3);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
-  double stepAxis1 =
+  long double stepAxis1 =
       std::abs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, std::size_t{1});
-  double stepAxis2 =
+  long double stepAxis2 =
       std::abs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, std::size_t{1});
-  double stepAxis3 =
+  long double stepAxis3 =
       std::abs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, std::size_t{1});
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
@@ -83,37 +83,37 @@ Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
       std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
 }
 
-std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
+std::function<long double(Acts::Vector3)> Acts::globalToLocalFromBin(
     Acts::AxisDirection& type) {
-  std::function<double(Acts::Vector3)> transfoGlobalToLocal;
+  std::function<long double(Acts::Vector3)> transfoGlobalToLocal;
 
   switch (type) {
     case Acts::AxisDirection::AxisX:
-      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> long double {
         return (pos.x());
       };
       break;
 
     case Acts::AxisDirection::AxisY:
-      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> long double {
         return (pos.y());
       };
       break;
 
     case Acts::AxisDirection::AxisR:
-      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> long double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
     case Acts::AxisDirection::AxisPhi:
-      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> long double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
     case Acts::AxisDirection::AxisZ:
-      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> long double {
         return (pos.z());
       };
       break;
@@ -154,9 +154,9 @@ Acts::Grid2D Acts::createGrid2D(
   MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
   MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
-  std::function<double(Acts::Vector3)> coord1 =
+  std::function<long double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
-  std::function<double(Acts::Vector3)> coord2 =
+  std::function<long double(Acts::Vector3)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
   Transform3 transfo = bins.transform().inverse();
   transfoGlobalToLocal = [coord1, coord2,
@@ -196,11 +196,11 @@ Acts::Grid3D Acts::createGrid3D(
 
   MaterialGridAxisData gridAxis3{bu[2].min, bu[2].max, bu[2].bins()};
 
-  std::function<double(Acts::Vector3)> coord1 =
+  std::function<long double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
-  std::function<double(Acts::Vector3)> coord2 =
+  std::function<long double(Acts::Vector3)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
-  std::function<double(Acts::Vector3)> coord3 =
+  std::function<long double(Acts::Vector3)> coord3 =
       globalToLocalFromBin(bu[2].binvalue);
   Transform3 transfo = bins.transform().inverse();
 

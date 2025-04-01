@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg
-  double const expectedZResult = -13.013;
+  long double const expectedZResult = -13.013;
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
@@ -195,22 +195,22 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   }
 }
 
-const double zVertexPos = 12.;
+const long double zVertexPos = 12.;
 // x position
-std::normal_distribution<double> xdist(1_mm, 0.1_mm);
+std::normal_distribution<long double> xdist(1_mm, 0.1_mm);
 // y position
-std::normal_distribution<double> ydist(-0.7_mm, 0.1_mm);
+std::normal_distribution<long double> ydist(-0.7_mm, 0.1_mm);
 // z1 position
-std::normal_distribution<double> z1dist(zVertexPos * 1_mm, 1_mm);
+std::normal_distribution<long double> z1dist(zVertexPos * 1_mm, 1_mm);
 // z2 position
-std::normal_distribution<double> z2dist(-3_mm, 0.5_mm);
+std::normal_distribution<long double> z2dist(-3_mm, 0.5_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
+std::uniform_real_distribution<long double> pTDist(0.1_GeV, 100_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track eta distribution
-std::uniform_real_distribution<double> etaDist(-4., 4.);
+std::uniform_real_distribution<long double> etaDist(-4., 4.);
 
 ///
 /// @brief Unit test for TrackDensityVertexFinder using same configuration
@@ -244,10 +244,10 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     Vector3 pos(xdist(gen), ydist(gen), 0);
 
     // Create momentum and charge of track
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    long double pt = pTDist(gen);
+    long double phi = phiDist(gen);
+    long double eta = etaDist(gen);
+    long double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg
-  double const expectedZResult = -13.013;
+  long double const expectedZResult = -13.013;
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};

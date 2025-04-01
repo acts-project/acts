@@ -41,7 +41,7 @@ template <typename stepper_t>
 IntersectionStatus updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, std::uint8_t index, Direction direction,
-    const BoundaryTolerance& boundaryTolerance, double surfaceTolerance,
+    const BoundaryTolerance& boundaryTolerance, long double surfaceTolerance,
     ConstrainedStep::Type stype, const Logger& logger) {
   ACTS_VERBOSE("Update single surface status for surface: "
                << surface.geometryId() << " index " << static_cast<int>(index));
@@ -59,8 +59,8 @@ IntersectionStatus updateSingleSurfaceStatus(
     return IntersectionStatus::onSurface;
   }
 
-  const double nearLimit = std::numeric_limits<double>::lowest();
-  const double farLimit = std::numeric_limits<double>::max();
+  const long double nearLimit = std::numeric_limits<long double>::lowest();
+  const long double farLimit = std::numeric_limits<long double>::max();
 
   if (sIntersection.isValid() &&
       detail::checkPathLength(sIntersection.pathLength(), nearLimit, farLimit,

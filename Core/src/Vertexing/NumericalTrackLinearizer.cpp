@@ -17,7 +17,7 @@
 
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
-    const BoundTrackParameters& params, double linPointTime,
+    const BoundTrackParameters& params, long double linPointTime,
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& /*fieldCache*/) const {
@@ -78,10 +78,10 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // Fill "paramVec", "pca", and "momentumAtPCA"
   {
     Vector3 globalCoords = endParams.position(gctx);
-    double globalTime = endParams.time();
-    double phi = perigeeParams(BoundIndices::eBoundPhi);
-    double theta = perigeeParams(BoundIndices::eBoundTheta);
-    double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
+    long double globalTime = endParams.time();
+    long double phi = perigeeParams(BoundIndices::eBoundPhi);
+    long double theta = perigeeParams(BoundIndices::eBoundTheta);
+    long double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
     paramVec << globalCoords, globalTime, phi, theta, qOvP;
     pca << globalCoords, globalTime;

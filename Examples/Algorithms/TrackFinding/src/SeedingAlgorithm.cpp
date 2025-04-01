@@ -176,7 +176,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     m_cfg.seedFinderConfig.spacePointSelector
         .connect<itkFastTrackingSPselect>();
 
-    // This function will be applied to the doublet compatibility selection
+    // This function will be applied to the long doublet compatibility selection
     m_cfg.seedFinderConfig.experimentCuts.connect<itkFastTrackingCuts>();
   }
 
@@ -218,8 +218,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // Config
   Acts::SpacePointContainerConfig spConfig;
-  spConfig.useDetailedDoubleMeasurementInfo =
-      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
+  spConfig.useDetailedlong doubleMeasurementInfo =
+      m_cfg.seedFinderConfig.useDetailedlong doubleMeasurementInfo;
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};

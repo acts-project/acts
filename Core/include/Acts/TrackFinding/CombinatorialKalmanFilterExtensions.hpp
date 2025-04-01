@@ -26,7 +26,7 @@ static constexpr std::size_t s_maxBranchesPerSurface = 10;
 template <typename T>
 using BranchVector = boost::container::small_vector<T, s_maxBranchesPerSurface>;
 
-using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, long double>;
 
 }  // namespace CkfTypes
 

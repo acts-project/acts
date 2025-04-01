@@ -35,13 +35,15 @@ class ISurfaceMaterial {
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
-  explicit ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
+  explicit ISurfaceMaterial(long double splitFactor)
+      : m_splitFactor(splitFactor) {}
 
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
-  explicit ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
+  explicit ISurfaceMaterial(long double splitFactor,
+                            Acts::MappingType mappingType)
       : m_splitFactor(splitFactor), m_mappingType(mappingType) {}
 
   /// Destructor
@@ -50,7 +52,7 @@ class ISurfaceMaterial {
   /// Scale material
   ///
   /// @param factor is the scale factor applied
-  virtual ISurfaceMaterial& scale(double factor) = 0;
+  virtual ISurfaceMaterial& scale(long double factor) = 0;
 
   /// Return method for full material description of the Surface
   /// - from local coordinate on the surface
@@ -72,7 +74,7 @@ class ISurfaceMaterial {
   ///
   /// @param pDir is the positive direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
-  double factor(Direction pDir, MaterialUpdateStage mStage) const;
+  long double factor(Direction pDir, MaterialUpdateStage mStage) const;
 
   /// Return the type of surface material mapping
   ///
@@ -126,14 +128,14 @@ class ISurfaceMaterial {
 
  protected:
   /// the split factor in favour of oppositePre
-  double m_splitFactor{1.};
+  long double m_splitFactor{1.};
 
   /// Use the default mapping type by default
   MappingType m_mappingType{Acts::MappingType::Default};
 };
 
-inline double ISurfaceMaterial::factor(Direction pDir,
-                                       MaterialUpdateStage mStage) const {
+inline long double ISurfaceMaterial::factor(Direction pDir,
+                                            MaterialUpdateStage mStage) const {
   if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
   } else if (mStage == Acts::MaterialUpdateStage::PreUpdate) {
@@ -149,7 +151,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
   if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mStage);
+    long double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }
@@ -164,7 +166,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
   if (!plainMatProp.isVacuum()) {
-    double scaleFactor = factor(pDir, mStage);
+    long double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
       return MaterialSlab::Nothing();
     }

@@ -208,10 +208,10 @@ int main(int argc, char* argv[]) {
 
   // Record the finish time.
   auto end_host = std::chrono::system_clock::now();
-  double time_host = std::chrono::duration_cast<std::chrono::milliseconds>(
-                         end_host - start_host)
-                         .count() *
-                     0.001;
+  long double time_host = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              end_host - start_host)
+                              .count() *
+                          0.001;
   if (!cmdl.onlyGPU) {
     std::cout << "Done with the seedfinding on the host" << std::endl;
   }
@@ -243,10 +243,11 @@ int main(int argc, char* argv[]) {
 
   // Record the finish time.
   auto end_device = std::chrono::system_clock::now();
-  double time_device = std::chrono::duration_cast<std::chrono::milliseconds>(
-                           end_device - start_device)
-                           .count() *
-                       0.001;
+  long double time_device =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end_device -
+                                                            start_device)
+          .count() *
+      0.001;
   std::cout << "Done with the seedfinding on the device" << std::endl;
 
   //
@@ -265,7 +266,7 @@ int main(int argc, char* argv[]) {
   // Count how many seeds, reconstructed on the host, can be matched with seeds
   // reconstructed on the accelerator.
   std::size_t nMatch = 0;
-  double matchPercentage = 0.0;
+  long double matchPercentage = 0.0;
   if (!cmdl.onlyGPU) {
     assert(seeds_host.size() == seeds_device.size());
     for (std::size_t i = 0; i < seeds_host.size(); i++) {

@@ -69,18 +69,18 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
 
     /// Minimum fraction of track weight matched between truth
     /// and reco vertices to consider as truth matched.
-    double vertexMatchThreshold = 0.7;
+    long double vertexMatchThreshold = 0.7;
     /// Minimum fraction of hits associated to particle to consider track
     /// as truth matched.
-    double trackMatchThreshold = 0.5;
+    long double trackMatchThreshold = 0.5;
     /// Whether to write information about tracks
     bool writeTrackInfo = false;
     /// Minimum track weight for track to be considered as part of the fit
-    double minTrkWeight = 0.1;
+    long double minTrkWeight = 0.1;
     /// Spatial window for vertex density calculation.
     /// @note This is a Z-window
     /// @note This is a half-window around the reconstructed vertex
-    double vertexDensityWindow = 1 * Acts::UnitConstants::mm;
+    long double vertexDensityWindow = 1 * Acts::UnitConstants::mm;
   };
 
   /// Constructor
@@ -139,35 +139,35 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   std::vector<int> m_nTracksOnRecoVertex;
 
   /// Sum of the track weights associated with the reconstructed vertex
-  std::vector<double> m_recoVertexTrackWeights;
+  std::vector<long double> m_recoVertexTrackWeights;
 
   // Sum pT^2 of all tracks associated with the vertex
-  std::vector<double> m_sumPt2;
+  std::vector<long double> m_sumPt2;
 
   // Reconstructed 4D vertex position
-  std::vector<double> m_recoX;
-  std::vector<double> m_recoY;
-  std::vector<double> m_recoZ;
-  std::vector<double> m_recoT;
+  std::vector<long double> m_recoX;
+  std::vector<long double> m_recoY;
+  std::vector<long double> m_recoZ;
+  std::vector<long double> m_recoT;
 
   // Vertex covariance
-  std::vector<double> m_covXX;
-  std::vector<double> m_covYY;
-  std::vector<double> m_covZZ;
-  std::vector<double> m_covTT;
-  std::vector<double> m_covXY;
-  std::vector<double> m_covXZ;
-  std::vector<double> m_covXT;
-  std::vector<double> m_covYZ;
-  std::vector<double> m_covYT;
-  std::vector<double> m_covZT;
+  std::vector<long double> m_covXX;
+  std::vector<long double> m_covYY;
+  std::vector<long double> m_covZZ;
+  std::vector<long double> m_covTT;
+  std::vector<long double> m_covXY;
+  std::vector<long double> m_covXZ;
+  std::vector<long double> m_covXT;
+  std::vector<long double> m_covYZ;
+  std::vector<long double> m_covYT;
+  std::vector<long double> m_covZT;
 
   // 4D position of the vertex seed. x and y coordinate are 0 in current
   // implementations, we save them here as a check.
-  std::vector<double> m_seedX;
-  std::vector<double> m_seedY;
-  std::vector<double> m_seedZ;
-  std::vector<double> m_seedT;
+  std::vector<long double> m_seedX;
+  std::vector<long double> m_seedY;
+  std::vector<long double> m_seedZ;
+  std::vector<long double> m_seedT;
 
   // Truth vertex ID
   std::vector<int> m_vertexPrimary;
@@ -177,39 +177,39 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
   std::vector<int> m_nTracksOnTruthVertex;
 
   /// Truth-based primary vertex density for the reconstructed vertex
-  std::vector<double> m_truthPrimaryVertexDensity;
+  std::vector<long double> m_truthPrimaryVertexDensity;
 
   /// Sum of the track weights associated with the truth vertex
-  std::vector<double> m_truthVertexTrackWeights;
+  std::vector<long double> m_truthVertexTrackWeights;
   /// Fraction of track weight matched between truth and reco vertices
-  std::vector<double> m_truthVertexMatchRatio;
+  std::vector<long double> m_truthVertexMatchRatio;
   /// Fraction of incorrectly assigned track weight to the reco vertex
-  std::vector<double> m_recoVertexContamination;
+  std::vector<long double> m_recoVertexContamination;
 
   /// Classification of the reconstructed vertex see RecoVertexClassification
   std::vector<int> m_recoVertexClassification;
 
   // True 4D vertex position
-  std::vector<double> m_truthX;
-  std::vector<double> m_truthY;
-  std::vector<double> m_truthZ;
-  std::vector<double> m_truthT;
+  std::vector<long double> m_truthX;
+  std::vector<long double> m_truthY;
+  std::vector<long double> m_truthZ;
+  std::vector<long double> m_truthT;
 
   // Difference of reconstructed and true vertex 4D position
-  std::vector<double> m_resX;
-  std::vector<double> m_resY;
-  std::vector<double> m_resZ;
-  std::vector<double> m_resT;
+  std::vector<long double> m_resX;
+  std::vector<long double> m_resY;
+  std::vector<long double> m_resZ;
+  std::vector<long double> m_resT;
 
   // Difference between the seed and the true vertex z and t coordinate
-  std::vector<double> m_resSeedZ;
-  std::vector<double> m_resSeedT;
+  std::vector<long double> m_resSeedZ;
+  std::vector<long double> m_resSeedT;
 
   // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
-  std::vector<double> m_pullX;
-  std::vector<double> m_pullY;
-  std::vector<double> m_pullZ;
-  std::vector<double> m_pullT;
+  std::vector<long double> m_pullX;
+  std::vector<long double> m_pullY;
+  std::vector<long double> m_pullZ;
+  std::vector<long double> m_pullT;
 
   //--------------------------------------------------------------
   // Track-related variables are contained in a vector of vectors: The inner
@@ -224,43 +224,43 @@ class VertexNTupleWriter final : public WriterT<std::vector<Acts::Vertex>> {
 
   // Track weights from vertex fit, will be set to 1 if we do unweighted vertex
   // fitting
-  std::vector<std::vector<double>> m_trkWeight;
+  std::vector<std::vector<long double>> m_trkWeight;
 
   // Reconstructed track momenta at the vertex before and after the vertex fit
-  std::vector<std::vector<double>> m_recoPhi;
-  std::vector<std::vector<double>> m_recoTheta;
-  std::vector<std::vector<double>> m_recoQOverP;
+  std::vector<std::vector<long double>> m_recoPhi;
+  std::vector<std::vector<long double>> m_recoTheta;
+  std::vector<std::vector<long double>> m_recoQOverP;
 
-  std::vector<std::vector<double>> m_recoPhiFitted;
-  std::vector<std::vector<double>> m_recoThetaFitted;
-  std::vector<std::vector<double>> m_recoQOverPFitted;
+  std::vector<std::vector<long double>> m_recoPhiFitted;
+  std::vector<std::vector<long double>> m_recoThetaFitted;
+  std::vector<std::vector<long double>> m_recoQOverPFitted;
 
   std::vector<std::vector<std::uint64_t>> m_trkParticleId;
 
   // True track momenta at the vertex
-  std::vector<std::vector<double>> m_truthPhi;
-  std::vector<std::vector<double>> m_truthTheta;
-  std::vector<std::vector<double>> m_truthQOverP;
+  std::vector<std::vector<long double>> m_truthPhi;
+  std::vector<std::vector<long double>> m_truthTheta;
+  std::vector<std::vector<long double>> m_truthQOverP;
 
   // Difference between reconstructed momenta and true momenta
-  std::vector<std::vector<double>> m_resPhi;
-  std::vector<std::vector<double>> m_resTheta;
-  std::vector<std::vector<double>> m_resQOverP;
-  std::vector<std::vector<double>> m_momOverlap;
+  std::vector<std::vector<long double>> m_resPhi;
+  std::vector<std::vector<long double>> m_resTheta;
+  std::vector<std::vector<long double>> m_resQOverP;
+  std::vector<std::vector<long double>> m_momOverlap;
 
-  std::vector<std::vector<double>> m_resPhiFitted;
-  std::vector<std::vector<double>> m_resThetaFitted;
-  std::vector<std::vector<double>> m_resQOverPFitted;
-  std::vector<std::vector<double>> m_momOverlapFitted;
+  std::vector<std::vector<long double>> m_resPhiFitted;
+  std::vector<std::vector<long double>> m_resThetaFitted;
+  std::vector<std::vector<long double>> m_resQOverPFitted;
+  std::vector<std::vector<long double>> m_momOverlapFitted;
 
   // Pulls
-  std::vector<std::vector<double>> m_pullPhi;
-  std::vector<std::vector<double>> m_pullTheta;
-  std::vector<std::vector<double>> m_pullQOverP;
+  std::vector<std::vector<long double>> m_pullPhi;
+  std::vector<std::vector<long double>> m_pullTheta;
+  std::vector<std::vector<long double>> m_pullQOverP;
 
-  std::vector<std::vector<double>> m_pullPhiFitted;
-  std::vector<std::vector<double>> m_pullThetaFitted;
-  std::vector<std::vector<double>> m_pullQOverPFitted;
+  std::vector<std::vector<long double>> m_pullPhiFitted;
+  std::vector<std::vector<long double>> m_pullThetaFitted;
+  std::vector<std::vector<long double>> m_pullQOverPFitted;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   ReadDataHandle<SimVertexContainer> m_inputTruthVertices{this,

@@ -168,16 +168,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     }
     // Loop over all the other truth particle and find the distance to the
     // closest one
-    double minDeltaR = -1;
+    long double minDeltaR = -1;
     for (const auto& closeParticle : particles) {
       if (closeParticle.particleId() == particle.particleId()) {
         continue;
       }
-      double p_phi = phi(particle.direction());
-      double p_eta = eta(particle.direction());
-      double c_phi = phi(closeParticle.direction());
-      double c_eta = eta(closeParticle.direction());
-      double distance = sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
+      long double p_phi = phi(particle.direction());
+      long double p_eta = eta(particle.direction());
+      long double c_phi = phi(closeParticle.direction());
+      long double c_eta = eta(closeParticle.direction());
+      long double distance =
+          sqrt(pow(p_phi - c_phi, 2) + pow(p_eta - c_eta, 2));
       if (minDeltaR == -1 || distance < minDeltaR) {
         minDeltaR = distance;
       }

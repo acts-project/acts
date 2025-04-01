@@ -14,7 +14,7 @@
 namespace Acts {
 
 JsonDetectorElement::JsonDetectorElement(const nlohmann::json &jSurface,
-                                         double thickness)
+                                         long double thickness)
     : m_thickness(thickness) {
   m_surface = Acts::SurfaceJsonConverter::fromJson(jSurface);
   m_transform = Transform3JsonConverter::fromJson(jSurface["transform"]);
@@ -34,7 +34,7 @@ const Transform3 &JsonDetectorElement::transform(
   return m_transform;
 }
 
-double JsonDetectorElement::thickness() const {
+long double JsonDetectorElement::thickness() const {
   return m_thickness;
 }
 

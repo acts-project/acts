@@ -53,16 +53,16 @@ class DirectNavigator {
     SurfaceSequence surfaces;
 
     /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
+    long double surfaceTolerance = s_onSurfaceTolerance;
 
     // TODO https://github.com/acts-project/acts/issues/2738
     /// Distance limit to discard intersections "behind us"
     /// @note this is only necessary because some surfaces have more than one
     ///       intersection
-    double nearLimit = -100 * UnitConstants::um;
+    long double nearLimit = -100 * UnitConstants::um;
 
     /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+    long double farLimit = std::numeric_limits<long double>::max();
 
     void setPlainOptions(const NavigatorPlainOptions& options) {
       static_cast<NavigatorPlainOptions&>(*this) = options;
@@ -258,7 +258,7 @@ class DirectNavigator {
     // Establish & update the surface status
     // TODO we do not know the intersection index - passing the closer one
     const Surface& surface = state.navSurface();
-    const double farLimit = std::numeric_limits<double>::max();
+    const long double farLimit = std::numeric_limits<long double>::max();
     const auto intersection = chooseIntersection(
         state.options.geoContext, surface, position, direction,
         BoundaryTolerance::Infinite(), state.options.nearLimit, farLimit,
@@ -318,8 +318,8 @@ class DirectNavigator {
   ObjectIntersection<Surface> chooseIntersection(
       const GeometryContext& gctx, const Surface& surface,
       const Vector3& position, const Vector3& direction,
-      const BoundaryTolerance& boundaryTolerance, double nearLimit,
-      double farLimit, double tolerance) const {
+      const BoundaryTolerance& boundaryTolerance, long double nearLimit,
+      long double farLimit, long double tolerance) const {
     auto intersections = surface.intersect(gctx, position, direction,
                                            boundaryTolerance, tolerance);
 

@@ -36,9 +36,9 @@ Acts::fieldMapRZ(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::vector<double> rPos, std::vector<double> zPos,
-    const std::vector<Vector2>& bField, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant) {
+    std::vector<long double> rPos, std::vector<long double> zPos,
+    const std::vector<Vector2>& bField, long double lengthUnit,
+    long double BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
   const auto [rMin, rMax, rBinCount] = detail::getMinMaxAndBinCount(rPos);
   auto [zMin, zMax, zBinCount] = detail::getMinMaxAndBinCount(zPos);
@@ -89,12 +89,12 @@ Acts::fieldMapRZ(
 
   // [4] Create the transformation for the bField map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Vector2& field, const Vector3& pos) {
-    const double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cosPhi = 1.;
-    double sinPhi = 0.;
+    const long double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
+    long double cosPhi = 1.;
+    long double sinPhi = 0.;
 
-    if (rSinTheta2 > std::numeric_limits<double>::min()) {
-      const double invRsinTheta = 1. / std::sqrt(rSinTheta2);
+    if (rSinTheta2 > std::numeric_limits<long double>::min()) {
+      const long double invRsinTheta = 1. / std::sqrt(rSinTheta2);
       cosPhi = pos.x() * invRsinTheta;
       sinPhi = pos.y() * invRsinTheta;
     }
@@ -115,9 +115,9 @@ Acts::fieldMapXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, const std::vector<Vector3>& bField,
-    double lengthUnit, double BFieldUnit, bool firstOctant) {
+    std::vector<long double> xPos, std::vector<long double> yPos,
+    std::vector<long double> zPos, const std::vector<Vector3>& bField,
+    long double lengthUnit, long double BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   auto [xMin, xMax, xBinCount] = detail::getMinMaxAndBinCount(xPos);
   auto [yMin, yMax, yBinCount] = detail::getMinMaxAndBinCount(yPos);
@@ -193,16 +193,16 @@ Acts::fieldMapXYZ(
 Acts::InterpolatedBFieldMap<
     Acts::Grid<Acts::Vector2, Acts::Axis<Acts::AxisType::Equidistant>,
                Acts::Axis<Acts::AxisType::Equidistant>>>
-Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
-                       const std::pair<double, double>& zLim,
+Acts::solenoidFieldMap(const std::pair<long double, long double>& rLim,
+                       const std::pair<long double, long double>& zLim,
                        const std::pair<std::size_t, std::size_t>& nBins,
                        const SolenoidBField& field) {
   auto [rMin, rMax] = rLim;
   auto [zMin, zMax] = zLim;
   const auto [nBinsR, nBinsZ] = nBins;
 
-  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
+  long double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  long double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
   rMax += stepR;
   zMax += stepZ;
 
@@ -221,12 +221,12 @@ Acts::solenoidFieldMap(const std::pair<double, double>& rLim,
 
   // Create the transformation for the bField map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Vector2& bField, const Vector3& pos) {
-    const double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cosPhi = 1.;
-    double sinPhi = 0.;
+    const long double rSinTheta2 = pos.x() * pos.x() + pos.y() * pos.y();
+    long double cosPhi = 1.;
+    long double sinPhi = 0.;
 
-    if (rSinTheta2 > std::numeric_limits<double>::min()) {
-      const double invRsinTheta = 1. / std::sqrt(rSinTheta2);
+    if (rSinTheta2 > std::numeric_limits<long double>::min()) {
+      const long double invRsinTheta = 1. / std::sqrt(rSinTheta2);
       cosPhi = pos.x() * invRsinTheta;
       sinPhi = pos.y() * invRsinTheta;
     }

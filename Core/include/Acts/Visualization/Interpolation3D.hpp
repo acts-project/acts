@@ -59,12 +59,13 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
     for (std::size_t i = 0; i < inputs.size(); ++i) {
       points.col(i) = inputs[i].transpose();
     }
-    Eigen::Spline<double, 3> spline3D =
-        Eigen::SplineFitting<Eigen::Spline<double, 3>>::Interpolate(points, 2);
+    Eigen::Spline<long double, 3> spline3D =
+        Eigen::SplineFitting<Eigen::Spline<long double, 3>>::Interpolate(points,
+                                                                         2);
 
-    double step = 1. / (nPoints - 1);
+    long double step = 1. / (nPoints - 1);
     for (std::size_t i = 0; i < nPoints; ++i) {
-      double t = i * step;
+      long double t = i * step;
       InputVectorType point;
       point[0] = spline3D(t)[0];
       point[1] = spline3D(t)[1];
@@ -80,12 +81,12 @@ trajectory_type spline(const trajectory_type& inputsRaw, std::size_t nPoints,
     std::sort(output.begin(), output.end(),
               [&inputs](const auto& a, const auto& b) {
                 const auto ifront = inputs.front();
-                double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
-                             (a[1] - ifront[1]) * (a[1] - ifront[1]) +
-                             (a[2] - ifront[2]) * (a[2] - ifront[2]);
-                double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
-                             (b[1] - ifront[1]) * (b[1] - ifront[1]) +
-                             (b[2] - ifront[2]) * (b[2] - ifront[2]);
+                long double da2 = (a[0] - ifront[0]) * (a[0] - ifront[0]) +
+                                  (a[1] - ifront[1]) * (a[1] - ifront[1]) +
+                                  (a[2] - ifront[2]) * (a[2] - ifront[2]);
+                long double db2 = (b[0] - ifront[0]) * (b[0] - ifront[0]) +
+                                  (b[1] - ifront[1]) * (b[1] - ifront[1]) +
+                                  (b[2] - ifront[2]) * (b[2] - ifront[2]);
                 return da2 < db2;
               });
   }

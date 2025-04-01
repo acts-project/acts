@@ -61,8 +61,8 @@ void transformCoordinates(Acts::SpacePointMutableData& mutableData,
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const external_spacepoint_t& sp, const double* spacepointPosition,
-    double* outputCoordinates);
+    const external_spacepoint_t& sp, const long double* spacepointPosition,
+    long double* outputCoordinates);
 
 }  // namespace Acts
 

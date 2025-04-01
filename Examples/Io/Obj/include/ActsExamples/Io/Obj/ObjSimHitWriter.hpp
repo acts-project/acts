@@ -49,9 +49,9 @@ class ObjSimHitWriter : public WriterT<SimHitContainer> {
     /// Draw line connections between hits
     bool drawConnections = true;
     /// Momentum threshold for hits
-    double momentumThreshold = 0.05 * Acts::UnitConstants::GeV;
+    long double momentumThreshold = 0.05 * Acts::UnitConstants::GeV;
     /// Momentum threshold for trajectories
-    double momentumThresholdTraj = 0.05 * Acts::UnitConstants::GeV;
+    long double momentumThresholdTraj = 0.05 * Acts::UnitConstants::GeV;
     /// Number of points to interpolated between hits to smooth the
     /// trajectory view in the obj file.
     std::size_t nInterpolatedPoints = 4;

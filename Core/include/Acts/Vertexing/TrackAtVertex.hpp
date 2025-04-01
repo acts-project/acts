@@ -79,7 +79,8 @@ struct TrackAtVertex {
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(double chi2perTrack, const BoundTrackParameters& paramsAtVertex,
+  TrackAtVertex(long double chi2perTrack,
+                const BoundTrackParameters& paramsAtVertex,
                 InputTrack originalTrack)
       : fittedParams(paramsAtVertex),
         originalParams(originalTrack),
@@ -100,20 +101,20 @@ struct TrackAtVertex {
   InputTrack originalParams;
 
   /// Chi2 of track
-  double chi2Track = 0;
+  long double chi2Track = 0;
 
   /// Number degrees of freedom
   /// Note: Can be different from integer value
   /// since annealing can result in effective
   /// non-interger values
-  double ndf = 0;
+  long double ndf = 0;
 
   /// Value of the compatibility of the track to the actual vertex, based
   /// on the estimation of the 3d distance between the track and the vertex
-  double vertexCompatibility = 0;
+  long double vertexCompatibility = 0;
 
   /// Weight of track in fit
-  double trackWeight = 1;
+  long double trackWeight = 1;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;

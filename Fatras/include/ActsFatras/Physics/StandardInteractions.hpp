@@ -67,6 +67,6 @@ using StandardChargedElectroMagneticInteractions =
 ///
 /// @param minimumAbsMomentum lower p cut on output particles
 StandardChargedElectroMagneticInteractions
-makeStandardChargedElectroMagneticInteractions(double minimumAbsMomentum);
+makeStandardChargedElectroMagneticInteractions(long double minimumAbsMomentum);
 
 }  // namespace ActsFatras

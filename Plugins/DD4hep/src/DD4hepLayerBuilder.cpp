@@ -94,7 +94,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         pl.toStream(ss);
         ACTS_VERBOSE("Extent from surfaces: " << ss.str());
 
-        std::vector<double> rvalues;
+        std::vector<long double> rvalues;
         std::transform(layerSurfaces.begin(), layerSurfaces.end(),
                        std::back_inserter(rvalues), [&](const auto& surface) {
                          return VectorHelpers::perp(surface->center(gctx));
@@ -116,11 +116,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         // set the values of the proto layer in case enevelopes are handed
         // over
         pl.envelope[Acts::AxisDirection::AxisR] = {
-            params.get<double>("envelope_r_min"),
-            params.get<double>("envelope_r_max")};
+            params.get<long double>("envelope_r_min"),
+            params.get<long double>("envelope_r_max")};
         pl.envelope[Acts::AxisDirection::AxisZ] = {
-            params.get<double>("envelope_z_min"),
-            params.get<double>("envelope_z_max")};
+            params.get<long double>("envelope_z_min"),
+            params.get<long double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
@@ -129,13 +129,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
               "Disc layer has wrong shape - needs to be TGeoTubeSeg!"};
         }
         // extract the boundaries
-        double rMin = tube->GetRmin() * UnitConstants::cm;
-        double rMax = tube->GetRmax() * UnitConstants::cm;
-        double zMin =
+        long double rMin = tube->GetRmin() * UnitConstants::cm;
+        long double rMax = tube->GetRmax() * UnitConstants::cm;
+        long double zMin =
             (transform.translation() -
              transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
-        double zMax =
+        long double zMax =
             (transform.translation() +
              transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
@@ -147,11 +147,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           ACTS_VERBOSE(" Disc layer has no sensitive surfaces.");
           // in case no surfaces are handed over the layer thickness will be
           // set to a default value to allow attaching material layers
-          double z = (zMin + zMax) * 0.5;
+          long double z = (zMin + zMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
-          double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
-          double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
+          long double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
+          long double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
           pl.extent.range(Acts::AxisDirection::AxisZ).set(eiz, eoz);
           pl.extent.range(Acts::AxisDirection::AxisR).set(rMin, rMax);
           pl.envelope[Acts::AxisDirection::AxisR] = {0., 0.};
@@ -206,8 +206,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         auto dBounds = std::make_shared<const RadialBounds>(
             pl.min(Acts::AxisDirection::AxisR),
             pl.max(Acts::AxisDirection::AxisR));
-        double thickness = std::abs(pl.max(Acts::AxisDirection::AxisZ) -
-                                    pl.min(Acts::AxisDirection::AxisZ));
+        long double thickness = std::abs(pl.max(Acts::AxisDirection::AxisZ) -
+                                         pl.min(Acts::AxisDirection::AxisZ));
         // Create the layer containing the sensitive surface
         endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
                                         thickness, nullptr, Acts::active);
@@ -268,7 +268,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         std::stringstream ss;
         pl.toStream(ss);
         ACTS_VERBOSE("Extent from surfaces: " << ss.str());
-        std::vector<double> zvalues;
+        std::vector<long double> zvalues;
         std::transform(layerSurfaces.begin(), layerSurfaces.end(),
                        std::back_inserter(zvalues), [&](const auto& surface) {
                          return surface->center(gctx)[eZ];
@@ -289,11 +289,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           params.contains("envelope_z_max")) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envelope[Acts::AxisDirection::AxisR] = {
-            params.get<double>("envelope_r_min"),
-            params.get<double>("envelope_r_max")};
+            params.get<long double>("envelope_r_min"),
+            params.get<long double>("envelope_r_max")};
         pl.envelope[Acts::AxisDirection::AxisZ] = {
-            params.get<double>("envelope_z_min"),
-            params.get<double>("envelope_z_max")};
+            params.get<long double>("envelope_z_min"),
+            params.get<long double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
         if (tube == nullptr) {
@@ -304,18 +304,18 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         }
 
         // extract the boundaries
-        double rMin = tube->GetRmin() * UnitConstants::cm;
-        double rMax = tube->GetRmax() * UnitConstants::cm;
-        double dz = tube->GetDz() * UnitConstants::cm;
+        long double rMin = tube->GetRmin() * UnitConstants::cm;
+        long double rMax = tube->GetRmax() * UnitConstants::cm;
+        long double dz = tube->GetDz() * UnitConstants::cm;
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
           // in case no surfaces are handed over the layer thickness will be set
           // to a default value to allow attaching material layers
-          double r = (rMin + rMax) * 0.5;
+          long double r = (rMin + rMax) * 0.5;
           // create layer without surfaces
           // manually create a proto layer
-          double eir = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
-          double eor = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
+          long double eir = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
+          long double eor = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
           pl.extent.range(Acts::AxisDirection::AxisR).set(eir, eor);
           pl.extent.range(Acts::AxisDirection::AxisZ).set(-dz, dz);
           pl.envelope[Acts::AxisDirection::AxisR] = {0., 0.};
@@ -338,9 +338,9 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                         "constructor!"));
       }
 
-      double halfZ = (pl.min(Acts::AxisDirection::AxisZ) -
-                      pl.max(Acts::AxisDirection::AxisZ)) *
-                     0.5;
+      long double halfZ = (pl.min(Acts::AxisDirection::AxisZ) -
+                           pl.max(Acts::AxisDirection::AxisZ)) *
+                          0.5;
 
       std::shared_ptr<Layer> centralLayer = nullptr;
       // In case the layer is sensitive
@@ -352,11 +352,11 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
             std::make_unique<SurfaceArray>(sensitiveSurf);
 
         // create the layer
-        double layerR = (pl.min(Acts::AxisDirection::AxisR) +
-                         pl.max(Acts::AxisDirection::AxisR)) *
-                        0.5;
-        double thickness = std::abs(pl.max(Acts::AxisDirection::AxisR) -
-                                    pl.min(Acts::AxisDirection::AxisR));
+        long double layerR = (pl.min(Acts::AxisDirection::AxisR) +
+                              pl.max(Acts::AxisDirection::AxisR)) *
+                             0.5;
+        long double thickness = std::abs(pl.max(Acts::AxisDirection::AxisR) -
+                                         pl.min(Acts::AxisDirection::AxisR));
         auto cBounds = std::make_shared<CylinderBounds>(layerR, halfZ);
         // Create the layer containing the sensitive surface
         centralLayer =
@@ -418,8 +418,8 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
 Acts::Transform3 Acts::DD4hepLayerBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // get the placement and orientation in respect to its mother
-  const Double_t* rotation = tGeoTrans->GetRotationMatrix();
-  const Double_t* translation = tGeoTrans->GetTranslation();
+  const long double_t* rotation = tGeoTrans->GetRotationMatrix();
+  const long double_t* translation = tGeoTrans->GetTranslation();
   return TGeoPrimitivesHelper::makeTransform(
       Acts::Vector3(rotation[0], rotation[3], rotation[6]),
       Acts::Vector3(rotation[1], rotation[4], rotation[7]),

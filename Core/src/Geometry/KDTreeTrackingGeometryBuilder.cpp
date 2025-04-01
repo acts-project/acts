@@ -45,15 +45,15 @@ std::unique_ptr<const Acts::TrackingGeometry>
 Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
     const GeometryContext& gctx) const {
   using MeasuredSurface =
-      std::pair<std::array<double, 2u>, std::shared_ptr<Surface>>;
+      std::pair<std::array<long double, 2u>, std::shared_ptr<Surface>>;
   // Prepare all the surfaces
   std::vector<MeasuredSurface> surfacesMeasured;
   surfacesMeasured.reserve(m_cfg.surfaces.size());
   for (auto& s : m_cfg.surfaces) {
     auto ext = s->polyhedronRepresentation(gctx, 1u).extent();
     surfacesMeasured.push_back(MeasuredSurface{
-        std::array<double, 2u>{ext.medium(AxisDirection::AxisZ),
-                               ext.medium(AxisDirection::AxisR)},
+        std::array<long double, 2u>{ext.medium(AxisDirection::AxisZ),
+                                    ext.medium(AxisDirection::AxisR)},
         s});
   }
 
@@ -157,7 +157,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
   auto& its = plVolume.internal.value();
 
   // Try to pull from the kd tree
-  RangeXD<2u, double> zrRange;
+  RangeXD<2u, long double> zrRange;
   zrRange[0u] = plVolume.extent.range(Acts::AxisDirection::AxisZ);
   zrRange[1u] = plVolume.extent.range(Acts::AxisDirection::AxisR);
 

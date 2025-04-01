@@ -142,9 +142,9 @@ Acts::PortalJsonConverter::toJsonDetray(
       const auto& volumes = multiLink1D->indexedUpdater.extractor.dVolumes;
 
       // Apply the correction from local to global boundaries
-      double gCorr = VectorHelpers::cast(transform.translation(), cast);
+      long double gCorr = VectorHelpers::cast(transform.translation(), cast);
       std::for_each(boundaries.begin(), boundaries.end(),
-                    [&gCorr](double& b) { b -= gCorr; });
+                    [&gCorr](long double& b) { b -= gCorr; });
 
       // Get the volume indices
       auto surfaceType = surfaceAdjusted->type();
@@ -154,11 +154,11 @@ Acts::PortalJsonConverter::toJsonDetray(
       }
 
       // Pick the surface dimension - via poly
-      std::array<double, 2u> clipRange = {0., 0.};
-      std::vector<double> boundValues = surfaceAdjusted->bounds().values();
+      std::array<long double, 2u> clipRange = {0., 0.};
+      std::vector<long double> boundValues = surfaceAdjusted->bounds().values();
       if (surfaceType == Surface::SurfaceType::Cylinder &&
           cast == AxisDirection::AxisZ) {
-        double zPosition = surfaceAdjusted->center(gctx).z();
+        long double zPosition = surfaceAdjusted->center(gctx).z();
         clipRange = {
             zPosition - boundValues[CylinderBounds::BoundValues::eHalfLengthZ],
             zPosition + boundValues[CylinderBounds::BoundValues::eHalfLengthZ]};
@@ -174,12 +174,12 @@ Acts::PortalJsonConverter::toJsonDetray(
 
       // Need to clip the parameter space to the surface dimension
       std::vector<unsigned int> clippedIndices = {};
-      std::vector<double> clippedBoundaries = {};
+      std::vector<long double> clippedBoundaries = {};
       clippedBoundaries.push_back(clipRange[0u]);
       for (const auto [ib, b] : enumerate(boundaries)) {
         if (ib > 0) {
           unsigned int vI = vIndices[ib - 1u];
-          double highEdge = boundaries[ib];
+          long double highEdge = boundaries[ib];
           if (boundaries[ib - 1] >= clipRange[1u]) {
             break;
           }
@@ -201,7 +201,7 @@ Acts::PortalJsonConverter::toJsonDetray(
         for (auto [ib, b] : enumerate(clippedBoundaries)) {
           if (ib > 0) {
             // Create sub surfaces
-            std::array<double, CylinderBounds::BoundValues::eSize>
+            std::array<long double, CylinderBounds::BoundValues::eSize>
                 subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;
@@ -228,7 +228,7 @@ Acts::PortalJsonConverter::toJsonDetray(
         for (auto [ib, b] : enumerate(clippedBoundaries)) {
           if (ib > 0) {
             // Create sub surfaces
-            std::array<double, RadialBounds::BoundValues::eSize>
+            std::array<long double, RadialBounds::BoundValues::eSize>
                 subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;
@@ -331,7 +331,8 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
     } else if (vl.contains("multi_1D")) {
       // Resolve the multi link 1D
       auto jMultiLink = vl["multi_1D"];
-      auto boundaries = jMultiLink["boundaries"].get<std::vector<double>>();
+      auto boundaries =
+          jMultiLink["boundaries"].get<std::vector<long double>>();
       auto binning = jMultiLink["binning"].get<AxisDirection>();
       auto targets = jMultiLink["targets"].get<std::vector<unsigned int>>();
       std::vector<std::shared_ptr<Experimental::DetectorVolume>> targetVolumes;

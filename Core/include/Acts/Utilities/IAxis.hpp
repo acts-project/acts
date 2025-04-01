@@ -45,17 +45,17 @@ class IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  virtual std::vector<double> getBinEdges() const = 0;
+  virtual std::vector<long double> getBinEdges() const = 0;
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  virtual double getMin() const = 0;
+  virtual long double getMin() const = 0;
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  virtual double getMax() const = 0;
+  virtual long double getMax() const = 0;
 
   /// @brief get total number of bins
   ///
@@ -73,7 +73,7 @@ class IAxis {
   ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createEquidistant(
-      AxisBoundaryType aBoundaryType, double min, double max,
+      AxisBoundaryType aBoundaryType, long double min, long double max,
       std::size_t nbins);
 
   /// Centralized axis factory for variable binning
@@ -85,7 +85,7 @@ class IAxis {
   ///
   /// @return a unique pointer to the axis
   static std::unique_ptr<IAxis> createVariable(
-      AxisBoundaryType aBoundaryType, const std::vector<double>& edges);
+      AxisBoundaryType aBoundaryType, const std::vector<long double>& edges);
 
   /// Helper function that dispatches from the @c IAxis base class
   /// to a concrete axis type. It will call the provided @p callable

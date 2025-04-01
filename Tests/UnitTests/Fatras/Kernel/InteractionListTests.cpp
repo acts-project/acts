@@ -62,9 +62,9 @@ static_assert(!detail::PointLikeProcessConcept<FatalContinuousProcess>,
 /// Each run call creates one descendant particle.
 struct X0PointLikeProcess {
   template <typename generator_t>
-  std::pair<double, double> generatePathLimits(
+  std::pair<long double, long double> generatePathLimits(
       generator_t & /*generator*/, const Particle & /*particle*/) const {
-    return {0.5, std::numeric_limits<double>::infinity()};
+    return {0.5, std::numeric_limits<long double>::infinity()};
   }
 
   template <typename generator_t>
@@ -86,9 +86,9 @@ static_assert(detail::PointLikeProcessConcept<X0PointLikeProcess>,
 /// Each run call creates two descendant particles.
 struct L0PointLikeProcess {
   template <typename generator_t>
-  std::pair<double, double> generatePathLimits(
+  std::pair<long double, long double> generatePathLimits(
       generator_t & /*generator*/, const Particle & /*particle*/) const {
-    return {std::numeric_limits<double>::infinity(), 1.5};
+    return {std::numeric_limits<long double>::infinity(), 1.5};
   }
 
   template <typename generator_t>
@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE(Empty) {
 
   // w/o processes there should be no selection
   auto sel = l.armPointLike(f.rng, f.incoming);
-  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<double>::infinity());
-  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<double>::infinity());
+  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<long double>::infinity());
+  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<long double>::infinity());
   BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(PointLikeX0) {
   // w/o processes the list should never abort
   auto sel = l.armPointLike(f.rng, f.incoming);
   BOOST_CHECK_EQUAL(sel.x0Limit, 0.5);
-  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<double>::infinity());
+  BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<long double>::infinity());
   BOOST_CHECK_EQUAL(sel.x0Process, 0u);
   BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(PointLikeL0) {
 
   // w/o processes the list should never abort
   auto sel = l.armPointLike(f.rng, f.incoming);
-  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<double>::infinity());
+  BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<long double>::infinity());
   BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
   BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
   BOOST_CHECK_EQUAL(sel.l0Process, 0u);
@@ -252,7 +252,8 @@ BOOST_AUTO_TEST_CASE(Disable) {
   l.disable<X0PointLikeProcess>();
   {
     auto sel = l.armPointLike(f.rng, f.incoming);
-    BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<double>::infinity());
+    BOOST_CHECK_EQUAL(sel.x0Limit,
+                      std::numeric_limits<long double>::infinity());
     BOOST_CHECK_EQUAL(sel.l0Limit, 1.5);
     BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
     BOOST_CHECK_EQUAL(sel.l0Process, 3u);
@@ -270,8 +271,10 @@ BOOST_AUTO_TEST_CASE(Disable) {
   l.disable<L0PointLikeProcess>();
   {
     auto sel = l.armPointLike(f.rng, f.incoming);
-    BOOST_CHECK_EQUAL(sel.x0Limit, std::numeric_limits<double>::infinity());
-    BOOST_CHECK_EQUAL(sel.l0Limit, std::numeric_limits<double>::infinity());
+    BOOST_CHECK_EQUAL(sel.x0Limit,
+                      std::numeric_limits<long double>::infinity());
+    BOOST_CHECK_EQUAL(sel.l0Limit,
+                      std::numeric_limits<long double>::infinity());
     BOOST_CHECK_EQUAL(sel.x0Process, std::numeric_limits<std::size_t>::max());
     BOOST_CHECK_EQUAL(sel.l0Process, std::numeric_limits<std::size_t>::max());
 

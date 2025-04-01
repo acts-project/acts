@@ -26,8 +26,8 @@ namespace ActsExamples {
 /// Is public as it is also used by the I/O system
 struct DigitizedParameters {
   std::vector<Acts::BoundIndices> indices = {};
-  std::vector<double> values = {};
-  std::vector<double> variances = {};
+  std::vector<long double> values = {};
+  std::vector<long double> variances = {};
 
   Cluster cluster;
 };

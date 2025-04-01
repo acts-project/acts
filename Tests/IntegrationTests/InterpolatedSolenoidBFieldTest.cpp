@@ -30,10 +30,10 @@ namespace bdata = boost::unit_test::data;
 
 namespace Acts::IntegrationTest {
 
-const double L = 5.8_m;
-const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
+const long double L = 5.8_m;
+const long double R = (2.56 + 2.46) * 0.5 * 0.5_m;
 const std::size_t nCoils = 1154;
-const double bMagCenter = 2_T;
+const long double bMagCenter = 2_T;
 const std::size_t nBinsR = 150;
 const std::size_t nBinsZ = 200;
 
@@ -41,10 +41,10 @@ auto makeFieldMap(const SolenoidBField& field) {
   std::ofstream ostr("solenoidmap.csv");
   ostr << "i;j;r;z;B_r;B_z" << std::endl;
 
-  double rMin = 0;
-  double rMax = R * 2.;
-  double zMin = 2 * (-L / 2.);
-  double zMax = 2 * (L / 2.);
+  long double rMin = 0;
+  long double rMax = R * 2.;
+  long double zMin = 2 * (-L / 2.);
+  long double zMax = 2 * (L / 2.);
 
   std::cout << "rMin = " << rMin << std::endl;
   std::cout << "rMax = " << rMax << std::endl;
@@ -94,16 +94,17 @@ StreamWrapper valid(std::ofstream("magfield_lookup.csv"));
 const int ntests = 10000;
 BOOST_DATA_TEST_CASE(
     solenoid_interpolated_bfield_comparison,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       1.5 * (-L / 2.), 1.5 * L / 2.))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(0,
-                                                                  R * 1.5))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 1,
+         bdata::distribution = std::uniform_real_distribution<long double>(
+             1.5 * (-L / 2.), 1.5 * L / 2.))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 2,
+             bdata::distribution =
+                 std::uniform_real_distribution<long double>(0, R * 1.5))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(ntests),
     z, r, phi, index) {

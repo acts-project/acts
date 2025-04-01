@@ -64,36 +64,36 @@ struct SeedFinderOrthogonalConfig {
   std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
                                            2700 * Acts::UnitConstants::mm};
 
-  /// Seeding parameters used to define the cuts on space-point doublets
+  /// Seeding parameters used to define the cuts on space-point long doublets
 
-  /// Minimum radial distance between middle-outer doublet components
+  /// Minimum radial distance between middle-outer long doublet components
   float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
-  /// Maximum radial distance between middle-outer doublet components
+  /// Maximum radial distance between middle-outer long doublet components
   float deltaRMaxTopSP = std::numeric_limits<float>::quiet_NaN();
-  /// Minimum radial distance between inner-middle doublet components
+  /// Minimum radial distance between inner-middle long doublet components
   float deltaRMinBottomSP = std::numeric_limits<float>::quiet_NaN();
-  /// Maximum radial distance between inner-middle doublet components
+  /// Maximum radial distance between inner-middle long doublet components
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
 
   /// Shrink the phi range of middle space-point (analogous to phi bin size in
   /// grid from default seeding + number of phi bins used in search)
   float deltaPhiMax = 0.085;
 
-  /// Maximum value of z-distance between space-points in doublet
+  /// Maximum value of z-distance between space-points in long doublet
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
-  /// Maximum allowed cotTheta between two space-points in doublet, used to
+  /// Maximum allowed cotTheta between two space-points in long doublet, used to
   /// check if forward angle is within bounds
   float cotThetaMax = 7.40627;  // equivalent to 2.7 eta (pseudorapidity)
 
-  /// Limiting location of collision region in z-axis used to check if doublet
-  /// origin is within reasonable bounds
+  /// Limiting location of collision region in z-axis used to check if long
+  /// doublet origin is within reasonable bounds
   float collisionRegionMin = -150 * Acts::UnitConstants::mm;
   float collisionRegionMax = +150 * Acts::UnitConstants::mm;
 
-  /// Enable cut on the compatibility between interaction point and doublet,
-  /// this is an useful approximation to speed up the seeding
+  /// Enable cut on the compatibility between interaction point and long
+  /// doublet, this is an useful approximation to speed up the seeding
   bool interactionPointCut = false;
 
   /// Seeding parameters used to define the cuts on space-point triplets
@@ -127,7 +127,7 @@ struct SeedFinderOrthogonalConfig {
   /// of the detector (e.g. forward or central region) by SeedConfirmationRange.
   /// Seeds are classified as "high-quality" seeds and normal quality seeds.
   /// Normal quality seeds are only selected if no other "high-quality" seeds
-  /// has been found for that inner-middle doublet.
+  /// has been found for that inner-middle long doublet.
   bool seedConfirmation = false;
   /// Contains parameters for central seed confirmation
   SeedConfirmationRangeConfig centralSeedConfirmationRange;

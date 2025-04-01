@@ -120,7 +120,7 @@ class CylinderVolumeStack : public VolumeStack {
   /// @param volumes is the vector of volumes
   /// @param logger is the logger
   /// @return tuple of the minimum and maximum radii
-  std::pair<double, double> synchronizeRBounds(
+  std::pair<long double, long double> synchronizeRBounds(
       std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   /// Helper function that checks overlaps and attaches in r direction
@@ -136,7 +136,7 @@ class CylinderVolumeStack : public VolumeStack {
   /// @param volumes is the vector of volumes
   /// @param logger is the logger
   /// @return tuple of the minimum and maximum z extent
-  std::pair<double, double> synchronizeZBounds(
+  std::pair<long double, long double> synchronizeZBounds(
       std::vector<VolumeTuple>& volumes, const Logger& logger);
 
   /// Helper functions that checks if the cylinder volume bounds

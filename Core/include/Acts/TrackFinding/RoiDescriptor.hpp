@@ -39,10 +39,10 @@ class RoiDescriptor {
    * @param zedMinus zed at rear  of RoI
    * @param zedPlus  zed at front of RoI
    */
-  RoiDescriptor(double eta, double etaMinus, double etaPlus, double phi,
-                double phiMinus, double phiPlus, double zed = 0,
-                double zedMinus = -s_zedWidthDefault,
-                double zedPlus = s_zedWidthDefault);
+  RoiDescriptor(long double eta, long double etaMinus, long double etaPlus,
+                long double phi, long double phiMinus, long double phiPlus,
+                long double zed = 0, long double zedMinus = -s_zedWidthDefault,
+                long double zedPlus = s_zedWidthDefault);
   // zedminus - s_zedWidthDefault = 225 //from ROIDescriptor
 
   /*
@@ -56,26 +56,26 @@ class RoiDescriptor {
 
   // Methods to retrieve data members
 
-  double phi() const { return m_phi; }
-  double eta() const { return m_eta; }
-  double zed() const { return m_zed; }
+  long double phi() const { return m_phi; }
+  long double eta() const { return m_eta; }
+  long double zed() const { return m_zed; }
 
   /// these quantities probably don't need to be used any more
   /// - they are implemented here only because we had them in
   ///   the original legacy interface
 
-  double zedPlus() const {
+  long double zedPlus() const {
     return m_zedPlus;
   }  //!< z at the most forward end of the RoI
-  double zedMinus() const {
+  long double zedMinus() const {
     return m_zedMinus;
   }  //!< z at the most backward end of the RoI
 
-  double etaPlus() const { return m_etaPlus; }    //!< gets eta at zedPlus
-  double etaMinus() const { return m_etaMinus; }  //!< gets eta at zMinus
+  long double etaPlus() const { return m_etaPlus; }    //!< gets eta at zedPlus
+  long double etaMinus() const { return m_etaMinus; }  //!< gets eta at zMinus
 
-  double phiPlus() const { return m_phiPlus; }    //!< gets phiPlus
-  double phiMinus() const { return m_phiMinus; }  //!< gets phiMinus
+  long double phiPlus() const { return m_phiPlus; }    //!< gets phiPlus
+  long double phiMinus() const { return m_phiMinus; }  //!< gets phiMinus
 
   /// versioning
   int version() const { return m_version; }
@@ -120,39 +120,39 @@ class RoiDescriptor {
   roi_iterator end() const { return m_roiDescriptors.end(); }
 
   /// return the gradients
-  double dzdrMinus() const {
+  long double dzdrMinus() const {
     return m_dzdrMinus;
   }  //!<  dz/dr at the rear of the RoI
-  double dzdrPlus() const {
+  long double dzdrPlus() const {
     return m_dzdrPlus;
   }  //!<  dz/dr at the front of the RoI
 
-  double drdzMinus() const {
+  long double drdzMinus() const {
     return m_drdzMinus;
   }  //!<  dr/dz at the rear of the RoI
-  double drdzPlus() const {
+  long double drdzPlus() const {
     return m_drdzPlus;
   }  //!<  dr/dz at the front of the RoI
 
   /// methods to calculate z position at the RoI boundary
   /// at a given radius
-  double zedMin(double r) const;
-  double zedMax(double r) const;
+  long double zedMin(long double r) const;
+  long double zedMax(long double r) const;
 
-  double zedOuterPlus() const {
+  long double zedOuterPlus() const {
     return m_zedOuterPlus;
   }  //!< z at the most forward end of the RoI
-  double zedOuterMinus() const {
+  long double zedOuterMinus() const {
     return m_zedOuterMinus;
   }  //!< z at the most backward end of the RoI
 
-  double rhoMin(double z) const;
-  double rhoMax(double z) const;
+  long double rhoMin(long double z) const;
+  long double rhoMax(long double z) const;
 
-  static double zedWidthDefault() { return s_zedWidthDefault; }
+  static long double zedWidthDefault() { return s_zedWidthDefault; }
 
   /// set default z-width (but only before any RoiDescriptor has been created)
-  static void zedWidthDefault(double d);
+  static void zedWidthDefault(long double d);
 
   // fromn trig
   unsigned int roiId() const { return m_roiId; }
@@ -161,7 +161,7 @@ class RoiDescriptor {
 
  private:
   /// default parameters - there may be better ways, but this will do
-  static std::atomic<double> s_zedWidthDefault;
+  static std::atomic<long double> s_zedWidthDefault;
   /// to ensure default width is only set once at job startup
   static std::atomic<bool> s_firstInstanceCreated;
 

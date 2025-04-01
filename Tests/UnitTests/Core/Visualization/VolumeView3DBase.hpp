@@ -38,7 +38,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 
-  const double halfPhiSector = std::numbers::pi / 4.;
+  const long double halfPhiSector = std::numbers::pi / 4.;
 
   ViewConfig vConfig = s_viewVolume;
   vConfig.triangulate = triangulate;
@@ -117,9 +117,9 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   //----------------------------------------------------
   // Cylinder volume section
-  double cylinderInnerR = 1.;
-  double cylinderOuterR = 5.;
-  double cylinderHalfZ = 10.;
+  long double cylinderInnerR = 1.;
+  long double cylinderOuterR = 5.;
+  long double cylinderHalfZ = 10.;
 
   auto fullCylinder =
       std::make_shared<CylinderVolumeBounds>(0., cylinderOuterR, cylinderHalfZ);

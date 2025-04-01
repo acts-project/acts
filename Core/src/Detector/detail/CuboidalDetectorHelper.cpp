@@ -53,8 +53,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   auto [sIndex, fIndex] = portalSets[toUnderlying(bValue)];
 
   // Log the merge splits, i.e. the boundaries of the volumes
-  std::array<std::vector<double>, 3u> mergeSplits;
-  std::array<double, 3u> mergeHalfLengths = {
+  std::array<std::vector<long double>, 3u> mergeSplits;
+  std::array<long double, 3u> mergeHalfLengths = {
       0.,
       0.,
       0.,
@@ -72,7 +72,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
   // Things that can be done without a loop be first/last check
   // Estimate the merge parameters: the scalar and the transform
-  using MergeParameters = std::tuple<double, Transform3>;
+  using MergeParameters = std::tuple<long double, Transform3>;
   std::map<std::size_t, MergeParameters> mergeParameters;
   auto& firstVolume = volumes.front();
   auto& lastVolume = volumes.back();
@@ -93,8 +93,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
                           ->surface()
                           .transform(gctx)
                           .rotation();
-      double stepDown = firstBoundValues[toUnderlying(bValue)];
-      double stepUp = lastBoundValues[toUnderlying(bValue)];
+      long double stepDown = firstBoundValues[toUnderlying(bValue)];
+      long double stepUp = lastBoundValues[toUnderlying(bValue)];
       // Take translation from first and last volume
       auto translationF = firstVolume->portalPtrs()[index]
                               ->surface()
@@ -113,7 +113,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       portalTransform.prerotate(rotation);
       portalTransform.pretranslate(translation);
       // The half length to be kept
-      double keepHalfLength =
+      long double keepHalfLength =
           firstBoundValues[toUnderlying(counterPart(mergeValue))];
       mergeParameters[index] = MergeParameters(keepHalfLength, portalTransform);
     }
@@ -183,7 +183,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     }
 
     // The stitch boundaries for portal pointing
-    std::vector<double> stitchBoundaries;
+    std::vector<long double> stitchBoundaries;
     stitchBoundaries.push_back(-mergeHalfLengths[im]);
     for (auto step : mergeSplits[im]) {
       stitchBoundaries.push_back(stitchBoundaries.back() + step);
@@ -320,7 +320,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   return dShell;
 }
 
-std::array<std::vector<double>, 3u>
+std::array<std::vector<long double>, 3u>
 Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
     [[maybe_unused]] const GeometryContext& gctx,
     [[maybe_unused]] const std::vector<
@@ -330,16 +330,16 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   // The return boundaries
-  std::array<std::vector<double>, 3u> boundaries;
+  std::array<std::vector<long double>, 3u> boundaries;
 
   // The map for collecting
-  std::array<std::map<double, std::size_t>, 3u> valueMaps;
+  std::array<std::map<long double, std::size_t>, 3u> valueMaps;
   auto& xMap = valueMaps[0u];
   auto& yMap = valueMaps[1u];
   auto& zMap = valueMaps[2u];
 
-  auto fillMap = [&](std::map<double, std::size_t>& map,
-                     const std::array<double, 2u>& values) {
+  auto fillMap = [&](std::map<long double, std::size_t>& map,
+                     const std::array<long double, 2u>& values) {
     for (auto v : values) {
       // This will insert v with a value of 0 if it doesn't exist
       ++map[v];
@@ -351,18 +351,21 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
     if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCuboid) {
       auto bValues = v->volumeBounds().values();
       // The min/max values
-      double halfX = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthX];
-      double halfY = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthY];
-      double halfZ = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
+      long double halfX =
+          bValues[CuboidVolumeBounds::BoundValues::eHalfLengthX];
+      long double halfY =
+          bValues[CuboidVolumeBounds::BoundValues::eHalfLengthY];
+      long double halfZ =
+          bValues[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
       // Get the transform @todo use a center of gravity of the detector
       auto translation = v->transform(gctx).translation();
       // The min/max values
-      double xMin = translation.x() - halfX;
-      double xMax = translation.x() + halfX;
-      double yMin = translation.y() - halfY;
-      double yMax = translation.y() + halfY;
-      double zMin = translation.z() - halfZ;
-      double zMax = translation.z() + halfZ;
+      long double xMin = translation.x() - halfX;
+      long double xMax = translation.x() + halfX;
+      long double yMin = translation.y() - halfY;
+      long double yMax = translation.y() + halfY;
+      long double zMin = translation.z() - halfZ;
+      long double zMax = translation.z() + halfZ;
       // Fill the maps
       fillMap(xMap, {xMin, xMax});
       fillMap(yMap, {yMin, yMax});

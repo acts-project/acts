@@ -63,10 +63,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   }
 
   // Remaining layer parameters - they include the envelopes
-  double layerR = protoLayer.medium(AxisDirection::AxisR);
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisR);
+  long double layerR = protoLayer.medium(AxisDirection::AxisR);
+  long double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  long double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+  long double layerThickness = protoLayer.range(AxisDirection::AxisR);
 
   ACTS_VERBOSE("Creating a cylindrical Layer:");
   ACTS_VERBOSE(" - with layer R     = " << layerR);
@@ -140,10 +140,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   }
 
   // remaining layer parameters
-  double layerR = protoLayer.medium(AxisDirection::AxisR);
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisR);
+  long double layerR = protoLayer.medium(AxisDirection::AxisR);
+  long double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  long double layerHalfZ = 0.5 * protoLayer.range(AxisDirection::AxisZ);
+  long double layerThickness = protoLayer.range(AxisDirection::AxisR);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a cylindrical Layer:");
@@ -217,8 +217,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
   }
 
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisZ);
+  long double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  long double layerThickness = protoLayer.range(AxisDirection::AxisZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -287,8 +287,8 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
     protoLayer.envelope[AxisDirection::AxisZ] = m_cfg.defaultEnvelopeZ;
   }
 
-  double layerZ = protoLayer.medium(AxisDirection::AxisZ);
-  double layerThickness = protoLayer.range(AxisDirection::AxisZ);
+  long double layerZ = protoLayer.medium(AxisDirection::AxisZ);
+  long double layerThickness = protoLayer.range(AxisDirection::AxisZ);
 
   // adjust the layer radius
   ACTS_VERBOSE("Creating a disk Layer:");
@@ -356,7 +356,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   }
 
   // remaining layer parameters
-  double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
+  long double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
   switch (aDir) {
     case AxisDirection::AxisX: {
       layerHalf1 = 0.5 * (protoLayer.max(AxisDirection::AxisY) -
@@ -389,12 +389,12 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
       throw std::invalid_argument("Invalid binning value");
   }
 
-  double centerX = 0.5 * (protoLayer.max(AxisDirection::AxisX) +
-                          protoLayer.min(AxisDirection::AxisX));
-  double centerY = 0.5 * (protoLayer.max(AxisDirection::AxisY) +
-                          protoLayer.min(AxisDirection::AxisY));
-  double centerZ = 0.5 * (protoLayer.max(AxisDirection::AxisZ) +
-                          protoLayer.min(AxisDirection::AxisZ));
+  long double centerX = 0.5 * (protoLayer.max(AxisDirection::AxisX) +
+                               protoLayer.min(AxisDirection::AxisX));
+  long double centerY = 0.5 * (protoLayer.max(AxisDirection::AxisY) +
+                               protoLayer.min(AxisDirection::AxisY));
+  long double centerZ = 0.5 * (protoLayer.max(AxisDirection::AxisZ) +
+                               protoLayer.min(AxisDirection::AxisZ));
 
   ACTS_VERBOSE("Creating a plane Layer:");
   ACTS_VERBOSE(" - with layer center     = "

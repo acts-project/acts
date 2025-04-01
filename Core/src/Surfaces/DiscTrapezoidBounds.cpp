@@ -20,17 +20,18 @@
 
 namespace Acts {
 
-DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR, double halfXmaxR,
-                                         double minR, double maxR,
-                                         double avgPhi,
-                                         double stereo) noexcept(false)
+DiscTrapezoidBounds::DiscTrapezoidBounds(long double halfXminR,
+                                         long double halfXmaxR,
+                                         long double minR, long double maxR,
+                                         long double avgPhi,
+                                         long double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
   m_ymax = std::sqrt(get(eMaxR) * get(eMaxR) -
                      get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
-std::vector<double> DiscTrapezoidBounds::values() const {
+std::vector<long double> DiscTrapezoidBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 

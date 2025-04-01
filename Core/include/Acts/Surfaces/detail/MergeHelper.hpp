@@ -18,9 +18,9 @@ namespace Acts::detail {
 /// a half phi sector in the range [0,pi). The two
 /// ranges need to line up, i.e. that one of the sector
 /// ends exactly where the other one starts.
-std::tuple<double, double, bool> mergedPhiSector(
-    double hlPhi1, double avgPhi1, double hlPhi2, double avgPhi2,
-    const Logger& logger = getDummyLogger(),
-    double tolerance = s_onSurfaceTolerance);
+std::tuple<long double, long double, bool> mergedPhiSector(
+    long double hlPhi1, long double avgPhi1, long double hlPhi2,
+    long double avgPhi2, const Logger& logger = getDummyLogger(),
+    long double tolerance = s_onSurfaceTolerance);
 
 }  // namespace Acts::detail

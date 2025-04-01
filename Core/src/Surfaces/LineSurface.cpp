@@ -24,8 +24,8 @@
 
 namespace Acts {
 
-LineSurface::LineSurface(const Transform3& transform, double radius,
-                         double halez)
+LineSurface::LineSurface(const Transform3& transform, long double radius,
+                         long double halez)
     : GeometryObject(),
       Surface(transform),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}
@@ -70,7 +70,7 @@ Vector3 LineSurface::localToGlobal(const GeometryContext& gctx,
 Result<Vector2> LineSurface::globalToLocal(const GeometryContext& gctx,
                                            const Vector3& position,
                                            const Vector3& direction,
-                                           double tolerance) const {
+                                           long double tolerance) const {
   using VectorHelpers::perp;
 
   // Bring the global position into the local frame. First remove the
@@ -113,9 +113,9 @@ RotationMatrix3 LineSurface::referenceFrame(const GeometryContext& gctx,
   return mFrame;
 }
 
-double LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
-                                   const Vector3& /*pos*/,
-                                   const Vector3& /*mom*/) const {
+long double LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
+                                        const Vector3& /*pos*/,
+                                        const Vector3& /*mom*/) const {
   return 1.;
 }
 
@@ -140,7 +140,7 @@ const SurfaceBounds& LineSurface::bounds() const {
 SurfaceMultiIntersection LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryTolerance& boundaryTolerance,
-    double tolerance) const {
+    long double tolerance) const {
   // The nomenclature is following the header file and doxygen documentation
 
   const Vector3& ma = position;
@@ -153,8 +153,8 @@ SurfaceMultiIntersection LineSurface::intersect(
 
   // Now go ahead and solve for the closest approach
   Vector3 mab = mb - ma;
-  double eaTeb = ea.dot(eb);
-  double denom = 1 - eaTeb * eaTeb;
+  long double eaTeb = ea.dot(eb);
+  long double denom = 1 - eaTeb * eaTeb;
 
   // `tolerance` does not really have a meaning here it is just a sufficiently
   // small number so `u` does not explode
@@ -163,7 +163,7 @@ SurfaceMultiIntersection LineSurface::intersect(
     return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
-  double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
+  long double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
   // Check if we are on the surface already
   IntersectionStatus status = std::abs(u) > std::abs(tolerance)
                                   ? IntersectionStatus::reachable
@@ -173,8 +173,8 @@ SurfaceMultiIntersection LineSurface::intersect(
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
   if (m_bounds && !boundaryTolerance.isInfinite()) {
     Vector3 vecLocal = result - mb;
-    double cZ = vecLocal.dot(eb);
-    double cR = (vecLocal - cZ * eb).norm();
+    long double cZ = vecLocal.dot(eb);
+    long double cR = (vecLocal - cZ * eb).norm();
     if (!m_bounds->inside({cR, cZ}, boundaryTolerance)) {
       status = IntersectionStatus::unreachable;
     }
@@ -192,7 +192,7 @@ BoundToFreeMatrix LineSurface::boundToFreeJacobian(
   auto rframe = referenceFrame(gctx, position, direction);
 
   Vector2 local = *globalToLocal(gctx, position, direction,
-                                 std::numeric_limits<double>::max());
+                                 std::numeric_limits<long double>::max());
 
   // For the derivative of global position with bound angles, refer the
   // following white paper:
@@ -202,7 +202,7 @@ BoundToFreeMatrix LineSurface::boundToFreeJacobian(
       Surface::boundToFreeJacobian(gctx, position, direction);
 
   // the projection of direction onto ref frame normal
-  double ipdn = 1. / direction.dot(rframe.col(2));
+  long double ipdn = 1. / direction.dot(rframe.col(2));
   // build the cross product of d(D)/d(eBoundPhi) components with y axis
   Vector3 dDPhiY = rframe.block<3, 1>(0, 1).cross(
       jacToGlobal.block<3, 1>(eFreeDir0, eBoundPhi));
@@ -230,10 +230,10 @@ FreeToPathMatrix LineSurface::freeToPathDerivative(
   // The local frame z axis
   Vector3 localZAxis = lineDirection(gctx);
   // The local z coordinate
-  double pz = pcRowVec.dot(localZAxis);
+  long double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
-  double dz = localZAxis.dot(direction);
-  double norm = 1 / (1 - dz * dz);
+  long double dz = localZAxis.dot(direction);
+  long double norm = 1 / (1 - dz * dz);
 
   // Initialize the derivative of propagation path w.r.t. free parameter
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
@@ -259,10 +259,10 @@ AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   // The local frame z axis
   Vector3 localZAxis = lineDirection(gctx);
   // The local z coordinate
-  double pz = pcRowVec.dot(localZAxis);
+  long double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
-  double dz = localZAxis.dot(direction);
-  double norm = 1 / (1 - dz * dz);
+  long double dz = localZAxis.dot(direction);
+  long double norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
   auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
       detail::rotationToLocalAxesDerivative(transform(gctx).rotation());
@@ -283,7 +283,7 @@ ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
   // calculate the transformation to local coordinates
   Vector3 localPosition = transform(gctx).inverse() * position;
-  double localPhi = VectorHelpers::phi(localPosition);
+  long double localPhi = VectorHelpers::phi(localPosition);
 
   ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;

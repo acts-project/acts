@@ -70,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::ObjSimHitWriter::writeT(
     std::unordered_map<std::size_t, std::vector<Acts::Vector4>> particleHits;
     // Pre-loop over hits ... write those below threshold
     for (const auto& simHit : simHits) {
-      double momentum = simHit.momentum4Before().head<3>().norm();
+      long double momentum = simHit.momentum4Before().head<3>().norm();
       if (momentum < m_cfg.momentumThreshold) {
         ACTS_VERBOSE("Skipping: Hit below threshold: " << momentum);
         continue;

@@ -37,11 +37,11 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 
-constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<long double>::epsilon();
 const GeometryContext geoCtx;
 
-void runTest(const Surface& surface, double l0, double l1, double phi,
-             double theta) {
+void runTest(const Surface& surface, long double l0, long double l1,
+             long double phi, long double theta) {
   const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // convert local-to-global

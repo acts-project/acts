@@ -35,12 +35,12 @@ void Acts::Experimental::detail::DetectorVolumeConsistency::
   }
 }
 
-std::vector<double>
+std::vector<long double>
 Acts::Experimental::detail::DetectorVolumeConsistency::checkCenterAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
     AxisDirection axisValue) {
-  std::vector<double> distances = {};
+  std::vector<long double> distances = {};
   // First it needs to surfive the rotation check
   checkRotationAlignment(gctx, volumes);
 

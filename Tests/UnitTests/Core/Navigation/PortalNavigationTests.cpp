@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(SingleVolumeUpdate) {
 
 // A typlical volume array in 1 dimension (bound, not closed)
 BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
-  std::vector<double> zArray = {-200, -100, 100, 400, 1000};
+  std::vector<long double> zArray = {-200, -100, 100, 400, 1000};
 
   std::vector<const Acts::Experimental::DetectorVolume*> volumes = {
       volumeA.get(), volumeB.get(), volumeC.get(), volumeD.get()};

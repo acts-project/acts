@@ -131,9 +131,10 @@ void writeSurface(SurfaceWriter& sfWriter, const Acts::Surface& surface,
 void writeCylinderLayerVolume(LayerVolumeWriter& lvWriter,
                               const Acts::Layer& lv,
                               const Acts::Transform3& transform,
-                              std::vector<double>& representingBoundValues,
-                              std::vector<double>& volumeBoundValues,
-                              std::vector<double>& lastBoundValues, bool last) {
+                              std::vector<long double>& representingBoundValues,
+                              std::vector<long double>& volumeBoundValues,
+                              std::vector<long double>& lastBoundValues,
+                              bool last) {
   // The layer volume to be written
   LayerVolumeData lvDims;
   lvDims.geometry_id = lv.geometryId().value();
@@ -229,8 +230,8 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
     const auto& vTransform = volume.transform();
 
     // Get the values of the volume boundaries
-    std::vector<double> volumeBoundValues = volume.volumeBounds().values();
-    std::vector<double> lastBoundValues;
+    std::vector<long double> volumeBoundValues = volume.volumeBounds().values();
+    std::vector<long double> lastBoundValues;
 
     if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
       auto vTranslation = vTransform.translation();
@@ -284,7 +285,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
         // Write the layer volume, exclude single layer volumes (written above)
         if (rVolume != nullptr && writeLayerVolume && layers.size() > 3) {
           // Get the values of the representing volume
-          std::vector<double> representingBoundValues =
+          std::vector<long double> representingBoundValues =
               rVolume->volumeBounds().values();
           if (rVolume->volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
             bool last = (layerIdx + 2 ==

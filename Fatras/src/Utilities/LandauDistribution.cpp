@@ -10,12 +10,12 @@
 
 #include <cmath>
 
-double ActsFatras::LandauDistribution::quantile(double z) {
+long double ActsFatras::LandauDistribution::quantile(long double z) {
   // LANDAU quantile : algorithm from CERNLIB G110 ranlan
   // Converted by Rene Brun from CERNLIB routine ranlan(G110),
   // Moved and adapted to QuantFuncMathCore by B. List 29.4.2010
 
-  static const double f[982] = {
+  static const long double f[982] = {
       0,         0,         0,         0,         0,         -2.244733,
       -2.204365, -2.168163, -2.135219, -2.104898, -2.076740, -2.050397,
       -2.025605, -2.002150, -1.979866, -1.958612, -1.938275, -1.918760,
@@ -182,13 +182,13 @@ double ActsFatras::LandauDistribution::quantile(double z) {
       51.005773, 53.437996, 56.123356, 59.103894};
 
   if (z <= 0) {
-    return -std::numeric_limits<double>::infinity();
+    return -std::numeric_limits<long double>::infinity();
   }
   if (z >= 1) {
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<long double>::infinity();
   }
 
-  double ranlan = 0, u = 0, v = 0;
+  long double ranlan = 0, u = 0, v = 0;
   u = 1000 * z;
   int i = static_cast<int>(u);
   u -= i;

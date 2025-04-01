@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-double RectangleBounds::get(BoundValues bValue) const {
+long double RectangleBounds::get(BoundValues bValue) const {
   switch (bValue) {
     case eMinX:
       return m_min.x();
@@ -28,7 +28,7 @@ double RectangleBounds::get(BoundValues bValue) const {
       return m_max.y();
     default:
       assert(false && "Invalid BoundValue enum value");
-      return std::numeric_limits<double>::quiet_NaN();
+      return std::numeric_limits<long double>::quiet_NaN();
   }
 }
 

@@ -45,7 +45,8 @@ class DiscLayer : virtual public DiscSurface, public Layer {
       const Transform3& transform,
       const std::shared_ptr<const DiscBounds>& dbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      long double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::passive) {
     return std::shared_ptr<DiscLayer>(
         new DiscLayer(transform, dbounds, std::move(surfaceArray), thickness,
@@ -80,7 +81,7 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   DiscLayer(const Transform3& transform,
             const std::shared_ptr<const DiscBounds>& dbounds,
             std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-            double thickness = 0.,
+            long double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ades = nullptr,
             LayerType laytyp = Acts::active);
 

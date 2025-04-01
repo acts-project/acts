@@ -34,7 +34,7 @@ class EDM4hepTrackReader : public IReader {
     std::string outputTracks;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
-    double Bz;
+    long double Bz;
   };
 
   /// constructor

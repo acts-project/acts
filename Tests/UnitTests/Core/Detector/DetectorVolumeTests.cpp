@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
-  double rInner = 10.;
-  double rOuter = 100.;
-  double zHalfL = 200.;
+  long double rInner = 10.;
+  long double rOuter = 100.;
+  long double zHalfL = 200.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
 }
 
 BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
-  double bigBox = 100.;
-  double smallBox = 10.;
+  long double bigBox = 100.;
+  long double smallBox = 10.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   auto portalGenerator = defaultPortalGenerator();
 
-  std::vector<double> radii = {100, 102, 104, 106, 108, 110};
+  std::vector<long double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};

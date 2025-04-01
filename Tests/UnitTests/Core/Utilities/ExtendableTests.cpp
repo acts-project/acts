@@ -19,7 +19,7 @@ namespace Acts::Test {
 // and the standard aborters
 BOOST_AUTO_TEST_CASE(Extendable_) {
   struct TypeA {
-    double vaA = 0.;
+    long double vaA = 0.;
   };
 
   struct TypeB {

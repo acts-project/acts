@@ -40,7 +40,7 @@ struct Segmentizer {
     /// The intersection with the channel boundary
     Acts::Vector2 intersect;
     /// The patlength from the start
-    double path = 0.;
+    long double path = 0.;
 
     /// Constructor with arguments for a ChannelStep.
     ///
@@ -69,14 +69,14 @@ struct Segmentizer {
     /// The segment start, end points
     Segment2D path2D;
     /// The (clipped) value (uncorrected: path length)
-    double activation = 0.;
+    long double activation = 0.;
 
     /// Constructor with arguments
     ///
     /// @param bin_ The bin corresponding to this step
     /// @param path2D_ The start/end 2D position of the segment
     /// @param activation_ The segment activation (clean: length) for this bin
-    ChannelSegment(Bin2D bin_, Segment2D path2D_, double activation_)
+    ChannelSegment(Bin2D bin_, Segment2D path2D_, long double activation_)
         : bin(bin_), path2D(std::move(path2D_)), activation(activation_) {}
   };
 

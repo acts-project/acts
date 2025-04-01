@@ -152,14 +152,14 @@ std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
 /// @return a transform extracted from parameters
 inline Transform3 extractTransform(const dd4hep::DetElement& dd4hepElement,
                                    const std::string& bname,
-                                   const double unitConversion = 1.) {
+                                   const long double unitConversion = 1.) {
   Transform3 transform = Transform3::Identity();
-  double x =
-      unitConversion * getParamOr<double>(bname + "_x", dd4hepElement, 0.);
-  double y =
-      unitConversion * getParamOr<double>(bname + "_y", dd4hepElement, 0.);
-  double z =
-      unitConversion * getParamOr<double>(bname + "_z", dd4hepElement, 0.);
+  long double x =
+      unitConversion * getParamOr<long double>(bname + "_x", dd4hepElement, 0.);
+  long double y =
+      unitConversion * getParamOr<long double>(bname + "_y", dd4hepElement, 0.);
+  long double z =
+      unitConversion * getParamOr<long double>(bname + "_z", dd4hepElement, 0.);
   transform.pretranslate(Vector3(x, y, z));
   return transform;
 }

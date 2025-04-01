@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   std::shared_ptr<Acts::PlaneSurface> planeSurface =
       Acts::CurvilinearSurface(cPosition, cNormal).planeSurface();
 
-  double depletion = 0.250;
+  long double depletion = 0.250;
 
   // Nominal intersection
   Acts::Vector3 noDrift(0., 0., 0.);

@@ -63,15 +63,16 @@ class SurfaceStub : public RegularSurface {
   /// Global to local transformation
   Result<Vector2> globalToLocal(const GeometryContext& /*cxt*/,
                                 const Vector3& /*gpos*/,
-                                double /*tolerance*/) const final {
+                                long double /*tolerance*/) const final {
     return Result<Vector2>::success(Vector2{20., 20.});
   }
 
   using RegularSurface::globalToLocal;
 
   /// Calculation of the path correction for incident
-  double pathCorrection(const GeometryContext& /*cxt*/, const Vector3& /*gpos*/,
-                        const Vector3& /*gmom*/) const final {
+  long double pathCorrection(const GeometryContext& /*cxt*/,
+                             const Vector3& /*gpos*/,
+                             const Vector3& /*gmom*/) const final {
     return 0.0;
   }
 
@@ -87,7 +88,7 @@ class SurfaceStub : public RegularSurface {
       const GeometryContext& /*gctx*/, const Vector3& /*position*/,
       const Vector3& /*direction*/,
       const BoundaryTolerance& /*boundaryTolerance*/,
-      const double /*tolerance*/) const final {
+      const long double /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     IntersectionStatus::reachable);
     return SurfaceMultiIntersection(

@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(ChannelMerger1D) {
   ActsFatras::Cell cell1(6, 11.5);
   ActsFatras::Cell cell2(7, 12.5);
 
-  using Channel1D = ActsFatras::Channel<double, 1>;
+  using Channel1D = ActsFatras::Channel<long double, 1>;
 
   // Digital clustering test
   std::vector<Channel1D> channels = {{{cell0}, 1., {5}},
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ChannelMerger2D) {
   ActsFatras::Cell cell11(10, 0.5);
   ActsFatras::Cell cell12(11, 1.5);
 
-  using Channel2D = ActsFatras::Channel<double, 2>;
+  using Channel2D = ActsFatras::Channel<long double, 2>;
 
   std::vector<Channel2D> channels = {{{cell00, cell10}, 1., {5}},
                                      {{cell01, cell11}, 1., {5}},

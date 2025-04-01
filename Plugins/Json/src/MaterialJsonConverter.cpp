@@ -768,17 +768,17 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
         nlohmann::json jMaterialParams;
         if (slab.thickness() > 0.) {
           jMaterialParams["params"] =
-              std::vector<double>{material.X0(),
-                                  material.L0(),
-                                  material.Ar(),
-                                  material.Z(),
-                                  material.massDensity(),
-                                  material.molarDensity(),
-                                  0.};
+              std::vector<long double>{material.X0(),
+                                       material.L0(),
+                                       material.Ar(),
+                                       material.Z(),
+                                       material.massDensity(),
+                                       material.molarDensity(),
+                                       0.};
 
         } else {
           jMaterialParams["params"] =
-              std::vector<double>{0., 0., 0., 0., 0., 0., 0.};
+              std::vector<long double>{0., 0., 0., 0., 0., 0., 0.};
         }
         jContent["material"] = jMaterialParams;
         jContent["type"] = 6;
@@ -804,12 +804,12 @@ nlohmann::json Acts::MaterialJsonConverter::toJsonDetray(
     jAxis["binning"] = 0u;
     jAxis["label"] = ib;
     jAxis["bins"] = bData.bins();
-    double offset = 0;
+    long double offset = 0;
     if (bData.binvalue == AxisDirection::AxisZ) {
       offset = surface.center(Acts::GeometryContext{}).z();
     }
     jAxis["edges"] =
-        std::array<double, 2>{bData.min + offset, bData.max + offset};
+        std::array<long double, 2>{bData.min + offset, bData.max + offset};
     jAxes.push_back(jAxis);
   }
   return jAxes;

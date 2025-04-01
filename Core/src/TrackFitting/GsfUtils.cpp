@@ -21,10 +21,10 @@ namespace Acts::detail {
 using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
-double calculateDeterminant(const double* fullCalibratedCovariance,
-                            TrackStateTraits::Covariance predictedCovariance,
-                            BoundSubspaceIndices projector,
-                            unsigned int calibratedSize) {
+long double calculateDeterminant(
+    const long double* fullCalibratedCovariance,
+    TrackStateTraits::Covariance predictedCovariance,
+    BoundSubspaceIndices projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     std::span<const std::uint8_t, kMeasurementSize> validSubspaceIndices(

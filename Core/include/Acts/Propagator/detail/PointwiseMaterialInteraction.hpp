@@ -32,7 +32,7 @@ struct PointwiseMaterialInteraction {
   /// The particle position at the interaction.
   const Vector3 pos = Vector3(0., 0., 0);
   /// The particle time at the interaction.
-  const double time = 0.0;
+  const long double time = 0.0;
   /// The particle direction at the interaction.
   const Vector3 dir = Vector3(0., 0., 0);
   /// The particle q/p at the interaction
@@ -53,17 +53,17 @@ struct PointwiseMaterialInteraction {
   /// The effective, passed material properties including the path correction.
   MaterialSlab slab = MaterialSlab::Nothing();
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection = 0.;
+  long double pathCorrection = 0.;
   /// Expected phi variance due to the interactions.
-  double variancePhi = 0.;
+  long double variancePhi = 0.;
   /// Expected theta variance due to the interactions.
-  double varianceTheta = 0.;
+  long double varianceTheta = 0.;
   /// Expected q/p variance due to the interactions.
-  double varianceQoverP = 0.;
+  long double varianceQoverP = 0.;
   /// The energy change due to the interaction.
-  double Eloss = 0.;
+  long double Eloss = 0.;
   /// The momentum after the interaction
-  double nextP = 0.;
+  long double nextP = 0.;
 
   /// @brief Constructor
   ///
@@ -153,9 +153,9 @@ struct PointwiseMaterialInteraction {
     // minimum momentum below which we will not push particles via material
     // update
     // TODO 10 MeV might be quite low and we should make this configurable
-    static constexpr double minP = 10 * Acts::UnitConstants::MeV;
+    static constexpr long double minP = 10 * Acts::UnitConstants::MeV;
     nextP = std::max(minP, nextP);
-    const double nextQOverP =
+    const long double nextQOverP =
         std::copysign(particleHypothesis.qOverP(nextP, absQ), qOverP);
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextQOverP, time);
@@ -184,8 +184,8 @@ struct PointwiseMaterialInteraction {
   /// @param [in] updateMode The noise update mode (in default: add noise)
   ///
   /// @return The updated variance
-  double updateVariance(double variance, double change,
-                        NoiseUpdateMode updateMode = addNoise) const;
+  long double updateVariance(long double variance, long double change,
+                             NoiseUpdateMode updateMode = addNoise) const;
 };
 
 }  // namespace Acts::detail

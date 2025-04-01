@@ -15,10 +15,10 @@ namespace ActsExamples {
 
 /// An example data object to be shared via the event store.
 struct HelloData {
-  double x;
-  double a;
-  double b;
-  double t;
+  long double x;
+  long double a;
+  long double b;
+  long double t;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const HelloData& data) {

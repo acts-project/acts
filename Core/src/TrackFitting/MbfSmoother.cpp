@@ -50,11 +50,12 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     FixedBoundSubspaceHelper<kMeasurementSize> subspaceHelper(
         validSubspaceIndices);
 
-    using ProjectorMatrix = Eigen::Matrix<double, kMeasurementSize, eBoundSize>;
+    using ProjectorMatrix =
+        Eigen::Matrix<long double, kMeasurementSize, eBoundSize>;
     using CovarianceMatrix =
-        Eigen::Matrix<double, kMeasurementSize, kMeasurementSize>;
+        Eigen::Matrix<long double, kMeasurementSize, kMeasurementSize>;
     using KalmanGainMatrix =
-        Eigen::Matrix<double, eBoundSize, kMeasurementSize>;
+        Eigen::Matrix<long double, eBoundSize, kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Calibrated calibrated{
         measurement.calibrated};
@@ -75,12 +76,12 @@ void MbfSmoother::visitMeasurement(const InternalTrackState& ts,
     const KalmanGainMatrix K = (ts.predictedCovariance * H.transpose() * SInv);
 
     const Acts::BoundMatrix CHat = (Acts::BoundMatrix::Identity() - K * H);
-    const Eigen::Matrix<double, kMeasurementSize, 1> y =
+    const Eigen::Matrix<long double, kMeasurementSize, 1> y =
         (calibrated - H * ts.predicted);
 
     const Acts::BoundMatrix bigLambdaTilde =
         (H.transpose() * SInv * H + CHat.transpose() * bigLambdaHat * CHat);
-    const Eigen::Matrix<double, eBoundSize, 1> smallLambdaTilde =
+    const Eigen::Matrix<long double, eBoundSize, 1> smallLambdaTilde =
         (-H.transpose() * SInv * y + CHat.transpose() * smallLambdaHat);
 
     bigLambdaHat = F.transpose() * bigLambdaTilde * F;

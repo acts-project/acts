@@ -42,12 +42,13 @@ namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-constexpr auto eps = 8 * std::numeric_limits<double>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<long double>::epsilon();
 const GeometryContext geoCtx;
 const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
-void checkParameters(const BoundTrackParameters& params, double l0, double l1,
-                     double time, double phi, double theta, double p, double q,
+void checkParameters(const BoundTrackParameters& params, long double l0,
+                     long double l1, long double time, long double phi,
+                     long double theta, long double p, long double q,
                      const Vector3& pos, const Vector3& unitDir) {
   const auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
 
@@ -82,8 +83,9 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
                        params.parameters(), eps, eps);
 }
 
-void runTest(const std::shared_ptr<const Surface>& surface, double l0,
-             double l1, double time, double phi, double theta, double p) {
+void runTest(const std::shared_ptr<const Surface>& surface, long double l0,
+             long double l1, long double time, long double phi,
+             long double theta, long double p) {
   // phi is ill-defined in forward/backward tracks
   phi = ((0 < theta) && (theta < std::numbers::pi)) ? phi : 0.;
 
@@ -160,7 +162,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
   }
-  // double-negative charged any parameters from local vector
+  // long double-negative charged any parameters from local vector
   {
     BoundVector vector = BoundVector::Zero();
     vector[eBoundLoc0] = l0;
@@ -217,7 +219,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(!params.covariance());
   }
-  // double-negative any parameters from global information
+  // long double-negative any parameters from global information
   {
     auto params = BoundTrackParameters::create(
                       geoCtx, surface, pos4, dir, -2_e / p, std::nullopt,

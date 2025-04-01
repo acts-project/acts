@@ -60,7 +60,7 @@ using Covariance = BoundSquareMatrix;
 struct PerpendicularMeasure {
   /// Simple result struct to be returned
   struct this_result {
-    double distance = std::numeric_limits<double>::max();
+    long double distance = std::numeric_limits<long double>::max();
   };
 
   using result_type = this_result;
@@ -81,12 +81,12 @@ struct SurfaceObserver {
   // the surface to be intersected
   const Surface* surface = nullptr;
   // the tolerance for intersection
-  double tolerance = 1e-5;
+  long double tolerance = 1e-5;
 
   /// Simple result struct to be returned
   struct this_result {
     std::size_t surfaces_passed = 0;
-    double surface_passed_r = std::numeric_limits<double>::max();
+    long double surface_passed_r = std::numeric_limits<long double>::max();
   };
 
   using result_type = this_result;
@@ -101,7 +101,7 @@ struct SurfaceObserver {
     }
 
     // calculate the distance to the surface
-    const double distance =
+    const long double distance =
         surface
             ->intersect(state.geoContext, stepper.position(state.stepping),
                         stepper.direction(state.stepping),
@@ -128,7 +128,7 @@ using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 
-const double Bz = 2_T;
+const long double Bz = 2_T;
 auto bField = std::make_shared<BFieldType>(Vector3{0, 0, Bz});
 EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), VoidNavigator(),
@@ -156,26 +156,27 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 BOOST_DATA_TEST_CASE(
     cylinder_passage_observer_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 1,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-1_ns,
-                                                                  1_ns))) ^
+                           std::uniform_real_distribution<long double>(-1_ns,
+                                                                       1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  long double dcharge = -1 + 2 * charge;
   (void)index;
 
   using CylinderObserver = SurfaceObserver<CylinderSurface>;
@@ -193,13 +194,13 @@ BOOST_DATA_TEST_CASE(
   using so_result = typename CylinderObserver::result_type;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
+  long double x = 0;
+  long double y = 0;
+  long double z = 0;
+  long double px = pT * cos(phi);
+  long double py = pT * sin(phi);
+  long double pz = pT / tan(theta);
+  long double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
@@ -216,26 +217,27 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     curvilinear_additive_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 1,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-1_ns,
-                                                                  1_ns))) ^
+                           std::uniform_real_distribution<long double>(-1_ns,
+                                                                       1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  long double dcharge = -1 + 2 * charge;
   (void)index;
 
   // setup propagation options - the tow step options
@@ -244,13 +246,13 @@ BOOST_DATA_TEST_CASE(
   options_2s.stepping.maxStepSize = 1_cm;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
+  long double x = 0;
+  long double y = 0;
+  long double z = 0;
+  long double px = pT * cos(phi);
+  long double py = pT * sin(phi);
+  long double pz = pT / tan(theta);
+  long double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
   /// a covariance matrix to transport
@@ -296,26 +298,27 @@ BOOST_DATA_TEST_CASE(
 BOOST_DATA_TEST_CASE(
     cylinder_additive_,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.4_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.4_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 1,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-1_ns,
-                                                                  1_ns))) ^
+                           std::uniform_real_distribution<long double>(-1_ns,
+                                                                       1_ns))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  long double dcharge = -1 + 2 * charge;
   (void)index;
 
   // setup propagation options - 2 setp options
@@ -324,13 +327,13 @@ BOOST_DATA_TEST_CASE(
   options_2s.stepping.maxStepSize = 1_cm;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
+  long double x = 0;
+  long double y = 0;
+  long double z = 0;
+  long double px = pT * cos(phi);
+  long double py = pT * sin(phi);
+  long double pz = pT / tan(theta);
+  long double q = dcharge;
   Vector3 pos(x, y, z);
   Vector3 mom(px, py, pz);
   /// a covariance matrix to transport

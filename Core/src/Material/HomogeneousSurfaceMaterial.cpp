@@ -15,11 +15,12 @@
 namespace Acts {
 
 HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(const MaterialSlab& full,
-                                                       double splitFactor,
+                                                       long double splitFactor,
                                                        MappingType mappingType)
     : ISurfaceMaterial(splitFactor, mappingType), m_fullMaterial(full) {}
 
-HomogeneousSurfaceMaterial& HomogeneousSurfaceMaterial::scale(double factor) {
+HomogeneousSurfaceMaterial& HomogeneousSurfaceMaterial::scale(
+    long double factor) {
   m_fullMaterial.scaleThickness(factor);
   return *this;
 }

@@ -17,7 +17,7 @@ namespace Acts {
 Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Surface> surface,
                                              const G4VPhysicalVolume& g4physVol,
                                              const Transform3& toGlobal,
-                                             double thickness)
+                                             long double thickness)
     : m_surface(std::move(surface)),
       m_g4physVol(&g4physVol),
       m_toGlobal(toGlobal),
@@ -36,7 +36,7 @@ Surface& Geant4DetectorElement::surface() {
   return *m_surface;
 }
 
-double Geant4DetectorElement::thickness() const {
+long double Geant4DetectorElement::thickness() const {
   return m_thickness;
 }
 

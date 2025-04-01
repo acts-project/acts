@@ -37,7 +37,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     /// PDG particle number of the second incoming beam.
     Acts::PdgParticle pdgBeam1 = Acts::PdgParticle::eProton;
     /// Center-of-mass energy.
-    double cmsEnergy = 14 * Acts::UnitConstants::TeV;
+    long double cmsEnergy = 14 * Acts::UnitConstants::TeV;
     /// Additional Pythia8 settings.
     std::vector<std::string> settings = {{"HardQCD:all = on"}};
     /// Let pythia print summarized event info
@@ -49,7 +49,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     /// of decay as secondary
     bool labelSecondaries = true;
     /// The spatial threshold to consider a particle originating from a vertex
-    double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
+    long double spatialVertexThreshold = 1.0 * Acts::UnitConstants::um;
     /// Random seed for the initialization stage of Pythia8
     unsigned int initializationSeed = 42;
 

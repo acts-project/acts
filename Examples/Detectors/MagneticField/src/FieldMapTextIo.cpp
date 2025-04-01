@@ -22,12 +22,12 @@ ActsExamples::makeMagneticFieldMapRzFromText(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant) {
+    const std::string& fieldMapFile, long double lengthUnit,
+    long double BFieldUnit, bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
-  std::vector<double> rPos;
-  std::vector<double> zPos;
+  std::vector<long double> rPos;
+  std::vector<long double> zPos;
   // components of magnetic field on grid points
   std::vector<Acts::Vector2> bField;
   // reserve estimated size
@@ -37,8 +37,8 @@ ActsExamples::makeMagneticFieldMapRzFromText(
   // [1] Read in file and fill values
   std::ifstream map_file(fieldMapFile.c_str(), std::ios::in);
   std::string line;
-  double r = 0., z = 0.;
-  double br = 0., bz = 0.;
+  long double r = 0., z = 0.;
+  long double br = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
         line.find_first_not_of(' ') == std::string::npos) {
@@ -65,13 +65,13 @@ ActsExamples::makeMagneticFieldMapXyzFromText(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstOctant) {
+    const std::string& fieldMapFile, long double lengthUnit,
+    long double BFieldUnit, bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
-  std::vector<double> xPos;
-  std::vector<double> yPos;
-  std::vector<double> zPos;
+  std::vector<long double> xPos;
+  std::vector<long double> yPos;
+  std::vector<long double> zPos;
   // components of magnetic field on grid points
   std::vector<Acts::Vector3> bField;
   // reserve estimated size
@@ -82,8 +82,8 @@ ActsExamples::makeMagneticFieldMapXyzFromText(
   // [1] Read in file and fill values
   std::ifstream map_file(fieldMapFile.c_str(), std::ios::in);
   std::string line;
-  double x = 0., y = 0., z = 0.;
-  double bx = 0., by = 0., bz = 0.;
+  long double x = 0., y = 0., z = 0.;
+  long double bx = 0., by = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
         line.find_first_not_of(' ') == std::string::npos) {

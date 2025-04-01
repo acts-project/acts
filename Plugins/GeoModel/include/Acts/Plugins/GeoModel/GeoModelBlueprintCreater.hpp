@@ -150,7 +150,8 @@ class GeoModelBlueprintCreater {
   /// @param internalExtent the extend of the internal objects (marked "i" in the database)
   ///
   /// @return The bounds type, raw bound values, deduced bound values, and a translation vector
-  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<double>, Vector3>
+  std::tuple<VolumeBounds::BoundsType, Extent, std::vector<long double>,
+             Vector3>
   parseBounds(const std::string& boundsEntry,
               const Extent& externalExtent = Extent(),
               const Extent& internalExtent = Extent()) const;

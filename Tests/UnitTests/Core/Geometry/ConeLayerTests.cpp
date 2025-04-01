@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // ConeBounds) to construct
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  const double alpha = std::numbers::pi / 8.;
+  const long double alpha = std::numbers::pi / 8.;
   const bool symmetric = false;
   auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
   // for some reason, this one doesn't exist
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
-  const double thickness = 1.;
+  const long double thickness = 1.;
   auto pConeLayerFromSurfaces = ConeLayer::create(pTransform, pCone, nullptr);
   BOOST_CHECK_EQUAL(pConeLayerFromSurfaces->layerType(), LayerType::active);
   // construct with thickness:

@@ -30,16 +30,16 @@ class RegionCreator {
     std::string name;
 
     /// Process cut to be applied for gammas, in mm
-    double gammaCut{};
+    long double gammaCut{};
 
     /// Process cut to be applied for electrons, in mm
-    double electronCut{};
+    long double electronCut{};
 
     /// Process cut to be applied for positrons, in mm
-    double positronCut{};
+    long double positronCut{};
 
     /// Process cut to be applied for protons, in mm
-    double protonCut{};
+    long double protonCut{};
 
     /// Volume list to be included in this region
     std::vector<std::string> volumes;

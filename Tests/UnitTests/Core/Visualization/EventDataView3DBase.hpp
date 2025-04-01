@@ -47,7 +47,7 @@ namespace Acts::EventDataView3DTest {
 
 using Covariance = BoundSquareMatrix;
 
-std::normal_distribution<double> gauss(0., 1.);
+std::normal_distribution<long double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
 /// A function that creates a simple telescope detector with surfaces for the
@@ -71,7 +71,7 @@ void createDetector(GeometryContext& tgContext,
 
   // Construct the rotation
   RotationMatrix3 rotation = RotationMatrix3::Identity();
-  double rotationAngle = 90_degree;
+  long double rotationAngle = 90_degree;
   Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);
   Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -109,7 +109,7 @@ void createDetector(GeometryContext& tgContext,
     sConf.detElementConstructor =
         [](const Transform3& trans,
            const std::shared_ptr<const RectangleBounds>& bounds,
-           double thickness) {
+           long double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
@@ -172,13 +172,13 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
   auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 
-  double momentumScale = 0.005;
-  double localErrorScale = 10.;
-  double directionErrorScale = 1000.;
+  long double momentumScale = 0.005;
+  long double localErrorScale = 10.;
+  long double directionErrorScale = 1000.;
 
   // now create parameters on this surface
   // l_x, l_y, phi, theta, q/p (1/p), t
-  std::array<double, 6> pars_array = {
+  std::array<long double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
   BoundTrackParameters::ParametersVector pars =
@@ -211,8 +211,8 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
 /// @param helper The visualization helper
 ///
 /// @return an overall string including all written output
-static inline std::string testMeasurement(IVisualization3D& helper,
-                                          const double localErrorScale = 100.) {
+static inline std::string testMeasurement(
+    IVisualization3D& helper, const long double localErrorScale = 100.) {
   using namespace UnitLiterals;
   std::stringstream ss;
 
@@ -372,9 +372,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
-  double momentumScale = 10;
-  double localErrorScale = 100.;
-  double directionErrorScale = 100000;
+  long double momentumScale = 10;
+  long double localErrorScale = 100.;
+  long double directionErrorScale = 100000;
 
   ViewConfig scolor{.color = {214, 214, 214}};
   ViewConfig mcolor{.color = {255, 145, 48}};

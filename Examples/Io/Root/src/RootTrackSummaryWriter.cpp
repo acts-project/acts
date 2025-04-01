@@ -248,10 +248,10 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_NDF.push_back(track.nDoF());
 
     {
-      std::vector<double> measurementChi2;
+      std::vector<long double> measurementChi2;
       std::vector<std::uint32_t> measurementVolume;
       std::vector<std::uint32_t> measurementLayer;
-      std::vector<double> outlierChi2;
+      std::vector<long double> outlierChi2;
       std::vector<std::uint32_t> outlierVolume;
       std::vector<std::uint32_t> outlierLayer;
       for (const auto& state : track.trackStatesReversed()) {
@@ -408,7 +408,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       }
 
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        double variance = getCov(i, i);
+        long double variance = getCov(i, i);
         error[i] = variance >= 0 ? std::sqrt(variance) : NaNfloat;
       }
     }
@@ -468,14 +468,14 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
       using namespace Acts::GsfConstants;
       if (tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
         m_gsf_max_material_fwd.push_back(
-            track.template component<double>(kFwdMaxMaterialXOverX0));
+            track.template component<long double>(kFwdMaxMaterialXOverX0));
       } else {
         m_gsf_max_material_fwd.push_back(NaNfloat);
       }
 
       if (tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
         m_gsf_sum_material_fwd.push_back(
-            track.template component<double>(kFwdSumMaterialXOverX0));
+            track.template component<long double>(kFwdSumMaterialXOverX0));
       } else {
         m_gsf_sum_material_fwd.push_back(NaNfloat);
       }

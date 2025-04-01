@@ -65,8 +65,8 @@ const MeasurementResolutionMap resolutions = {
      MeasurementResolution{MeasurementType::eLoc01, {0, 0}}}};
 
 // Construct initial track parameters.
-BoundTrackParameters makeParameters(double phi, double theta, double p,
-                                    double q) {
+BoundTrackParameters makeParameters(long double phi, long double theta,
+                                    long double p, long double q) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -101,10 +101,11 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
 
   ConstantFieldPropagator propagator(std::move(stepper), std::move(navigator));
 
-  std::array<double, 2> pArray = {0.5_GeV, 1.0_GeV};
-  std::array<double, 3> phiArray = {20._degree, 0._degree - 20._degree};
-  std::array<double, 3> thetaArray = {80._degree, 90.0_degree, 100._degree};
-  std::array<double, 2> qArray = {1, -1};
+  std::array<long double, 2> pArray = {0.5_GeV, 1.0_GeV};
+  std::array<long double, 3> phiArray = {20._degree, 0._degree - 20._degree};
+  std::array<long double, 3> thetaArray = {80._degree, 90.0_degree,
+                                           100._degree};
+  std::array<long double, 2> qArray = {1, -1};
 
   auto logger = Acts::getDefaultLogger("estimateTrackParamsFromSeed",
                                        Acts::Logging::INFO);

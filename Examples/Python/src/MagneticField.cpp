@@ -88,8 +88,8 @@ void addMagneticField(Context& ctx) {
 
   py::class_<Acts::MultiRangeBField, Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::MultiRangeBField>>(m, "MultiRangeBField")
-      .def(py::init<
-           std::vector<std::pair<Acts::RangeXD<3, double>, Acts::Vector3>>>());
+      .def(py::init<std::vector<
+               std::pair<Acts::RangeXD<3, long double>, Acts::Vector3>>>());
 
   {
     using Config = Acts::SolenoidBField::Config;
@@ -98,8 +98,8 @@ void addMagneticField(Context& ctx) {
         py::class_<Acts::SolenoidBField, Acts::MagneticFieldProvider,
                    std::shared_ptr<Acts::SolenoidBField>>(m, "SolenoidBField")
             .def(py::init<Config>())
-            .def(py::init([](double radius, double length, std::size_t nCoils,
-                             double bMagCenter) {
+            .def(py::init([](long double radius, long double length,
+                             std::size_t nCoils, long double bMagCenter) {
                    return Acts::SolenoidBField{
                        Config{radius, length, nCoils, bMagCenter}};
                  }),
@@ -117,7 +117,7 @@ void addMagneticField(Context& ctx) {
   mex.def(
       "MagneticFieldMapXyz",
       [](const std::string& filename, const std::string& tree,
-         double lengthUnit, double BFieldUnit, bool firstOctant) {
+         long double lengthUnit, long double BFieldUnit, bool firstOctant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<std::size_t, 3> bins,
@@ -150,7 +150,7 @@ void addMagneticField(Context& ctx) {
   mex.def(
       "MagneticFieldMapRz",
       [](const std::string& filename, const std::string& tree,
-         double lengthUnit, double BFieldUnit, bool firstQuadrant) {
+         long double lengthUnit, long double BFieldUnit, bool firstQuadrant) {
         const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<std::size_t, 2> bins,

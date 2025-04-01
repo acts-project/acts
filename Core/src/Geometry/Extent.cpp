@@ -20,13 +20,13 @@
 Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(AxisDirection::AxisR)] =
-      Range1D<double>(0., std::numeric_limits<double>::max());
+      Range1D<long double>(0., std::numeric_limits<long double>::max());
   m_range[toUnderlying(AxisDirection::AxisPhi)] =
-      Range1D<double>(-std::numbers::pi, std::numbers::pi);
+      Range1D<long double>(-std::numbers::pi, std::numbers::pi);
   m_range[toUnderlying(AxisDirection::AxisRPhi)] =
-      Range1D<double>(0., std::numeric_limits<double>::max());
+      Range1D<long double>(0., std::numeric_limits<long double>::max());
   m_range[toUnderlying(AxisDirection::AxisMag)] =
-      Range1D<double>(0., std::numeric_limits<double>::max());
+      Range1D<long double>(0., std::numeric_limits<long double>::max());
 }
 
 void Acts::Extent::extend(const Vector3& vtx,
@@ -34,14 +34,14 @@ void Acts::Extent::extend(const Vector3& vtx,
                           bool applyEnv, bool fillHistograms) {
   for (auto aDir : aDirs) {
     // Get the casted value given the binning value description
-    double cValue = VectorHelpers::cast(vtx, aDir);
+    long double cValue = VectorHelpers::cast(vtx, aDir);
     if (fillHistograms) {
       m_valueHistograms[toUnderlying(aDir)].push_back(cValue);
     }
     // Apply envelope as suggested
-    double lEnv = applyEnv ? m_envelope[aDir][0] : 0.;
-    double hEnv = applyEnv ? m_envelope[aDir][1] : 0.;
-    double mValue = cValue - lEnv;
+    long double lEnv = applyEnv ? m_envelope[aDir][0] : 0.;
+    long double hEnv = applyEnv ? m_envelope[aDir][1] : 0.;
+    long double mValue = cValue - lEnv;
     // Special protection for radial value
     if (aDir == AxisDirection::AxisR && mValue < 0.) {
       mValue = std::max(mValue, 0.);
@@ -61,8 +61,8 @@ void Acts::Extent::extend(const Extent& rhs,
   for (auto aDir : aDirs) {
     // The value is constraint, envelope can be optional
     if (rhs.constrains(aDir)) {
-      double lEnv = applyEnv ? m_envelope[aDir][0] : 0.;
-      double hEnv = applyEnv ? m_envelope[aDir][1] : 0.;
+      long double lEnv = applyEnv ? m_envelope[aDir][0] : 0.;
+      long double hEnv = applyEnv ? m_envelope[aDir][1] : 0.;
       if (constrains(aDir)) {
         m_range[toUnderlying(aDir)].expand(
             rhs.range()[toUnderlying(aDir)].min() - lEnv,
@@ -95,17 +95,17 @@ void Acts::Extent::addConstrain(const Acts::Extent& rhs,
   }
 }
 
-void Acts::Extent::set(AxisDirection aDir, double min, double max) {
-  double minval = min;
+void Acts::Extent::set(AxisDirection aDir, long double min, long double max) {
+  long double minval = min;
   if (aDir == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
   }
-  m_range[toUnderlying(aDir)] = Range1D<double>{minval, max};
+  m_range[toUnderlying(aDir)] = Range1D<long double>{minval, max};
   m_constrains.set(toUnderlying(aDir));
 }
 
-void Acts::Extent::setMin(AxisDirection aDir, double min) {
-  double minval = min;
+void Acts::Extent::setMin(AxisDirection aDir, long double min) {
+  long double minval = min;
   if (aDir == AxisDirection::AxisR && minval < 0.) {
     minval = 0.;
   }
@@ -113,7 +113,7 @@ void Acts::Extent::setMin(AxisDirection aDir, double min) {
   m_constrains.set(toUnderlying(aDir));
 }
 
-void Acts::Extent::setMax(AxisDirection aDir, double max) {
+void Acts::Extent::setMax(AxisDirection aDir, long double max) {
   m_range[toUnderlying(aDir)].setMax(0u, max);
   m_constrains.set(toUnderlying(aDir));
 }
@@ -126,7 +126,7 @@ bool Acts::Extent::contains(const Vector3& vtx) const {
   Extent checkExtent;
   for (const auto& bv : allAxisDirections()) {
     if (constrains(bv)) {
-      double vtxVal = VectorHelpers::cast(vtx, bv);
+      long double vtxVal = VectorHelpers::cast(vtx, bv);
       checkExtent.set(bv, vtxVal, vtxVal);
     }
   }

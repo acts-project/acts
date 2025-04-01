@@ -174,9 +174,9 @@ DetectorComponent::PortalContainer wrapInZR(
 ///
 /// @return extracted boundary values
 template <typename volume_container_t>
-std::array<std::vector<double>, 3u> rzphiBoundaries(
+std::array<std::vector<long double>, 3u> rzphiBoundaries(
     const GeometryContext& gctx, const volume_container_t& volumes,
-    double precision = 0.,
+    long double precision = 0.,
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
@@ -185,8 +185,8 @@ std::array<std::vector<double>, 3u> rzphiBoundaries(
                                                 << " volumes.");
 
   // The return boundaries
-  std::array<std::set<double>, 3u> uniqueBoundaries;
-  auto insertWithPrecision = [&](std::size_t is, double value) -> void {
+  std::array<std::set<long double>, 3u> uniqueBoundaries;
+  auto insertWithPrecision = [&](std::size_t is, long double value) -> void {
     if (precision == 0.) {
       uniqueBoundaries[is].insert(value);
       return;
@@ -199,19 +199,19 @@ std::array<std::vector<double>, 3u> rzphiBoundaries(
     if (v->volumeBounds().type() == VolumeBounds::BoundsType::eCylinder) {
       const auto& bValues = v->volumeBounds().values();
       // The min/max values
-      double rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
-      double rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
-      double zCenter = v->transform(gctx).translation().z();
-      double zHalfLength =
+      long double rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
+      long double rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
+      long double zCenter = v->transform(gctx).translation().z();
+      long double zHalfLength =
           bValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
-      double zMin = zCenter - zHalfLength;
-      double zMax = zCenter + zHalfLength;
-      double phiCenter =
+      long double zMin = zCenter - zHalfLength;
+      long double zMax = zCenter + zHalfLength;
+      long double phiCenter =
           bValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
-      double phiSector =
+      long double phiSector =
           bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-      double phiMin = phiCenter - phiSector;
-      double phiMax = phiCenter + phiSector;
+      long double phiMin = phiCenter - phiSector;
+      long double phiMax = phiCenter + phiSector;
       // Fill the sets
       insertWithPrecision(0u, rMin);
       insertWithPrecision(0u, rMax);
@@ -229,12 +229,12 @@ std::array<std::vector<double>, 3u> rzphiBoundaries(
   ACTS_VERBOSE("- did yield " << uniqueBoundaries[2u].size()
                               << " boundaries in phi.");
 
-  return {{std::vector<double>(uniqueBoundaries[0].begin(),
-                               uniqueBoundaries[0].end()),
-           std::vector<double>(uniqueBoundaries[1].begin(),
-                               uniqueBoundaries[1].end()),
-           std::vector<double>(uniqueBoundaries[2].begin(),
-                               uniqueBoundaries[2].end())}};
+  return {{std::vector<long double>(uniqueBoundaries[0].begin(),
+                                    uniqueBoundaries[0].end()),
+           std::vector<long double>(uniqueBoundaries[1].begin(),
+                                    uniqueBoundaries[1].end()),
+           std::vector<long double>(uniqueBoundaries[2].begin(),
+                                    uniqueBoundaries[2].end())}};
 }
 
 }  // namespace detail::CylindricalDetectorHelper

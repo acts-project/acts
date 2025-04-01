@@ -144,7 +144,7 @@ class Affine3Transformed : public IGlobalToGridLocal {
 template <AxisDirection... Args>
 class GlobalSubspace : public IGlobalToGridLocal {
  public:
-  using grid_local_t = std::array<double, sizeof...(Args)>;
+  using grid_local_t = std::array<long double, sizeof...(Args)>;
 
   /// Assert that size has to be bigger than 0
   static_assert(sizeof...(Args) > 0,
@@ -181,7 +181,7 @@ class GlobalSubspace : public IGlobalToGridLocal {
 template <std::size_t... Args>
 class LocalSubspace : public IBoundToGridLocal {
  public:
-  using grid_local_t = std::array<double, sizeof...(Args)>;
+  using grid_local_t = std::array<long double, sizeof...(Args)>;
 
   /// Assert that the accessors are unique
   static_assert(sizeof...(Args) == 1 || sizeof...(Args) == 2,
@@ -214,15 +214,15 @@ class LocalSubspace : public IBoundToGridLocal {
 
 class BoundCylinderToZPhi : public IBoundToGridLocal {
  public:
-  double radius = 1.;
-  double shift = 0.;
+  long double radius = 1.;
+  long double shift = 0.;
 
   /// Constructor with arguments
   /// @param r the radius
   /// @param z the shift
-  BoundCylinderToZPhi(double r, double z) : radius(r), shift(z) {}
+  BoundCylinderToZPhi(long double r, long double z) : radius(r), shift(z) {}
 
-  std::array<double, 2u> toGridLocal(const Vector2& local) const {
+  std::array<long double, 2u> toGridLocal(const Vector2& local) const {
     return {local[1u] + shift, local[0u] / radius};
   }
 
@@ -232,25 +232,25 @@ class BoundCylinderToZPhi : public IBoundToGridLocal {
 // Definition of bound (on surface) to grid local representation delegate
 // 1 dimensional local grid
 using BoundToGridLocal1DimDelegate =
-    OwningDelegate<std::array<double, 1u>(const Vector2&),
+    OwningDelegate<std::array<long double, 1u>(const Vector2&),
                    GridAccess::IBoundToGridLocal>;
 
 // Definition of global to grid local representation delegate
 // 1 dimensional local grid
 using GlobalToGridLocal1DimDelegate =
-    OwningDelegate<std::array<double, 1u>(const Vector3&),
+    OwningDelegate<std::array<long double, 1u>(const Vector3&),
                    GridAccess::IGlobalToGridLocal>;
 
 // Definition of bound (on surface) to grid local representation delegate
 // 2 dimensional local grid
 using BoundToGridLocal2DimDelegate =
-    OwningDelegate<std::array<double, 2u>(const Vector2&),
+    OwningDelegate<std::array<long double, 2u>(const Vector2&),
                    GridAccess::IBoundToGridLocal>;
 
 // Definition of global to grid local representation delegate
 // 2 dimensional local grid
 using GlobalToGridLocal2DimDelegate =
-    OwningDelegate<std::array<double, 2u>(const Vector3&),
+    OwningDelegate<std::array<long double, 2u>(const Vector3&),
                    GridAccess::IGlobalToGridLocal>;
 
 }  // namespace GridAccess

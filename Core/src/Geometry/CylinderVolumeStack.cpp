@@ -40,23 +40,23 @@ struct CylinderVolumeStack::VolumeTuple {
     updatedBounds = std::make_shared<CylinderVolumeBounds>(*bounds);
   }
 
-  double midZ() const { return localTransform.translation()[eZ]; }
-  double halfLengthZ() const {
+  long double midZ() const { return localTransform.translation()[eZ]; }
+  long double halfLengthZ() const {
     return updatedBounds->get(CylinderVolumeBounds::eHalfLengthZ);
   }
-  double minZ() const { return midZ() - halfLengthZ(); }
-  double maxZ() const { return midZ() + halfLengthZ(); }
+  long double minZ() const { return midZ() - halfLengthZ(); }
+  long double maxZ() const { return midZ() + halfLengthZ(); }
 
-  double minR() const {
+  long double minR() const {
     return updatedBounds->get(CylinderVolumeBounds::eMinR);
   }
-  double maxR() const {
+  long double maxR() const {
     return updatedBounds->get(CylinderVolumeBounds::eMaxR);
   }
-  double midR() const { return (minR() + maxR()) / 2.0; }
+  long double midR() const { return (minR() + maxR()) / 2.0; }
 
   void set(std::initializer_list<
-           std::pair<CylinderVolumeBounds::BoundValues, double>>
+           std::pair<CylinderVolumeBounds::BoundValues, long double>>
                keyValues) {
     updatedBounds->set(keyValues);
   }
@@ -192,11 +192,11 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_DEBUG("*** Volume configuration after final z sorting:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    double minZ = volumeTuples.front().minZ();
-    double maxZ = volumeTuples.back().maxZ();
+    long double minZ = volumeTuples.front().minZ();
+    long double maxZ = volumeTuples.back().maxZ();
 
-    double midZ = (minZ + maxZ) / 2.0;
-    double hlZ = (maxZ - minZ) / 2.0;
+    long double midZ = (minZ + maxZ) / 2.0;
+    long double hlZ = (maxZ - minZ) / 2.0;
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
@@ -249,11 +249,11 @@ void CylinderVolumeStack::initializeOuterVolume(
     ACTS_DEBUG("*** Volume configuration after final r sorting:");
     printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-    double minR = volumeTuples.front().minR();
-    double maxR = volumeTuples.back().maxR();
+    long double minR = volumeTuples.front().minR();
+    long double maxR = volumeTuples.back().maxR();
 
-    double midZ = (minZ + maxZ) / 2.0;
-    double hlZ = (maxZ - minZ) / 2.0;
+    long double midZ = (minZ + maxZ) / 2.0;
+    long double hlZ = (maxZ - minZ) / 2.0;
 
     m_transform = m_groupTransform * Translation3{0, 0, midZ};
 
@@ -335,7 +335,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
     if (std::abs(a.maxZ() - b.minZ()) < tolerance) {
       ACTS_VERBOSE("No gap between volumes, no attachment needed");
     } else {
-      double gapWidth = b.minZ() - a.maxZ();
+      long double gapWidth = b.minZ() - a.maxZ();
       ACTS_VERBOSE("Gap width: " << gapWidth);
 
       ACTS_VERBOSE("Synchronizing bounds in z with strategy: " << strategy);
@@ -343,8 +343,8 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
         case VolumeAttachmentStrategy::Midpoint: {
           ACTS_VERBOSE(" -> Strategy: Expand both volumes to midpoint");
 
-          double aZMidNew = (a.minZ() + a.maxZ()) / 2.0 + gapWidth / 4.0;
-          double aHlZNew = a.halfLengthZ() + gapWidth / 4.0;
+          long double aZMidNew = (a.minZ() + a.maxZ()) / 2.0 + gapWidth / 4.0;
+          long double aHlZNew = a.halfLengthZ() + gapWidth / 4.0;
           ACTS_VERBOSE("  - New halflength for first volume: " << aHlZNew);
           ACTS_VERBOSE("  - New bounds for first volume: ["
                        << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
@@ -354,8 +354,8 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
                  "Volume shrunk");
           assert(aHlZNew >= a.halfLengthZ() && "Volume shrunk");
 
-          double bZMidNew = (b.minZ() + b.maxZ()) / 2.0 - gapWidth / 4.0;
-          double bHlZNew = b.halfLengthZ() + gapWidth / 4.0;
+          long double bZMidNew = (b.minZ() + b.maxZ()) / 2.0 - gapWidth / 4.0;
+          long double bHlZNew = b.halfLengthZ() + gapWidth / 4.0;
           ACTS_VERBOSE("  - New halflength for second volume: " << bHlZNew);
           ACTS_VERBOSE("  - New bounds for second volume: ["
                        << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
@@ -377,8 +377,8 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::First: {
           ACTS_VERBOSE(" -> Strategy: Expand first volume");
-          double aZMidNew = (a.minZ() + b.minZ()) / 2.0;
-          double aHlZNew = (b.minZ() - a.minZ()) / 2.0;
+          long double aZMidNew = (a.minZ() + b.minZ()) / 2.0;
+          long double aHlZNew = (b.minZ() - a.minZ()) / 2.0;
           ACTS_VERBOSE("  - Gap width: " << gapWidth);
           ACTS_VERBOSE("  - New bounds for first volume: ["
                        << (aZMidNew - aHlZNew) << " <- " << aZMidNew << " -> "
@@ -396,8 +396,8 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::Second: {
           ACTS_VERBOSE(" -> Strategy: Expand second volume");
-          double bZMidNew = (a.maxZ() + b.maxZ()) / 2.0;
-          double bHlZNew = (b.maxZ() - a.maxZ()) / 2.0;
+          long double bZMidNew = (a.maxZ() + b.maxZ()) / 2.0;
+          long double bHlZNew = (b.maxZ() - a.maxZ()) / 2.0;
           ACTS_VERBOSE("  - New halflength for second volume: " << bHlZNew);
           ACTS_VERBOSE("  - New bounds for second volume: ["
                        << (bZMidNew - bHlZNew) << " <- " << bZMidNew << " -> "
@@ -414,14 +414,14 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::Gap: {
           ACTS_VERBOSE(" -> Strategy: Create a gap volume");
-          double gapHlZ = (b.minZ() - a.maxZ()) / 2.0;
-          double gapMidZ = (b.minZ() + a.maxZ()) / 2.0;
+          long double gapHlZ = (b.minZ() - a.maxZ()) / 2.0;
+          long double gapMidZ = (b.minZ() + a.maxZ()) / 2.0;
 
           ACTS_VERBOSE("  - Gap half length: " << gapHlZ
                                                << " at z: " << gapMidZ);
 
-          double minR = std::min(a.minR(), b.minR());
-          double maxR = std::max(a.maxR(), b.maxR());
+          long double minR = std::min(a.minR(), b.minR());
+          long double maxR = std::max(a.maxR(), b.maxR());
 
           Transform3 gapLocalTransform{Translation3{0, 0, gapMidZ}};
           Transform3 gapGlobalTransform = m_groupTransform * gapLocalTransform;
@@ -469,7 +469,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(std::vector<VolumeTuple>& volumes,
     if (std::abs(a.maxR() - b.minR()) < tolerance) {
       ACTS_VERBOSE("No gap between volumes, no attachment needed");
     } else {
-      double gapWidth = b.minR() - a.maxR();
+      long double gapWidth = b.minR() - a.maxR();
       ACTS_VERBOSE("Gap width: " << gapWidth);
 
       ACTS_VERBOSE("Synchronizing bounds in r with strategy: " << strategy);
@@ -578,9 +578,9 @@ void CylinderVolumeStack::checkVolumeAlignment(
   }
 }
 
-std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
+std::pair<long double, long double> CylinderVolumeStack::synchronizeRBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
-  const double minR =
+  const long double minR =
       std::min_element(volumes.begin(), volumes.end(),
                        [](const auto& a, const auto& b) {
                          return a.bounds->get(CylinderVolumeBounds::eMinR) <
@@ -588,7 +588,7 @@ std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
                        })
           ->bounds->get(CylinderVolumeBounds::eMinR);
 
-  const double maxR =
+  const long double maxR =
       std::max_element(volumes.begin(), volumes.end(),
                        [](const auto& a, const auto& b) {
                          return a.bounds->get(CylinderVolumeBounds::eMaxR) <
@@ -607,21 +607,21 @@ std::pair<double, double> CylinderVolumeStack::synchronizeRBounds(
   return {minR, maxR};
 }
 
-std::pair<double, double> CylinderVolumeStack::synchronizeZBounds(
+std::pair<long double, long double> CylinderVolumeStack::synchronizeZBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
-  const double minZ = std::min_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.minZ() < b.minZ();
-                                       })
-                          ->minZ();
+  const long double minZ = std::min_element(volumes.begin(), volumes.end(),
+                                            [](const auto& a, const auto& b) {
+                                              return a.minZ() < b.minZ();
+                                            })
+                               ->minZ();
 
-  const double maxZ = std::max_element(volumes.begin(), volumes.end(),
-                                       [](const auto& a, const auto& b) {
-                                         return a.maxZ() < b.maxZ();
-                                       })
-                          ->maxZ();
-  const double midZ = (minZ + maxZ) / 2.0;
-  const double hlZ = (maxZ - minZ) / 2.0;
+  const long double maxZ = std::max_element(volumes.begin(), volumes.end(),
+                                            [](const auto& a, const auto& b) {
+                                              return a.maxZ() < b.maxZ();
+                                            })
+                               ->maxZ();
+  const long double midZ = (minZ + maxZ) / 2.0;
+  const long double hlZ = (maxZ - minZ) / 2.0;
   ACTS_DEBUG("Found overall z bounds: [ " << minZ << " <- " << midZ << " -> "
                                           << maxZ << " ]");
   const Transform3 transform{Translation3{0, 0, midZ}};
@@ -689,19 +689,19 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
   checkNoPhiOrBevel(*cylBounds, logger);
 
-  const double newMinR = newVolume.minR();
-  const double newMaxR = newVolume.maxR();
-  const double newMinZ = newVolume.minZ();
-  const double newMaxZ = newVolume.maxZ();
-  const double newMidZ = newVolume.midZ();
-  const double newHlZ = newVolume.halfLengthZ();
+  const long double newMinR = newVolume.minR();
+  const long double newMaxR = newVolume.maxR();
+  const long double newMinZ = newVolume.minZ();
+  const long double newMaxZ = newVolume.maxZ();
+  const long double newMidZ = newVolume.midZ();
+  const long double newHlZ = newVolume.halfLengthZ();
 
-  const double oldMinR = oldVolume.minR();
-  const double oldMaxR = oldVolume.maxR();
-  const double oldMinZ = oldVolume.minZ();
-  const double oldMaxZ = oldVolume.maxZ();
-  const double oldMidZ = oldVolume.midZ();
-  const double oldHlZ = oldVolume.halfLengthZ();
+  const long double oldMinR = oldVolume.minR();
+  const long double oldMaxR = oldVolume.maxR();
+  const long double oldMinZ = oldVolume.minZ();
+  const long double oldMaxZ = oldVolume.maxZ();
+  const long double oldMidZ = oldVolume.midZ();
+  const long double oldHlZ = oldVolume.halfLengthZ();
 
   ACTS_VERBOSE("Previous bounds are: z: [ "
                << oldMinZ << " <- " << oldMidZ << " -> " << oldMaxZ << " ] ("
@@ -713,7 +713,9 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                << " ]");
 
   constexpr auto tolerance = s_onSurfaceTolerance;
-  auto same = [](double a, double b) { return std::abs(a - b) < tolerance; };
+  auto same = [](long double a, long double b) {
+    return std::abs(a - b) < tolerance;
+  };
 
   if (!same(newMinZ, oldMinZ) && newMinZ > oldMinZ) {
     ACTS_ERROR("Shrinking the stack size in z is not supported: "
@@ -780,9 +782,9 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ACTS_VERBOSE("Expanding first volume to new z bounds");
 
           auto& first = volumeTuples.front();
-          double newMinZFirst = newVolume.minZ();
-          double newMidZFirst = (newMinZFirst + first.maxZ()) / 2.0;
-          double newHlZFirst = (first.maxZ() - newMinZFirst) / 2.0;
+          long double newMinZFirst = newVolume.minZ();
+          long double newMidZFirst = (newMinZFirst + first.maxZ()) / 2.0;
+          long double newHlZFirst = (first.maxZ() - newMinZFirst) / 2.0;
 
           ACTS_VERBOSE(" -> first z: [ "
                        << newMinZFirst << " <- " << newMidZFirst << " -> "
@@ -797,9 +799,9 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ACTS_VERBOSE("Expanding last volume to new z bounds");
 
           auto& last = volumeTuples.back();
-          double newMaxZLast = newVolume.maxZ();
-          double newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
-          double newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
+          long double newMaxZLast = newVolume.maxZ();
+          long double newMidZLast = (last.minZ() + newMaxZLast) / 2.0;
+          long double newHlZLast = (newMaxZLast - last.minZ()) / 2.0;
 
           ACTS_VERBOSE(" -> last z: [ " << last.minZ() << " <- " << newMidZLast
                                         << " -> " << newMaxZLast
@@ -821,10 +823,10 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         };
 
         if (!same(newMinZ, oldMinZ) && newMinZ < oldMinZ) {
-          double gap1MinZ = newVolume.minZ();
-          double gap1MaxZ = oldVolume.minZ();
-          double gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
-          double gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
+          long double gap1MinZ = newVolume.minZ();
+          long double gap1MaxZ = oldVolume.minZ();
+          long double gap1HlZ = (gap1MaxZ - gap1MinZ) / 2.0;
+          long double gap1PZ = (gap1MaxZ + gap1MinZ) / 2.0;
 
           // // check if we need a new gap volume or reuse an existing one
           auto& candidate = volumeTuples.front();
@@ -859,10 +861,10 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         }
 
         if (!same(newMaxZ, oldMaxZ) && newMaxZ > oldMaxZ) {
-          double gap2MinZ = oldVolume.maxZ();
-          double gap2MaxZ = newVolume.maxZ();
-          double gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
-          double gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
+          long double gap2MinZ = oldVolume.maxZ();
+          long double gap2MaxZ = newVolume.maxZ();
+          long double gap2HlZ = (gap2MaxZ - gap2MinZ) / 2.0;
+          long double gap2PZ = (gap2MaxZ + gap2MinZ) / 2.0;
 
           // check if we need a new gap volume or reuse an existing one
           auto& candidate = volumeTuples.back();

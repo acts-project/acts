@@ -380,7 +380,7 @@ RootAthenaDumpReader::readMeasurements(
     const auto& locCov = CLlocal_cov->at(im);
 
     Acts::GeometryIdentifier geoId;
-    std::vector<double> localParams;
+    std::vector<long double> localParams;
     if (m_cfg.geometryIdMap && m_cfg.trackingGeometry) {
       const auto& geoIdMap = m_cfg.geometryIdMap->left;
       if (geoIdMap.find(CLmoduleID[im]) == geoIdMap.end()) {
@@ -401,7 +401,7 @@ RootAthenaDumpReader::readMeasurements(
           surface->isOnSurface(gctx, cluster.globalPosition, {},
                                Acts::BoundaryTolerance::AbsoluteEuclidean(
                                    m_cfg.absBoundaryTolerance),
-                               std::numeric_limits<double>::max());
+                               std::numeric_limits<long double>::max());
 
       if (!inside) {
         const Acts::Vector3 v =
@@ -413,7 +413,8 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      const double tol = (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
+      const long double tol =
+          (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
       auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
 
       if (!loc.ok()) {
@@ -428,7 +429,7 @@ RootAthenaDumpReader::readMeasurements(
 
       // TODO is this in strip coordinates or in polar coordinates for annulus
       // bounds?
-      localParams = std::vector<double>(loc->begin(), loc->end());
+      localParams = std::vector<long double>(loc->begin(), loc->end());
     } else {
       geoId = Acts::GeometryIdentifier(CLmoduleID[im]);
       localParams = {CLloc_direction1[im], CLloc_direction2[im]};
@@ -515,8 +516,8 @@ RootAthenaDumpReader::readSpacepoints(
     }
 
     const Acts::Vector3 globalPos{SPx[isp], SPy[isp], SPz[isp]};
-    const double spCovr = SPcovr[isp];
-    const double spCovz = SPcovz[isp];
+    const long double spCovr = SPcovr[isp];
+    const long double spCovz = SPcovz[isp];
 
     // PIX=1  STRIP = 2
     auto type = SPCL2_index[isp] == -1 ? ePixel : eStrip;
@@ -604,10 +605,10 @@ RootAthenaDumpReader::readSpacepoints(
       }
       sp = SimSpacePoint(globalPos, std::nullopt, spCovr, spCovz, std::nullopt,
                          sLinks, SPhl_topstrip[isp], SPhl_botstrip[isp],
-                         topStripDirection.cast<double>(),
-                         bottomStripDirection.cast<double>(),
-                         stripCenterDistance.cast<double>(),
-                         topStripCenterPosition.cast<double>());
+                         topStripDirection.cast<long double>(),
+                         bottomStripDirection.cast<long double>(),
+                         stripCenterDistance.cast<long double>(),
+                         topStripCenterPosition.cast<long double>());
 
       stripSpacePoints.push_back(sp);
     }

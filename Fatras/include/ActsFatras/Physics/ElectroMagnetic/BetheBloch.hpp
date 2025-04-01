@@ -24,9 +24,9 @@ namespace ActsFatras {
 /// for the removed energy.
 struct BetheBloch {
   /// Scaling for most probable value
-  double scaleFactorMPV = 1.;
+  long double scaleFactorMPV = 1.;
   /// Scaling for Sigma
-  double scaleFactorSigma = 1.;
+  long double scaleFactorSigma = 1.;
 
   /// Simulate energy loss and update the particle parameters.
   ///

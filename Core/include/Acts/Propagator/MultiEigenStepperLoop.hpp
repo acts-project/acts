@@ -77,13 +77,13 @@ struct SingleComponentReducer {
   }
 
   template <typename stepper_state_t>
-  static double qOverP(const stepper_state_t& s) {
+  static long double qOverP(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return cmp->state.pars[eFreeQOverP];
   }
 
   template <typename stepper_state_t>
-  static double absoluteMomentum(const stepper_state_t& s) {
+  static long double absoluteMomentum(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return s.particleHypothesis.extractMomentum(cmp->state.pars[eFreeQOverP]);
   }
@@ -96,13 +96,13 @@ struct SingleComponentReducer {
   }
 
   template <typename stepper_state_t>
-  static double charge(const stepper_state_t& s) {
+  static long double charge(const stepper_state_t& s) {
     const auto cmp = component_chooser_t{}(s.components);
     return s.particleHypothesis.extractCharge(cmp->state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
-  static double time(const stepper_state_t& s) {
+  static long double time(const stepper_state_t& s) {
     return component_chooser_t{}(s.components)->state.pars[eFreeTime];
   }
 
@@ -167,7 +167,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
 
   /// @brief Define an own bound state
   using BoundState =
-      std::tuple<MultiComponentBoundTrackParameters, Jacobian, double>;
+      std::tuple<MultiComponentBoundTrackParameters, Jacobian, long double>;
 
   /// @brief The reducer type
   using Reducer = component_reducer_t;
@@ -192,10 +192,11 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     /// The struct that stores the individual components
     struct Component {
       SingleState state;
-      double weight;
+      long double weight;
       IntersectionStatus status;
 
-      Component(SingleState state_, double weight_, IntersectionStatus status_)
+      Component(SingleState state_, long double weight_,
+                IntersectionStatus status_)
           : state(std::move(state_)), weight(weight_), status(status_) {}
     };
 
@@ -208,7 +209,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     SmallVector<Component> components;
 
     bool covTransport = false;
-    double pathAccumulated = 0.;
+    long double pathAccumulated = 0.;
     std::size_t steps = 0;
 
     /// Step-limit counter which limits the number of steps when one component
@@ -376,7 +377,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   void reweightComponents(State& state) const {
-    double sumOfWeights = 0.0;
+    long double sumOfWeights = 0.0;
     for (const auto& cmp : state.components) {
       sumOfWeights += cmp.weight;
     }
@@ -404,7 +405,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// the component number is again modified
   Result<ComponentProxy> addComponent(State& state,
                                       const BoundTrackParameters& pars,
-                                      double weight) const {
+                                      long double weight) const {
     auto& cmp =
         state.components.emplace_back(SingleStepper::makeState(state.options),
                                       weight, IntersectionStatus::onSurface);
@@ -442,12 +443,14 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// QoP access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qOverP(const State& state) const { return Reducer::qOverP(state); }
+  long double qOverP(const State& state) const {
+    return Reducer::qOverP(state);
+  }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double absoluteMomentum(const State& state) const {
+  long double absoluteMomentum(const State& state) const {
     return Reducer::absoluteMomentum(state);
   }
 
@@ -461,7 +464,9 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return Reducer::charge(state); }
+  long double charge(const State& state) const {
+    return Reducer::charge(state);
+  }
 
   /// Particle hypothesis
   ///
@@ -473,7 +478,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return Reducer::time(state); }
+  long double time(const State& state) const { return Reducer::time(state); }
 
   /// Update surface status
   ///
@@ -491,7 +496,7 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction navDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance, ConstrainedStep::Type stype,
+      long double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     using Status = IntersectionStatus;
 
@@ -582,12 +587,12 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
     }
   }
 
-  /// Update step size - explicitly with a double
+  /// Update step size - explicitly with a long double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void updateStepSize(State& state, double stepSize,
+  void updateStepSize(State& state, long double stepSize,
                       ConstrainedStep::Type stype) const {
     for (auto& component : state.components) {
       SingleStepper::updateStepSize(component.state, stepSize, stype);
@@ -601,7 +606,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// @note This returns the smallest step size of all components. It uses
   /// std::abs for comparison to handle backward propagation and negative
   /// step sizes correctly.
-  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+  long double getStepSize(const State& state,
+                          ConstrainedStep::Type stype) const {
     return std::min_element(state.components.begin(), state.components.end(),
                             [=](const auto& a, const auto& b) {
                               return std::abs(a.state.stepSize.value(stype)) <
@@ -727,8 +733,8 @@ class MultiEigenStepperLoop : public EigenStepper<extension_t> {
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  Result<double> step(State& state, Direction propDir,
-                      const IVolumeMaterial* material) const;
+  Result<long double> step(State& state, Direction propDir,
+                           const IVolumeMaterial* material) const;
 };
 
 }  // namespace Acts

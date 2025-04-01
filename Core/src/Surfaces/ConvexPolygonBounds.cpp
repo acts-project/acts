@@ -31,8 +31,8 @@ std::ostream& ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<double> ConvexPolygonBoundsBase::values() const {
-  std::vector<double> values;
+std::vector<long double> ConvexPolygonBoundsBase::values() const {
+  std::vector<long double> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
     values.push_back(vtx.y());

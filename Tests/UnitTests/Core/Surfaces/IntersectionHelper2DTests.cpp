@@ -21,8 +21,8 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
 void basicChecks(bool circleCase = false) {
-  double rY = 10.;
-  double rX = circleCase ? rY : 5.;
+  long double rY = 10.;
+  long double rX = circleCase ? rY : 5.;
 
   // Line along x - not intersecting
   Vector2 start(12., 0.);
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(EllipseIntersection) {
   basicChecks();
 
   // Specific checks for ellipse
-  double radiusX = 450.;
-  double radiusY = 275.;
+  long double radiusX = 450.;
+  long double radiusY = 275.;
 
   Vector2 start(-500., -300.);
   Vector2 direction = Vector2(10., 4.).normalized();
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   basicChecks(true);
 
   // Specific checks for circle
-  double radius = 275.;
+  long double radius = 275.;
 
   Vector2 start(-500., -300.);
   Vector2 direction = Vector2(1., 1.).normalized();

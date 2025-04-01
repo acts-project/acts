@@ -48,23 +48,23 @@ using Covariance = BoundSquareMatrix;
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
-const double zVertexPos1 = 12.;
-const double zVertexPos2 = -3.;
+const long double zVertexPos1 = 12.;
+const long double zVertexPos2 = -3.;
 // x position
-std::normal_distribution<double> xdist(1_mm, 0.1_mm);
+std::normal_distribution<long double> xdist(1_mm, 0.1_mm);
 // y position
-std::normal_distribution<double> ydist(-0.7_mm, 0.1_mm);
+std::normal_distribution<long double> ydist(-0.7_mm, 0.1_mm);
 // z1 position
-std::normal_distribution<double> z1dist(zVertexPos1 * 1_mm, 1_mm);
+std::normal_distribution<long double> z1dist(zVertexPos1 * 1_mm, 1_mm);
 // z2 position
-std::normal_distribution<double> z2dist(zVertexPos2 * 1_mm, 0.5_mm);
+std::normal_distribution<long double> z2dist(zVertexPos2 * 1_mm, 0.5_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
+std::uniform_real_distribution<long double> pTDist(0.1_GeV, 100_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track eta distribution
-std::uniform_real_distribution<double> etaDist(-4., 4.);
+std::uniform_real_distribution<long double> etaDist(-4., 4.);
 
 ///
 /// @brief Unit test for GridDensityVertexFinder without caching
@@ -131,10 +131,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     Vector3 pos(xdist(gen), ydist(gen), 0);
 
     // Create momentum and charge of track
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    long double pt = pTDist(gen);
+    long double phi = phiDist(gen);
+    long double eta = etaDist(gen);
+    long double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     std::cout << res2.error().message() << std::endl;
   }
 
-  double zResult1 = 0;
+  long double zResult1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
     Vector3 result1 = (*res1).back().position();
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     zResult1 = result1[eZ];
   }
 
-  double zResult2 = 0;
+  long double zResult2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
     Vector3 result2 = (*res2).back().position();
@@ -250,10 +250,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     Vector3 pos(xdist(gen), ydist(gen), 0);
 
     // Create momentum and charge of track
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    long double pt = pTDist(gen);
+    long double phi = phiDist(gen);
+    long double eta = etaDist(gen);
+    long double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   IVertexFinder::State state1 = finder1.makeState(magFieldContext);
   IVertexFinder::State state2 = finder2.makeState(magFieldContext);
 
-  double zResult1 = 0;
-  double zResult2 = 0;
+  long double zResult1 = 0;
+  long double zResult2 = 0;
 
   auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
@@ -421,10 +421,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     Vector3 pos(xdist(gen), ydist(gen), 0);
 
     // Create momentum and charge of track
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    long double pt = pTDist(gen);
+    long double phi = phiDist(gen);
+    long double eta = etaDist(gen);
+    long double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     std::cout << res1.error().message() << std::endl;
   }
 
-  double covZZ1 = 0;
+  long double covZZ1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
     SquareMatrix3 cov = (*res1).back().covariance();
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     std::cout << res2.error().message() << std::endl;
   }
 
-  double covZZ2 = 0;
+  long double covZZ2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
     SquareMatrix3 cov = (*res2).back().covariance();

@@ -35,13 +35,13 @@ BOOST_AUTO_TEST_SUITE(GeoModelPoyVol)
 BOOST_AUTO_TEST_CASE(GeoModelDetectorObjectFactory) {
   auto al = new GeoMaterial("Aluminium", 1.0);
 
-  std::vector<std::vector<double>> trapVerts = {
+  std::vector<std::vector<long double>> trapVerts = {
       {-103, -50}, {103, -50}, {183, 50}, {-183, 50}};
-  std::vector<std::vector<double>> polyVerts = {
+  std::vector<std::vector<long double>> polyVerts = {
       {-60, -50}, {60, -50}, {153, 0}, {123, 50}, {-123, 50}, {-153, 0}};
-  std::vector<std::vector<double>> errVerts = {
+  std::vector<std::vector<long double>> errVerts = {
       {60, -50}, {153, 0}, {123, 50}, {-123, 50}, {-153, 0}};
-  double poly_z = 2;
+  long double poly_z = 2;
 
   auto trap = new GeoSimplePolygonBrep(poly_z);
   for (const auto& tVert : trapVerts) {

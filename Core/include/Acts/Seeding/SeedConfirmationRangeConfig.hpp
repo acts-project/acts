@@ -25,10 +25,10 @@ inline bool noopExperimentCuts(float /*bottomRadius*/, float /*cotTheta*/) {
 /// for different (r, z) regions of the detector (e.g. forward or central
 /// region) by SeedConfirmationRange. Seeds are classified as "high-quality"
 /// seeds and normal quality seeds. Normal quality seeds are only selected if
-/// no other "high-quality" seed has been found for that inner-middle doublet.
-/// For optimization reasons, the algorithm only calls the seed confirmation
-/// for a certain inner-middle doublet, in case a configurable minimum number
-/// of inner-middle-outer triplets have been found.
+/// no other "high-quality" seed has been found for that inner-middle long
+/// doublet. For optimization reasons, the algorithm only calls the seed
+/// confirmation for a certain inner-middle long doublet, in case a configurable
+/// minimum number of inner-middle-outer triplets have been found.
 struct SeedConfirmationRangeConfig {
   /// Minimum z position of middle component of the seed used to
   /// split the region of the detector for seed confirmation

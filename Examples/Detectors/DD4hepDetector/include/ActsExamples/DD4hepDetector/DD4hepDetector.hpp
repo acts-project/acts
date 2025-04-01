@@ -62,14 +62,14 @@ class DD4hepDetector : public Detector {
     /// the
     /// layers (e.g. barrel, endcap volumes) have no specific shape
     /// (assemblies)
-    double envelopeR = 1 * Acts::UnitConstants::mm;
+    long double envelopeR = 1 * Acts::UnitConstants::mm;
     /// The tolerance added to the geometrical extension in z
     /// of the layers contained to build the volume envelope around
     /// @note this parameter only needs to be set if the volumes containing
     /// the layers (e.g. barrel, endcap volumes) have no specific shape
     /// (assemblies)
-    double envelopeZ = 1 * Acts::UnitConstants::mm;
-    double defaultLayerThickness = 1e-10;
+    long double envelopeZ = 1 * Acts::UnitConstants::mm;
+    long double defaultLayerThickness = 1e-10;
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
     /// Material decorator

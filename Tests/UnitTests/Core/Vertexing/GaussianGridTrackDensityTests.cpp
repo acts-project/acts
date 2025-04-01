@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   using Grid = GaussianGridTrackDensity;
 
-  double binSize = 0.1;  // mm
-  double zMinMax = mainGridSize / 2 * binSize;
+  long double binSize = 0.1;  // mm
+  long double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
   Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
 
   using Grid = Acts::GaussianGridTrackDensity;
 
-  double binSize = 0.1;  // mm
-  double zMinMax = mainGridSize / 2 * binSize;
+  long double binSize = 0.1;  // mm
+  long double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
   Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   covMat << 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0,
       0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2;
 
-  const double posZ1 = -1.75;
-  const double posZ2 = 1.75;
+  const long double posZ1 = -1.75;
+  const long double posZ2 = 1.75;
 
   // Take two tracks, track 1 is closer in d0 and will thus have a slightly
   // higher density
@@ -245,8 +245,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
 
   using Grid = Acts::GaussianGridTrackDensity;
 
-  double binSize = 0.1;  // mm
-  double zMinMax = mainGridSize / 2 * binSize;
+  long double binSize = 0.1;  // mm
+  long double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
   Grid::Config cfg(zMinMax, mainGridSize, trkGridSize);
@@ -258,8 +258,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   covMat << 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0,
       0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2, 0, 0, 0, 0, 0, 0, 1e-2;
 
-  const double posZ1 = -1.75;
-  const double posZ2 = 1.75;
+  const long double posZ1 = -1.75;
+  const long double posZ2 = 1.75;
 
   // Take two tracks, track 1 is closer in d0 and will thus have a slightly
   // higher density
@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
 
   auto maxRes = grid.getMaxZPositionAndWidth(mainGrid);
   BOOST_CHECK(maxRes.ok());
-  double z = (*maxRes).first;
-  double width = (*maxRes).second;
+  long double z = (*maxRes).first;
+  long double width = (*maxRes).second;
 
   BOOST_CHECK_EQUAL(z, posZ2);
   // Check that width was estimated

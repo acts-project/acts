@@ -121,8 +121,8 @@ auto Acts::IterativeVertexFinder::find(
                << currentVertex.fullPosition().transpose());
 
     // Number degrees of freedom
-    double ndf = currentVertex.fitQuality().second;
-    double ndfSplitVertex = currentSplitVertex.fitQuality().second;
+    long double ndf = currentVertex.fitQuality().second;
+    long double ndfSplitVertex = currentSplitVertex.fitQuality().second;
 
     // Number of significant tracks
     int nTracksAtVertex = countSignificantTracks(currentVertex);
@@ -234,7 +234,7 @@ inline void Acts::IterativeVertexFinder::removeTracks(
   }
 }
 
-Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
+Acts::Result<long double> Acts::IterativeVertexFinder::getCompatibility(
     const BoundTrackParameters& params, const Vertex& vertex,
     const Surface& perigeeSurface, const VertexingOptions& vertexingOptions,
     State& state) const {
@@ -263,7 +263,7 @@ Acts::Result<double> Acts::IterativeVertexFinder::getCompatibility(
   // Calculate compatibility / chi2
   Vector2 trackParameters2D =
       linTrack.parametersAtPCA.template block<2, 1>(0, 0);
-  double compatibility =
+  long double compatibility =
       trackParameters2D.dot(weightReduced * trackParameters2D);
 
   return compatibility;
@@ -322,7 +322,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::removeUsedCompatibleTracks(
       return result.error();
     }
 
-    double chi2 = *result;
+    long double chi2 = *result;
 
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
@@ -398,7 +398,7 @@ Acts::Result<void> Acts::IterativeVertexFinder::fillTracksToFit(
       }
 
       // sqrt(sigma(d0)^2+sigma(z0)^2), where sigma(d0)^2 is the variance of d0
-      double hypotVariance =
+      long double hypotVariance =
           sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
@@ -465,7 +465,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
-      double chi2NewVtx = *resultNew;
+      long double chi2NewVtx = *resultNew;
 
       auto resultOld =
           getCompatibility(origParams, vertexIt, *vertexItPerigeeSurface,
@@ -473,7 +473,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
-      double chi2OldVtx = *resultOld;
+      long double chi2OldVtx = *resultOld;
 
       ACTS_DEBUG("Compatibility to new vs old vertex: " << chi2NewVtx << " vs "
                                                         << chi2OldVtx);
@@ -536,7 +536,7 @@ Acts::Result<bool> Acts::IterativeVertexFinder::reassignTracksToNewVertex(
   }
 
   // Number degrees of freedom
-  double ndf = currentVertex.fitQuality().second;
+  long double ndf = currentVertex.fitQuality().second;
 
   // Number of significant tracks
   int nTracksAtVertex = countSignificantTracks(currentVertex);

@@ -94,7 +94,7 @@ auto vt0s = bd::make({0_ns, -2_ns, 2_ns});
 auto vertices = vx0s * vy0s * vz0s * vt0s;
 
 // Construct an impact point estimator for a constant bfield along z.
-Estimator makeEstimator(double bZ) {
+Estimator makeEstimator(long double bZ) {
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, bZ));
   Stepper stepper(field);
   Estimator::Config cfg(field,
@@ -106,7 +106,7 @@ Estimator makeEstimator(double bZ) {
 
 // Construct a diagonal track covariance w/ reasonable values.
 Acts::BoundSquareMatrix makeBoundParametersCovariance(
-    double stdDevTime = 30_ps) {
+    long double stdDevTime = 30_ps) {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
@@ -128,9 +128,9 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 }
 
 // random value between 0 and 1
-std::uniform_real_distribution<double> uniformDist(0.0, 1.0);
+std::uniform_real_distribution<long double> uniformDist(0.0, 1.0);
 // random sign
-std::uniform_real_distribution<double> signDist(-1, 1);
+std::uniform_real_distribution<long double> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
@@ -159,8 +159,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
       perigeeSurface, par, makeBoundParametersCovariance(), particleHypothesis);
 
   // initial distance to the reference position in the perigee frame
-  double distT = std::hypot(d0, l0);
-  double dist3 =
+  long double distT = std::hypot(d0, l0);
+  long double dist3 =
       ipEstimator.calculateDistance(geoContext, myTrack, refPosition, state)
           .value();
   // estimated 3D distance should be less than the 2d distance in the perigee
@@ -184,7 +184,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3D, tracks, d0,
   // BOOST_CHECK_NE(atPerigee[eBoundPhi], atIp3d[eBoundPhi]);
   CHECK_CLOSE_ABS(atPerigee[eBoundTheta], atIp3d[eBoundTheta], 0.01_mrad);
   CHECK_CLOSE_REL(atPerigee[eBoundQOverP], atIp3d[eBoundQOverP],
-                  std::numeric_limits<double>::epsilon());
+                  std::numeric_limits<long double>::epsilon());
 
   // check that we get sensible compatibility scores
   // this is a chi2-like value and should always be positive
@@ -242,12 +242,12 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Correct quantities for checking if IP estimation worked
   // Time of the track with respect to the vertex
-  double corrTimeDiff = t0 - vt0;
+  long double corrTimeDiff = t0 - vt0;
 
   // Momentum direction at vertex (i.e., at 3D PCA)
-  double cosPhi = std::cos(phi);
-  double sinPhi = std::sin(phi);
-  double sinTheta = std::sin(theta);
+  long double cosPhi = std::cos(phi);
+  long double sinPhi = std::sin(phi);
+  long double sinTheta = std::sin(theta);
   Vector3 corrMomDir =
       Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
 
@@ -313,7 +313,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
     // Check quantities:
     // Spatial distance should be 0 as track passes through the vertex
-    double dist = distVec.head<3>().norm();
+    long double dist = distVec.head<3>().norm();
     CHECK_CLOSE_ABS(dist, 0., 30_nm);
     // Distance in time should correspond to the time of the track in a
     // coordinate system with the vertex as the origin since the track passes
@@ -364,13 +364,13 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   // to the vertex in time. Note that momenta don't play a role in the
   // computation and we set the angles and q/p to 0.
   // Time offsets
-  double timeDiffFactor = uniformDist(gen);
-  double timeDiffClose = timeDiffFactor * 0.1_ps;
-  double timeDiffFar = timeDiffFactor * 0.11_ps;
+  long double timeDiffFactor = uniformDist(gen);
+  long double timeDiffClose = timeDiffFactor * 0.1_ps;
+  long double timeDiffFar = timeDiffFactor * 0.11_ps;
 
   // Different random signs for the time offsets
-  double sgnClose = signDist(gen) < 0 ? -1. : 1.;
-  double sgnFar = signDist(gen) < 0 ? -1. : 1.;
+  long double sgnClose = signDist(gen) < 0 ? -1. : 1.;
+  long double sgnFar = signDist(gen) < 0 ? -1. : 1.;
 
   BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
@@ -400,14 +400,14 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
                                  ParticleHypothesis::pion());
 
   // Calculate the 4D vertex compatibilities of the three tracks
-  double compatibilityClose =
+  long double compatibilityClose =
       ipEstimator.getVertexCompatibility(geoContext, &paramsClose, vtxPos)
           .value();
-  double compatibilityCloseLargerCov =
+  long double compatibilityCloseLargerCov =
       ipEstimator
           .getVertexCompatibility(geoContext, &paramsCloseLargerCov, vtxPos)
           .value();
-  double compatibilityFar =
+  long double compatibilityFar =
       ipEstimator.getVertexCompatibility(geoContext, &paramsFar, vtxPos)
           .value();
 

@@ -110,19 +110,19 @@ void ParticleTrackingAction::PostUserTrackingAction(const G4Track* aTrack) {
 SimParticleState ParticleTrackingAction::convert(const G4Track& aTrack,
                                                  SimBarcode particleId) const {
   // Unit conversions G4->::ACTS
-  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
-  constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+  constexpr long double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
+  constexpr long double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  constexpr long double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
   // Get all the information from the Track
   const G4ParticleDefinition* particleDef = aTrack.GetParticleDefinition();
   G4int pdg = particleDef->GetPDGEncoding();
-  G4double charge = particleDef->GetPDGCharge();
-  G4double mass = convertEnergy * particleDef->GetPDGMass();
+  G4long double charge = particleDef->GetPDGCharge();
+  G4long double mass = convertEnergy * particleDef->GetPDGMass();
   G4ThreeVector pPosition = convertLength * aTrack.GetPosition();
-  G4double pTime = convertTime * aTrack.GetGlobalTime();
+  G4long double pTime = convertTime * aTrack.GetGlobalTime();
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
-  G4double p = convertEnergy * aTrack.GetKineticEnergy();
+  G4long double p = convertEnergy * aTrack.GetKineticEnergy();
 
   std::uint32_t numberOfHits = 0;
   if (auto it = eventStore().particleHitCount.find(particleId);

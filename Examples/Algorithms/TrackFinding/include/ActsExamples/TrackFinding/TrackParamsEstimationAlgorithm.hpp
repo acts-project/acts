@@ -63,10 +63,10 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
 
     /// The minimum magnetic field to trigger the track parameters estimation
-    double bFieldMin = 0.1 * Acts::UnitConstants::T;
+    long double bFieldMin = 0.1 * Acts::UnitConstants::T;
 
     /// Initial sigmas for the track parameters.
-    std::array<double, 6> initialSigmas = {
+    std::array<long double, 6> initialSigmas = {
         1 * Acts::UnitConstants::mm,
         1 * Acts::UnitConstants::mm,
         1 * Acts::UnitConstants::degree,
@@ -74,11 +74,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
         0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
         1 * Acts::UnitConstants::ns};
     /// Relative pt resolution used for the initial sigma of q/p.
-    double initialSigmaPtRel = 0.1;
+    long double initialSigmaPtRel = 0.1;
     /// Inflate initial covariance.
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    std::array<long double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Inflate time covariance if no time measurement is available.
-    double noTimeVarInflation = 100.;
+    long double noTimeVarInflation = 100.;
 
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =

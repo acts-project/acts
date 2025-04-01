@@ -143,7 +143,7 @@ inline bool InternalSeed<SpacePoint>::set3(Acts::Legacy::Seed<SpacePoint>& s) {
   s.add(m_s0->spacepoint);
   s.add(m_s1->spacepoint);
   s.add(m_s2->spacepoint);
-  s.setZVertex(static_cast<double>(m_z));
+  s.setZVertex(static_cast<long double>(m_z));
   return true;
 }
 

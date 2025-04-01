@@ -45,7 +45,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
       const Transform3& transform,
-      std::shared_ptr<const CylinderBounds> cBounds, double thickness,
+      std::shared_ptr<const CylinderBounds> cBounds, long double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(transform),
@@ -64,7 +64,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
       const Transform3& transform, std::shared_ptr<const PlanarBounds> pBounds,
-      double thickness,
+      long double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(transform),
@@ -83,7 +83,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
       const Transform3& transform, std::shared_ptr<const LineBounds> lBounds,
-      double thickness,
+      long double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(transform),
@@ -110,7 +110,7 @@ class DetectorElementStub : public DetectorElementBase {
   Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  long double thickness() const override;
 
  private:
   /// the transform for positioning in 3D space
@@ -118,7 +118,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// the surface represented by it
   std::shared_ptr<Surface> m_elementSurface{nullptr};
   /// the element thickness
-  double m_elementThickness{0.};
+  long double m_elementThickness{0.};
 };
 
 inline const Transform3& DetectorElementStub::transform(
@@ -134,7 +134,7 @@ inline Surface& DetectorElementStub::surface() {
   return *m_elementSurface;
 }
 
-inline double DetectorElementStub::thickness() const {
+inline long double DetectorElementStub::thickness() const {
   return m_elementThickness;
 }
 

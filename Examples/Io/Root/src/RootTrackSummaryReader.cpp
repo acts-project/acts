@@ -189,12 +189,12 @@ ProcessCode RootTrackSummaryReader::read(const AlgorithmContext& context) {
           (*m_eTHETA_fit)[i], (*m_eQOP_fit)[i], (*m_eT_fit)[i];
 
       // Resolutions
-      double resD0 = (*m_err_eLOC0_fit)[i];
-      double resZ0 = (*m_err_eLOC1_fit)[i];
-      double resPh = (*m_err_ePHI_fit)[i];
-      double resTh = (*m_err_eTHETA_fit)[i];
-      double resQp = (*m_err_eQOP_fit)[i];
-      double resT = (*m_err_eT_fit)[i];
+      long double resD0 = (*m_err_eLOC0_fit)[i];
+      long double resZ0 = (*m_err_eLOC1_fit)[i];
+      long double resPh = (*m_err_ePHI_fit)[i];
+      long double resTh = (*m_err_eTHETA_fit)[i];
+      long double resQp = (*m_err_eQOP_fit)[i];
+      long double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
       Acts::BoundSquareMatrix covMat;

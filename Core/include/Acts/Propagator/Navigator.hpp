@@ -56,9 +56,9 @@ struct NavigationOptions {
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
   /// The minimum distance for a surface to be considered
-  double nearLimit = 0;
+  long double nearLimit = 0;
   /// The maximum distance for a surface to be considered
-  double farLimit = std::numeric_limits<double>::max();
+  long double farLimit = std::numeric_limits<long double>::max();
 };
 
 /// @brief Steers the propagation through the geometry by providing the next
@@ -118,13 +118,13 @@ class Navigator {
         : NavigatorPlainOptions(gctx) {}
 
     /// The surface tolerance
-    double surfaceTolerance = s_onSurfaceTolerance;
+    long double surfaceTolerance = s_onSurfaceTolerance;
 
     /// The near limit to resolve surfaces
-    double nearLimit = s_onSurfaceTolerance;
+    long double nearLimit = s_onSurfaceTolerance;
 
     /// The far limit to resolve surfaces
-    double farLimit = std::numeric_limits<double>::max();
+    long double farLimit = std::numeric_limits<long double>::max();
 
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};

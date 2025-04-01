@@ -20,7 +20,7 @@
 #include "Acts/Plugins/GeoModel/detail/GeoSubtractionConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTrdConverter.hpp"
 #include "Acts/Plugins/GeoModel/detail/GeoTubeConverter.hpp"
-#include "Acts/Plugins/GeoModel/detail/GeoUnionDoubleTrdConverter.hpp"
+#include "Acts/Plugins/GeoModel/detail/GeoUnionlong doubleTrdConverter.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
@@ -75,9 +75,9 @@ using GeoTubeConverter =
 /// @brief The GeoTube converter
 ///
 /// This is a dedicated converter for GeoTube shapes
-using GeoUnionDoubleTrdConverter =
+using GeoUnionlong doubleTrdConverter =
     detail::GenericGeoShapeConverter<GeoShapeUnion,
-                                     detail::GeoUnionDoubleTrdConverter>;
+                                     detail::GeoUnionlong doubleTrdConverter>;
 
 /// @brief The map that maps the converters with the shapes
 
@@ -98,7 +98,7 @@ inline std::shared_ptr<const IGeoShapeConverter> geoShapesConverters(
           {GeoShapeSubtraction::getClassTypeID(),
            std::make_shared<GeoSubtractionConverter>()},
           {GeoShapeUnion::getClassTypeID(),
-           std::make_shared<GeoUnionDoubleTrdConverter>()}};
+           std::make_shared<GeoUnionlong doubleTrdConverter>()}};
   auto itr = converters.find(geoShapeId);
 
   return itr != converters.end() ? itr->second : nullptr;

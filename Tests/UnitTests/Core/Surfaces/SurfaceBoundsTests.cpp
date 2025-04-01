@@ -41,7 +41,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
 
   ~SurfaceBoundsStub() override = default;
   BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> values() const override { return m_values; }
+  std::vector<long double> values() const override { return m_values; }
   bool inside(const Vector2& /*lpos*/,
               const BoundaryTolerance& /*boundaryTolerance*/) const final {
     return true;
@@ -53,7 +53,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
 
  private:
-  std::vector<double> m_values;
+  std::vector<long double> m_values;
 };
 
 }  // namespace Acts
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsConstruction) {
 
 BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   SurfaceBoundsStub surface(5);
-  std::vector<double> reference{0, 1, 2, 3, 4};
+  std::vector<long double> reference{0, 1, 2, 3, 4};
   const auto& boundValues = surface.values();
   BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(), reference.cend(),
                                 boundValues.cbegin(), boundValues.cend());

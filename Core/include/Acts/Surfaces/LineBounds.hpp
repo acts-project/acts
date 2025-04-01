@@ -29,7 +29,7 @@ class LineBounds : public SurfaceBounds {
   ///
   /// @param r The radius of the line
   /// @param halfZ The half length in z
-  explicit LineBounds(double r, double halfZ) noexcept(false)
+  explicit LineBounds(long double r, long double halfZ) noexcept(false)
       : m_values({r, halfZ}) {
     checkConsistency();
   }
@@ -37,7 +37,8 @@ class LineBounds : public SurfaceBounds {
   /// Constructor - from fixed size array
   ///
   /// @param values The bound values stored in a fixed size array
-  explicit LineBounds(const std::array<double, eSize>& values) noexcept(false)
+  explicit LineBounds(const std::array<long double, eSize>& values) noexcept(
+      false)
       : m_values(values) {
     checkConsistency();
   }
@@ -47,7 +48,7 @@ class LineBounds : public SurfaceBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -67,10 +68,10 @@ class LineBounds : public SurfaceBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

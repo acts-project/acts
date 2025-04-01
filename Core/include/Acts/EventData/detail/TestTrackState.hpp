@@ -26,8 +26,8 @@ struct TestTrackState {
   BoundTrackParameters filtered;
   BoundTrackParameters smoothed;
   BoundMatrix jacobian;
-  double chi2;
-  double pathLength;
+  long double chi2;
+  long double pathLength;
 
   // Generate a random TestTrackState.
   //
@@ -45,8 +45,8 @@ struct TestTrackState {
         smoothed(surface, someBoundParametersA(), std::nullopt,
                  ParticleHypothesis::pion()),
         jacobian(BoundMatrix::Identity()),
-        chi2(std::chi_squared_distribution<double>(measdim)(rng)),
-        pathLength(std::uniform_real_distribution<double>(
+        chi2(std::chi_squared_distribution<long double>(measdim)(rng)),
+        pathLength(std::uniform_real_distribution<long double>(
             1 * Acts::UnitConstants::mm, 10 * Acts::UnitConstants::mm)(rng)) {
     // set a random geometry identifier to uniquely identify each surface
     Acts::GeometryIdentifier geoId{
@@ -55,10 +55,10 @@ struct TestTrackState {
 
     // create source link w/ inline 1d or 2d measurement data
     if (measdim == 1u) {
-      auto [par, cov] = generateParametersCovariance<double, 1u>(rng);
+      auto [par, cov] = generateParametersCovariance<long double, 1u>(rng);
       sourceLink = TestSourceLink(eBoundLoc0, par[0], cov(0, 0), geoId);
     } else if (measdim == 2u) {
-      auto [par, cov] = generateParametersCovariance<double, 2u>(rng);
+      auto [par, cov] = generateParametersCovariance<long double, 2u>(rng);
       sourceLink = TestSourceLink(eBoundLoc1, eBoundQOverP, par, cov, geoId);
     } else {
       throw std::runtime_error("invalid number of measurement dimensions");
@@ -85,7 +85,7 @@ struct TestTrackState {
     for (Eigen::Index c = 0; c < jacobian.cols(); ++c) {
       for (Eigen::Index r = 0; r < jacobian.rows(); ++r) {
         jacobian(c, r) +=
-            std::uniform_real_distribution<double>(-0.125, 0.125)(rng);
+            std::uniform_real_distribution<long double>(-0.125, 0.125)(rng);
       }
     }
   }

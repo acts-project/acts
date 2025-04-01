@@ -69,7 +69,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operation - dummy implementation
   ///
-  ProtoSurfaceMaterialT<BinningType>& scale(double /*factor*/) final {
+  ProtoSurfaceMaterialT<BinningType>& scale(long double /*factor*/) final {
     return (*this);
   }
 

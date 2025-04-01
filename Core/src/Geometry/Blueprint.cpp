@@ -137,9 +137,9 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
     auto newBounds = std::make_shared<CuboidVolumeBounds>(*box);
 
     // Get the current half lengths
-    double halfX = newBounds->get(CuboidVolumeBounds::eHalfLengthX);
-    double halfY = newBounds->get(CuboidVolumeBounds::eHalfLengthY);
-    double halfZ = newBounds->get(CuboidVolumeBounds::eHalfLengthZ);
+    long double halfX = newBounds->get(CuboidVolumeBounds::eHalfLengthX);
+    long double halfY = newBounds->get(CuboidVolumeBounds::eHalfLengthY);
+    long double halfZ = newBounds->get(CuboidVolumeBounds::eHalfLengthZ);
 
     // Apply envelope to each dimension
     const auto &xEnv = m_cfg.envelope[AxisX];

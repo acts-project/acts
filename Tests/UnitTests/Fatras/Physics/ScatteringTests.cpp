@@ -26,11 +26,11 @@
 
 namespace {
 
-constexpr auto eps = std::numeric_limits<double>::epsilon();
+constexpr auto eps = std::numeric_limits<long double>::epsilon();
 
-double rms(const std::vector<double>& values, double mean) {
+long double rms(const std::vector<long double>& values, long double mean) {
   return std::sqrt(std::accumulate(values.begin(), values.end(), 0.0,
-                                   [mean](double sum, double value) {
+                                   [mean](long double sum, long double value) {
                                      return sum +
                                             (value - mean) * (value - mean);
                                    }) /
@@ -85,24 +85,24 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
 
   std::ranlux48 gen(0);
 
-  std::vector<double> thetaYZs;
-  std::vector<double> theta3Ds;
+  std::vector<long double> thetaYZs;
+  std::vector<long double> theta3Ds;
 
   for (std::size_t i = 0; i < 10000; i++) {
     auto newParticle = particle;
     scattering(gen, materialSlab, newParticle);
 
-    double thetaYZ =
+    long double thetaYZ =
         std::atan2(newParticle.direction().y(), newParticle.direction().z());
-    double theta3d =
+    long double theta3d =
         std::acos(newParticle.direction().dot(particle.direction()));
 
     thetaYZs.push_back(thetaYZ);
     theta3Ds.push_back(theta3d);
   }
 
-  double rmsThetaYZ = rms(thetaYZs, 0);
-  double rmsTheta3D = rms(theta3Ds, 0);
+  long double rmsThetaYZ = rms(thetaYZs, 0);
+  long double rmsTheta3D = rms(theta3Ds, 0);
 
   CHECK_CLOSE_REL(rmsThetaYZ, theta0, 0.02);
   CHECK_CLOSE_REL(rmsTheta3D, std::numbers::sqrt2 * theta0, 0.02);

@@ -61,7 +61,7 @@ using Stepper = EigenStepper<>;
 using ReferencePropagator = Propagator<Stepper, Navigator>;
 using DirectPropagator = Propagator<Stepper, DirectNavigator>;
 
-const double Bz = 2_T;
+const long double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 Stepper estepper(bField);
 Stepper dstepper(bField);
@@ -73,7 +73,7 @@ const int ntests = 1000;
 const int skip = 0;
 bool referenceTiming = false;
 bool oversteppingTest = false;
-double oversteppingMaxStepSize = 1_mm;
+long double oversteppingMaxStepSize = 1_mm;
 
 /// The actual test method that runs the test
 /// can be used with several propagator types
@@ -89,16 +89,17 @@ double oversteppingMaxStepSize = 1_mm;
 /// @param charge is the charge of the particle
 /// @param index is the run index from the test
 template <typename rpropagator_t, typename dpropagator_t>
-void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
-             double phi, double theta, int charge, int index) {
-  double dcharge = -1 + 2 * charge;
+void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop,
+             long double pT, long double phi, long double theta, int charge,
+             int index) {
+  long double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
     return;
   }
 
   // Define start parameters from ranom input
-  double p = pT / sin(theta);
+  long double p = pT / sin(theta);
   BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
       Vector4::Zero(), phi, theta, dcharge / p, std::nullopt,
       ParticleHypothesis::pion());
@@ -176,15 +177,16 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 BOOST_DATA_TEST_CASE(
     test_direct_navigator,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.15_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.15_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 21,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =

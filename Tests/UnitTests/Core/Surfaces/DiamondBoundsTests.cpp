@@ -27,11 +27,11 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
   /// Test default construction
   // default construction is deleted
 
-  const double minHalfX = 10.;
-  const double midHalfX = 20.;
-  const double maxHalfX = 15.;
-  const double halfY1 = 5.;
-  const double halfY2 = 7.;
+  const long double minHalfX = 10.;
+  const long double midHalfX = 20.;
+  const long double maxHalfX = 15.;
+  const long double halfY1 = 5.;
+  const long double halfY2 = 7.;
 
   /// Test construction with dimensions
   BOOST_CHECK_EQUAL(
@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
 
 /// Unit tests for DiamondBounds properties
 BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
-  const double minHalfX = 10.;
-  const double midHalfX = 50.;  // != 20.
-  const double maxHalfX = 30.;  // != 15.
-  const double halfY1 = 10.;    // != 5.
-  const double halfY2 = 20.;    // != 7.
+  const long double minHalfX = 10.;
+  const long double midHalfX = 50.;  // != 20.
+  const long double maxHalfX = 30.;  // != 15.
+  const long double halfY1 = 10.;    // != 5.
+  const long double halfY2 = 20.;    // != 7.
 
   /// Test clone
   DiamondBounds diamondBoundsObject(minHalfX, midHalfX, maxHalfX, halfY1,
@@ -124,11 +124,11 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
 
 /// Unit test for testing DiamondBounds assignment
 BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
-  const double minHalfX = 10.;
-  const double midHalfX = 20.;
-  const double maxHalfX = 15.;
-  const double halfY1 = 5.;
-  const double halfY2 = 7.;
+  const long double minHalfX = 10.;
+  const long double midHalfX = 20.;
+  const long double maxHalfX = 15.;
+  const long double halfY1 = 5.;
+  const long double halfY2 = 7.;
 
   DiamondBounds diamondBoundsObject(minHalfX, midHalfX, maxHalfX, halfY1,
                                     halfY2);

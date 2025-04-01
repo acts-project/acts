@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-using Envelope = std::array<double, 2>;
+using Envelope = std::array<long double, 2>;
 
 constexpr Envelope zeroEnvelope = {0, 0};
 
@@ -183,19 +183,19 @@ class Extent {
   /// @param aDir the axis direction
   /// @param min the minimum parameter
   /// @param max the maximum parameter
-  void set(AxisDirection aDir, double min, double max);
+  void set(AxisDirection aDir, long double min, long double max);
 
   /// Set a min value for a dedicated binning value
   ///
   /// @param aDir the axis direction
   /// @param min the minimum parameter
-  void setMin(AxisDirection aDir, double min);
+  void setMin(AxisDirection aDir, long double min);
 
   /// Set a max value for a dedicated binning value
   ///
   /// @param aDir the axis direction
   /// @param max the maximum parameter
-  void setMax(AxisDirection aDir, double max);
+  void setMax(AxisDirection aDir, long double max);
 
   /// (re-)Set the envelope
   ///
@@ -214,10 +214,10 @@ class Extent {
   /// @param aDir is the axis direction to be returned
   ///
   /// @return a one dimensional arrange
-  Range1D<double> range(AxisDirection aDir) const;
+  Range1D<long double> range(AxisDirection aDir) const;
 
   /// Return the N-dimension range
-  const RangeXD<numAxisDirections(), double>& range() const;
+  const RangeXD<numAxisDirections(), long double>& range() const;
 
   /// Return an D-dimensional sub range according to the
   /// the given binvalues
@@ -225,9 +225,9 @@ class Extent {
   /// @param axisDirections the axis directions
   /// @return the sub range
   template <unsigned int kSUBDIM>
-  RangeXD<kSUBDIM, double> range(
+  RangeXD<kSUBDIM, long double> range(
       const std::array<AxisDirection, kSUBDIM>& axisDirections) const {
-    RangeXD<kSUBDIM, double> rRange;
+    RangeXD<kSUBDIM, long double> rRange;
     for (auto [i, v] : enumerate(axisDirections)) {
       rRange[i] = range(v);
     }
@@ -243,27 +243,27 @@ class Extent {
   /// Return the histogram store
   ///
   /// The histogram store can be used for automated binning detection
-  const std::array<std::vector<double>, numAxisDirections()>& valueHistograms()
-      const;
+  const std::array<std::vector<long double>, numAxisDirections()>&
+  valueHistograms() const;
 
   /// Access the minimum parameter
   ///
   /// @param aDir the axis direction
-  double min(AxisDirection aDir) const {
+  long double min(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].min();
   }
 
   /// Access the maximum parameter
   ///
   /// @param aDir the axis direction
-  double max(AxisDirection aDir) const {
+  long double max(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].max();
   }
 
   /// Access the midpoint
   ///
   /// @param aDir the axis direction
-  double medium(AxisDirection aDir) const {
+  long double medium(AxisDirection aDir) const {
     return 0.5 * (m_range[toUnderlying(aDir)].min() +
                   m_range[toUnderlying(aDir)].max());
   }
@@ -271,7 +271,7 @@ class Extent {
   /// Access the parameter interval (i.e. the range span)
   ///
   /// @param aDir the axis direction
-  double interval(AxisDirection aDir) const {
+  long double interval(AxisDirection aDir) const {
     return m_range[toUnderlying(aDir)].size();
   }
 
@@ -319,18 +319,18 @@ class Extent {
   /// A bitset that remembers the constraint values
   std::bitset<numAxisDirections()> m_constrains{0};
   /// The actual range store
-  RangeXD<numAxisDirections(), double> m_range;
+  RangeXD<numAxisDirections(), long double> m_range;
   /// A potential envelope
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   /// (Optional) Value histograms for bin detection
-  std::array<std::vector<double>, numAxisDirections()> m_valueHistograms;
+  std::array<std::vector<long double>, numAxisDirections()> m_valueHistograms;
 };
 
-inline Range1D<double> Acts::Extent::range(AxisDirection aDir) const {
+inline Range1D<long double> Acts::Extent::range(AxisDirection aDir) const {
   return m_range[toUnderlying(aDir)];
 }
 
-inline const RangeXD<numAxisDirections(), double>& Extent::range() const {
+inline const RangeXD<numAxisDirections(), long double>& Extent::range() const {
   return m_range;
 }
 
@@ -342,7 +342,7 @@ inline const ExtentEnvelope& Extent::envelope() const {
   return m_envelope;
 }
 
-inline const std::array<std::vector<double>, numAxisDirections()>&
+inline const std::array<std::vector<long double>, numAxisDirections()>&
 Extent::valueHistograms() const {
   return m_valueHistograms;
 }

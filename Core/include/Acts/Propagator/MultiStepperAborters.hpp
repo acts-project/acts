@@ -22,7 +22,7 @@ struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// A configurable tolerance within which distance to the intersection we
   /// consider the surface as reached. Has no effect if averageOnSurface is
   /// false
-  double averageOnSurfaceTolerance = 0.2;
+  long double averageOnSurfaceTolerance = 0.2;
 
   MultiStepperSurfaceReached() = default;
 

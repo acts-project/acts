@@ -40,7 +40,7 @@ class TruthGraphBuilder final : public IAlgorithm {
     /// Output truth graph
     std::string outputGraph;
 
-    double targetMinPT = 0.5;
+    long double targetMinPT = 0.5;
     std::size_t targetMinSize = 3;
 
     /// Only allow one hit per track & module

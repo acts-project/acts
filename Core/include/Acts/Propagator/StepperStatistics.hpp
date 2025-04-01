@@ -26,9 +26,9 @@ struct StepperStatistics {
   std::size_t nReverseSteps = 0;
 
   /// Signed sum of the step lengths
-  double pathLength = 0;
+  long double pathLength = 0;
   /// Unsigned sum of the step lengths
-  double absolutePathLength = 0;
+  long double absolutePathLength = 0;
 };
 
 }  // namespace Acts

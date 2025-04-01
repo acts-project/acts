@@ -41,7 +41,7 @@ namespace {
 /// @param tolerance the tolerance
 /// @return a boolean to see if they are equal
 bool isEqual(const Acts::ProtoVolume& one, const Acts::ProtoVolume& two,
-             const double tolerance = 0.) {
+             const long double tolerance = 0.) {
   bool nameEq = (one.name == two.name);
   // Name
   BOOST_CHECK(nameEq);

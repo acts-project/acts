@@ -39,47 +39,47 @@ class SingleSeedVertexFinder {
   struct Config {
     /// maximum deviation in phi between the near and middle spacepoints or
     /// middle and far spacepoints
-    double maxPhideviation = 0.08;
+    long double maxPhideviation = 0.08;
     /// maximum deviation in X-Y between the first 2 spacepoints and the last 2
     /// spacepoints
-    double maxXYdeviation = 0.08;
+    long double maxXYdeviation = 0.08;
     /// maximum deviation in 3D between the first 2 spacepoints and the last 2
     /// spacepoints
-    double maxXYZdeviation = 0.08;
+    long double maxXYZdeviation = 0.08;
 
     /// minimum angle between Z axis and a triplet, effectively removing
     /// triplets with large |eta|
-    double minTheta = 1.;
+    long double minTheta = 1.;
 
     /// thresholds for near, middle, and far spacepoints
-    double rMinNear = 20.f * Acts::UnitConstants::mm;
-    double rMaxNear = 60.f * Acts::UnitConstants::mm;
-    double rMinMiddle = 150.f * Acts::UnitConstants::mm;
-    double rMaxMiddle = 190.f * Acts::UnitConstants::mm;
-    double rMinFar = 280.f * Acts::UnitConstants::mm;
-    double rMaxFar = 320.f * Acts::UnitConstants::mm;
+    long double rMinNear = 20.f * Acts::UnitConstants::mm;
+    long double rMaxNear = 60.f * Acts::UnitConstants::mm;
+    long double rMinMiddle = 150.f * Acts::UnitConstants::mm;
+    long double rMaxMiddle = 190.f * Acts::UnitConstants::mm;
+    long double rMinFar = 280.f * Acts::UnitConstants::mm;
+    long double rMaxFar = 320.f * Acts::UnitConstants::mm;
 
     /// number of phi slices, at least 3 to avoid duplicities
     /// it should be less than 2*pi/maxPhideviation in order not to loop over
     /// triplets that will be rejected by maxPhideviation anyway
     std::uint32_t numPhiSlices = 60;
     /// use only a fraction of available phi slices to speed up calculations;
-    double useFracPhiSlices = 0.5;
+    long double useFracPhiSlices = 0.5;
 
     /// number of z slices
     std::uint32_t numZSlices = 150;
     /// use only a fraction of available z slices to speed up calculations;
-    double useFracZSlices = 0.5;
+    long double useFracZSlices = 0.5;
     /// maximum |z| to consider, z slices will be done within the range
     /// (-maxAbsZ,maxAbsZ)
     /// values of maxAbsZ, maxZPosition, rMaxFar, and minTheta should be
     /// set reasonably with respect to each other
-    double maxAbsZ = 450. * Acts::UnitConstants::mm;
+    long double maxAbsZ = 450. * Acts::UnitConstants::mm;
 
     /// maximum Z position of the vertex at the point closest to the Z axis
-    double maxZPosition = 200.f * Acts::UnitConstants::mm;
+    long double maxZPosition = 200.f * Acts::UnitConstants::mm;
     /// maximum R position of the vertex at the point closest to the Z axis
-    double maxRPosition = 10.f * Acts::UnitConstants::mm;
+    long double maxRPosition = 10.f * Acts::UnitConstants::mm;
 
     /// chi^2 minimalization will happen with respect to "planes" or "rays"
     std::string minimalizeWRT = "planes";
@@ -88,9 +88,9 @@ class SingleSeedVertexFinder {
     /// chi^2
     std::uint32_t maxIterations = 20;
     /// each iteration, discard this fraction of triplets with the largest chi^2
-    double removeFraction = 0.10;
+    long double removeFraction = 0.10;
     /// if the vertex estimation moves less than this, stop iterations
-    double minVtxShift = 0.3f * Acts::UnitConstants::mm;
+    long double minVtxShift = 0.3f * Acts::UnitConstants::mm;
   };
 
   /// Const access to the config
@@ -127,11 +127,11 @@ class SingleSeedVertexFinder {
   /// @brief Struct to store sorted spacepoints for each layer (near, middle, and far), for each slice of phi, and for each slice of z
   struct SortedSpacepoints {
     SortedSpacepoints(const int phiSize, const int zSize) {
-      std::vector<std::pair<spacepoint_t const*, double>> helper = {};
-      std::vector<std::vector<std::pair<spacepoint_t const*, double>>> helperZ(
-          zSize, helper);
+      std::vector<std::pair<spacepoint_t const*, long double>> helper = {};
+      std::vector<std::vector<std::pair<spacepoint_t const*, long double>>>
+          helperZ(zSize, helper);
       std::vector<
-          std::vector<std::vector<std::pair<spacepoint_t const*, double>>>>
+          std::vector<std::vector<std::pair<spacepoint_t const*, long double>>>>
           helperPhi(phiSize, helperZ);
       sortedSP.fill(helperPhi);
     }
@@ -141,9 +141,8 @@ class SingleSeedVertexFinder {
     /// @param phi Index of the phi slice
     /// @param z Index of the z slice
     /// @return Non-const vector of spacepoints
-    inline std::vector<std::pair<spacepoint_t const*, double>>& addSP(int layer,
-                                                                      int phi,
-                                                                      int z) {
+    inline std::vector<std::pair<spacepoint_t const*, long double>>& addSP(
+        int layer, int phi, int z) {
       return sortedSP[layer][phi][z];
     }
 
@@ -152,13 +151,13 @@ class SingleSeedVertexFinder {
     /// @param phi Index of the phi slice
     /// @param z Index of the z slice
     /// @return Const vector of spacepoints
-    inline const std::vector<std::pair<spacepoint_t const*, double>>& getSP(
-        int layer, int phi, int z) const {
+    inline const std::vector<std::pair<spacepoint_t const*, long double>>&
+    getSP(int layer, int phi, int z) const {
       return sortedSP[layer][phi][z];
     }
 
     std::array<std::vector<std::vector<
-                   std::vector<std::pair<spacepoint_t const*, double>>>>,
+                   std::vector<std::pair<spacepoint_t const*, long double>>>>,
                3>
         sortedSP;
   };
@@ -189,7 +188,7 @@ class SingleSeedVertexFinder {
   /// @brief Calculates equation of the plane (alpha*x + beta*y + gamma*z + delta = 0), given the three points
   /// @param triplet A single triplet (with 3 spacepoints)
   /// @return A pair of {{alpha,beta,gamma},delta}
-  static std::pair<Acts::Vector3, double> makePlaneFromTriplet(
+  static std::pair<Acts::Vector3, long double> makePlaneFromTriplet(
       const Triplet& triplet);
 
   /// @brief Find a point (=the vertex) that has minimum chi^2 with respect to all planes defined by the triplets

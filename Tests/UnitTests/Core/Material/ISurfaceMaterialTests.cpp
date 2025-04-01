@@ -21,7 +21,7 @@ namespace Acts::Test {
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
 
-  ISurfaceMaterial& scale(double /*factor*/) override { return *this; };
+  ISurfaceMaterial& scale(long double /*factor*/) override { return *this; };
 
   const MaterialSlab& materialSlab(const Vector2& /*lp*/) const override {
     return m_fullMaterial;
@@ -41,7 +41,7 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
-  double splitFactor = 42.0;
+  long double splitFactor = 42.0;
   SurfaceMaterialStub stub{splitFactor};
 
   BOOST_CHECK_EQUAL(

@@ -51,7 +51,7 @@ class Intersection {
   /// @param position is the position of the intersection
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
-  constexpr Intersection(const Position& position, double pathLength,
+  constexpr Intersection(const Position& position, long double pathLength,
                          IntersectionStatus status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
@@ -64,7 +64,7 @@ class Intersection {
   constexpr const Position& position() const { return m_position; }
 
   /// Returns the path length to the interseciton
-  constexpr double pathLength() const { return m_pathLength; }
+  constexpr long double pathLength() const { return m_pathLength; }
 
   /// Returns the intersection status enum
   constexpr IntersectionStatus status() const { return m_status; }
@@ -113,7 +113,7 @@ class Intersection {
   /// Position of the intersection
   Position m_position = Position::Zero();
   /// Signed path length to the intersection (if valid)
-  double m_pathLength = std::numeric_limits<double>::infinity();
+  long double m_pathLength = std::numeric_limits<long double>::infinity();
   /// The Status of the intersection
   IntersectionStatus m_status = IntersectionStatus::unreachable;
 
@@ -154,7 +154,9 @@ class ObjectIntersection {
   }
 
   /// Returns the path length to the interseciton
-  constexpr double pathLength() const { return m_intersection.pathLength(); }
+  constexpr long double pathLength() const {
+    return m_intersection.pathLength();
+  }
 
   /// Returns the status of the interseciton
   constexpr IntersectionStatus status() const {
@@ -268,7 +270,8 @@ namespace detail {
 /// @param farLimit The maximum path length for an intersection to be considered
 /// @param logger A optionally supplied logger which prints out a lot of infos
 ///               at VERBOSE level
-bool checkPathLength(double pathLength, double nearLimit, double farLimit,
+bool checkPathLength(long double pathLength, long double nearLimit,
+                     long double farLimit,
                      const Logger& logger = getDummyLogger());
 
 }  // namespace detail

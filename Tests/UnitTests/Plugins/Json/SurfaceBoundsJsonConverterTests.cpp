@@ -55,10 +55,11 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
   nlohmann::json rectangleOutDetray =
       SurfaceBoundsJsonConverter::toJsonDetray(*rectangeRef);
 
-  std::vector<double> boundariesRef = {4, 6};
+  std::vector<long double> boundariesRef = {4, 6};
   BOOST_CHECK_EQUAL(rectangleOutDetray["shape"].get<unsigned int>(), 5u);
-  BOOST_CHECK(rectangleOutDetray["boundaries"].get<std::vector<double>>() ==
-              boundariesRef);
+  BOOST_CHECK(
+      rectangleOutDetray["boundaries"].get<std::vector<long double>>() ==
+      boundariesRef);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

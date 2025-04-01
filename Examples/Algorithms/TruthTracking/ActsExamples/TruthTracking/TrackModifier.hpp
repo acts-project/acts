@@ -31,7 +31,7 @@ class TrackModifier final : public IAlgorithm {
     /// When turned on, only keep the diagonal of the cov matrix.
     bool dropCovariance{false};
     /// Scale cov matrix;
-    double covScale{1};
+    long double covScale{1};
     /// Remove all time components
     bool killTime{false};
   };

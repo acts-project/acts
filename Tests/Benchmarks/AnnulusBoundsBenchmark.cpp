@@ -24,8 +24,8 @@ using namespace Acts;
 
 int main(int /*argc*/, char** /*argv[]*/) {
   std::mt19937 rng(42);
-  std::uniform_real_distribution<double> xDist(-2, 20);
-  std::uniform_real_distribution<double> yDist(-2, 20);
+  std::uniform_real_distribution<long double> xDist(-2, 20);
+  std::uniform_real_distribution<long double> yDist(-2, 20);
 
   std::ofstream os{"annulus.csv"};
   os << "x,y,inside_abs,inside_tol0,inside_tol1,inside_tol01,inside_cov"
@@ -34,18 +34,18 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // === PROBLEM DATA ===
 
   // bounds definition
-  double minRadius = 7.2;
-  double maxRadius = 12.0;
-  double minPhi = 0.74195;
-  double maxPhi = 1.33970;
+  long double minRadius = 7.2;
+  long double maxRadius = 12.0;
+  long double minPhi = 0.74195;
+  long double maxPhi = 1.33970;
   Vector2 offset(-2., 2.);
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
   // helper to convert to expected local frame
   auto toStripFrame = [&](const Vector2& xy) -> Vector2 {
     auto shifted = xy + offset;
-    double r = VectorHelpers::perp(shifted);
-    double phi = VectorHelpers::phi(shifted);
+    long double r = VectorHelpers::perp(shifted);
+    long double phi = VectorHelpers::phi(shifted);
     return Vector2(r, phi);
   };
 

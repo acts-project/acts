@@ -204,15 +204,15 @@ int GaussianGridTrackDensity::getHighestSumZPosition(
   int zbin = -1;
   mainGrid.maxCoeff(&zbin);
   int zFirstMax = zbin;
-  double firstDensity = mainGrid(zFirstMax);
-  double firstSum = getDensitySum(mainGrid, zFirstMax);
+  long double firstDensity = mainGrid(zFirstMax);
+  long double firstSum = getDensitySum(mainGrid, zFirstMax);
 
   // Get the second highest maximum
   mainGrid[zFirstMax] = 0;
   mainGrid.maxCoeff(&zbin);
   int zSecondMax = zbin;
-  double secondDensity = mainGrid(zSecondMax);
-  double secondSum = 0;
+  long double secondDensity = mainGrid(zSecondMax);
+  long double secondSum = 0;
   if (firstDensity - secondDensity <
       firstDensity * m_cfg.maxRelativeDensityDev) {
     secondSum = getDensitySum(mainGrid, zSecondMax);
@@ -222,8 +222,8 @@ int GaussianGridTrackDensity::getHighestSumZPosition(
   mainGrid[zSecondMax] = 0;
   mainGrid.maxCoeff(&zbin);
   int zThirdMax = zbin;
-  double thirdDensity = mainGrid(zThirdMax);
-  double thirdSum = 0;
+  long double thirdDensity = mainGrid(zThirdMax);
+  long double thirdSum = 0;
   if (firstDensity - thirdDensity <
       firstDensity * m_cfg.maxRelativeDensityDev) {
     thirdSum = getDensitySum(mainGrid, zThirdMax);
@@ -243,9 +243,9 @@ int GaussianGridTrackDensity::getHighestSumZPosition(
   return zFirstMax;
 }
 
-double GaussianGridTrackDensity::getDensitySum(const MainGridVector& mainGrid,
-                                               int pos) const {
-  double sum = mainGrid(pos);
+long double GaussianGridTrackDensity::getDensitySum(
+    const MainGridVector& mainGrid, int pos) const {
+  long double sum = mainGrid(pos);
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
   if (pos - 1 >= 0) {

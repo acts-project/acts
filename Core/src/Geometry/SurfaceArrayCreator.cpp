@@ -50,7 +50,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ProtoAxis pAxisZ = createEquidistantAxis(
       gctx, surfacesRaw, AxisDirection::AxisZ, protoLayer, ftransform, binsZ);
 
-  double R = protoLayer.medium(AxisDirection::AxisR, true);
+  long double R = protoLayer.medium(AxisDirection::AxisR, true);
 
   Transform3 itransform = ftransform.inverse();
   // Transform lambda captures the transform matrix
@@ -86,7 +86,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ProtoLayer protoLayer =
       protoLayerOpt ? *protoLayerOpt : ProtoLayer(gctx, surfacesRaw);
 
-  double R = protoLayer.medium(AxisDirection::AxisR, true);
+  long double R = protoLayer.medium(AxisDirection::AxisR, true);
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
@@ -161,7 +161,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       createEquidistantAxis(gctx, surfacesRaw, AxisDirection::AxisPhi,
                             protoLayer, ftransform, binsPhi);
 
-  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
+  long double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
   Transform3 itransform = transform.inverse();
@@ -268,7 +268,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     }
   }
 
-  double Z = protoLayer.medium(AxisDirection::AxisZ, true);
+  long double Z = protoLayer.medium(AxisDirection::AxisZ, true);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
 
   Transform3 itransform = ftransform.inverse();
@@ -578,8 +578,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   }
   // check the binning type first
 
-  double minimum = 0.;
-  double maximum = 0.;
+  long double minimum = 0.;
+  long double maximum = 0.;
 
   // binning option is open for z and r, in case of phi binning reset later
   // Acts::BinningOption bOption = Acts::open;
@@ -627,14 +627,14 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         minimum = -std::numbers::pi;
         maximum = std::numbers::pi;
 
-        // double step = 2 * std::numbers::pi / keys.size();
-        double step = 2 * std::numbers::pi / binNumber;
+        // long double step = 2 * std::numbers::pi / keys.size();
+        long double step = 2 * std::numbers::pi / binNumber;
         // rotate to max phi module plus one half step
         // this should make sure that phi wrapping at +- pi
         // never falls on a module center
-        double max =
+        long double max =
             phi(maxElem->referencePosition(gctx, AxisDirection::AxisR));
-        double angle = std::numbers::pi - (max + 0.5 * step);
+        long double angle = std::numbers::pi - (max + 0.5 * step);
 
         // replace given transform ref
         transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());

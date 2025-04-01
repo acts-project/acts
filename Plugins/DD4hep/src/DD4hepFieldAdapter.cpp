@@ -23,9 +23,9 @@ namespace Acts {
 DD4hepFieldAdapter::DD4hepFieldAdapter(dd4hep::OverlayedField field)
     : m_field{std::make_unique<dd4hep::OverlayedField>(field)} {
   m_fieldConversionFactor =
-      dd4hep::_toDouble("1/tesla") * Acts::UnitConstants::T;
+      dd4hep::_tolong double("1/tesla") * Acts::UnitConstants::T;
   m_lengthConversionFactor =
-      dd4hep::_toDouble("1*mm") / Acts::UnitConstants::mm;
+      dd4hep::_tolong double("1*mm") / Acts::UnitConstants::mm;
 }
 
 MagneticFieldProvider::Cache DD4hepFieldAdapter::makeCache(

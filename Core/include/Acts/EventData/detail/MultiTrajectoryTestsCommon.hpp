@@ -1162,7 +1162,7 @@ class MultiTrajectoryTestsCommon {
     test("std_int32_t", std::int32_t{-3});
     test("std_int64_t", std::int64_t{-4});
     test("float", float{8.9});
-    test("double", double{656.2});
+    test("long double", long double{656.2});
 
     trajectory_t traj = m_factory.create();
     traj.template addColumn<int>("extra_column");

@@ -68,9 +68,11 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moduleHalfXmaxY,
-      double moduleHalfY, double moduleThickness, double moduleTilt,
-      double ringRadius, double ringZ, double zStagger, int nPhi) {
+      DetectorStore& detStore, long double moduleHalfXminY,
+      long double moduleHalfXmaxY, long double moduleHalfY,
+      long double moduleThickness, long double moduleTilt,
+      long double ringRadius, long double ringZ, long double zStagger,
+      int nPhi) {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
@@ -90,11 +92,11 @@ struct CylindricalTrackingGeometry {
                                                   moduleHalfXmaxY, moduleHalfY);
     }
 
-    double phiStep = 2 * std::numbers::pi / nPhi;
+    long double phiStep = 2 * std::numbers::pi / nPhi;
 
     for (int im = 0; im < nPhi; ++im) {
       // Get the moduleTransform
-      double phi = -std::numbers::pi + im * phiStep;
+      long double phi = -std::numbers::pi + im * phiStep;
       auto mModuleTransform = Transform3(
           Translation3(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
                        ringZ + (im % 2) * zStagger) *
@@ -126,9 +128,10 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*> surfacesCylinder(
-      DetectorStore& detStore, double moduleHalfX, double moduleHalfY,
-      double moduleThickness, double moduleTiltPhi, double layerRadius,
-      double radialStagger, double longitudinalOverlap,
+      DetectorStore& detStore, long double moduleHalfX, long double moduleHalfY,
+      long double moduleThickness, long double moduleTiltPhi,
+      long double layerRadius, long double radialStagger,
+      long double longitudinalOverlap,
       const std::pair<int, int>& binningSchema) {
     std::vector<const Surface*> layerSurfaces;
 
@@ -150,7 +153,7 @@ struct CylindricalTrackingGeometry {
 
     for (auto& mCenter : moduleCenters) {
       // The association transform
-      double modulePhi = VectorHelpers::phi(mCenter);
+      long double modulePhi = VectorHelpers::phi(mCenter);
       // Local z axis is the normal vector
       Vector3 moduleLocalZ(cos(modulePhi + moduleTiltPhi),
                            sin(modulePhi + moduleTiltPhi), 0.);
@@ -180,29 +183,30 @@ struct CylindricalTrackingGeometry {
   /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
   std::vector<Vector3> modulePositionsCylinder(
-      double radius, double zStagger, double moduleHalfLength, double lOverlap,
-      const std::pair<int, int>& binningSchema) {
+      long double radius, long double zStagger, long double moduleHalfLength,
+      long double lOverlap, const std::pair<int, int>& binningSchema) {
     int nPhiBins = binningSchema.first;
     int nZbins = binningSchema.second;
     // prepare the return value
     std::vector<Vector3> mPositions;
     mPositions.reserve(nPhiBins * nZbins);
     // prep work
-    double phiStep = 2 * std::numbers::pi / (nPhiBins);
-    double minPhi = -std::numbers::pi + phiStep / 2.;
-    double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
-    double zStep = 2 * std::abs(zStart) / (nZbins - 1);
+    long double phiStep = 2 * std::numbers::pi / (nPhiBins);
+    long double minPhi = -std::numbers::pi + phiStep / 2.;
+    long double zStart =
+        -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
+    long double zStep = 2 * std::abs(zStart) / (nZbins - 1);
     // loop over the bins
     for (std::size_t zBin = 0; zBin < static_cast<std::size_t>(nZbins);
          ++zBin) {
       // prepare z and r
-      double moduleZ = zStart + zBin * zStep;
-      double moduleR =
+      long double moduleZ = zStart + zBin * zStep;
+      long double moduleR =
           (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
       for (std::size_t phiBin = 0; phiBin < static_cast<std::size_t>(nPhiBins);
            ++phiBin) {
         // calculate the current phi value
-        double modulePhi = minPhi + phiBin * phiStep;
+        long double modulePhi = minPhi + phiBin * phiStep;
         mPositions.push_back(Vector3(moduleR * cos(modulePhi),
                                      moduleR * sin(modulePhi), moduleZ));
       }
@@ -248,9 +252,9 @@ struct CylindricalTrackingGeometry {
     MaterialSlab beamPipeMaterial(makeBeryllium(), 0.8_mm);
     PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
-    bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
-    bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 1000.);
-    bplConfig.centralLayerThickness = std::vector<double>(1, 0.8);
+    bplConfig.centralLayerRadii = std::vector<long double>(1, 19.);
+    bplConfig.centralLayerHalflengthZ = std::vector<long double>(1, 1000.);
+    bplConfig.centralLayerThickness = std::vector<long double>(1, 0.8);
     bplConfig.centralLayerMaterial = {
         std::make_shared<const HomogeneousSurfaceMaterial>(beamPipeMaterial)};
     auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
@@ -280,13 +284,13 @@ struct CylindricalTrackingGeometry {
         std::shared_ptr<const ISurfaceMaterial>(
             new Acts::HomogeneousSurfaceMaterial(lProperties));
 
-    std::vector<double> pLayerRadii = {32., 72., 116., 172.};
+    std::vector<long double> pLayerRadii = {32., 72., 116., 172.};
     std::vector<std::pair<int, int>> pLayerBinning = {
         {16, 14}, {32, 14}, {52, 14}, {78, 14}};
-    std::vector<double> pModuleTiltPhi = {0.145, 0.145, 0.145, 0.145};
-    std::vector<double> pModuleHalfX = {8.4, 8.4, 8.4, 8.4};
-    std::vector<double> pModuleHalfY = {36., 36., 36., 36.};
-    std::vector<double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
+    std::vector<long double> pModuleTiltPhi = {0.145, 0.145, 0.145, 0.145};
+    std::vector<long double> pModuleHalfX = {8.4, 8.4, 8.4, 8.4};
+    std::vector<long double> pModuleHalfY = {36., 36., 36., 36.};
+    std::vector<long double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
     std::vector<LayerPtr> pLayers;
 

@@ -20,19 +20,19 @@ namespace Acts {
 /// has a specific meaning (e.g., flags surfaces as sensitive).
 class JsonDetectorElement : public DetectorElementBase {
  public:
-  JsonDetectorElement(const nlohmann::json &jSurface, double thickness);
+  JsonDetectorElement(const nlohmann::json &jSurface, long double thickness);
 
   Surface &surface() override;
   const Surface &surface() const override;
 
-  double thickness() const override;
+  long double thickness() const override;
 
   const Transform3 &transform(const GeometryContext &gctx) const override;
 
  private:
   std::shared_ptr<Surface> m_surface;
   Transform3 m_transform{};
-  double m_thickness{};
+  long double m_thickness{};
 };
 
 }  // namespace Acts

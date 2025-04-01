@@ -54,8 +54,8 @@ static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Rotation around the original U axis
-Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
-                                    double angleY) {
+Transform3 createCylindricTransform(const Vector3& nposition,
+                                    long double angleX, long double angleY) {
   Transform3 ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
@@ -72,8 +72,8 @@ Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Rotation around the original U axis
 Transform3 createPlanarTransform(const Vector3& nposition,
-                                 const Vector3& nnormal, double angleT,
-                                 double angleU) {
+                                 const Vector3& nnormal, long double angleT,
+                                 long double angleU) {
   // the rotation of the destination surface
   Vector3 T = nnormal.normalized();
   Vector3 U = std::abs(T.dot(Vector3::UnitZ())) < 0.99
@@ -95,7 +95,7 @@ Transform3 createPlanarTransform(const Vector3& nposition,
 }
 
 /// Helper method : convert into Acts matrix
-/// It takes the double array from AtlasStepper
+/// It takes the long double array from AtlasStepper
 /// and transforms it into an ActsMatrixD
 ///
 /// @param P is the pointer to the array
@@ -111,7 +111,7 @@ Transform3 createPlanarTransform(const Vector3& nposition,
 /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
 /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
 
-BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
+BoundToFreeMatrix convertToMatrix(const std::array<long double, 60> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
   for (std::size_t j = 0; j < eBoundSize; ++j) {

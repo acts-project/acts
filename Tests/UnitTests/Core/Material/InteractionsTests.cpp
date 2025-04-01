@@ -25,13 +25,13 @@ using namespace Acts::UnitLiterals;
 static const Acts::Material material = Acts::Test::makeSilicon();
 // variable values for other parameters
 // thickness
-static const double valuesThickness[] = {200_um, 1_mm};
+static const long double valuesThickness[] = {200_um, 1_mm};
 static auto thickness = data::make(valuesThickness);
 // particle type, mass, and charge
 static const Acts::PdgParticle pdg[] = {Acts::eElectron, Acts::eMuon,
                                         Acts::ePionPlus, Acts::eProton};
-static const double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
-static const double charge[] = {-1_e, -1_e, 1_e, 1_e};
+static const long double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
+static const long double charge[] = {-1_e, -1_e, 1_e, 1_e};
 static const auto particle =
     data::make(pdg) ^ data::make(mass) ^ data::make(charge);
 // momentum range
@@ -77,7 +77,7 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
 BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
                      thickness* particle* momentum, x, i, m, q, p) {
   const auto slab = Acts::MaterialSlab(material, x);
-  const auto slabDoubled = Acts::MaterialSlab(material, 2 * x);
+  const auto slablong doubled = Acts::MaterialSlab(material, 2 * x);
   const auto qOverP = q / p;
   const auto qOver2P = q / (2 * p);
   const auto absQ = std::abs(q);
@@ -89,12 +89,12 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
   auto tanti = computeMultipleScatteringTheta0(slab, absPdg, m, -qOverP, absQ);
   BOOST_CHECK_LT(0, tanti);
   BOOST_CHECK_EQUAL(t0, tanti);
-  // double the material -> more scattering
-  auto t2x =
-      computeMultipleScatteringTheta0(slabDoubled, absPdg, m, qOverP, absQ);
+  // long double the material -> more scattering
+  auto t2x = computeMultipleScatteringTheta0(slablong doubled, absPdg, m,
+                                             qOverP, absQ);
   BOOST_CHECK_LT(0, t2x);
   BOOST_CHECK_LT(t0, t2x);
-  // double the momentum -> less scattering
+  // long double the momentum -> less scattering
   auto t2p = computeMultipleScatteringTheta0(slab, absPdg, m, qOver2P, absQ);
   BOOST_CHECK_LT(0, t2p);
   BOOST_CHECK_LT(t2p, t0);
@@ -122,8 +122,9 @@ BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
 
 // Silicon Bethe Energy Loss Validation
 // PDG value from https://pdg.lbl.gov/2022/AtomicNuclearProperties
-static const double momentum[] = {0.1003_GeV, 1.101_GeV, 10.11_GeV, 100.1_GeV};
-static const double energy_loss[] = {2.608, 1.803, 2.177, 2.451};
+static const long double momentum[] = {0.1003_GeV, 1.101_GeV, 10.11_GeV,
+                                       100.1_GeV};
+static const long double energy_loss[] = {2.608, 1.803, 2.177, 2.451};
 
 BOOST_DATA_TEST_CASE(silicon_energy_loss,
                      data::make(momentum) ^ data::make(energy_loss), p, loss) {

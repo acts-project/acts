@@ -32,12 +32,12 @@
 BOOST_AUTO_TEST_SUITE(GeoModelDetObj)
 
 struct GeoDims {
-  std::vector<double> boxO;
-  std::vector<double> boxI;
-  std::vector<double> tube;
-  std::vector<std::vector<double>> trapVerts;
-  std::vector<double> trapHls;
-  std::vector<std::vector<double>> polyVerts;
+  std::vector<long double> boxO;
+  std::vector<long double> boxI;
+  std::vector<long double> tube;
+  std::vector<std::vector<long double>> trapVerts;
+  std::vector<long double> trapHls;
+  std::vector<std::vector<long double>> polyVerts;
 };
 void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
           GeoModelDetObj::GeoDims geoDims) {
@@ -60,10 +60,10 @@ void test(const Acts::GeoModelDetectorObjectFactory::Cache& cache,
       }
       // rectangle Surface check corner position without trf
       if (sbounds.type() == Acts::SurfaceBounds::eRectangle) {
-        double csxmin = sbounds.values()[0];
-        double csymin = sbounds.values()[1];
-        double csxmax = sbounds.values()[2];
-        double csymax = sbounds.values()[3];
+        long double csxmin = sbounds.values()[0];
+        long double csymin = sbounds.values()[1];
+        long double csxmax = sbounds.values()[2];
+        long double csymax = sbounds.values()[3];
         BOOST_CHECK(geoDims.boxI[0] == -csxmin);
         BOOST_CHECK(geoDims.boxI[1] == -csymin);
         BOOST_CHECK(geoDims.boxI[0] == csxmax);

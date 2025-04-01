@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(CallableWithAny) {
   // Test with unrelated overloads
   static_assert(!detail::callableWithAny<decltype(overloaded{
                     [](int /*x*/) {},
-                    [](double /*y*/) {},
+                    [](long double /*y*/) {},
                     [](const std::string& /*s*/) {},
                 })>());
 
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(CallableWithAny) {
   static_assert(detail::callableWithAny<decltype(overloaded{
                     [](void* /*ptr*/) {},
                     [](const Portal& /*portal*/) {},
-                    [](double /*d*/) {},
+                    [](long double /*d*/) {},
                 })>());
 }
 

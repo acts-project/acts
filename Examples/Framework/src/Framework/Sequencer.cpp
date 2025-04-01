@@ -253,8 +253,8 @@ namespace {
 using Clock = std::chrono::high_resolution_clock;
 using Duration = Clock::duration;
 using Timepoint = Clock::time_point;
-using Seconds = std::chrono::duration<double>;
-using NanoSeconds = std::chrono::duration<double, std::nano>;
+using Seconds = std::chrono::duration<long double>;
+using NanoSeconds = std::chrono::duration<long double, std::nano>;
 
 // RAII-based stopwatch to time execution within a block
 struct StopWatch {
@@ -268,7 +268,7 @@ struct StopWatch {
 // Convert duration to a printable string w/ reasonable unit.
 template <typename D>
 inline std::string asString(D duration) {
-  double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
+  long double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
   if (1e9 < std::abs(ns)) {
     return std::to_string(ns / 1e9) + " s";
   } else if (1e6 < std::abs(ns)) {

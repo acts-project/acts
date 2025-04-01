@@ -55,9 +55,9 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
     /// Only write truth matched tracks
     bool onlyTruthMatched = false;
     /// Probability threshold for fake tracks
-    double truthMatchProbMin = 0.5;
+    long double truthMatchProbMin = 0.5;
     /// Min pt of tracks
-    double ptMin = 1 * Acts::UnitConstants::GeV;
+    long double ptMin = 1 * Acts::UnitConstants::GeV;
   };
 
   /// constructor
@@ -91,7 +91,7 @@ class CsvTrackWriter : public WriterT<ConstTrackContainer> {
     ActsFatras::Barcode particleId;
     std::size_t nMajorityHits = 0;
     std::string trackType;
-    double truthMatchProb = 0;
+    long double truthMatchProb = 0;
     std::optional<TrackParameters> fittedParameters;
     std::vector<std::uint64_t> measurementsID;
   };

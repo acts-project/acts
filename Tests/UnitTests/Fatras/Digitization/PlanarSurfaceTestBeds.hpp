@@ -30,7 +30,7 @@
 
 namespace ActsFatras {
 
-using Randomizer = std::function<Acts::Vector2(double, double)>;
+using Randomizer = std::function<Acts::Vector2(long double, long double)>;
 
 using PlanarTestBed =
     std::tuple<std::string, std::shared_ptr<const Acts::Surface>,
@@ -44,12 +44,12 @@ struct PlanarSurfaceTestBeds {
   ///
   /// @param rScale is a parameter how far the random numbers
   /// should be generated (1 -> inside to boundary, 1.1 -> 10% outside)
-  std::vector<PlanarTestBed> operator()(double rScale) const {
-    double irScale = (2. - rScale);
+  std::vector<PlanarTestBed> operator()(long double rScale) const {
+    long double irScale = (2. - rScale);
 
     // Pixel test in Rectangle
-    double xhalf = 3.;
-    double yhalf = 6.5;
+    long double xhalf = 3.;
+    long double yhalf = 6.5;
     auto rectangle = std::make_shared<Acts::RectangleBounds>(xhalf, yhalf);
     auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Acts::Transform3::Identity(), rectangle);
@@ -60,8 +60,8 @@ struct PlanarSurfaceTestBeds {
     RectangleRandom rRandom(xhalf * rScale, yhalf * rScale);
 
     // Cartesian strip test in Trapezoid
-    double xhalfminy = 2.;
-    double xhalfmaxy = 3.5;
+    long double xhalfminy = 2.;
+    long double xhalfmaxy = 3.5;
     yhalf = 4.;
     auto trapezoid =
         std::make_shared<Acts::TrapezoidBounds>(xhalfminy, xhalfmaxy, yhalf);
@@ -75,12 +75,12 @@ struct PlanarSurfaceTestBeds {
                             yhalf * rScale);
 
     // Phi strip test in DiscTrapezoid
-    double rmin = 2.;
-    double rmax = 7.5;
-    double xmin = 2.;
-    double xmax = 3.5;
-    double ymax = std::sqrt(rmax * rmax - xmax * xmax);
-    double alpha = std::max(atan2(xmin, rmin), atan2(xmax, ymax));
+    long double rmin = 2.;
+    long double rmax = 7.5;
+    long double xmin = 2.;
+    long double xmax = 3.5;
+    long double ymax = std::sqrt(rmax * rmax - xmax * xmax);
+    long double alpha = std::max(atan2(xmin, rmin), atan2(xmax, ymax));
 
     auto discTrapezoid =
         std::make_shared<Acts::DiscTrapezoidBounds>(xmin, xmax, rmin, rmax);
@@ -115,8 +115,8 @@ struct PlanarSurfaceTestBeds {
     rmin = 2.5;
     rmax = 5.5;
     Acts::Vector2 aorigin(0.1, -0.3);
-    double phimin = -0.25;
-    double phimax = 0.38;
+    long double phimin = -0.25;
+    long double phimax = 0.38;
     auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, phimin,
                                                          phimax, aorigin);
     auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
@@ -126,7 +126,7 @@ struct PlanarSurfaceTestBeds {
 
     auto vertices = annulus->vertices(72);
     std::for_each(vertices.begin(), vertices.end(), [&](Acts::Vector2& v) {
-      double r = Acts::VectorHelpers::perp(v);
+      long double r = Acts::VectorHelpers::perp(v);
       rmin = std::min(rmin, r);
       rmax = std::max(rmax, r);
     });

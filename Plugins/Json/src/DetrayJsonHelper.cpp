@@ -17,13 +17,13 @@
 
 namespace Acts::DetrayJsonHelper {
 
-std::tuple<unsigned int, std::vector<double>> maskFromBounds(
+std::tuple<unsigned int, std::vector<long double>> maskFromBounds(
     const Acts::SurfaceBounds& sBounds, bool portal) {
   SurfaceBounds::BoundsType bType = sBounds.type();
-  std::vector<double> bValues = sBounds.values();
+  std::vector<long double> bValues = sBounds.values();
   // Return value
   unsigned int type = 13u;
-  std::vector<double> boundaries = bValues;
+  std::vector<long double> boundaries = bValues;
   // Special treatment for some portals
   if (portal && bType == SurfaceBounds::BoundsType::eCylinder) {
     boundaries = {bValues.at(0u), -bValues.at(1u), bValues.at(1u)};

@@ -51,7 +51,7 @@ struct TrackAlignmentState {
   ActsDynamicMatrix residualCovariance;
 
   // The chi2
-  double chi2 = 0;
+  long double chi2 = 0;
 
   // The derivative of residual w.r.t. alignment parameters
   ActsDynamicMatrix alignmentToResidualDerivative;

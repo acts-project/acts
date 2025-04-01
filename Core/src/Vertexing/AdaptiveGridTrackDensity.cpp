@@ -28,26 +28,28 @@ namespace {
 ///
 /// @return Multivariate Gaussian evaluated at args
 template <unsigned int nDim>
-double multivariateGaussian(const ActsVector<nDim>& args,
-                            const ActsSquareMatrix<nDim>& cov) {
-  double exponent = -0.5 * args.transpose().dot(cov.inverse() * args);
-  double gaussianDensity = safeExp(exponent) / std::sqrt(cov.determinant());
+long double multivariateGaussian(const ActsVector<nDim>& args,
+                                 const ActsSquareMatrix<nDim>& cov) {
+  long double exponent = -0.5 * args.transpose().dot(cov.inverse() * args);
+  long double gaussianDensity =
+      safeExp(exponent) / std::sqrt(cov.determinant());
   return gaussianDensity;
 }
 
 }  // namespace
 
-double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
-                                              double binExtent) {
+long double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
+                                                   long double binExtent) {
   return bin * binExtent;
 }
 
-std::int32_t AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
+std::int32_t AdaptiveGridTrackDensity::getBin(long double value,
+                                              long double binExtent) {
   return static_cast<std::int32_t>(std::floor(value / binExtent - 0.5) + 1);
 }
 
 std::uint32_t AdaptiveGridTrackDensity::getTrkGridSize(
-    double sigma, double nTrkSigmas, double binExtent,
+    long double sigma, long double nTrkSigmas, long double binExtent,
     const GridSizeRange& trkGridSizeRange) {
   std::uint32_t size =
       static_cast<std::uint32_t>(std::ceil(2 * nTrkSigmas * sigma / binExtent));
@@ -65,22 +67,24 @@ std::uint32_t AdaptiveGridTrackDensity::getTrkGridSize(
   return size;
 }
 
-std::int32_t AdaptiveGridTrackDensity::getSpatialBin(double value) const {
+std::int32_t AdaptiveGridTrackDensity::getSpatialBin(long double value) const {
   return getBin(value, m_cfg.spatialBinExtent);
 }
 
-std::int32_t AdaptiveGridTrackDensity::getTemporalBin(double value) const {
+std::int32_t AdaptiveGridTrackDensity::getTemporalBin(long double value) const {
   if (!m_cfg.useTime) {
     return 0;
   }
   return getBin(value, m_cfg.temporalBinExtent);
 }
 
-double AdaptiveGridTrackDensity::getSpatialBinCenter(std::int32_t bin) const {
+long double AdaptiveGridTrackDensity::getSpatialBinCenter(
+    std::int32_t bin) const {
   return getBinCenter(bin, m_cfg.spatialBinExtent);
 }
 
-double AdaptiveGridTrackDensity::getTemporalBinCenter(std::int32_t bin) const {
+long double AdaptiveGridTrackDensity::getTemporalBinCenter(
+    std::int32_t bin) const {
   if (!m_cfg.useTime) {
     return 0.;
   }
@@ -88,13 +92,13 @@ double AdaptiveGridTrackDensity::getTemporalBinCenter(std::int32_t bin) const {
 }
 
 std::uint32_t AdaptiveGridTrackDensity::getSpatialTrkGridSize(
-    double sigma) const {
+    long double sigma) const {
   return getTrkGridSize(sigma, m_cfg.nSpatialTrkSigmas, m_cfg.spatialBinExtent,
                         m_cfg.spatialTrkGridSizeRange);
 }
 
 std::uint32_t AdaptiveGridTrackDensity::getTemporalTrkGridSize(
-    double sigma) const {
+    long double sigma) const {
   if (!m_cfg.useTime) {
     return 1;
   }
@@ -153,8 +157,8 @@ AdaptiveGridTrackDensity::getMaxZTPosition(DensityMap& densityMap) const {
   }
 
   // Derive corresponding z and t value
-  double maxZ = getSpatialBinCenter(bin.first);
-  double maxT = getTemporalBinCenter(bin.second);
+  long double maxZ = getSpatialBinCenter(bin.first);
+  long double maxT = getTemporalBinCenter(bin.second);
 
   return std::pair(maxZ, maxT);
 }
@@ -174,7 +178,7 @@ AdaptiveGridTrackDensity::getMaxZTPositionAndWidth(
   if (!widthRes.ok()) {
     return widthRes.error();
   }
-  double width = *widthRes;
+  long double width = *widthRes;
   ZTPositionAndWidth maxZTAndWidth{maxZT, width};
   return maxZTAndWidth;
 }
@@ -236,13 +240,13 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
   // Loop over bins
   for (std::uint32_t i = 0; i < temporalTrkGridSize; i++) {
     std::int32_t tBin = firstTBin + i;
-    double t = getTemporalBinCenter(tBin);
+    long double t = getTemporalBinCenter(tBin);
     if (t < m_cfg.temporalWindow.first || t > m_cfg.temporalWindow.second) {
       continue;
     }
     for (std::uint32_t j = 0; j < spatialTrkGridSize; j++) {
       std::int32_t zBin = firstZBin + j;
-      double z = getSpatialBinCenter(zBin);
+      long double z = getSpatialBinCenter(zBin);
       if (z < m_cfg.spatialWindow.first || z > m_cfg.spatialWindow.second) {
         continue;
       }
@@ -251,7 +255,7 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
       // Transformation to coordinate system with origin at the track center
       binCoords -= impactParams;
       Bin bin = {zBin, tBin};
-      double density = 0;
+      long double density = 0;
       if (m_cfg.useTime) {
         density = multivariateGaussian<3>(binCoords, cov);
       } else {
@@ -268,7 +272,7 @@ AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::createTrackGrid(
   return trackDensityMap;
 }
 
-Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
+Result<long double> AdaptiveGridTrackDensity::estimateSeedWidth(
     const DensityMap& densityMap, const ZTPosition& maxZT) const {
   if (densityMap.empty()) {
     return VertexingError::EmptyInput;
@@ -277,10 +281,10 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   // Get z and t bin of max density
   std::int32_t zMaxBin = getBin(maxZT.first, m_cfg.spatialBinExtent);
   std::int32_t tMaxBin = getBin(maxZT.second, m_cfg.temporalBinExtent);
-  double maxValue = densityMap.at({zMaxBin, tMaxBin});
+  long double maxValue = densityMap.at({zMaxBin, tMaxBin});
 
   std::int32_t rhmBin = zMaxBin;
-  double gridValue = maxValue;
+  long double gridValue = maxValue;
   // Boolean indicating whether we find a filled bin that has a densityValue <=
   // maxValue/2
   bool binFilled = true;
@@ -295,13 +299,13 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  double rightDensity = 0;
+  long double rightDensity = 0;
   if (binFilled) {
     rightDensity = densityMap.at({rhmBin, tMaxBin});
   }
-  double leftDensity = densityMap.at({rhmBin - 1, tMaxBin});
-  double deltaZ1 = m_cfg.spatialBinExtent * (maxValue / 2 - leftDensity) /
-                   (rightDensity - leftDensity);
+  long double leftDensity = densityMap.at({rhmBin - 1, tMaxBin});
+  long double deltaZ1 = m_cfg.spatialBinExtent * (maxValue / 2 - leftDensity) /
+                        (rightDensity - leftDensity);
 
   std::int32_t lhmBin = zMaxBin;
   gridValue = maxValue;
@@ -323,13 +327,14 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   } else {
     leftDensity = 0;
   }
-  double deltaZ2 = m_cfg.spatialBinExtent * (rightDensity - maxValue / 2) /
-                   (rightDensity - leftDensity);
+  long double deltaZ2 = m_cfg.spatialBinExtent * (rightDensity - maxValue / 2) /
+                        (rightDensity - leftDensity);
 
-  double fwhm = (rhmBin - lhmBin) * m_cfg.spatialBinExtent - deltaZ1 - deltaZ2;
+  long double fwhm =
+      (rhmBin - lhmBin) * m_cfg.spatialBinExtent - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
-  double width = fwhm / 2.355;
+  long double width = fwhm / 2.355;
 
   return std::isnormal(width) ? width : 0.0;
 }
@@ -339,18 +344,18 @@ AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
   // The global maximum
   auto firstMax = highestDensityEntry(densityMap);
   Bin binFirstMax = firstMax->first;
-  double valueFirstMax = firstMax->second;
-  double firstSum = getDensitySum(densityMap, binFirstMax);
+  long double valueFirstMax = firstMax->second;
+  long double firstSum = getDensitySum(densityMap, binFirstMax);
   // Smaller maxima must have a density of at least:
   // valueFirstMax - densityDeviation
-  double densityDeviation = valueFirstMax * m_cfg.maxRelativeDensityDev;
+  long double densityDeviation = valueFirstMax * m_cfg.maxRelativeDensityDev;
 
   // Get the second highest maximum
   densityMap[binFirstMax] = 0;
   auto secondMax = highestDensityEntry(densityMap);
   Bin binSecondMax = secondMax->first;
-  double valueSecondMax = secondMax->second;
-  double secondSum = 0;
+  long double valueSecondMax = secondMax->second;
+  long double secondSum = 0;
   if (valueFirstMax - valueSecondMax < densityDeviation) {
     secondSum = getDensitySum(densityMap, binSecondMax);
   } else {
@@ -364,8 +369,8 @@ AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
   densityMap[binSecondMax] = 0;
   auto thirdMax = highestDensityEntry(densityMap);
   Bin binThirdMax = thirdMax->first;
-  double valueThirdMax = thirdMax->second;
-  double thirdSum = 0;
+  long double valueThirdMax = thirdMax->second;
+  long double thirdSum = 0;
   if (valueFirstMax - valueThirdMax < densityDeviation) {
     thirdSum = getDensitySum(densityMap, binThirdMax);
   }
@@ -384,8 +389,8 @@ AdaptiveGridTrackDensity::Bin AdaptiveGridTrackDensity::highestDensitySumBin(
   return binFirstMax;
 }
 
-double AdaptiveGridTrackDensity::getDensitySum(const DensityMap& densityMap,
-                                               const Bin& bin) const {
+long double AdaptiveGridTrackDensity::getDensitySum(
+    const DensityMap& densityMap, const Bin& bin) const {
   auto valueOrZero = [&densityMap](const Bin& b) {
     if (auto it = densityMap.find(b); it != densityMap.end()) {
       return it->second;

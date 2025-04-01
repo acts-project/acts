@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   // CylinderBounds) to construct
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  double radius(0.5), halfz(10.);
+  long double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
   auto pCylinderLayer =
       CylinderLayer::create(pTransform, pCylinder, nullptr, 1.);
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds),
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
-  const double thickness(1.0);
+  const long double thickness(1.0);
   auto pCylinderLayerFromSurfaces =
       CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
   BOOST_CHECK_EQUAL(pCylinderLayerFromSurfaces->layerType(),
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
 BOOST_AUTO_TEST_CASE(CylinderLayerProperties) {
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
-  double radius(0.5), halfz(10.);
+  long double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
   auto pCylinderLayer =
       CylinderLayer::create(pTransform, pCylinder, nullptr, 1.);

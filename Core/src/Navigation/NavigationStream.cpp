@@ -18,7 +18,7 @@ namespace Acts {
 bool NavigationStream::initialize(const GeometryContext& gctx,
                                   const QueryPoint& queryPoint,
                                   const BoundaryTolerance& cTolerance,
-                                  double onSurfaceTolerance) {
+                                  long double onSurfaceTolerance) {
   // Position and direction from the query point
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
@@ -95,7 +95,7 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
 bool NavigationStream::update(const GeometryContext& gctx,
                               const QueryPoint& queryPoint,
-                              double onSurfaceTolerance) {
+                              long double onSurfaceTolerance) {
   // Loop over the (currently valid) candidates and update
   for (; m_currentIndex < m_candidates.size(); ++m_currentIndex) {
     // Get the candidate, and resolve the tuple

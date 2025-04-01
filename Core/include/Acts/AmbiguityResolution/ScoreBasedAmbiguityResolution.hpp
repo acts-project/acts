@@ -52,7 +52,7 @@ class ScoreBasedAmbiguityResolution {
     int otherScoreWeight = 0;
 
     // the eta bins for the detector
-    std::vector<double> etaBins = {-5, 5};
+    std::vector<long double> etaBins = {-5, 5};
 
     // the minimum number of hits for each eta bin
     std::vector<std::size_t> minHitsPerEta = {0};
@@ -77,12 +77,12 @@ class ScoreBasedAmbiguityResolution {
     /// a list of values from  0 to 1, the higher number of hits, higher value
     /// in the list is multiplied to ambuiguity score applied only if
     /// useAmbiguityScoring is true
-    std::vector<double> factorHits = {1.0};
+    std::vector<long double> factorHits = {1.0};
 
     /// a list of values from  0 to 1, the higher number of holes, lower value
     /// in the list is multiplied to ambuiguity score applied only if
     /// useAmbiguityScoring is true
-    std::vector<double> factorHoles = {1.0};
+    std::vector<long double> factorHoles = {1.0};
   };
 
   /// @brief  TrackFeatures struct : contains the features that are counted for each track.
@@ -113,9 +113,9 @@ class ScoreBasedAmbiguityResolution {
     std::map<std::size_t, std::size_t> volumeMap = {{0, 0}};
     std::vector<DetectorConfig> detectorConfigs;
     /// minimum score for any track
-    double minScore = 0;
+    long double minScore = 0;
     /// minimum score for shared tracks
-    double minScoreSharedTracks = 0;
+    long double minScoreSharedTracks = 0;
     /// maximum number of shared tracks per measurement
     std::size_t maxSharedTracksPerMeasurement = 10;
     /// maximum number of shared hit per track
@@ -137,7 +137,7 @@ class ScoreBasedAmbiguityResolution {
     using OptionalCuts = std::function<bool(const track_proxy_t&)>;
 
     using OptionalScoreModifier =
-        std::function<void(const track_proxy_t&, double&)>;
+        std::function<void(const track_proxy_t&, long double&)>;
 
     using OptionalHitSelection = std::function<void(
         const track_proxy_t&,
@@ -172,7 +172,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
-  std::vector<double> simpleScore(
+  std::vector<long double> simpleScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
@@ -185,7 +185,7 @@ class ScoreBasedAmbiguityResolution {
   /// @param optionals is the user defined optional cuts to be applied.
   /// @return a vector of scores for each track
   template <TrackContainerFrontend track_container_t>
-  std::vector<double> ambiguityScore(
+  std::vector<long double> ambiguityScore(
       const track_container_t& tracks,
       const std::vector<std::vector<TrackFeatures>>& trackFeaturesVectors,
       const Optionals<typename track_container_t::ConstTrackProxy>& optionals =
@@ -199,7 +199,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return true if the track is rejected, false otherwise
   bool etaBasedCuts(const DetectorConfig& detector,
                     const TrackFeatures& trackFeatures,
-                    const double& eta) const;
+                    const long double& eta) const;
 
   /// Remove hits that are not good enough for each track and removes tracks
   /// that have a score below a certain threshold or not enough hits.
@@ -213,7 +213,7 @@ class ScoreBasedAmbiguityResolution {
   /// @return a vector of IDs of the tracks we want to keep
   template <TrackProxyConcept track_proxy_t>
   bool getCleanedOutTracks(
-      const track_proxy_t& track, const double& trackScore,
+      const track_proxy_t& track, const long double& trackScore,
       const std::vector<std::size_t>& measurementsPerTrack,
       const std::map<std::size_t, std::size_t>& nTracksPerMeasurement,
       const std::vector<std::function<

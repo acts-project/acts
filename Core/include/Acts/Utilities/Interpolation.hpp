@@ -41,11 +41,11 @@ namespace Acts {
 ///      \text{upperCorner}[i] \quad \forall i=0, \dots, d-1\f$.
 ///
 /// @note
-/// - Given @c U and @c V of value type @c T as well as two @c double @c a and
+/// - Given @c U and @c V of value type @c T as well as two @c long double @c a and
 /// @c b, then the following must be a valid expression <tt>a * U + b * V</tt>
 /// yielding an object which is (implicitly) convertible to @c T.
 /// - All @c Point types must represent d-dimensional positions and support
-/// coordinate access using @c operator[] which should return a @c double (or a
+/// coordinate access using @c operator[] which should return a @c long double (or a
 /// value which is implicitly convertible). Coordinate indices must start at 0.
 /// - @c N is the number of hyper box corners which is \f$2^d\f$ where \f$d\f$
 /// is the dimensionality of the hyper box. The dimensionality must be

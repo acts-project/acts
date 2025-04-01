@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TestConstruction) {
   }
 
   {
-    using Result = Result<double, std::string>;
+    using Result = Result<long double, std::string>;
 
     Result res1("hallo");
     BOOST_CHECK(!res1.ok());
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   std::error_code ec = err1;
 
   {
-    using Result = Result<double, MyError>;
+    using Result = Result<long double, MyError>;
 
     Result res(42.);
     BOOST_CHECK(res.ok());
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
-    using Result = Result<double, std::error_code>;
+    using Result = Result<long double, std::error_code>;
 
     Result res(42.);
     BOOST_CHECK(res.ok());
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
-    using Result = Result<double, const char*>;
+    using Result = Result<long double, const char*>;
     Result res{0.};
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(*res, 0.0);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
-    using Result = Result<const char*, double>;
+    using Result = Result<const char*, long double>;
     Result res{0.};
     BOOST_CHECK(!res.ok());
     BOOST_CHECK_EQUAL(res.error(), 0.0);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
-    using Result = Result<double, int>;
+    using Result = Result<long double, int>;
     Result res = Result::success(2);
     BOOST_CHECK(res.ok());
     BOOST_CHECK_EQUAL(res.value(), 2.0);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(TestErrorCodes) {
   }
 
   {
-    using Result = Result<double>;
+    using Result = Result<long double>;
 
     Result res(42.);
     BOOST_CHECK(res.ok());

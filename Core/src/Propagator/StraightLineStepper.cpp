@@ -60,7 +60,7 @@ void StraightLineStepper::initialize(State& state,
   }
 }
 
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
+Result<std::tuple<BoundTrackParameters, BoundMatrix, long double>>
 StraightLineStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
@@ -71,7 +71,7 @@ StraightLineStepper::boundState(
       state.pathAccumulated, freeToBoundCorrection);
 }
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, long double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
@@ -91,8 +91,8 @@ void StraightLineStepper::update(State& state, const FreeVector& freeParams,
 }
 
 void StraightLineStepper::update(State& state, const Vector3& uposition,
-                                 const Vector3& udirection, double qop,
-                                 double time) const {
+                                 const Vector3& udirection, long double qop,
+                                 long double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;

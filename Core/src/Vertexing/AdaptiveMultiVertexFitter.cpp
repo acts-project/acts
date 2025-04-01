@@ -236,7 +236,7 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setAllVertexCompatibilities(
       vtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
-    Acts::Result<double> compatibilityResult(0.);
+    Acts::Result<long double> compatibilityResult(0.);
     if (m_cfg.useTime) {
       compatibilityResult = m_cfg.ipEst.getVertexCompatibility(
           vertexingOptions.geoContext, &(vtxInfo.impactParams3D.at(trk)),
@@ -309,11 +309,11 @@ Acts::Result<void> Acts::AdaptiveMultiVertexFitter::setWeightsAndUpdate(
   return {};
 }
 
-std::vector<double>
+std::vector<long double>
 Acts::AdaptiveMultiVertexFitter::collectTrackToVertexCompatibilities(
     State& state, const InputTrack& trk) const {
   // Compatibilities of trk wrt all of its associated vertices
-  std::vector<double> trkToVtxCompatibilities;
+  std::vector<long double> trkToVtxCompatibilities;
 
   // Range of vertices that are associated with trk. The range is
   // represented via its bounds: begin refers to the first iterator of the
@@ -338,7 +338,7 @@ bool Acts::AdaptiveMultiVertexFitter::checkSmallShift(State& state) const {
     Vector3 diff =
         state.vtxInfoMap[vtx].oldPosition.template head<3>() - vtx->position();
     const SquareMatrix3& vtxCov = vtx->covariance();
-    double relativeShift = diff.dot(vtxCov.inverse() * diff);
+    long double relativeShift = diff.dot(vtxCov.inverse() * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
     }

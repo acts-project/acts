@@ -17,7 +17,7 @@ class ConeBounds;
 Acts::ConeLayer::ConeLayer(const Transform3& transform,
                            std::shared_ptr<const ConeBounds> cbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,
-                           double thickness,
+                           long double thickness,
                            std::unique_ptr<ApproachDescriptor> ade,
                            LayerType laytyp)
     : ConeSurface(transform, std::move(cbounds)),

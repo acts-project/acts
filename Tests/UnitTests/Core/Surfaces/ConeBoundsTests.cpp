@@ -35,11 +35,11 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const double alpha = std::numbers::pi / 8.;
-const double zMin = 3.;
-const double zMax = 6.;
-const double halfPhi = std::numbers::pi / 4.;
-const double averagePhi = 0.;
+const long double alpha = std::numbers::pi / 8.;
+const long double zMin = 3.;
+const long double zMax = 6.;
+const long double halfPhi = std::numbers::pi / 4.;
+const long double averagePhi = 0.;
 const bool symmetric = false;
 
 /// Unit test for creating compliant/non-compliant ConeBounds object
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
 BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
   ConeBounds original(alpha, zMin, zMax, halfPhi, averagePhi);
   auto valvector = original.values();
-  std::array<double, ConeBounds::eSize> values{};
+  std::array<long double, ConeBounds::eSize> values{};
   std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
   ConeBounds recreated(values);
 

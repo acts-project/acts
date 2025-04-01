@@ -69,7 +69,8 @@ FreeVector transformBoundToFreeParameters(const Surface& surface,
 /// @return Bound track parameters vector on the given surface
 Result<BoundVector> transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,
-    const GeometryContext& geoCtx, double tolerance = s_onSurfaceTolerance);
+    const GeometryContext& geoCtx,
+    long double tolerance = s_onSurfaceTolerance);
 
 /// Convert position and direction to bound track parameters.
 ///
@@ -83,9 +84,9 @@ Result<BoundVector> transformFreeToBoundParameters(
 ///
 /// @return Equivalent bound parameters vector on the given surface
 Result<BoundVector> transformFreeToBoundParameters(
-    const Vector3& position, double time, const Vector3& direction,
-    double qOverP, const Surface& surface, const GeometryContext& geoCtx,
-    double tolerance = s_onSurfaceTolerance);
+    const Vector3& position, long double time, const Vector3& direction,
+    long double qOverP, const Surface& surface, const GeometryContext& geoCtx,
+    long double tolerance = s_onSurfaceTolerance);
 
 /// Convert direction to curvilinear track parameters.
 ///
@@ -97,9 +98,9 @@ Result<BoundVector> transformFreeToBoundParameters(
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(double time,
+BoundVector transformFreeToCurvilinearParameters(long double time,
                                                  const Vector3& direction,
-                                                 double qOverP);
+                                                 long double qOverP);
 
 /// Convert direction angles to curvilinear track parameters.
 ///
@@ -112,7 +113,9 @@ BoundVector transformFreeToCurvilinearParameters(double time,
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction angles. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearParameters(double time, double phi,
-                                                 double theta, double qOverP);
+BoundVector transformFreeToCurvilinearParameters(long double time,
+                                                 long double phi,
+                                                 long double theta,
+                                                 long double qOverP);
 
 }  // namespace Acts

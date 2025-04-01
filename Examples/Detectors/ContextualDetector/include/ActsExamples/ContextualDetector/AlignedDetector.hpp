@@ -30,13 +30,13 @@ class AlignedDetector : public Detector {
     /// Run the garbage collection?
     bool doGarbageCollection = true;
     /// Sigma of the in-plane misalignment
-    double sigmaInPlane = 100 * Acts::UnitConstants::um;
+    long double sigmaInPlane = 100 * Acts::UnitConstants::um;
     /// Sigma of the out-of-plane misalignment
-    double sigmaOutPlane = 50 * Acts::UnitConstants::um;
+    long double sigmaOutPlane = 50 * Acts::UnitConstants::um;
     /// Sigma of the in-plane rotation misalignment
-    double sigmaInRot = 20 * 0.001;  // millirad
+    long double sigmaInRot = 20 * 0.001;  // millirad
     /// Sigma of the out-of-plane rotation misalignment
-    double sigmaOutRot = 0;
+    long double sigmaOutRot = 0;
     /// Keep the first iov batch nominal.
     bool firstIovNominal = false;
     /// Log level for the decorator

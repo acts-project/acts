@@ -30,7 +30,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr double unitLength =
+  static constexpr long double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -39,7 +39,7 @@ Acts::detail::GeoPolygonConverter::operator()(
   auto rotation = absTransform.rotation();
   // Get the half lengths
   int nVertices = polygon.getNVertices();
-  std::vector<std::vector<double>> vertices;
+  std::vector<std::vector<long double>> vertices;
 
   for (int i = 0; i < nVertices; i++) {
     vertices.push_back({polygon.getXVertex(i), polygon.getYVertex(i)});
@@ -47,10 +47,10 @@ Acts::detail::GeoPolygonConverter::operator()(
   // sort based on the y-coordinate
   std::ranges::sort(vertices, {}, [](const auto& v) { return v[1]; });
   if (nVertices == 4) {
-    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
-    double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxposy, hly};
+    long double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    long double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    long double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
+    std::vector<long double> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
     Vector3 colX = rotation.col(0);
@@ -61,9 +61,9 @@ Acts::detail::GeoPolygonConverter::operator()(
     rotation.col(2) = colZ;
     transform.linear() = rotation;
     // Create the surface bounds
-    double halfXnegY = unitLength * halfLengths[0];
-    double halfXposY = unitLength * halfLengths[1];
-    double halfY = unitLength * halfLengths[2];
+    long double halfXnegY = unitLength * halfLengths[0];
+    long double halfXposY = unitLength * halfLengths[1];
+    long double halfY = unitLength * halfLengths[2];
     auto trapBounds =
         std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
     if (!sensitive) {
@@ -78,11 +78,12 @@ Acts::detail::GeoPolygonConverter::operator()(
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else if (nVertices == 6) {
-    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
-    double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
-    double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
+    long double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    long double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    long double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
+    long double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
+    std::vector<long double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
+                                            hly};
 
     // Create the surface
 
@@ -95,11 +96,11 @@ Acts::detail::GeoPolygonConverter::operator()(
     transform.linear() = rotation;
 
     // Create the surface bounds
-    double halfXnegY = unitLength * halfLengths[0];
-    double halfXzeroY = unitLength * halfLengths[1];
-    double halfXposY = unitLength * halfLengths[2];
-    double halfYnegX = unitLength * halfLengths[3];
-    double halfYposX = unitLength * halfLengths[4];
+    long double halfXnegY = unitLength * halfLengths[0];
+    long double halfXzeroY = unitLength * halfLengths[1];
+    long double halfXposY = unitLength * halfLengths[2];
+    long double halfYnegX = unitLength * halfLengths[3];
+    long double halfYposX = unitLength * halfLengths[4];
 
     auto diamondBounds = std::make_shared<Acts::DiamondBounds>(
         halfXnegY, halfXzeroY, halfXposY, halfYnegX, halfYposX);

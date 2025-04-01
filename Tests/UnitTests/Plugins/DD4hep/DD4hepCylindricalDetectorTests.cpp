@@ -73,9 +73,9 @@ const char* plugin_xml =
       <argument value="acts_world: bool = true"/>
       <argument value="acts_world_type: int = 3"/>
       <argument value="acts_world_bvalues_n: int = 3"/>
-      <argument value="acts_world_bvalues_0: double = 0"/>
-      <argument value="acts_world_bvalues_1: double = 150*mm"/>
-      <argument value="acts_world_bvalues_2: double = 1000*mm"/>
+      <argument value="acts_world_bvalues_0: long double = 0"/>
+      <argument value="acts_world_bvalues_1: long double = 150*mm"/>
+      <argument value="acts_world_bvalues_2: long double = 1000*mm"/>
       <argument value="acts_world_binning: str = r"/>
       <argument value="acts_world_geo_id: str = incremental"/>
       <argument value="acts_world_root_volume_finder: str = indexed"/>
@@ -85,9 +85,9 @@ const char* plugin_xml =
       <argument value="acts_volume: bool = true"/>
       <argument value="acts_volume_type: int = 3"/>
       <argument value="acts_volume_bvalues_n: int = 3"/>
-      <argument value="acts_volume_bvalues_0: double = 0"/>
-      <argument value="acts_volume_bvalues_1: double = 20*mm"/>
-      <argument value="acts_volume_bvalues_2: double = 1000*mm"/>
+      <argument value="acts_volume_bvalues_0: long double = 0"/>
+      <argument value="acts_volume_bvalues_1: long double = 20*mm"/>
+      <argument value="acts_volume_bvalues_2: long double = 1000*mm"/>
       <argument value="acts_volume_internals: bool = true"/>
       <argument value="acts_volume_internals_type: str = layer"/>
     </plugin>
@@ -96,9 +96,9 @@ const char* plugin_xml =
       <argument value="acts_container: bool = true"/>
       <argument value="acts_container_type: int = 3"/>
       <argument value="acts_container_bvalues_n: int = 3"/>
-      <argument value="acts_container_bvalues_0: double = 20*mm"/>
-      <argument value="acts_container_bvalues_1: double = 150*mm"/>
-      <argument value="acts_container_bvalues_2: double = 1000*mm"/>
+      <argument value="acts_container_bvalues_0: long double = 20*mm"/>
+      <argument value="acts_container_bvalues_1: long double = 150*mm"/>
+      <argument value="acts_container_bvalues_2: long double = 1000*mm"/>
       <argument value="acts_container_binning: str = z"/>
     </plugin>
     <plugin name="DD4hep_ParametersPlugin">
@@ -106,20 +106,20 @@ const char* plugin_xml =
       <argument value="acts_container: bool = true"/>
       <argument value="acts_container_type: int = 3"/>
       <argument value="acts_container_bvalues_n: int = 3"/>
-      <argument value="acts_container_bvalues_0: double = 20*mm"/>
-      <argument value="acts_container_bvalues_1: double = 150*mm"/>
-      <argument value="acts_container_bvalues_2: double = 200*mm"/>
+      <argument value="acts_container_bvalues_0: long double = 20*mm"/>
+      <argument value="acts_container_bvalues_1: long double = 150*mm"/>
+      <argument value="acts_container_bvalues_2: long double = 200*mm"/>
       <argument value="acts_container_binning: str = z"/>
-      <argument value="acts_container_z: double = -800*mm"/>
+      <argument value="acts_container_z: long double = -800*mm"/>
     </plugin>
     <plugin name="DD4hep_ParametersPlugin">
       <argument value="PixelBarrel"/>
       <argument value="acts_container: bool = true"/>
       <argument value="acts_container_type: int = 3"/>
       <argument value="acts_container_bvalues_n: int = 3"/>
-      <argument value="acts_container_bvalues_0: double = 20*mm"/>
-      <argument value="acts_container_bvalues_1: double = 150*mm"/>
-      <argument value="acts_container_bvalues_2: double = 600*mm"/>
+      <argument value="acts_container_bvalues_0: long double = 20*mm"/>
+      <argument value="acts_container_bvalues_1: long double = 150*mm"/>
+      <argument value="acts_container_bvalues_2: long double = 600*mm"/>
       <argument value="acts_container_binning: str = r"/>
     </plugin>
     <plugin name="DD4hep_ParametersPlugin">
@@ -127,11 +127,11 @@ const char* plugin_xml =
       <argument value="acts_container: bool = true"/>
       <argument value="acts_container_type: int = 3"/>
       <argument value="acts_container_bvalues_n: int = 3"/>
-      <argument value="acts_container_bvalues_0: double = 20*mm"/>
-      <argument value="acts_container_bvalues_1: double = 150*mm"/>
-      <argument value="acts_container_bvalues_2: double = 200*mm"/>
+      <argument value="acts_container_bvalues_0: long double = 20*mm"/>
+      <argument value="acts_container_bvalues_1: long double = 150*mm"/>
+      <argument value="acts_container_bvalues_2: long double = 200*mm"/>
       <argument value="acts_container_binning: str = z"/>
-      <argument value="acts_container_z: double = 800*mm"/>
+      <argument value="acts_container_z: long double = 800*mm"/>
     </plugin>
   </plugins>
   )""";
@@ -146,7 +146,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
   Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
 
   // Nec surfaces
-  double necZ = -800.;
+  long double necZ = -800.;
   auto necR0Surfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                               42., necZ, 2., 22u);
 
@@ -157,7 +157,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
                                                                 necR1Surfaces};
 
   // Barrel surfaces
-  std::vector<std::array<double, 2u>> innerOuter = {
+  std::vector<std::array<long double, 2u>> innerOuter = {
       {25., 35.}, {65., 75.}, {110., 120.}};
   auto b0Surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.14,
                                                31., 3., 2., {16, 14});
@@ -172,7 +172,7 @@ Acts::Test::CylindricalTrackingGeometry::DetectorStore generateXML() {
       b0Surfaces, b1Surfaces, b2Surfaces};
 
   // Nec surfaces
-  double pecZ = 800.;
+  long double pecZ = 800.;
   auto pecR0Surfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 18., 0.125, 0.,
                                               42., pecZ, 2., 22u);
 

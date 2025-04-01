@@ -49,16 +49,17 @@ BOOST_DATA_TEST_CASE(EtaFromThetaRobustness, bd::xrange(0, 1000, 1), exponent) {
   {
     // check right
 
-    double thetaRight = exponent < 300 ? std::pow(10.0, -1.0 * exponent) : 0.0;
+    long double thetaRight =
+        exponent < 300 ? std::pow(10.0, -1.0 * exponent) : 0.0;
 
-    double etaRight = etaFromTheta<double>(thetaRight);
+    long double etaRight = etaFromTheta<long double>(thetaRight);
     BOOST_CHECK(!std::isnan(etaRight));
 
     // check left
 
-    double thetaLeft = std::numbers::pi - thetaRight;
+    long double thetaLeft = std::numbers::pi - thetaRight;
 
-    double etaLeft = etaFromTheta<double>(thetaLeft);
+    long double etaLeft = etaFromTheta<long double>(thetaLeft);
     BOOST_CHECK(!std::isnan(etaLeft));
   }
 }
@@ -82,14 +83,14 @@ BOOST_DATA_TEST_CASE(ThetaFromEtaRobustness, bd::xrange(1.0, 1000.0, 1.0),
   {
     // check right
 
-    double thetaRight = thetaFromEta<double>(etaRight);
+    long double thetaRight = thetaFromEta<long double>(etaRight);
     BOOST_CHECK(!std::isnan(thetaRight));
 
     // check left
 
-    double etaLeft = -etaRight;
+    long double etaLeft = -etaRight;
 
-    double thetaLeft = thetaFromEta<double>(etaLeft);
+    long double thetaLeft = thetaFromEta<long double>(etaLeft);
     BOOST_CHECK(!std::isnan(thetaLeft));
   }
 }

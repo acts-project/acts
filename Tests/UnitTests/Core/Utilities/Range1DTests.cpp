@@ -32,11 +32,11 @@ BOOST_AUTO_TEST_CASE(infinite_range_int) {
   BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<int>::max());
 }
 
-BOOST_AUTO_TEST_CASE(infinite_range_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(infinite_range_long double) {
+  Acts::Range1D<long double> r;
 
-  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<double>::lowest());
-  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<long double>::lowest());
+  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<long double>::max());
 }
 
 BOOST_AUTO_TEST_CASE(constructor_range_int) {
@@ -46,56 +46,56 @@ BOOST_AUTO_TEST_CASE(constructor_range_int) {
   BOOST_CHECK_EQUAL(r.max(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_range_double) {
-  Acts::Range1D<double> r(-11.0, 2.0);
+BOOST_AUTO_TEST_CASE(constructor_range_long double) {
+  Acts::Range1D<long double> r(-11.0, 2.0);
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_copy_double) {
-  Acts::Range1D<double> q(-11.0, 2.0);
-  Acts::Range1D<double> r(q);
+BOOST_AUTO_TEST_CASE(constructor_copy_long double) {
+  Acts::Range1D<long double> q(-11.0, 2.0);
+  Acts::Range1D<long double> r(q);
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(constructor_tuple_double) {
-  Acts::Range1D<double> r(std::pair<double, double>(-11.0, 2.0));
+BOOST_AUTO_TEST_CASE(constructor_tuple_long double) {
+  Acts::Range1D<long double> r(std::pair<long double, long double>(-11.0, 2.0));
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(assign_double) {
-  Acts::Range1D<double> q(-11.0, 2.0);
-  Acts::Range1D<double> r = q;
+BOOST_AUTO_TEST_CASE(assign_long double) {
+  Acts::Range1D<long double> q(-11.0, 2.0);
+  Acts::Range1D<long double> r = q;
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrinkMin_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrinkMin_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrinkMin(-11.0);
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
-  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<long double>::max());
 }
 
-BOOST_AUTO_TEST_CASE(shrinkMax_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrinkMax_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrinkMax(2.0);
 
-  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<double>::lowest());
+  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<long double>::lowest());
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_both_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_both_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrinkMin(-11.0);
   r.shrinkMax(2.0);
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(shrink_both_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrink(-11.0, 2.0);
 
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(shrink_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_twice_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_twice_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrink(-100.0, 20.0);
   r.shrink(-11.0, 2.0);
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(shrink_twice_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_noop_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_noop_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrink(-11.0, 2.0);
   r.shrink(-100.0, 20.0);
@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(shrink_noop_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_noop_min_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_noop_min_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrink(-11.0, 2.0);
   r.shrink(-100.0, 1.0);
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(shrink_noop_min_double) {
   BOOST_CHECK_EQUAL(r.max(), 1.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrink_noop_max_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrink_noop_max_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrink(-11.0, 2.0);
   r.shrink(-10.0, 20.0);
@@ -153,66 +153,66 @@ BOOST_AUTO_TEST_CASE(shrink_noop_max_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(shrinkMin_noop_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrinkMin_noop_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrinkMin(-11.0);
   r.shrinkMin(-100.0);
 
   BOOST_CHECK_EQUAL(r.min(), -11.0);
-  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<long double>::max());
 }
 
-BOOST_AUTO_TEST_CASE(shrinkMax_noop_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(shrinkMax_noop_long double) {
+  Acts::Range1D<long double> r;
 
   r.shrinkMax(2.0);
   r.shrinkMax(4.0);
 
-  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<double>::lowest());
+  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<long double>::lowest());
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(setMin_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(setMin_long double) {
+  Acts::Range1D<long double> r;
 
   r.setMin(2.0);
 
   BOOST_CHECK_EQUAL(r.min(), 2.0);
-  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<long double>::max());
 }
 
-BOOST_AUTO_TEST_CASE(setMin_twice_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(setMin_twice_long double) {
+  Acts::Range1D<long double> r;
 
   r.setMin(-2.0);
   r.setMin(-4.0);
 
   BOOST_CHECK_EQUAL(r.min(), -4.0);
-  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r.max(), std::numeric_limits<long double>::max());
 }
 
-BOOST_AUTO_TEST_CASE(setMax_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(setMax_long double) {
+  Acts::Range1D<long double> r;
 
   r.setMax(2.0);
 
-  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<double>::lowest());
+  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<long double>::lowest());
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(setMax_twice_double) {
-  Acts::Range1D<double> r;
+BOOST_AUTO_TEST_CASE(setMax_twice_long double) {
+  Acts::Range1D<long double> r;
 
   r.setMax(2.0);
   r.setMax(4.0);
 
-  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<double>::lowest());
+  BOOST_CHECK_EQUAL(r.min(), std::numeric_limits<long double>::lowest());
   BOOST_CHECK_EQUAL(r.max(), 4.0);
 }
 
-BOOST_AUTO_TEST_CASE(expandMin_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expandMin_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expandMin(-11.0);
 
@@ -220,8 +220,8 @@ BOOST_AUTO_TEST_CASE(expandMin_double) {
   BOOST_CHECK_EQUAL(r.max(), 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(expandMax_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expandMax_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expandMax(2.0);
 
@@ -229,8 +229,8 @@ BOOST_AUTO_TEST_CASE(expandMax_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_both_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_both_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expandMin(-11.0);
   r.expandMax(2.0);
@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE(expand_both_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expand(-11.0, 2.0);
 
@@ -248,8 +248,8 @@ BOOST_AUTO_TEST_CASE(expand_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_twice_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_twice_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expand(-11.0, 2.0);
   r.expand(-100.0, 20.0);
@@ -258,8 +258,8 @@ BOOST_AUTO_TEST_CASE(expand_twice_double) {
   BOOST_CHECK_EQUAL(r.max(), 20.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_noop_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_noop_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expand(-100.0, 20.0);
   r.expand(-11.0, 2.0);
@@ -268,8 +268,8 @@ BOOST_AUTO_TEST_CASE(expand_noop_double) {
   BOOST_CHECK_EQUAL(r.max(), 20.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_noop_min_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_noop_min_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expand(-100.0, 1.0);
   r.expand(-11.0, 2.0);
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(expand_noop_min_double) {
   BOOST_CHECK_EQUAL(r.max(), 2.0);
 }
 
-BOOST_AUTO_TEST_CASE(expand_noop_max_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expand_noop_max_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expand(-10.0, 20.0);
   r.expand(-11.0, 2.0);
@@ -288,8 +288,8 @@ BOOST_AUTO_TEST_CASE(expand_noop_max_double) {
   BOOST_CHECK_EQUAL(r.max(), 20.0);
 }
 
-BOOST_AUTO_TEST_CASE(expandMin_noop_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expandMin_noop_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expandMin(-100.0);
   r.expandMin(-11.0);
@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(expandMin_noop_double) {
   BOOST_CHECK_EQUAL(r.max(), 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(expandMax_noop_double) {
-  Acts::Range1D<double> r(0.0, 0.0);
+BOOST_AUTO_TEST_CASE(expandMax_noop_long double) {
+  Acts::Range1D<long double> r(0.0, 0.0);
 
   r.expandMax(4.0);
   r.expandMax(2.0);
@@ -308,38 +308,38 @@ BOOST_AUTO_TEST_CASE(expandMax_noop_double) {
   BOOST_CHECK_EQUAL(r.max(), 4.0);
 }
 
-BOOST_AUTO_TEST_CASE(size_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
+BOOST_AUTO_TEST_CASE(size_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
 
   BOOST_CHECK_EQUAL(r.size(), 35.0);
 }
 
-BOOST_AUTO_TEST_CASE(size_zero_double) {
-  Acts::Range1D<double> r(-10.0, -10.0);
+BOOST_AUTO_TEST_CASE(size_zero_long double) {
+  Acts::Range1D<long double> r(-10.0, -10.0);
 
   BOOST_CHECK_EQUAL(r.size(), 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(size_zero2_double) {
-  Acts::Range1D<double> r(-10.0, -50.0);
+BOOST_AUTO_TEST_CASE(size_zero2_long double) {
+  Acts::Range1D<long double> r(-10.0, -50.0);
 
   BOOST_CHECK_EQUAL(r.size(), 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(degenerate_false_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
+BOOST_AUTO_TEST_CASE(degenerate_false_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
 
   BOOST_CHECK(!r.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(degenerate_true_double) {
-  Acts::Range1D<double> r(-10.0, -25.0);
+BOOST_AUTO_TEST_CASE(degenerate_true_long double) {
+  Acts::Range1D<long double> r(-10.0, -25.0);
 
   BOOST_CHECK(r.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(contains_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
+BOOST_AUTO_TEST_CASE(contains_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
 
   BOOST_CHECK(!r.contains(-11.0));
   BOOST_CHECK(!r.contains(-30.0));
@@ -348,8 +348,8 @@ BOOST_AUTO_TEST_CASE(contains_double) {
   BOOST_CHECK(r.contains(10.0));
 }
 
-BOOST_AUTO_TEST_CASE(contains_degenerate_double) {
-  Acts::Range1D<double> r(-10.0, -25.0);
+BOOST_AUTO_TEST_CASE(contains_degenerate_long double) {
+  Acts::Range1D<long double> r(-10.0, -25.0);
 
   BOOST_CHECK(!r.contains(-11.0));
   BOOST_CHECK(!r.contains(-30.0));
@@ -358,37 +358,37 @@ BOOST_AUTO_TEST_CASE(contains_degenerate_double) {
   BOOST_CHECK(!r.contains(10.0));
 }
 
-BOOST_AUTO_TEST_CASE(intersect_true1_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(5.0, 50.0);
+BOOST_AUTO_TEST_CASE(intersect_true1_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(5.0, 50.0);
 
   BOOST_CHECK((r && q));
 }
 
-BOOST_AUTO_TEST_CASE(intersect_true2_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-100.0, 50.0);
+BOOST_AUTO_TEST_CASE(intersect_true2_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-100.0, 50.0);
 
   BOOST_CHECK((r && q));
 }
 
-BOOST_AUTO_TEST_CASE(intersect_true3_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-5.0, 5.0);
+BOOST_AUTO_TEST_CASE(intersect_true3_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-5.0, 5.0);
 
   BOOST_CHECK((r && q));
 }
 
-BOOST_AUTO_TEST_CASE(intersect_false1_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-50.0, -15.0);
+BOOST_AUTO_TEST_CASE(intersect_false1_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-50.0, -15.0);
 
   BOOST_CHECK(!(r && q));
 }
 
-BOOST_AUTO_TEST_CASE(intersect_false2_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(50.0, 55.0);
+BOOST_AUTO_TEST_CASE(intersect_false2_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(50.0, 55.0);
 
   BOOST_CHECK(!(r && q));
 }
@@ -407,125 +407,125 @@ BOOST_AUTO_TEST_CASE(equals_false_int) {
   BOOST_CHECK(!(r == q));
 }
 
-BOOST_AUTO_TEST_CASE(subset1_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(5.0, 50.0);
+BOOST_AUTO_TEST_CASE(subset1_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(5.0, 50.0);
 
   BOOST_CHECK(!(r <= q));
   BOOST_CHECK(!(q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(subset2_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-100.0, 50.0);
+BOOST_AUTO_TEST_CASE(subset2_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-100.0, 50.0);
 
   BOOST_CHECK((r <= q));
   BOOST_CHECK(!(q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(subset3_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-5.0, 5.0);
+BOOST_AUTO_TEST_CASE(subset3_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-5.0, 5.0);
 
   BOOST_CHECK(!(r <= q));
   BOOST_CHECK((q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(subset4_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-50.0, -15.0);
+BOOST_AUTO_TEST_CASE(subset4_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-50.0, -15.0);
 
   BOOST_CHECK(!(r <= q));
   BOOST_CHECK(!(q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(subset5_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(50.0, 55.0);
+BOOST_AUTO_TEST_CASE(subset5_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(50.0, 55.0);
 
   BOOST_CHECK(!(r <= q));
   BOOST_CHECK(!(q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset1_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(5.0, 50.0);
+BOOST_AUTO_TEST_CASE(superset1_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(5.0, 50.0);
 
   BOOST_CHECK(!(r >= q));
   BOOST_CHECK(!(q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset2_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-100.0, 50.0);
+BOOST_AUTO_TEST_CASE(superset2_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-100.0, 50.0);
 
   BOOST_CHECK(!(r >= q));
   BOOST_CHECK((q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset3_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-5.0, 5.0);
+BOOST_AUTO_TEST_CASE(superset3_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-5.0, 5.0);
 
   BOOST_CHECK((r >= q));
   BOOST_CHECK(!(q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset4_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-50.0, -15.0);
+BOOST_AUTO_TEST_CASE(superset4_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-50.0, -15.0);
 
   BOOST_CHECK(!(r >= q));
   BOOST_CHECK(!(q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset5_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(50.0, 55.0);
+BOOST_AUTO_TEST_CASE(superset5_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(50.0, 55.0);
 
   BOOST_CHECK(!(r >= q));
   BOOST_CHECK(!(q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(intersection1_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(5.0, 50.0);
-  Acts::Range1D<double> i = r & q;
+BOOST_AUTO_TEST_CASE(intersection1_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(5.0, 50.0);
+  Acts::Range1D<long double> i = r & q;
 
   BOOST_CHECK_EQUAL(i.min(), 5.0);
   BOOST_CHECK_EQUAL(i.max(), 25.0);
 }
 
-BOOST_AUTO_TEST_CASE(intersection2_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-100.0, 50.0);
-  Acts::Range1D<double> i = r & q;
+BOOST_AUTO_TEST_CASE(intersection2_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-100.0, 50.0);
+  Acts::Range1D<long double> i = r & q;
 
   BOOST_CHECK_EQUAL(i.min(), -10.0);
   BOOST_CHECK_EQUAL(i.max(), 25.0);
 }
 
-BOOST_AUTO_TEST_CASE(intersection3_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-5.0, 5.0);
-  Acts::Range1D<double> i = r & q;
+BOOST_AUTO_TEST_CASE(intersection3_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-5.0, 5.0);
+  Acts::Range1D<long double> i = r & q;
 
   BOOST_CHECK_EQUAL(i.min(), -5.0);
   BOOST_CHECK_EQUAL(i.max(), 5.0);
 }
 
-BOOST_AUTO_TEST_CASE(intersection4_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(-50.0, -15.0);
-  Acts::Range1D<double> i = r & q;
+BOOST_AUTO_TEST_CASE(intersection4_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(-50.0, -15.0);
+  Acts::Range1D<long double> i = r & q;
 
   BOOST_CHECK(i.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(intersection5_double) {
-  Acts::Range1D<double> r(-10.0, 25.0);
-  Acts::Range1D<double> q(50.0, 55.0);
-  Acts::Range1D<double> i = r & q;
+BOOST_AUTO_TEST_CASE(intersection5_long double) {
+  Acts::Range1D<long double> r(-10.0, 25.0);
+  Acts::Range1D<long double> q(50.0, 55.0);
+  Acts::Range1D<long double> i = r & q;
 
   BOOST_CHECK(i.degenerate());
 }

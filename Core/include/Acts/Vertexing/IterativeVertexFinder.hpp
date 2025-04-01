@@ -89,8 +89,8 @@ class IterativeVertexFinder final : public IVertexFinder {
     /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2)
     ///
     /// are considered compatible with the vertex.
-    double significanceCutSeeding = 10;
-    double maximumChi2cutForSeeding = 36.;
+    long double significanceCutSeeding = 10;
+    long double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
 
     /// Assign a certain fraction of compatible tracks to a different (so-called
@@ -103,10 +103,10 @@ class IterativeVertexFinder final : public IVertexFinder {
     bool reassignTracksAfterFirstFit = false;
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
-    double cutOffTrackWeight = 0.01;
+    long double cutOffTrackWeight = 0.01;
     /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
     /// decide if a track should be checked for reassignment to other vertices
-    double cutOffTrackWeightReassign = 1;
+    long double cutOffTrackWeightReassign = 1;
 
     /// Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;
@@ -199,11 +199,11 @@ class IterativeVertexFinder final : public IVertexFinder {
   /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<double> getCompatibility(const BoundTrackParameters& params,
-                                  const Vertex& vertex,
-                                  const Surface& perigeeSurface,
-                                  const VertexingOptions& vertexingOptions,
-                                  State& state) const;
+  Result<long double> getCompatibility(const BoundTrackParameters& params,
+                                       const Vertex& vertex,
+                                       const Surface& perigeeSurface,
+                                       const VertexingOptions& vertexingOptions,
+                                       State& state) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`vertex`) from `tracksToFit` and `seedTracks`

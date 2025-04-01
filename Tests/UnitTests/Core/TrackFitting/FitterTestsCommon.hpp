@@ -44,7 +44,7 @@ using namespace Acts::Test;
 /// to test that the basic principle works using simplified, synthetic data.
 /// Thus, the simplest possible implementation should do.
 struct TestOutlierFinder {
-  double distanceMax = std::numeric_limits<double>::max();
+  long double distanceMax = std::numeric_limits<long double>::max();
 
   /// Classify a measurement as a valid one or an outlier.
   ///
@@ -73,7 +73,7 @@ struct TestOutlierFinder {
 /// Determine if the smoothing of a track should be done with or without reverse
 /// filtering
 struct TestReverseFilteringLogic {
-  double momentumMax = std::numeric_limits<double>::max();
+  long double momentumMax = std::numeric_limits<long double>::max();
 
   /// Classify a measurement as a valid one or an outlier.
   ///
@@ -105,7 +105,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
 // Construct a propagator using a constant magnetic field along z.
 template <typename stepper_t>
 auto makeConstantFieldPropagator(
-    std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
+    std::shared_ptr<const Acts::TrackingGeometry> geo, long double bz) {
   Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;

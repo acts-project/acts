@@ -45,20 +45,20 @@ TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
   /// - OuterVolume with volumeID       == 5
 
   // sensitive surface definitions
-  double surfaceHalfLengthZ = 50_mm;
-  double surfaceRstagger = 5_mm;
-  double surfaceZoverlap = 10_mm;
-  double layerEnvelope = 0.5_mm;
-  double volumeEnvelope = 10_mm;
+  long double surfaceHalfLengthZ = 50_mm;
+  long double surfaceRstagger = 5_mm;
+  long double surfaceZoverlap = 10_mm;
+  long double layerEnvelope = 0.5_mm;
+  long double volumeEnvelope = 10_mm;
 
   // inner inner volume definitions
-  double iiv_surfaceR = 25_mm;
-  double iiv_volumeR =
+  long double iiv_surfaceR = 25_mm;
+  long double iiv_volumeR =
       iiv_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
   ///  inner outer volume definitions
-  double iov_surfaceR = 100_mm;
-  double iov_volumeR =
+  long double iov_surfaceR = 100_mm;
+  long double iov_volumeR =
       iov_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
   ///  inner inner volume
@@ -73,15 +73,15 @@ TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
       "InnerOuterVolume");
 
   // now create the Inner Container volume
-  double volumeHalfZ =
+  long double volumeHalfZ =
       (4 * surfaceHalfLengthZ - surfaceZoverlap) + volumeEnvelope;
   /// the inner volume
   auto iVolume = constructContainerVolume(
       tgContext, iiVolume, ioVolume, iov_volumeR, volumeHalfZ, "InnerVolume");
 
   // outer volume definitions
-  double ov_surfaceR = 150_mm;
-  double ov_volumeR =
+  long double ov_surfaceR = 150_mm;
+  long double ov_volumeR =
       ov_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
   ///  inner outer volume

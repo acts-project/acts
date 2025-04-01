@@ -24,21 +24,21 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // (a) Test with non-identity rotation matrix
   // Rotation angle parameters
-  const double alpha = std::numbers::pi;
-  const double beta = 0.;
-  const double gamma = std::numbers::pi / 2.;
+  const long double alpha = std::numbers::pi;
+  const long double beta = 0.;
+  const long double gamma = std::numbers::pi / 2.;
   // rotation around x axis
   AngleAxis3 rotX(alpha, Vector3(1., 0., 0.));
   // rotation around y axis
   AngleAxis3 rotY(beta, Vector3(0., 1., 0.));
   // rotation around z axis
   AngleAxis3 rotZ(gamma, Vector3(0., 0., 1.));
-  double sz = std::sin(gamma);
-  double cz = std::cos(gamma);
-  double sy = std::sin(beta);
-  double cy = std::cos(beta);
-  double sx = std::sin(alpha);
-  double cx = std::cos(alpha);
+  long double sz = std::sin(gamma);
+  long double cz = std::cos(gamma);
+  long double sy = std::sin(beta);
+  long double cy = std::cos(beta);
+  long double sx = std::sin(alpha);
+  long double cx = std::cos(alpha);
 
   // Calculate the expected rotation matrix for rotZ * rotY * rotX,
   // (i.e. first rotation around x axis, then y axis, last z axis):

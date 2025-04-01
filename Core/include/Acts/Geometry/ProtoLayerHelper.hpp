@@ -30,7 +30,7 @@ struct ProtoLayer;
 /// @todo write more documentation on how this is done
 class ProtoLayerHelper {
  public:
-  using SortingConfig = std::pair<AxisDirection, double>;
+  using SortingConfig = std::pair<AxisDirection, long double>;
 
   struct Config {};
 

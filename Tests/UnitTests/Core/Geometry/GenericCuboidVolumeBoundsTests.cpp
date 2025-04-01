@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
                {2, 1, 1},
                {0, 1, 1}}};
   GenericCuboidVolumeBounds cubo(vertices);
-  PlyVisualization3D<double> ply;
+  PlyVisualization3D<long double> ply;
   cubo.draw(ply);
 
   std::ofstream os("cuboid.ply");
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   BOOST_CHECK_EQUAL(boundValues.size(), 24u);
 
   auto bValueArrray =
-      toArray<GenericCuboidVolumeBounds::BoundValues::eSize, double>(
+      toArray<GenericCuboidVolumeBounds::BoundValues::eSize, long double>(
           boundValues);
   GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
   BOOST_CHECK_EQUAL(gcvbCopy.values().size(), 24u);

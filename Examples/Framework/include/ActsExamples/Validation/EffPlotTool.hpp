@@ -67,7 +67,7 @@ class EffPlotTool {
   /// @param deltaR the distance to the closest truth particle
   /// @param status the reconstruction status
   void fill(EffPlotCache& effPlotCache, const SimParticleState& truthParticle,
-            double deltaR, bool status) const;
+            long double deltaR, bool status) const;
 
   /// @brief write the efficiency plots to file
   ///

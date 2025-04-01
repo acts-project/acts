@@ -26,7 +26,7 @@ Acts::Result<std::vector<Acts::Vertex>> Acts::TrackDensityVertexFinder::find(
   }
   const auto& zAndWidth = *zAndWidthOpt;
 
-  double z = zAndWidth.first;
+  long double z = zAndWidth.first;
 
   // Calculate seed position
   // Note: constraint position is (0,0,0) if no constraint provided

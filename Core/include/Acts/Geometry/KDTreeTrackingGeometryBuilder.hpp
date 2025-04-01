@@ -58,7 +58,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   };
 
   using SurfaceKDT =
-      KDTree<2u, std::shared_ptr<Surface>, double, std::array, 100>;
+      KDTree<2u, std::shared_ptr<Surface>, long double, std::array, 100>;
 
   /// Constructor
   ///

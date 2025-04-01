@@ -39,7 +39,7 @@ class ObjTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    double outputScalor = 1.0;        ///< scale output values
+    long double outputScalor = 1.0;   ///< scale output values
     std::size_t outputPrecision = 6;  ///< floating point precision
     std::string outputDir = ".";
 

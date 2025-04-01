@@ -32,10 +32,11 @@ using namespace Acts;
 static const auto particleHypothesis = ParticleHypothesis::pion();
 
 BOOST_AUTO_TEST_CASE(test_constructors) {
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
+  std::vector<std::tuple<long double, BoundVector, BoundSquareMatrix>> a;
   a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+  std::vector<
+      std::tuple<long double, BoundVector, std::optional<BoundSquareMatrix>>>
       b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
@@ -72,8 +73,8 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                                            particleHypothesis);
 
     const auto multi_pars = [&]() {
-      std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      std::vector<std::tuple<long double, BoundVector,
+                             std::optional<BoundSquareMatrix>>>
           a;
       for (int i = 0; i < 4; ++i) {
         a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});

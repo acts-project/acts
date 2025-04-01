@@ -27,7 +27,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
 
   if (releaseLimit) {
     pathAborter.internalLimit =
-        state.options.direction * std::numeric_limits<double>::max();
+        state.options.direction * std::numeric_limits<long double>::max();
   }
 
   // Get the field at the start position
@@ -40,19 +40,19 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
     return;
   }
   const Vector3 field = *fieldRes;
-  const double B = field.norm();
+  const long double B = field.norm();
   if (B == 0) {
     return;
   }
 
   // Transverse component at start is taken for the loop protection
-  const double p = stepper.absoluteMomentum(state.stepping);
+  const long double p = stepper.absoluteMomentum(state.stepping);
   // Calculate the full helix path
-  const double helixPath =
+  const long double helixPath =
       state.options.direction * 2 * std::numbers::pi * p / B;
   // And set it as the loop limit if it overwrites the internal limit
-  const double loopLimit = state.options.loopFraction * helixPath;
-  const double previousLimit = pathAborter.internalLimit;
+  const long double loopLimit = state.options.loopFraction * helixPath;
+  const long double previousLimit = pathAborter.internalLimit;
   if (std::abs(loopLimit) < std::abs(previousLimit)) {
     pathAborter.internalLimit = loopLimit;
 

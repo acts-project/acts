@@ -45,33 +45,34 @@ class TrackParameterSmearing final : public IAlgorithm {
 
     // Smearing parameters
     /// Constant term of the loc0 resolution.
-    double sigmaLoc0 = 20 * Acts::UnitConstants::um;
+    long double sigmaLoc0 = 20 * Acts::UnitConstants::um;
     /// Pt-dependent loc0 resolution of the form sigma_loc0 =
     /// A*exp(-1.*abs(B)*pt).
-    double sigmaLoc0PtA = 30 * Acts::UnitConstants::um;
-    double sigmaLoc0PtB = 0.3 / Acts::UnitConstants::GeV;
+    long double sigmaLoc0PtA = 30 * Acts::UnitConstants::um;
+    long double sigmaLoc0PtB = 0.3 / Acts::UnitConstants::GeV;
     /// Constant term of the loc1 resolution.
-    double sigmaLoc1 = 20 * Acts::UnitConstants::um;
+    long double sigmaLoc1 = 20 * Acts::UnitConstants::um;
     /// Pt-dependent loc1 resolution of the form sigma_loc1 =
     /// A*exp(-1.*abs(B)*pt).
-    double sigmaLoc1PtA = 30 * Acts::UnitConstants::um;
-    double sigmaLoc1PtB = 0.3 / Acts::UnitConstants::GeV;
+    long double sigmaLoc1PtA = 30 * Acts::UnitConstants::um;
+    long double sigmaLoc1PtB = 0.3 / Acts::UnitConstants::GeV;
     /// Time resolution.
-    double sigmaTime = 1 * Acts::UnitConstants::ns;
+    long double sigmaTime = 1 * Acts::UnitConstants::ns;
     /// Phi angular resolution.
-    double sigmaPhi = 1 * Acts::UnitConstants::degree;
+    long double sigmaPhi = 1 * Acts::UnitConstants::degree;
     /// Theta angular resolution.
-    double sigmaTheta = 1 * Acts::UnitConstants::degree;
+    long double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative transverse momentum resolution.
-    double sigmaPtRel = 0.05;
+    long double sigmaPtRel = 0.05;
 
     /// Optional. Initial sigmas for the track parameters which overwrites the
     /// smearing params if set.
-    std::optional<std::array<double, 6>> initialSigmas;
+    std::optional<std::array<long double, 6>> initialSigmas;
     /// Relative pt resolution used for the initial sigma of q/p.
-    double initialSigmaPtRel = 0.1;
+    long double initialSigmaPtRel = 0.1;
     /// Inflate the initial covariance matrix
-    std::array<double, 6> initialVarInflation = {1e4, 1e4, 1e4, 1e4, 1e4, 1e4};
+    std::array<long double, 6> initialVarInflation = {1e4, 1e4, 1e4,
+                                                      1e4, 1e4, 1e4};
 
     /// Optional particle hypothesis override.
     std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;

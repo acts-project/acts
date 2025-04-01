@@ -15,7 +15,7 @@
 #include <vector>
 
 const std::vector<int> vec = {1, 2, 3, 4};
-const std::array<double, 4> arr = {2.0, 4.0, 6.0, 8.0};
+const std::array<long double, 4> arr = {2.0, 4.0, 6.0, 8.0};
 const std::string str = "abcd";
 
 BOOST_AUTO_TEST_CASE(test_access) {
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_access) {
 
 BOOST_AUTO_TEST_CASE(test_mutation) {
   std::vector<int> vec2 = vec;
-  std::array<double, 4> arr2 = arr;
+  std::array<long double, 4> arr2 = arr;
   std::string str2 = str;
 
   for (auto [a, b, c] : Acts::zip(vec2, arr2, str2)) {

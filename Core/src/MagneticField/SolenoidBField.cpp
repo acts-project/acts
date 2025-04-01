@@ -14,7 +14,7 @@
 #include <cmath>
 #include <numbers>
 
-#define BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
+#define BOOST_MATH_NO_LONG_long double_MATH_FUNCTIONS
 
 #include <boost/exception/exception.hpp>
 #include <boost/math/special_functions/ellint_1.hpp>
@@ -59,7 +59,7 @@ Acts::Vector2 Acts::SolenoidBField::getField(const Vector2& position) const {
 }
 
 Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
-                                                   double scale) const {
+                                                   long double scale) const {
   // iterate over all coils
   Vector2 resultField(0, 0);
   for (std::size_t coil = 0; coil < m_cfg.nCoils; coil++) {
@@ -72,11 +72,12 @@ Acts::Vector2 Acts::SolenoidBField::multiCoilField(const Vector2& pos,
 }
 
 Acts::Vector2 Acts::SolenoidBField::singleCoilField(const Vector2& pos,
-                                                    double scale) const {
+                                                    long double scale) const {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
+long double Acts::SolenoidBField::B_r(const Vector2& pos,
+                                      long double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -88,8 +89,8 @@ double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   //  2         _/  0
   using boost::math::ellint_2;
 
-  double r = std::abs(pos[0]);
-  double z = pos[1];
+  long double r = std::abs(pos[0]);
+  long double z = pos[1];
 
   if (r == 0) {
     return 0.;
@@ -102,19 +103,20 @@ double Acts::SolenoidBField::B_r(const Vector2& pos, double scale) const {
   //  r            4pi     ___ |  |      2| 2          1       |
   //                    | /  3 |_ \2 - 2k /                   _|
   //                    |/ Rr
-  double k_2 = k2(r, z);
-  double k = std::sqrt(k_2);
-  double constant =
+  long double k_2 = k2(r, z);
+  long double k = std::sqrt(k_2);
+  long double constant =
       scale * k * z /
       (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r * r * r));
 
-  double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
+  long double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
   // pos[0] is still signed!
   return r / pos[0] * constant * B;
 }
 
-double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
+long double Acts::SolenoidBField::B_z(const Vector2& pos,
+                                      long double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -126,8 +128,8 @@ double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
   //  2         _/  0
   using boost::math::ellint_2;
 
-  double r = std::abs(pos[0]);
-  double z = pos[1];
+  long double r = std::abs(pos[0]);
+  long double z = pos[1];
 
   //                         _                                       _
   //             mu  I      |  /         2      \                     |
@@ -137,22 +139,23 @@ double Acts::SolenoidBField::B_z(const Vector2& pos, double scale) const {
   //                   |/Rr |_ \   2r(1 - k )   /                    _|
 
   if (r == 0) {
-    double res = scale / 2. * m_R2 / (std::sqrt(m_R2 + z * z) * (m_R2 + z * z));
+    long double res =
+        scale / 2. * m_R2 / (std::sqrt(m_R2 + z * z) * (m_R2 + z * z));
     return res;
   }
 
-  double k_2 = k2(r, z);
-  double k = std::sqrt(k_2);
-  double constant =
+  long double k_2 = k2(r, z);
+  long double k = std::sqrt(k_2);
+  long double constant =
       scale * k / (4 * std::numbers::pi * std::sqrt(m_cfg.radius * r));
-  double B = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) *
-                 ellint_2(k_2) +
-             ellint_1(k_2);
+  long double B = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) *
+                      ellint_2(k_2) +
+                  ellint_1(k_2);
 
   return constant * B;
 }
 
-double Acts::SolenoidBField::k2(double r, double z) const {
+long double Acts::SolenoidBField::k2(long double r, long double z) const {
   //  2           4Rr
   // k   =  ---------------
   //               2      2

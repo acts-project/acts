@@ -17,8 +17,9 @@
 
 namespace Acts {
 
-TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
-                                 double halfY, double rotAngle) noexcept(false)
+TrapezoidBounds::TrapezoidBounds(long double halfXnegY, long double halfXposY,
+                                 long double halfY,
+                                 long double rotAngle) noexcept(false)
     : m_values({halfXnegY, halfXposY, halfY, rotAngle}),
       m_boundingBox(std::max(halfXnegY, halfXposY), halfY) {
   rotateBoundingBox();
@@ -26,7 +27,7 @@ TrapezoidBounds::TrapezoidBounds(double halfXnegY, double halfXposY,
 }
 
 TrapezoidBounds::TrapezoidBounds(
-    const std::array<double, eSize>& values) noexcept(false)
+    const std::array<long double, eSize>& values) noexcept(false)
     : m_values(values),
       m_boundingBox(
           std::max(values[eHalfLengthXnegY], values[eHalfLengthXposY]),
@@ -35,7 +36,7 @@ TrapezoidBounds::TrapezoidBounds(
   checkConsistency();
 }
 
-std::vector<double> TrapezoidBounds::values() const {
+std::vector<long double> TrapezoidBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -45,19 +46,19 @@ bool TrapezoidBounds::inside(const Vector2& lposition,
     return true;
   }
 
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+  const long double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const long double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const long double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const long double rotAngle = get(TrapezoidBounds::eRotationAngle);
 
   const Vector2 extPosition = Eigen::Rotation2Dd(rotAngle) * lposition;
-  const double x = extPosition[0];
-  const double y = extPosition[1];
+  const long double x = extPosition[0];
+  const long double y = extPosition[1];
 
   if (auto absoluteBound = boundaryTolerance.asAbsoluteBoundOpt(true);
       absoluteBound.has_value()) {
-    double tolX = absoluteBound->tolerance0;
-    double tolY = absoluteBound->tolerance1;
+    long double tolX = absoluteBound->tolerance0;
+    long double tolY = absoluteBound->tolerance1;
 
     if (std::abs(y) - hlY > tolY) {
       // outside y range
@@ -85,10 +86,10 @@ bool TrapezoidBounds::inside(const Vector2& lposition,
 
 std::vector<Vector2> TrapezoidBounds::vertices(
     unsigned int /*ignoredSegments*/) const {
-  const double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
-  const double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
-  const double hlY = get(TrapezoidBounds::eHalfLengthY);
-  const double rotAngle = get(TrapezoidBounds::eRotationAngle);
+  const long double hlXnY = get(TrapezoidBounds::eHalfLengthXnegY);
+  const long double hlXpY = get(TrapezoidBounds::eHalfLengthXposY);
+  const long double hlY = get(TrapezoidBounds::eHalfLengthY);
+  const long double rotAngle = get(TrapezoidBounds::eRotationAngle);
 
   std::vector<Vector2> vertices = {
       {-hlXnY, -hlY}, {hlXnY, -hlY}, {hlXpY, hlY}, {-hlXpY, hlY}};
@@ -113,7 +114,7 @@ std::ostream& TrapezoidBounds::toStream(std::ostream& sl) const {
 }
 
 void TrapezoidBounds::rotateBoundingBox() noexcept(false) {
-  const double rotAngle = get(eRotationAngle);
+  const long double rotAngle = get(eRotationAngle);
 
   if (rotAngle != 0.) {
     m_boundingBox = ConvexPolygonBounds<4>(vertices()).boundingBox();

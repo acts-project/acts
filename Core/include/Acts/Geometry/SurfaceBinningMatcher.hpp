@@ -19,7 +19,7 @@ namespace Acts {
 
 struct SurfaceBinningMatcher {
   /// The binning tolerance parameters
-  using Range = std::pair<double, double>;
+  using Range = std::pair<long double, long double>;
   std::vector<Range> tolerances{static_cast<int>(numAxisDirections()),
                                 {0., 0.}};
 
@@ -44,11 +44,11 @@ struct SurfaceBinningMatcher {
     auto oneExt = one->polyhedronRepresentation(gctx, 1).extent();
     auto otherExt = other->polyhedronRepresentation(gctx, 1).extent();
 
-    double oneMin = oneExt.min(aDir);
-    double oneMax = oneExt.max(aDir);
+    long double oneMin = oneExt.min(aDir);
+    long double oneMax = oneExt.max(aDir);
 
-    double otherMin = otherExt.min(aDir);
-    double otherMax = otherExt.max(aDir);
+    long double otherMin = otherExt.min(aDir);
+    long double otherMax = otherExt.max(aDir);
 
     return (
         std::abs(oneMin - otherMin) <= tolerances[toUnderlying(aDir)].first &&

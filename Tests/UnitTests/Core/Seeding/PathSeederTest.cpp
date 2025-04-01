@@ -37,21 +37,22 @@ using Grid = Acts::Grid<std::vector<SourceLink>, Axis, Axis>;
 GeometryContext gctx;
 
 // Parameters for the geometry
-const double halfY = 10.;
-const double halfZ = 10.;
-const double deltaX = 10.;
-const double deltaYZ = 1.;
+const long double halfY = 10.;
+const long double halfZ = 10.;
+const long double deltaX = 10.;
+const long double deltaYZ = 1.;
 
 const Vector4 trueVertex(-5., 0., 0., 0);
-const std::vector<double> truePhis = {-0.15, -0.1, -0.05, 0, 0.05, 0.1, 0.15};
-const double trueTheta = std::numbers::pi / 2.;
-const double trueQOverP = 1. / 1._GeV;
+const std::vector<long double> truePhis = {-0.15, -0.1, -0.05, 0,
+                                           0.05,  0.1,  0.15};
+const long double trueTheta = std::numbers::pi / 2.;
+const long double trueQOverP = 1. / 1._GeV;
 
 // Intersection finding to get the
 // region of interest for seeding
 class NoFieldIntersectionFinder {
  public:
-  double m_tol = 1e-4;
+  long double m_tol = 1e-4;
 
   std::vector<const Surface*> m_surfaces;
 
@@ -96,9 +97,9 @@ class NoFieldIntersectionFinder {
 // intersection point
 class PathWidthProvider {
  public:
-  std::pair<double, double> width;
+  std::pair<long double, long double> width;
 
-  std::pair<double, double> operator()(
+  std::pair<long double, long double> operator()(
       const GeometryContext& /*gctx*/,
       const GeometryIdentifier& /*geoId*/) const {
     return width;
@@ -122,9 +123,9 @@ class TrackEstimator {
     Vector3 direction = (pivot3 - m_ip).normalized();
 
     Vector4 ip = {m_ip.x(), m_ip.y(), m_ip.z(), 0};
-    double qOverP = 1_e / 1._GeV;
-    double phi = Acts::VectorHelpers::phi(direction);
-    double theta = Acts::VectorHelpers::theta(direction);
+    long double qOverP = 1_e / 1._GeV;
+    long double phi = Acts::VectorHelpers::phi(direction);
+    long double theta = Acts::VectorHelpers::theta(direction);
     ParticleHypothesis particle = ParticleHypothesis::electron();
 
     BoundTrackParameters ipParams = BoundTrackParameters::createCurvilinear(
@@ -173,7 +174,7 @@ struct ConstructSourceLinkGrid {
 // Construct a simple telescope detector
 std::shared_ptr<Experimental::Detector> constructTelescopeDetector() {
   RotationMatrix3 rotation;
-  double angle = 90_degree;
+  long double angle = 90_degree;
   Vector3 xPos(cos(angle), 0., sin(angle));
   Vector3 yPos(0., 1., 0.);
   Vector3 zPos(-sin(angle), 0., cos(angle));
@@ -294,7 +295,7 @@ std::vector<SourceLink> createSourceLinks(
   }
 
   std::vector<SourceLink> sourceLinks;
-  for (double phi : truePhis) {
+  for (long double phi : truePhis) {
     BoundTrackParameters trackParameters =
         BoundTrackParameters::createCurvilinear(trueVertex, phi, trueTheta,
                                                 trueQOverP, std::nullopt,

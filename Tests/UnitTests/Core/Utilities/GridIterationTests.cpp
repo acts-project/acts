@@ -20,7 +20,7 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis));
 
   BOOST_CHECK_EQUAL(grid.size(true), nBins + 2ul);
 
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global_operators) {
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 3ul);
   BOOST_CHECK_EQUAL(gridStart != gridStop, true);
 
-  [[maybe_unused]] double value = *gridStart;
+  [[maybe_unused]] long double value = *gridStart;
 
-  Acts::GridGlobalIterator<double, Acts::Axis<AxisType::Equidistant>>
+  Acts::GridGlobalIterator<long double, Acts::Axis<AxisType::Equidistant>>
       gridDefault;
   Acts::GridGlobalIterator gridDummy(grid, 0ul);
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
   const std::size_t nBinsY = 5ul;
   Acts::Axis xAxis(0, 100, nBinsX);
   Acts::Axis yAxis(0, 100, nBinsY);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis));
 
   BOOST_CHECK_EQUAL(grid.size(true), (nBinsX + 2ul) * (nBinsY + 2ul));
 
@@ -116,9 +116,9 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), 3ul);
   BOOST_CHECK_EQUAL(gridStart != gridStop, true);
 
-  [[maybe_unused]] double value = *gridStart;
+  [[maybe_unused]] long double value = *gridStart;
 
-  Acts::GridGlobalIterator<double, Acts::Axis<AxisType::Equidistant>,
+  Acts::GridGlobalIterator<long double, Acts::Axis<AxisType::Equidistant>,
                            Acts::Axis<AxisType::Equidistant>>
       gridDefault;
   Acts::GridGlobalIterator gridDummy(grid, 0ul);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global_operators) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_global) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_global) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
   Acts::Axis yAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
   Acts::Axis xAxis(0, 100, nBins);
   Acts::Axis yAxis(0, 100, nBins);
   Acts::Axis zAxis(0, 100, nBinsZ);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis),
                   std::move(zAxis));
 
   // test general properties
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_global) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis));
 
   std::array<std::vector<std::size_t>, 1ul> navigation;
   navigation[0ul].resize(nBins);
@@ -238,14 +238,14 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_operators) {
   BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 0ul);
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBins - 2ul);
 
-  [[maybe_unused]] double value = *gridStart;
+  [[maybe_unused]] long double value = *gridStart;
   std::array<std::size_t, 1ul> locPos = gridStart.localBinsIndices();
   BOOST_CHECK_EQUAL(locPos[0ul], 3ul);
 
   std::size_t globPos = gridStart.globalBinIndex();
   BOOST_CHECK_EQUAL(globPos, 3ul);
 
-  Acts::GridLocalIterator<double, Acts::Axis<AxisType::Equidistant>>
+  Acts::GridLocalIterator<long double, Acts::Axis<AxisType::Equidistant>>
       gridDefault;
   Acts::GridLocalIterator gridDummy(grid, {0ul});
 
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   const std::size_t nBinsY = 5ul;
   Acts::Axis xAxis(0, 100, nBinsX);
   Acts::Axis yAxis(0, 100, nBinsY);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis));
 
   std::array<std::vector<std::size_t>, 2ul> navigation;
   navigation[0ul].resize(nBinsX);
@@ -298,12 +298,12 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
   BOOST_CHECK_EQUAL(std::distance(itr, gridStart), 0ul);
   BOOST_CHECK_EQUAL(std::distance(gridStart, gridStop), nBinsX * nBinsY - 2ul);
 
-  [[maybe_unused]] double value = *gridStart;
+  [[maybe_unused]] long double value = *gridStart;
   std::array<std::size_t, 2ul> locPos = gridStart.localBinsIndices();
   BOOST_CHECK_EQUAL(locPos[0ul], 1ul);
   BOOST_CHECK_EQUAL(locPos[1ul], 3ul);
 
-  Acts::GridLocalIterator<double, Acts::Axis<AxisType::Equidistant>,
+  Acts::GridLocalIterator<long double, Acts::Axis<AxisType::Equidistant>,
                           Acts::Axis<AxisType::Equidistant>>
       gridDefault;
   Acts::GridLocalIterator gridDummy(grid, {0ul, 0ul});
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local_operators) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_notvalid) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis));
 
   // no navigation bins
   std::array<std::vector<std::size_t>, 1ul> noNavigation;
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local_notvalid) {
 BOOST_AUTO_TEST_CASE(grid_iteration_test_1d_local) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins);
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_2d_local) {
   const std::size_t nBins = 10ul;
   Acts::Axis xAxis(0, 100, nBins);
   Acts::Axis yAxis(0, 100, nBins);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis));
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis));
 
   // test general properties
   BOOST_CHECK_EQUAL(grid.size(false), nBins * nBins);
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local) {
   Acts::Axis xAxis(0, 100, nBins);
   Acts::Axis yAxis(0, 100, nBins);
   Acts::Axis zAxis(0, 100, nBinsZ);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis),
                   std::move(zAxis));
 
   // test general properties
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_custom_navigation) {
   Acts::Axis xAxis(0, 100, nBins);
   Acts::Axis yAxis(0, 100, nBins);
   Acts::Axis zAxis(0, 100, nBinsZ);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis),
                   std::move(zAxis));
 
   // test general properties
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_5d_local_custom_subnavigation) {
   Acts::Axis zAxis(0, 100, nBinsZ);
   Acts::Axis jAxis(0, 100, nBinsJK);
   Acts::Axis kAxis(0, 100, nBinsJK);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis),
                   std::move(zAxis), std::move(jAxis), std::move(kAxis));
 
   // test general properties
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(grid_iteration_test_3d_local_norepetitions) {
   Acts::Axis xAxis(0, 100, nBinsX);
   Acts::Axis yAxis(0, 100, nBinsY);
   Acts::Axis zAxis(0, 100, nBinsZ);
-  Acts::Grid grid(Type<double>, std::move(xAxis), std::move(yAxis),
+  Acts::Grid grid(Type<long double>, std::move(xAxis), std::move(yAxis),
                   std::move(zAxis));
 
   std::array<std::vector<std::size_t>, 3ul> navigation;

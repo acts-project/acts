@@ -22,10 +22,10 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create grid values
-  std::vector<double> rPos = {0., 1., 2.};
-  std::vector<double> xPos = {0., 1., 2.};
-  std::vector<double> yPos = {0., 1., 2.};
-  std::vector<double> zPos = {0., 1., 2.};
+  std::vector<long double> rPos = {0., 1., 2.};
+  std::vector<long double> xPos = {0., 1., 2.};
+  std::vector<long double> yPos = {0., 1., 2.};
+  std::vector<long double> zPos = {0., 1., 2.};
 
   // Create material association in rz
   std::vector<Material> material_rz;
@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
       materialMapperRZ(localToGlobalBin_rz, rPos, zPos, material_rz);
   // check number of bins, minima & maxima
   std::vector<std::size_t> nBins_rz = {rPos.size(), zPos.size()};
-  std::vector<double> minima_rz = {0., 0.};
-  std::vector<double> maxima_rz = {3., 3.};
+  std::vector<long double> minima_rz = {0., 0.};
+  std::vector<long double> maxima_rz = {3., 3.};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   // Check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
       materialMapperXYZ(localToGlobalBin_xyz, xPos, yPos, zPos, material_xyz);
   // Check number of bins, minima & maxima
   std::vector<std::size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
-  std::vector<double> minima_xyz = {0., 0., 0.};
-  std::vector<double> maxima_xyz = {3., 3., 3.};
+  std::vector<long double> minima_xyz = {0., 0., 0.};
+  std::vector<long double> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // Check minimum (should be first value because bin values are always
   // assigned to the left boundary)

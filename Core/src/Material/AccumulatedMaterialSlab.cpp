@@ -30,8 +30,8 @@ void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
     if (m_totalCount == 0u) {
       m_totalVariance = variance;
     } else {
-      double weightTotal = m_totalCount / (m_totalCount + 1.0);
-      double weightTrack = 1 / (m_totalCount + 1.0);
+      long double weightTotal = m_totalCount / (m_totalCount + 1.0);
+      long double weightTrack = 1 / (m_totalCount + 1.0);
       m_totalVariance = weightTotal * m_totalVariance + weightTrack * variance;
     }
   }
@@ -43,8 +43,8 @@ void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
     if (m_totalCount == 0u) {
       m_totalAverage = m_trackAverage;
     } else {
-      double weightTotal = m_totalCount / (m_totalCount + 1.0);
-      double weightTrack = 1 / (m_totalCount + 1.0);
+      long double weightTotal = m_totalCount / (m_totalCount + 1.0);
+      long double weightTrack = 1 / (m_totalCount + 1.0);
       // average such that each track contributes equally.
       MaterialSlab fromTotal(m_totalAverage.material(),
                              weightTotal * m_totalAverage.thickness());

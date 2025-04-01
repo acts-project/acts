@@ -31,7 +31,7 @@ class VolumeBounds;
 /// information.
 class Volume : public GeometryObject {
  public:
-  using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
+  using BoundingBox = AxisAlignedBoundingBox<Volume, long double, 3>;
 
   /// Explicit constructor with shared arguments
   ///
@@ -105,7 +105,7 @@ class Volume : public GeometryObject {
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool inside(const Vector3& gpos, double tol = 0.) const;
+  bool inside(const Vector3& gpos, long double tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded

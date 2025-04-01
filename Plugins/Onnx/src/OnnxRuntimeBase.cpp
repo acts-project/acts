@@ -105,7 +105,7 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
   Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
       memoryInfo, inputTensorValues.data(), inputTensorValues.size(),
       inputNodeDims.data(), inputNodeDims.size());
-  // Double-check that inputTensor is a Tensor
+  // long double-check that inputTensor is a Tensor
   if (!inputTensor.IsTensor()) {
     throw std::runtime_error(
         "runONNXInference: conversion of input to Tensor failed. ");
@@ -117,8 +117,8 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
                      m_inputNodeNames.size(), m_outputNodeNames.data(),
                      m_outputNodeNames.size());
 
-  // Double-check that outputTensors contains Tensors and that the count matches
-  // that of output nodes
+  // long double-check that outputTensors contains Tensors and that the count
+  // matches that of output nodes
   if (!outputTensors[0].IsTensor() ||
       (outputTensors.size() != m_outputNodeNames.size())) {
     throw std::runtime_error(

@@ -33,7 +33,7 @@ class VolumeAssociationTest final : public IAlgorithm {
     /// The random number service
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The random number range
-    std::vector<double> randomRange = {};
+    std::vector<long double> randomRange = {};
     /// The detector
     std::shared_ptr<const Acts::Experimental::Detector> detector = nullptr;
   };

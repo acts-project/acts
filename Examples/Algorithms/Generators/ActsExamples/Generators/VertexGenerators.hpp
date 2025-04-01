@@ -36,7 +36,7 @@ struct GaussianPrimaryVertexPositionGenerator
   Acts::Vector4 mean = {0.0, 0.0, 0.0, 0.0};
 
   Acts::Vector4 operator()(RandomEngine& rng) const override {
-    auto normal = std::normal_distribution<double>(0.0, 1.0);
+    auto normal = std::normal_distribution<long double>(0.0, 1.0);
     Acts::Vector4 rndNormal = {
         normal(rng),
         normal(rng),
@@ -50,32 +50,32 @@ struct GaussianPrimaryVertexPositionGenerator
 //
 struct GaussianDisplacedVertexPositionGenerator
     : public EventGenerator::PrimaryVertexPositionGenerator {
-  double rMean = 0;
-  double rStdDev = 1;
-  double zMean = 0;
-  double zStdDev = 1;
-  double tMean = 0;
-  double tStdDev = 1;
+  long double rMean = 0;
+  long double rStdDev = 1;
+  long double zMean = 0;
+  long double zStdDev = 1;
+  long double tMean = 0;
+  long double tStdDev = 1;
 
   Acts::Vector4 operator()(RandomEngine& rng) const override {
-    double min_value = -std::numbers::pi;
-    double max_value = std::numbers::pi;
+    long double min_value = -std::numbers::pi;
+    long double max_value = std::numbers::pi;
 
     std::uniform_real_distribution<> uniform(min_value, max_value);
 
-    std::normal_distribution<double> rDist(rMean, rStdDev);
-    std::normal_distribution<double> zDist(zMean, zStdDev);
-    std::normal_distribution<double> tDist(tMean, tStdDev);
+    std::normal_distribution<long double> rDist(rMean, rStdDev);
+    std::normal_distribution<long double> zDist(zMean, zStdDev);
+    std::normal_distribution<long double> tDist(tMean, tStdDev);
 
     // Generate random values from normal distributions
-    double r = rDist(rng);
-    double phi = uniform(rng);  // Random angle in radians
-    double z = zDist(rng);
-    double t = tDist(rng);
+    long double r = rDist(rng);
+    long double phi = uniform(rng);  // Random angle in radians
+    long double z = zDist(rng);
+    long double t = tDist(rng);
 
     // Convert cylindrical coordinates to Cartesian coordinates
-    double x = r * std::cos(phi);
-    double y = r * std::sin(phi);
+    long double x = r * std::cos(phi);
+    long double y = r * std::sin(phi);
 
     return Acts::Vector4(x, y, z, t);
   }

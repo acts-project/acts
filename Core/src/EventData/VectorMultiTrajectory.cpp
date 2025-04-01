@@ -250,18 +250,19 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
 
   auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
     os << std::setw(20) << key << ": ";
-    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
+    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, long double>) {
       os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
          << suffix;
     } else {
-      os << std::fixed << std::setw(8) << static_cast<double>(v) / n << suffix;
+      os << std::fixed << std::setw(8) << static_cast<long double>(v) / n
+         << suffix;
     }
     os << std::endl;
   };
 
   for (int t = 0; t < type_axis.size(); t++) {
     os << (type_axis.bin(t) == 1 ? "meas" : "other") << ":" << std::endl;
-    double total = 0;
+    long double total = 0;
     for (int c = 0; c < column_axis.size(); c++) {
       std::string key = column_axis.bin(c);
       auto v = h.at(c, t);

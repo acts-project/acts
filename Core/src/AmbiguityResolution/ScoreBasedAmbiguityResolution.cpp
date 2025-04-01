@@ -10,7 +10,7 @@
 
 bool Acts::ScoreBasedAmbiguityResolution::etaBasedCuts(
     const DetectorConfig& detector, const TrackFeatures& trackFeatures,
-    const double& eta) const {
+    const long double& eta) const {
   const auto& etaBins = detector.etaBins;
 
   auto it = std::ranges::upper_bound(etaBins, eta);

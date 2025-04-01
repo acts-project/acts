@@ -30,10 +30,11 @@ namespace Acts::detail::VerticesHelper {
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of generated phi values
-std::vector<double> phiSegments(double phiMin = -std::numbers::pi,
-                                double phiMax = std::numbers::pi,
-                                const std::vector<double>& phiRefs = {},
-                                unsigned int quarterSegments = 2u);
+std::vector<long double> phiSegments(
+    long double phiMin = -std::numbers::pi,
+    long double phiMax = std::numbers::pi,
+    const std::vector<long double>& phiRefs = {},
+    unsigned int quarterSegments = 2u);
 
 /// Helper method to create a regular 2 or 3 D segment
 /// between two phi values with a given number of segments
@@ -55,14 +56,15 @@ std::vector<double> phiSegments(double phiMin = -std::numbers::pi,
 /// @return a vector of vertices
 template <typename vertex_t, typename transform_t>
 std::vector<vertex_t> segmentVertices(
-    std::pair<double, double> rXY, double phiMin, double phiMax,
-    const std::vector<double>& phiRefs = {}, unsigned int quarterSegments = 2u,
+    std::pair<long double, long double> rXY, long double phiMin,
+    long double phiMax, const std::vector<long double>& phiRefs = {},
+    unsigned int quarterSegments = 2u,
     const vertex_t& offset = vertex_t::Zero(),
     const transform_t& transform = transform_t::Identity()) {
   std::vector<vertex_t> vertices;
-  std::vector<double> phis =
+  std::vector<long double> phis =
       phiSegments(phiMin, phiMax, phiRefs, quarterSegments);
-  for (double phi : phis) {
+  for (long double phi : phis) {
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rXY.first * std::cos(phi);
     vertex(1) = rXY.second * std::sin(phi);
@@ -83,10 +85,10 @@ std::vector<vertex_t> segmentVertices(
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> ellipsoidVertices(double innerRx, double innerRy,
-                                       double outerRx, double outerRy,
-                                       double avgPhi = 0.,
-                                       double halfPhi = std::numbers::pi,
+std::vector<Vector2> ellipsoidVertices(long double innerRx, long double innerRy,
+                                       long double outerRx, long double outerRy,
+                                       long double avgPhi = 0.,
+                                       long double halfPhi = std::numbers::pi,
                                        unsigned int quarterSegments = 2u);
 
 /// Construct vertices on an disc/wheel-like bound object.
@@ -98,9 +100,9 @@ std::vector<Vector2> ellipsoidVertices(double innerRx, double innerRy,
 /// @param quarterSegments number of segments used to approximate a segment quarter
 ///
 /// @return a vector of 2d-vectors
-std::vector<Vector2> circularVertices(double innerR, double outerR,
-                                      double avgPhi = 0.,
-                                      double halfPhi = std::numbers::pi,
+std::vector<Vector2> circularVertices(long double innerR, long double outerR,
+                                      long double avgPhi = 0.,
+                                      long double halfPhi = std::numbers::pi,
                                       unsigned int quarterSegments = 2u);
 
 /// Check if the point is inside the polygon w/o any tolerances.
@@ -172,7 +174,7 @@ bool isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
 /// @param tolerance The allowed out of plane tolerance
 /// @return boolean to indicate if all points are inside/outside
 bool onHyperPlane(const std::vector<Vector3>& vertices,
-                  double tolerance = s_onSurfaceTolerance);
+                  long double tolerance = s_onSurfaceTolerance);
 
 /// Calculate the closest point on the polygon.
 inline Vector2 computeClosestPointOnPolygon(const Vector2& point,
@@ -241,17 +243,17 @@ inline Vector2 computeEuclideanClosestPointOnRectangle(
    *
    */
 
-  double l0 = point[0], l1 = point[1];
-  double loc0Min = lowerLeft[0], loc0Max = upperRight[0];
-  double loc1Min = lowerLeft[1], loc1Max = upperRight[1];
+  long double l0 = point[0], l1 = point[1];
+  long double loc0Min = lowerLeft[0], loc0Max = upperRight[0];
+  long double loc1Min = lowerLeft[1], loc1Max = upperRight[1];
 
   // check if inside
   if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {
     // INSIDE
-    double dist = std::abs(loc0Max - l0);
+    long double dist = std::abs(loc0Max - l0);
     Vector2 cls(loc0Max, l1);
 
-    double test = std::abs(loc0Min - l0);
+    long double test = std::abs(loc0Min - l0);
     if (test <= dist) {
       dist = test;
       cls = {loc0Min, l1};

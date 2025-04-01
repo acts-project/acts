@@ -58,8 +58,8 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstQuadrant = false);
+    const std::string& fieldMapFile, long double lengthUnit,
+    long double BFieldUnit, bool firstQuadrant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -107,7 +107,7 @@ detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromText(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    const std::string& fieldMapFile, double lengthUnit, double BFieldUnit,
-    bool firstOctant = false);
+    const std::string& fieldMapFile, long double lengthUnit,
+    long double BFieldUnit, bool firstOctant = false);
 
 }  // namespace ActsExamples

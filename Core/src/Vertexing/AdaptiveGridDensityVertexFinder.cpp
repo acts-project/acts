@@ -51,9 +51,9 @@ Acts::AdaptiveGridDensityVertexFinder::find(
     return std::vector<Vertex>{};
   }
 
-  double z = 0;
-  double t = 0;
-  double zWidth = 0;
+  long double z = 0;
+  long double t = 0;
+  long double zWidth = 0;
 
   if (!m_cfg.estimateSeedWidth) {
     // Get z value of highest density bin
@@ -98,20 +98,20 @@ Acts::AdaptiveGridDensityVertexFinder::find(
 bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
     const BoundTrackParameters& trk) const {
   // Get required track parameters
-  const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
-  const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
+  const long double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
+  const long double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
   // Get track covariance
   if (!trk.covariance().has_value()) {
     return false;
   }
   const auto perigeeCov = *(trk.covariance());
-  const double covDD =
+  const long double covDD =
       perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
-  const double covZZ =
+  const long double covZZ =
       perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
-  const double covDZ =
+  const long double covDZ =
       perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
-  const double covDeterminant = covDD * covZZ - covDZ * covDZ;
+  const long double covDeterminant = covDD * covZZ - covDZ * covDZ;
 
   // Do track selection based on track cov matrix and d0SignificanceCut
   if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
@@ -121,12 +121,12 @@ bool Acts::AdaptiveGridDensityVertexFinder::doesPassTrackSelection(
 
   // Calculate track density quantities to check if track can easily
   // be considered as 2-dim Gaussian distribution without causing problems
-  double constantTerm =
+  long double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
       (2. * covDeterminant);
-  const double linearTerm = (d0 * covDZ + z0 * covDD) / covDeterminant;
-  const double quadraticTerm = -covDD / (2. * covDeterminant);
-  double discriminant =
+  const long double linearTerm = (d0 * covDZ + z0 * covDD) / covDeterminant;
+  const long double quadraticTerm = -covDD / (2. * covDeterminant);
+  long double discriminant =
       linearTerm * linearTerm -
       4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
   if (discriminant < 0) {

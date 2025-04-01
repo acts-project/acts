@@ -134,7 +134,7 @@ CompositePortalLink::CompositePortalLink(
 
 Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector2& position,
-    double tolerance) const {
+    long double tolerance) const {
   // In this overload, we have to go back to global, because the children have
   // their own local coordinate systems
   Vector3 global = m_surface->localToGlobal(gctx, position);
@@ -147,7 +147,7 @@ Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
 
 Result<const TrackingVolume*> CompositePortalLink::resolveVolume(
     const GeometryContext& gctx, const Vector3& position,
-    double tolerance) const {
+    long double tolerance) const {
   assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
                                 tolerance));
 
@@ -218,7 +218,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       throw std::runtime_error{"Unsupported binning direction"};
     }
 
-    std::vector<double> edges;
+    std::vector<long double> edges;
     edges.reserve(m_children.size() + 1);
 
     const Transform3& groupTransform = m_surface->transform(gctx);
@@ -234,9 +234,9 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       const auto& bounds =
           dynamic_cast<const CylinderBounds&>(child->surface().bounds());
       Transform3 ltransform = itransform * child->surface().transform(gctx);
-      double hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
-      double minZ = ltransform.translation()[eZ] - hlZ;
-      double maxZ = ltransform.translation()[eZ] + hlZ;
+      long double hlZ = bounds.get(CylinderBounds::eHalfLengthZ);
+      long double minZ = ltransform.translation()[eZ] - hlZ;
+      long double maxZ = ltransform.translation()[eZ] + hlZ;
       if (i == 0) {
         edges.push_back(minZ);
       }
@@ -263,7 +263,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       throw std::runtime_error{"Unsupported binning direction"};
     }
 
-    std::vector<double> edges;
+    std::vector<long double> edges;
     edges.reserve(m_children.size() + 1);
 
     std::ranges::sort(trivialLinks, [](const auto& a, const auto& b) {
@@ -306,7 +306,7 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
 
     bool dirX = m_direction == AxisDirection::AxisX;
 
-    std::vector<double> edges;
+    std::vector<long double> edges;
     edges.reserve(m_children.size() + 1);
 
     const Transform3& groupTransform = m_surface->transform(gctx);
@@ -325,9 +325,9 @@ std::unique_ptr<GridPortalLink> CompositePortalLink::makeGrid(
       const auto& bounds =
           dynamic_cast<const RectangleBounds&>(child->surface().bounds());
       Transform3 ltransform = itransform * child->surface().transform(gctx);
-      double half = dirX ? bounds.halfLengthX() : bounds.halfLengthY();
-      double min = ltransform.translation()[sortingDir] - half;
-      double max = ltransform.translation()[sortingDir] + half;
+      long double half = dirX ? bounds.halfLengthX() : bounds.halfLengthY();
+      long double min = ltransform.translation()[sortingDir] - half;
+      long double max = ltransform.translation()[sortingDir] + half;
       if (i == 0) {
         edges.push_back(min);
       }

@@ -110,7 +110,7 @@ struct SimVertex {
   /// The vertex three-position.
   auto position() const { return position4.head<3>(); }
   /// The vertex time.
-  double time() const { return position4[3]; }
+  long double time() const { return position4[3]; }
 };
 
 namespace detail {

@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
   material0D.accumulate(Vector2{0., 0.}, one);
   material0D.trackVariance(bin, one);
   material0D.trackAverage();
-  // assign 1 double step
+  // assign 1 long double step
   material0D.accumulate(Vector3(0., 0., 0.), two);
   material0D.trackVariance(bin, one);
   material0D.trackAverage();
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_variance_0D) {
   material0D.accumulate(Vector2{0., 0.}, one);
   material0D.trackVariance(bin, avg);
   material0D.trackAverage();
-  // assign 1 double step
+  // assign 1 long double step
   material0D.accumulate(Vector3(0., 0., 0.), two);
   material0D.trackVariance(bin, avg);
   material0D.trackAverage();

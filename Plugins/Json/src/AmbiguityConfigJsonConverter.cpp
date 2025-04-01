@@ -46,13 +46,13 @@ void from_json(const nlohmann::json& j, ConfigPair& p) {
 
     detectorConfig.sharedHitsFlag = value["sharedHitsFlag"];
 
-    const std::vector<double>& goodHits = value["goodHits"];
-    const std::vector<double>& goodHoles = value["goodHoles"];
+    const std::vector<long double>& goodHits = value["goodHits"];
+    const std::vector<long double>& goodHoles = value["goodHoles"];
 
-    const std::vector<double>& fakeHits = value["fakeHits"];
-    const std::vector<double>& fakeHoles = value["fakeHoles"];
+    const std::vector<long double>& fakeHits = value["fakeHits"];
+    const std::vector<long double>& fakeHoles = value["fakeHoles"];
 
-    const std::vector<double>& etaBins = value["etaBins"];
+    const std::vector<long double>& etaBins = value["etaBins"];
 
     // Validate eta bins
     if (!etaBins.empty()) {

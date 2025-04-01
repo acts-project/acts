@@ -22,18 +22,18 @@ using ActsFatras::detail::TupleIndexOf;
 BOOST_AUTO_TEST_SUITE(FatrasTupleIndexOf)
 
 BOOST_AUTO_TEST_CASE(Regular) {
-  using T = std::tuple<int, double, float>;
+  using T = std::tuple<int, long double, float>;
 
   BOOST_CHECK_EQUAL((TupleIndexOf<int, T>::value), 0u);
-  BOOST_CHECK_EQUAL((TupleIndexOf<double, T>::value), 1u);
+  BOOST_CHECK_EQUAL((TupleIndexOf<long double, T>::value), 1u);
   BOOST_CHECK_EQUAL((TupleIndexOf<float, T>::value), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(Duplicates) {
-  using T = std::tuple<double, int, double>;
+  using T = std::tuple<long double, int, long double>;
 
   // should return the first matching type
-  BOOST_CHECK_EQUAL((TupleIndexOf<double, T>::value), 0u);
+  BOOST_CHECK_EQUAL((TupleIndexOf<long double, T>::value), 0u);
   BOOST_CHECK_EQUAL((TupleIndexOf<int, T>::value), 1u);
 }
 

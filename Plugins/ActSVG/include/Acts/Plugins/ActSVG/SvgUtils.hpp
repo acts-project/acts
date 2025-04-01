@@ -23,16 +23,16 @@ namespace Acts::Svg {
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {255, 255, 255};
-  double fillOpacity = 1.;
+  long double fillOpacity = 1.;
 
   // Highlight parameters
   std::array<int, 3> highlightColor = {0, 0, 0};
   std::vector<std::string> highlights = {};
 
-  double strokeWidth = 0.5;
+  long double strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-  double highlightStrokeWidth = 2;
+  long double highlightStrokeWidth = 2;
   std::array<int, 3> highlightStrokeColor = {0, 0, 0};
 
   std::vector<int> strokeDasharray = {};
@@ -101,10 +101,11 @@ inline static actsvg::svg::object group(
 /// @param yEnd the end position y
 ///
 /// @return a single svg object as a measure
-inline static actsvg::svg::object measure(double xStart, double yStart,
-                                          double xEnd, double yEnd,
+inline static actsvg::svg::object measure(long double xStart,
+                                          long double yStart, long double xEnd,
+                                          long double yEnd,
                                           const std::string& variable = "",
-                                          double value = 0.,
+                                          long double value = 0.,
                                           const std::string& unit = "") {
   std::string mlabel = "";
   if (!variable.empty()) {
@@ -134,8 +135,8 @@ inline static actsvg::svg::object measure(double xStart, double yStart,
 /// @param yMax the maximum y value
 ///
 /// @return an svg object
-inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
-                                         double yMax) {
+inline static actsvg::svg::object axesXY(long double xMin, long double xMax,
+                                         long double yMin, long double yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
@@ -154,9 +155,9 @@ inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
 ///
 /// @return an svg object
 inline static actsvg::svg::object infoBox(
-    double xPos, double yPos, const std::string& title, const Style& titleStyle,
-    const std::vector<std::string>& info, const Style& infoStyle,
-    actsvg::svg::object& object,
+    long double xPos, long double yPos, const std::string& title,
+    const Style& titleStyle, const std::vector<std::string>& info,
+    const Style& infoStyle, actsvg::svg::object& object,
     const std::vector<std::string>& highlights = {"mouseover", "mouseout"}) {
   auto [titleFill, titleStroke, titleFont] = titleStyle.fillStrokeFont();
   auto [infoFill, infoStroke, infoFont] = infoStyle.fillStrokeFont();

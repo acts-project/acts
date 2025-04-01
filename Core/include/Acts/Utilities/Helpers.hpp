@@ -173,10 +173,10 @@ T clampValue(U value) {
 ///
 /// @return [ range, medium ] in an tuple
 template <typename T>
-std::tuple<typename T::value_type, double> range_medium(const T& tseries) {
+std::tuple<typename T::value_type, long double> range_medium(const T& tseries) {
   auto [minIt, maxIt] = std::ranges::minmax_element(tseries);
   typename T::value_type range = (*maxIt - *minIt);
-  double medium = static_cast<double>((*maxIt + *minIt) * 0.5);
+  long double medium = static_cast<long double>((*maxIt + *minIt) * 0.5);
   return {range, medium};
 }
 
@@ -223,7 +223,7 @@ namespace detail {
 
 /// Computes the minimum, maximum, and bin count for a given vector of values.
 ///
-/// This function processes a vector of doubles to compute:
+/// This function processes a vector of long doubles to compute:
 /// - The minimum value (@c xMin)
 /// - The maximum value (@c xMax), adjusted to include an additional bin
 /// - The bin count (@c xBinCount) based on the number of unique values
@@ -235,14 +235,14 @@ namespace detail {
 /// 4. Adjusts the maximum to include an additional bin by adding the bin step
 /// size.
 ///
-/// @param xPos A reference to a vector of doubles.
+/// @param xPos A reference to a vector of long doubles.
 /// @return A tuple containing:
-///         - The minimum value (double)
-///         - The adjusted maximum value (double)
+///         - The minimum value (long double)
+///         - The adjusted maximum value (long double)
 ///         - The bin count (std::size_t)
 ///
 /// @note The vector xPos will be modified during the call.
-inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
+inline auto getMinMaxAndBinCount(std::vector<long double>& xPos) {
   // sort the values for unique()
   std::ranges::sort(xPos);
 
@@ -255,7 +255,8 @@ inline auto getMinMaxAndBinCount(std::vector<double>& xPos) {
 
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  const double stepX = (xMax - xMin) / static_cast<double>(xBinCount - 1);
+  const long double stepX =
+      (xMax - xMin) / static_cast<long double>(xBinCount - 1);
   xMax += stepX;
 
   // Return all values as a tuple

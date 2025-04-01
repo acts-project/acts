@@ -27,7 +27,7 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
   Segmentizer::Bin2D bin = {static_cast<Segmentizer::Bin2D::value_type>(binX),
                             static_cast<Segmentizer::Bin2D::value_type>(binY)};
   Segmentizer::Segment2D segment = {position, position};
-  double activation = 1;
+  long double activation = 1;
   Cluster::Cell cell = {bin, segment, activation};
 
   Cluster cluster;
@@ -52,7 +52,7 @@ auto testDigitizedParametersWithTwoClusters(bool merge, const Vector2 &firstHit,
   binUtility += BinUtility(BinningData(
       BinningOption::open, AxisDirection::AxisY, 20, -10.0f, 10.0f));
   std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
-  double nsigma = 1;
+  long double nsigma = 1;
   bool commonCorner = true;
 
   ModuleClusters moduleClusters(binUtility, boundIndices, merge, nsigma,

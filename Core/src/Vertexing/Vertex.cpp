@@ -37,7 +37,7 @@ Vector3 Vertex::position() const {
   return VectorHelpers::position(m_position);
 }
 
-double Vertex::time() const {
+long double Vertex::time() const {
   return m_position[eTime];
 }
 
@@ -73,7 +73,7 @@ const std::vector<TrackAtVertex>& Vertex::tracks() const {
   return m_tracksAtVertex;
 }
 
-std::pair<double, double> Vertex::fitQuality() const {
+std::pair<long double, long double> Vertex::fitQuality() const {
   return {m_chiSquared, m_numberDoF};
 }
 
@@ -85,7 +85,7 @@ void Vertex::setFullPosition(const Vector4& fullPosition) {
   m_position = fullPosition;
 }
 
-void Vertex::setTime(double time) {
+void Vertex::setTime(long double time) {
   m_position[eTime] = time;
 }
 
@@ -102,12 +102,12 @@ void Vertex::setTracksAtVertex(std::vector<TrackAtVertex> tracks) {
   m_tracksAtVertex = std::move(tracks);
 }
 
-void Vertex::setFitQuality(double chiSquared, double numberDoF) {
+void Vertex::setFitQuality(long double chiSquared, long double numberDoF) {
   m_chiSquared = chiSquared;
   m_numberDoF = numberDoF;
 }
 
-void Vertex::setFitQuality(std::pair<double, double> fitQuality) {
+void Vertex::setFitQuality(std::pair<long double, long double> fitQuality) {
   m_chiSquared = fitQuality.first;
   m_numberDoF = fitQuality.second;
 }

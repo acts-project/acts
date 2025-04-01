@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(GeoModelPlugin)
 BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
   auto material = new GeoMaterial("Material", 1.0);
   // Let's create a GeoFullPhysVol object
-  double geoHlX1 = 2, geoHlX2 = 2, geoHlY1 = 50, geoHlY2 = 80, geoHlZ = 60;
+  long double geoHlX1 = 2, geoHlX2 = 2, geoHlY1 = 50, geoHlY2 = 80, geoHlZ = 60;
   auto trd = new GeoTrd(geoHlX1, geoHlX1, geoHlY1, geoHlY2, geoHlZ);
   auto logTrd = new GeoLogVol("Trd", trd, material);
   auto physTrd = make_intrusive<GeoFullPhysVol>(logTrd);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(GeoTrdToVolumeConversion) {
       gmCache.boundingBoxes[0];
   const auto* bounds = dynamic_cast<const Acts::TrapezoidVolumeBounds*>(
       &volumeTrd->volumeBounds());
-  std::vector<double> convHls = bounds->values();
+  std::vector<long double> convHls = bounds->values();
   // note: GeoTrd and Acts use different coordinates
   BOOST_CHECK(geoHlX1 == convHls[3]);
   BOOST_CHECK(geoHlX2 == convHls[3]);

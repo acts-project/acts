@@ -27,8 +27,8 @@ namespace Acts {
 ///
 /// @return True if the bound vector is valid
 bool isBoundVectorValid(
-    const BoundVector& v, bool validateAngleRange, double epsilon = 1e-6,
-    double maxAbsEta = std::numeric_limits<double>::infinity());
+    const BoundVector& v, bool validateAngleRange, long double epsilon = 1e-6,
+    long double maxAbsEta = std::numeric_limits<long double>::infinity());
 
 /// Check if a free vector is valid. This checks the following:
 /// - All values are finite
@@ -40,8 +40,8 @@ bool isBoundVectorValid(
 ///
 /// @return True if the free vector is valid
 bool isFreeVectorValid(
-    const FreeVector& v, double epsilon = 1e-6,
-    double maxAbsEta = std::numeric_limits<double>::infinity());
+    const FreeVector& v, long double epsilon = 1e-6,
+    long double maxAbsEta = std::numeric_limits<long double>::infinity());
 
 /// Normalize the bound parameter angles
 ///

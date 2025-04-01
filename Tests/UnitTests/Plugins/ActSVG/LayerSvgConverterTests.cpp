@@ -44,7 +44,8 @@ void setupTools() {
   }
 }
 
-std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
+std::shared_ptr<Acts::Layer> generateDiscLayer(long double rInner,
+                                               long double rOuter,
                                                unsigned int quarterSegments,
                                                unsigned int nRings,
                                                bool useTrapezoids = false) {
@@ -52,8 +53,8 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
   setupTools();
   unsigned int fullSegments = 4 * quarterSegments;
   std::vector<std::shared_ptr<const Acts::Surface>> moduleSurfaces;
-  double phiStep = 2 * std::numbers::pi / fullSegments;
-  double rStep = (rOuter - rInner) / nRings;
+  long double phiStep = 2 * std::numbers::pi / fullSegments;
+  long double rStep = (rOuter - rInner) / nRings;
   // Reserve & fill
   moduleSurfaces.reserve(fullSegments * nRings);
   // Radial disc
@@ -79,12 +80,12 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
   } else {
     for (unsigned int ir = 0; ir < nRings; ++ir) {
       // Trapezoid parameters
-      double radius = rInner + (ir + 0.5) * rStep;
-      double yHalf = rStep * 0.5125;
+      long double radius = rInner + (ir + 0.5) * rStep;
+      long double yHalf = rStep * 0.5125;
 
-      double xHalfMin =
+      long double xHalfMin =
           1.15 * (rInner + ir * rStep) * std::numbers::pi / fullSegments;
-      double xHalfMax =
+      long double xHalfMax =
           1.15 * (rInner + (ir + 1) * rStep) * std::numbers::pi / fullSegments;
 
       std::shared_ptr<const Acts::TrapezoidBounds> tBounds =
@@ -92,7 +93,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(double rInner, double rOuter,
                                                         yHalf);
       for (unsigned int is = 0; is < fullSegments; ++is) {
         // Setting the phi
-        double cphi = -std::numbers::pi + is * phiStep;
+        long double cphi = -std::numbers::pi + is * phiStep;
         Acts::Vector3 center(radius * std::cos(cphi), radius * std::sin(cphi),
                              (is % 2) * 2 + (ir % 2) * 5);
         // Local axis system

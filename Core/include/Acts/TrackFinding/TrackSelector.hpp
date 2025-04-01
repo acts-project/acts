@@ -28,7 +28,8 @@ namespace Acts {
 /// track container and uses the built-in copy facility to copy tracks into the
 /// output container.
 class TrackSelector {
-  static constexpr double inf = std::numeric_limits<double>::infinity();
+  static constexpr long double inf =
+      std::numeric_limits<long double>::infinity();
 
  public:
   struct MeasurementCounter {
@@ -55,30 +56,30 @@ class TrackSelector {
   /// Default construction yields a set of cuts that accepts everything.
   struct Config {
     // Minimum/maximum local positions.
-    double loc0Min = -inf;
-    double loc0Max = inf;
-    double loc1Min = -inf;
-    double loc1Max = inf;
+    long double loc0Min = -inf;
+    long double loc0Max = inf;
+    long double loc1Min = -inf;
+    long double loc1Max = inf;
     // Minimum/maximum track time.
-    double timeMin = -inf;
-    double timeMax = inf;
+    long double timeMin = -inf;
+    long double timeMax = inf;
     // Direction cuts.
-    double phiMin = -inf;
-    double phiMax = inf;
-    double etaMin = -inf;
-    double etaMax = inf;
-    double absEtaMin = 0.0;
-    double absEtaMax = inf;
+    long double phiMin = -inf;
+    long double phiMax = inf;
+    long double etaMin = -inf;
+    long double etaMax = inf;
+    long double absEtaMin = 0.0;
+    long double absEtaMax = inf;
     // Momentum cuts.
-    double ptMin = 0.0;
-    double ptMax = inf;
+    long double ptMin = 0.0;
+    long double ptMax = inf;
 
     std::size_t minMeasurements = 0;
     std::size_t maxHoles = std::numeric_limits<std::size_t>::max();
     std::size_t maxOutliers = std::numeric_limits<std::size_t>::max();
     std::size_t maxHolesAndOutliers = std::numeric_limits<std::size_t>::max();
     std::size_t maxSharedHits = std::numeric_limits<std::size_t>::max();
-    double maxChi2 = inf;
+    long double maxChi2 = inf;
 
     /// Whether a reference surface is required for the track
     /// If false, the parameter cuts are not evaluated
@@ -94,43 +95,43 @@ class TrackSelector {
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& loc0(double min, double max);
+    Config& loc0(long double min, long double max);
 
     /// Set loc1 acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& loc1(double min, double max);
+    Config& loc1(long double min, long double max);
 
     /// Set time acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& time(double min, double max);
+    Config& time(long double min, long double max);
 
     /// Set phi acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& phi(double min, double max);
+    Config& phi(long double min, long double max);
 
     /// Set the eta acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& eta(double min, double max);
+    Config& eta(long double min, long double max);
 
     /// Set the absolute eta acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& absEta(double min, double max);
+    Config& absEta(long double min, long double max);
 
     /// Set the pt acceptance range
     /// @param min Minimum value
     /// @param max Maximum value
     /// @return Reference to this object
-    Config& pt(double min, double max);
+    Config& pt(long double min, long double max);
 
     /// Print this set of cuts to an output stream
     /// @param os Output stream
@@ -146,7 +147,7 @@ class TrackSelector {
     std::vector<Config> cutSets = {};
 
     /// Eta bin edges for varying cuts by eta
-    std::vector<double> absEtaEdges = {0, inf};
+    std::vector<long double> absEtaEdges = {0, inf};
 
     /// Get the number of eta bins
     /// @return Number of eta bins
@@ -159,13 +160,14 @@ class TrackSelector {
     /// Constructor to create a config object that is not upper-bounded.
     /// This is useful to use the "fluent" API to populate the configuration.
     /// @param etaMin Minimum eta bin edge
-    explicit EtaBinnedConfig(double etaMin) : cutSets{}, absEtaEdges{etaMin} {}
+    explicit EtaBinnedConfig(long double etaMin)
+        : cutSets{}, absEtaEdges{etaMin} {}
 
     /// Constructor from a vector of eta bin edges. This automatically
     /// initializes all the cuts to be the same for all eta and be essentially
     /// no-op.
     /// @param absEtaEdgesIn is the vector of eta bin edges
-    explicit EtaBinnedConfig(std::vector<double> absEtaEdgesIn)
+    explicit EtaBinnedConfig(std::vector<long double> absEtaEdgesIn)
         : absEtaEdges{std::move(absEtaEdgesIn)} {
       cutSets.resize(nEtaBins());
     }
@@ -178,7 +180,7 @@ class TrackSelector {
     /// @param etaMax Upper bound of the new eta bin
     /// @param callback Callback to configure the cuts for this eta bin
     /// @return Reference to this object
-    EtaBinnedConfig& addCuts(double etaMax,
+    EtaBinnedConfig& addCuts(long double etaMax,
                              const std::function<void(Config&)>& callback = {});
 
     /// Add a new eta bin with an upper bound of +infinity.
@@ -196,23 +198,23 @@ class TrackSelector {
     /// Check if the configuration has a bin for a given eta
     /// @param eta Eta value
     /// @return True if the configuration has a bin for the given eta
-    bool hasCuts(double eta) const;
+    bool hasCuts(long double eta) const;
 
     /// Get the index of the eta bin for a given eta.
     /// throws an exception if Eta is outside the abs eta bin edges.
     /// @param eta Eta value
     /// @return Index of the eta bin
-    std::size_t binIndex(double eta) const;
+    std::size_t binIndex(long double eta) const;
 
     /// Get the index of the eta bin for a given eta
     /// @param eta Eta value
     /// @return Index of the eta bin, or >= nEtaBins() if Eta is outside the abs eta bin edges.
-    std::size_t binIndexNoCheck(double eta) const;
+    std::size_t binIndexNoCheck(long double eta) const;
 
     /// Get the cuts for a given eta
     /// @param eta Eta value
     /// @return Cuts for the given eta
-    const Config& getCuts(double eta) const;
+    const Config& getCuts(long double eta) const;
   };
 
   /// Constructor from a single cut config object
@@ -249,36 +251,36 @@ class TrackSelector {
   bool m_isUnbinned = false;
 };
 
-inline TrackSelector::Config& TrackSelector::Config::loc0(double min,
-                                                          double max) {
+inline TrackSelector::Config& TrackSelector::Config::loc0(long double min,
+                                                          long double max) {
   loc0Min = min;
   loc0Max = max;
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::loc1(double min,
-                                                          double max) {
+inline TrackSelector::Config& TrackSelector::Config::loc1(long double min,
+                                                          long double max) {
   loc1Min = min;
   loc1Max = max;
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::time(double min,
-                                                          double max) {
+inline TrackSelector::Config& TrackSelector::Config::time(long double min,
+                                                          long double max) {
   timeMin = min;
   timeMax = max;
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::phi(double min,
-                                                         double max) {
+inline TrackSelector::Config& TrackSelector::Config::phi(long double min,
+                                                         long double max) {
   phiMin = min;
   phiMax = max;
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::eta(double min,
-                                                         double max) {
+inline TrackSelector::Config& TrackSelector::Config::eta(long double min,
+                                                         long double max) {
   if (absEtaMin != 0.0 || absEtaMax != inf) {
     throw std::invalid_argument(
         "Cannot set both eta and absEta cuts in the same cut set");
@@ -288,8 +290,8 @@ inline TrackSelector::Config& TrackSelector::Config::eta(double min,
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::absEta(double min,
-                                                            double max) {
+inline TrackSelector::Config& TrackSelector::Config::absEta(long double min,
+                                                            long double max) {
   if (etaMin != -inf || etaMax != inf) {
     throw std::invalid_argument(
         "Cannot set both eta and absEta cuts in the same cut set");
@@ -299,8 +301,8 @@ inline TrackSelector::Config& TrackSelector::Config::absEta(double min,
   return *this;
 }
 
-inline TrackSelector::Config& TrackSelector::Config::pt(double min,
-                                                        double max) {
+inline TrackSelector::Config& TrackSelector::Config::pt(long double min,
+                                                        long double max) {
   ptMin = min;
   ptMax = max;
   return *this;
@@ -338,7 +340,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 inline TrackSelector::EtaBinnedConfig& TrackSelector::EtaBinnedConfig::addCuts(
-    double etaMax, const std::function<void(Config&)>& callback) {
+    long double etaMax, const std::function<void(Config&)>& callback) {
   if (etaMax <= absEtaEdges.back()) {
     throw std::invalid_argument{
         "Abs Eta bin edges must be in increasing order"};
@@ -361,11 +363,12 @@ inline TrackSelector::EtaBinnedConfig& TrackSelector::EtaBinnedConfig::addCuts(
   return addCuts(inf, callback);
 }
 
-inline bool TrackSelector::EtaBinnedConfig::hasCuts(double eta) const {
+inline bool TrackSelector::EtaBinnedConfig::hasCuts(long double eta) const {
   return std::abs(eta) < absEtaEdges.back();
 }
 
-inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
+inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(
+    long double eta) const {
   std::size_t index = binIndexNoCheck(eta);
   if (!(index < nEtaBins())) {
     throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
@@ -374,7 +377,7 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndex(double eta) const {
 }
 
 inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
-    double eta) const {
+    long double eta) const {
   auto binIt =
       std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
   std::size_t index = std::distance(absEtaEdges.begin(), binIt);
@@ -385,7 +388,7 @@ inline std::size_t TrackSelector::EtaBinnedConfig::binIndexNoCheck(
 }
 
 inline const TrackSelector::Config& TrackSelector::EtaBinnedConfig::getCuts(
-    double eta) const {
+    long double eta) const {
   return nEtaBins() == 1 ? cutSets[0] : cutSets[binIndex(eta)];
 }
 
@@ -418,16 +421,16 @@ template <TrackProxyConcept track_proxy_t>
 bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   auto checkMin = [](auto x, auto min) { return min <= x; };
   auto checkMax = [](auto x, auto max) { return x <= max; };
-  auto within = [](double x, double min, double max) {
+  auto within = [](long double x, long double min, long double max) {
     return (min <= x) && (x < max);
   };
 
   const auto theta = track.theta();
 
-  constexpr double kUnset = -std::numeric_limits<double>::infinity();
+  constexpr long double kUnset = -std::numeric_limits<long double>::infinity();
 
-  double _eta = kUnset;
-  double _absEta = kUnset;
+  long double _eta = kUnset;
+  long double _absEta = kUnset;
 
   auto absEta = [&]() {
     if (_absEta == kUnset) {
@@ -489,7 +492,7 @@ inline TrackSelector::TrackSelector(
   }
 
   if (m_cfg.nEtaBins() == 1) {
-    static const std::vector<double> infVec = {0, inf};
+    static const std::vector<long double> infVec = {0, inf};
     m_isUnbinned =
         m_cfg.absEtaEdges == infVec;  // single bin, no eta edges given
   }

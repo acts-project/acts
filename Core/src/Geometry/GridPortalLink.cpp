@@ -28,19 +28,20 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
           dynamic_cast<const CylinderSurface*>(surface.get());
       cylinder != nullptr) {
     if (direction == AxisDirection::AxisRPhi) {
-      double r = cylinder->bounds().get(CylinderBounds::eR);
+      long double r = cylinder->bounds().get(CylinderBounds::eR);
       if (cylinder->bounds().coversFullAzimuth()) {
         grid = GridPortalLink::make(
             surface, direction,
             Axis{AxisClosed, -std::numbers::pi * r, std::numbers::pi * r, 1});
       } else {
-        double hlPhi = cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
+        long double hlPhi =
+            cylinder->bounds().get(CylinderBounds::eHalfPhiSector);
 
         grid = GridPortalLink::make(surface, direction,
                                     Axis{AxisBound, -hlPhi * r, hlPhi * r, 1});
       }
     } else if (direction == AxisDirection::AxisZ) {
-      double hlZ = cylinder->bounds().get(CylinderBounds::eHalfLengthZ);
+      long double hlZ = cylinder->bounds().get(CylinderBounds::eHalfLengthZ);
       grid = GridPortalLink::make(surface, direction,
                                   Axis{AxisBound, -hlZ, hlZ, 1});
     } else {
@@ -50,8 +51,8 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
              disc != nullptr) {
     const auto& bounds = dynamic_cast<const RadialBounds&>(disc->bounds());
     if (direction == AxisDirection::AxisR) {
-      double minR = bounds.get(RadialBounds::eMinR);
-      double maxR = bounds.get(RadialBounds::eMaxR);
+      long double minR = bounds.get(RadialBounds::eMinR);
+      long double maxR = bounds.get(RadialBounds::eMaxR);
       grid = GridPortalLink::make(surface, direction,
                                   Axis{AxisBound, minR, maxR, 1});
     } else if (direction == AxisDirection::AxisPhi) {
@@ -60,7 +61,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
             surface, direction,
             Axis{AxisClosed, -std::numbers::pi, std::numbers::pi, 1});
       } else {
-        double hlPhi = bounds.get(RadialBounds::eHalfPhiSector);
+        long double hlPhi = bounds.get(RadialBounds::eHalfPhiSector);
         grid = GridPortalLink::make(surface, direction,
                                     Axis{AxisBound, -hlPhi, hlPhi, 1});
       }
@@ -75,12 +76,12 @@ std::unique_ptr<GridPortalLink> GridPortalLink::make(
         direction != AxisDirection::AxisY) {
       throw std::invalid_argument{"Invalid binning direction"};
     }
-    double min = (direction == AxisDirection::AxisX)
-                     ? bounds.get(RectangleBounds::eMinX)
-                     : bounds.get(RectangleBounds::eMinY);
-    double max = (direction == AxisDirection::AxisX)
-                     ? bounds.get(RectangleBounds::eMaxX)
-                     : bounds.get(RectangleBounds::eMaxY);
+    long double min = (direction == AxisDirection::AxisX)
+                          ? bounds.get(RectangleBounds::eMinX)
+                          : bounds.get(RectangleBounds::eMinY);
+    long double max = (direction == AxisDirection::AxisX)
+                          ? bounds.get(RectangleBounds::eMaxX)
+                          : bounds.get(RectangleBounds::eMaxY);
     grid =
         GridPortalLink::make(surface, direction, Axis{AxisBound, min, max, 1});
   } else {
@@ -104,7 +105,7 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
   auto same = [](auto a, auto b) { return std::abs(a - b) < tolerance; };
 
   auto checkZ = [&cyl, same](const IAxis& axis) {
-    double hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
+    long double hlZ = cyl.bounds().get(CylinderBounds::eHalfLengthZ);
     if (!same(axis.getMin(), -hlZ) || !same(axis.getMax(), hlZ)) {
       throw std::invalid_argument(
           "GridPortalLink: CylinderBounds: invalid length setup: " +
@@ -114,9 +115,9 @@ void GridPortalLink::checkConsistency(const CylinderSurface& cyl) const {
     }
   };
   auto checkRPhi = [&cyl, same](const IAxis& axis) {
-    double hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
-    double r = cyl.bounds().get(CylinderBounds::eR);
-    if (double hlRPhi = r * hlPhi;
+    long double hlPhi = cyl.bounds().get(CylinderBounds::eHalfPhiSector);
+    long double r = cyl.bounds().get(CylinderBounds::eR);
+    if (long double hlRPhi = r * hlPhi;
         !same(axis.getMin(), -hlRPhi) || !same(axis.getMax(), hlRPhi)) {
       throw std::invalid_argument(
           "GridPortalLink: CylinderBounds: invalid phi sector setup: axes "
@@ -171,8 +172,8 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
   }
 
   auto checkR = [&bounds, same](const IAxis& axis) {
-    double minR = bounds->get(RadialBounds::eMinR);
-    double maxR = bounds->get(RadialBounds::eMaxR);
+    long double minR = bounds->get(RadialBounds::eMinR);
+    long double maxR = bounds->get(RadialBounds::eMaxR);
     if (!same(axis.getMin(), minR) || !same(axis.getMax(), maxR)) {
       throw std::invalid_argument(
           "GridPortalLink: DiscBounds: invalid radius setup.");
@@ -180,7 +181,7 @@ void GridPortalLink::checkConsistency(const DiscSurface& disc) const {
   };
 
   auto checkPhi = [&bounds, same](const IAxis& axis) {
-    double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+    long double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
     if (!same(axis.getMin(), -hlPhi) || !same(axis.getMax(), hlPhi)) {
       throw std::invalid_argument(
           "GridPortalLink: DiscBounds: invalid phi sector setup.");
@@ -226,12 +227,12 @@ void GridPortalLink::checkConsistency(const PlaneSurface& plane) const {
         "GridPortalLink: PlaneBounds: invalid bounds type.");
   }
   auto check = [&bounds, same](const IAxis& axis, AxisDirection dir) {
-    double min = (dir == AxisDirection::AxisX)
-                     ? bounds->get(RectangleBounds::eMinX)
-                     : bounds->get(RectangleBounds::eMinY);
-    double max = (dir == AxisDirection::AxisX)
-                     ? bounds->get(RectangleBounds::eMaxX)
-                     : bounds->get(RectangleBounds::eMaxY);
+    long double min = (dir == AxisDirection::AxisX)
+                          ? bounds->get(RectangleBounds::eMinX)
+                          : bounds->get(RectangleBounds::eMinY);
+    long double max = (dir == AxisDirection::AxisX)
+                          ? bounds->get(RectangleBounds::eMaxX)
+                          : bounds->get(RectangleBounds::eMaxY);
     if (!same(axis.getMin(), min) || !same(axis.getMax(), max)) {
       throw std::invalid_argument(
           "GridPortalLink: PlaneBounds: invalid setup.");
@@ -376,7 +377,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   if (direction() == AxisDirection::AxisRPhi) {
     const auto& axisRPhi = *grid().axes().front();
     // 1D direction is AxisRPhi, so add a Z axis
-    double hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
+    long double hlZ = surface->bounds().get(CylinderBounds::eHalfLengthZ);
 
     auto grid = axisRPhi.visit([&](const auto& axis0) {
       Axis axisZ{AxisBound, -hlZ, hlZ, 1};
@@ -394,9 +395,9 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   } else {
     const auto& axisZ = *grid().axes().front();
     // 1D direction is AxisZ, so add an rPhi axis
-    double r = surface->bounds().get(CylinderBounds::eR);
-    double hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
-    double hlRPhi = r * hlPhi;
+    long double r = surface->bounds().get(CylinderBounds::eR);
+    long double hlPhi = surface->bounds().get(CylinderBounds::eHalfPhiSector);
+    long double hlRPhi = r * hlPhi;
 
     auto makeGrid = [&](auto bdt) {
       auto grid = axisZ.visit([&](const auto& axis1) {
@@ -433,7 +434,7 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   if (direction() == AxisDirection::AxisR) {
     const auto& axisR = *grid().axes().front();
     // 1D direction is AxisR, so add a phi axis
-    double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
+    long double hlPhi = bounds->get(RadialBounds::eHalfPhiSector);
 
     auto makeGrid = [&](auto bdt) {
       auto grid = axisR.visit([&](const auto& axis0) {
@@ -457,8 +458,8 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   } else {
     const auto& axisPhi = *grid().axes().front();
     // 1D direction is AxisPhi, so add an R axis
-    double rMin = bounds->get(RadialBounds::eMinR);
-    double rMax = bounds->get(RadialBounds::eMaxR);
+    long double rMin = bounds->get(RadialBounds::eMinR);
+    long double rMax = bounds->get(RadialBounds::eMaxR);
 
     auto grid = axisPhi.visit([&](const auto& axis1) {
       Axis axisR{AxisBound, rMin, rMax, 1};
@@ -487,10 +488,12 @@ std::unique_ptr<GridPortalLink> GridPortalLink::extendTo2dImpl(
   bool dirX = direction() == AxisDirection::AxisX;
   const auto& thisAxis = *grid().axes().front();
 
-  double minExtend = dirX ? bounds->get(RectangleBounds::BoundValues::eMinY)
-                          : bounds->get(RectangleBounds::BoundValues::eMinX);
-  double maxExtend = dirX ? bounds->get(RectangleBounds::BoundValues::eMaxY)
-                          : bounds->get(RectangleBounds::BoundValues::eMaxX);
+  long double minExtend =
+      dirX ? bounds->get(RectangleBounds::BoundValues::eMinY)
+           : bounds->get(RectangleBounds::BoundValues::eMinX);
+  long double maxExtend =
+      dirX ? bounds->get(RectangleBounds::BoundValues::eMaxY)
+           : bounds->get(RectangleBounds::BoundValues::eMaxX);
 
   FillDirection fillDir = dirX ? FillDirection::loc1 : FillDirection::loc0;
 

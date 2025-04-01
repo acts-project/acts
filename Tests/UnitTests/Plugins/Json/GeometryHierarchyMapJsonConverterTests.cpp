@@ -36,7 +36,7 @@ GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 // example element for the container
 
 struct Thing {
-  double x = 1.0;
+  long double x = 1.0;
   int y = 23;
 
   friend constexpr bool operator==(const Thing& lhs, const Thing& rhs) {

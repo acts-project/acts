@@ -53,7 +53,8 @@ ProcessCode HitSelector::execute(const AlgorithmContext& ctx) const {
   unorderedHits.reserve(hits.size());
 
   for (const auto& hit : hits) {
-    const double r = Acts::fastHypot(hit.position().x(), hit.position().y());
+    const long double r =
+        Acts::fastHypot(hit.position().x(), hit.position().y());
     const std::uint64_t primaryVertexId = hit.particleId().vertexPrimary();
 
     const bool validParticle = (particlesSelected == nullptr) ||

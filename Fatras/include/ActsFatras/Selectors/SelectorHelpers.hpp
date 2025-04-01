@@ -19,7 +19,7 @@ namespace ActsFatras {
 /// Select all objects with an extracted value equal or larger than the cut.
 template <typename cast_t>
 struct Min {
-  double valMin = 0.;
+  long double valMin = 0.;
 
   template <typename T>
   bool operator()(const T &thing) const {
@@ -30,7 +30,7 @@ struct Min {
 /// Select all objects with an extracted value below the cut.
 template <typename cast_t>
 struct Max {
-  double valMax = std::numeric_limits<double>::max();
+  long double valMax = std::numeric_limits<long double>::max();
 
   template <typename T>
   bool operator()(const T &thing) const {
@@ -43,8 +43,8 @@ struct Max {
 /// The range is defined as the left, half-open interval within the cuts.
 template <typename cast_t>
 struct Range {
-  double valMin = std::numeric_limits<double>::lowest();
-  double valMax = std::numeric_limits<double>::max();
+  long double valMin = std::numeric_limits<long double>::lowest();
+  long double valMax = std::numeric_limits<long double>::max();
 
   template <typename T>
   bool operator()(const T &thing) const {

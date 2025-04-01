@@ -27,7 +27,7 @@
 #pragma link C++ class std::vector<std::vector<std::size_t>>+;
 
 #pragma link C++ class std::vector<std::vector<float>>+;
-#pragma link C++ class std::vector<std::vector<double>>+;
+#pragma link C++ class std::vector<std::vector<long double>>+;
 #pragma link C++ class std::vector<std::vector<bool>>+;
 
 // clang-format on

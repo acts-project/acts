@@ -57,6 +57,6 @@ std::vector<std::shared_ptr<Acts::Surface>> readVector(const Options& options);
 ///
 /// @return  a vector of surfaces
 std::vector<std::shared_ptr<Acts::JsonDetectorElement>> readDetectorElements(
-    const Options& options, double thickness);
+    const Options& options, long double thickness);
 
 }  // namespace Acts::JsonSurfacesReader

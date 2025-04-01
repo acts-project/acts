@@ -160,7 +160,7 @@ Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
                          Acts::open, Acts::AxisDirection::AxisY);
   }
   if (trapezoidBounds != nullptr) {
-    double halfLengthX =
+    long double halfLengthX =
         std::max(trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
                  trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
     bUtility += Acts::BinUtility(1, -1 * halfLengthX, halfLengthX, Acts::open,

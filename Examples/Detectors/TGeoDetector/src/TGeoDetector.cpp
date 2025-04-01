@@ -62,7 +62,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     layerBuilderConfig.elementFactory = config.elementFactory;
 
     // configure surface autobinning
-    std::vector<std::pair<double, double>> binTolerances(
+    std::vector<std::pair<long double, long double>> binTolerances(
         Acts::numAxisDirections(), {0., 0.});
     binTolerances[toUnderlying(Acts::AxisDirection::AxisR)] = {
         volume.binToleranceR.lower.value_or(0.),
@@ -96,10 +96,10 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
 
       auto rR = volume.rRange.at(ncp);
       auto rMin = rR.lower.value_or(0.);
-      auto rMax = rR.upper.value_or(std::numeric_limits<double>::max());
+      auto rMax = rR.upper.value_or(std::numeric_limits<long double>::max());
       auto zR = volume.zRange.at(ncp);
-      auto zMin = zR.lower.value_or(-std::numeric_limits<double>::max());
-      auto zMax = zR.upper.value_or(std::numeric_limits<double>::max());
+      auto zMin = zR.lower.value_or(-std::numeric_limits<long double>::max());
+      auto zMax = zR.upper.value_or(std::numeric_limits<long double>::max());
       lConfig.parseRanges = {
           {Acts::AxisDirection::AxisR, {rMin, rMax}},
           {Acts::AxisDirection::AxisZ, {zMin, zMax}},
@@ -351,7 +351,7 @@ void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
   config.buildBeamPipe = djson["geo-tgeo-build-beampipe"];
   if (config.buildBeamPipe) {
     const auto beamPipeParameters =
-        djson["geo-tgeo-beampipe-parameters"].get<std::array<double, 3>>();
+        djson["geo-tgeo-beampipe-parameters"].get<std::array<long double, 3>>();
     config.beamPipeRadius = beamPipeParameters[0];
     config.beamPipeHalflengthZ = beamPipeParameters[1];
     config.beamPipeLayerThickness = beamPipeParameters[2];

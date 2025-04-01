@@ -54,7 +54,7 @@ struct GridMaterialAccessor : public IGridMaterialAccessor {
   ///
   /// @note this is not particularly fast
   template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
+  void scale(grid_type& grid, long double scale) {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
       grid.at(ib).scaleThickness(static_cast<float>(scale));
@@ -91,7 +91,7 @@ struct IndexedMaterialAccessor : public IGridMaterialAccessor {
   ///
   /// @param scale the amount of the scaling
   template <typename grid_type>
-  void scale(grid_type& /*grid*/, double scale) {
+  void scale(grid_type& /*grid*/, long double scale) {
     for (auto& m : material) {
       m.scaleThickness(static_cast<float>(scale));
     }
@@ -144,7 +144,7 @@ struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
   /// outcome is unpredictable.
   ///
   template <typename grid_type>
-  void scale(grid_type& grid, double scale) {
+  void scale(grid_type& grid, long double scale) {
     if (sharedEntries) {
       throw std::invalid_argument(
           "GloballyIndexedMaterialAccessor: shared entry scaling is not "
@@ -250,7 +250,7 @@ class GridSurfaceMaterialT
   /// Scale operator
   ///
   /// @param factor is the scale factor applied
-  ISurfaceMaterial& scale(double factor) final {
+  ISurfaceMaterial& scale(long double factor) final {
     m_materialAccessor.scale(m_grid, factor);
     return (*this);
   }

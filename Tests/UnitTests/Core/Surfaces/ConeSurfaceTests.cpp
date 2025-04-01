@@ -42,10 +42,10 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   // default construction is deleted
 
   /// Constructor with transform, alpha and symmetry indicator
-  const double alpha = std::numbers::pi / 8.;
-  const double halfPhiSector = std::numbers::pi / 16.;
-  const double zMin = 1.;
-  const double zMax = 10.;
+  const long double alpha = std::numbers::pi / 8.;
+  const long double halfPhiSector = std::numbers::pi / 16.;
+  const long double zMin = 1.;
+  const long double zMax = 10.;
   const bool symmetric = false;
   const Translation3 translation{0., 1., 2.};
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
 /// Unit test for testing ConeSurface properties
 BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test clone method
-  const double alpha = std::numbers::pi / 8.;
+  const long double alpha = std::numbers::pi / 8.;
   const bool symmetric = false;
   const Translation3 translation{0., 1., 2.};
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test referenceFrame
   Vector3 globalPosition{2., 2., 2.};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
-  double rootHalf = std::sqrt(0.5);
+  long double rootHalf = std::sqrt(0.5);
   RotationMatrix3 expectedFrame;
   expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1., 0.;
   CHECK_CLOSE_OR_SMALL(
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
-  const double alpha = std::numbers::pi / 8.;
+  const long double alpha = std::numbers::pi / 8.;
   const bool symmetric = false;
   const Translation3 translation{0., 1., 2.};
 
@@ -212,10 +212,10 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
-  const double alpha = std::numbers::pi / 8.;
-  const double halfPhiSector = std::numbers::pi / 8.;  // != pi/16
-  const double zMin = 0.;                              // != 1.
-  const double zMax = 10.;
+  const long double alpha = std::numbers::pi / 8.;
+  const long double halfPhiSector = std::numbers::pi / 8.;  // != pi/16
+  const long double zMin = 0.;                              // != 1.
+  const long double zMax = 10.;
   const Translation3 translation{0., 0., 0.};  // != {0., 1., 2.}
 
   /// Testing a Full cone
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   auto pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
   auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
 
-  double rMax = zMax * std::tan(alpha);
+  long double rMax = zMax * std::tan(alpha);
   CHECK_CLOSE_ABS(zMin, pConeExtent.min(AxisDirection::AxisZ),
                   s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(zMax, pConeExtent.max(AxisDirection::AxisZ),
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
 
 /// Unit test for testing ConeSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
-  const double alpha = std::numbers::pi / 8.;
+  const long double alpha = std::numbers::pi / 8.;
   const bool symmetric = false;
   const Translation3 translation{0., 1., 2.};
 

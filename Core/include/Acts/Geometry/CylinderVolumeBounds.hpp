@@ -105,26 +105,27 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param avgphi The average phi value
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
-  CylinderVolumeBounds(double rmin, double rmax, double halfz,
-                       double halfphi = std::numbers::pi, double avgphi = 0.,
-                       double bevelMinZ = 0., double bevelMaxZ = 0.);
+  CylinderVolumeBounds(long double rmin, long double rmax, long double halfz,
+                       long double halfphi = std::numbers::pi,
+                       long double avgphi = 0., long double bevelMinZ = 0.,
+                       long double bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  explicit CylinderVolumeBounds(const std::array<double, eSize>& values);
+  explicit CylinderVolumeBounds(const std::array<long double, eSize>& values);
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
   /// @param cBounds the cylinder bounds
   /// @param thickness of the extrusion
-  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
+  CylinderVolumeBounds(const CylinderBounds& cBounds, long double thickness);
 
   /// Constructor - extruded from radial bounds and thickness
   ///
   /// @param rBounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
+  CylinderVolumeBounds(const RadialBounds& rBounds, long double thickness);
 
   /// Copy Constructor
   ///
@@ -141,14 +142,14 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool inside(const Vector3& pos, double tol = 0.) const override;
+  bool inside(const Vector3& pos, long double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -186,10 +187,10 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param aDir is the axis direction used for the binning
   Vector3 referenceOffset(AxisDirection aDir) const override;
 
-  /// Binning borders in double
+  /// Binning borders in long double
   ///
   /// @param aDir is the axis direction used for the binning
-  double referenceBorder(AxisDirection aDir) const override;
+  long double referenceBorder(AxisDirection aDir) const override;
 
   /// Output Method for std::ostream
   /// @param os is the output stream
@@ -197,20 +198,21 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value
   /// @param bValue the bound value identifier
   /// @param value the value to be set
-  void set(BoundValues bValue, double value);
+  void set(BoundValues bValue, long double value);
 
   /// Set a range of bound values
   /// @param keyValues the initializer list of key value pairs
-  void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
+  void set(
+      std::initializer_list<std::pair<BoundValues, long double>> keyValues);
 
  private:
-  /// The internal version of the bounds can be float/double
-  std::array<double, eSize> m_values{};
+  /// The internal version of the bounds can be float/long double
+  std::array<long double, eSize> m_values{};
 
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};

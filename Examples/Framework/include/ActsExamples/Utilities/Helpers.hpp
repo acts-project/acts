@@ -31,7 +31,7 @@ class Binning {
  public:
   Binning() : m_bins({0.0}) {}
 
-  Binning(std::string title, int bins, double bMin, double bMax)
+  Binning(std::string title, int bins, long double bMin, long double bMax)
       : m_title(std::move(title)) {
     const auto step = (bMax - bMin) / bins;
     m_bins.resize(bins + 1);
@@ -42,18 +42,18 @@ class Binning {
     });
   }
 
-  Binning(std::string title, std::vector<double> bins)
+  Binning(std::string title, std::vector<long double> bins)
       : m_title(std::move(title)), m_bins(std::move(bins)) {}
 
   const auto& title() const { return m_title; }
   auto nBins() const { return m_bins.size() - 1; }
-  const double* data() const { return m_bins.data(); }
+  const long double* data() const { return m_bins.data(); }
   auto low() const { return m_bins.front(); }
   auto high() const { return m_bins.back(); }
 
  private:
   std::string m_title;
-  std::vector<double> m_bins;
+  std::vector<long double> m_bins;
 };
 
 /// @brief book a 1D histogram

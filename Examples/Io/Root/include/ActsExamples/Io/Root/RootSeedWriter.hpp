@@ -101,7 +101,7 @@ class RootSeedWriter final : public WriterT<SimSeedContainer> {
   float m_var_z_2 = std::numeric_limits<float>::signaling_NaN();
   float m_var_z_3 = std::numeric_limits<float>::signaling_NaN();
   // Seed vertex position
-  double m_z_vertex = std::numeric_limits<double>::signaling_NaN();
+  long double m_z_vertex = std::numeric_limits<long double>::signaling_NaN();
   // Seed quality
   float m_seed_quality = std::numeric_limits<float>::signaling_NaN();
 };

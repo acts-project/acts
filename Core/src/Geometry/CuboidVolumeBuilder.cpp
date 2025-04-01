@@ -100,13 +100,14 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
                                  cfg.binningDimension, pl, trafo);
 }
 
-std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
+std::pair<long double, long double> Acts::CuboidVolumeBuilder::binningRange(
     const GeometryContext& gctx,
     const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   using namespace UnitLiterals;
   // Construct return value
-  std::pair<double, double> minMax = std::make_pair(
-      std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
+  std::pair<long double, long double> minMax =
+      std::make_pair(std::numeric_limits<long double>::max(),
+                     -std::numeric_limits<long double>::max());
 
   // Compute the min volume boundaries for computing the binning start
   // See
@@ -123,8 +124,8 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
     ProtoLayer pl{gctx, layercfg.surfaces};
     pl.envelope[cfg.binningDimension] = layercfg.envelopeX;
 
-    double surfacePosMin = pl.min(cfg.binningDimension);
-    double surfacePosMax = pl.max(cfg.binningDimension);
+    long double surfacePosMin = pl.min(cfg.binningDimension);
+    long double surfacePosMax = pl.max(cfg.binningDimension);
 
     // Test if new extreme is found and set it
     if (surfacePosMin < minMax.first) {
@@ -170,7 +171,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   }
 
   // Build layer array
-  std::pair<double, double> minMax = binningRange(gctx, cfg);
+  std::pair<long double, long double> minMax = binningRange(gctx, cfg);
   LayerArrayCreator::Config lacCnf;
   LayerArrayCreator layArrCreator(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));

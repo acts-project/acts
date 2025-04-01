@@ -18,7 +18,7 @@
 namespace {
 // Test vector of 2D points generated from the make_blobs function of
 // scikit-learn to correspond to 4 clusters with a standard deviation of 0.3
-std::vector<std::array<double, 2>> testVector{
+std::vector<std::array<long double, 2>> testVector{
     {-2.83739915, 2.62792556},  {-2.02847331, -1.90722196},
     {4.42609249, -2.42439165},  {-2.54167208, -1.31586441},
     {-2.74072011, 1.88175176},  {-2.44805173, -1.72270269},
@@ -76,7 +76,8 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(AnnoySetSeedTest) {
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
+      Annoy::AnnoyIndex<unsigned int, long double, AnnoyMetric,
+                        Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   const unsigned int annoySeed = 123456789;
@@ -92,7 +93,8 @@ BOOST_AUTO_TEST_CASE(AnnoySetSeedTest) {
 BOOST_AUTO_TEST_CASE(AnnoyAddAndBuildTest) {
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
+      Annoy::AnnoyIndex<unsigned int, long double, AnnoyMetric,
+                        Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   const unsigned int annoySeed = 123456789;
@@ -124,7 +126,8 @@ BOOST_AUTO_TEST_CASE(AnnoyAddAndBuildTest) {
 BOOST_AUTO_TEST_CASE(AnnoyNeighborTest) {
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
+      Annoy::AnnoyIndex<unsigned int, long double, AnnoyMetric,
+                        Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   const unsigned int annoySeed = 123456789;
@@ -148,7 +151,7 @@ BOOST_AUTO_TEST_CASE(AnnoyNeighborTest) {
   /// Validate neighbors for the first point
   unsigned int bucketSize = 5;
   std::vector<unsigned int> bucketIds;
-  std::vector<double> distances;
+  std::vector<long double> distances;
   annoyModel.get_nns_by_item(0, bucketSize, -1, &bucketIds, &distances);
 
   BOOST_CHECK_EQUAL(bucketIds.size(), bucketSize);
@@ -166,7 +169,8 @@ BOOST_AUTO_TEST_CASE(AnnoyNeighborTest) {
 BOOST_AUTO_TEST_CASE(AnnoyDistanceTest) {
   using AnnoyMetric = Annoy::Euclidean;
   using AnnoyModel =
-      Annoy::AnnoyIndex<unsigned int, double, AnnoyMetric, Annoy::Kiss32Random,
+      Annoy::AnnoyIndex<unsigned int, long double, AnnoyMetric,
+                        Annoy::Kiss32Random,
                         Annoy::AnnoyIndexSingleThreadedBuildPolicy>;
 
   const unsigned int annoySeed = 123456789;
@@ -188,8 +192,8 @@ BOOST_AUTO_TEST_CASE(AnnoyDistanceTest) {
   annoyModel.build(nTrees);
 
   /// Validate the distance computation
-  double distance = annoyModel.get_distance(0, 1);
-  double expected_distance =
+  long double distance = annoyModel.get_distance(0, 1);
+  long double expected_distance =
       std::sqrt(std::pow(testVector[0][0] - testVector[1][0], 2) +
                 std::pow(testVector[0][1] - testVector[1][1], 2));
 

@@ -68,7 +68,7 @@ class DD4hepBlueprintFactory {
 
  private:
   /// @brief auto-calculate the unit length conversion
-  static constexpr double unitLength =
+  static constexpr long double unitLength =
       Acts::UnitConstants::mm / dd4hep::millimeter;
 
   /// Configuration struct
@@ -100,7 +100,7 @@ class DD4hepBlueprintFactory {
   /// @param extOpt the optional extent as output from the internal parsing
   ///
   /// @return a tuple of the bounds type, values and binning, auxiliary data
-  std::tuple<Transform3, VolumeBounds::BoundsType, std::vector<double>,
+  std::tuple<Transform3, VolumeBounds::BoundsType, std::vector<long double>,
              std::vector<AxisDirection>, std::string>
   extractExternals([[maybe_unused]] const GeometryContext& gctx,
                    const dd4hep::DetElement& dd4hepElement,

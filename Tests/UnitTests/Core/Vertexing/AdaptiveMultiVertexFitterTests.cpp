@@ -66,34 +66,35 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<long double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<long double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<long double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<long double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(1._GeV, 30._GeV);
+std::uniform_real_distribution<long double> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
+std::uniform_real_distribution<long double> thetaDist(1.,
+                                                      std::numbers::pi - 1.);
 // Track charge helper distribution
-std::uniform_real_distribution<double> qDist(-1, 1);
+std::uniform_real_distribution<long double> qDist(-1, 1);
 // Distribution of track time (relative to vertex time). Values are unrealistic
 // and only used for testing purposes.
-std::uniform_real_distribution<double> relTDist(-4_ps, 4_ps);
+std::uniform_real_distribution<long double> relTDist(-4_ps, 4_ps);
 // Track IP resolution distribution
-std::uniform_real_distribution<double> resIPDist(0., 100._um);
+std::uniform_real_distribution<long double> resIPDist(0., 100._um);
 // Track angular distribution
-std::uniform_real_distribution<double> resAngDist(0., 0.1);
+std::uniform_real_distribution<long double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
+std::uniform_real_distribution<long double> resQoPDist(-0.1, 0.1);
 // Track time resolution distribution. Values are unrealistic and only used for
 // testing purposes.
-std::uniform_real_distribution<double> resTDist(0_ps, 8_ps);
+std::uniform_real_distribution<long double> resTDist(0_ps, 8_ps);
 
 /// @brief Unit test for AdaptiveMultiVertexFitter
 ///
@@ -141,11 +142,11 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   std::vector<Vector3> vtxPosVec{vtxPos1, vtxPos2, vtxPos3};
 
   // Resolutions, use the same for all tracks
-  double resD0 = resIPDist(gen);
-  double resZ0 = resIPDist(gen);
-  double resPh = resAngDist(gen);
-  double resTh = resAngDist(gen);
-  double resQp = resQoPDist(gen);
+  long double resD0 = resIPDist(gen);
+  long double resZ0 = resIPDist(gen);
+  long double resPh = resAngDist(gen);
+  long double resTh = resAngDist(gen);
+  long double resQp = resQoPDist(gen);
 
   std::vector<Vertex> vtxList;
   for (auto& vtxPos : vtxPosVec) {
@@ -174,7 +175,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (unsigned int iTrack = 0; iTrack < nTracksPerVtx * vtxPosVec.size();
        iTrack++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    long double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -354,7 +355,7 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   AdaptiveMultiVertexFitter fitter(std::move(fitterCfg));
 
   // Vertex position
-  double trueVtxTime = 40.0_ps;
+  long double trueVtxTime = 40.0_ps;
   Vector3 trueVtxPos(-0.15_mm, -0.1_mm, -1.5_mm);
 
   // Seed position of the vertex
@@ -371,15 +372,15 @@ BOOST_AUTO_TEST_CASE(time_fitting) {
   unsigned int nTracks = 4;
   for (unsigned int _ = 0; _ < nTracks; _++) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    long double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Track resolution
-    double resD0 = resIPDist(gen);
-    double resZ0 = resIPDist(gen);
-    double resPh = resAngDist(gen);
-    double resTh = resAngDist(gen);
-    double resQp = resQoPDist(gen);
-    double resT = resTDist(gen);
+    long double resD0 = resIPDist(gen);
+    long double resZ0 = resIPDist(gen);
+    long double resPh = resAngDist(gen);
+    long double resTh = resAngDist(gen);
+    long double resQp = resQoPDist(gen);
+    long double resT = resTDist(gen);
 
     // Random diagonal covariance matrix
     Covariance covMat;
@@ -471,7 +472,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   ImpactPointEstimator::Config ip3dEstCfg(bField, propagator);
   ImpactPointEstimator ip3dEst(ip3dEstCfg);
 
-  std::vector<double> temperatures(1, 3.);
+  std::vector<long double> temperatures(1, 3.);
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -692,8 +693,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   ActsVector<6> expVtx1TrkWeights;
   expVtx1TrkWeights << 0.8128, 0.7994, 0.8164, 0.8165, 0.8165, 0.8119;
-  const double expVtx1chi2 = 0.9812;
-  const double expVtx1ndf = 6.7474;
+  const long double expVtx1chi2 = 0.9812;
+  const long double expVtx1ndf = 6.7474;
 
   // Vertex 2
   const Vector3 expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
@@ -702,8 +703,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   expVtx2Cov << 1.088, 0.028, -0.066, 0.028, 0.643, 0.073, -0.066, 0.073, 0.435;
 
   const Vector3 expVtx2TrkWeights(0.8172, 0.8150, 0.8137);
-  const double expVtx2chi2 = 0.2114;
-  const double expVtx2ndf = 1.8920;
+  const long double expVtx2chi2 = 0.2114;
+  const long double expVtx2ndf = 1.8920;
 
   // Compare the results
   // Vertex 1

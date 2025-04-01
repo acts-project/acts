@@ -42,7 +42,7 @@ namespace Acts {
 /// @tparam kDims The number of dimensions.
 /// @tparam scalar_t The scalar type used to construct position vectors.
 /// @tparam kLeafSize The maximum number of points in a leaf node of the KDTree.
-template <std::size_t kDims, typename scalar_t = double,
+template <std::size_t kDims, typename scalar_t = long double,
           std::size_t kLeafSize = 4>
 class DBScan {
  public:

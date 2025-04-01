@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{
+  std::vector<long double> temperatures{
       8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
-  double relTol = 1e-2;
-  double small = 1e-3;
+  long double relTol = 1e-2;
+  long double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{
+  std::vector<long double> temperatures{
       8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
@@ -352,8 +352,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
-  double relTol = 1e-2;
-  double small = 1e-3;
+  long double relTol = 1e-2;
+  long double small = 1e-3;
   for (int i = 0; i < expNRecoVertices; i++) {
     auto recoVtx = allVertices[i];
     auto expVtx = verticesInfo[i];
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{
+  std::vector<long double> temperatures{
       8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
   for (const auto& vtx : allVertices) {
-    double vtxZ = vtx.position()[2];
-    double diffZ = 1e5;
+    long double vtxZ = vtx.position()[2];
+    long double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
       if (!vtxFound[i]) {
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{
+  std::vector<long double> temperatures{
       8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
@@ -653,8 +653,8 @@ BOOST_AUTO_TEST_CASE(
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
   for (const auto& vtx : allVertices) {
-    double vtxZ = vtx.position()[2];
-    double diffZ = 1e5;
+    long double vtxZ = vtx.position()[2];
+    long double diffZ = 1e5;
     int foundVtxIdx = -1;
     for (int i = 0; i < expNRecoVertices; i++) {
       if (!vtxFound[i]) {

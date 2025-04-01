@@ -52,9 +52,9 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
-           double reverseFilteringMomThreshold,
-           Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
-           Logging::Level level) {
+           long double reverseFilteringMomThreshold,
+           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           long double chi2Cut, Logging::Level level) {
           return ActsExamples::makeKalmanFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
               reverseFilteringMomThreshold, freeToBoundCorrection, chi2Cut,
@@ -106,7 +106,8 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+           long double weightCutoff,
+           Acts::ComponentMergeMethod componentMergeMethod,
            ActsExamples::MixtureReductionAlgorithm mixtureReductionAlgorithm,
            Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
@@ -126,7 +127,7 @@ void addTrackFitting(Context& ctx) {
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            bool multipleScattering, bool energyLoss,
            Acts::FreeToBoundCorrection freeToBoundCorrection,
-           std::size_t nUpdateMax, double relChi2changeCutOff,
+           std::size_t nUpdateMax, long double relChi2changeCutOff,
            Logging::Level level) {
           return ActsExamples::makeGlobalChiSquareFitterFunction(
               trackingGeometry, magneticField, multipleScattering, energyLoss,
@@ -143,8 +144,9 @@ void addTrackFitting(Context& ctx) {
     py::class_<FreeToBoundCorrection>(mex, "FreeToBoundCorrection")
         .def(py::init<>())
         .def(py::init<bool>(), py::arg("apply") = false)
-        .def(py::init<bool, double, double>(), py::arg("apply") = false,
-             py::arg("alpha") = 0.1, py::arg("beta") = 2);
+        .def(py::init<bool, long double, long double>(),
+             py::arg("apply") = false, py::arg("alpha") = 0.1,
+             py::arg("beta") = 2);
   }
 }
 

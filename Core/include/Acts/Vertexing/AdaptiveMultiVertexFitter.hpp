@@ -119,13 +119,13 @@ class AdaptiveMultiVertexFitter {
 
     // Max distance to linearization point allowed
     // without relinearization
-    double maxDistToLinPoint{0.5};
+    long double maxDistToLinPoint{0.5};
 
     // Minimum track weight needed for track to be considered
-    double minWeight{0.0001};
+    long double minWeight{0.0001};
 
     // Max relative shift of vertex during one iteration
-    double maxRelativeShift{0.01};
+    long double maxRelativeShift{0.01};
 
     // Do smoothing after multivertex fit
     bool doSmoothing{false};
@@ -244,7 +244,7 @@ class AdaptiveMultiVertexFitter {
   /// @param trk Track
   ///
   /// @return Vector of compatibility values
-  std::vector<double> collectTrackToVertexCompatibilities(
+  std::vector<long double> collectTrackToVertexCompatibilities(
       State& state, const InputTrack& trk) const;
 
   /// @brief Determines if any vertex position has shifted more than

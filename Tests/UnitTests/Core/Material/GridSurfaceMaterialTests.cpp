@@ -22,53 +22,53 @@
 // this is a global access to the x coordinate
 class GlobalAccessX final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  std::array<double, 1u> g2X(const Acts::Vector3& global) const {
+  std::array<long double, 1u> g2X(const Acts::Vector3& global) const {
     return {global.x()};
   }
 };
 
 class LocalAccessX final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  std::array<double, 1u> l2X(const Acts::Vector2& local) const {
+  std::array<long double, 1u> l2X(const Acts::Vector2& local) const {
     return {local.x()};
   }
 };
 
 class GlobalAccessPhi final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  std::array<double, 1u> g2Phi(const Acts::Vector3& global) const {
+  std::array<long double, 1u> g2Phi(const Acts::Vector3& global) const {
     return {std::atan2(global.y(), global.x())};
   }
 };
 
 class LocalAccessPhi final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  std::array<double, 1u> l2Phi(const Acts::Vector2& local) const {
+  std::array<long double, 1u> l2Phi(const Acts::Vector2& local) const {
     return {std::atan2(local.y(), local.x())};
   }
 };
 
 class GlobalAccessXY final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  std::array<double, 2u> g2XY(const Acts::Vector3& global) const {
+  std::array<long double, 2u> g2XY(const Acts::Vector3& global) const {
     return {global.x(), global.y()};
   }
 };
 
 class LocalAccessXY final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  std::array<double, 2u> l2XY(const Acts::Vector2& local) const {
+  std::array<long double, 2u> l2XY(const Acts::Vector2& local) const {
     return {local.x(), local.y()};
   }
 };
 
 class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
  public:
-  double zShift = 0.;
+  long double zShift = 0.;
 
-  explicit GlobalToZPhi(double shift) : zShift(shift) {}
+  explicit GlobalToZPhi(long double shift) : zShift(shift) {}
 
-  std::array<double, 2u> g2ZPhi(const Acts::Vector3& global) const {
+  std::array<long double, 2u> g2ZPhi(const Acts::Vector3& global) const {
     return {global.z() + zShift, Acts::VectorHelpers::phi(global)};
   }
 };
@@ -76,11 +76,11 @@ class GlobalToZPhi final : public Acts::GridAccess::IGlobalToGridLocal {
 // Local on cylinder surface is rPhi, z
 class LocalToZPhi final : public Acts::GridAccess::IBoundToGridLocal {
  public:
-  double radius = 1.;
+  long double radius = 1.;
 
-  explicit LocalToZPhi(double r) : radius(r) {}
+  explicit LocalToZPhi(long double r) : radius(r) {}
 
-  std::array<double, 2u> l2ZPhi(const Acts::Vector2& local) const {
+  std::array<long double, 2u> l2ZPhi(const Acts::Vector2& local) const {
     return {local[1u], local[0u] / radius};
   }
 };
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
   BOOST_CHECK(ismPhi != nullptr);
 
   for (std::size_t i = 0; i < 8; ++i) {
-    double alpha = -std::numbers::pi + (i + 0.5) * std::numbers::pi / 4.;
+    long double alpha = -std::numbers::pi + (i + 0.5) * std::numbers::pi / 4.;
     Acts::Vector2 query{std::cos(alpha), std::sin(alpha)};
     const Acts::MaterialSlab& m = ismPhi->materialSlab(query);
     if (i % 2 == 0) {

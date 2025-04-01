@@ -27,10 +27,9 @@
 
 namespace Acts {
 
-CylinderVolumeBounds::CylinderVolumeBounds(double rmin, double rmax,
-                                           double halfz, double halfphi,
-                                           double avgphi, double bevelMinZ,
-                                           double bevelMaxZ)
+CylinderVolumeBounds::CylinderVolumeBounds(
+    long double rmin, long double rmax, long double halfz, long double halfphi,
+    long double avgphi, long double bevelMinZ, long double bevelMaxZ)
     : m_values() {
   m_values[eMinR] = rmin;
   m_values[eMaxR] = rmax;
@@ -44,16 +43,16 @@ CylinderVolumeBounds::CylinderVolumeBounds(double rmin, double rmax,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(
-    const std::array<double, eSize>& values)
+    const std::array<long double, eSize>& values)
     : m_values(values) {
   checkConsistency();
   buildSurfaceBounds();
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
-                                           double thickness)
+                                           long double thickness)
     : VolumeBounds() {
-  double cR = cBounds.get(CylinderBounds::eR);
+  long double cR = cBounds.get(CylinderBounds::eR);
   if (thickness <= 0. || (cR - 0.5 * thickness) < 0.) {
     throw(std::invalid_argument(
         "CylinderVolumeBounds: invalid extrusion thickness."));
@@ -69,7 +68,7 @@ CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
 }
 
 CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
-                                           double thickness)
+                                           long double thickness)
     : VolumeBounds() {
   if (thickness <= 0.) {
     throw(std::invalid_argument(
@@ -93,11 +92,11 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
   Translation3 vMinZ(0., 0., -get(eHalfLengthZ));
   Translation3 vMaxZ(0., 0., get(eHalfLengthZ));
   // Set up transform for beveled edges if they are defined
-  double bevelMinZ = get(eBevelMinZ);
-  double bevelMaxZ = get(eBevelMaxZ);
+  long double bevelMinZ = get(eBevelMinZ);
+  long double bevelMaxZ = get(eBevelMaxZ);
   Transform3 transMinZ, transMaxZ;
   if (bevelMinZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMinZ);
+    long double sy = 1 - 1 / std::cos(bevelMinZ);
     transMinZ = transform * vMinZ *
                 Eigen::AngleAxisd(-bevelMinZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -105,7 +104,7 @@ std::vector<OrientedSurface> CylinderVolumeBounds::orientedSurfaces(
     transMinZ = transform * vMinZ;
   }
   if (bevelMaxZ != 0.) {
-    double sy = 1 - 1 / std::cos(bevelMaxZ);
+    long double sy = 1 - 1 / std::cos(bevelMaxZ);
     transMaxZ = transform * vMaxZ *
                 Eigen::AngleAxisd(bevelMaxZ, Eigen::Vector3d(1., 0., 0.)) *
                 Eigen::Scaling(1., 1. + sy, 1.);
@@ -195,7 +194,7 @@ std::ostream& CylinderVolumeBounds::toStream(std::ostream& os) const {
 Volume::BoundingBox CylinderVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
+  long double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
   if (get(eHalfPhiSector) > std::numbers::pi / 2.) {
@@ -219,10 +218,10 @@ Volume::BoundingBox CylinderVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-bool CylinderVolumeBounds::inside(const Vector3& pos, double tol) const {
+bool CylinderVolumeBounds::inside(const Vector3& pos, long double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  double ros = perp(pos);
+  long double ros = perp(pos);
   bool insidePhi = cos(phi(pos)) >= cos(get(eHalfPhiSector)) - tol;
   bool insideR = insidePhi
                      ? ((ros >= get(eMinR) - tol) && (ros <= get(eMaxR) + tol))
@@ -241,7 +240,7 @@ Vector3 CylinderVolumeBounds::referenceOffset(AxisDirection aDir)
   return VolumeBounds::referenceOffset(aDir);
 }
 
-double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
+long double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
   if (aDir == Acts::AxisDirection::AxisR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
@@ -251,7 +250,7 @@ double CylinderVolumeBounds::referenceBorder(AxisDirection aDir) const {
   return VolumeBounds::referenceBorder(aDir);
 }
 
-std::vector<double> CylinderVolumeBounds::values() const {
+std::vector<long double> CylinderVolumeBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -289,13 +288,13 @@ void CylinderVolumeBounds::checkConsistency() {
   }
 }
 
-void CylinderVolumeBounds::set(BoundValues bValue, double value) {
+void CylinderVolumeBounds::set(BoundValues bValue, long double value) {
   set({{bValue, value}});
 }
 
 void CylinderVolumeBounds::set(
-    std::initializer_list<std::pair<BoundValues, double>> keyValues) {
-  std::array<double, eSize> previous = m_values;
+    std::initializer_list<std::pair<BoundValues, long double>> keyValues) {
+  std::array<long double, eSize> previous = m_values;
   for (const auto& [key, value] : keyValues) {
     m_values[key] = value;
   }

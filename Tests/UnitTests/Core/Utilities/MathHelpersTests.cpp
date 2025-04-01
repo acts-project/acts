@@ -18,7 +18,7 @@ namespace bdata = boost::unit_test::data;
 
 const auto expDist = bdata::random(
     (bdata::engine = std::mt19937{}, bdata::seed = 0,
-     bdata::distribution = std::uniform_real_distribution<double>(-4, 4)));
+     bdata::distribution = std::uniform_real_distribution<long double>(-4, 4)));
 
 BOOST_AUTO_TEST_SUITE(Utilities)
 
@@ -26,19 +26,19 @@ BOOST_DATA_TEST_CASE(fastHypot, expDist ^ expDist ^ bdata::xrange(100), xExp,
                      yExp, i) {
   (void)i;
 
-  const double x = std::pow(10, xExp);
-  const double y = std::pow(10, yExp);
+  const long double x = std::pow(10, xExp);
+  const long double y = std::pow(10, yExp);
 
   const float fastFloat =
       Acts::fastHypot(static_cast<float>(x), static_cast<float>(y));
-  const double fastDouble = Acts::fastHypot(x, y);
+  const long double fastlong double = Acts::fastHypot(x, y);
 
   const float stdFloat =
       std::hypot(static_cast<float>(x), static_cast<float>(y));
-  const double stdDouble = std::hypot(x, y);
+  const long double stdlong double = std::hypot(x, y);
 
   CHECK_CLOSE_REL(stdFloat, fastFloat, 1e-6);
-  CHECK_CLOSE_REL(stdDouble, fastDouble, 1e-6);
+  CHECK_CLOSE_REL(stdlong double, fastlong double, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

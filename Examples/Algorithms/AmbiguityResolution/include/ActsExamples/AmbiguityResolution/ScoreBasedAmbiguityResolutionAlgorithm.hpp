@@ -42,9 +42,9 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     std::map<std::size_t, std::size_t> volumeMap;
 
     // minimum score for any track
-    double minScore = 0;
+    long double minScore = 0;
     // minimum score for shared tracks
-    double minScoreSharedTracks = 0;
+    long double minScoreSharedTracks = 0;
 
     // configuration file for the detector map
     std::string configFile = "detectorConfigs.json";

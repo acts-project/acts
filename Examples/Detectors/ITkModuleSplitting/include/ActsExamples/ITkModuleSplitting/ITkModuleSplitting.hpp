@@ -43,13 +43,13 @@ inline std::vector<std::shared_ptr<const detector_element_t>> splitBarrelModule(
   // Get the geometric information
   const Acts::Transform3& transform = surface.transform(gctx);
   // Determine the new bounds
-  const std::vector<double> boundsValues = bounds.values();
+  const std::vector<long double> boundsValues = bounds.values();
 
-  double lengthX = (boundsValues[Acts::RectangleBounds::eMaxX] -
-                    boundsValues[Acts::RectangleBounds::eMinX]) /
-                   nSegments;
-  double lengthY = boundsValues[Acts::RectangleBounds::eMaxY] -
-                   boundsValues[Acts::RectangleBounds::eMinY];
+  long double lengthX = (boundsValues[Acts::RectangleBounds::eMaxX] -
+                         boundsValues[Acts::RectangleBounds::eMinX]) /
+                        nSegments;
+  long double lengthY = boundsValues[Acts::RectangleBounds::eMaxY] -
+                        boundsValues[Acts::RectangleBounds::eMinY];
   auto rectBounds =
       std::make_shared<Acts::RectangleBounds>(0.5 * lengthX, 0.5 * lengthY);
   // Translation for every subelement
@@ -76,7 +76,7 @@ template <typename detector_element_t, typename element_factory_t>
 inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
     const Acts::GeometryContext& gctx,
     const std::shared_ptr<detector_element_t>& detElement,
-    const std::vector<std::pair<double, double>>& splitRanges,
+    const std::vector<std::pair<long double, long double>>& splitRanges,
     const element_factory_t& factory, const std::string& name,
     const Acts::Logger& logger = Acts::getDummyLogger()) {
   // Retrieve the surface
@@ -108,8 +108,8 @@ inline std::vector<std::shared_ptr<detector_element_t>> splitDiscModule(
 
   // Get the geometric information
   const Acts::Transform3& transform = surface.transform(gctx);
-  const std::vector<double> boundsValues = bounds.values();
-  std::array<double, Acts::AnnulusBounds::eSize> values{};
+  const std::vector<long double> boundsValues = bounds.values();
+  std::array<long double, Acts::AnnulusBounds::eSize> values{};
 
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
 

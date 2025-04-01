@@ -57,7 +57,7 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    double lengthUnit, double BFieldUnit, bool firstQuadrant = false);
+    long double lengthUnit, long double BFieldUnit, bool firstQuadrant = false);
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -104,6 +104,6 @@ detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromRoot(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    double lengthUnit, double BFieldUnit, bool firstOctant = false);
+    long double lengthUnit, long double BFieldUnit, bool firstOctant = false);
 
 }  // namespace ActsExamples

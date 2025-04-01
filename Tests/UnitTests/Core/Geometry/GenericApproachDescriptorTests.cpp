@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   };
   Vector3 zDir{0., 0., 1.};
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-  double nearLimit = -100 * UnitConstants::um;
-  double farLimit = std::numeric_limits<double>::max();
+  long double nearLimit = -100 * UnitConstants::um;
+  long double farLimit = std::numeric_limits<long double>::max();
   //
   std::vector<std::shared_ptr<const Surface>> someSurfaces{
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   // approachSurface
   SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
       tgContext, origin, zDir, boundaryTolerance, nearLimit, farLimit);
-  double expectedIntersection = 20.0;  // property of SurfaceStub
+  long double expectedIntersection = 20.0;  // property of SurfaceStub
   CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3 origin{0., -0.5, 1.};
   Vector3 direction{0., 1., 0.};
   BoundaryTolerance boundaryTolerance = BoundaryTolerance::None();
-  double nearLimit = -100 * UnitConstants::um;
-  double farLimit = std::numeric_limits<double>::max();
+  long double nearLimit = -100 * UnitConstants::um;
+  long double farLimit = std::numeric_limits<long double>::max();
 
   auto conCyl =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 20.);

@@ -68,7 +68,7 @@ void SympyStepper::initialize(State& state, const BoundVector& boundParams,
   }
 }
 
-Result<std::tuple<BoundTrackParameters, BoundMatrix, double>>
+Result<std::tuple<BoundTrackParameters, BoundMatrix, long double>>
 SympyStepper::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const {
@@ -85,7 +85,7 @@ bool SympyStepper::prepareCurvilinearState(State& state) const {
   return true;
 }
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, long double>
 SympyStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::sympy::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
@@ -105,8 +105,8 @@ void SympyStepper::update(State& state, const FreeVector& freeParams,
 }
 
 void SympyStepper::update(State& state, const Vector3& uposition,
-                          const Vector3& udirection, double qOverP,
-                          double time) const {
+                          const Vector3& udirection, long double qOverP,
+                          long double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
@@ -128,29 +128,30 @@ void SympyStepper::transportCovarianceToBound(
       freeToBoundCorrection);
 }
 
-Result<double> SympyStepper::step(State& state, Direction propDir,
-                                  const IVolumeMaterial* material) const {
+Result<long double> SympyStepper::step(State& state, Direction propDir,
+                                       const IVolumeMaterial* material) const {
   (void)material;
 
   auto pos = position(state);
   auto dir = direction(state);
-  double t = time(state);
-  double qop = qOverP(state);
-  double m = particleHypothesis(state).mass();
-  double p_abs = absoluteMomentum(state);
+  long double t = time(state);
+  long double qop = qOverP(state);
+  long double m = particleHypothesis(state).mass();
+  long double p_abs = absoluteMomentum(state);
 
-  auto getB = [&](const double* p) -> Result<Vector3> {
+  auto getB = [&](const long double* p) -> Result<Vector3> {
     return getField(state, {p[0], p[1], p[2]});
   };
 
-  const auto calcStepSizeScaling = [&](const double errorEstimate_) -> double {
+  const auto calcStepSizeScaling =
+      [&](const long double errorEstimate_) -> long double {
     // For details about these values see ATL-SOFT-PUB-2009-001
-    constexpr double lower = 0.25;
-    constexpr double upper = 4.0;
+    constexpr long double lower = 0.25;
+    constexpr long double upper = 4.0;
     // This is given by the order of the Runge-Kutta method
-    constexpr double exponent = 0.25;
+    constexpr long double exponent = 0.25;
 
-    double x = state.options.stepTolerance / errorEstimate_;
+    long double x = state.options.stepTolerance / errorEstimate_;
 
     if constexpr (exponent == 0.25) {
       // This is 3x faster than std::pow
@@ -162,10 +163,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
     return std::clamp(x, lower, upper);
   };
 
-  double h = state.stepSize.value() * propDir;
-  double initialH = h;
+  long double h = state.stepSize.value() * propDir;
+  long double initialH = h;
   std::size_t nStepTrials = 0;
-  double errorEstimate = 0.;
+  long double errorEstimate = 0.;
 
   while (true) {
     ++nStepTrials;
@@ -192,7 +193,7 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
 
     ++state.statistics.nRejectedSteps;
 
-    const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+    const long double stepSizeScaling = calcStepSizeScaling(errorEstimate);
     h *= stepSizeScaling;
 
     // If step size becomes too small the particle remains at the initial
@@ -221,10 +222,10 @@ Result<double> SympyStepper::step(State& state, Direction propDir,
   state.statistics.pathLength += h;
   state.statistics.absolutePathLength += std::abs(h);
 
-  const double stepSizeScaling = calcStepSizeScaling(errorEstimate);
-  const double nextAccuracy = std::abs(h * stepSizeScaling);
-  const double previousAccuracy = std::abs(state.stepSize.accuracy());
-  const double initialStepLength = std::abs(initialH);
+  const long double stepSizeScaling = calcStepSizeScaling(errorEstimate);
+  const long double nextAccuracy = std::abs(h * stepSizeScaling);
+  const long double previousAccuracy = std::abs(state.stepSize.accuracy());
+  const long double initialStepLength = std::abs(initialH);
   if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
     state.stepSize.setAccuracy(nextAccuracy);
   }

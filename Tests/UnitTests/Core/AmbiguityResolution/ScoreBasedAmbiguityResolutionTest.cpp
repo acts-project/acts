@@ -108,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(ComputeInitialStateTest, Fixture) {
 
   BOOST_CHECK_EQUAL(trackFeaturesVectors.size(), ctc.size());
 
-  std::vector<double> trackScores;
+  std::vector<long double> trackScores;
   trackScores = tester.simpleScore(ctc, trackFeaturesVectors);
 
   BOOST_CHECK_EQUAL(trackScores.size(), ctc.size());

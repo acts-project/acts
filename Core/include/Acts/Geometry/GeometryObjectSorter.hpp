@@ -110,38 +110,38 @@ class DistanceSorterT {
     switch (m_sortingDirection) {
       // compare on diff x
       case AxisDirection::AxisX: {
-        double diffOneX = one.x() - m_reference.x();
-        double diffTwoX = two.x() - m_reference.x();
+        long double diffOneX = one.x() - m_reference.x();
+        long double diffTwoX = two.x() - m_reference.x();
         return std::abs(diffOneX) < std::abs(diffTwoX);
       }
       // compare on diff y
       case AxisDirection::AxisY: {
-        double diffOneY = one.y() - m_reference.y();
-        double diffTwoY = two.y() - m_reference.y();
+        long double diffOneY = one.y() - m_reference.y();
+        long double diffTwoY = two.y() - m_reference.y();
         return std::abs(diffOneY) < std::abs(diffTwoY);
       }
       // compare on diff z
       case AxisDirection::AxisZ: {
-        double diffOneZ = one.z() - m_reference.z();
-        double diffTwoZ = two.z() - m_reference.z();
+        long double diffOneZ = one.z() - m_reference.z();
+        long double diffTwoZ = two.z() - m_reference.z();
         return std::abs(diffOneZ) < std::abs(diffTwoZ);
       }
       // compare on r
       case AxisDirection::AxisR: {
-        double diffOneR = perp(one) - m_refR;
-        double diffTwoR = perp(two) - m_refR;
+        long double diffOneR = perp(one) - m_refR;
+        long double diffTwoR = perp(two) - m_refR;
         return std::abs(diffOneR) < std::abs(diffTwoR);
       }
       // compare on phi /// @todo add cyclic value
       case AxisDirection::AxisPhi: {
-        double diffOnePhi = phi(one) - m_refPhi;
-        double diffTwoPhi = phi(two) - m_refPhi;
+        long double diffOnePhi = phi(one) - m_refPhi;
+        long double diffTwoPhi = phi(two) - m_refPhi;
         return std::abs(diffOnePhi) < std::abs(diffTwoPhi);
       }
       // compare on eta
       case AxisDirection::AxisEta: {
-        double diffOneEta = eta(one) - m_refEta;
-        double diffTwoEta = eta(two) - m_refEta;
+        long double diffOneEta = eta(one) - m_refEta;
+        long double diffTwoEta = eta(two) - m_refEta;
         return std::abs(diffOneEta) < std::abs(diffTwoEta);
       }
       // default for the moment
@@ -156,9 +156,9 @@ class DistanceSorterT {
  private:
   AxisDirection m_sortingDirection;  ///< the sorting direction
   T m_reference;
-  double m_refR;
-  double m_refPhi;
-  double m_refEta;
+  long double m_refR;
+  long double m_refPhi;
+  long double m_refEta;
 };
 
 template <class T>

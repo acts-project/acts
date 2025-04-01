@@ -26,12 +26,14 @@ class DigitizationCoordinatesConverter final {
   const DigitizationAlgorithm::Config& config() const { return m_cfg; }
 
   /// Convert the hit coordinates to the local frame.
-  std::tuple<double, double> globalToLocal(std::uint64_t moduleId, double x,
-                                           double y, double z) const;
+  std::tuple<long double, long double> globalToLocal(std::uint64_t moduleId,
+                                                     long double x,
+                                                     long double y,
+                                                     long double z) const;
 
   /// Convert the hit coordinates to the global frame.
-  std::tuple<double, double, double> localToGlobal(std::uint64_t moduleId,
-                                                   double x, double y) const;
+  std::tuple<long double, long double, long double> localToGlobal(
+      std::uint64_t moduleId, long double x, long double y) const;
 
  private:
   /// Configuration

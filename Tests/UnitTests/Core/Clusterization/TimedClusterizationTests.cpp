@@ -15,14 +15,14 @@ namespace Acts::Test {
 // Define objects
 using Identifier = std::size_t;
 struct Cell {
-  Cell(Identifier identifier, int c, int r, double t)
+  Cell(Identifier identifier, int c, int r, long double t)
       : id(identifier), column(c), row(r), time(t) {}
 
   Identifier id{};
   int column{0};
   int row{0};
   int label{-1};
-  double time{0.};
+  long double time{0.};
 };
 
 struct Cluster {
@@ -45,7 +45,7 @@ static inline int& getCellLabel(Cell& cell) {
   return cell.label;
 }
 
-static inline double getCellTime(const Cell& cell) {
+static inline long double getCellTime(const Cell& cell) {
   return cell.time;
 }
 
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(TimedGrid_2D_notime) {
 
   ClusterCollection clusters =
       Acts::Ccl::createClusters<CellCollection, ClusterCollection, 2>(
-          cells,
-          Acts::Ccl::TimedConnect<Cell, 2>(std::numeric_limits<double>::max()));
+          cells, Acts::Ccl::TimedConnect<Cell, 2>(
+                     std::numeric_limits<long double>::max()));
 
   BOOST_CHECK_EQUAL(4ul, clusters.size());
 

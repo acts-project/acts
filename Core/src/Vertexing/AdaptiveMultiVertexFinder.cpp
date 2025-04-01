@@ -202,7 +202,7 @@ void AdaptiveMultiVertexFinder::setConstraintAfterSeeding(
   }
 }
 
-Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
+Result<long double> AdaptiveMultiVertexFinder::getIPSignificance(
     const InputTrack& track, const Vertex& vtx,
     const VertexingOptions& vertexingOptions) const {
   // TODO: In original implementation the covariance of the given vertex is set
@@ -225,14 +225,14 @@ Result<double> AdaptiveMultiVertexFinder::getIPSignificance(
   ImpactParametersAndSigma ipas = *estRes;
 
   // TODO: throw error when encountering negative standard deviations
-  double chi2Time = 0;
+  long double chi2Time = 0;
   if (m_cfg.useTime) {
     if (ipas.sigmaDeltaT.value() > 0) {
       chi2Time = std::pow(ipas.deltaT.value() / ipas.sigmaDeltaT.value(), 2);
     }
   }
 
-  double significance = 0.;
+  long double significance = 0.;
   if (ipas.sigmaD0 > 0 && ipas.sigmaZ0 > 0) {
     significance = std::sqrt(std::pow(ipas.d0 / ipas.sigmaD0, 2) +
                              std::pow(ipas.z0 / ipas.sigmaZ0, 2) + chi2Time);
@@ -257,7 +257,7 @@ Result<void> AdaptiveMultiVertexFinder::addCompatibleTracksToVertex(
     if (!sigRes.ok()) {
       return sigRes.error();
     }
-    double ipSig = *sigRes;
+    long double ipSig = *sigRes;
     if (ipSig < m_cfg.tracksMaxSignificance) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
       fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, &vtx),
@@ -281,8 +281,8 @@ Result<bool> AdaptiveMultiVertexFinder::canRecoverFromNoCompatibleTracks(
   // nasty to me
   if (fitterState.vtxInfoMap[&vtx].trackLinks.empty()) {
     // Find nearest track to vertex candidate
-    double smallestDeltaZ = std::numeric_limits<double>::max();
-    double newZ = 0;
+    long double smallestDeltaZ = std::numeric_limits<long double>::max();
+    long double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
       auto pos =
@@ -412,14 +412,14 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     VertexFitterState& fitterState, std::vector<InputTrack>& removedSeedTracks,
     const GeometryContext& geoCtx) const {
   // Try to find the track with highest compatibility
-  double maxCompatibility = 0;
+  long double maxCompatibility = 0;
 
   auto maxCompSeedIt = seedTracks.end();
   std::optional<InputTrack> removedTrack = std::nullopt;
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
-    double compatibility = trkAtVtx.vertexCompatibility;
+    long double compatibility = trkAtVtx.vertexCompatibility;
     if (compatibility > maxCompatibility) {
       // Try to find track in seed tracks
       auto foundSeedIter = std::ranges::find(seedTracks, trk);
@@ -438,11 +438,11 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
     // Could not find any seed with compatibility > 0, use alternative
     // method to remove a track from seed tracks: Closest track in z to
     // vtx candidate
-    double smallestDeltaZ = std::numeric_limits<double>::max();
+    long double smallestDeltaZ = std::numeric_limits<long double>::max();
     auto smallestDzSeedIter = seedTracks.end();
     for (unsigned int i = 0; i < seedTracks.size(); i++) {
       auto pos = m_cfg.extractParameters(seedTracks[i]).position(geoCtx);
-      double zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
+      long double zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         smallestDzSeedIter = seedTracks.begin() + i;
@@ -463,13 +463,13 @@ bool AdaptiveMultiVertexFinder::removeTrackIfIncompatible(
 Result<bool> AdaptiveMultiVertexFinder::keepNewVertex(
     Vertex& vtx, const std::vector<Vertex*>& allVertices,
     VertexFitterState& fitterState) const {
-  double contamination = 0.;
-  double contaminationNum = 0;
-  double contaminationDeNom = 0;
+  long double contamination = 0.;
+  long double contaminationNum = 0;
+  long double contaminationDeNom = 0;
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
-    double trackWeight = trkAtVtx.trackWeight;
+    long double trackWeight = trkAtVtx.trackWeight;
     contaminationNum += trackWeight * (1. - trackWeight);
     // MARK: fpeMaskBegin(FLTUND, 1, #2590)
     contaminationDeNom += trackWeight * trackWeight;
@@ -506,7 +506,7 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
     const Vector4& otherPos = otherVtx->fullPosition();
     const SquareMatrix4& otherCov = otherVtx->fullCovariance();
 
-    double significance = 0;
+    long double significance = 0;
     if (!m_cfg.doFullSplitting) {
       if (m_cfg.useTime) {
         const Vector2 deltaZT = otherPos.tail<2>() - candidatePos.tail<2>();
@@ -520,8 +520,8 @@ Result<bool> AdaptiveMultiVertexFinder::isMergedVertex(
         }
         significance = std::sqrt(deltaZT.dot(*sumCovZTInverse * deltaZT));
       } else {
-        const double deltaZPos = otherPos[eZ] - candidatePos[eZ];
-        const double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
+        const long double deltaZPos = otherPos[eZ] - candidatePos[eZ];
+        const long double sumVarZ = otherCov(eZ, eZ) + candidateCov(eZ, eZ);
         if (sumVarZ <= 0) {
           ACTS_ERROR("Variance of the vertex's z-coordinate is not positive.");
           ACTS_ERROR("sumVarZ:\n" << sumVarZ);

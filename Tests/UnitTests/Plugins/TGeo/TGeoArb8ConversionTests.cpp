@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   // The one parameter at construction is dZ, when the
   // TGeoArb8 is spanning from -dZ to +dZ:
   // - hence, the thickness is 2 * dZ
-  double dZ = 1.;
+  long double dZ = 1.;
   TGeoArb8 *arb = new TGeoArb8(dZ);
   arb->SetVertex(0, -30, -25);
   arb->SetVertex(1, -25, 25);

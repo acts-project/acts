@@ -33,13 +33,13 @@ namespace Acts {
 /// cut on the local chi2.
 struct MeasurementSelectorCuts {
   /// bins in |eta| to specify variable selections
-  std::vector<double> etaBins{};
+  std::vector<long double> etaBins{};
   /// Maximum local chi2 contribution to classify as measurement.
-  std::vector<double> chi2CutOff{15};
+  std::vector<long double> chi2CutOff{15};
   /// Maximum number of associated measurements on a single surface.
   std::vector<std::size_t> numMeasurementsCutOff{1};
   /// Maximum local chi2 contribution to classify as outlier.
-  std::vector<double> chi2CutOffOutlier{};
+  std::vector<long double> chi2CutOffOutlier{};
 };
 
 /// @brief Measurement selection struct selecting those measurements compatible
@@ -94,27 +94,29 @@ class MeasurementSelector {
 
  private:
   struct InternalCutBin {
-    double maxTheta{};
+    long double maxTheta{};
     std::size_t maxNumMeasurements{};
-    double maxChi2Measurement{};
-    double maxChi2Outlier{};
+    long double maxChi2Measurement{};
+    long double maxChi2Outlier{};
   };
   using InternalCutBins = std::vector<InternalCutBin>;
   using InternalConfig = Acts::GeometryHierarchyMap<InternalCutBins>;
 
   struct Cuts {
     std::size_t numMeasurements{};
-    double chi2Measurement{};
-    double chi2Outlier{};
+    long double chi2Measurement{};
+    long double chi2Outlier{};
   };
 
   static InternalCutBins convertCutBins(const MeasurementSelectorCuts& config);
 
-  static Cuts getCutsByTheta(const InternalCutBins& config, double theta);
-  Result<Cuts> getCuts(const GeometryIdentifier& geoID, double theta) const;
+  static Cuts getCutsByTheta(const InternalCutBins& config, long double theta);
+  Result<Cuts> getCuts(const GeometryIdentifier& geoID,
+                       long double theta) const;
 
-  double calculateChi2(
-      const double* fullCalibrated, const double* fullCalibratedCovariance,
+  long double calculateChi2(
+      const long double* fullCalibrated,
+      const long double* fullCalibratedCovariance,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,

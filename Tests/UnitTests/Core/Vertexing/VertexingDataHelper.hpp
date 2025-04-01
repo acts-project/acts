@@ -33,11 +33,11 @@ struct VertexInfo {
   // Number of tracks
   int nTracks = 0;
   // Weight of first track
-  double trk1Weight = 0;
+  long double trk1Weight = 0;
   // Vertex compatibility value of first track
-  double trk1Comp = 0;
+  long double trk1Comp = 0;
   // Chi2 of first track
-  double trk1Chi2 = 0;
+  long double trk1Chi2 = 0;
 };
 
 inline std::tuple<Vertex, std::vector<VertexInfo>,

@@ -30,9 +30,9 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-const double minHalfX = 1.;
-const double maxHalfX = 6.;
-const double halfY = 2.;
+const long double minHalfX = 1.;
+const long double maxHalfX = 6.;
+const long double halfY = 2.;
 
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, TrapezoidBounds::eSize> values{};
+  std::array<long double, TrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
   TrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -173,12 +173,13 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
 
 BOOST_DATA_TEST_CASE(
     TrapezoidInsideCheck,
-    bdata::random(
-        (bdata::engine = std::mt19937(), bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<double>(-7, 7))) ^
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(-7, 7))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-3, 3))) ^
+                           std::uniform_real_distribution<long double>(-3,
+                                                                       3))) ^
         bdata::xrange(1000) * bdata::make({0., 0.1, 0.2, 0.3}),
     x, y, index, tol) {
   (void)index;

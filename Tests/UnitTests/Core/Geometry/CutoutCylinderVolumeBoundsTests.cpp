@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsConstruction) {
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
   CutoutCylinderVolumeBounds original(5, 10, 15, 30, 25);
-  std::array<double, CutoutCylinderVolumeBounds::eSize> values{};
-  std::vector<double> valvector = original.values();
+  std::array<long double, CutoutCylinderVolumeBounds::eSize> values{};
+  std::vector<long double> valvector = original.values();
   std::copy_n(valvector.begin(), CutoutCylinderVolumeBounds::eSize,
               values.begin());
   CutoutCylinderVolumeBounds recreated(values);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsExceptions) {
-  double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
+  long double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
 
   // Test negative rmin
   BOOST_CHECK_THROW(CutoutCylinderVolumeBounds(-rmin, rmed, rmax, hz, hzc),
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsExceptions) {
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsAccess) {
-  double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
+  long double rmin{5}, rmed{10}, rmax{15}, hz{30}, hzc{25};
   CutoutCylinderVolumeBounds ccvb(rmin, rmed, rmax, hz, hzc);
 
   BOOST_CHECK_EQUAL(ccvb.get(CutoutCylinderVolumeBounds::eMinR), rmin);

@@ -42,7 +42,7 @@ struct CubicTrackingGeometry {
     using namespace UnitLiterals;
 
     // Construct the rotation
-    double rotationAngle = 90_degree;
+    long double rotationAngle = 90_degree;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -64,7 +64,7 @@ struct CubicTrackingGeometry {
     using namespace UnitLiterals;
 
     // Set translation vectors
-    double eps = 1_mm;
+    long double eps = 1_mm;
     std::vector<Vector3> translations;
     translations.push_back({-2_m, 0., 0.});
     translations.push_back({-1_m, 0., 0.});
@@ -73,7 +73,7 @@ struct CubicTrackingGeometry {
     translations.push_back({2_m - eps, 0., 0.});
     translations.push_back({2_m + eps, 0., 0.});
 
-    std::vector<double> rotAngle;
+    std::vector<long double> rotAngle;
     rotAngle.push_back(0.);
     rotAngle.push_back(0.);
     rotAngle.push_back(0.026);
@@ -85,7 +85,7 @@ struct CubicTrackingGeometry {
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
     for (unsigned int i = 0; i < translations.size(); i++) {
       RotationMatrix3 rotation_strip;
-      double angle = rotAngle[i];
+      long double angle = rotAngle[i];
       Vector3 xPos(cos(angle), sin(angle), 0.);
       Vector3 yPos(-sin(angle), cos(angle), 0.);
       Vector3 zPos(0., 0., 1.);

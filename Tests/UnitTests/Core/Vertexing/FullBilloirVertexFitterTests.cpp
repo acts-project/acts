@@ -56,38 +56,39 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // 4D vertex distributions
 // x-/y-position
-std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<long double> vXYDist(-0.1_mm, 0.1_mm);
 // z-position
-std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<long double> vZDist(-20_mm, 20_mm);
 // time
-std::uniform_real_distribution<double> vTDist(-1_ns, 1_ns);
+std::uniform_real_distribution<long double> vTDist(-1_ns, 1_ns);
 
 // Track parameter distributions
 // d0
-std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<long double> d0Dist(-0.01_mm, 0.01_mm);
 // z0
-std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<long double> z0Dist(-0.2_mm, 0.2_mm);
 // pT
-std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<long double> pTDist(0.4_GeV, 10_GeV);
 // phi
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // theta
-std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
+std::uniform_real_distribution<long double> thetaDist(1.,
+                                                      std::numbers::pi - 1.);
 // charge helper
-std::uniform_real_distribution<double> qDist(-1, 1);
+std::uniform_real_distribution<long double> qDist(-1, 1);
 // time
-std::uniform_real_distribution<double> tDist(-0.002_ns, 0.002_ns);
+std::uniform_real_distribution<long double> tDist(-0.002_ns, 0.002_ns);
 
 // Track parameter resolution distributions
 // impact parameters
-std::uniform_real_distribution<double> resIPDist(0., 100_um);
+std::uniform_real_distribution<long double> resIPDist(0., 100_um);
 // angles
-std::uniform_real_distribution<double> resAngDist(0., 0.1);
+std::uniform_real_distribution<long double> resAngDist(0., 0.1);
 // q/p
-std::uniform_real_distribution<double> resQoPDist(-0.1, 0.1);
+std::uniform_real_distribution<long double> resQoPDist(-0.1, 0.1);
 // Track time resolution distribution
-std::uniform_real_distribution<double> resTDist(0.1_ns, 0.2_ns);
+std::uniform_real_distribution<long double> resTDist(0.1_ns, 0.2_ns);
 
 // Number of tracks distritbution
 std::uniform_int_distribution<std::uint32_t> nTracksDist(3, 10);
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   Vertex customConstraint;
   // Some arbitrary values
   SquareMatrix4 covMatVtx = SquareMatrix4::Zero();
-  double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
+  long double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
   covMatVtx(0, 0) = 30_mm2;
   covMatVtx(1, 1) = 30_mm2;
   covMatVtx(2, 2) = 30_mm2;
@@ -200,18 +201,18 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     std::uint32_t nTracks = nTracksDist(gen);
 
     // Create position of vertex and perigee surface
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
-    double t = vTDist(gen);
+    long double x = vXYDist(gen);
+    long double y = vXYDist(gen);
+    long double z = vZDist(gen);
+    long double t = vTDist(gen);
 
     Vector4 trueVertex(x, y, z, t);
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Calculate d0 and z0 corresponding to the vertex position
-    double d0V = std::hypot(x, y);
-    double z0V = z;
+    long double d0V = std::hypot(x, y);
+    long double z0V = z;
 
     // Vector to store track objects used for vertex fit
     std::vector<BoundTrackParameters> tracks;
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Calculate random track emerging from vicinity of vertex position
     for (std::uint32_t iTrack = 0; iTrack < nTracks; iTrack++) {
       // Charge
-      double q = qDist(gen) < 0 ? -1. : 1.;
+      long double q = qDist(gen) < 0 ? -1. : 1.;
 
       // Track parameters
       BoundVector paramVec;
@@ -228,12 +229,12 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           thetaDist(gen), q / pTDist(gen), t + tDist(gen);
 
       // Resolutions
-      double resD0 = resIPDist(gen);
-      double resZ0 = resIPDist(gen);
-      double resPh = resAngDist(gen);
-      double resTh = resAngDist(gen);
-      double resQp = resQoPDist(gen);
-      double resT = resTDist(gen);
+      long double resD0 = resIPDist(gen);
+      long double resZ0 = resIPDist(gen);
+      long double resPh = resAngDist(gen);
+      long double resTh = resAngDist(gen);
+      long double resQp = resQoPDist(gen);
+      long double resT = resTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
       Covariance covMat;

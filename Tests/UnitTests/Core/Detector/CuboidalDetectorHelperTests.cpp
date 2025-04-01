@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
                                                     Acts::AxisDirection::AxisY,
                                                     Acts::AxisDirection::AxisZ};
 
-  using HlPos = std::array<double, 2u>;
+  using HlPos = std::array<long double, 2u>;
   using VolHlPos = std::array<HlPos, 3u>;
   using VolSetup = std::array<VolHlPos, 3u>;
 

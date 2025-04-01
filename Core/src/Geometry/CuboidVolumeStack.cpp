@@ -44,23 +44,23 @@ struct CuboidVolumeStack::VolumeTuple {
     updatedBounds = std::make_shared<CuboidVolumeBounds>(*bounds);
   }
 
-  double mid(AxisDirection direction) const {
+  long double mid(AxisDirection direction) const {
     return localTransform.translation()[axisToIndex(direction)];
   }
-  double halfLength(AxisDirection direction) const {
+  long double halfLength(AxisDirection direction) const {
     return updatedBounds->get(
         CuboidVolumeBounds::boundsFromAxisDirection(direction));
   }
-  double min(AxisDirection direction) const {
+  long double min(AxisDirection direction) const {
     return mid(direction) - halfLength(direction);
   }
-  double max(AxisDirection direction) const {
+  long double max(AxisDirection direction) const {
     return mid(direction) + halfLength(direction);
   }
 
-  void set(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>
-          keyValues) {
+  void set(std::initializer_list<
+           std::pair<CuboidVolumeBounds::BoundValues, long double>>
+               keyValues) {
     updatedBounds->set(keyValues);
   }
 
@@ -236,16 +236,17 @@ void CuboidVolumeStack::initializeOuterVolume(VolumeAttachmentStrategy strategy,
              << axisDirectionName(m_direction) << " sorting:");
   printVolumeSequence(volumeTuples, logger, Acts::Logging::DEBUG);
 
-  double min = volumeTuples.front().min(m_direction);
-  double max = volumeTuples.back().max(m_direction);
+  long double min = volumeTuples.front().min(m_direction);
+  long double max = volumeTuples.back().max(m_direction);
 
-  double mid = std::midpoint(min, max);
-  double hl = std::midpoint(max, -min);
+  long double mid = std::midpoint(min, max);
+  long double hl = std::midpoint(max, -min);
 
   Translation3 translation(Vector3::Unit(dirIdx) * mid);
   m_transform = m_groupTransform * translation;
   auto bounds = std::make_shared<CuboidVolumeBounds>(
-      std::initializer_list<std::pair<CuboidVolumeBounds::BoundValues, double>>{
+      std::initializer_list<
+          std::pair<CuboidVolumeBounds::BoundValues, long double>>{
           {CuboidVolumeBounds::boundsFromAxisDirection(m_direction), hl},
           {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1), hl1},
           {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2), hl2}});
@@ -315,7 +316,7 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
     if (std::abs(a.max(m_direction) - b.min(m_direction)) < tolerance) {
       ACTS_VERBOSE("No gap between volumes, no attachment needed");
     } else {
-      double gapWidth = b.min(m_direction) - a.max(m_direction);
+      long double gapWidth = b.min(m_direction) - a.max(m_direction);
       ACTS_VERBOSE("Gap width: " << gapWidth);
 
       ACTS_VERBOSE("Synchronizing bounds in "
@@ -325,9 +326,9 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
         case VolumeAttachmentStrategy::Midpoint: {
           ACTS_VERBOSE(" -> Strategy: Expand both volumes to midpoint");
 
-          double aMidNew =
+          long double aMidNew =
               (a.min(m_direction) + a.max(m_direction)) / 2.0 + gapWidth / 4.0;
-          double aHlNew = a.halfLength(m_direction) + gapWidth / 4.0;
+          long double aHlNew = a.halfLength(m_direction) + gapWidth / 4.0;
           ACTS_VERBOSE("  - New halflength for first volume: " << aHlNew);
           ACTS_VERBOSE("  - New bounds for first volume: ["
                        << (aMidNew - aHlNew) << " <- " << aMidNew << " -> "
@@ -337,9 +338,9 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
                  "Volume shrunk");
           assert(aHlNew >= a.halfLength(m_direction) && "Volume shrunk");
 
-          double bMidNew =
+          long double bMidNew =
               (b.min(m_direction) + b.max(m_direction)) / 2.0 - gapWidth / 4.0;
-          double bHlNew = b.halfLength(m_direction) + gapWidth / 4.0;
+          long double bHlNew = b.halfLength(m_direction) + gapWidth / 4.0;
           ACTS_VERBOSE("  - New halflength for second volume: " << bHlNew);
           ACTS_VERBOSE("  - New bounds for second volume: ["
                        << (bMidNew - bHlNew) << " <- " << bMidNew << " -> "
@@ -361,8 +362,8 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::First: {
           ACTS_VERBOSE(" -> Strategy: Expand first volume");
-          double aMidNew = (a.min(m_direction) + b.min(m_direction)) / 2.0;
-          double aHlNew = (b.min(m_direction) - a.min(m_direction)) / 2.0;
+          long double aMidNew = (a.min(m_direction) + b.min(m_direction)) / 2.0;
+          long double aHlNew = (b.min(m_direction) - a.min(m_direction)) / 2.0;
           ACTS_VERBOSE("  - Gap width: " << gapWidth);
           ACTS_VERBOSE("  - New bounds for first volume: ["
                        << (aMidNew - aHlNew) << " <- " << aMidNew << " -> "
@@ -380,8 +381,8 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::Second: {
           ACTS_VERBOSE(" -> Strategy: Expand second volume");
-          double bMidNew = (a.max(m_direction) + b.max(m_direction)) / 2.0;
-          double bHlNew = (b.max(m_direction) - a.max(m_direction)) / 2.0;
+          long double bMidNew = (a.max(m_direction) + b.max(m_direction)) / 2.0;
+          long double bHlNew = (b.max(m_direction) - a.max(m_direction)) / 2.0;
           ACTS_VERBOSE("  - New halflength for second volume: " << bHlNew);
           ACTS_VERBOSE("  - New bounds for second volume: ["
                        << (bMidNew - bHlNew) << " <- " << bMidNew << " -> "
@@ -398,8 +399,8 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
         }
         case VolumeAttachmentStrategy::Gap: {
           ACTS_VERBOSE(" -> Strategy: Create a gap volume");
-          double gapHl = (b.min(m_direction) - a.max(m_direction)) / 2.0;
-          double gapMid = (b.min(m_direction) + a.max(m_direction)) / 2.0;
+          long double gapHl = (b.min(m_direction) - a.max(m_direction)) / 2.0;
+          long double gapMid = (b.min(m_direction) + a.max(m_direction)) / 2.0;
 
           ACTS_VERBOSE("  - Gap half length: " << gapHl << " at "
                                                << axisDirectionName(m_direction)
@@ -407,18 +408,18 @@ CuboidVolumeStack::checkOverlapAndAttach(std::vector<VolumeTuple>& volumes,
 
           Translation3 gapTranslation(Vector3::Unit(dirIdx) * gapMid);
 
-          double min1 = std::min(a.min(m_dirOrth1), b.min(m_dirOrth1));
-          double max1 = std::max(a.max(m_dirOrth1), b.max(m_dirOrth1));
+          long double min1 = std::min(a.min(m_dirOrth1), b.min(m_dirOrth1));
+          long double max1 = std::max(a.max(m_dirOrth1), b.max(m_dirOrth1));
 
-          double min2 = std::min(a.min(m_dirOrth2), b.min(m_dirOrth2));
-          double max2 = std::max(a.max(m_dirOrth2), b.max(m_dirOrth2));
+          long double min2 = std::min(a.min(m_dirOrth2), b.min(m_dirOrth2));
+          long double max2 = std::max(a.max(m_dirOrth2), b.max(m_dirOrth2));
 
           Transform3 gapLocalTransform{gapTranslation};
           Transform3 gapGlobalTransform = m_groupTransform * gapLocalTransform;
 
           auto gapBounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
-                  std::pair<CuboidVolumeBounds::BoundValues, double>>{
+                  std::pair<CuboidVolumeBounds::BoundValues, long double>>{
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
                    gapHl},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
@@ -513,19 +514,19 @@ void CuboidVolumeStack::checkVolumeAlignment(
   }
 }
 
-std::pair<double, double> CuboidVolumeStack::synchronizeBounds(
+std::pair<long double, long double> CuboidVolumeStack::synchronizeBounds(
     std::vector<VolumeTuple>& volumes, const Logger& logger) {
   auto boundDirOrth1 = CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1);
   auto boundDirOrth2 = CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth2);
 
-  const double maxHl1 =
+  const long double maxHl1 =
       std::max_element(volumes.begin(), volumes.end(),
                        [boundDirOrth1](const auto& a, const auto& b) {
                          return a.bounds->get(boundDirOrth1) <
                                 b.bounds->get(boundDirOrth1);
                        })
           ->bounds->get(boundDirOrth1);
-  const double maxHl2 =
+  const long double maxHl2 =
       std::max_element(volumes.begin(), volumes.end(),
                        [boundDirOrth2](const auto& a, const auto& b) {
                          return a.bounds->get(boundDirOrth2) <
@@ -596,18 +597,20 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
   }
 
   constexpr auto tolerance = s_onSurfaceTolerance;
-  auto same = [](double a, double b) { return std::abs(a - b) < tolerance; };
+  auto same = [](long double a, long double b) {
+    return std::abs(a - b) < tolerance;
+  };
 
   for (const auto& dir : {m_direction, m_dirOrth1, m_dirOrth2}) {
-    const double newMin = newVolume.min(dir);
-    const double newMax = newVolume.max(dir);
-    const double newMid = newVolume.mid(dir);
-    const double newHl = newVolume.halfLength(dir);
+    const long double newMin = newVolume.min(dir);
+    const long double newMax = newVolume.max(dir);
+    const long double newMid = newVolume.mid(dir);
+    const long double newHl = newVolume.halfLength(dir);
 
-    const double oldMin = oldVolume.min(dir);
-    const double oldMax = oldVolume.max(dir);
-    const double oldMid = oldVolume.mid(dir);
-    const double oldHl = oldVolume.halfLength(dir);
+    const long double oldMin = oldVolume.min(dir);
+    const long double oldMax = oldVolume.max(dir);
+    const long double oldMid = oldVolume.mid(dir);
+    const long double oldHl = oldVolume.halfLength(dir);
 
     ACTS_VERBOSE("Previous bounds are: " << axisDirectionName(dir) << ": [ "
                                          << oldMin << " <- " << oldMid << " -> "
@@ -680,9 +683,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                      << axisDirectionName(m_direction) << "bounds");
 
         auto& first = volumeTuples.front();
-        double newMinFirst = newVolume.min(m_direction);
-        double newMidFirst = (newMinFirst + first.max(m_direction)) / 2.0;
-        double newHlFirst = (first.max(m_direction) - newMinFirst) / 2.0;
+        long double newMinFirst = newVolume.min(m_direction);
+        long double newMidFirst = (newMinFirst + first.max(m_direction)) / 2.0;
+        long double newHlFirst = (first.max(m_direction) - newMinFirst) / 2.0;
 
         ACTS_VERBOSE(" -> first " << axisDirectionName(m_direction) << ": [ "
                                   << newMinFirst << " <- " << newMidFirst
@@ -699,9 +702,9 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                      << axisDirectionName(m_direction) << " bounds");
 
         auto& last = volumeTuples.back();
-        double newMaxLast = newVolume.max(m_direction);
-        double newMidLast = (last.min(m_direction) + newMaxLast) / 2.0;
-        double newHlLast = (newMaxLast - last.min(m_direction)) / 2.0;
+        long double newMaxLast = newVolume.max(m_direction);
+        long double newMidLast = (last.min(m_direction) + newMaxLast) / 2.0;
+        long double newHlLast = (newMaxLast - last.min(m_direction)) / 2.0;
 
         ACTS_VERBOSE(" -> last " << axisDirectionName(m_direction) << ": [ "
                                  << last.min(m_direction) << " <- "
@@ -728,10 +731,10 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
       if (!same(newVolume.min(m_direction), oldVolume.min(m_direction)) &&
           newVolume.min(m_direction) < oldVolume.min(m_direction)) {
-        double gap1Min = newVolume.min(m_direction);
-        double gap1Max = oldVolume.min(m_direction);
-        double gap1Hl = (gap1Max - gap1Min) / 2.0;
-        double gap1P = (gap1Max + gap1Min) / 2.0;
+        long double gap1Min = newVolume.min(m_direction);
+        long double gap1Max = oldVolume.min(m_direction);
+        long double gap1Hl = (gap1Max - gap1Min) / 2.0;
+        long double gap1P = (gap1Max + gap1Min) / 2.0;
 
         // check if we need a new gap volume or reuse an existing one
         auto& candidate = volumeTuples.front();
@@ -750,7 +753,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
           auto gap1Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
-                  std::pair<CuboidVolumeBounds::BoundValues, double>>{
+                  std::pair<CuboidVolumeBounds::BoundValues, long double>>{
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
                    gap1Hl},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
@@ -768,7 +771,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ACTS_VERBOSE("~> Creating new gap volume at negative ");
           auto gap1Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
-                  std::pair<CuboidVolumeBounds::BoundValues, double>>{
+                  std::pair<CuboidVolumeBounds::BoundValues, long double>>{
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
                    gap1Hl},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
@@ -786,10 +789,10 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
       if (!same(newVolume.max(m_direction), oldVolume.max(m_direction)) &&
           newVolume.max(m_direction) > oldVolume.max(m_direction)) {
-        double gap2Min = oldVolume.max(m_direction);
-        double gap2Max = newVolume.max(m_direction);
-        double gap2Hl = (gap2Max - gap2Min) / 2.0;
-        double gap2P = (gap2Max + gap2Min) / 2.0;
+        long double gap2Min = oldVolume.max(m_direction);
+        long double gap2Max = newVolume.max(m_direction);
+        long double gap2Hl = (gap2Max - gap2Min) / 2.0;
+        long double gap2P = (gap2Max + gap2Min) / 2.0;
 
         // check if we need a new gap volume or reuse an existing one
         auto& candidate = volumeTuples.back();
@@ -805,7 +808,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
 
           auto gap2Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
-                  std::pair<CuboidVolumeBounds::BoundValues, double>>{
+                  std::pair<CuboidVolumeBounds::BoundValues, long double>>{
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
                    gap2Hl},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),
@@ -822,7 +825,7 @@ void CuboidVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           ACTS_VERBOSE("~> Creating new gap volume at positive ");
           auto gap2Bounds = std::make_shared<CuboidVolumeBounds>(
               std::initializer_list<
-                  std::pair<CuboidVolumeBounds::BoundValues, double>>{
+                  std::pair<CuboidVolumeBounds::BoundValues, long double>>{
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_direction),
                    gap2Hl},
                   {CuboidVolumeBounds::boundsFromAxisDirection(m_dirOrth1),

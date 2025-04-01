@@ -77,7 +77,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   TGeoDetectorElement(
       const Identifier& identifier, const TGeoNode& tGeoNode,
       const TGeoMatrix& tGeoMatrix = TGeoIdentity(),
-      const std::string& axes = "XYZ", double scalor = 10.,
+      const std::string& axes = "XYZ", long double scalor = 10.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor with pre-computed surface
@@ -93,7 +93,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
                       const std::shared_ptr<const PlanarBounds>& tgBounds,
-                      double tgThickness = 0.);
+                      long double tgThickness = 0.);
 
   /// Constructor with pre-computed disk surface.
   ///
@@ -108,7 +108,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
                       const std::shared_ptr<const DiscBounds>& tgBounds,
-                      double tgThickness = 0.);
+                      long double tgThickness = 0.);
 
   ~TGeoDetectorElement() override;
 
@@ -128,7 +128,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   Surface& surface() override;
 
   /// Returns the thickness of the module
-  double thickness() const override;
+  long double thickness() const override;
 
   /// Return the TGeoNode for back navigation
   const TGeoNode& tgeoNode() const { return *m_detElement; }
@@ -143,7 +143,7 @@ class TGeoDetectorElement : public Acts::DetectorElementBase {
   /// Boundaries of the detector element
   std::shared_ptr<const SurfaceBounds> m_bounds{nullptr};
   ///  Thickness of this detector element
-  double m_thickness{0.};
+  long double m_thickness{0.};
   /// Corresponding Surface
   std::shared_ptr<Surface> m_surface{nullptr};
 };
@@ -165,7 +165,7 @@ inline Surface& TGeoDetectorElement::surface() {
   return (*m_surface);
 }
 
-inline double TGeoDetectorElement::thickness() const {
+inline long double TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 

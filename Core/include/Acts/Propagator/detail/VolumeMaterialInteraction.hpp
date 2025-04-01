@@ -25,7 +25,7 @@ struct VolumeMaterialInteraction {
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
-  const double time = 0;
+  const long double time = 0;
   /// The particle current direction
   const Vector3 dir = Vector3::Zero();
   /// The particle q/p at the interaction
@@ -46,7 +46,7 @@ struct VolumeMaterialInteraction {
   /// Data evaluated within this struct
   MaterialSlab slab = MaterialSlab::Nothing();
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection = 0;
+  long double pathCorrection = 0;
 
   /// @brief Constructor
   ///

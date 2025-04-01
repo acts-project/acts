@@ -32,7 +32,7 @@ class ProtoAxis {
   /// @param abType the axis boundary type
   /// @param edges the bin edges (variable binning)
   ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-            const std::vector<double>& edges);
+            const std::vector<long double>& edges);
 
   /// Convenience constructors - for equidistant binning
   ///
@@ -41,8 +41,8 @@ class ProtoAxis {
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, double minE,
-            double maxE, std::size_t nbins);
+  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, long double minE,
+            long double maxE, std::size_t nbins);
 
   /// Placeholder constructor for auto-range binning
   ///
@@ -88,7 +88,7 @@ class ProtoAxis {
   ///
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
-  void setRange(double minE, double maxE);
+  void setRange(long double minE, long double maxE);
 
   /// @brief check if this is an auto-range binning
   bool isAutorange() const;

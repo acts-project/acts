@@ -131,7 +131,7 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool rFiltering = false, double rfScaling = 1.0,
+                      bool rFiltering = false, long double rfScaling = 1.0,
                       const FreeToBoundCorrection& freeToBoundCorrection_ =
                           FreeToBoundCorrection(false))
       : geoContext(gctx),
@@ -181,7 +181,7 @@ struct KalmanFitterOptions {
   /// scaled. This is only used in the backwardfiltering (if reversedFiltering
   /// is true or if the ReverseFilteringLogic return true for the track of
   /// interest)
-  double reversedFilteringCovarianceScaling = 1.0;
+  long double reversedFilteringCovarianceScaling = 1.0;
 
   /// Whether to include non-linear correction during global to local
   /// transformation
@@ -300,7 +300,7 @@ class KalmanFitter {
     using result_type = KalmanFitterResult<traj_t>;
 
     /// The target surface aboter
-    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
+    SurfaceReached targetReached{std::numeric_limits<long double>::lowest()};
 
     /// Strategy to propagate to target surface
     KalmanFitterTargetSurfaceStrategy targetSurfaceStrategy =
@@ -319,7 +319,7 @@ class KalmanFitter {
     bool reversedFiltering = false;
 
     /// Scale the covariance before the reversed filtering
-    double reversedFilteringCovarianceScaling = 1.0;
+    long double reversedFilteringCovarianceScaling = 1.0;
 
     /// Whether to include non-linear correction during global to local
     /// transformation

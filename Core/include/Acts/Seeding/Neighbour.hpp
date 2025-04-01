@@ -15,17 +15,17 @@ namespace Acts {
 /// @brief A class that helps in processing the neighbours, given a collection of
 /// middle space points
 /// The idea here is that in the seeding we look for compatible b-m and m-t
-/// doublets. One of the requirements is that the bottom/top space point is at a
-/// suitable distance (in radius) w.r.t. the middle space point. We know however
-/// that the space points in each bin are sorted in radius. That means we can
-/// use this sorting in order to reduce the number of space point to consider
-/// when looking for compatible doublets.
-/// The idea is to keep track of first space point that is in the allowed bin,
-/// by storing its position using an iterator itr This helps us since the lower
-/// possible buondary is given by the first middle space point (its radius minus
-/// the mad deltaR defined by the user). The subsequent middle space point will
-/// have a higher radius. That means that there is no point in looking at
-/// neighbour space point before itr, since we know they will be out of range.
+/// long doublets. One of the requirements is that the bottom/top space point is
+/// at a suitable distance (in radius) w.r.t. the middle space point. We know
+/// however that the space points in each bin are sorted in radius. That means
+/// we can use this sorting in order to reduce the number of space point to
+/// consider when looking for compatible long doublets. The idea is to keep
+/// track of first space point that is in the allowed bin, by storing its
+/// position using an iterator itr This helps us since the lower possible
+/// buondary is given by the first middle space point (its radius minus the mad
+/// deltaR defined by the user). The subsequent middle space point will have a
+/// higher radius. That means that there is no point in looking at neighbour
+/// space point before itr, since we know they will be out of range.
 
 template <typename grid_t>
 struct Neighbour {

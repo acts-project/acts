@@ -86,16 +86,16 @@ struct SurfaceArrayCreatorFixture {
         std::forward<Args>(args)...);
   }
 
-  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
-                               double zbase = 0, double r = 10, double w = 2,
-                               double h = 1) {
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, long double shift = 0,
+                               long double zbase = 0, long double r = 10,
+                               long double w = 2, long double h = 1) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
-      double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
-      double phi = std::fma(i, phiStep, shift);
+      long double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+      long double phi = std::fma(i, phiStep, shift);
 
       Transform3 trans;
       trans.setIdentity();
@@ -115,17 +115,17 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(std::size_t n = 10, double shift = 0,
-                                double zbase = 0,
-                                double incl = std::numbers::pi / 9.,
-                                double w = 2, double h = 1.5) {
+  SrfVec fullPhiTestSurfacesBRL(std::size_t n = 10, long double shift = 0,
+                                long double zbase = 0,
+                                long double incl = std::numbers::pi / 9.,
+                                long double w = 2, long double h = 1.5) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
-      double z = zbase;
-      double phi = std::fma(i, phiStep, shift);
+      long double z = zbase;
+      long double phi = std::fma(i, phiStep, shift);
 
       Transform3 trans;
       trans.setIdentity();
@@ -147,7 +147,8 @@ struct SurfaceArrayCreatorFixture {
   }
 
   SrfVec straightLineSurfaces(
-      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., long double step = 3,
+      const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
@@ -172,12 +173,12 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec makeBarrel(int nPhi, int nZ, double w, double h) {
-    double z0 = -(nZ - 1) * w;
+  SrfVec makeBarrel(int nPhi, int nZ, long double w, long double h) {
+    long double z0 = -(nZ - 1) * w;
     SrfVec res;
 
     for (int i = 0; i < nZ; i++) {
-      double z = i * w * 2 + z0;
+      long double z = i * w * 2 + z0;
       // std::cout << "z=" << z << std::endl;
       SrfVec ring =
           fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
@@ -188,19 +189,19 @@ struct SurfaceArrayCreatorFixture {
   }
 
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
-  makeBarrelStagger(int nPhi, int nZ, double shift = 0,
-                    double incl = std::numbers::pi / 9., double w = 2,
-                    double h = 1.5) {
-    double z0 = -(nZ - 1) * w;
+  makeBarrelStagger(int nPhi, int nZ, long double shift = 0,
+                    long double incl = std::numbers::pi / 9., long double w = 2,
+                    long double h = 1.5) {
+    long double z0 = -(nZ - 1) * w;
     SrfVec res;
     std::vector<std::pair<const Surface*, const Surface*>> pairs;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * std::numbers::pi / nPhi;
+    long double phiStep = 2 * std::numbers::pi / nPhi;
     for (int i = 0; i < nZ; i++) {
-      double z = i * w * 2 + z0;
+      long double z = i * w * 2 + z0;
       for (int j = 0; j < nPhi; ++j) {
-        double phi = std::fma(j, phiStep, shift);
+        long double phi = std::fma(j, phiStep, shift);
         Transform3 trans;
         trans.setIdentity();
         trans.rotate(Eigen::AngleAxisd(phi, Vector3(0, 0, 1)));
@@ -283,14 +284,14 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
       1.25664,  1.46608,  1.67552,  1.88496,  2.09439,   2.30383,   2.51327,
       2.72271,  2.93215,  3.14159};
 
-  double step = 2 * std::numbers::pi / 30.;
+  long double step = 2 * std::numbers::pi / 30.;
 
   // endcap style modules
 
   for (int i = -1; i <= 2; i += 2) {
-    double z = 10 * i;
+    long double z = 10 * i;
     // case 1: one module sits at pi / -pi
-    double angleShift = step / 2.;
+    long double angleShift = step / 2.;
     auto surfaces = fullPhiTestSurfacesEC(30, angleShift, z);
     std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
@@ -356,9 +357,9 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Phi,
   }
 
   for (int i = -1; i <= 2; i += 2) {
-    double z = 10 * i;
+    long double z = 10 * i;
     // case 1: one module sits at pi / -pi
-    double angleShift = step / 2.;
+    long double angleShift = step / 2.;
     auto surfaces = fullPhiTestSurfacesBRL(30, angleShift, z);
     auto surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
@@ -461,7 +462,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
 
   // z rows with varying starting point
   for (std::size_t i = 0; i <= 20; i++) {
-    double z0 = -10 + 1. * i;
+    long double z0 = -10 + 1. * i;
     surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, z0 + 1.5));
     surfacesRaw = unpack_shared_vector(surfaces);
     pl = ProtoLayer(tgContext, surfacesRaw);
@@ -537,7 +538,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
 // we want to create _as few bins_ as possible, meaning the r-ring with
 // the lowest number of surfaces should be used for the bin count or
 // as basis for the variable edge procedure
-// double filling will make sure no surfaces are dropped
+// long double filling will make sure no surfaces are dropped
 BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
                         SurfaceArrayCreatorFixture) {
   auto ringA = fullPhiTestSurfacesEC(10, 0, 0, 10, 2, 3);
@@ -572,12 +573,12 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
       -std::numbers::pi, std::numbers::pi, 30u);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
-  double R = 10.;
+  long double R = 10.;
   auto globalToLocal = [](const Vector3& pos) {
     return Vector2(phi(pos) + 2 * std::numbers::pi / 30 / 2, pos.z());
   };
   auto localToGlobal = [R](const Vector2& loc) {
-    double phi = loc[0] - 2 * std::numbers::pi / 30 / 2;
+    long double phi = loc[0] - 2 * std::numbers::pi / 30 / 2;
     return Vector3(R * std::cos(phi), R * std::sin(phi), loc[1]);
   };
 
@@ -620,7 +621,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
   auto pAxisZ =
       createEquidistantAxis(tgContext, brlRaw, AxisDirection::AxisZ, pl, tr);
 
-  double R = 10.;
+  long double R = 10.;
   Transform3 itr = tr.inverse();
 
   auto globalToLocal = [tr](const Vector3& pos) {
@@ -689,14 +690,14 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_barrelStagger,
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7u);
 
     // check bin edges
-    std::vector<double> phiEdgesExp = {
+    std::vector<long double> phiEdgesExp = {
         -3.14159,  -2.93215,  -2.72271, -2.51327,    -2.30383, -2.0944,
         -1.88496,  -1.67552,  -1.46608, -1.25664,    -1.0472,  -0.837758,
         -0.628319, -0.418879, -0.20944, 4.44089e-16, 0.20944,  0.418879,
         0.628319,  0.837758,  1.0472,   1.25664,     1.46608,  1.67552,
         1.88496,   2.0944,    2.30383,  2.51327,     2.72271,  3.00831,
         3.14159};
-    std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
+    std::vector<long double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
     std::size_t i = 0;
     for (const auto& edge : axes.at(0)->getBinEdges()) {
       BOOST_TEST_INFO("phi edge index " << i);

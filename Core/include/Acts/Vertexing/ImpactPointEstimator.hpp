@@ -24,18 +24,18 @@ namespace Acts {
 
 struct ImpactParametersAndSigma {
   // Impact parameters ...
-  double d0 = 0.;
-  double z0 = 0.;
+  long double d0 = 0.;
+  long double z0 = 0.;
   // ... and their standard deviations wrt a vertex, e.g.:
   // sigmaD0 = sqrt(Var(X) + Var(Y) + Var(d0)),
   // where X and Y are the x- and y-coordinate of the vertex
-  double sigmaD0 = 0.;
-  double sigmaZ0 = 0.;
+  long double sigmaD0 = 0.;
+  long double sigmaZ0 = 0.;
   // Absolute difference in time between the vertex and the track at the 2D PCA
   // ...
-  std::optional<double> deltaT = std::nullopt;
+  std::optional<long double> deltaT = std::nullopt;
   // ... and standard deviation wrt a vertex
-  std::optional<double> sigmaDeltaT = std::nullopt;
+  std::optional<long double> sigmaDeltaT = std::nullopt;
 };
 
 /// @class ImpactPointEstimator
@@ -75,7 +75,7 @@ class ImpactPointEstimator {
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
     /// Desired precision of deltaPhi in Newton method
-    double precision = 1.e-10;
+    long double precision = 1.e-10;
   };
 
   /// @brief Constructor
@@ -106,9 +106,10 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return Distance
-  Result<double> calculateDistance(const GeometryContext& gctx,
-                                   const BoundTrackParameters& trkParams,
-                                   const Vector3& vtxPos, State& state) const;
+  Result<long double> calculateDistance(const GeometryContext& gctx,
+                                        const BoundTrackParameters& trkParams,
+                                        const Vector3& vtxPos,
+                                        State& state) const;
 
   /// @brief Estimates the track parameters at the 3D PCA (i.e., a point of
   /// minimal 3D distance) to a vertex. The track parameters are defined wrt a
@@ -145,7 +146,7 @@ class ImpactPointEstimator {
   ///
   /// @return The compatibility value
   template <int nDim>
-  Result<double> getVertexCompatibility(
+  Result<long double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
       const ActsVector<nDim>& vertexPos) const {
     static_assert(nDim == 3 || nDim == 4,
@@ -209,7 +210,7 @@ class ImpactPointEstimator {
   /// @param mctx  The magnetic field context
   ///
   /// @return A pair holding the sign for the 2D and Z lifetimes
-  Result<std::pair<double, double>> getLifetimeSignOfTrack(
+  Result<std::pair<long double, long double>> getLifetimeSignOfTrack(
       const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
@@ -224,7 +225,7 @@ class ImpactPointEstimator {
   /// @param mctx  The magnetic field context
   ///
   /// @return The value of the 3D lifetime
-  Result<double> get3DLifetimeSignOfTrack(
+  Result<long double> get3DLifetimeSignOfTrack(
       const BoundTrackParameters& track, const Vertex& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
@@ -234,7 +235,7 @@ class ImpactPointEstimator {
       const GeometryContext& gctx, const BoundTrackParameters& trkParams,
       Eigen::Map<const ActsDynamicVector> vtxPos, State& state) const;
 
-  Result<double> getVertexCompatibility(
+  Result<long double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
       Eigen::Map<const ActsDynamicVector> vertexPos) const;
 

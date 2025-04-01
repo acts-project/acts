@@ -27,8 +27,8 @@ GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_SUITE(StrawSurfaces)
 
-const double radius = 1.;
-const double halfZ = 10.;
+const long double radius = 1.;
+const long double halfZ = 10.;
 Translation3 translation{0., 1., 2.};
 
 /// Unit test for creating compliant/non-compliant StrawSurface object

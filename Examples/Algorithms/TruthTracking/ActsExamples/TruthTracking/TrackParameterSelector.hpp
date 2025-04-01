@@ -30,23 +30,23 @@ class TrackParameterSelector final : public IAlgorithm {
     std::string outputTrackParameters;
 
     // Minimum/maximum local positions.
-    double loc0Min = -std::numeric_limits<double>::infinity();
-    double loc0Max = std::numeric_limits<double>::infinity();
-    double loc1Min = -std::numeric_limits<double>::infinity();
-    double loc1Max = std::numeric_limits<double>::infinity();
+    long double loc0Min = -std::numeric_limits<long double>::infinity();
+    long double loc0Max = std::numeric_limits<long double>::infinity();
+    long double loc1Min = -std::numeric_limits<long double>::infinity();
+    long double loc1Max = std::numeric_limits<long double>::infinity();
     // Minimum/maximum track time.
-    double timeMin = -std::numeric_limits<double>::infinity();
-    double timeMax = std::numeric_limits<double>::infinity();
+    long double timeMin = -std::numeric_limits<long double>::infinity();
+    long double timeMax = std::numeric_limits<long double>::infinity();
     // Direction cuts.
-    double phiMin = -std::numeric_limits<double>::infinity();
-    double phiMax = std::numeric_limits<double>::infinity();
-    double etaMin = -std::numeric_limits<double>::infinity();
-    double etaMax = std::numeric_limits<double>::infinity();
-    double absEtaMin = 0.0;
-    double absEtaMax = std::numeric_limits<double>::infinity();
+    long double phiMin = -std::numeric_limits<long double>::infinity();
+    long double phiMax = std::numeric_limits<long double>::infinity();
+    long double etaMin = -std::numeric_limits<long double>::infinity();
+    long double etaMax = std::numeric_limits<long double>::infinity();
+    long double absEtaMin = 0.0;
+    long double absEtaMax = std::numeric_limits<long double>::infinity();
     // Momentum cuts.
-    double ptMin = 0.0;
-    double ptMax = std::numeric_limits<double>::infinity();
+    long double ptMin = 0.0;
+    long double ptMax = std::numeric_limits<long double>::infinity();
   };
 
   TrackParameterSelector(const Config& config, Acts::Logging::Level level);

@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   // default construction is deleted
 
   /// Constructor with transform, radius and halfZ
-  const double radius = 1.;
-  const double halfZ = 10.;
-  const double halfPhiSector = std::numbers::pi / 8.;
+  const long double radius = 1.;
+  const long double halfZ = 10.;
+  const long double halfPhiSector = std::numbers::pi / 8.;
   const Translation3 translation{0., 1., 2.};
 
   auto pTransform = Transform3(translation);
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
 /// Unit test for testing CylinderSurface properties
 BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test clone method
-  const double radius = 1.;
-  const double halfZ = 10.;
+  const long double radius = 1.;
+  const long double halfZ = 10.;
   const Translation3 translation{0., 1., 2.};
 
   auto pTransform = Transform3(translation);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
                   referencePosition, 1e-9);
 
   /// Test referenceFrame
-  const double invSqrt2 = 1. / std::numbers::sqrt2;
+  const long double invSqrt2 = 1. / std::numbers::sqrt2;
   Vector3 globalPosition{invSqrt2, 1. - invSqrt2, 0.};
   Vector3 globalPositionZ{invSqrt2, 1. - invSqrt2, 2.};
   Vector3 momentum{15., 15., 15.};
@@ -200,8 +200,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // there is a second solution & and it should be valid
   BOOST_CHECK(sfIntersection[1].isValid());
   // And it's path should be further away then the primary solution
-  double pn = sfIntersection[0].pathLength();
-  double pa = sfIntersection[1].pathLength();
+  long double pn = sfIntersection[0].pathLength();
+  long double pa = sfIntersection[1].pathLength();
   BOOST_CHECK_LT(std::abs(pn), std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
-  const double radius = 1.;
-  const double halfZ = 10.;
+  const long double radius = 1.;
+  const long double halfZ = 10.;
   const Translation3 translation{0., 1., 2.};
 
   auto pTransform = Transform3(translation);
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   using enum AxisDirection;
 
   // Some radius and half length
-  const double radius = 1.;
-  const double halfZ = 10.;
+  const long double radius = 1.;
+  const long double halfZ = 10.;
   const Translation3 translation{0., 0., 2.};  // != {0., 1., 2.}
 
   auto pTransform = Transform3(translation);
@@ -280,8 +280,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
 
 /// Unit test for testing CylinderSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
-  const double radius = 1.;
-  const double halfZ = 10.;
+  const long double radius = 1.;
+  const long double halfZ = 10.;
   const Translation3 translation{0., 1., 2.};
 
   auto pTransform = Transform3(translation);
@@ -314,9 +314,9 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
   Transform3 trf;
   trf = Translation3(s) * AngleAxis3{0.5, Vector3::UnitZ()};
 
-  double r = 300;
-  double halfZ = 330;
-  double averagePhi = 0.1;
+  long double r = 300;
+  long double halfZ = 330;
+  long double averagePhi = 0.1;
 
   auto bounds = std::make_shared<CylinderBounds>(r, halfZ, std::numbers::pi / 8,
                                                  averagePhi);
@@ -526,7 +526,7 @@ BOOST_DATA_TEST_CASE(IncompatibleRPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](double v) {
+  auto a = [phiShift](long double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -575,7 +575,7 @@ BOOST_DATA_TEST_CASE(RPhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](double v) {
+  auto a = [phiShift](long double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 

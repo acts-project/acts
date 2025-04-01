@@ -540,7 +540,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// @return The tracking volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const override {
+      long double tolerance = s_onSurfaceTolerance) const override {
     auto res = m_surface->globalToLocal(gctx, position, tolerance);
     if (!res.ok()) {
       return res.error();
@@ -556,7 +556,7 @@ class GridPortalLinkT : public GridPortalLink {
   /// @return The tracking volume (can be null)
   Result<const TrackingVolume*> resolveVolume(
       const GeometryContext& /*gctx*/, const Vector2& position,
-      double /*tolerance*/ = s_onSurfaceTolerance) const override {
+      long double /*tolerance*/ = s_onSurfaceTolerance) const override {
     throw_assert(surface().insideBounds(position, BoundaryTolerance::None()),
                  "Checking volume outside of bounds");
     return m_grid.atPosition(m_projection(position));

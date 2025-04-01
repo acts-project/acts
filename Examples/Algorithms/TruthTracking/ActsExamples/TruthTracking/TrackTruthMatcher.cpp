@@ -96,15 +96,15 @@ ActsExamples::ProcessCode TrackTruthMatcher::execute(
     // Check if the trajectory is matched with truth.
     // If not, it will be classified as 'fake'
     const bool recoMatched =
-        static_cast<double>(nMajorityHits) / track.nMeasurements() >=
+        static_cast<long double>(nMajorityHits) / track.nMeasurements() >=
         m_cfg.matchingRatio;
     const bool truthMatched =
-        static_cast<double>(nMajorityHits) /
+        static_cast<long double>(nMajorityHits) /
             particleTruthHitCount.at(majorityParticleId) >=
         m_cfg.matchingRatio;
 
-    if ((!m_cfg.doubleMatching && recoMatched) ||
-        (m_cfg.doubleMatching && recoMatched && truthMatched)) {
+    if ((!m_cfg.long doubleMatching&& recoMatched) ||
+        (m_cfg.long doubleMatching&& recoMatched&& truthMatched)) {
       auto& trackParticleMatch = trackParticleMatching[track.index()] = {
           TrackMatchClassification::Matched, majorityParticleId,
           particleHitCounts};

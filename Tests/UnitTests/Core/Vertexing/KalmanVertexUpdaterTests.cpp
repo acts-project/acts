@@ -56,28 +56,29 @@ GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 // Vertex x/y position distribution
-std::uniform_real_distribution<double> vXYDist(-0.1_mm, 0.1_mm);
+std::uniform_real_distribution<long double> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution
-std::uniform_real_distribution<double> vZDist(-20_mm, 20_mm);
+std::uniform_real_distribution<long double> vZDist(-20_mm, 20_mm);
 // Track d0 distribution
-std::uniform_real_distribution<double> d0Dist(-0.01_mm, 0.01_mm);
+std::uniform_real_distribution<long double> d0Dist(-0.01_mm, 0.01_mm);
 // Track z0 distribution
-std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
+std::uniform_real_distribution<long double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.4_GeV, 10_GeV);
+std::uniform_real_distribution<long double> pTDist(0.4_GeV, 10_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                               std::numbers::pi);
+std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                    std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
+std::uniform_real_distribution<long double> thetaDist(1.,
+                                                      std::numbers::pi - 1.);
 // Track charge helper distribution
-std::uniform_real_distribution<double> qDist(-1, 1);
+std::uniform_real_distribution<long double> qDist(-1, 1);
 // Track IP resolution distribution
-std::uniform_real_distribution<double> resIPDist(0., 100_um);
+std::uniform_real_distribution<long double> resIPDist(0., 100_um);
 // Track angular distribution
-std::uniform_real_distribution<double> resAngDist(0., 0.1);
+std::uniform_real_distribution<long double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
+std::uniform_real_distribution<long double> resQoPDist(-0.01, 0.01);
 // Number of vertices per test event distribution
 
 ///
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
       std::cout << "Test " << i + 1 << std::endl;
     }
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    long double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters around origin
     BoundTrackParameters::ParametersVector paramVec;
@@ -137,11 +138,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     Covariance covMat;
 
     // Resolutions
-    double res_d0 = resIPDist(gen);
-    double res_z0 = resIPDist(gen);
-    double res_ph = resAngDist(gen);
-    double res_th = resAngDist(gen);
-    double res_qp = resQoPDist(gen);
+    long double res_d0 = resIPDist(gen);
+    long double res_z0 = resIPDist(gen);
+    long double res_ph = resAngDist(gen);
+    long double res_th = resAngDist(gen);
+    long double res_qp = resQoPDist(gen);
 
     covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
@@ -180,8 +181,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
       std::cout << "New vertex position: " << vtx.position() << std::endl;
     }
 
-    double oldDistance = vtxPos.norm();
-    double newDistance = vtx.position().norm();
+    long double oldDistance = vtxPos.norm();
+    long double newDistance = vtx.position().norm();
 
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;
@@ -246,7 +247,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   // vertex after the update process
   for (unsigned int i = 0; i < nTests; ++i) {
     // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
+    long double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
     BoundTrackParameters::ParametersVector paramVec;
@@ -262,11 +263,11 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Covariance covMat;
 
     // Resolutions
-    double res_d0 = resIPDist(gen);
-    double res_z0 = resIPDist(gen);
-    double res_ph = resAngDist(gen);
-    double res_th = resAngDist(gen);
-    double res_qp = resQoPDist(gen);
+    long double res_d0 = resIPDist(gen);
+    long double res_z0 = resIPDist(gen);
+    long double res_ph = resAngDist(gen);
+    long double res_th = resAngDist(gen);
+    long double res_qp = resQoPDist(gen);
 
     covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
@@ -303,12 +304,12 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     KalmanVertexUpdater::updateTrackWithVertex(trkAtVtx, vtx, 3);
 
     // The old distance
-    double oldDistance =
+    long double oldDistance =
         ip3dEst.calculateDistance(geoContext, fittedParamsCopy, vtxPos, state)
             .value();
 
     // The new distance after update
-    double newDistance =
+    long double newDistance =
         ip3dEst
             .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
             .value();

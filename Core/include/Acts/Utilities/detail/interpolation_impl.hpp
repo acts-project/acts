@@ -33,15 +33,17 @@ template <typename Point1, typename Point2, typename Point3, typename Value>
 struct can_interpolate {
   template <typename C>
   static auto value_type_test(C* c)
-      -> decltype(static_cast<C>(std::declval<double>() * std::declval<C>() +
-                                 std::declval<double>() * std::declval<C>()),
+      -> decltype(static_cast<C>(
+                      std::declval<long double>() * std::declval<C>() +
+                      std::declval<long double>() * std::declval<C>()),
                   std::true_type());
   template <typename C>
   static std::false_type value_type_test(...);
 
   template <typename C>
   static auto point_type_test(C* c)
-      -> decltype(static_cast<double>(std::declval<C>()[0]), std::true_type());
+      -> decltype(static_cast<long double>(std::declval<C>()[0]),
+                  std::true_type());
   template <typename C>
   static std::false_type point_type_test(...);
 
@@ -91,7 +93,7 @@ struct get_dimension<2u> {
 /// @tparam N      number of hyper box corners
 ///
 /// @note
-/// - Given @c U and @c V of value type @c T as well as two @c double @c a and
+/// - Given @c U and @c V of value type @c T as well as two @c long double @c a and
 /// @c b, then the following must be a valid expression <tt>a * U + b * V</tt>
 /// yielding an object which is (implicitly) convertible to @c T.
 /// - The @c Point types must represent d-dimensional positions and support
@@ -111,7 +113,8 @@ struct interpolate_impl {
   static T run(const Point1& pos, const Point2& lowerLeft,
                const Point3& upperRight, const std::array<T, N>& fields) {
     // get distance to lower boundary relative to total bin width
-    const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
+    const long double f =
+        (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
     std::array<T, (N >> 1)> newFields{};
     for (std::size_t i = 0; i < N / 2; ++i) {
@@ -129,7 +132,8 @@ struct interpolate_impl<T, Point1, Point2, Point3, D, 2u> {
   static T run(const Point1& pos, const Point2& lowerLeft,
                const Point3& upperRight, const std::array<T, 2u>& fields) {
     // get distance to lower boundary relative to total bin width
-    const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
+    const long double f =
+        (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
     return (1 - f) * fields.at(0) + f * fields.at(1);
   }

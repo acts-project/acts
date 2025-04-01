@@ -47,19 +47,19 @@ enum WrappingCondition {
 struct VolumeConfig {
   bool present{false};                  ///< layers are present
   bool wrapping{false};                 ///< in what way they are binned
-  double rMin;                          ///< min parameter r
-  double rMax;                          ///< max parameter r
-  double zMin;                          ///< min parameter z
-  double zMax;                          ///< max parameter z
+  long double rMin;                     ///< min parameter r
+  long double rMax;                     ///< max parameter r
+  long double zMin;                     ///< min parameter z
+  long double zMax;                     ///< max parameter z
   LayerVector layers;                   ///< the layers you have
   MutableTrackingVolumeVector volumes;  ///< the confined volumes you have
 
   /// Default constructor
   VolumeConfig()
-      : rMin(std::numeric_limits<double>::max()),
-        rMax(std::numeric_limits<double>::lowest()),
-        zMin(std::numeric_limits<double>::max()),
-        zMax(std::numeric_limits<double>::lowest()),
+      : rMin(std::numeric_limits<long double>::max()),
+        rMax(std::numeric_limits<long double>::lowest()),
+        zMin(std::numeric_limits<long double>::max()),
+        zMax(std::numeric_limits<long double>::lowest()),
         layers() {}
 
   /// Adapt to the dimensions of another config in Z
@@ -101,11 +101,11 @@ struct VolumeConfig {
   /// @note lConfig will be changed
   void midPointAttachZ(VolumeConfig& lConfig) {
     if (lConfig.zMin >= zMax) {
-      double zMid = 0.5 * (lConfig.zMin + zMax);
+      long double zMid = 0.5 * (lConfig.zMin + zMax);
       lConfig.zMin = zMid;
       zMax = zMid;
     } else {
-      double zMid = 0.5 * (zMin + lConfig.zMax);
+      long double zMid = 0.5 * (zMin + lConfig.zMax);
       lConfig.zMax = zMid;
       zMin = zMid;
     }
@@ -485,17 +485,17 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     /// Check for endcap ring layout
     bool checkRingLayout = false;
     /// Tolerance for endcap ring association
-    double ringTolerance = 0 * UnitConstants::mm;
+    long double ringTolerance = 0 * UnitConstants::mm;
     /// Builder to construct layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
     /// Builder to construct confined volumes within the volume
     std::shared_ptr<const IConfinedTrackingVolumeBuilder> ctVolumeBuilder =
         nullptr;
     /// Additional envelope in R to create rMin, rMax
-    std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
-                                                1. * UnitConstants::mm};
+    std::pair<long double, long double> layerEnvelopeR = {
+        1. * UnitConstants::mm, 1. * UnitConstants::mm};
     /// the additional envelope in Z to create zMin, zMax
-    double layerEnvelopeZ = 1. * UnitConstants::mm;
+    long double layerEnvelopeZ = 1. * UnitConstants::mm;
 
     // The potential boundary material (MB) options - there are 6 at maximum
     /// -------------------- MB (outer [1]) ---------------

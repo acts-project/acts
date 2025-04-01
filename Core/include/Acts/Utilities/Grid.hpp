@@ -63,7 +63,7 @@ class IGrid {
   ///
   /// @{
   using AnyIndexType = boost::container::small_vector<std::size_t, 3>;
-  using AnyPointType = boost::container::small_vector<double, 3>;
+  using AnyPointType = boost::container::small_vector<long double, 3>;
 
   /// @brief Get the lower left edge of a bin for a given set of indices
   /// @param indices The indices to get the lower left edge of the bin for
@@ -148,7 +148,7 @@ class Grid final : public IGrid {
   /// constant reference type to values stored
   using const_reference = const value_type&;
   /// type for points in d-dimensional grid space
-  using point_t = std::array<double, DIM>;
+  using point_t = std::array<long double, DIM>;
   /// index type using local bin indices along each axis
   using index_t = std::array<std::size_t, DIM>;
   /// global iterator type
@@ -509,19 +509,19 @@ class Grid final : public IGrid {
   ///
   /// @note This function is available only if the following conditions are
   /// fulfilled:
-  /// - Given @c U and @c V of value type @c T as well as two @c double
+  /// - Given @c U and @c V of value type @c T as well as two @c long double
   /// @c a and @c b, then the following must be a valid expression <tt>a * U + b
   /// * V</tt> yielding an object which is (implicitly) convertible to @c T.
   /// - @c Point must represent a d-dimensional position and support
   /// coordinate access using @c operator[] which should return a @c
-  /// double (or a value which is implicitly convertible). Coordinate
+  /// long double (or a value which is implicitly convertible). Coordinate
   /// indices must start at 0.
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
   template <class Point>
   T interpolate(const Point& point) const
-    requires(Concepts::interpolatable<T, Point, std::array<double, DIM>,
-                                      std::array<double, DIM>>)
+    requires(Concepts::interpolatable<T, Point, std::array<long double, DIM>,
+                                      std::array<long double, DIM>>)
   {
     // there are 2^DIM corner points used during the interpolation
     constexpr std::size_t nCorners = 1 << DIM;

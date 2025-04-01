@@ -46,10 +46,11 @@ BOOST_AUTO_TEST_CASE(JacobianRoundtrip) {
   BoundMatrix cov;
   cov.setIdentity();
 
-  double Bz = 2_T;
+  long double Bz = 2_T;
 
-  double tanLambda = std::tan(std::numbers::pi / 2. - par[Acts::eBoundTheta]);
-  double omega =
+  long double tanLambda =
+      std::tan(std::numbers::pi / 2. - par[Acts::eBoundTheta]);
+  long double omega =
       par[Acts::eBoundQOverP] / std::sin(par[Acts::eBoundTheta]) * Bz;
 
   auto J1 = EDM4hepUtil::detail::jacobianToEdm4hep(par[eBoundTheta],
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   BoundTrackParameters boundPar{refSurface, par, cov,
                                 ParticleHypothesis::pion()};
 
-  double Bz = 2_T;
+  long double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BoundTrackParameters planePar{planeSurface, par, cov,
                                 ParticleHypothesis::pion()};
 
-  double Bz = 2_T;
+  long double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
@@ -184,7 +185,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
-  double Bz = 2_T;
+  long double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
@@ -219,7 +220,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   BoundTrackParameters boundPar{refSurface, par, std::nullopt,
                                 ParticleHypothesis::pion()};
 
-  double Bz = 2_T;
+  long double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
@@ -270,28 +271,28 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   std::mt19937 rng{42};
-  std::normal_distribution<double> gauss(0., 1.);
-  std::uniform_real_distribution<double> f(-1, 1);
-  std::uniform_real_distribution<double> r(0, 1);
+  std::normal_distribution<long double> gauss(0., 1.);
+  std::uniform_real_distribution<long double> f(-1, 1);
+  std::uniform_real_distribution<long double> r(0, 1);
   std::uniform_int_distribution<std::uint32_t> nTracks(2, 20);
   std::uniform_int_distribution<std::uint32_t> nTs(1, 20);
-  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                                 std::numbers::pi);
-  std::uniform_real_distribution<double> etaDist(-4, 4);
-  std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
-  std::uniform_real_distribution<double> qDist(0., 1.);
+  std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                      std::numbers::pi);
+  std::uniform_real_distribution<long double> etaDist(-4, 4);
+  std::uniform_real_distribution<long double> ptDist(1_MeV, 10_GeV);
+  std::uniform_real_distribution<long double> qDist(0., 1.);
 
   auto genParams = [&]() -> std::pair<BoundVector, BoundMatrix> {
-    double d0 = 20_um * gauss(rng);
-    double z0 = 20_mm * gauss(rng);
-    double phi = phiDist(rng);
-    double eta = etaDist(rng);
-    double theta = 2 * atan(exp(-eta));
-    double pt = ptDist(rng);
-    double p = pt / sin(theta);
-    double charge = qDist(rng) > 0.5 ? 1. : -1.;
-    double qop = charge / p;
-    double t = 5_ns * gauss(rng);
+    long double d0 = 20_um * gauss(rng);
+    long double z0 = 20_mm * gauss(rng);
+    long double phi = phiDist(rng);
+    long double eta = etaDist(rng);
+    long double theta = 2 * atan(exp(-eta));
+    long double pt = ptDist(rng);
+    long double p = pt / sin(theta);
+    long double charge = qDist(rng) > 0.5 ? 1. : -1.;
+    long double qop = charge / p;
+    long double t = 5_ns * gauss(rng);
 
     BoundVector par;
     par << d0, z0, phi, theta, qop, t;
@@ -315,7 +316,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     std::uint32_t numTs = nTs(rng);
     for (std::uint32_t i = 0; i < numTs; i++) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
-      double crit = r(rng);
+      long double crit = r(rng);
       if (crit < 0.1) {
         ts.typeFlags().set(TrackStateFlag::HoleFlag);
         continue;
@@ -346,7 +347,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
 
   Acts::GeometryContext gctx;
 
-  double Bz = 3_T;
+  long double Bz = 3_T;
 
   auto logger = getDefaultLogger("EDM4hep", Logging::INFO);
 

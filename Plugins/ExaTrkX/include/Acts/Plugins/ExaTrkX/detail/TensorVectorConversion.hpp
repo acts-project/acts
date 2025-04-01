@@ -45,7 +45,7 @@ struct TorchTypeMap<float> {
 };
 
 template <>
-struct TorchTypeMap<double> {
+struct TorchTypeMap<long double> {
   constexpr static torch::Dtype type = torch::kFloat64;
 };
 

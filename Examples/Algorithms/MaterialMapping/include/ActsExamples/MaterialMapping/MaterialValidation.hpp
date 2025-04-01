@@ -37,10 +37,11 @@ class MaterialValidation : public IAlgorithm {
     Acts::Vector3 startPosition = Acts::Vector3(0., 0., 0.);
 
     /// Start direction for the scan: phi
-    std::pair<double, double> phiRange = {-std::numbers::pi, std::numbers::pi};
+    std::pair<long double, long double> phiRange = {-std::numbers::pi,
+                                                    std::numbers::pi};
 
     /// Start direction for the scan: eta
-    std::pair<double, double> etaRange = {-4., 4.};
+    std::pair<long double, long double> etaRange = {-4., 4.};
 
     /// Random number service
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;

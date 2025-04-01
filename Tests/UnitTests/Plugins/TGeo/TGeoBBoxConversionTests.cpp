@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   ObjVisualization3D objVis;
 
   // BBox is defined [-dX,dX] x [-dY,dY] x [-dZ,dZ]
-  double dX = 10.;
-  double dY = 30.;
-  double dZ = 1.;
+  long double dX = 10.;
+  long double dY = 30.;
+  long double dZ = 1.;
 
   new TGeoManager("box", "poza1");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   auto bounds_XYZ =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
   BOOST_REQUIRE_NE(bounds_XYZ, nullptr);
-  double maxX = bounds_XYZ->get(RectangleBounds::eMaxX);
-  double minX = bounds_XYZ->get(RectangleBounds::eMinX);
-  double maxY = bounds_XYZ->get(RectangleBounds::eMaxY);
-  double minY = bounds_XYZ->get(RectangleBounds::eMinY);
+  long double maxX = bounds_XYZ->get(RectangleBounds::eMaxX);
+  long double minX = bounds_XYZ->get(RectangleBounds::eMinX);
+  long double maxY = bounds_XYZ->get(RectangleBounds::eMaxY);
+  long double minY = bounds_XYZ->get(RectangleBounds::eMinY);
   CHECK_CLOSE_ABS(maxX - minX, 2 * dX, s_epsilon);
   CHECK_CLOSE_ABS(maxY - minY, 2 * dY, s_epsilon);
 
@@ -201,10 +201,10 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   auto bounds_XYZ10 =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ10->bounds()));
-  double maxX10 = bounds_XYZ10->get(RectangleBounds::eMaxX);
-  double minX10 = bounds_XYZ10->get(RectangleBounds::eMinX);
-  double maxY10 = bounds_XYZ10->get(RectangleBounds::eMaxY);
-  double minY10 = bounds_XYZ10->get(RectangleBounds::eMinY);
+  long double maxX10 = bounds_XYZ10->get(RectangleBounds::eMaxX);
+  long double minX10 = bounds_XYZ10->get(RectangleBounds::eMinX);
+  long double maxY10 = bounds_XYZ10->get(RectangleBounds::eMaxY);
+  long double minY10 = bounds_XYZ10->get(RectangleBounds::eMinY);
   CHECK_CLOSE_ABS(maxX10 - minX10, 20 * dX, s_epsilon);
   CHECK_CLOSE_ABS(maxY10 - minY10, 20 * dY, s_epsilon);
 

@@ -85,24 +85,24 @@ void RootBFieldWriter::run(const Config& config,
     ACTS_INFO("Map will be written out in cartesian coordinates (x,y,z).");
 
     // Write out the interpolated magnetic field map
-    double minX = 0., minY = 0., minZ = 0.;
-    double maxX = 0., maxY = 0., maxZ = 0.;
+    long double minX = 0., minY = 0., minZ = 0.;
+    long double maxX = 0., maxY = 0., maxZ = 0.;
     std::size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
 
     // The position values in xyz
-    double x = 0;
+    long double x = 0;
     outputTree->Branch("x", &x);
-    double y = 0;
+    long double y = 0;
     outputTree->Branch("y", &y);
-    double z = 0;
+    long double z = 0;
     outputTree->Branch("z", &z);
 
     // The BField values in xyz
-    double Bx = 0;
+    long double Bx = 0;
     outputTree->Branch("Bx", &Bx);
-    double By = 0;
+    long double By = 0;
     outputTree->Branch("By", &By);
-    double Bz = 0;
+    long double Bz = 0;
     outputTree->Branch("Bz", &Bz);
 
     // check if range is user defined
@@ -164,16 +164,16 @@ void RootBFieldWriter::run(const Config& config,
     assert(maxY > minY);
     assert(maxZ > minZ);
 
-    double stepX = (maxX - minX) / (nBinsX - 1);
-    double stepY = (maxY - minY) / (nBinsY - 1);
-    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
+    long double stepX = (maxX - minX) / (nBinsX - 1);
+    long double stepY = (maxY - minY) / (nBinsY - 1);
+    long double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
     for (std::size_t i = 0; i < nBinsX; i++) {
-      double raw_x = minX + i * stepX;
+      long double raw_x = minX + i * stepX;
       for (std::size_t j = 0; j < nBinsY; j++) {
-        double raw_y = minY + j * stepY;
+        long double raw_y = minY + j * stepY;
         for (std::size_t k = 0; k < nBinsZ; k++) {
-          double raw_z = minZ + k * stepZ;
+          long double raw_z = minZ + k * stepZ;
           Acts::Vector3 position(raw_x, raw_y, raw_z);
           Acts::Vector3 bField = config.bField->getFieldUnchecked(position);
 
@@ -192,18 +192,18 @@ void RootBFieldWriter::run(const Config& config,
     ACTS_INFO("Map will be written out in cylinder coordinates (r,z).");
 
     // The position value in rz
-    double r = 0;
+    long double r = 0;
     outputTree->Branch("r", &r);
-    double z = 0;
+    long double z = 0;
     outputTree->Branch("z", &z);
     // The BField value in rz
-    double Br = 0;
+    long double Br = 0;
     outputTree->Branch("Br", &Br);
-    double Bz = 0;
+    long double Bz = 0;
     outputTree->Branch("Bz", &Bz);
 
-    double minR = 0, maxR = 0;
-    double minZ = 0, maxZ = 0;
+    long double minR = 0, maxR = 0;
+    long double minZ = 0, maxZ = 0;
     std::size_t nBinsR = 0, nBinsZ = 0;
 
     if (config.rBounds && config.zBounds) {
@@ -251,13 +251,13 @@ void RootBFieldWriter::run(const Config& config,
     assert(maxR > minR);
     assert(maxZ > minZ);
 
-    double stepR = (maxR - minR) / (nBinsR - 1);
-    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
+    long double stepR = (maxR - minR) / (nBinsR - 1);
+    long double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
     for (std::size_t k = 0; k < nBinsZ; k++) {
-      double raw_z = minZ + k * stepZ;
+      long double raw_z = minZ + k * stepZ;
       for (std::size_t j = 0; j < nBinsR; j++) {
-        double raw_r = minR + j * stepR;
+        long double raw_r = minR + j * stepR;
         Acts::Vector3 position(raw_r, 0.0, raw_z);  // position at phi=0
         ACTS_VERBOSE("Requesting position: " << position.transpose());
         auto bField = config.bField->getFieldUnchecked(position);

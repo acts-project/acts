@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-Result<std::optional<std::pair<double, double>>>
+Result<std::optional<std::pair<long double, long double>>>
 Acts::GaussianTrackDensity::globalMaximumWithWidth(
     State& state, const std::vector<InputTrack>& trackList) const {
   auto result = addTracks(state, trackList);
@@ -23,12 +23,12 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
     return result.error();
   }
 
-  double maxPosition = 0.;
-  double maxDensity = 0.;
-  double maxSecondDerivative = 0.;
+  long double maxPosition = 0.;
+  long double maxDensity = 0.;
+  long double maxSecondDerivative = 0.;
 
   for (const auto& track : state.trackEntries) {
-    double trialZ = track.z;
+    long double trialZ = track.z;
 
     auto [density, firstDerivative, secondDerivative] =
         trackDensityAndDerivatives(state, trialZ);
@@ -67,7 +67,7 @@ Acts::GaussianTrackDensity::globalMaximumWithWidth(
   return std::pair{maxPosition, std::sqrt(-(maxDensity / maxSecondDerivative))};
 }
 
-Result<std::optional<double>> Acts::GaussianTrackDensity::globalMaximum(
+Result<std::optional<long double>> Acts::GaussianTrackDensity::globalMaximum(
     State& state, const std::vector<InputTrack>& trackList) const {
   auto maxRes = globalMaximumWithWidth(state, trackList);
   if (!maxRes.ok()) {
@@ -85,20 +85,21 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
   for (auto trk : trackList) {
     const BoundTrackParameters& boundParams = m_cfg.extractParameters(trk);
     // Get required track parameters
-    const double d0 = boundParams.parameters()[BoundIndices::eBoundLoc0];
-    const double z0 = boundParams.parameters()[BoundIndices::eBoundLoc1];
+    const long double d0 = boundParams.parameters()[BoundIndices::eBoundLoc0];
+    const long double z0 = boundParams.parameters()[BoundIndices::eBoundLoc1];
     // Get track covariance
     if (!boundParams.covariance().has_value()) {
       return VertexingError::NoCovariance;
     }
     const auto perigeeCov = *(boundParams.covariance());
-    const double covDD =
+    const long double covDD =
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
-    const double covZZ =
+    const long double covZZ =
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
-    const double covDZ =
+    const long double covDZ =
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
-    const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
+    const long double covDeterminant =
+        (perigeeCov.block<2, 2>(0, 0)).determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut
     if ((covDD <= 0) || (d0 * d0 / covDD > m_cfg.d0SignificanceCut) ||
@@ -107,14 +108,14 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
     }
 
     // Calculate track density quantities
-    double constantTerm =
+    long double constantTerm =
         -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
         (2. * covDeterminant);
-    const double linearTerm =
+    const long double linearTerm =
         (d0 * covDZ + z0 * covDD) /
         covDeterminant;  // minus signs and factors of 2 cancel...
-    const double quadraticTerm = -covDD / (2. * covDeterminant);
-    double discriminant =
+    const long double quadraticTerm = -covDD / (2. * covDeterminant);
+    long double discriminant =
         linearTerm * linearTerm -
         4. * quadraticTerm * (constantTerm + 2. * m_cfg.z0SignificanceCut);
     if (discriminant < 0) {
@@ -123,8 +124,10 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
 
     // Add the track to the current maps in the state
     discriminant = std::sqrt(discriminant);
-    const double zMax = (-linearTerm - discriminant) / (2. * quadraticTerm);
-    const double zMin = (-linearTerm + discriminant) / (2. * quadraticTerm);
+    const long double zMax =
+        (-linearTerm - discriminant) / (2. * quadraticTerm);
+    const long double zMin =
+        (-linearTerm + discriminant) / (2. * quadraticTerm);
     constantTerm -= std::log(2. * std::numbers::pi * std::sqrt(covDeterminant));
 
     state.trackEntries.emplace_back(z0, constantTerm, linearTerm, quadraticTerm,
@@ -133,9 +136,9 @@ Result<void> Acts::GaussianTrackDensity::addTracks(
   return Result<void>::success();
 }
 
-std::tuple<double, double, double>
+std::tuple<long double, long double, long double>
 Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
-                                                       double z) const {
+                                                       long double z) const {
   GaussianTrackDensityStore densityResult(z);
   for (const auto& trackEntry : state.trackEntries) {
     densityResult.addTrackToDensity(trackEntry);
@@ -143,9 +146,11 @@ Acts::GaussianTrackDensity::trackDensityAndDerivatives(State& state,
   return densityResult.densityAndDerivatives();
 }
 
-std::tuple<double, double, double> Acts::GaussianTrackDensity::updateMaximum(
-    double newZ, double newValue, double newSecondDerivative, double maxZ,
-    double maxValue, double maxSecondDerivative) const {
+std::tuple<long double, long double, long double>
+Acts::GaussianTrackDensity::updateMaximum(
+    long double newZ, long double newValue, long double newSecondDerivative,
+    long double maxZ, long double maxValue,
+    long double maxSecondDerivative) const {
   if (newValue > maxValue) {
     maxZ = newZ;
     maxValue = newValue;
@@ -154,8 +159,8 @@ std::tuple<double, double, double> Acts::GaussianTrackDensity::updateMaximum(
   return {maxZ, maxValue, maxSecondDerivative};
 }
 
-double Acts::GaussianTrackDensity::stepSize(double y, double dy,
-                                            double ddy) const {
+long double Acts::GaussianTrackDensity::stepSize(long double y, long double dy,
+                                                 long double ddy) const {
   return (m_cfg.isGaussianShaped ? (y * dy) / (dy * dy - y * ddy) : -dy / ddy);
 }
 
@@ -163,9 +168,9 @@ void Acts::GaussianTrackDensity::GaussianTrackDensityStore::addTrackToDensity(
     const TrackEntry& entry) {
   // Take track only if it's within bounds
   if (entry.lowerBound < m_z && m_z < entry.upperBound) {
-    double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
-    double qPrime = entry.c1 + 2. * m_z * entry.c2;
-    double deltaPrime = delta * qPrime;
+    long double delta = std::exp(entry.c0 + m_z * (entry.c1 + m_z * entry.c2));
+    long double qPrime = entry.c1 + 2. * m_z * entry.c2;
+    long double deltaPrime = delta * qPrime;
     m_density += delta;
     m_firstDerivative += deltaPrime;
     m_secondDerivative += 2. * entry.c2 * delta + qPrime * deltaPrime;

@@ -85,10 +85,11 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxisJsonConversion) {
 
 BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
   // valid eq axis input
-  nlohmann::json jValidEqAxis = {{"bins", 10},
-                                 {"boundary_type", "Bound"},
-                                 {"range", std::array<double, 2>{0.0, 1.0}},
-                                 {"type", "Equidistant"}};
+  nlohmann::json jValidEqAxis = {
+      {"bins", 10},
+      {"boundary_type", "Bound"},
+      {"range", std::array<long double, 2>{0.0, 1.0}},
+      {"type", "Equidistant"}};
 
   // Valid input first
   nlohmann::json jValidEq = {
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   // Invalid input - min >= max
   jInvalidEqAxis = jValidEqAxis;
-  jInvalidEqAxis["range"] = std::array<double, 2>{1.0, 0.0};
+  jInvalidEqAxis["range"] = std::array<long double, 2>{1.0, 0.0};
 
   jInvalidEq = {
       {"axis", jInvalidEqAxis}, {"axis_dir", "AxisX"}, {"autorange", false}};
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   nlohmann::json jValidVarAxis = {
       {"boundary_type", "Bound"},
-      {"boundaries", std::vector<double>{0.0, 0.25, 0.75, 1.0}},
+      {"boundaries", std::vector<long double>{0.0, 0.25, 0.75, 1.0}},
       {"type", "Variable"}};
 
   // Valid input first
@@ -134,7 +135,7 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   // Invalid input - less than two edges
   nlohmann::json jInvalidVarAxis = jValidVarAxis;
-  jInvalidVarAxis["boundaries"] = std::vector<double>{0.0};
+  jInvalidVarAxis["boundaries"] = std::vector<long double>{0.0};
 
   nlohmann::json jInvalidVar = {
       {"axis", jInvalidVarAxis}, {"axis_dir", "AxisX"}, {"autorange", false}};
@@ -143,7 +144,8 @@ BOOST_AUTO_TEST_CASE(InvalidAndValidInputJson) {
 
   // Invalid input - non-increasing edges
   jInvalidVarAxis = jValidVarAxis;
-  jInvalidVarAxis["boundaries"] = std::vector<double>{0.0, 0.75, 0.25, 1.0};
+  jInvalidVarAxis["boundaries"] =
+      std::vector<long double>{0.0, 0.75, 0.25, 1.0};
 
   jInvalidVar = {
       {"axis", jInvalidVarAxis}, {"axis_dir", "AxisX"}, {"autorange", false}};

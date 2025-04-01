@@ -73,7 +73,8 @@ class GenericFreeTrackParameters {
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
   GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
-                             double qOverP, std::optional<CovarianceMatrix> cov,
+                             long double qOverP,
+                             std::optional<CovarianceMatrix> cov,
                              ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
@@ -98,8 +99,9 @@ class GenericFreeTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericFreeTrackParameters(const Vector4& pos4, double phi, double theta,
-                             double qOverP, std::optional<CovarianceMatrix> cov,
+  GenericFreeTrackParameters(const Vector4& pos4, long double phi,
+                             long double theta, long double qOverP,
+                             std::optional<CovarianceMatrix> cov,
                              ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
@@ -134,7 +136,7 @@ class GenericFreeTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <FreeIndices kIndex>
-  double get() const {
+  long double get() const {
     return m_params[kIndex];
   }
 
@@ -150,33 +152,33 @@ class GenericFreeTrackParameters {
   /// Spatial position three-vector.
   Vector3 position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
-  double time() const { return m_params[eFreeTime]; }
+  long double time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  double phi() const { return VectorHelpers::phi(direction()); }
+  long double phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
-  double theta() const { return VectorHelpers::theta(direction()); }
+  long double theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
-  double qOverP() const { return m_params[eFreeQOverP]; }
+  long double qOverP() const { return m_params[eFreeQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
-  double absoluteMomentum() const {
+  long double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
-  double transverseMomentum() const {
+  long double transverseMomentum() const {
     // direction vector w/ arbitrary normalization can be parametrized as
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
-    double transverseMagnitude2 =
+    long double transverseMagnitude2 =
         square(m_params[eFreeDir0]) + square(m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    double magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
+    long double magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
     return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }
@@ -184,7 +186,7 @@ class GenericFreeTrackParameters {
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
-  double charge() const {
+  long double charge() const {
     return m_particleHypothesis.extractCharge(get<eFreeQOverP>());
   }
 

@@ -35,12 +35,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   BinUtility uBinUtil(transform);
 
   // The parameters from the cylinder bounds
-  double minR = rBounds.get(RadialBounds::eMinR);
-  double maxR = rBounds.get(RadialBounds::eMaxR);
-  double minPhi = rBounds.get(RadialBounds::eAveragePhi) -
-                  rBounds.get(RadialBounds::eHalfPhiSector);
-  double maxPhi = rBounds.get(RadialBounds::eAveragePhi) +
-                  rBounds.get(RadialBounds::eHalfPhiSector);
+  long double minR = rBounds.get(RadialBounds::eMinR);
+  long double maxR = rBounds.get(RadialBounds::eMaxR);
+  long double minPhi = rBounds.get(RadialBounds::eAveragePhi) -
+                       rBounds.get(RadialBounds::eHalfPhiSector);
+  long double maxPhi = rBounds.get(RadialBounds::eAveragePhi) +
+                       rBounds.get(RadialBounds::eHalfPhiSector);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions
@@ -85,12 +85,12 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   BinUtility uBinUtil(transform);
 
   // The parameters from the cylinder bounds
-  double cR = cBounds.get(CylinderBounds::eR);
-  double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
-  double avgPhi = cBounds.get(CylinderBounds::eAveragePhi);
-  double halfPhi = cBounds.get(CylinderBounds::eHalfPhiSector);
-  double minPhi = avgPhi - halfPhi;
-  double maxPhi = avgPhi + halfPhi;
+  long double cR = cBounds.get(CylinderBounds::eR);
+  long double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
+  long double avgPhi = cBounds.get(CylinderBounds::eAveragePhi);
+  long double halfPhi = cBounds.get(CylinderBounds::eHalfPhiSector);
+  long double minPhi = avgPhi - halfPhi;
+  long double maxPhi = avgPhi + halfPhi;
 
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
@@ -140,10 +140,10 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
   BinUtility uBinUtil(transform);
 
   // The parameters from the cylinder bounds
-  double minX = pBounds.get(RectangleBounds::eMinX);
-  double minY = pBounds.get(RectangleBounds::eMinY);
-  double maxX = pBounds.get(RectangleBounds::eMaxX);
-  double maxY = pBounds.get(RectangleBounds::eMaxY);
+  long double minX = pBounds.get(RectangleBounds::eMinX);
+  long double minY = pBounds.get(RectangleBounds::eMinY);
+  long double maxX = pBounds.get(RectangleBounds::eMaxX);
+  long double maxY = pBounds.get(RectangleBounds::eMaxY);
 
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
@@ -191,9 +191,10 @@ static inline BinUtility adjustBinUtility(const BinUtility& bu,
 
   // The parameters from the cylinder bounds
 
-  double halfX = std::max(pBounds.get(Acts::TrapezoidBounds::eHalfLengthXnegY),
-                          pBounds.get(Acts::TrapezoidBounds::eHalfLengthXposY));
-  double halfY = pBounds.get(Acts::TrapezoidBounds::eHalfLengthY);
+  long double halfX =
+      std::max(pBounds.get(Acts::TrapezoidBounds::eHalfLengthXnegY),
+               pBounds.get(Acts::TrapezoidBounds::eHalfLengthXposY));
+  long double halfY = pBounds.get(Acts::TrapezoidBounds::eHalfLengthY);
 
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();

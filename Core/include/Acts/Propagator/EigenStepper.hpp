@@ -49,7 +49,7 @@ class EigenStepper {
   /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, long double>;
 
   struct Config {
     std::shared_ptr<const MagneticFieldProvider> bField;
@@ -104,7 +104,7 @@ class EigenStepper {
     FreeVector derivative = FreeVector::Zero();
 
     /// Accummulated path length state
-    double pathAccumulated = 0.;
+    long double pathAccumulated = 0.;
 
     /// Total number of performed steps
     std::size_t nSteps = 0;
@@ -116,7 +116,7 @@ class EigenStepper {
     ConstrainedStep stepSize;
 
     /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
+    long double previousStepSize = 0.;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
@@ -133,7 +133,7 @@ class EigenStepper {
       /// k_i of the RKN4 algorithm
       Vector3 k1, k2, k3, k4;
       /// k_i elements of the momenta
-      std::array<double, 4> kQoP{};
+      std::array<long double, 4> kQoP{};
     } stepData;
 
     /// Statistics of the stepper
@@ -186,12 +186,14 @@ class EigenStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
+  long double qOverP(const State& state) const {
+    return state.pars[eFreeQOverP];
+  }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double absoluteMomentum(const State& state) const {
+  long double absoluteMomentum(const State& state) const {
     return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
@@ -205,7 +207,7 @@ class EigenStepper {
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const {
+  long double charge(const State& state) const {
     return particleHypothesis(state).extractCharge(qOverP(state));
   }
 
@@ -219,7 +221,7 @@ class EigenStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.pars[eFreeTime]; }
+  long double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
   ///
@@ -237,7 +239,7 @@ class EigenStepper {
   IntersectionStatus updateSurfaceStatus(
       State& state, const Surface& surface, std::uint8_t index,
       Direction propDir, const BoundaryTolerance& boundaryTolerance,
-      double surfaceTolerance, ConstrainedStep::Type stype,
+      long double surfaceTolerance, ConstrainedStep::Type stype,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, index, propDir, boundaryTolerance,
@@ -259,16 +261,16 @@ class EigenStepper {
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       Direction direction, ConstrainedStep::Type stype) const {
     (void)direction;
-    double stepSize = oIntersection.pathLength();
+    long double stepSize = oIntersection.pathLength();
     updateStepSize(state, stepSize, stype);
   }
 
-  /// Update step size - explicitly with a double
+  /// Update step size - explicitly with a long double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void updateStepSize(State& state, double stepSize,
+  void updateStepSize(State& state, long double stepSize,
                       ConstrainedStep::Type stype) const {
     state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype);
@@ -278,7 +280,8 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
-  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+  long double getStepSize(const State& state,
+                          ConstrainedStep::Type stype) const {
     return state.stepSize.value(stype);
   }
 
@@ -360,7 +363,7 @@ class EigenStepper {
   /// @param [in] qOverP the updated qOverP value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double qOverP, double time) const;
+              long double qOverP, long double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -396,8 +399,8 @@ class EigenStepper {
   ///       backwards track propagation, and since we're using an adaptive
   ///       algorithm, it can be modified by the stepper class during
   ///       propagation.
-  Result<double> step(State& state, Direction propDir,
-                      const IVolumeMaterial* material) const;
+  Result<long double> step(State& state, Direction propDir,
+                           const IVolumeMaterial* material) const;
 
   /// Method that reset the Jacobian to the Identity for when no bound state are
   /// available

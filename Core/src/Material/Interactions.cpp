@@ -350,20 +350,20 @@ inline float deriveBremsstrahlungLossMeanE(float mass) {
 /// native units.
 constexpr float MuonHighLowThreshold = 1_TeV;
 // [low0 / X0] = MeV / mm -> [low0] = MeV
-constexpr double MuonLow0 = -0.5345_MeV;
+constexpr long double MuonLow0 = -0.5345_MeV;
 // [low1 * E / X0] = MeV / mm -> [low1] = 1
-constexpr double MuonLow1 = 6.803e-5;
+constexpr long double MuonLow1 = 6.803e-5;
 // [low2 * E^2 / X0] = MeV / mm -> [low2] = 1/MeV
-constexpr double MuonLow2 = 2.278e-11 / 1_MeV;
+constexpr long double MuonLow2 = 2.278e-11 / 1_MeV;
 // [low3 * E^3 / X0] = MeV / mm -> [low3] = 1/MeV^2
-constexpr double MuonLow3 = -9.899e-18 / (1_MeV * 1_MeV);
+constexpr long double MuonLow3 = -9.899e-18 / (1_MeV * 1_MeV);
 // units are the same as low0
-constexpr double MuonHigh0 = -2.986_MeV;
+constexpr long double MuonHigh0 = -2.986_MeV;
 // units are the same as low1
-constexpr double MuonHigh1 = 9.253e-5;
+constexpr long double MuonHigh1 = 9.253e-5;
 
 /// Compute additional radiation energy loss for muons per radiation length.
-inline float computeMuonDirectPairPhotoNuclearLossMean(double energy) {
+inline float computeMuonDirectPairPhotoNuclearLossMean(long double energy) {
   if (energy < MuonHighLowThreshold) {
     return MuonLow0 +
            (MuonLow1 + (MuonLow2 + MuonLow3 * energy) * energy) * energy;
@@ -373,7 +373,7 @@ inline float computeMuonDirectPairPhotoNuclearLossMean(double energy) {
 }
 
 /// Derivative of the additional rad loss per rad length with respect to energy.
-inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
+inline float deriveMuonDirectPairPhotoNuclearLossMeanE(long double energy) {
   if (energy < MuonHighLowThreshold) {
     return MuonLow1 + (2 * MuonLow2 + 3 * MuonLow3 * energy) * energy;
   } else {

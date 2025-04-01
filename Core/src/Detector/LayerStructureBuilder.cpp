@@ -50,8 +50,8 @@ void adaptBinningRange(
     // Starting values
     const auto& axis = pb.getAxis();
     const auto& edges = axis.getBinEdges();
-    double vmin = edges.front();
-    double vmax = edges.back();
+    long double vmin = edges.front();
+    long double vmax = edges.back();
     // Check if extent overwrites that
     if (extent.constrains(pb.getAxisDirection())) {
       const auto& range = extent.range(pb.getAxisDirection());

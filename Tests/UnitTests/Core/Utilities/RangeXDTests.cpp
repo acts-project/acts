@@ -18,19 +18,19 @@ BOOST_AUTO_TEST_SUITE(Utilities)
 
 BOOST_AUTO_TEST_SUITE(RangeXD)
 
-BOOST_AUTO_TEST_CASE(default_constructor_double) {
-  Acts::RangeXD<3, double> r;
+BOOST_AUTO_TEST_CASE(default_constructor_long double) {
+  Acts::RangeXD<3, long double> r;
 
-  BOOST_CHECK_EQUAL(r[0].min(), std::numeric_limits<double>::lowest());
-  BOOST_CHECK_EQUAL(r[0].max(), std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(r[1].min(), std::numeric_limits<double>::lowest());
-  BOOST_CHECK_EQUAL(r[1].max(), std::numeric_limits<double>::max());
-  BOOST_CHECK_EQUAL(r[2].min(), std::numeric_limits<double>::lowest());
-  BOOST_CHECK_EQUAL(r[2].max(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(r[0].min(), std::numeric_limits<long double>::lowest());
+  BOOST_CHECK_EQUAL(r[0].max(), std::numeric_limits<long double>::max());
+  BOOST_CHECK_EQUAL(r[1].min(), std::numeric_limits<long double>::lowest());
+  BOOST_CHECK_EQUAL(r[1].max(), std::numeric_limits<long double>::max());
+  BOOST_CHECK_EQUAL(r[2].min(), std::numeric_limits<long double>::lowest());
+  BOOST_CHECK_EQUAL(r[2].max(), std::numeric_limits<long double>::max());
 }
 
-BOOST_AUTO_TEST_CASE(mutate_ranges_double) {
-  Acts::RangeXD<3, double> r;
+BOOST_AUTO_TEST_CASE(mutate_ranges_long double) {
+  Acts::RangeXD<3, long double> r;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -40,12 +40,12 @@ BOOST_AUTO_TEST_CASE(mutate_ranges_double) {
   BOOST_CHECK_EQUAL(r[0].max(), 10.0);
   BOOST_CHECK_EQUAL(r[1].min(), 0.0);
   BOOST_CHECK_EQUAL(r[1].max(), 50.0);
-  BOOST_CHECK_EQUAL(r[2].min(), std::numeric_limits<double>::lowest());
+  BOOST_CHECK_EQUAL(r[2].min(), std::numeric_limits<long double>::lowest());
   BOOST_CHECK_EQUAL(r[2].max(), -20.0);
 }
 
-BOOST_AUTO_TEST_CASE(degenerate_double) {
-  Acts::RangeXD<3, double> r;
+BOOST_AUTO_TEST_CASE(degenerate_long double) {
+  Acts::RangeXD<3, long double> r;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(degenerate_double) {
   BOOST_CHECK(r.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(degenerate_false_double) {
-  Acts::RangeXD<3, double> r;
+BOOST_AUTO_TEST_CASE(degenerate_false_long double) {
+  Acts::RangeXD<3, long double> r;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(degenerate_false_double) {
   BOOST_CHECK(!r.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(contains_double) {
-  Acts::RangeXD<3, double> r;
+BOOST_AUTO_TEST_CASE(contains_long double) {
+  Acts::RangeXD<3, long double> r;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(equality_int) {
   BOOST_CHECK((r == q));
 }
 
-BOOST_AUTO_TEST_CASE(subset1_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(subset1_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(subset1_double) {
   BOOST_CHECK(!(q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(subset2_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(subset2_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(subset2_double) {
   BOOST_CHECK((q <= r));
 }
 
-BOOST_AUTO_TEST_CASE(superset2_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(superset2_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(superset2_double) {
   BOOST_CHECK(!(q >= r));
 }
 
-BOOST_AUTO_TEST_CASE(intersection_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(intersection_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(intersection_double) {
   BOOST_CHECK((q && r));
 }
 
-BOOST_AUTO_TEST_CASE(intersection_false_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(intersection_false_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE(intersection_false_double) {
   BOOST_CHECK(!(q && r));
 }
 
-BOOST_AUTO_TEST_CASE(intersection_false2_double) {
-  Acts::RangeXD<3, double> r, q;
+BOOST_AUTO_TEST_CASE(intersection_false2_long double) {
+  Acts::RangeXD<3, long double> r, q;
 
   r[0].shrink(-10.0, 10.0);
   r[1].shrink(0.0, 50.0);

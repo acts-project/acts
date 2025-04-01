@@ -40,7 +40,7 @@ namespace Acts {
 /// @tparam Scalar The scalar type used to construct position vectors.
 /// @tparam Vector The general vector type used to construct coordinates.
 /// @tparam LeafSize The maximum number of elements stored in a leaf node.
-template <std::size_t Dims, typename Type, typename Scalar = double,
+template <std::size_t Dims, typename Type, typename Scalar = long double,
           template <typename, std::size_t> typename Vector = std::array,
           std::size_t LeafSize = 4>
 class KDTree {

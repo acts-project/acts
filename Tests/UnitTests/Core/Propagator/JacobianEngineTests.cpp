@@ -28,9 +28,9 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
 
   // Build a start vector
   Vector3 position{1., 2., 3.};
-  double time = 4.;
+  long double time = 4.;
   Vector3 direction = Vector3(5., 2., 7.).normalized();
-  double qop = 0.125;
+  long double qop = 0.125;
 
   // Build a surface
   std::shared_ptr<PlaneSurface> pSurface =

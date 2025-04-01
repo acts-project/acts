@@ -123,7 +123,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
     unsigned int igap = 0;
     for (auto& child : node.children) {
       auto [neg, pos] = endPointsXYZ(*child, bVal);
-      double gapSpan = (neg - negC).norm();
+      long double gapSpan = (neg - negC).norm();
       if (gapSpan > s_onSurfaceTolerance) {
         // Fill a gap node
         auto gapName = node.name + "_gap_" + std::to_string(igap);
@@ -132,7 +132,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
         gapTransform.pretranslate(0.5 * (neg + negC));
         auto gap = std::make_unique<Gen2Blueprint::Node>(
             gapName, gapTransform, VolumeBounds::eCylinder,
-            std::vector<double>{cInnerR, cOuterR, 0.5 * gapSpan});
+            std::vector<long double>{cInnerR, cOuterR, 0.5 * gapSpan});
         gaps.push_back(std::move(gap));
         ++igap;
       }
@@ -140,7 +140,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
       negC = pos;
     }
     // Check if a last one needs to be filled
-    double gapSpan = (negC - posC).norm();
+    long double gapSpan = (negC - posC).norm();
     if (gapSpan > s_onSurfaceTolerance) {
       // Fill a gap node
       auto gapName = node.name + "_gap_" + std::to_string(igap);
@@ -149,7 +149,7 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
       gapTransform.pretranslate(0.5 * (negC + posC));
       auto gap = std::make_unique<Gen2Blueprint::Node>(
           gapName, gapTransform, VolumeBounds::eCylinder,
-          std::vector<double>{cInnerR, cOuterR, 0.5 * gapSpan});
+          std::vector<long double>{cInnerR, cOuterR, 0.5 * gapSpan});
       gaps.push_back(std::move(gap));
     }
 
@@ -164,13 +164,14 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
     }
     // Fill the gaps in R
     unsigned int igap = 0;
-    double lastR = cInnerR;
+    long double lastR = cInnerR;
     for (auto& child : node.children) {
-      double iR = child->boundaryValues[0];
+      long double iR = child->boundaryValues[0];
       if (std::abs(iR - lastR) > s_onSurfaceTolerance) {
         auto gap = std::make_unique<Gen2Blueprint::Node>(
             node.name + "_gap_" + std::to_string(igap), node.transform,
-            VolumeBounds::eCylinder, std::vector<double>{lastR, iR, cHalfZ});
+            VolumeBounds::eCylinder,
+            std::vector<long double>{lastR, iR, cHalfZ});
         gaps.push_back(std::move(gap));
         ++igap;
       }
@@ -181,7 +182,8 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCylindrical(
     if (std::abs(lastR - cOuterR) > s_onSurfaceTolerance) {
       auto gap = std::make_unique<Gen2Blueprint::Node>(
           node.name + "_gap_" + std::to_string(igap), node.transform,
-          VolumeBounds::eCylinder, std::vector<double>{lastR, cOuterR, cHalfZ});
+          VolumeBounds::eCylinder,
+          std::vector<long double>{lastR, cOuterR, cHalfZ});
       gaps.push_back(std::move(gap));
     }
   } else {
@@ -236,14 +238,14 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
   unsigned int igap = 0;
   for (auto& child : node.children) {
     auto [neg, pos] = endPointsXYZ(*child, binVal);
-    double gapSpan = (neg - negC).norm();
+    long double gapSpan = (neg - negC).norm();
     if (gapSpan > s_onSurfaceTolerance) {
       // Fill a gap node
       auto gapName = node.name + "_gap_" + std::to_string(igap);
       auto gapTransform = Transform3::Identity();
       gapTransform.rotate(node.transform.rotation());
       gapTransform.pretranslate(0.5 * (neg + negC));
-      std::vector<double> gapBounds{0, 0, 0};
+      std::vector<long double> gapBounds{0, 0, 0};
       gapBounds[toUnderlying(binVal)] = 0.5 * gapSpan;
       for (auto bv : allowedBinVals) {
         if (bv != binVal) {
@@ -259,14 +261,14 @@ void Acts::Experimental::detail::BlueprintHelper::fillGapsCuboidal(
     negC = pos;
   }
   // Check if a last one needs to be filled
-  double gapSpan = (negC - posC).norm();
+  long double gapSpan = (negC - posC).norm();
   if (gapSpan > s_onSurfaceTolerance) {
     // Fill a gap node
     auto gapName = node.name + "_gap_" + std::to_string(igap);
     auto gapTransform = Transform3::Identity();
     gapTransform.rotate(node.transform.rotation());
     gapTransform.pretranslate(0.5 * (negC + posC));
-    std::vector<double> gapBounds{0, 0, 0};
+    std::vector<long double> gapBounds{0, 0, 0};
     gapBounds[toUnderlying(binVal)] = 0.5 * gapSpan;
     for (auto bv : allowedBinVals) {
       if (bv != binVal) {

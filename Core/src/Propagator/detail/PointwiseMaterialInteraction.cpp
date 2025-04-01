@@ -44,8 +44,9 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
 }
 
-double PointwiseMaterialInteraction::updateVariance(
-    double variance, double change, NoiseUpdateMode updateMode) const {
+long double PointwiseMaterialInteraction::updateVariance(
+    long double variance, long double change,
+    NoiseUpdateMode updateMode) const {
   // Add/Subtract the change
   // Protect the variance against becoming negative
   return std::max(0., variance + std::copysign(change, updateMode));

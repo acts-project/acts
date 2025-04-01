@@ -53,7 +53,7 @@ struct GenericScattering {
     // drawn from the specific scattering model distribution.
 
     // draw the random orientation angle
-    const auto psi = std::uniform_real_distribution<double>(
+    const auto psi = std::uniform_real_distribution<long double>(
         -std::numbers::pi, std::numbers::pi)(generator);
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);

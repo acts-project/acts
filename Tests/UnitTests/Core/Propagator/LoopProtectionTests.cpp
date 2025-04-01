@@ -48,7 +48,7 @@ struct SteppingState {
   /// Parameters
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
-  double p = 100_MeV;
+  long double p = 100_MeV;
 };
 
 /// @brief mockup of stepping state
@@ -75,7 +75,9 @@ struct Stepper {
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
-  double absoluteMomentum(const SteppingState& state) const { return state.p; }
+  long double absoluteMomentum(const SteppingState& state) const {
+    return state.p;
+  }
 };
 
 /// @brief mockup of navigation state
@@ -86,9 +88,9 @@ struct NavigationState {
 /// @brief mockup of the Propagator Options
 struct Options {
   /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
+  long double pathLimit = std::numeric_limits<long double>::max();
   bool loopProtection = true;
-  double loopFraction = 0.5;
+  long double loopFraction = 0.5;
   Direction direction = Direction::Forward();
 
   bool debug = false;
@@ -116,12 +118,13 @@ struct PropagatorState {
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     loop_aborter_test,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       -std::numbers::pi, std::numbers::pi))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 21,
+         bdata::distribution = std::uniform_real_distribution<long double>(
+             -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
@@ -158,15 +161,16 @@ const int skip = 0;
 BOOST_DATA_TEST_CASE(
     propagator_loop_protection_test,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       0.5_GeV, 10_GeV))) ^
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0.5_GeV,
+                                                                   10_GeV))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 21,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
@@ -177,13 +181,13 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double p = pT / sin(theta);
-  double q = -1 + 2 * charge;
+  long double px = pT * cos(phi);
+  long double py = pT * sin(phi);
+  long double pz = pT / tan(theta);
+  long double p = pT / sin(theta);
+  long double q = -1 + 2 * charge;
 
-  const double Bz = 2_T;
+  const long double Bz = 2_T;
   auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
   EigenStepper estepper(bField);
   EigenPropagator epropagator(std::move(estepper));

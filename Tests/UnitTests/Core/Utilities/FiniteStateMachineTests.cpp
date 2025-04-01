@@ -121,7 +121,7 @@ struct fsm2
   fsm2() : fsm_base(states::Disconnected{}) {}
 
   event_return on_event(const states::Disconnected& /*unused*/,
-                        const events::Connect& /*unused*/, double f) {
+                        const events::Connect& /*unused*/, long double f) {
     std::cout << "f: " << f << std::endl;
     return states::Connected{};
   }

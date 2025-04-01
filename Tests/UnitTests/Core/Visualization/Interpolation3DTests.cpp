@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
   /// Define the input vector
-  double R = 10.;
+  long double R = 10.;
   std::vector<Acts::Vector3> inputs;
 
   // Interpolate the points options
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
   trajectory = Acts::Interpolation3D::spline(inputs, 10);
   BOOST_CHECK(trajectory.empty());
 
-  for (double phi = 0; phi < 2 * std::numbers::pi;
+  for (long double phi = 0; phi < 2 * std::numbers::pi;
        phi += std::numbers::pi / 4) {
     inputs.push_back(Acts::Vector3(R * cos(phi), R * sin(phi), 0.));
   }
@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationEigen) {
 
 BOOST_AUTO_TEST_CASE(SplineInterpolationArray) {
   /// Define the input vector
-  std::vector<std::array<double, 3u>> inputs;
+  std::vector<std::array<long double, 3u>> inputs;
 
-  for (double x = 0; x < 10; x += 1) {
+  for (long double x = 0; x < 10; x += 1) {
     inputs.push_back({x, x * x, 0.});
   }
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SplineInterpolationArray) {
 }
 
 BOOST_AUTO_TEST_CASE(SplineInterpolationErrors) {
-  std::vector<std::array<double, 3u>> inputs;
+  std::vector<std::array<long double, 3u>> inputs;
 
   // Test with single point
   inputs.push_back({0., 0., 0.});

@@ -25,13 +25,13 @@ namespace Acts::detail {
 template <BoundIndices Idx>
 struct CyclicAngle {
   constexpr static BoundIndices idx = Idx;
-  constexpr static double constant = 1.0;
+  constexpr static long double constant = 1.0;
 };
 
 template <BoundIndices Idx>
 struct CyclicRadiusAngle {
   constexpr static BoundIndices idx = Idx;
-  double constant = 1.0;  // the radius
+  long double constant = 1.0;  // the radius
 };
 
 /// A compile time map to provide angle descriptions for different surfaces
@@ -77,7 +77,7 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
 template <int D, typename components_t, typename projector_t,
           typename angle_desc_t>
 auto gaussianMixtureCov(const components_t components,
-                        const ActsVector<D> &mean, double sumOfWeights,
+                        const ActsVector<D> &mean, long double sumOfWeights,
                         projector_t &&projector,
                         const angle_desc_t &angleDesc) {
   ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
@@ -209,7 +209,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 /// @param surface The surface, on which the bound state is
 /// @param method How to reduce the mixture
 /// @param projector How to project a element of the iterable to something
-/// like a std::tuple< double, BoundVector, BoundMatrix >
+/// like a std::tuple< long double, BoundVector, BoundMatrix >
 ///
 /// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
 template <typename mixture_t, typename projector_t = std::identity>

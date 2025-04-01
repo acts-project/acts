@@ -40,7 +40,7 @@ struct TrackStateCreator {
       typename track_container_t::TrackStateContainerBackend;
   using TrackProxy = typename track_container_t::TrackProxy;
   using TrackStateProxy = typename track_container_t::TrackStateProxy;
-  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
+  using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, long double>;
   using candidate_container_t =
       typename std::vector<typename track_container_t::TrackStateProxy>;
 

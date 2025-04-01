@@ -38,7 +38,7 @@ struct Eq {
   using grid_type =
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>>;
 
-  std::array<double, 2u> range = {};
+  std::array<long double, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis
@@ -66,7 +66,7 @@ struct Var {
   template <typename T>
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>>;
 
-  std::vector<double> edges = {};
+  std::vector<long double> edges = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {
@@ -98,9 +98,9 @@ struct EqEq {
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>,
                  Acts::Axis<Acts::AxisType::Equidistant, bType>>;
 
-  std::array<double, 2u> range0 = {};
+  std::array<long double, 2u> range0 = {};
   std::size_t nBins0 = 0u;
-  std::array<double, 2u> range1 = {};
+  std::array<long double, 2u> range1 = {};
   std::size_t nBins1 = 1u;
 
   /// Call operator that generates the Axis
@@ -151,9 +151,9 @@ struct EqVar {
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>,
                  Acts::Axis<Acts::AxisType::Variable, bType>>;
 
-  std::array<double, 2u> range = {};
+  std::array<long double, 2u> range = {};
   std::size_t nBins = 0u;
-  std::vector<double> edges = {};
+  std::vector<long double> edges = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {
@@ -201,8 +201,8 @@ struct VarEq {
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>,
                                Acts::Axis<Acts::AxisType::Equidistant, bType>>;
 
-  std::vector<double> edges = {};
-  std::array<double, 2u> range = {};
+  std::vector<long double> edges = {};
+  std::array<long double, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis
@@ -250,8 +250,8 @@ struct VarVar {
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>,
                                Acts::Axis<Acts::AxisType::Variable, bType>>;
 
-  std::vector<double> edges0 = {};
-  std::vector<double> edges1 = {};
+  std::vector<long double> edges0 = {};
+  std::vector<long double> edges1 = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {

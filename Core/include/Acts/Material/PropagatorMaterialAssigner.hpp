@@ -37,7 +37,7 @@ struct MaterialSurfaceIdentifier {
 struct InteractionVolumeCollector {
   /// Simple result struct that holds the collected volumes
   ///
-  /// @note the map is to avoid double counting as this is
+  /// @note the map is to avoid long double counting as this is
   /// called in an action list
   struct this_result {
     std::map<GeometryIdentifier, IAssignmentFinder::VolumeAssignment> collected;

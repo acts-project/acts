@@ -38,8 +38,8 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   for (auto& bin : binning) {
     AxisDirection bval = axisDirectionFromName(bin.first);
     Acts::BinningOption bopt = bin.second;
-    double min = 0.;
-    double max = 0.;
+    long double min = 0.;
+    long double max = 0.;
     if (bopt == Acts::closed) {
       min = -std::numbers::pi;
       max = std::numbers::pi;

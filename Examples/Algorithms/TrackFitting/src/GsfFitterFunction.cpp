@@ -79,8 +79,8 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Acts::GainMatrixUpdater updater;
 
   std::size_t maxComponents = 0;
-  double weightCutoff = 0;
-  const double momentumCutoff = 0;  // 500_MeV;
+  long double weightCutoff = 0;
+  const long double momentumCutoff = 0;  // 500_MeV;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
   MixtureReductionAlgorithm reductionAlg =
@@ -155,11 +155,13 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     }
 
     if (!tracks.hasColumn(Acts::hashString(kFwdMaxMaterialXOverX0))) {
-      tracks.template addColumn<double>(std::string(kFwdMaxMaterialXOverX0));
+      tracks.template addColumn<long double>(
+          std::string(kFwdMaxMaterialXOverX0));
     }
 
     if (!tracks.hasColumn(Acts::hashString(kFwdSumMaterialXOverX0))) {
-      tracks.template addColumn<double>(std::string(kFwdSumMaterialXOverX0));
+      tracks.template addColumn<long double>(
+          std::string(kFwdSumMaterialXOverX0));
     }
 
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
@@ -193,7 +195,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
+    long double weightCutoff, Acts::ComponentMergeMethod componentMergeMethod,
     MixtureReductionAlgorithm mixtureReductionAlgorithm,
     const Acts::Logger& logger) {
   // Standard fitter

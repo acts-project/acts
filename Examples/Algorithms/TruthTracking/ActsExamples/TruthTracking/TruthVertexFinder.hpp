@@ -38,7 +38,7 @@ class TruthVertexFinder final : public IAlgorithm {
     /// Build separate proto vertices for the secondary particles.
     bool separateSecondaries = false;
     /// The minimum number of tracks required to create a proto vertex.
-    double trackMatchingRatio = 0.5;
+    long double trackMatchingRatio = 0.5;
   };
 
   TruthVertexFinder(const Config& config, Acts::Logging::Level level);

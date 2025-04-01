@@ -256,8 +256,8 @@ int main(int argc, char** argv) {
       std::move(grid), *bottomBinFinder, *topBinFinder);
 
   auto end_pre = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
-  double preprocessTime = elapsec_pre.count();
+  std::chrono::duration<long double> elapsec_pre = end_pre - start_pre;
+  long double preprocessTime = elapsec_pre.count();
   std::cout << "Preprocess Time: " << preprocessTime << std::endl;
 
   //--------------------------------------------------------------------//
@@ -303,8 +303,8 @@ int main(int argc, char** argv) {
   }
 
   auto end_cpu = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
-  double cpuTime = elapsec_cpu.count();
+  std::chrono::duration<long double> elapsec_cpu = end_cpu - start_cpu;
+  long double cpuTime = elapsec_cpu.count();
 
   //----------- CUDA ----------//
 
@@ -331,8 +331,8 @@ int main(int argc, char** argv) {
   }
 
   auto end_cuda = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
-  double cudaTime = elapsec_cuda.count();
+  std::chrono::duration<long double> elapsec_cuda = end_cuda - start_cuda;
+  long double cudaTime = elapsec_cuda.count();
 
   cudaProfilerStop();
   std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
@@ -347,8 +347,8 @@ int main(int argc, char** argv) {
             << (do_cpu ? std::to_string(cpuTime) : "") << "  " << std::setw(11)
             << cudaTime << "  " << std::setw(11)
             << (do_cpu ? std::to_string(cpuTime / cudaTime) : "") << std::endl;
-  double wallTime_cpu = cpuTime + preprocessTime;
-  double wallTime_cuda = cudaTime + preprocessTime;
+  long double wallTime_cpu = cpuTime + preprocessTime;
+  long double wallTime_cuda = cudaTime + preprocessTime;
   std::cout << "Wall_time         " << std::setw(11)
             << (do_cpu ? std::to_string(wallTime_cpu) : "") << "  "
             << std::setw(11) << wallTime_cuda << "  " << std::setw(11)

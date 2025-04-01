@@ -36,7 +36,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // covered by the trapezoid and most of it is covered by a 3*sigma tolerance
   // given the above covariance matrix.
   std::mt19937 rng(42);
-  std::uniform_real_distribution<double> axis(0, 1);
+  std::uniform_real_distribution<long double> axis(0, 1);
   auto random_point = [&]() -> Vector2 {
     return Vector2(axis(rng), axis(rng));
   };

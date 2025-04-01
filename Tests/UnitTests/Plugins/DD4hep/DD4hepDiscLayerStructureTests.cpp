@@ -50,7 +50,7 @@ const char* indent_12_xml = "            ";
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
 BOOST_AUTO_TEST_CASE(DD4hepDiscLayerStructure) {
-  double rZ = 400.;
+  long double rZ = 400.;
 
   // First create some test surfaces
   Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;

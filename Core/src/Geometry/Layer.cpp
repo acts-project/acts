@@ -22,7 +22,8 @@
 #include <iterator>
 #include <vector>
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+                   long double thickness,
                    std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
     : m_nextLayers(NextLayers(nullptr, nullptr)),
       m_surfaceArray(surfaceArray.release()),
@@ -122,8 +123,8 @@ Acts::Layer::compatibleSurfaces(
     return sIntersections;
   }
 
-  double nearLimit = options.nearLimit;
-  double farLimit = options.farLimit;
+  long double nearLimit = options.nearLimit;
+  long double farLimit = options.farLimit;
 
   auto isUnique = [&](const SurfaceIntersection& b) {
     return std::ranges::none_of(sIntersections, [&b](const auto& a) {
@@ -228,8 +229,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
   // The Limits
-  double nearLimit = options.nearLimit;
-  double farLimit = options.farLimit;
+  long double nearLimit = options.nearLimit;
+  long double farLimit = options.farLimit;
 
   // Helper function to find valid intersection
   auto findValidIntersection =

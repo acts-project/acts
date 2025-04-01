@@ -22,8 +22,9 @@ class HashingAnnoy {
   void computeSpacePointsBuckets(
       const AnnoyModel* annoyModel, const SpacePointContainer& spacePoints,
       const unsigned int bucketSize, const unsigned int zBins,
-      const unsigned int phiBins, const double layerRMin,
-      const double layerRMax, const double layerZMin, const double layerZMax);
+      const unsigned int phiBins, const long double layerRMin,
+      const long double layerRMax, const long double layerZMin,
+      const long double layerZMax);
   std::map<unsigned int, std::set<external_spacepoint_t>> m_bucketsSPMap;
 };
 }  // namespace Acts

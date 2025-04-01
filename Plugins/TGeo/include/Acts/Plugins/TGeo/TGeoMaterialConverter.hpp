@@ -25,9 +25,9 @@ struct TGeoMaterialConverter {
   /// to steer the conversion process
   struct Options {
     /// @brief  Convert input TGeo unit to ACTS unit
-    double unitLengthScalor = 10.;
+    long double unitLengthScalor = 10.;
     /// @brief  Convert input TGeo unit to ACTS unit
-    double unitMassScalor = 1.;
+    long double unitMassScalor = 1.;
   };
 
   /// @brief Helper method to convert a TGeoMaterial into Acts::MaterialSlab
@@ -39,7 +39,8 @@ struct TGeoMaterialConverter {
   ///
   /// @return a material slab object
   static MaterialSlab materialSlab(const TGeoMaterial& tgMaterial,
-                                   double thicknessIn, double thicknessOut,
+                                   long double thicknessIn,
+                                   long double thicknessOut,
                                    const Options& options);
 };
 }  // namespace Acts

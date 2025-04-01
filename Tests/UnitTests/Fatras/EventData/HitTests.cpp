@@ -18,7 +18,7 @@
 using namespace ActsFatras;
 
 namespace {
-constexpr auto eps = std::numeric_limits<double>::epsilon();
+constexpr auto eps = std::numeric_limits<long double>::epsilon();
 const auto pid = Barcode().setVertexPrimary(12).setParticle(23);
 const auto gid =
     Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(3);

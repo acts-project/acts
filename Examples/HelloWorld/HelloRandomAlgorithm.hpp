@@ -26,9 +26,9 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
   struct Config {
     std::shared_ptr<ActsExamples::RandomNumbers> randomNumbers = nullptr;
     /// Random distribution parameters.
-    std::array<double, 2> gaussParameters = {{0., 1.}};
-    std::array<double, 2> uniformParameters = {{0., 1.}};
-    std::array<double, 2> gammaParameters = {{0., 1.}};
+    std::array<long double, 2> gaussParameters = {{0., 1.}};
+    std::array<long double, 2> uniformParameters = {{0., 1.}};
+    std::array<long double, 2> gammaParameters = {{0., 1.}};
     int poissonParameter = 40;
     std::size_t drawsPerEvent = 0;
     /// Where to store the generated data in the event store.

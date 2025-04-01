@@ -22,7 +22,7 @@ class InfiniteBounds : public SurfaceBounds {
  public:
   BoundsType type() const final { return SurfaceBounds::eBoundless; }
 
-  std::vector<double> values() const final { return {}; }
+  std::vector<long double> values() const final { return {}; }
 
   /// Method inside() returns true for any case
   ///

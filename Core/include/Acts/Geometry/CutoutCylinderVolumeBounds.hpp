@@ -54,8 +54,9 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param rmax The outer radius of the overall shape
   /// @param hlZ The longer halflength of the shape
   /// @param hlZc The cutout halflength of the shape
-  CutoutCylinderVolumeBounds(double rmin, double rmed, double rmax, double hlZ,
-                             double hlZc) noexcept(false)
+  CutoutCylinderVolumeBounds(long double rmin, long double rmed,
+                             long double rmax, long double hlZ,
+                             long double hlZc) noexcept(false)
       : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
     checkConsistency();
     buildSurfaceBounds();
@@ -65,7 +66,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   ///
   /// @param values The bound values
   explicit CutoutCylinderVolumeBounds(
-      const std::array<double, eSize>& values) noexcept(false)
+      const std::array<long double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
@@ -78,14 +79,14 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// Inside method to test whether a point is inside the shape
   ///
   /// @param gpos The point to test
   /// @param tol The tolerance to test with
   /// @return Whether the point is inside or not.
-  bool inside(const Vector3& gpos, double tol = 0) const override;
+  bool inside(const Vector3& gpos, long double tol = 0) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -127,10 +128,10 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   // The surface bound objects
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};

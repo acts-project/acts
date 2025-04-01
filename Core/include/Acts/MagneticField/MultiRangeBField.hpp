@@ -27,7 +27,7 @@ class MultiRangeBField final : public MagneticFieldProvider {
     std::optional<std::size_t> index = {};
   };
 
-  using BFieldRange = std::pair<RangeXD<3, double>, Vector3>;
+  using BFieldRange = std::pair<RangeXD<3, long double>, Vector3>;
 
   // The different ranges and their corresponding field vectors. Note that
   // regions positioned _later_ in this vector take priority over earlier

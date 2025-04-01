@@ -48,13 +48,13 @@ struct SurfaceArrayFixture {
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
-  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
-                               double zbase = 0, double r = 10) {
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, long double shift = 0,
+                               long double zbase = 0, long double r = 10) {
     SrfVec res;
 
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (std::size_t i = 0; i < n; ++i) {
-      double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+      long double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
       trans.setIdentity();
@@ -73,14 +73,15 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                                double incl = std::numbers::pi / 9.,
-                                double w = 2, double h = 1.5) {
+  SrfVec fullPhiTestSurfacesBRL(int n = 10, long double shift = 0,
+                                long double zbase = 0,
+                                long double incl = std::numbers::pi / 9.,
+                                long double w = 2, long double h = 1.5) {
     SrfVec res;
 
-    double phiStep = 2 * std::numbers::pi / n;
+    long double phiStep = 2 * std::numbers::pi / n;
     for (int i = 0; i < n; ++i) {
-      double z = zbase;
+      long double z = zbase;
 
       Transform3 trans;
       trans.setIdentity();
@@ -102,7 +103,8 @@ struct SurfaceArrayFixture {
   }
 
   SrfVec straightLineSurfaces(
-      std::size_t n = 10., double step = 3, const Vector3& origin = {0, 0, 1.5},
+      std::size_t n = 10., long double step = 3,
+      const Vector3& origin = {0, 0, 1.5},
       const Transform3& pretrans = Transform3::Identity(),
       const Vector3& dir = {0, 0, 1}) {
     SrfVec res;
@@ -127,12 +129,12 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  SrfVec makeBarrel(int nPhi, int nZ, double w, double h) {
-    double z0 = -(nZ - 1) * w;
+  SrfVec makeBarrel(int nPhi, int nZ, long double w, long double h) {
+    long double z0 = -(nZ - 1) * w;
     SrfVec res;
 
     for (int i = 0; i < nZ; i++) {
-      double z = i * w * 2 + z0;
+      long double z = i * w * 2 + z0;
       SrfVec ring =
           fullPhiTestSurfacesBRL(nPhi, 0, z, std::numbers::pi / 9., w, h);
       res.insert(res.end(), ring.begin(), ring.end());
@@ -187,11 +189,11 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
       -std::numbers::pi, std::numbers::pi, 30u);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> zAxis(-14, 14, 7u);
 
-  double angleShift = 2 * std::numbers::pi / 30. / 2.;
+  long double angleShift = 2 * std::numbers::pi / 30. / 2.;
   auto transform = [angleShift](const Vector3& pos) {
     return Vector2(phi(pos) + angleShift, pos.z());
   };
-  double R = 10;
+  long double R = 10;
   auto itransform = [angleShift, R](const Vector2& loc) {
     return Vector3(R * std::cos(loc[0] - angleShift),
                    R * std::sin(loc[0] - angleShift), loc[1]);
@@ -237,8 +239,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
-  const double w = 3;
-  const double h = 4;
+  const long double w = 3;
+  const long double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
 
@@ -252,8 +254,8 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
 }
 
 BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
-  const double w = 3;
-  const double h = 4;
+  const long double w = 3;
+  const long double h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
   auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
   auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);

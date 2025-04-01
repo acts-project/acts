@@ -33,12 +33,12 @@ struct MockTrack {
   using Trajectory = VectorMultiTrajectory;
   using IndexType = TrackIndexType;
 
-  double m_theta;
-  double m_phi;
-  double m_pt;
-  double m_loc0;
-  double m_loc1;
-  double m_time;
+  long double m_theta;
+  long double m_phi;
+  long double m_pt;
+  long double m_loc0;
+  long double m_loc1;
+  long double m_time;
   std::size_t m_nMeasurements;
   std::size_t m_nHoles;
   std::size_t m_nOutliers;
@@ -46,12 +46,12 @@ struct MockTrack {
   float m_chi2;
 
   bool hasReferenceSurface() const { return true; }
-  double theta() const { return m_theta; }
-  double phi() const { return m_phi; }
-  double transverseMomentum() const { return m_pt; }
-  double loc0() const { return m_loc0; }
-  double loc1() const { return m_loc1; }
-  double time() const { return m_time; }
+  long double theta() const { return m_theta; }
+  long double phi() const { return m_phi; }
+  long double transverseMomentum() const { return m_pt; }
+  long double loc0() const { return m_loc0; }
+  long double loc1() const { return m_loc1; }
+  long double time() const { return m_time; }
   std::size_t nMeasurements() const { return m_nMeasurements; }
   std::size_t nHoles() const { return m_nHoles; }
   std::size_t nOutliers() const { return m_nOutliers; }
@@ -87,9 +87,9 @@ struct MockTrack {
 
 BOOST_AUTO_TEST_SUITE(TrackSelectorTests)
 
-std::vector<double> etaValues{-5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5,
-                              -1.0, -0.5, 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,
-                              3.0,  3.5,  4.0,  4.5,  5.0,  1.0};
+std::vector<long double> etaValues{
+    -5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0,
+    0.5,  1.0,  1.5,  2.0,  2.5,  3.0,  3.5,  4.0,  4.5,  5.0,  1.0};
 
 BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
   TrackSelector::EtaBinnedConfig cfgBase;
@@ -405,8 +405,8 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
 
   using Config = TrackSelector::Config;
 
-  using factory_ptr_t = Config& (Config::*)(double, double);
-  using prop_ptr_t = double MockTrack::*;
+  using factory_ptr_t = Config& (Config::*)(long double, long double);
+  using prop_ptr_t = long double MockTrack::*;
 
   auto check = [&](const char* name, const factory_ptr_t& factory,
                    const prop_ptr_t& prop) {
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
         // first bin edge
         MockTrack track = baseTrack;
         track.m_theta = AngleHelpers::thetaFromEta(
-            2.0 - std::numeric_limits<double>::epsilon());
+            2.0 - std::numeric_limits<long double>::epsilon());
 
         BOOST_CHECK(selector.isValidTrack(track));
 
@@ -512,10 +512,10 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
 
 BOOST_AUTO_TEST_CASE(TestBinSelection) {
   using EtaBinnedConfig = TrackSelector::EtaBinnedConfig;
-  constexpr double inf = std::numeric_limits<double>::infinity();
+  constexpr long double inf = std::numeric_limits<long double>::infinity();
 
   {
-    EtaBinnedConfig cfg{std::vector<double>{0, inf}};
+    EtaBinnedConfig cfg{std::vector<long double>{0, inf}};
     for (int i = -1; i <= 1; i = i + 2) {
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 0.0), 0);
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 1.0), 0);
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(TestBinSelection) {
   }
 
   {
-    EtaBinnedConfig cfg{std::vector<double>{0, 0.5, 1.5, 2.5, 3.0, inf}};
+    EtaBinnedConfig cfg{std::vector<long double>{0, 0.5, 1.5, 2.5, 3.0, inf}};
     for (int i = -1; i <= 1; i = i + 2) {
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 0.0), 0);
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 1.0), 1);
@@ -539,12 +539,13 @@ BOOST_AUTO_TEST_CASE(TestBinSelection) {
   }
 
   {
-    EtaBinnedConfig cfg{std::vector<double>{0, 1, 2}};
+    EtaBinnedConfig cfg{std::vector<long double>{0, 1, 2}};
     for (int i = -1; i <= 1; i = i + 2) {
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 0.0), 0);
       BOOST_CHECK_EQUAL(cfg.binIndex(i * 1.0), 1);
       BOOST_CHECK_EQUAL(
-          cfg.binIndex(i * (2.0 - std::numeric_limits<double>::epsilon())), 1);
+          cfg.binIndex(i * (2.0 - std::numeric_limits<long double>::epsilon())),
+          1);
       BOOST_CHECK_THROW(cfg.binIndex(i * 2.0), std::invalid_argument);
     }
   }
@@ -553,7 +554,7 @@ BOOST_AUTO_TEST_CASE(TestBinSelection) {
 BOOST_AUTO_TEST_CASE(TestConstructor) {
   // valid multi bin construction
   {
-    TrackSelector::EtaBinnedConfig cfg{std::vector<double>{0, 1, 4}};
+    TrackSelector::EtaBinnedConfig cfg{std::vector<long double>{0, 1, 4}};
     cfg.cutSets.at(0).ptMin = 0.9;
     cfg.cutSets.at(1).ptMin = 0.4;
     TrackSelector{cfg};
@@ -561,7 +562,7 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
 
   {
     // Track selector config with 2 eta bins
-    TrackSelector::EtaBinnedConfig cfg{std::vector<double>{0, 1, 4}};
+    TrackSelector::EtaBinnedConfig cfg{std::vector<long double>{0, 1, 4}};
 
     // just the right amount!
     TrackSelector{cfg};

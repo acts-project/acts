@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<Acts::Surface>> JsonSurfacesReader::readVector(
 
 std::vector<std::shared_ptr<Acts::JsonDetectorElement>>
 JsonSurfacesReader::readDetectorElements(const Options& options,
-                                         double thickness = 0.0) {
+                                         long double thickness = 0.0) {
   nlohmann::json j;
   {
     std::ifstream in(options.inputFile);

@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
-  const double radius = 1_m;
-  const double halfZ = 10_m;
+  const long double radius = 1_m;
+  const long double halfZ = 10_m;
 
   auto testCylinderIntersection = [&](const Transform3& transform) -> void {
     // A cylinder created aligned with a provided transform
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
-  const double alpha = std::numbers::pi / 4.;
+  const long double alpha = std::numbers::pi / 4.;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use
@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
-  const double halfX = 1_m;
-  const double halfY = 10_m;
+  const long double halfX = 1_m;
+  const long double halfY = 10_m;
 
   auto testPlanarIntersection = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform
@@ -310,8 +310,8 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
 /// sufficient
 /// - it looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
-  const double radius = 1_m;
-  const double halfZ = 10_m;
+  const long double radius = 1_m;
+  const long double halfZ = 10_m;
 
   auto testLineAppraoch = [&](const Transform3& transform) -> void {
     // A Plane created with a specific transform

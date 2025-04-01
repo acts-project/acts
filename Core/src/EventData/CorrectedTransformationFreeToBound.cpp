@@ -25,8 +25,9 @@
 #include <utility>
 #include <vector>
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
-                                                   double beta_)
+Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
+                                                   long double alpha_,
+                                                   long double beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
 Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
@@ -37,8 +38,8 @@ Acts::FreeToBoundCorrection::operator bool() const {
 }
 
 Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
-    double alpha, double beta, double cosIncidentAngleMinCutoff,
-    double cosIncidentAngleMaxCutoff)
+    long double alpha, long double beta, long double cosIncidentAngleMinCutoff,
+    long double cosIncidentAngleMaxCutoff)
     : m_alpha(alpha),
       m_beta(beta),
       m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
@@ -62,7 +63,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal =
       surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
-  double absCosIncidenceAng = std::abs(dir.dot(normal));
+  long double absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound
   // transformation
@@ -77,7 +78,8 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   std::size_t sampleSize = 2 * eFreeSize + 1;
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
-  std::vector<std::tuple<FreeVector, double, double>> sampledFreeParams;
+  std::vector<std::tuple<FreeVector, long double, long double>>
+      sampledFreeParams;
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
@@ -98,11 +100,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   covSqrt = U * D;
 
   // Define kappa = alpha*alpha*N
-  double kappa = m_alpha * m_alpha * static_cast<double>(eFreeSize);
+  long double kappa = m_alpha * m_alpha * static_cast<long double>(eFreeSize);
   // lambda = alpha*alpha*N - N
-  double lambda = kappa - static_cast<double>(eFreeSize);
+  long double lambda = kappa - static_cast<long double>(eFreeSize);
   // gamma = sqrt(labmda + N)
-  double gamma = std::sqrt(kappa);
+  long double gamma = std::sqrt(kappa);
 
   // Sample the free parameters
   // 1. the nominal parameter
@@ -124,7 +126,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
-  std::vector<std::pair<BoundVector, double>> transformedBoundParams;
+  std::vector<std::pair<BoundVector, long double>> transformedBoundParams;
 
   // 1. The nominal one
   // The sampled free parameters, the weight for measurement W_m and weight for

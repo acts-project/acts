@@ -54,7 +54,7 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
 
   auto getEtaOrInf = [](const auto& vec, std::size_t bin) {
     if (bin >= vec.size()) {
-      return std::numeric_limits<double>::infinity();
+      return std::numeric_limits<long double>::infinity();
     }
     assert(vec[bin] >= 0 && "Eta bins must be positive");
     return vec[bin];
@@ -79,8 +79,9 @@ MeasurementSelector::InternalCutBins MeasurementSelector::convertCutBins(
   return cutBins;
 }
 
-double MeasurementSelector::calculateChi2(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+long double MeasurementSelector::calculateChi2(
+    const long double* fullCalibrated,
+    const long double* fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -89,7 +90,7 @@ double MeasurementSelector::calculateChi2(
   return visit_measurement(
       calibratedSize,
       [&fullCalibrated, &fullCalibratedCovariance, &predicted,
-       &predictedCovariance, &projector](auto N) -> double {
+       &predictedCovariance, &projector](auto N) -> long double {
         constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
         typename TrackStateTraits<kMeasurementSize, true>::Calibrated
@@ -120,10 +121,11 @@ double MeasurementSelector::calculateChi2(
 }
 
 MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
-    const InternalCutBins& config, double theta) {
+    const InternalCutBins& config, long double theta) {
   // since theta is in [0, pi] and we have a symmetric cut in eta, we can just
   // look at the positive half of the Z axis
-  const double constrainedTheta = std::min(theta, std::numbers::pi - theta);
+  const long double constrainedTheta =
+      std::min(theta, std::numbers::pi - theta);
 
   auto it = std::ranges::find_if(
       config, [constrainedTheta](const InternalCutBin& cuts) {
@@ -134,7 +136,7 @@ MeasurementSelector::Cuts MeasurementSelector::getCutsByTheta(
 }
 
 Result<MeasurementSelector::Cuts> MeasurementSelector::getCuts(
-    const GeometryIdentifier& geoID, double theta) const {
+    const GeometryIdentifier& geoID, long double theta) const {
   // Find the appropriate cuts
   auto cuts = m_config.find(geoID);
   if (cuts == m_config.end()) {

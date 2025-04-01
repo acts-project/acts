@@ -43,7 +43,7 @@ struct Options {
   // Sub node types to come
   Node shape = Node{"cylinder", "lightgrey"};
   Node virtualShape = Node{"cylinder", "white"};
-  Node internals = Node{"doubleoctagon", "cadetblue1"};
+  Node internals = Node{"long doubleoctagon", "cadetblue1"};
   Node geoID = Node{"box", "azure"};
   Node roots = Node{"box", "darkkhaki"};
 };

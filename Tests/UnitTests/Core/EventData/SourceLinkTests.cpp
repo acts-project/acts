@@ -57,13 +57,13 @@ BOOST_AUTO_TEST_CASE(Reassign) {
   Acts::SourceLink sl{value};
 
   BOOST_CHECK_EQUAL(sl.get<int>(), value);
-  BOOST_CHECK_THROW(sl.get<double>(), std::bad_any_cast);
+  BOOST_CHECK_THROW(sl.get<long double>(), std::bad_any_cast);
 
-  double otherValue = 42.42;
+  long double otherValue = 42.42;
 
   // this changes the stored type
   sl = Acts::SourceLink{otherValue};
-  BOOST_CHECK_EQUAL(sl.get<double>(), otherValue);
+  BOOST_CHECK_EQUAL(sl.get<long double>(), otherValue);
   BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
 }
 

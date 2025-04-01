@@ -55,8 +55,8 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     if (state.onBranch &&
         TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str())) {
       // Get the placement and orientation in respect to its mother
-      const Double_t* rotation = transform.GetRotationMatrix();
-      const Double_t* translation = transform.GetTranslation();
+      const long double_t* rotation = transform.GetRotationMatrix();
+      const long double_t* translation = transform.GetTranslation();
 
       // Create a eigen transform
       Vector3 t(options.unit * translation[0], options.unit * translation[1],
@@ -75,15 +75,15 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
           // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
           // and vertices converision which would make a more appropriate
           // parsomg
-          double dx = options.unit * shape->GetDX();
-          double dy = options.unit * shape->GetDY();
-          double dz = options.unit * shape->GetDZ();
-          for (auto x : std::vector<double>{-dx, dx}) {
-            for (auto y : std::vector<double>{-dy, dy}) {
-              for (auto z : std::vector<double>{-dz, dz}) {
+          long double dx = options.unit * shape->GetDX();
+          long double dy = options.unit * shape->GetDY();
+          long double dz = options.unit * shape->GetDZ();
+          for (auto x : std::vector<long double>{-dx, dx}) {
+            for (auto y : std::vector<long double>{-dy, dy}) {
+              for (auto z : std::vector<long double>{-dz, dz}) {
                 Vector3 edge = etrf * Vector3(x, y, z);
                 for (auto& check : options.parseRanges) {
-                  double val = VectorHelpers::cast(edge, check.first);
+                  long double val = VectorHelpers::cast(edge, check.first);
                   if (val < check.second.first || val > check.second.second) {
                     accept = false;
                     break;

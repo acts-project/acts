@@ -31,12 +31,12 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  virtual std::vector<double> getMin() const = 0;
+  virtual std::vector<long double> getMin() const = 0;
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  virtual std::vector<double> getMax() const = 0;
+  virtual std::vector<long double> getMax() const = 0;
 
   /// @brief check whether given 3D position is inside look-up domain
   ///
@@ -97,8 +97,8 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     ///                         each Dimension)
     /// @param [in] fieldValues field values at the hyper box corners sorted in
     ///                         the canonical order defined in Acts::interpolate
-    FieldCell(std::array<double, DIM_POS> lowerLeft,
-              std::array<double, DIM_POS> upperRight,
+    FieldCell(std::array<long double, DIM_POS> lowerLeft,
+              std::array<long double, DIM_POS> upperRight,
               std::array<Vector3, N> fieldValues)
         : m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
@@ -131,10 +131,10 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
    private:
     /// generalized lower-left corner of the confining hyper-box
-    std::array<double, DIM_POS> m_lowerLeft;
+    std::array<long double, DIM_POS> m_lowerLeft;
 
     /// generalized upper-right corner of the confining hyper-box
-    std::array<double, DIM_POS> m_upperRight;
+    std::array<long double, DIM_POS> m_upperRight;
 
     /// @brief magnetic field vectors at the hyper-box corners
     ///
@@ -169,7 +169,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     ///
     /// @note Negative values for @p scale are accepted and will invert the
     ///       direction of the magnetic field.
-    double scale = 1.;
+    long double scale = 1.;
   };
 
   /// @brief default constructor
@@ -224,15 +224,15 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  std::vector<double> getMin() const final {
-    return std::vector<double>(m_lowerLeft.begin(), m_lowerLeft.end());
+  std::vector<long double> getMin() const final {
+    return std::vector<long double>(m_lowerLeft.begin(), m_lowerLeft.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  std::vector<double> getMax() const final {
-    return std::vector<double>(m_upperRight.begin(), m_upperRight.end());
+  std::vector<long double> getMax() const final {
+    return std::vector<long double>(m_upperRight.begin(), m_upperRight.end());
   }
 
   /// @brief check whether given 3D position is inside look-up domain

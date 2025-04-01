@@ -16,7 +16,7 @@
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
-  std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
+  std::vector<long double> temperatures{64., 16., 4., 2., 1.5, 1.};
   AnnealingUtility::Config config;
   config.setOfTemperatures = temperatures;
   AnnealingUtility annealingTool(config);
@@ -26,14 +26,14 @@ BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
   // Test weight decrease when annealing for chi2>cutOff
   // choose a chi2 greater than default config.cutOff (=9.),
   // such that it should decrease with decreasing temperature
-  double chi2 = config.cutOff + 3.14;
+  long double chi2 = config.cutOff + 3.14;
 
   // cache last weight
-  double previousWeight = 1.;
+  long double previousWeight = 1.;
 
   std::cout << "Check weight decrease:" << std::endl;
   for (auto temp : temperatures) {
-    double weight = annealingTool.getWeight(state, chi2);
+    long double weight = annealingTool.getWeight(state, chi2);
 
     bool hasDecreased = weight < previousWeight;
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
 
   std::cout << "Check weight increase:" << std::endl;
   for (auto temp : temperatures) {
-    double weight = annealingTool.getWeight(state, chi2);
+    long double weight = annealingTool.getWeight(state, chi2);
 
     bool hasIncreased = weight > previousWeight;
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
 
   std::cout << "Check weight insensitivity:" << std::endl;
   for (auto temp : temperatures) {
-    double weight = annealingTool.getWeight(state, chi2);
+    long double weight = annealingTool.getWeight(state, chi2);
 
     bool hasNotChanged = weight == previousWeight;
 
@@ -107,10 +107,10 @@ BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
 
 BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   // vector of different chi2
-  std::vector<double> allChi2{1.3, 4.5, 8.4,  0.4, 10.3, 12.3,
-                              3.5, 5.8, 11.0, 1.1, 3.5,  6.7};
+  std::vector<long double> allChi2{1.3, 4.5, 8.4,  0.4, 10.3, 12.3,
+                                   3.5, 5.8, 11.0, 1.1, 3.5,  6.7};
 
-  std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
+  std::vector<long double> temperatures{64., 16., 4., 2., 1.5, 1.};
   AnnealingUtility::Config config;
   config.setOfTemperatures = {64., 16., 4., 2., 1.5, 1.};
   AnnealingUtility annealingTool(config);
@@ -120,14 +120,14 @@ BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   // Test weight decrease when annealing for chi2>cutOff
   // choose a chi2 greater than default config.cutOff (=9.),
   // such that it should decrease with decreasing temperature
-  double chi2 = config.cutOff + 5.;
+  long double chi2 = config.cutOff + 5.;
 
   // cache last weight
-  double previousWeight = 1.;
+  long double previousWeight = 1.;
 
   std::cout << "Check weight decrease:" << std::endl;
   for (auto temp : temperatures) {
-    double weight = annealingTool.getWeight(state, chi2, allChi2);
+    long double weight = annealingTool.getWeight(state, chi2, allChi2);
 
     bool hasDecreased = weight < previousWeight;
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
 
   std::cout << "Check weight increase:" << std::endl;
   for (auto temp : temperatures) {
-    double weight = annealingTool.getWeight(state, chi2, allChi2);
+    long double weight = annealingTool.getWeight(state, chi2, allChi2);
 
     bool hasIncreased = weight > previousWeight;
 

@@ -118,11 +118,11 @@ class RootTrackSummaryReader : public IReader {
   /// The number of ndf of the measurements+outliers
   std::vector<unsigned int>* m_NDF = new std::vector<unsigned int>;
   /// The chi2 on all measurement states
-  std::vector<std::vector<double>>* m_measurementChi2 =
-      new std::vector<std::vector<double>>;
+  std::vector<std::vector<long double>>* m_measurementChi2 =
+      new std::vector<std::vector<long double>>;
   /// The chi2 on all outlier states
-  std::vector<std::vector<double>>* m_outlierChi2 =
-      new std::vector<std::vector<double>>;
+  std::vector<std::vector<long double>>* m_outlierChi2 =
+      new std::vector<std::vector<long double>>;
   /// The volume id of the measurements
   std::vector<std::vector<std::uint32_t>>* m_measurementVolume =
       new std::vector<std::vector<std::uint32_t>>;

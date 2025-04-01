@@ -30,8 +30,8 @@ auto Acts::materialMapperRZ(
     const std::function<std::size_t(std::array<std::size_t, 2> binsRZ,
                                     std::array<std::size_t, 2> nBinsRZ)>&
         materialVectorToGridMapper,
-    std::vector<double> rPos, std::vector<double> zPos,
-    const std::vector<Acts::Material>& material, double lengthUnit)
+    std::vector<long double> rPos, std::vector<long double> zPos,
+    const std::vector<Acts::Material>& material, long double lengthUnit)
     -> MaterialMapper<
         Grid<Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
              Axis<Acts::AxisType::Equidistant>>> {
@@ -86,9 +86,9 @@ auto Acts::materialMapperXYZ(
     const std::function<std::size_t(std::array<std::size_t, 3> binsXYZ,
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         materialVectorToGridMapper,
-    std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, const std::vector<Material>& material,
-    double lengthUnit)
+    std::vector<long double> xPos, std::vector<long double> yPos,
+    std::vector<long double> zPos, const std::vector<Material>& material,
+    long double lengthUnit)
     -> MaterialMapper<Grid<
         Material::ParametersVector, Axis<Acts::AxisType::Equidistant>,
         Axis<Acts::AxisType::Equidistant>, Axis<Acts::AxisType::Equidistant>>> {

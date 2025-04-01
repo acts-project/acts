@@ -79,7 +79,8 @@ void from_json(const nlohmann::json& j, TGeoITkModuleSplitter::Config& msc) {
       j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
   msc.discMap =
       j["geo-tgeo-disc-map"]
-          .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
+          .get<std::map<std::string,
+                        std::vector<std::pair<long double, long double>>>>();
 }
 
 void to_json(nlohmann::json& j, const TGeoITkModuleSplitter::Config& msc) {

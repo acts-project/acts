@@ -36,14 +36,14 @@ Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
   return std::clamp(u, 0., 1.) * n + a;
 }
 
-double squaredNorm(const Vector2& v, const SquareMatrix2& weight) {
+long double squaredNorm(const Vector2& v, const SquareMatrix2& weight) {
   return (v.transpose() * weight * v).value();
 }
 
 }  // namespace
 
-AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
-    false)
+AnnulusBounds::AnnulusBounds(
+    const std::array<long double, eSize>& values) noexcept(false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
   m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
@@ -57,7 +57,8 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
   // checking, calculate them here once, they don't change
 
   // find inner outer radius at edges in STRIP PC
-  auto circIx = [](double O_x, double O_y, double r, double phi) -> Vector2 {
+  auto circIx = [](long double O_x, long double O_y, long double r,
+                   long double phi) -> Vector2 {
     //                      _____________________________________________
     //                     /      2  2                    2    2  2    2
     //     O_x + O_y*m - \/  - O_x *m  + 2*O_x*O_y*m - O_y  + m *r  + r
@@ -67,18 +68,20 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
     //
     // y = m*x
     //
-    double m = std::tan(phi);
+    long double m = std::tan(phi);
     Vector2 dir(std::cos(phi), std::sin(phi));
-    double x1 = (O_x + O_y * m -
-                 std::sqrt(-std::pow(O_x, 2) * std::pow(m, 2) +
-                           2 * O_x * O_y * m - std::pow(O_y, 2) +
-                           std::pow(m, 2) * std::pow(r, 2) + std::pow(r, 2))) /
-                (std::pow(m, 2) + 1);
-    double x2 = (O_x + O_y * m +
-                 std::sqrt(-std::pow(O_x, 2) * std::pow(m, 2) +
-                           2 * O_x * O_y * m - std::pow(O_y, 2) +
-                           std::pow(m, 2) * std::pow(r, 2) + std::pow(r, 2))) /
-                (std::pow(m, 2) + 1);
+    long double x1 =
+        (O_x + O_y * m -
+         std::sqrt(-std::pow(O_x, 2) * std::pow(m, 2) + 2 * O_x * O_y * m -
+                   std::pow(O_y, 2) + std::pow(m, 2) * std::pow(r, 2) +
+                   std::pow(r, 2))) /
+        (std::pow(m, 2) + 1);
+    long double x2 =
+        (O_x + O_y * m +
+         std::sqrt(-std::pow(O_x, 2) * std::pow(m, 2) + 2 * O_x * O_y * m -
+                   std::pow(O_y, 2) + std::pow(m, 2) * std::pow(r, 2) +
+                   std::pow(r, 2))) /
+        (std::pow(m, 2) + 1);
 
     Vector2 v1(x1, m * x1);
     if (v1.dot(dir) > 0) {
@@ -112,7 +115,7 @@ AnnulusBounds::AnnulusBounds(const std::array<double, eSize>& values) noexcept(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<double> AnnulusBounds::values() const {
+std::vector<long double> AnnulusBounds::values() const {
   return {m_values.begin(), m_values.end()};
 }
 
@@ -143,11 +146,11 @@ std::vector<Vector2> AnnulusBounds::vertices(
   if (quarterSegments > 0u) {
     using VectorHelpers::phi;
 
-    double phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
-    double phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
+    long double phiMinInner = phi(m_inRightStripXY - m_moduleOrigin);
+    long double phiMaxInner = phi(m_inLeftStripXY - m_moduleOrigin);
 
-    double phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
-    double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
+    long double phiMinOuter = phi(m_outRightStripXY - m_moduleOrigin);
+    long double phiMaxOuter = phi(m_outLeftStripXY - m_moduleOrigin);
 
     // Inner bow from phi_min -> phi_max (needs to be reversed)
     std::vector<Vector2> rvertices =
@@ -171,13 +174,13 @@ std::vector<Vector2> AnnulusBounds::vertices(
           m_outLeftStripXY};
 }
 
-bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
-                           double tolPhi) const {
+bool AnnulusBounds::inside(const Vector2& lposition, long double tolR,
+                           long double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by average phi
   Vector2 locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[1];
-  double rLoc = locpo_rotated[0];
+  long double phiLoc = locpo_rotated[1];
+  long double rLoc = locpo_rotated[0];
 
   if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
       phiLoc > (get(eMaxPhiRel) + tolPhi)) {
@@ -187,16 +190,17 @@ bool AnnulusBounds::inside(const Vector2& lposition, double tolR,
   // calculate R in MODULE SYSTEM to evaluate R-bounds
   if (tolR == 0.) {
     // don't need R, can use R^2
-    double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                    2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
+    long double r_mod2 = m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+                         2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]);
 
     if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
     // use R
-    double r_mod = sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
-                        2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
+    long double r_mod =
+        sqrt(m_shiftPC[0] * m_shiftPC[0] + rLoc * rLoc +
+             2 * m_shiftPC[0] * rLoc * cos(phiLoc - m_shiftPC[1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
@@ -243,11 +247,11 @@ bool AnnulusBounds::inside(const Vector2& lposition,
   // covariance to the MODULE SYSTEM in PC via jacobian. The following
   // transforms into STRIP XY, does the shift into MODULE XY, and then
   // transforms into MODULE PC
-  double dphi = get(eAveragePhi);
-  double phi_strip = locpo_rotated[1];
-  double r_strip = locpo_rotated[0];
-  double O_x = m_shiftXY[0];
-  double O_y = m_shiftXY[1];
+  long double dphi = get(eAveragePhi);
+  long double phi_strip = locpo_rotated[1];
+  long double r_strip = locpo_rotated[0];
+  long double O_x = m_shiftXY[0];
+  long double O_y = m_shiftXY[1];
 
   auto closestPointDistanceBound = [&](const SquareMatrix2& weight) {
     // For a transformation from cartesian into polar coordinates
@@ -307,15 +311,16 @@ bool AnnulusBounds::inside(const Vector2& lposition,
     // B = cos(dPhi - phiStrip)
     // C = -sin(dPhi - phiStrip)
 
-    double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
-    double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
+    long double cosDPhiPhiStrip = std::cos(dphi - phi_strip);
+    long double sinDPhiPhiStrip = std::sin(dphi - phi_strip);
 
-    double A = O_x * O_x + 2 * O_x * r_strip * cosDPhiPhiStrip + O_y * O_y -
-               2 * O_y * r_strip * sinDPhiPhiStrip + r_strip * r_strip;
-    double sqrtA = std::sqrt(A);
+    long double A = O_x * O_x + 2 * O_x * r_strip * cosDPhiPhiStrip +
+                    O_y * O_y - 2 * O_y * r_strip * sinDPhiPhiStrip +
+                    r_strip * r_strip;
+    long double sqrtA = std::sqrt(A);
 
-    double B = cosDPhiPhiStrip;
-    double C = -sinDPhiPhiStrip;
+    long double B = cosDPhiPhiStrip;
+    long double C = -sinDPhiPhiStrip;
     SquareMatrix2 jacobianStripPCToModulePC;
     jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
     jacobianStripPCToModulePC(0, 1) =
@@ -329,11 +334,11 @@ bool AnnulusBounds::inside(const Vector2& lposition,
     auto weightModulePC = jacobianStripPCToModulePC.transpose() *
                           weightStripPC * jacobianStripPCToModulePC;
 
-    double minDist = std::numeric_limits<double>::max();
+    long double minDist = std::numeric_limits<long double>::max();
     Vector2 delta;
 
     Vector2 currentClosest;
-    double currentDist = 0;
+    long double currentDist = 0;
 
     // do projection in STRIP PC
 
@@ -442,7 +447,7 @@ Vector2 AnnulusBounds::stripXYToModulePC(const Vector2& vStripXY) const {
 }
 
 Vector2 AnnulusBounds::moduleOrigin() const {
-  return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
+  return Eigen::Rotation2D<long double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 std::ostream& AnnulusBounds::toStream(std::ostream& sl) const {

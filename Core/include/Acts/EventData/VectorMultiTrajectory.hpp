@@ -182,7 +182,7 @@ class VectorMultiTrajectoryBase {
     IndexType iprojector = kInvalid;
 
     float chi2 = 0;
-    double pathLength = 0;
+    long double pathLength = 0;
     TrackStateType::raw_type typeFlags{};
 
     IndexType iUncalibrated = kInvalid;
@@ -348,9 +348,9 @@ class VectorMultiTrajectoryBase {
       m_params;
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_cov;
 
-  std::vector<double, NonInitializingAllocator<double>> m_meas;
+  std::vector<long double, NonInitializingAllocator<long double>> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
-  std::vector<double, NonInitializingAllocator<double>> m_measCov;
+  std::vector<long double, NonInitializingAllocator<long double>> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
   std::vector<typename detail_lt::FixedSizeTypes<eBoundSize>::Covariance> m_jac;
@@ -521,11 +521,11 @@ class VectorMultiTrajectory final
 
     m_index[istate].measdim = measdim;
 
-    double* measPtr = &m_meas[m_measOffset[istate]];
+    long double* measPtr = &m_meas[m_measOffset[istate]];
     Eigen::Map<ActsVector<measdim>> valMap(measPtr);
     valMap = val;
 
-    double* covPtr = &m_measCov[m_measCovOffset[istate]];
+    long double* covPtr = &m_measCov[m_measCovOffset[istate]];
     Eigen::Map<ActsSquareMatrix<measdim>> covMap(covPtr);
     covMap = cov;
   }

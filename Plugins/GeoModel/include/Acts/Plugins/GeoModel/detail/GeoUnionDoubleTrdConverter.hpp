@@ -23,9 +23,9 @@ class GeoTube;
 
 namespace Acts::detail {
 
-struct GeoUnionDoubleTrdConverter {
+struct GeoUnionlong doubleTrdConverter {
   /// Merge trapezoids up to this gap
-  double gapTolerance = 0.2;
+  long double gapTolerance = 0.2;
 
   /// @brief Convert a GeoTube to a detector element and surface
   ///

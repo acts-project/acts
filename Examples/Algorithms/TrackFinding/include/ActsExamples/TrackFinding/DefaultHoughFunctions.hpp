@@ -25,19 +25,20 @@ struct is_error_code_enum<HoughError> : std::true_type {};
 }  // namespace std
 
 namespace ActsExamples::DefaultHoughFunctions {
-using ResultDouble = Acts::Result<double>;
+using Resultlong double = Acts::Result<long double>;
 using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
 
-ResultDouble fieldCorrectionDefault(unsigned region, double y, double r) {
+Resultlong double fieldCorrectionDefault(unsigned region, long double y,
+                                         long double r) {
   if (region == 999) {
     return y + r;  // this should not be found, for now this is a dummy to show
                    // what one *could* do
   }
-  return ResultDouble::success(0.0);
+  return Resultlong double ::success(0.0);
 }
 
-ResultUnsigned findLayerIDDefault(double r) {
+ResultUnsigned findLayerIDDefault(long double r) {
   if (r < 50) {
     return ResultUnsigned::success(0);
   } else if (r < 100) {
@@ -65,12 +66,12 @@ ResultUnsigned findLayerIDDefault(double r) {
 
 // default with two slices, one for negative and one for positive z, counting
 // some small overlaps, and -1 means "just take everything"
-ResultBool inSliceDefault(double z, unsigned layer, int slice) {
+ResultBool inSliceDefault(long double z, unsigned layer, int slice) {
   if (slice == -1) {
     return ResultBool::success(true);
   }
 
-  double absz = abs(z);
+  long double absz = abs(z);
   if (slice == 0 && z > 50) {
     return ResultBool::success(false);
   } else if (slice == 1 && z < -50) {

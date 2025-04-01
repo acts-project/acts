@@ -35,7 +35,7 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(Geometry)
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
-  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
+  long double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
       avgphi{0.};
 
   // Test different construction modes: solid
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
   CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
 
   // Test construction from CylinderBounds and thickness
-  double rmed = 0.5 * (rmin + rmax);
-  double rthickness = (rmax - rmin);
+  long double rmed = 0.5 * (rmin + rmax);
+  long double rthickness = (rmax - rmin);
   CylinderBounds cBounds(rmed, halfz, halfphi, avgphi);
   CylinderVolumeBounds fromCylinder(cBounds, rthickness);
   BOOST_CHECK_EQUAL(original, fromCylinder);
@@ -78,19 +78,19 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsConstruction) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsRecreation) {
-  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
+  long double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
       avgphi{0.};
 
   CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
-  std::array<double, CylinderVolumeBounds::eSize> values{};
-  std::vector<double> valvector = original.values();
+  std::array<long double, CylinderVolumeBounds::eSize> values{};
+  std::vector<long double> valvector = original.values();
   std::copy_n(valvector.begin(), CylinderVolumeBounds::eSize, values.begin());
   CylinderVolumeBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsExceptions) {
-  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
+  long double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
       avgphi{0.};
 
   // Negative inner radius
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsExceptions) {
                     std::logic_error);
 
   // Test construction from CylinderBounds and thickness
-  double rmed = 0.5 * (rmin + rmax);
+  long double rmed = 0.5 * (rmin + rmax);
   CylinderBounds cBounds(rmed, halfz, halfphi, avgphi);
   RadialBounds rBounds(rmin, rmax, halfphi, avgphi);
 
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsExceptions) {
 }
 
 BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
-  double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
+  long double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{std::numbers::pi / 4.},
       avgphi{0.};
   CylinderVolumeBounds cvBounds(rmin, rmax, halfz, halfphi, avgphi);
 
@@ -153,26 +153,30 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsAccess) {
 /// Unit test for testing the orientedSurfaces() function
 BOOST_DATA_TEST_CASE(
     CylinderVolumeBoundsOrientedSurfaces,
-    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
-                   bdata::distribution = std::uniform_real_distribution<double>(
-                       -std::numbers::pi, std::numbers::pi))) ^
+    bdata::random(
+        (bdata::engine = std::mt19937(), bdata::seed = 1,
+         bdata::distribution = std::uniform_real_distribution<long double>(
+             -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 2,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 3,
-             bdata::distribution = std::uniform_real_distribution<double>(
+             bdata::distribution = std::uniform_real_distribution<long double>(
                  -std::numbers::pi, std::numbers::pi))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(-10., 10.))) ^
+                           std::uniform_real_distribution<long double>(-10.,
+                                                                       10.))) ^
         bdata::xrange(100),
     alpha, beta, gamma, posX, posY, posZ, index) {
   (void)index;
@@ -190,9 +194,9 @@ BOOST_DATA_TEST_CASE(
   AngleAxis3 rotZ(gamma, Vector3(0., 0., 1.));
 
   // create the cylinder bounds
-  double rmin = 1.;
-  double rmax = 2.;
-  double halfz = 3.;
+  long double rmin = 1.;
+  long double rmax = 2.;
+  long double halfz = 3.;
   CylinderVolumeBounds cylBounds(rmin, rmax, halfz);
   // create the transformation matrix
   auto transform = Transform3(Translation3(pos));
@@ -211,18 +215,18 @@ BOOST_DATA_TEST_CASE(
       (pos - boundarySurfaces.at(1).surface->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
-  double posDiscPosZ =
+  long double posDiscPosZ =
       (transform.inverse() * boundarySurfaces.at(1).surface->center(tgContext))
           .z();
-  double centerPosZ = (transform.inverse() * pos).z();
-  double negDiscPosZ =
+  long double centerPosZ = (transform.inverse() * pos).z();
+  long double negDiscPosZ =
       (transform.inverse() * boundarySurfaces.at(0).surface->center(tgContext))
           .z();
   // check if center of disc boundaries lies in the middle in z
   BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
   BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
   // check positions of disc boundarysurfaces
-  // checks for zero value. double precision value is not exact.
+  // checks for zero value. long double precision value is not exact.
   CHECK_CLOSE_ABS(
       negDiscPosZ + cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
       centerPosZ, 1e-12);
@@ -275,7 +279,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   BOOST_CHECK_EQUAL(bb.max(), Vector3(8, 8, 12));
   BOOST_CHECK_EQUAL(bb.min(), Vector3(-8, -8, -12));
 
-  double angle = std::numbers::pi / 8.;
+  long double angle = std::numbers::pi / 8.;
   cvb = CylinderVolumeBounds(5, 8, 13, angle);
   bb = cvb.boundingBox();
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);

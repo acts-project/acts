@@ -24,10 +24,10 @@ namespace ActsExamples::Digitization {
 /// Exact smearing of a single parameter.
 ///
 struct Exact {
-  double sigma;
+  long double sigma;
 
   /// Construct with a @param sigma standard deviation
-  explicit Exact(double sigma_) : sigma{sigma_} {}
+  explicit Exact(long double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -36,8 +36,8 @@ struct Exact {
   ///
   /// @return a Result that is always ok(), and just returns
   /// the value and a stddev of 0.0
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomEngine& /*rnd*/) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& /*rnd*/) const {
     return std::pair{value, sigma};
   }
 };
@@ -47,10 +47,10 @@ struct Exact {
 /// @note This smearer will smear over module boundaries
 /// it has no notion of a parameter range is assumed
 struct Gauss {
-  double sigma;
+  long double sigma;
 
   /// Construct with a @param sigma standard deviation
-  explicit Gauss(double sigma_) : sigma{sigma_} {}
+  explicit Gauss(long double sigma_) : sigma{sigma_} {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -58,8 +58,8 @@ struct Gauss {
   /// @param rnd random generator to be used for the call
   ///
   /// @return a Result that is always ok()
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& rnd) const {
     std::normal_distribution<> dist{0, sigma};
     return std::pair{value + dist(rnd), sigma};
   }
@@ -70,12 +70,14 @@ struct Gauss {
 /// In case a hit is smeared outside the range, a DigitizationError
 /// indicating the truncation
 struct GaussTrunc {
-  double sigma;
-  std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
-                                     std::numeric_limits<double>::max()};
+  long double sigma;
+  std::pair<long double, long double> range = {
+      std::numeric_limits<long double>::lowest(),
+      std::numeric_limits<long double>::max()};
 
   /// Construct with a @param sigma standard deviation and @param range
-  GaussTrunc(double sigma_, const std::pair<double, double>& range_)
+  GaussTrunc(long double sigma_,
+             const std::pair<long double, long double>& range_)
       : sigma{sigma_}, range(range_) {}
 
   /// Call operator for the SmearFunction caller interface.
@@ -84,14 +86,14 @@ struct GaussTrunc {
   /// @param rnd random generator to be used for the call
   ///
   /// @return a Result that is ok() when inside range, other DigitizationError
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& rnd) const {
     std::normal_distribution<> dist{0., 1};
-    double x = dist(rnd);
+    long double x = dist(rnd);
     if (x < range.first || x > range.second) {
       return ActsFatras::DigitizationError::SmearingOutOfRange;
     }
-    double svalue = value + sigma * x;
+    long double svalue = value + sigma * x;
     return std::pair{svalue, sigma};
   }
 };
@@ -101,15 +103,17 @@ struct GaussTrunc {
 /// In case a hit is smeared outside the range, the smearing will be
 /// repeated, until a maximum attempt number is reached
 struct GaussClipped {
-  double sigma;
+  long double sigma;
 
   std::size_t maxAttemps = 1000;
 
-  std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
-                                     std::numeric_limits<double>::max()};
+  std::pair<long double, long double> range = {
+      std::numeric_limits<long double>::lowest(),
+      std::numeric_limits<long double>::max()};
 
   /// Construct with a @param sigma standard deviation and @param range
-  GaussClipped(double sigma_, const std::pair<double, double>& range_)
+  GaussClipped(long double sigma_,
+               const std::pair<long double, long double>& range_)
       : sigma{sigma_}, range(range_) {}
 
   /// Call operator for the SmearFunction caller interface.
@@ -120,13 +124,13 @@ struct GaussClipped {
   /// @note it will smear until inside range, unless maxAttempts is reached
   ///
   /// @return a Result that is ok() when inside range, other DigitizationError
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& rnd) const {
     std::normal_distribution<> dist{0., 1};
     for (std::size_t attempt = 0; attempt < maxAttemps; ++attempt) {
-      double x = dist(rnd);
+      long double x = dist(rnd);
       if (x >= range.first && x <= range.second) {
-        double svalue = value + sigma * x;
+        long double svalue = value + sigma * x;
         return std::pair{svalue, sigma};
       }
     }
@@ -141,7 +145,7 @@ struct Uniform {
   Acts::BinningData binningData;
 
   /// Construct with a @param pitch standard deviation and @param range
-  Uniform(double pitch, const std::pair<double, double>& range_)
+  Uniform(long double pitch, const std::pair<long double, long double>& range_)
       : binningData(
             Acts::open, Acts::AxisDirection::AxisX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
@@ -158,14 +162,14 @@ struct Uniform {
   /// @param rnd random generator to be used for the call
   ///
   /// @return a Result is uniformly distributed between bin borders
-  Acts::Result<std::pair<double, double>> operator()(double value,
-                                                     RandomEngine& rnd) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& rnd) const {
     if (binningData.min < value && binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
-      std::uniform_real_distribution<double> dist{0., 1.};
-      double svalue = lower + (higher - lower) * dist(rnd);
+      std::uniform_real_distribution<long double> dist{0., 1.};
+      long double svalue = lower + (higher - lower) * dist(rnd);
       return std::pair{svalue, (higher - lower) / std::sqrt(12.)};
     }
     return ActsFatras::DigitizationError::SmearingError;
@@ -179,7 +183,7 @@ struct Digital {
   Acts::BinningData binningData;
 
   /// Construct with a @param pitch standard deviation and @param range
-  Digital(double pitch, const std::pair<double, double>& range_)
+  Digital(long double pitch, const std::pair<long double, long double>& range_)
       : binningData(
             Acts::open, Acts::AxisDirection::AxisX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
@@ -196,13 +200,13 @@ struct Digital {
   /// @param rnd random generator to be used for the call (unused)
   ///
   /// @return a Result is uniformly distributed between bin borders
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomEngine& /*rnd*/) const {
+  Acts::Result<std::pair<long double, long double>> operator()(
+      long double value, RandomEngine& /*rnd*/) const {
     if (binningData.min < value && binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
       auto higher = binningData.boundaries()[bin + 1];
-      double svalue = 0.5 * (lower + higher);
+      long double svalue = 0.5 * (lower + higher);
       return std::pair{svalue, (higher - lower) / std::sqrt(12.)};
     }
     return ActsFatras::DigitizationError::SmearingError;

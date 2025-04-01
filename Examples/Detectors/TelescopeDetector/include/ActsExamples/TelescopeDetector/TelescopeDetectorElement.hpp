@@ -48,7 +48,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   TelescopeDetectorElement(
       std::shared_ptr<const Acts::Transform3> transform,
-      std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const Acts::PlanarBounds> pBounds, long double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor for single sided detector element
@@ -60,7 +60,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   TelescopeDetectorElement(
       std::shared_ptr<const Acts::Transform3> transform,
-      std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
+      std::shared_ptr<const Acts::DiscBounds> dBounds, long double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   ///  Destructor
@@ -73,7 +73,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   Acts::Surface& surface() final;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final;
+  long double thickness() const final;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -108,7 +108,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// the surface represented by it
   std::shared_ptr<Acts::Surface> m_elementSurface = nullptr;
   /// the element thickness
-  double m_elementThickness = 0.;
+  long double m_elementThickness = 0.;
   /// the planar bounds
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
   /// the disc bounds
@@ -123,7 +123,7 @@ inline Acts::Surface& TelescopeDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-inline double TelescopeDetectorElement::thickness() const {
+inline long double TelescopeDetectorElement::thickness() const {
   return m_elementThickness;
 }
 

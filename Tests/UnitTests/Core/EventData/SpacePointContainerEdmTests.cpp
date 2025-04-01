@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(spacepoint_container_edm_functionalities) {
   }
 
   Acts::SpacePointContainerConfig spConfig;
-  spConfig.useDetailedDoubleMeasurementInfo = true;
+  spConfig.useDetailedlong doubleMeasurementInfo = true;
   Acts::SpacePointContainerOptions spOptions;
 
   Acts::Test::Adapter adapter(externalCollection);

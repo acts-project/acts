@@ -19,7 +19,7 @@ struct LinearizedTrack;
 class Surface;
 
 using TrackLinearizer = Acts::Delegate<Result<LinearizedTrack>(
-    const BoundTrackParameters& params, double linPointTime,
+    const BoundTrackParameters& params, long double linPointTime,
     const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
     const Acts::MagneticFieldContext& mctx,
     MagneticFieldProvider::Cache& fieldCache)>;

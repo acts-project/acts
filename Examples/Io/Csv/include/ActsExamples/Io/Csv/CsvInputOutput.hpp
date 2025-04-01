@@ -197,7 +197,7 @@ class DsvWriter {
   /// \param path       Path to the output file
   /// \param precision  Output floating point precision
   DsvWriter(const std::vector<std::string>& columns, const std::string& path,
-            int precision = std::numeric_limits<double>::max_digits10);
+            int precision = std::numeric_limits<long double>::max_digits10);
 
   /// Append arguments as a new row to the file.
   ///
@@ -270,7 +270,7 @@ class NamedTupleDsvWriter {
   /// \param precision  Output floating point precision
   explicit NamedTupleDsvWriter(
       const std::string& path,
-      int precision = std::numeric_limits<double>::max_digits10)
+      int precision = std::numeric_limits<long double>::max_digits10)
       : m_writer(colum_names(), path, precision) {}
 
   /// Append a record to the file.

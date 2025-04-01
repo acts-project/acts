@@ -36,11 +36,11 @@ struct TestMatrix : public std::vector<std::vector<std::uint8_t>> {
 };
 
 std::pair<Vector2, Vector2> boundingBox(const RegularSurface& surface,
-                                        double relMargin) {
-  Vector2 min{std::numeric_limits<double>::max(),
-              std::numeric_limits<double>::max()};
-  Vector2 max{std::numeric_limits<double>::lowest(),
-              std::numeric_limits<double>::lowest()};
+                                        long double relMargin) {
+  Vector2 min{std::numeric_limits<long double>::max(),
+              std::numeric_limits<long double>::max()};
+  Vector2 max{std::numeric_limits<long double>::lowest(),
+              std::numeric_limits<long double>::lowest()};
 
   std::vector<Vector2> vertices;
   if (const auto* pBounds =
@@ -73,7 +73,7 @@ std::pair<Vector2, Vector2> boundingBox(const RegularSurface& surface,
 
 TestMatrix makeTestMatrix(const RegularSurface& surface,
                           const BoundaryTolerance& tolerance,
-                          double relMargin = 0.1) {
+                          long double relMargin = 0.1) {
   auto [min, max] = boundingBox(surface, relMargin);
   Vector2 delta = max - min;
 
@@ -2364,10 +2364,10 @@ BOOST_AUTO_TEST_CASE(Trapezoid) {
 }
 
 BOOST_AUTO_TEST_CASE(Annulus) {
-  const double minRadius = 7.2;
-  const double maxRadius = 12.0;
-  const double minPhi = 0.74195;
-  const double maxPhi = 1.33970;
+  const long double minRadius = 7.2;
+  const long double maxRadius = 12.0;
+  const long double minPhi = 0.74195;
+  const long double maxPhi = 1.33970;
 
   const Vector2 offset(-2., 2.);
 

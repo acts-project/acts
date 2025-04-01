@@ -21,14 +21,15 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   ConstrainedStep stepSize_p(0.25);
 
   // All of the types should be 0.25 now
-  BOOST_CHECK_EQUAL(stepSize_p.accuracy(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_p.accuracy(),
+                    std::numeric_limits<long double>::max());
   BOOST_CHECK_EQUAL(stepSize_p.value(ConstrainedStep::Type::Navigator),
-                    std::numeric_limits<double>::max());
+                    std::numeric_limits<long double>::max());
   BOOST_CHECK_EQUAL(stepSize_p.value(ConstrainedStep::Type::Actor),
-                    std::numeric_limits<double>::max());
+                    std::numeric_limits<long double>::max());
   BOOST_CHECK_EQUAL(stepSize_p.value(ConstrainedStep::Type::User), 0.25);
 
-  // Check the cast operation to double
+  // Check the cast operation to long double
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.25);
 
   // now we set the accuracy
@@ -54,7 +55,8 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
 
   // now we release the accuracy - to the highest available value
   stepSize_p.releaseAccuracy();
-  BOOST_CHECK_EQUAL(stepSize_p.accuracy(), std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stepSize_p.accuracy(),
+                    std::numeric_limits<long double>::max());
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.05);
 }
 

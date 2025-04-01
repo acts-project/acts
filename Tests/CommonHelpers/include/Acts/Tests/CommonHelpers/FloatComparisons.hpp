@@ -62,10 +62,11 @@ namespace float_compare_internal {
 
 using predicate_result = boost::test_tools::predicate_result;
 
-using ScalarComparison = std::function<predicate_result(double, double)>;
+using ScalarComparison =
+    std::function<predicate_result(long double, long double)>;
 
-ScalarComparison closeOrSmall(double reltol, double small) {
-  return [=](double val, double ref) -> predicate_result {
+ScalarComparison closeOrSmall(long double reltol, long double small) {
+  return [=](long double val, long double ref) -> predicate_result {
     // Perform the comparison, exit on success
     if (std::abs(ref) >= small) {
       // Reference is large enough for a relative comparison
@@ -91,8 +92,8 @@ ScalarComparison closeOrSmall(double reltol, double small) {
   };
 }
 
-ScalarComparison closeAbs(double abstol) {
-  return [=](double val, double ref) -> predicate_result {
+ScalarComparison closeAbs(long double abstol) {
+  return [=](long double val, long double ref) -> predicate_result {
     // Perform the comparison, exit on success
     if (std::abs(ref - val) <= abstol) {
       return true;
@@ -228,7 +229,7 @@ predicate_result compare(const Transform3& val, const Transform3& ref,
 }
 
 // Scalar frontend
-predicate_result compare(double val, double ref,
+predicate_result compare(long double val, long double ref,
                          ScalarComparison&& compareImpl) {
   return compareImpl(val, ref);
 }
@@ -238,20 +239,21 @@ predicate_result compare(double val, double ref,
 
 template <typename T, typename U>
 boost::test_tools::predicate_result checkCloseRel(const T& val, const U& ref,
-                                                  double reltol) {
+                                                  long double reltol) {
   using namespace float_compare_internal;
   return compare(val, ref, closeOrSmall(reltol, 0.));
 }
 
 template <typename T, typename U>
 boost::test_tools::predicate_result checkCloseAbs(const T& val, const U& ref,
-                                                  double abstol) {
+                                                  long double abstol) {
   using namespace float_compare_internal;
   return compare(val, ref, closeAbs(abstol));
 }
 
 template <typename T>
-boost::test_tools::predicate_result checkSmall(const T& val, double small) {
+boost::test_tools::predicate_result checkSmall(const T& val,
+                                               long double small) {
   using namespace float_compare_internal;
   return compare(val, val, closeOrSmall(0., small));
 }
@@ -259,8 +261,8 @@ boost::test_tools::predicate_result checkSmall(const T& val, double small) {
 template <typename T, typename U>
 boost::test_tools::predicate_result checkCloseOrSmall(const T& val,
                                                       const U& ref,
-                                                      double reltol,
-                                                      double small) {
+                                                      long double reltol,
+                                                      long double small) {
   using namespace float_compare_internal;
   return compare(val, ref, closeOrSmall(reltol, small));
 }
@@ -268,7 +270,7 @@ boost::test_tools::predicate_result checkCloseOrSmall(const T& val,
 template <typename val_t, typename ref_t>
 boost::test_tools::predicate_result checkCloseCovariance(
     const Eigen::MatrixBase<val_t>& val, const Eigen::MatrixBase<ref_t>& ref,
-    double tol) {
+    long double tol) {
   EIGEN_STATIC_ASSERT_FIXED_SIZE(val_t);
   EIGEN_STATIC_ASSERT_FIXED_SIZE(ref_t);
   EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(val_t, ref_t);

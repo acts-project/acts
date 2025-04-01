@@ -171,14 +171,14 @@ ProcessCode RootMaterialTrackReader::read(const AlgorithmContext& context) {
       ACTS_VERBOSE("====================");
       ACTS_VERBOSE("[" << is + 1 << "/" << msteps << "] STEP INFORMATION: ");
 
-      double s = (*m_step_length)[is];
+      long double s = (*m_step_length)[is];
       if (s == 0) {
         ACTS_VERBOSE("invalid step length... skipping!");
         continue;
       }
 
-      double mX0 = (*m_step_X0)[is];
-      double mL0 = (*m_step_L0)[is];
+      long double mX0 = (*m_step_X0)[is];
+      long double mL0 = (*m_step_L0)[is];
 
       rmTrack.second.materialInX0 += s / mX0;
       rmTrack.second.materialInL0 += s / mL0;

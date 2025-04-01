@@ -34,46 +34,47 @@ struct TGeoSurfaceConverter {
   /// Convert a TGeoShape into cylinder surface components
   ///
   /// @param tgShape The TGeoShape
-  /// @param rotation The rotation matrix as Double_t* from root
-  /// @param translation The translation vector as Double_t* from root
+  /// @param rotation The rotation matrix as long double_t* from root
+  /// @param translation The translation vector as long double_t* from root
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of DiscBounds, Transform, thickness
   static std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3,
-                    double>
-  cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                     const Double_t* translation, const std::string& axes,
-                     double scalor = 10.) noexcept(false);
+                    long double>
+  cylinderComponents(const TGeoShape& tgShape, const long double_t* rotation,
+                     const long double_t* translation, const std::string& axes,
+                     long double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into disk surface components
   ///
   /// @param tgShape The TGeoShape
-  /// @param rotation The rotation matrix as Double_t* from root
-  /// @param translation The translation vector as Double_t* from root
+  /// @param rotation The rotation matrix as long double_t* from root
+  /// @param translation The translation vector as long double_t* from root
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of DiscBounds, Transform, thickness
-  static std::tuple<std::shared_ptr<const DiscBounds>, const Transform3, double>
-  discComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                 const Double_t* translation, const std::string& axes,
-                 double scalor = 10.) noexcept(false);
+  static std::tuple<std::shared_ptr<const DiscBounds>, const Transform3,
+                    long double>
+  discComponents(const TGeoShape& tgShape, const long double_t* rotation,
+                 const long double_t* translation, const std::string& axes,
+                 long double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into plane surface components
   ///
   /// @param tgShape The TGeoShape
-  /// @param rotation The rotation matrix as Double_t* from root
-  /// @param translation The translation as a Double_t*
+  /// @param rotation The rotation matrix as long double_t* from root
+  /// @param translation The translation as a long double_t*
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return tuple of PlanarBounds, Transform, thickness
   static std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3,
-                    double>
-  planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                  const Double_t* translation, const std::string& axes,
-                  double scalor = 10.) noexcept(false);
+                    long double>
+  planeComponents(const TGeoShape& tgShape, const long double_t* rotation,
+                  const long double_t* translation, const std::string& axes,
+                  long double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
   ///
@@ -84,15 +85,15 @@ struct TGeoSurfaceConverter {
   ///
   /// @return shared pointer to a surface and the original thickness that
   /// has been condensed to the surface
-  static std::tuple<std::shared_ptr<Surface>, double> toSurface(
+  static std::tuple<std::shared_ptr<Surface>, long double> toSurface(
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-      const std::string& axes, double scalor = 10.) noexcept(false);
+      const std::string& axes, long double scalor = 10.) noexcept(false);
 
   /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
   /// @param degree The input in degree
   /// @return angle in radians
-  static double toRadian(double degree) {
+  static long double toRadian(long double degree) {
     if (degree > 180. && degree < 360.) {
       degree -= 360.;
     }

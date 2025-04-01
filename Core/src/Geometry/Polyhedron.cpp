@@ -71,28 +71,28 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
     if (exact) {
       // Check for radial extend in 2D
       auto radialDistance = [&](const Vector3& pos1,
-                                const Vector3& pos2) -> double {
+                                const Vector3& pos2) -> long double {
         Vector2 O(0, 0);
         Vector2 p1p2 = (pos2.block<2, 1>(0, 0) - pos1.block<2, 1>(0, 0));
-        double L = p1p2.norm();
+        long double L = p1p2.norm();
         Vector2 p1O = (O - pos1.block<2, 1>(0, 0));
 
         // Don't try parallel lines
         if (L < 1e-7) {
-          return std::numeric_limits<double>::max();
+          return std::numeric_limits<long double>::max();
         }
-        double f = p1p2.dot(p1O) / L;
+        long double f = p1p2.dot(p1O) / L;
 
         // Clamp to [0, |p1p2|]
         f = std::min(L, std::max(0., f));
         Vector2 closest = f * p1p2.normalized() + pos1.block<2, 1>(0, 0);
-        double dist = (closest - O).norm();
+        long double dist = (closest - O).norm();
         return dist;
       };
 
       for (std::size_t iv = 1; iv < vtxs.size() + 1; ++iv) {
         std::size_t fpoint = iv < vtxs.size() ? iv : 0;
-        double testR = radialDistance(vtxs[fpoint], vtxs[iv - 1]);
+        long double testR = radialDistance(vtxs[fpoint], vtxs[iv - 1]);
         extent.range(AxisDirection::AxisR).expandMin(testR);
       }
     }

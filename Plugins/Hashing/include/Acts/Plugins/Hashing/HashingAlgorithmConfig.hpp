@@ -18,10 +18,10 @@ struct HashingAlgorithmConfig {
   unsigned int phiBins = 50;
 
   /// Layer selection
-  double layerRMin = 25;
-  double layerRMax = 40;
-  double layerZMin = -550;
-  double layerZMax = 550;
+  long double layerRMin = 25;
+  long double layerRMax = 40;
+  long double layerZMin = -550;
+  long double layerZMax = 550;
 };
 
 }  // namespace Acts

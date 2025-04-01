@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                               "PixelActiveo6"};
     std::string axes = "XYZ";
-    double scale = 10.;
+    long double scale = 10.;
 
     TGeoParser::State tgpState;
     tgpState.volume = gGeoManager->GetTopVolume();

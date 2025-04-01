@@ -65,7 +65,7 @@ class RegularSurface : public Surface {
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Convert a global position to a local one.
   /// @note The @p position is required to be on-surface, which is indicated by
@@ -76,7 +76,7 @@ class RegularSurface : public Surface {
   /// @return Result type containing local position by value
   virtual Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      long double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Local to global transformation. This is the most generic interface,
   /// which is implemented by all surfaces.
@@ -111,7 +111,7 @@ class RegularSurface : public Surface {
   bool isOnSurface(
       const GeometryContext& gctx, const Vector3& position,
       const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
-      double tolerance = s_onSurfaceTolerance) const;
+      long double tolerance = s_onSurfaceTolerance) const;
 
   using Surface::isOnSurface;
 };

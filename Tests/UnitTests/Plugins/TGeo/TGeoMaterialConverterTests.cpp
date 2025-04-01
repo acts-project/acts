@@ -25,8 +25,8 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
 
-  double A = 26.98;
-  double Z = 13.;
+  long double A = 26.98;
+  long double Z = 13.;
   TGeoMaterial *mat = new TGeoMaterial("Al", A, Z, 2.7);
 
   // ROOT calculates the radiation/int length in cm
@@ -39,9 +39,10 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   options.unitMassScalor = 1.;
 
   // Assume we describe a 10 mm thick box as a 10 mm thick slab
-  double tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
-  double tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
-  double rho = 2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
+  long double tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
+  long double tInL0 = 10_mm / (mat->GetIntLen() * options.unitLengthScalor);
+  long double rho =
+      2.7 * options.unitMassScalor / pow(options.unitLengthScalor, 3);
 
   Acts::MaterialSlab slab_10_10 =
       Acts::TGeoMaterialConverter::materialSlab(*mat, 10_mm, 10_mm, options);

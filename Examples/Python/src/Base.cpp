@@ -262,8 +262,8 @@ void addAlgebra(Acts::Python::Context& ctx) {
   auto& m = ctx.get("main");
 
   py::class_<Acts::Vector2>(m, "Vector2")
-      .def(py::init<double, double>())
-      .def(py::init([](std::array<double, 2> a) {
+      .def(py::init<long double, long double>())
+      .def(py::init([](std::array<long double, 2> a) {
         Acts::Vector2 v;
         v << a[0], a[1];
         return v;
@@ -277,8 +277,8 @@ void addAlgebra(Acts::Python::Context& ctx) {
       });
 
   py::class_<Acts::Vector3>(m, "Vector3")
-      .def(py::init<double, double, double>())
-      .def(py::init([](std::array<double, 3> a) {
+      .def(py::init<long double, long double, long double>())
+      .def(py::init([](std::array<long double, 3> a) {
         Acts::Vector3 v;
         v << a[0], a[1], a[2];
         return v;
@@ -296,8 +296,8 @@ void addAlgebra(Acts::Python::Context& ctx) {
       });
 
   py::class_<Acts::Vector4>(m, "Vector4")
-      .def(py::init<double, double, double, double>())
-      .def(py::init([](std::array<double, 4> a) {
+      .def(py::init<long double, long double, long double, long double>())
+      .def(py::init([](std::array<long double, 4> a) {
         Acts::Vector4 v;
         v << a[0], a[1], a[2], a[3];
         return v;
@@ -336,7 +336,7 @@ void addAlgebra(Acts::Python::Context& ctx) {
   py::class_<Acts::Translation3>(m, "Translation3")
       .def(py::init(
           [](const Acts::Vector3& a) { return Acts::Translation3(a); }))
-      .def(py::init([](std::array<double, 3> a) {
+      .def(py::init([](std::array<long double, 3> a) {
         return Acts::Translation3(Acts::Vector3(a[0], a[1], a[2]));
       }))
       .def("__str__", [](const Acts::Translation3& self) {
@@ -346,7 +346,7 @@ void addAlgebra(Acts::Python::Context& ctx) {
       });
 
   py::class_<Acts::AngleAxis3>(m, "AngleAxis3")
-      .def(py::init([](double angle, const Acts::Vector3& axis) {
+      .def(py::init([](long double angle, const Acts::Vector3& axis) {
         return Acts::AngleAxis3(angle, axis);
       }))
       .def("__str__", [](const Acts::Transform3& self) {

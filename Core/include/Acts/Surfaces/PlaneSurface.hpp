@@ -144,16 +144,17 @@ class PlaneSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const override;
+      long double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position (ignored for @ref PlaneSurface)
   /// @param direction global 3D momentum direction (ignored for @ref PlaneSurface)
-  /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& direction) const final;
+  /// @return a long double representing the scaling factor
+  long double pathCorrection(const GeometryContext& gctx,
+                             const Vector3& position,
+                             const Vector3& direction) const final;
 
   /// @brief Straight line intersection
   ///
@@ -187,7 +188,7 @@ class PlaneSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

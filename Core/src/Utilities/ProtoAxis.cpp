@@ -26,13 +26,14 @@ void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
 }  // namespace
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-                           const std::vector<double>& edges)
+                           const std::vector<long double>& edges)
     : m_axisDir(aDir), m_axis(IAxis::createVariable(abType, edges)) {
   checkConsistency(aDir, abType);
 }
 
 Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           double minE, double maxE, std::size_t nbins)
+                           long double minE, long double maxE,
+                           std::size_t nbins)
     : m_axisDir(aDir),
       m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
   checkConsistency(aDir, abType);
@@ -92,7 +93,7 @@ const Acts::IAxis& Acts::ProtoAxis::getAxis() const {
   return *m_axis;
 }
 
-void Acts::ProtoAxis::setRange(double minE, double maxE) {
+void Acts::ProtoAxis::setRange(long double minE, long double maxE) {
   if (minE > maxE) {
     throw std::invalid_argument(
         "ProtoAxis::setRange: minE > maxE is not allowed.");
@@ -102,10 +103,10 @@ void Acts::ProtoAxis::setRange(double minE, double maxE) {
     m_axis = IAxis::createEquidistant(m_axis->getBoundaryType(), minE, maxE,
                                       m_axis->getNBins());
   } else {
-    std::vector<double> edges = m_axis->getBinEdges();
+    std::vector<long double> edges = m_axis->getBinEdges();
     // Clip it to min/max
-    std::erase_if(edges,
-                  [minE, maxE](double e) { return (e < minE || e > maxE); });
+    std::erase_if(
+        edges, [minE, maxE](long double e) { return (e < minE || e > maxE); });
     // Add the min and max
     edges.emplace_back(minE);
     edges.emplace_back(maxE);

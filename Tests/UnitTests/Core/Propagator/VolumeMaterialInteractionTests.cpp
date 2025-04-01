@@ -31,9 +31,9 @@ namespace Acts::Test {
 struct StepperState {
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
   Vector3 pos, dir;
-  double t = 0, p = 0, q = 0;
+  long double t = 0, p = 0, q = 0;
   bool covTransport = false;
-  double absCharge = UnitConstants::e;
+  long double absCharge = UnitConstants::e;
 };
 
 /// @brief Simplified navigator
@@ -57,15 +57,19 @@ struct Stepper {
 
   Vector3 position(const StepperState& state) const { return state.pos; }
 
-  double time(const StepperState& state) const { return state.t; }
+  long double time(const StepperState& state) const { return state.t; }
 
   Vector3 direction(const StepperState& state) const { return state.dir; }
 
-  double qOverP(const StepperState& state) const { return state.q / state.p; }
+  long double qOverP(const StepperState& state) const {
+    return state.q / state.p;
+  }
 
-  double absoluteMomentum(const StepperState& state) const { return state.p; }
+  long double absoluteMomentum(const StepperState& state) const {
+    return state.p;
+  }
 
-  double charge(const StepperState& state) const { return state.q; };
+  long double charge(const StepperState& state) const { return state.q; };
 
   ParticleHypothesis particleHypothesis(const StepperState& state) const {
     return state.particleHypothesis;

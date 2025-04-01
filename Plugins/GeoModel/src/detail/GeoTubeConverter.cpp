@@ -30,7 +30,7 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
                                            const Transform3& absTransform,
                                            bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr double unitLength =
+  static constexpr long double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -39,9 +39,9 @@ Acts::detail::GeoTubeConverter::operator()(const PVConstLink& geoPV,
   transform.linear() = absTransform.rotation();
 
   // Create the surface
-  double innerRadius = unitLength * geoTube.getRMin();
-  double outerRadius = unitLength * geoTube.getRMax();
-  double halfZ = unitLength * geoTube.getZHalfLength();
+  long double innerRadius = unitLength * geoTube.getRMin();
+  long double outerRadius = unitLength * geoTube.getRMax();
+  long double halfZ = unitLength * geoTube.getZHalfLength();
 
   if (targetShape == Surface::SurfaceType::Straw) {
     // Create the element and the surface

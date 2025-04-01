@@ -33,12 +33,12 @@ class AlignmentDecorator : public IContextDecorator {
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
 
     /// Gaussian module parameters - 6 Degrees of freedom
-    double gSigmaX = 0.;  // smear position along local x Axis
-    double gSigmaY = 0.;  // smear position along local y Axis
-    double gSigmaZ = 0.;  // smear position along local z Axis
-    double aSigmaX = 0.;  // rotate around local x Axis
-    double aSigmaY = 0.;  // rotate around local y Axis
-    double aSigmaZ = 0.;  // rotate around local z Axis
+    long double gSigmaX = 0.;  // smear position along local x Axis
+    long double gSigmaY = 0.;  // smear position along local y Axis
+    long double gSigmaZ = 0.;  // smear position along local z Axis
+    long double aSigmaX = 0.;  // rotate around local x Axis
+    long double aSigmaY = 0.;  // rotate around local y Axis
+    long double aSigmaZ = 0.;  // rotate around local z Axis
 
     bool firstIovNominal = false;
   };
@@ -46,12 +46,12 @@ class AlignmentDecorator : public IContextDecorator {
  protected:
   static void applyTransform(Acts::Transform3& trf, const Config& cfg,
                              RandomEngine& rng, unsigned int iov) {
-    std::normal_distribution<double> gauss(0., 1.);
+    std::normal_distribution<long double> gauss(0., 1.);
     if (iov != 0 || !cfg.firstIovNominal) {
       // the shifts in x, y, z
-      double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
-      double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;
-      double tz = cfg.gSigmaZ != 0 ? cfg.gSigmaZ * gauss(rng) : 0.;
+      long double tx = cfg.gSigmaX != 0 ? cfg.gSigmaX * gauss(rng) : 0.;
+      long double ty = cfg.gSigmaY != 0 ? cfg.gSigmaY * gauss(rng) : 0.;
+      long double tz = cfg.gSigmaZ != 0 ? cfg.gSigmaZ * gauss(rng) : 0.;
       // Add a translation - if there is any
       if (tx != 0. || ty != 0. || tz != 0.) {
         const auto& tMatrix = trf.matrix();

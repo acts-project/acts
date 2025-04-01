@@ -54,7 +54,7 @@ Acts::Vector3 position(const std::shared_ptr<HepMC3::GenVertex>& vertex);
 /// @brief Returns the time of a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @return time of the vertex
-double time(const std::shared_ptr<HepMC3::GenVertex>& vertex);
+long double time(const std::shared_ptr<HepMC3::GenVertex>& vertex);
 
 /// @brief Adds an incoming particle to a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
@@ -89,6 +89,6 @@ void position(const std::shared_ptr<HepMC3::GenVertex>& vertex,
 /// @brief Sets the time of a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @param time new time of the vertex
-void time(const std::shared_ptr<HepMC3::GenVertex>& vertex, double time);
+void time(const std::shared_ptr<HepMC3::GenVertex>& vertex, long double time);
 
 }  // namespace ActsExamples::HepMC3Vertex

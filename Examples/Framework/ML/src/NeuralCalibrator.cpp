@@ -26,17 +26,17 @@ std::size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
                              std::size_t size0 = 7u, std::size_t size1 = 7u) {
   // First, rescale the activations to sum to unity. This promotes
   // numerical stability in the index computation
-  double totalAct = 0;
+  long double totalAct = 0;
   for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
     totalAct += cell.activation;
   }
-  std::vector<double> weights;
+  std::vector<long double> weights;
   for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
     weights.push_back(cell.activation / totalAct);
   }
 
-  double acc0 = 0;
-  double acc1 = 0;
+  long double acc0 = 0;
+  long double acc1 = 0;
   for (std::size_t i = 0; i < cluster.channels.size(); i++) {
     acc0 += cluster.channels.at(i).bin[0] * weights.at(i);
     acc1 += cluster.channels.at(i).bin[1] * weights.at(i);
@@ -136,7 +136,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   // coordinate axes of the local coordinate system.
   Acts::RotationMatrix3 rot =
       referenceSurface.referenceFrame(gctx, globalPosition, dir).inverse();
-  std::pair<double, double> angles =
+  std::pair<long double, long double> angles =
       Acts::VectorHelpers::incidentAngles(dir, rot);
 
   input[iInput++] = angles.first;

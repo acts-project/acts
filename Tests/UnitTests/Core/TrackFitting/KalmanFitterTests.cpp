@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
   auto start = makeParameters();
 
-  auto test = [&](double threshold, bool reverse, bool expected_reversed,
+  auto test = [&](long double threshold, bool reverse, bool expected_reversed,
                   bool expected_smoothed) {
     auto kfOptions = makeDefaultKalmanFitterOptions();
 

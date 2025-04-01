@@ -49,7 +49,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   GenericDetectorElement(
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
-      std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const Acts::PlanarBounds> pBounds, long double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Constructor for single sided detector element
@@ -63,7 +63,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   GenericDetectorElement(
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3> transform,
-      std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
+      std::shared_ptr<const Acts::DiscBounds> dBounds, long double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   /// Return local to global transform associated with this detector element
@@ -82,7 +82,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   Acts::Surface& surface() override;
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const override;
+  long double thickness() const override;
 
   /// The identifier of the detector element
   Identifier identifier() const;
@@ -95,7 +95,7 @@ class GenericDetectorElement : public Acts::DetectorElementBase {
   /// the surface represented by it
   std::shared_ptr<Acts::Surface> m_elementSurface;
   /// the element thickness
-  double m_elementThickness;
+  long double m_elementThickness;
   /// store either
   std::shared_ptr<const Acts::PlanarBounds> m_elementPlanarBounds = nullptr;
   std::shared_ptr<const Acts::DiscBounds> m_elementDiscBounds = nullptr;

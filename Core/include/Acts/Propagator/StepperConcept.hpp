@@ -46,7 +46,7 @@ concept CommonStepper = requires {
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,
-                      const BoundaryTolerance& bt, double sc,
+                      const BoundaryTolerance& bt, long double sc,
                       ConstrainedStep::Type st, const Logger& l) {
       { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, st, l) };
     };
@@ -54,7 +54,7 @@ concept CommonStepper = requires {
     requires requires(const ConstrainedStep::Type st) {
       { s.releaseStepSize(t, st) } -> std::same_as<void>;
 
-      requires requires(double d) {
+      requires requires(long double d) {
         { s.updateStepSize(t, d, st) } -> std::same_as<void>;
       };
     };
@@ -63,15 +63,15 @@ concept CommonStepper = requires {
   requires requires(const Stepper& s, const State& t) {
     { s.position(t) } -> std::same_as<Vector3>;
     { s.direction(t) } -> std::same_as<Vector3>;
-    { s.qOverP(t) } -> std::same_as<double>;
-    { s.absoluteMomentum(t) } -> std::same_as<double>;
+    { s.qOverP(t) } -> std::same_as<long double>;
+    { s.absoluteMomentum(t) } -> std::same_as<long double>;
     { s.momentum(t) } -> std::same_as<Vector3>;
-    { s.charge(t) } -> std::same_as<double>;
-    { s.time(t) } -> std::same_as<double>;
+    { s.charge(t) } -> std::same_as<long double>;
+    { s.time(t) } -> std::same_as<long double>;
     { s.outputStepSize(t) } -> std::same_as<std::string>;
 
     requires requires(const ConstrainedStep::Type st) {
-      { s.getStepSize(t, st) } -> std::same_as<double>;
+      { s.getStepSize(t, st) } -> std::same_as<long double>;
     };
   };
 };
@@ -85,8 +85,8 @@ concept SingleStepper =
         { s.update(t, fv, bv, bm, sf) } -> std::same_as<void>;
       };
 
-      requires requires(const Vector3& v1, const Vector3& v2, double d1,
-                        double d2) {
+      requires requires(const Vector3& v1, const Vector3& v2, long double d1,
+                        long double d2) {
         { s.update(t, v1, v2, d1, d2) } -> std::same_as<void>;
         { s.getField(t, v1) } -> std::same_as<Result<Vector3>>;
       };
@@ -119,7 +119,7 @@ concept StepperConcept = Concepts::SingleStepper<_Stepper, State> ||
 template <typename State>
 concept StepperStateConcept = requires(const State& t) {
   { t.covTransport } -> Concepts::decayed_same_as<const bool&>;
-  { t.pathAccumulated } -> Concepts::decayed_same_as<const double&>;
+  { t.pathAccumulated } -> Concepts::decayed_same_as<const long double&>;
 };
 
 }  // namespace Acts

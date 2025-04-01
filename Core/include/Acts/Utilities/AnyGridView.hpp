@@ -157,8 +157,8 @@ class AnyGridViewBase {
 ///
 /// Example usage:
 /// ```
-/// Grid<double, Axis> grid(...);
-/// AnyGridView<double> view(grid);
+/// Grid<long double, Axis> grid(...);
+/// AnyGridView<long double> view(grid);
 /// view.atLocalBins({1}) = 42.0;  // Modify the grid through the view
 /// ```
 template <typename T>
@@ -183,9 +183,9 @@ AnyGridView(Grid<T, Axes...>& grid) -> AnyGridView<T>;
 ///
 /// Example usage:
 /// ```
-/// const Grid<double, Axis> grid(...);
-/// AnyGridConstView<double> view(grid);
-/// double value = view.atLocalBins({1});  // Read-only access
+/// const Grid<long double, Axis> grid(...);
+/// AnyGridConstView<long double> view(grid);
+/// long double value = view.atLocalBins({1});  // Read-only access
 /// ```
 template <typename T>
 class AnyGridConstView : public detail::AnyGridViewBase<T, true> {

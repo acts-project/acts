@@ -38,10 +38,10 @@ struct SimulationResult {
   // Whether the particle is still alive and the simulation should continue
   bool isAlive = true;
   // Proper time limit before decay.
-  double properTimeLimit = std::numeric_limits<double>::quiet_NaN();
+  long double properTimeLimit = std::numeric_limits<long double>::quiet_NaN();
   // Accumulated radiation/interaction length limit before next interaction.
-  double x0Limit = std::numeric_limits<double>::quiet_NaN();
-  double l0Limit = std::numeric_limits<double>::quiet_NaN();
+  long double x0Limit = std::numeric_limits<long double>::quiet_NaN();
+  long double l0Limit = std::numeric_limits<long double>::quiet_NaN();
   // Process selection for the next interaction.
   std::size_t x0Process = std::numeric_limits<std::size_t>::max();
   std::size_t l0Process = std::numeric_limits<std::size_t>::max();

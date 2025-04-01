@@ -40,11 +40,11 @@ ActsExamples::buildTelescopeDetector(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
         detectorStore,
-    const std::vector<double>& positions,
-    const std::vector<double>& stereoAngles,
-    const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
-    double thickness, TelescopeSurfaceType surfaceType,
-    Acts::AxisDirection binValue) {
+    const std::vector<long double>& positions,
+    const std::vector<long double>& stereoAngles,
+    const std::array<long double, 2>& offsets,
+    const std::array<long double, 2>& bounds, long double thickness,
+    TelescopeSurfaceType surfaceType, Acts::AxisDirection binValue) {
   using namespace Acts::UnitLiterals;
 
   // The rectangle bounds for plane surface

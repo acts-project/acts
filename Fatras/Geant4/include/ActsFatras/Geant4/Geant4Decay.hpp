@@ -38,8 +38,8 @@ class Geant4Decay {
   ///
   /// @return Proper time limit of the particle
   template <typename generator_t>
-  double generateProperTimeLimit(generator_t& generator,
-                                 const Particle& particle) const;
+  long double generateProperTimeLimit(generator_t& generator,
+                                      const Particle& particle) const;
 
   /// Decay the particle and create the decay products.
   ///
@@ -65,13 +65,13 @@ class Geant4Decay {
 };
 
 template <typename generator_t>
-double Geant4Decay::generateProperTimeLimit(generator_t& generator,
-                                            const Particle& particle) const {
+long double Geant4Decay::generateProperTimeLimit(
+    generator_t& generator, const Particle& particle) const {
   // Get the particle properties
   const Acts::PdgParticle pdgCode = particle.pdg();
   // Keep muons stable
   if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon) {
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<long double>::infinity();
   }
 
   // Get the Geant4 particle
@@ -79,14 +79,14 @@ double Geant4Decay::generateProperTimeLimit(generator_t& generator,
 
   // Fast exit if the particle is stable
   if (!pDef || pDef->GetPDGStable()) {
-    return std::numeric_limits<double>::infinity();
+    return std::numeric_limits<long double>::infinity();
   }
 
   // Get average lifetime
-  constexpr double convertTime = Acts::UnitConstants::mm / CLHEP::s;
-  const double tau = pDef->GetPDGLifeTime() * convertTime;
+  constexpr long double convertTime = Acts::UnitConstants::mm / CLHEP::s;
+  const long double tau = pDef->GetPDGLifeTime() * convertTime;
   // Sample & return the lifetime
-  std::uniform_real_distribution<double> uniformDistribution{0., 1.};
+  std::uniform_real_distribution<long double> uniformDistribution{0., 1.};
 
   return -tau * std::log(uniformDistribution(generator));
 }

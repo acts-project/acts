@@ -50,9 +50,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   /// Test default construction
   // default construction is deleted
 
-  const double rMin = 1.;
-  const double rMax = 5.;
-  const double halfPhiSector = std::numbers::pi / 8.;
+  const long double rMin = 1.;
+  const long double rMax = 5.;
+  const long double halfPhiSector = std::numbers::pi / 8.;
 
   /// Test DiscSurface constructor with default halfPhiSector
   BOOST_CHECK_NO_THROW(
@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
 
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
-  const double rMin = 1.;
-  const double rMax = 5.;
-  const double halfPhiSector = std::numbers::pi / 8.;
+  const long double rMin = 1.;
+  const long double rMax = 5.;
+  const long double halfPhiSector = std::numbers::pi / 8.;
 
   const Vector3 origin3D{0, 0, 0};
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
       cartesian1_1, 1e-6);
 
   /// Test pathCorrection
-  double projected3DMomentum = std::numbers::sqrt3 * 1.e6;
+  long double projected3DMomentum = std::numbers::sqrt3 * 1.e6;
   Vector3 momentum{projected3DMomentum, projected3DMomentum,
                    projected3DMomentum};
   Vector3 ignoredPosition = discSurfaceObject->center(tgContext);
@@ -226,9 +226,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
 
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
-  const double rMin = 1.;
-  const double rMax = 5.;
-  const double halfPhiSector = std::numbers::pi / 8.;
+  const long double rMin = 1.;
+  const long double rMax = 5.;
+  const long double halfPhiSector = std::numbers::pi / 8.;
 
   auto discSurfaceObject = Surface::makeShared<DiscSurface>(
       Transform3::Identity(), rMin, rMax, halfPhiSector);
@@ -241,8 +241,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
 
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
-  const double rMin = 1.;
-  const double rMax = 5.;
+  const long double rMin = 1.;
+  const long double rMax = 5.;
 
   auto pDisc =
       Surface::makeShared<DiscSurface>(Transform3::Identity(), 0., rMax);
@@ -295,9 +295,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Translation3 translation{0., 1., 2.};
   Transform3 transform(translation);
-  const double rMin = 1.;
-  const double rMax = 5.;
-  const double halfPhiSector = std::numbers::pi / 8.;
+  const long double rMin = 1.;
+  const long double rMax = 5.;
+  const long double halfPhiSector = std::numbers::pi / 8.;
 
   auto discSurfaceObject =
       Surface::makeShared<DiscSurface>(transform, rMin, rMax, halfPhiSector);
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
   Transform3 trf;
   trf = Translation3(s) * AngleAxis3{0.5, Vector3::UnitZ()};
 
-  double minR = 300;
-  double maxR = 330;
+  long double minR = 300;
+  long double maxR = 330;
 
   {
     // Radial Bounds
@@ -350,8 +350,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
     auto disc = Acts::Surface::makeShared<Acts::DiscSurface>(trf, bounds);
 
     Vector3 bp = disc->referencePosition(tgContext, AxisDirection::AxisR);
-    double r = (bounds->rMax() + bounds->rMin()) / 2.0;
-    double phi = bounds->get(RadialBounds::eAveragePhi);
+    long double r = (bounds->rMax() + bounds->rMin()) / 2.0;
+    long double phi = bounds->get(RadialBounds::eAveragePhi);
     Vector3 exp = Vector3{r * std::cos(phi), r * std::sin(phi), 0};
     exp = trf * exp;
 
@@ -379,8 +379,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 
   {
     // Annulus Bounds
-    double minPhiRel = -0.3;
-    double maxPhiRel = 0.2;
+    long double minPhiRel = -0.3;
+    long double maxPhiRel = 0.2;
     Vector2 origin{5_mm, 5_mm};
     auto bounds = std::make_shared<AnnulusBounds>(minR, maxR, minPhiRel,
                                                   maxPhiRel, origin);
@@ -388,8 +388,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
     auto disc = Acts::Surface::makeShared<Acts::DiscSurface>(trf, bounds);
 
     Vector3 bp = disc->referencePosition(tgContext, AxisDirection::AxisR);
-    double r = (bounds->rMax() + bounds->rMin()) / 2.0;
-    double phi = bounds->get(AnnulusBounds::eAveragePhi);
+    long double r = (bounds->rMax() + bounds->rMin()) / 2.0;
+    long double phi = bounds->get(AnnulusBounds::eAveragePhi);
     Vector3 exp = Vector3{r * std::cos(phi), r * std::sin(phi), 0};
     exp = trf * exp;
 
@@ -413,10 +413,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceBinningPosition) {
 BOOST_AUTO_TEST_SUITE(DiscSurfaceMerging)
 
 namespace {
-std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform, double rMin,
-                                      double rMax,
-                                      double halfPhi = std::numbers::pi,
-                                      double avgPhi = 0) {
+std::shared_ptr<DiscSurface> makeDisc(const Transform3& transform,
+                                      long double rMin, long double rMax,
+                                      long double halfPhi = std::numbers::pi,
+                                      long double avgPhi = 0) {
   return Surface::makeShared<DiscSurface>(
       transform, std::make_shared<RadialBounds>(rMin, rMax, halfPhi, avgPhi));
 }
@@ -593,7 +593,7 @@ BOOST_DATA_TEST_CASE(IncompatiblePhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](double v) {
+  auto a = [phiShift](long double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 
@@ -637,7 +637,7 @@ BOOST_DATA_TEST_CASE(PhiDirection,
   Transform3 base =
       AngleAxis3(angle * 1_degree, Vector3::UnitX()) * Translation3(offset);
 
-  auto a = [phiShift](double v) {
+  auto a = [phiShift](long double v) {
     return detail::radian_sym(v + phiShift * 1_degree);
   };
 

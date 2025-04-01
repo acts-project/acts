@@ -65,8 +65,8 @@ class GeometryObject {
   /// @param aDir is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
-  virtual double referencePositionValue(const GeometryContext& gctx,
-                                        AxisDirection aDir) const;
+  virtual long double referencePositionValue(const GeometryContext& gctx,
+                                             AxisDirection aDir) const;
 
   /// Set the value
   ///
@@ -86,7 +86,7 @@ inline void GeometryObject::assignGeometryId(
   m_geometryId = geometryId;
 }
 
-inline double GeometryObject::referencePositionValue(
+inline long double GeometryObject::referencePositionValue(
     const GeometryContext& gctx, AxisDirection aDir) const {
   return VectorHelpers::cast(referencePosition(gctx, aDir), aDir);
 }

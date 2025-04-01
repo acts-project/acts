@@ -42,9 +42,9 @@ class RadialBounds : public DiscBounds {
   /// @param maxR The outer radius
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
-  explicit RadialBounds(double minR, double maxR,
-                        double halfPhi = std::numbers::pi,
-                        double avgPhi = 0.) noexcept(false)
+  explicit RadialBounds(long double minR, long double maxR,
+                        long double halfPhi = std::numbers::pi,
+                        long double avgPhi = 0.) noexcept(false)
       : m_values({minR, maxR, halfPhi, avgPhi}) {
     checkConsistency();
   }
@@ -52,7 +52,8 @@ class RadialBounds : public DiscBounds {
   /// Constructor from array values
   ///
   /// @param values The bound values
-  explicit RadialBounds(const std::array<double, eSize>& values) noexcept(false)
+  explicit RadialBounds(const std::array<long double, eSize>& values) noexcept(
+      false)
       : m_values(values) {
     checkConsistency();
   }
@@ -62,7 +63,7 @@ class RadialBounds : public DiscBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<long double> values() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
@@ -79,14 +80,14 @@ class RadialBounds : public DiscBounds {
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return method for inner Radius
-  double rMin() const final { return get(eMinR); }
+  long double rMin() const final { return get(eMinR); }
 
   /// Return method for outer Radius
-  double rMax() const final { return get(eMaxR); }
+  long double rMax() const final { return get(eMaxR); }
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  long double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Returns true for full phi coverage
   bool coversFullAzimuth() const final {
@@ -95,18 +96,21 @@ class RadialBounds : public DiscBounds {
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final {
+  bool insideRadialBounds(long double R,
+                          long double tolerance = 0.) const final {
     return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
   }
 
   /// Return a reference radius for binning
-  double binningValueR() const final { return 0.5 * (get(eMinR) + get(eMaxR)); }
+  long double binningValueR() const final {
+    return 0.5 * (get(eMinR) + get(eMaxR));
+  }
 
   /// Return a reference radius for binning
-  double binningValuePhi() const final { return get(eAveragePhi); }
+  long double binningValuePhi() const final { return get(eAveragePhi); }
 
  private:
-  std::array<double, eSize> m_values;
+  std::array<long double, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given

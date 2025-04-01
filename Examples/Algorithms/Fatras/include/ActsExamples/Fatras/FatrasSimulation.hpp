@@ -56,7 +56,7 @@ class FatrasSimulation final : public IAlgorithm {
 
     // tuning parameters
     /// Minimal absolute momentum for particles to be simulated.
-    double pMin = 0.5 * Acts::UnitConstants::GeV;
+    long double pMin = 0.5 * Acts::UnitConstants::GeV;
     /// Simulate (multiple) scattering for charged particles.
     bool emScattering = true;
     /// Simulate ionisiation/excitation energy loss of charged particles.
@@ -74,9 +74,9 @@ class FatrasSimulation final : public IAlgorithm {
     bool generateHitsOnPassive = false;
 
     /// Absolute maximum step size
-    double maxStepSize = 1 * Acts::UnitConstants::m;
+    long double maxStepSize = 1 * Acts::UnitConstants::m;
     /// Absolute maximum path length
-    double pathLimit = 30 * Acts::UnitConstants::m;
+    long double pathLimit = 30 * Acts::UnitConstants::m;
 
     /// Expected average number of hits generated per particle.
     ///

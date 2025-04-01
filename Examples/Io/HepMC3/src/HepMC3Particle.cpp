@@ -72,17 +72,17 @@ Acts::Vector3 HepMC3Particle::momentum(
   return mom;
 }
 
-double HepMC3Particle::energy(
+long double HepMC3Particle::energy(
     const std::shared_ptr<HepMC3::GenParticle>& particle) {
   return particle->momentum().e();
 }
 
-double HepMC3Particle::mass(
+long double HepMC3Particle::mass(
     const std::shared_ptr<HepMC3::GenParticle>& particle) {
   return particle->generated_mass();
 }
 
-double HepMC3Particle::charge(
+long double HepMC3Particle::charge(
     const std::shared_ptr<HepMC3::GenParticle>& particle) {
   return Acts::findCharge(static_cast<Acts::PdgParticle>(particle->pid()))
       .value_or(0);
@@ -101,14 +101,15 @@ void HepMC3Particle::momentum(
 }
 
 void HepMC3Particle::energy(
-    const std::shared_ptr<HepMC3::GenParticle>& particle, const double energy) {
+    const std::shared_ptr<HepMC3::GenParticle>& particle,
+    const long double energy) {
   HepMC3::FourVector fVec(particle->momentum().x(), particle->momentum().y(),
                           particle->momentum().z(), energy);
   particle->set_momentum(fVec);
 }
 
 void HepMC3Particle::mass(const std::shared_ptr<HepMC3::GenParticle>& particle,
-                          const double mass) {
+                          const long double mass) {
   particle->set_generated_mass(mass);
 }
 

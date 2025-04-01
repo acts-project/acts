@@ -52,8 +52,8 @@ struct MaterialMapper {
     /// box corners sorted in the canonical order defined in Acts::interpolate
     MaterialCell(
         std::function<ActsVector<DIM_POS>(const Vector3&)> transformPos,
-        std::array<double, DIM_POS> lowerLeft,
-        std::array<double, DIM_POS> upperRight,
+        std::array<long double, DIM_POS> lowerLeft,
+        std::array<long double, DIM_POS> upperRight,
         std::array<Material::ParametersVector, N> materialValues)
         : m_transformPos(std::move(transformPos)),
           m_lowerLeft(std::move(lowerLeft)),
@@ -93,10 +93,10 @@ struct MaterialMapper {
     std::function<ActsVector<DIM_POS>(const Vector3&)> m_transformPos;
 
     /// Generalized lower-left corner of the confining hyper-box
-    std::array<double, DIM_POS> m_lowerLeft;
+    std::array<long double, DIM_POS> m_lowerLeft;
 
     /// Generalized upper-right corner of the confining hyper-box
-    std::array<double, DIM_POS> m_upperRight;
+    std::array<long double, DIM_POS> m_upperRight;
 
     /// @brief Material component vectors at the hyper-box corners
     ///
@@ -177,17 +177,17 @@ struct MaterialMapper {
   /// @brief Get the minimum value of all axes of the map
   ///
   /// @return Vector returning the minima of all map axes
-  std::vector<double> getMin() const {
+  std::vector<long double> getMin() const {
     auto minArray = m_grid.minPosition();
-    return std::vector<double>(minArray.begin(), minArray.end());
+    return std::vector<long double>(minArray.begin(), minArray.end());
   }
 
   /// @brief Get the maximum value of all axes of the map
   ///
   /// @return Vector returning the maxima of all map axes
-  std::vector<double> getMax() const {
+  std::vector<long double> getMax() const {
     auto maxArray = m_grid.maxPosition();
-    return std::vector<double>(maxArray.begin(), maxArray.end());
+    return std::vector<long double>(maxArray.begin(), maxArray.end());
   }
 
   /// @brief Check whether given 3D position is inside look-up domain

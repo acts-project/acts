@@ -47,11 +47,11 @@ class RootBFieldWriter {
     /// cylinder coordinates) or x/y (in cartesian coordinates)
     /// @note setting this parameter is optional, in case no boundaries are
     /// handed over the full magnetic field map will be printed out
-    std::optional<std::array<double, 2>> rBounds;
+    std::optional<std::array<long double, 2>> rBounds;
     /// [optional] Setting the range in z to be printed out
     /// @note setting this parameter is optional, in case no boundaries are
     /// handed over the full magnetic field map will be printed out
-    std::optional<std::array<double, 2>> zBounds;
+    std::optional<std::array<long double, 2>> zBounds;
     /// Number of bins in r
     /// @note setting this parameter is optional, in case no bin numbers are
     /// handed over the full magnetic field map will be printed out

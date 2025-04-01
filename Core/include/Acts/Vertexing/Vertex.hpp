@@ -50,7 +50,7 @@ class Vertex {
   Vector3 position() const;
 
   /// @return Returns time
-  double time() const;
+  long double time() const;
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
@@ -71,7 +71,7 @@ class Vertex {
   const std::vector<TrackAtVertex>& tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
-  std::pair<double, double> fitQuality() const;
+  std::pair<long double, long double> fitQuality() const;
 
   /// @brief Set position
   ///
@@ -86,7 +86,7 @@ class Vertex {
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(double time);
+  void setTime(long double time);
 
   /// @brief Sets 3x3 covariance
   ///
@@ -103,18 +103,18 @@ class Vertex {
 
   /// @param chiSquared Chi2 of fit
   /// @param numberDoF Number of degrees of freedom
-  void setFitQuality(double chiSquared, double numberDoF);
+  void setFitQuality(long double chiSquared, long double numberDoF);
 
   /// @param fitQuality pair of (chi2, numberDoF)
-  void setFitQuality(std::pair<double, double> fitQuality);
+  void setFitQuality(std::pair<long double, long double> fitQuality);
 
  private:
   Vector4 m_position = Vector4::Zero();
   Vector4 m_seedPosition = Vector4::Zero();
   SquareMatrix4 m_covariance = SquareMatrix4::Zero();
   std::vector<TrackAtVertex> m_tracksAtVertex;
-  double m_chiSquared = 0.;  // chi2 of the fit
-  double m_numberDoF = 0.;   // number of degrees of freedom
+  long double m_chiSquared = 0.;  // chi2 of the fit
+  long double m_numberDoF = 0.;   // number of degrees of freedom
 };
 
 }  // namespace Acts

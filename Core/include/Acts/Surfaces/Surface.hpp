@@ -248,7 +248,7 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance = BoundaryTolerance::None(),
-      double tolerance = s_onSurfaceTolerance) const;
+      long double tolerance = s_onSurfaceTolerance) const;
 
   /// The insideBounds method for local positions
   ///
@@ -289,7 +289,7 @@ class Surface : public virtual GeometryObject,
   virtual Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      long double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Return method for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
@@ -374,9 +374,9 @@ class Surface : public virtual GeometryObject,
   /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.
-  virtual double pathCorrection(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction) const = 0;
+  virtual long double pathCorrection(const GeometryContext& gctx,
+                                     const Vector3& position,
+                                     const Vector3& direction) const = 0;
 
   /// Straight line intersection schema from position/direction
   ///
@@ -392,7 +392,7 @@ class Surface : public virtual GeometryObject,
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      long double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Helper method for printing: the returned object captures the
   /// surface and the geometry context and will print the surface

@@ -48,8 +48,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 
-  const double halfPhiSector = std::numbers::pi / 4.;
-  const double centralPhi = std::numbers::pi / 2.;
+  const long double halfPhiSector = std::numbers::pi / 4.;
+  const long double centralPhi = std::numbers::pi / 2.;
 
   ViewConfig sConfig = s_viewSensitive;
   sConfig.triangulate = triangulate;
@@ -58,10 +58,10 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   // Cone Surface section
   std::vector<std::shared_ptr<ConeSurface>> coneSurfaces;
 
-  double coneAlpha = 0.245;
-  double coneMinZ = 0.;
-  double coneCutZ = 2.;
-  double coneMaxZ = 10.;
+  long double coneAlpha = 0.245;
+  long double coneMinZ = 0.;
+  long double coneCutZ = 2.;
+  long double coneMaxZ = 10.;
   // Full Cone
   auto coneBounds =
       std::make_shared<ConeBounds>(coneAlpha, -coneCutZ, coneMaxZ);
@@ -116,8 +116,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   // Cylinder surface section
   std::vector<std::shared_ptr<CylinderSurface>> cylinderSurfaces;
 
-  double cylinderRadius = 5.;
-  double cylinderHalfZ = 10.;
+  long double cylinderRadius = 5.;
+  long double cylinderHalfZ = 10.;
 
   // Full Cylinder
   auto cylinderBounds =
@@ -189,8 +189,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   //----------------------------------------------------
   // Disc Surface section
 
-  double discRmin = 5.;
-  double discRmax = 10.;
+  long double discRmin = 5.;
+  long double discRmax = 10.;
 
   std::vector<std::shared_ptr<DiscSurface>> radialSurfaces;
 
@@ -281,8 +281,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   std::vector<std::shared_ptr<DiscSurface>> anomalDiscSurfaces;
 
-  double annulusMinPhi = 0.75;
-  double annulusMaxPhi = 1.35;
+  long double annulusMinPhi = 0.75;
+  long double annulusMaxPhi = 1.35;
   Vector2 offset(-4., 2.);
   auto annulus = std::make_shared<AnnulusBounds>(
       discRmin, discRmax, annulusMinPhi, annulusMaxPhi, offset);
@@ -295,8 +295,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   helper.write(cStream);
   helper.clear();
 
-  double discTrapezoidHxRmin = 3.;
-  double discTrapezoidHxRmax = 6.;
+  long double discTrapezoidHxRmin = 3.;
+  long double discTrapezoidHxRmax = 6.;
   auto discTrapezoid = std::make_shared<DiscTrapezoidBounds>(
       discTrapezoidHxRmin, discTrapezoidHxRmax, discRmin, discRmax);
   disc = Surface::makeShared<DiscSurface>(identity, discTrapezoid);
@@ -325,10 +325,10 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   std::vector<std::shared_ptr<PlaneSurface>> planarSurfaces;
 
   // Ellipse shaped : Full Ellipse
-  double ellipseR0min = 2;
-  double ellipseR0max = 4;
-  double ellipseR1min = 3;
-  double ellipseR1max = 6;
+  long double ellipseR0min = 2;
+  long double ellipseR0max = 4;
+  long double ellipseR1min = 3;
+  long double ellipseR1max = 6;
   std::string name = "Surfaces_PlaneSurfaceEllipse";
   auto ellipse =
       std::make_shared<EllipseBounds>(0., 0., ellipseR1min, ellipseR1max);

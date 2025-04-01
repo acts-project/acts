@@ -21,7 +21,7 @@
 namespace {
 // Test vector of 2D points generated from the make_blobs function of
 // scikit-learn to correspond to 4 clusters with a standard deviation of 0.3
-std::vector<std::array<double, 2>> test_vector{
+std::vector<std::array<long double, 2>> test_vector{
     {-2.83739915, 2.62792556},  {-2.02847331, -1.90722196},
     {4.42609249, -2.42439165},  {-2.54167208, -1.31586441},
     {-2.74072011, 1.88175176},  {-2.44805173, -1.72270269},
@@ -77,7 +77,7 @@ std::vector<std::array<double, 2>> test_vector{
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(ClusteringTest2D) {
-  using DBSCAN = Acts::DBScan<2, double, 4>;
+  using DBSCAN = Acts::DBScan<2, long double, 4>;
   DBSCAN dbscan(0.3, 3, false);
 
   DBSCAN dbscan_onePoint(0, 3, true);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ClusteringTest2D) {
   clusteredPoints.clear();
 
   // Check that it works with empty input
-  std::vector<std::array<double, 2>> empty_vector;
+  std::vector<std::array<long double, 2>> empty_vector;
   clusterNb = dbscan.cluster(empty_vector, clusteredPoints);
   BOOST_CHECK_EQUAL(clusterNb, 0);
 

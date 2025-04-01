@@ -46,9 +46,9 @@ struct RestrictedParameterTraits {
   /// Parameter values may need adjustment.
   static constexpr bool may_modify_value = true;
   /// Lower bound of range.
-  static constexpr double min = limits_t::lowest();
+  static constexpr long double min = limits_t::lowest();
   /// Upper bound of range.
-  static constexpr double max = limits_t::max();
+  static constexpr long double max = limits_t::max();
 
   /// Get the corrected value within the limits.
   template <typename value_t>
@@ -74,9 +74,9 @@ struct CyclicParameterTraits {
   /// Parameter values may need adjustment.
   static constexpr bool may_modify_value = true;
   /// Lower bound of range.
-  static constexpr double min = limits_t::lowest();
+  static constexpr long double min = limits_t::lowest();
   /// Upper bound of range.
-  static constexpr double max = limits_t::max();
+  static constexpr long double max = limits_t::max();
 
   /// Get the corrected value folded into the central range.
   template <typename value_t>
@@ -107,12 +107,12 @@ struct CyclicParameterTraits {
 //
 // The functions names are chosen to be consistent w/ std::numeric_limits
 struct PhiBoundParameterLimits {
-  static constexpr double lowest() { return -std::numbers::pi; }
-  static constexpr double max() { return std::numbers::pi; }
+  static constexpr long double lowest() { return -std::numbers::pi; }
+  static constexpr long double max() { return std::numbers::pi; }
 };
 struct ThetaBoundParameterLimits {
-  static constexpr double lowest() { return 0; }
-  static constexpr double max() { return std::numbers::pi; }
+  static constexpr long double lowest() { return 0; }
+  static constexpr long double max() { return std::numbers::pi; }
 };
 
 // Traits implementation structs for single parameters.

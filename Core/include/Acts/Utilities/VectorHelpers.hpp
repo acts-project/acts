@@ -27,7 +27,7 @@ namespace Acts::VectorHelpers {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The value of the angle in the transverse plane.
 template <typename Derived>
-double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
+long double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -42,12 +42,12 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 }
 
 /// Calculate phi (transverse plane angle) from anything implementing a method
-/// like `phi()` returning anything convertible to `double`.
+/// like `phi()` returning anything convertible to `long double`.
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
 template <typename T>
-double phi(const T& v) noexcept
+long double phi(const T& v) noexcept
   requires requires {
     { v.phi() } -> std::floating_point;
   }
@@ -62,7 +62,7 @@ double phi(const T& v) noexcept
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The transverse radius value.
 template <typename Derived>
-double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
+long double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -83,7 +83,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The theta value
 template <typename Derived>
-double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
+long double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -103,7 +103,7 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The pseudorapidity value
 template <typename Derived>
-double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
+long double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -114,7 +114,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   }
 
   if (v[0] == 0. && v[1] == 0.) {
-    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
+    return std::copysign(std::numeric_limits<long double>::infinity(), v[2]);
   } else {
     return std::asinh(v[2] / perp(v));
   }
@@ -125,19 +125,20 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @param direction for this evaluatoin
 ///
 /// @return cos(phi), sin(phi), cos(theta), sin(theta), 1/sin(theta)
-inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
+inline std::array<long double, 4> evaluateTrigonomics(
+    const Vector3& direction) {
+  const long double x = direction(0);  // == cos(phi) * sin(theta)
+  const long double y = direction(1);  // == sin(phi) * sin(theta)
+  const long double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
-  const double cosTheta = z;
-  const double sinTheta = std::sqrt(1 - z * z);
+  const long double cosTheta = z;
+  const long double sinTheta = std::sqrt(1 - z * z);
   assert(sinTheta != 0 &&
          "VectorHelpers: Vector is parallel to the z-axis "
          "which leads to division by zero");
-  const double invSinTheta = 1. / sinTheta;
-  const double cosPhi = x * invSinTheta;
-  const double sinPhi = y * invSinTheta;
+  const long double invSinTheta = 1. / sinTheta;
+  const long double cosPhi = x * invSinTheta;
+  const long double sinPhi = y * invSinTheta;
 
   return {cosPhi, sinPhi, cosTheta, sinTheta};
 }
@@ -151,7 +152,7 @@ inline std::array<double, 4> evaluateTrigonomics(const Vector3& direction) {
 /// @param aDir is the axis direction to be extracted
 ///
 /// @return the value of the binning direction
-inline double cast(const Vector3& position, AxisDirection aDir) {
+inline long double cast(const Vector3& position, AxisDirection aDir) {
   using enum AxisDirection;
   switch (aDir) {
     case AxisX:
@@ -174,7 +175,7 @@ inline double cast(const Vector3& position, AxisDirection aDir) {
       return position.norm();
     default:
       assert(false && "Invalid AxisDirection enum value");
-      return std::numeric_limits<double>::quiet_NaN();
+      return std::numeric_limits<long double>::quiet_NaN();
   }
 }
 
@@ -223,14 +224,14 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 /// @param direction The crossing direction in the global frame
 /// @param globalToLocal Rotation from global to local frame
 /// @return The angles of incidence in the two normal planes
-inline std::pair<double, double> incidentAngles(
+inline std::pair<long double, long double> incidentAngles(
     const Acts::Vector3& direction,
     const Acts::RotationMatrix3& globalToLocal) {
   Acts::Vector3 trfDir = globalToLocal * direction;
   // The angles are defined with respect to the measurement axis
   // i.e. "head-on" == pi/2, parallel = 0
-  double phi = std::atan2(trfDir[2], trfDir[0]);
-  double theta = std::atan2(trfDir[2], trfDir[1]);
+  long double phi = std::atan2(trfDir[2], trfDir[0]);
+  long double theta = std::atan2(trfDir[2], trfDir[1]);
   return {phi, theta};
 }
 

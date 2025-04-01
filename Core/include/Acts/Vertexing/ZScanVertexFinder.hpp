@@ -55,11 +55,11 @@ class ZScanVertexFinder final : public IVertexFinder {
     // use pt for weighting
     bool usePt = false;
     // minimum pt
-    double minPt = 0.4 * UnitConstants::GeV;
+    long double minPt = 0.4 * UnitConstants::GeV;
     // exponent used for weighting if usePt
-    double expPt = 1.;
+    long double expPt = 1.;
     // minimum required weight
-    double minWeight = 0.01;
+    long double minWeight = 0.01;
 
     // Function to extract parameters from InputTrack
     InputTrack::Extractor extractParameters;

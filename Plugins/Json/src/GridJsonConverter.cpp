@@ -19,7 +19,7 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
   // type, range, bins or boundaries
   if (ia.isEquidistant()) {
     jAxis["type"] = AxisType::Equidistant;
-    jAxis["range"] = std::array<double, 2u>({ia.getMin(), ia.getMax()});
+    jAxis["range"] = std::array<long double, 2u>({ia.getMin(), ia.getMax()});
     jAxis["bins"] = ia.getNBins();
   } else {
     jAxis["type"] = AxisType::Variable;
@@ -35,8 +35,8 @@ nlohmann::json Acts::AxisJsonConverter::toJsonDetray(const IAxis& ia) {
   jAxis["binning"] = ia.isEquidistant() ? 0 : 1;
   jAxis["bins"] = ia.getNBins();
   if (ia.isEquidistant()) {
-    std::array<double, 2u> range = {ia.getBinEdges().front(),
-                                    ia.getBinEdges().back()};
+    std::array<long double, 2u> range = {ia.getBinEdges().front(),
+                                         ia.getBinEdges().back()};
     jAxis["edges"] = range;
 
   } else {
@@ -473,8 +473,8 @@ Acts::GridAccessJsonConverter::boundToGridLocalFromJson(
           std::make_unique<Acts::GridAccess::LocalSubspace<1u, 0u>>();
     }
   } else if (type == "cylinder_to_zphi") {
-    double radius = jBoundToGridLocal.at("radius").get<double>();
-    double shift = jBoundToGridLocal.at("shift").get<double>();
+    long double radius = jBoundToGridLocal.at("radius").get<long double>();
+    long double shift = jBoundToGridLocal.at("shift").get<long double>();
     boundToGridLocal =
         std::make_unique<Acts::GridAccess::BoundCylinderToZPhi>(radius, shift);
   }
@@ -538,8 +538,8 @@ Acts::GridAccessJsonConverter::boundToGridLocal2DimDelegateFromJson(
           std::move(boundToGridLocal));
     }
   } else if (type == "cylinder_to_zphi") {
-    double radius = jBoundToGridLocal.at("radius").get<double>();
-    double shift = jBoundToGridLocal.at("shift").get<double>();
+    long double radius = jBoundToGridLocal.at("radius").get<long double>();
+    long double shift = jBoundToGridLocal.at("shift").get<long double>();
     auto boundToGridLocal =
         std::make_unique<const Acts::GridAccess::BoundCylinderToZPhi>(radius,
                                                                       shift);

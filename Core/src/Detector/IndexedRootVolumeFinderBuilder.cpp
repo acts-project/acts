@@ -21,15 +21,15 @@ void fillGridIndices2D(
     const Acts::GeometryContext& gctx, Grid2D& grid,
     const std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
         rootVolumes,
-    const std::array<std::vector<double>, 2u>& boundaries,
+    const std::array<std::vector<long double>, 2u>& boundaries,
     const std::array<Acts::AxisDirection, 2u>& casts) {
   // Brute force loop over all bins & all volumes
   for (const auto [ic0, c0] : Acts::enumerate(boundaries[0u])) {
     if (ic0 > 0) {
-      double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
+      long double v0 = 0.5 * (c0 + boundaries[0u][ic0 - 1]);
       for (const auto [ic1, c1] : Acts::enumerate(boundaries[1u])) {
         if (ic1 > 0) {
-          double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
+          long double v1 = 0.5 * (c1 + boundaries[1u][ic1 - 1]);
           if (casts ==
               std::array<Acts::AxisDirection, 2u>{Acts::AxisDirection::AxisZ,
                                                   Acts::AxisDirection::AxisR}) {
@@ -74,7 +74,8 @@ Acts::Experimental::IndexedRootVolumeFinderBuilder::construct(
 
   auto casts = std::array<AxisDirection, 2u>{m_casts[0u], m_casts[1u]};
 
-  auto boundaries = std::array<std::vector<double>, 2u>{rzphis[1], rzphis[0]};
+  auto boundaries =
+      std::array<std::vector<long double>, 2u>{rzphis[1], rzphis[0]};
   fillGridIndices2D(gctx, grid, rootVolumes, boundaries, casts);
 
   using IndexedDetectorVolumesImpl =

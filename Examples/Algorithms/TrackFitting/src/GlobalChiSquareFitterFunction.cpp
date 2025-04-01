@@ -69,7 +69,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
   std::size_t nUpdateMax = 5;
-  double relChi2changeCutOff = 1e-7;
+  long double relChi2changeCutOff = 1e-7;
 
   IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
@@ -135,7 +135,7 @@ ActsExamples::makeGlobalChiSquareFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     Acts::FreeToBoundCorrection freeToBoundCorrection, std::size_t nUpdateMax,
-    double relChi2changeCutOff, const Acts::Logger& logger) {
+    long double relChi2changeCutOff, const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
 

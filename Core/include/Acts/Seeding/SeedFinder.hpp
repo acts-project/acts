@@ -74,7 +74,7 @@ class SeedFinder {
     // managing seed candidates for SpM
     CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector{};
 
-    // managing doublet candidates
+    // managing long doublet candidates
     boost::container::small_vector<Acts::Neighbour<grid_t>,
                                    Acts::detail::ipow(3, grid_t::DIM)>
         bottomNeighbours{};
@@ -157,16 +157,16 @@ class SeedFinder {
   /// @param cosPhiM ratio between middle SP x position and radius
   /// @param sinPhiM ratio between middle SP y position and radius
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
-  void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options, const grid_t& grid,
-      Acts::SpacePointMutableData& mutableData,
-      boost::container::small_vector<Neighbour<grid_t>,
-                                     Acts::detail::ipow(3, grid_t::DIM)>&
-          otherSPsNeighbours,
-      const external_spacepoint_t& mediumSP,
-      std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
-      const float uIP2, const float cosPhiM, const float sinPhiM) const;
+  void getCompatiblelong
+  doublets(const Acts::SeedFinderOptions& options, const grid_t& grid,
+           Acts::SpacePointMutableData& mutableData,
+           boost::container::small_vector<Neighbour<grid_t>,
+                                          Acts::detail::ipow(3, grid_t::DIM)>&
+               otherSPsNeighbours,
+           const external_spacepoint_t& mediumSP,
+           std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
+           const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
+           const float uIP2, const float cosPhiM, const float sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation

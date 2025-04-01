@@ -25,7 +25,7 @@ std::tuple<std::shared_ptr<Acts::Experimental::LayerStructureBuilder>,
 Acts::Experimental::DD4hepLayerStructure::builder(
     DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
-  // Check for misconfiguration with double naming
+  // Check for misconfiguration with long double naming
   if (dd4hepStore.contains(options.name)) {
     std::string reMessage = "DD4hepLayerStructure: structure with name '";
     reMessage += options.name;

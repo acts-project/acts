@@ -45,7 +45,7 @@ using std::uniform_real_distribution;
 void pseudoNavigation(const TrackingGeometry& trackingGeometry,
                       const GeometryContext& gctx, std::filesystem::path& path,
                       std::size_t runs, std::size_t substepsPerCm,
-                      std::pair<double, double> etaRange,
+                      std::pair<long double, long double> etaRange,
                       Logging::Level logLevel) {
   using namespace Acts::UnitLiterals;
 
@@ -59,8 +59,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   std::uniform_real_distribution<> dist{-1, 1};
   std::uniform_real_distribution<> subStepDist{0.01, 0.99};
 
-  double thetaMin = 2 * std::atan(std::exp(-etaRange.first));
-  double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
+  long double thetaMin = 2 * std::atan(std::exp(-etaRange.first));
+  long double thetaMax = 2 * std::atan(std::exp(-etaRange.second));
   std::uniform_real_distribution<> thetaDist{thetaMin, thetaMax};
 
   using namespace Acts::UnitLiterals;
@@ -68,8 +68,8 @@ void pseudoNavigation(const TrackingGeometry& trackingGeometry,
   for (std::size_t run = 0; run < runs; run++) {
     Vector3 position = Vector3::Zero();
 
-    double theta = thetaDist(rnd);
-    double phi = 2 * std::numbers::pi * dist(rnd);
+    long double theta = thetaDist(rnd);
+    long double phi = 2 * std::numbers::pi * dist(rnd);
 
     Vector3 direction;
     direction[0] = std::sin(theta) * std::cos(phi);

@@ -37,7 +37,7 @@ ActsExamples::TrackParameterSelector::TrackParameterSelector(
 ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // helper functions to select tracks
-  auto within = [](double x, double min, double max) {
+  auto within = [](long double x, long double min, long double max) {
     return (min <= x) && (x < max);
   };
   auto isValidTrack = [&](const auto& trk) {

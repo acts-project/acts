@@ -37,10 +37,10 @@ Acts::Svg::SurfaceArrayConverter::convert(
 
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
     // The endges values
-    std::vector<double> edges0;
-    std::vector<double> edges1;
+    std::vector<long double> edges0;
+    std::vector<long double> edges1;
     // Helper method to convert from ACTS to Grid edges
-    auto convertGridEdges = [](const std::vector<double>& actsEdges)
+    auto convertGridEdges = [](const std::vector<long double>& actsEdges)
         -> std::vector<actsvg::scalar> {
       std::vector<actsvg::scalar> svgEdges;
       svgEdges.reserve(actsEdges.size());
@@ -119,7 +119,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
   }
 
   // Estimate a reference radius
-  double radius = 0.;
+  long double radius = 0.;
 
   // Now draw the surfaces from the correct template
   for (const auto& sf : surfaces) {
@@ -164,8 +164,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
       Vector3 localA = sTransform.rotation().col(0);
       Vector3 localZ = sTransform.rotation().col(2);
       // Find out orientation w.r.t. global transform
-      double projZ = localZ.dot(Vector3(0., 0., 1.));
-      double alpha = std::atan2(localA[1], localA[0]) / std::numbers::pi * 180.;
+      long double projZ = localZ.dot(Vector3(0., 0., 1.));
+      long double alpha =
+          std::atan2(localA[1], localA[0]) / std::numbers::pi * 180.;
       if (projZ < 0.) {
         alpha += 180.;
       }
@@ -182,9 +183,9 @@ Acts::Svg::SurfaceArrayConverter::convert(
 
   // Create the bin associations
   for (unsigned int il0 = 1; il0 < pGrid._edges_0.size(); ++il0) {
-    double p0 = 0.5 * (pGrid._edges_0[il0] + pGrid._edges_0[il0 - 1]);
+    long double p0 = 0.5 * (pGrid._edges_0[il0] + pGrid._edges_0[il0 - 1]);
     for (unsigned int il1 = 1; il1 < pGrid._edges_1.size(); ++il1) {
-      double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
+      long double p1 = 0.5 * (pGrid._edges_1[il1] + pGrid._edges_1[il1 - 1]);
       // Create the fitting bin center estimates
       Vector3 bCenter;
       if (vType == polar) {

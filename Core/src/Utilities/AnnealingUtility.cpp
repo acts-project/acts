@@ -18,7 +18,7 @@ namespace {
 /// @param invTemp Denominator 1/(2 * temperature)
 ///
 /// @return exp(-chi2 * invTemp)
-double computeAnnealingWeight(double chi2, double invTemp) {
+long double computeAnnealingWeight(long double chi2, long double invTemp) {
   return Acts::safeExp(-chi2 * invTemp);
 }
 }  // namespace
@@ -33,26 +33,28 @@ void Acts::AnnealingUtility::anneal(State& state) const {
   }
 }
 
-double Acts::AnnealingUtility::getWeight(
-    State& state, double chi2, const std::vector<double>& allChi2) const {
+long double Acts::AnnealingUtility::getWeight(
+    State& state, long double chi2,
+    const std::vector<long double>& allChi2) const {
   unsigned int idx = state.currentTemperatureIndex;
   // Calculate 1/denominator in exp function already here
-  const double currentInvTemp = 1. / (2. * m_cfg.setOfTemperatures[idx]);
+  const long double currentInvTemp = 1. / (2. * m_cfg.setOfTemperatures[idx]);
 
-  double num = computeAnnealingWeight(chi2, currentInvTemp);
+  long double num = computeAnnealingWeight(chi2, currentInvTemp);
 
-  double denom = m_gaussCutTempVec[idx];
+  long double denom = m_gaussCutTempVec[idx];
 
-  for (double val : allChi2) {
+  for (long double val : allChi2) {
     denom += computeAnnealingWeight(val, currentInvTemp);
   }
 
   return num / denom;
 }
 
-double Acts::AnnealingUtility::getWeight(State& state, double chi2) const {
+long double Acts::AnnealingUtility::getWeight(State& state,
+                                              long double chi2) const {
   // Calculate 1/denominator in exp function
-  const double currentInvTemp =
+  const long double currentInvTemp =
       1. / (2 * m_cfg.setOfTemperatures[state.currentTemperatureIndex]);
 
   return 1. /

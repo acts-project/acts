@@ -42,13 +42,13 @@ constexpr auto epsCov = 0.025;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double Bz) {
+inline Propagator makePropagator(long double Bz) {
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
 
-inline RiddersPropagator makeRiddersPropagator(double Bz) {
+inline RiddersPropagator makeRiddersPropagator(long double Bz) {
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return RiddersPropagator(std::move(stepper));

@@ -124,18 +124,21 @@ BOOST_AUTO_TEST_CASE(SegmentizerPolarRadial) {
 /// Unit test for testing the Segmentizer
 BOOST_DATA_TEST_CASE(
     RandomSegmentizerTest,
-    bdata::random((
-        bdata::engine = std::mt19937(), bdata::seed = 1,
-        bdata::distribution = std::uniform_real_distribution<double>(0., 1.))) ^
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<long double>(0., 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 1.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 1.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
                        bdata::distribution =
-                           std::uniform_real_distribution<double>(0., 1.))) ^
+                           std::uniform_real_distribution<long double>(0.,
+                                                                       1.))) ^
         bdata::xrange(25),
     startR0, startR1, endR0, endR1, index) {
   Acts::GeometryContext geoCtx;
@@ -174,10 +177,10 @@ BOOST_DATA_TEST_CASE(
               Acts::AxisDirection::AxisX &&
           segmentation.binningData()[1].binvalue ==
               Acts::AxisDirection::AxisY) {
-        double bxmin = segmentation.binningData()[0].min;
-        double bxmax = segmentation.binningData()[0].max;
-        double bymin = segmentation.binningData()[1].min;
-        double bymax = segmentation.binningData()[1].max;
+        long double bxmin = segmentation.binningData()[0].min;
+        long double bxmax = segmentation.binningData()[0].max;
+        long double bymin = segmentation.binningData()[1].min;
+        long double bymax = segmentation.binningData()[1].max;
         const auto& xboundaries = segmentation.binningData()[0].boundaries();
         const auto& yboundaries = segmentation.binningData()[1].boundaries();
         for (const auto xval : xboundaries) {
@@ -190,18 +193,18 @@ BOOST_DATA_TEST_CASE(
                      Acts::AxisDirection::AxisR &&
                  segmentation.binningData()[1].binvalue ==
                      Acts::AxisDirection::AxisPhi) {
-        double brmin = segmentation.binningData()[0].min;
-        double brmax = segmentation.binningData()[0].max;
-        double bphimin = segmentation.binningData()[1].min;
-        double bphimax = segmentation.binningData()[1].max;
+        long double brmin = segmentation.binningData()[0].min;
+        long double brmax = segmentation.binningData()[0].max;
+        long double bphimin = segmentation.binningData()[1].min;
+        long double bphimax = segmentation.binningData()[1].max;
         const auto& rboundaries = segmentation.binningData()[0].boundaries();
         const auto& phiboundaries = segmentation.binningData()[1].boundaries();
         for (const auto r : rboundaries) {
           csvHelper.writeArc(grid, r, bphimin, bphimax);
         }
         for (const auto phi : phiboundaries) {
-          double cphi = std::cos(phi);
-          double sphi = std::sin(phi);
+          long double cphi = std::cos(phi);
+          long double sphi = std::sin(phi);
           csvHelper.writeLine(grid, {brmin * cphi, brmin * sphi},
                               {brmax * cphi, brmax * sphi});
         }

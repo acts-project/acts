@@ -50,7 +50,7 @@ Surface::~Surface() = default;
 bool Surface::isOnSurface(const GeometryContext& gctx, const Vector3& position,
                           const Vector3& direction,
                           const BoundaryTolerance& boundaryTolerance,
-                          double tolerance) const {
+                          long double tolerance) const {
   // global to local transformation
   auto lpResult = globalToLocal(gctx, position, direction, tolerance);
   if (!lpResult.ok()) {
@@ -310,7 +310,7 @@ FreeToPathMatrix Surface::freeToPathDerivative(const GeometryContext& gctx,
   // The measurement frame z axis
   const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis
-  const double dz = refZAxis.dot(direction);
+  const long double dz = refZAxis.dot(direction);
   // Initialize the derivative
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * refZAxis.transpose() / dz;

@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(PackUnpack) {
   ctx = v;
 
   BOOST_CHECK_EQUAL(ctx.get<int>(), 42);
-  BOOST_CHECK_THROW(ctx.get<double>(), std::bad_any_cast);
+  BOOST_CHECK_THROW(ctx.get<long double>(), std::bad_any_cast);
 }
 
 BOOST_AUTO_TEST_CASE(MaybeUnpack) {
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(MaybeUnpack) {
   ctx = v;
 
   BOOST_CHECK_EQUAL(*ctx.maybeGet<int>(), 42);
-  BOOST_CHECK_EQUAL(ctx.maybeGet<double>(), nullptr);
+  BOOST_CHECK_EQUAL(ctx.maybeGet<long double>(), nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

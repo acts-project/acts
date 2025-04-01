@@ -91,7 +91,7 @@ void addTrackFinding(Context& ctx) {
         deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange, rRangeMiddleSP,
         rMinMiddle, rMaxMiddle, binSizeR, seedConfirmation,
         centralSeedConfirmationRange, forwardSeedConfirmationRange,
-        useDetailedDoubleMeasurementInfo);
+        useDetailedlong doubleMeasurementInfo);
     patchKwargsConstructor(c);
   }
   {
@@ -236,8 +236,8 @@ void addTrackFinding(Context& ctx) {
     auto constructor =
         [](const std::vector<std::pair<
                GeometryIdentifier,
-               std::tuple<std::vector<double>, std::vector<double>,
-                          std::vector<double>, std::vector<std::size_t>>>>&
+               std::tuple<std::vector<long double>, std::vector<long double>,
+                          std::vector<long double>, std::vector<std::size_t>>>>&
                input) {
           std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
               converted;
@@ -253,8 +253,8 @@ void addTrackFinding(Context& ctx) {
 
     py::class_<MeasurementSelectorCuts>(m, "MeasurementSelectorCuts")
         .def(py::init<>())
-        .def(py::init<std::vector<double>, std::vector<double>,
-                      std::vector<std::size_t>, std::vector<double>>())
+        .def(py::init<std::vector<long double>, std::vector<long double>,
+                      std::vector<std::size_t>, std::vector<long double>>())
         .def_readwrite("etaBins", &MeasurementSelectorCuts::etaBins)
         .def_readwrite("chi2CutOffMeasurement",
                        &MeasurementSelectorCuts::chi2CutOff)

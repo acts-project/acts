@@ -43,7 +43,8 @@ constexpr auto epsCov = 0.1;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(double bz) {
+inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(
+    long double bz) {
   auto field = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   return {AtlasPropagator(AtlasStepper(field)),
           EigenPropagator(EigenStepper(field))};

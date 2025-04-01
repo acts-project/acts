@@ -38,9 +38,9 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
     gExt.extend(v);
   }
 
-  double phiMin = std::atan2(-3_mm, 15_mm);
-  double phiMax = std::atan2(3_mm, 15_mm);
-  double rMin = std::hypot(15_mm, 3_mm);
+  long double phiMin = std::atan2(-3_mm, 15_mm);
+  long double phiMax = std::atan2(3_mm, 15_mm);
+  long double rMin = std::hypot(15_mm, 3_mm);
 
   CHECK_CLOSE_ABS(gExt.min(AxisDirection::AxisX), 15_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(AxisDirection::AxisX), 18_mm, 1e-6);
@@ -62,7 +62,8 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   auto xVals = vHist[toUnderlying(AxisDirection::AxisX)];
 
   BOOST_CHECK_EQUAL(xVals.size(), 6u);
-  std::vector<double> reference = {15_mm, 18_mm, 15_mm, 15_mm, 18_mm, 15_mm};
+  std::vector<long double> reference = {15_mm, 18_mm, 15_mm,
+                                        15_mm, 18_mm, 15_mm};
   BOOST_CHECK(xVals == reference);
 
   // Call with ieterator range

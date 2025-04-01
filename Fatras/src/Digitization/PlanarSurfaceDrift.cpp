@@ -15,7 +15,7 @@
 ActsFatras::PlanarSurfaceDrift::Segment2D
 ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
                                           const Acts::Surface& surface,
-                                          double thickness,
+                                          long double thickness,
                                           const Acts::Vector3& pos,
                                           const Acts::Vector3& dir,
                                           const Acts::Vector3& driftDir) const {

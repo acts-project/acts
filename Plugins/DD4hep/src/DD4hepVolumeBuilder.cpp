@@ -49,7 +49,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   // Resulting volumes
   MutableTrackingVolumeVector volumes;
   // Inner/outer radius and half length of the barrel
-  double rMin = 0, rMax = 0, dz = 0;
+  long double rMin = 0, rMax = 0, dz = 0;
 
   // Go through volumes
   for (auto& detElement : m_cfg.centralVolumes) {
@@ -90,8 +90,8 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
 Acts::Transform3 Acts::DD4hepVolumeBuilder::convertTransform(
     const TGeoMatrix* tGeoTrans) const {
   // Get the placement and orientation in respect to its mother
-  const Double_t* rotation = tGeoTrans->GetRotationMatrix();
-  const Double_t* translation = tGeoTrans->GetTranslation();
+  const long double_t* rotation = tGeoTrans->GetRotationMatrix();
+  const long double_t* translation = tGeoTrans->GetTranslation();
   return TGeoPrimitivesHelper::makeTransform(
       Acts::Vector3(rotation[0], rotation[3], rotation[6]),
       Acts::Vector3(rotation[1], rotation[4], rotation[7]),

@@ -97,10 +97,10 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   // this is only needed if layers are provided
   if (!layers.empty()) {
     // the raw data
-    double rMinRaw = 0.;
-    double rMaxRaw = 0.;
-    double zMinRaw = 0.;
-    double zMaxRaw = 0.;
+    long double rMinRaw = 0.;
+    long double rMaxRaw = 0.;
+    long double zMinRaw = 0.;
+    long double zMaxRaw = 0.;
 
     AxisDirection bValue = AxisDirection::AxisR;
 
@@ -116,22 +116,23 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     // we might have overwritten the bounds in estimateAndCheckDimension
     volumeBounds = cylinderBounds;
     // get the zMin/Max
-    double zMin =
+    long double zMin =
         (!idTrf ? transform.translation().z() : 0.) +
         (cylinderBounds != nullptr
              ? -cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
              : 0.);
-    double zMax = (!idTrf ? transform.translation().z() : 0.) +
-                  (cylinderBounds != nullptr
-                       ? cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
-                       : 0.);
+    long double zMax =
+        (!idTrf ? transform.translation().z() : 0.) +
+        (cylinderBounds != nullptr
+             ? cylinderBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+             : 0.);
     // get the rMin/rmAx
-    double rMin = cylinderBounds != nullptr
-                      ? cylinderBounds->get(CylinderVolumeBounds::eMinR)
-                      : rMinRaw;
-    double rMax = cylinderBounds != nullptr
-                      ? cylinderBounds->get(CylinderVolumeBounds::eMaxR)
-                      : rMaxRaw;
+    long double rMin = cylinderBounds != nullptr
+                           ? cylinderBounds->get(CylinderVolumeBounds::eMinR)
+                           : rMinRaw;
+    long double rMax = cylinderBounds != nullptr
+                           ? cylinderBounds->get(CylinderVolumeBounds::eMaxR)
+                           : rMaxRaw;
 
     ACTS_VERBOSE(
         "Filling the layers into an appropriate layer array - with "
@@ -162,9 +163,9 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const GeometryContext& gctx, const LayerVector& layers,
     MutableTrackingVolumeVector mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, const std::string& volumeName,
-    BinningType bType) const {
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial, long double rMin,
+    long double rMax, long double zMin, long double zMax,
+    const std::string& volumeName, BinningType bType) const {
   // Screen output
   ACTS_VERBOSE("Create cylindrical TrackingVolume '" << volumeName << "'.");
   ACTS_VERBOSE("    -> with given dimensions of (rMin/rMax/zMin/Max) = "
@@ -180,8 +181,8 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   }
 
   // create a Transform3 and VolumeBounds out of the zMin/zMax
-  double halflengthZ = 0.5 * (zMax - zMin);
-  double zPosition = 0.5 * (zMin + zMax);
+  long double halflengthZ = 0.5 * (zMax - zMin);
+  long double zPosition = 0.5 * (zMin + zMax);
   zPosition = std::abs(zPosition) < 0.1 ? 0. : zPosition;
 
   // now create the cylinder volume bounds
@@ -198,22 +199,23 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
     const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, unsigned int materialLayers,
-    bool cylinder, const std::string& volumeName) const {
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial, long double rMin,
+    long double rMax, long double zMin, long double zMax,
+    unsigned int materialLayers, bool cylinder,
+    const std::string& volumeName) const {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE("\t" << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // assign min/max
-  double min = cylinder ? rMin : zMin;
-  double max = cylinder ? rMax : zMax;
+  long double min = cylinder ? rMin : zMin;
+  long double max = cylinder ? rMax : zMax;
 
   // create the layer r/z positions
-  std::vector<double> layerPositions;
+  std::vector<long double> layerPositions;
   if (materialLayers > 1) {
-    double step = (max - min) / (materialLayers - 1);
+    long double step = (max - min) / (materialLayers - 1);
     for (unsigned int il = 0; il < materialLayers; ++il) {
       layerPositions.push_back(min + il * step);
     }
@@ -230,9 +232,9 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
     const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax,
-    const std::vector<double>& layerPositions, bool cylinder,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial, long double rMin,
+    long double rMax, long double zMin, long double zMax,
+    const std::vector<long double>& layerPositions, bool cylinder,
     const std::string& volumeName, BinningType bType) const {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -243,14 +245,15 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   LayerVector layers;
   layers.reserve(layerPositions.size());
 
-  std::vector<double>::const_iterator layerPropIter = layerPositions.begin();
-  std::vector<double>::const_iterator layerPropEnd = layerPositions.end();
+  std::vector<long double>::const_iterator layerPropIter =
+      layerPositions.begin();
+  std::vector<long double>::const_iterator layerPropEnd = layerPositions.end();
   for (; layerPropIter != layerPropEnd; ++layerPropIter) {
     // create cylinder layers
     if (cylinder) {
       // take envelopes into account
-      double zMinLayer = zMin;
-      double zMaxLayer = zMax;
+      long double zMinLayer = zMin;
+      long double zMaxLayer = zMax;
       // create the layer
       layers.push_back(createCylinderLayer(
           0.5 * (zMinLayer + zMaxLayer), (*layerPropIter),
@@ -259,8 +262,8 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 
     } else {
       // take the envelopes into account
-      double rMinLayer = rMin;
-      double rMaxLayer = rMax;
+      long double rMinLayer = rMin;
+      long double rMaxLayer = rMax;
       // create the layer
       layers.push_back(createDiscLayer(
           (*layerPropIter), rMinLayer, rMaxLayer, m_cfg.passiveLayerThickness,
@@ -341,13 +344,13 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
                lastVolumeBounds->get(CylinderVolumeBounds::eMinR)) > 0.1;
 
   // Fill these ones depending on the rCase though assignment
-  double zMin = 0.;
-  double zMax = 0.;
-  double rMin = 0.;
-  double rGlueMin = 0.;
-  double rMax = 0.;
-  double zSep1 = 0.;
-  double zSep2 = 0.;
+  long double zMin = 0.;
+  long double zMax = 0.;
+  long double rMin = 0.;
+  long double rGlueMin = 0.;
+  long double rMax = 0.;
+  long double zSep1 = 0.;
+  long double zSep2 = 0.;
   if (rCase) {
     zMin = (*firstVolume)->center().z() -
            firstVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ);
@@ -370,7 +373,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     rMax = firstVolumeBounds->get(CylinderVolumeBounds::eMaxR);
   }
   // Estimate the z - position
-  double zPos = 0.5 * (zMin + zMax);
+  long double zPos = 0.5 * (zMin + zMax);
   // Create the transform from the stuff known so far
   const Transform3 topVolumeTransform = Transform3(Translation3(0., 0., zPos));
   // Create the bounds from the information gathered so far
@@ -416,8 +419,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
 bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const GeometryContext& gctx, const LayerVector& layers,
     std::shared_ptr<CylinderVolumeBounds>& cylinderVolumeBounds,
-    const Transform3& transform, double& rMinClean, double& rMaxClean,
-    double& zMinClean, double& zMaxClean, AxisDirection& bValue,
+    const Transform3& transform, long double& rMinClean, long double& rMaxClean,
+    long double& zMinClean, long double& zMaxClean, AxisDirection& bValue,
     BinningType /*bType*/) const {
   // some verbose output
 
@@ -433,10 +436,10 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   }
 
   // prepare for parsing the layers
-  double layerRmin = 10e10;
-  double layerRmax = 0.;
-  double layerZmin = 10e10;
-  double layerZmax = -10e10;
+  long double layerRmin = 10e10;
+  long double layerRmax = 0.;
+  long double layerZmin = 10e10;
+  long double layerZmax = -10e10;
   bool radial = false;
 
   rMinClean = 10e10;
@@ -447,10 +450,10 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   // find out what is there
   for (auto& layerIter : layers) {
     // initialize
-    double currentRmin = 0.;
-    double currentRmax = 0.;
-    double currentZmin = 0.;
-    double currentZmax = 0.;
+    long double currentRmin = 0.;
+    long double currentRmax = 0.;
+    long double currentZmin = 0.;
+    long double currentZmax = 0.;
     // dynamic cast the bounds either to CylinderBounds or DiscBounds
     const CylinderBounds* cylBounds = dynamic_cast<const CylinderBounds*>(
         &(layerIter->surfaceRepresentation()).bounds());
@@ -458,8 +461,9 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     if (cylBounds != nullptr) {
       radial = true;
       // get the raw data
-      double currentR = cylBounds->get(CylinderBounds::eR);
-      double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
+      long double currentR = cylBounds->get(CylinderBounds::eR);
+      long double centerZ =
+          (layerIter->surfaceRepresentation()).center(gctx).z();
       // check for min/max in the cylinder bounds case
       currentRmin = currentR - (0.5 * (layerIter)->thickness());
       currentRmax = currentR + (0.5 * (layerIter)->thickness());
@@ -471,7 +475,8 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
         &(layerIter->surfaceRepresentation()).bounds());
     if (discBounds != nullptr) {
       // check for min/max in the cylinder bounds case
-      double centerZ = (layerIter->surfaceRepresentation()).center(gctx).z();
+      long double centerZ =
+          (layerIter->surfaceRepresentation()).center(gctx).z();
       currentRmin = discBounds->rMin();
       currentRmax = discBounds->rMax();
       currentZmin = centerZ - (0.5 * (layerIter)->thickness());
@@ -496,8 +501,8 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       "Estimate/check CylinderVolumeBounds from/w.r.t. enclosed "
       "layers + envelope covers");
   // the z from the layers w and w/o envelopes
-  double zEstFromLayerEnv = 0.5 * (layerZmax + layerZmin);
-  double halflengthFromLayer = 0.5 * std::abs(layerZmax - layerZmin);
+  long double zEstFromLayerEnv = 0.5 * (layerZmax + layerZmin);
+  long double halflengthFromLayer = 0.5 * std::abs(layerZmax - layerZmin);
 
   // using `sqrt(0.001) = 0.031622777` because previously it compared to
   // `zEstFromLayerEnv * zEstFromLayerEnv < 0.001` which was changed due to
@@ -527,7 +532,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
                << layerRmin << " / " << layerRmax << " / " << layerZmin << " / "
                << layerZmax);
 
-  double zFromTransform = !idTrf ? transform.translation().z() : 0.;
+  long double zFromTransform = !idTrf ? transform.translation().z() : 0.;
   ACTS_VERBOSE(
       "    -> while created bounds are (rMin/rMax/zMin/zMax) = "
       << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << " / "
@@ -578,8 +583,8 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
 
 bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tVolume,
-    bool rBinned, double rMin, double rGlueMin, double rMax, double zMin,
-    double zMax) const {
+    bool rBinned, long double rMin, long double rGlueMin, long double rMax,
+    long double zMin, long double zMax) const {
   ACTS_VERBOSE("Glue contained TrackingVolumes of container '"
                << tVolume->volumeName() << "'.");
 
@@ -638,7 +643,7 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
 
           // re-evalueate rGlueMin
-          double rGlueR =
+          long double rGlueR =
               0.5 * (tVol1->volumeBounds()
                          .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
                      tVol2->volumeBounds()
@@ -745,8 +750,8 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
 void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tvolOne,
     BoundarySurfaceFace faceOne, const std::shared_ptr<TrackingVolume>& tvolTwo,
-    BoundarySurfaceFace faceTwo, double rMin, double rGlueMin, double rMax,
-    double zMin, double zMax) const {
+    BoundarySurfaceFace faceTwo, long double rMin, long double rGlueMin,
+    long double rMax, long double zMin, long double zMax) const {
   // get the two gluevolume descriptors
   const GlueVolumesDescriptor& gvDescriptorOne =
       tvolOne->glueVolumesDescriptor();
@@ -851,8 +856,8 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
       // we assume it's cylinder bounds
       auto cylVolBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
           &tvolOne->volumeBounds());
-      double zPos = tvolOne->center().z();
-      double zHL = cylVolBounds->get(CylinderVolumeBounds::eHalfLengthZ);
+      long double zPos = tvolOne->center().z();
+      long double zHL = cylVolBounds->get(CylinderVolumeBounds::eHalfLengthZ);
       transform = Transform3(Translation3(0, 0, zPos + zHL));
       // this puts the surface on the positive z side of the cyl vol bounds
       // iteration is from neg to pos, so it should always be in between.
@@ -950,10 +955,10 @@ void Acts::CylinderVolumeHelper::addFaceVolumes(
 }
 
 std::shared_ptr<const Acts::Layer>
-Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
-                                                double halflengthZ,
-                                                double thickness, int binsPhi,
-                                                int binsZ) const {
+Acts::CylinderVolumeHelper::createCylinderLayer(long double z, long double r,
+                                                long double halflengthZ,
+                                                long double thickness,
+                                                int binsPhi, int binsZ) const {
   ACTS_VERBOSE("Creating a CylinderLayer at position " << z << " and radius "
                                                        << r);
   // positioning
@@ -988,8 +993,8 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
 }
 
 std::shared_ptr<const Acts::Layer> Acts::CylinderVolumeHelper::createDiscLayer(
-    double z, double rMin, double rMax, double thickness, int binsPhi,
-    int binsR) const {
+    long double z, long double rMin, long double rMax, long double thickness,
+    int binsPhi, int binsR) const {
   ACTS_VERBOSE("Creating a DiscLayer at position " << z << " and rMin/rMax "
                                                    << rMin << " / " << rMax);
 

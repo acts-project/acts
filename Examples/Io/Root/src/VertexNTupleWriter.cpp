@@ -52,7 +52,7 @@ namespace ActsExamples {
 
 namespace {
 
-constexpr double nan = std::numeric_limits<double>::quiet_NaN();
+constexpr long double nan = std::numeric_limits<long double>::quiet_NaN();
 
 std::uint32_t getNumberOfReconstructableVertices(
     const SimParticleContainer& collection) {
@@ -101,13 +101,13 @@ std::uint32_t getNumberOfTruePriVertices(
   return allPriVtxIds.size();
 }
 
-double calcSumPt2(const VertexNTupleWriter::Config& config,
-                  const Acts::Vertex& vtx) {
-  double sumPt2 = 0;
+long double calcSumPt2(const VertexNTupleWriter::Config& config,
+                       const Acts::Vertex& vtx) {
+  long double sumPt2 = 0;
   for (const auto& trk : vtx.tracks()) {
     if (trk.trackWeight > config.minTrkWeight) {
-      double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
-                      ->transverseMomentum();
+      long double pt = trk.originalParams.as<Acts::BoundTrackParameters>()
+                           ->transverseMomentum();
       sumPt2 += pt * pt;
     }
   }
@@ -115,8 +115,9 @@ double calcSumPt2(const VertexNTupleWriter::Config& config,
 }
 
 /// Helper function for computing the pull
-double pull(double diff, double variance, const std::string& variableStr,
-            bool afterFit, const Acts::Logger& logger) {
+long double pull(long double diff, long double variance,
+                 const std::string& variableStr, bool afterFit,
+                 const Acts::Logger& logger) {
   if (variance <= 0) {
     std::string tempStr;
     if (afterFit) {
@@ -129,20 +130,20 @@ double pull(double diff, double variance, const std::string& variableStr,
                                          << " <= 0.");
     return nan;
   }
-  double std = std::sqrt(variance);
+  long double std = std::sqrt(variance);
   return diff / std;
 }
 
-double calculateTruthPrimaryVertexDensity(
+long double calculateTruthPrimaryVertexDensity(
     const VertexNTupleWriter::Config& config,
     const SimVertexContainer& truthVertices, const Acts::Vertex& vtx) {
-  double z = vtx.fullPosition()[Acts::CoordinateIndices::eZ];
+  long double z = vtx.fullPosition()[Acts::CoordinateIndices::eZ];
   int count = 0;
   for (const SimVertex& truthVertex : truthVertices) {
     if (truthVertex.vertexId().vertexSecondary() != 0) {
       continue;
     }
-    double zTruth = truthVertex.position4[Acts::CoordinateIndices::eZ];
+    long double zTruth = truthVertex.position4[Acts::CoordinateIndices::eZ];
     if (std::abs(z - zTruth) <= config.vertexDensityWindow) {
       ++count;
     }
@@ -434,16 +435,16 @@ ProcessCode VertexNTupleWriter::writeT(
 
   struct ToTruthMatching {
     std::optional<SimVertexBarcode> vertexId;
-    double totalTrackWeight{};
-    double truthMajorityTrackWeights{};
-    double matchFraction{};
+    long double totalTrackWeight{};
+    long double truthMajorityTrackWeights{};
+    long double matchFraction{};
 
     RecoVertexClassification classification{RecoVertexClassification::Unknown};
   };
   struct ToRecoMatching {
     std::size_t recoIndex{};
 
-    double recoSumPt2{};
+    long double recoSumPt2{};
   };
 
   std::vector<ToTruthMatching> recoToTruthMatching;
@@ -457,9 +458,10 @@ ProcessCode VertexNTupleWriter::writeT(
     // Containers for storing truth particles and truth vertices that
     // contribute
     // to the reconstructed vertex
-    std::vector<std::pair<SimVertexBarcode, double>> contributingTruthVertices;
+    std::vector<std::pair<SimVertexBarcode, long double>>
+        contributingTruthVertices;
 
-    double totalTrackWeight = 0;
+    long double totalTrackWeight = 0;
     for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
       if (trk.trackWeight < m_cfg.minTrkWeight) {
         continue;
@@ -484,12 +486,12 @@ ProcessCode VertexNTupleWriter::writeT(
     }
 
     // Find true vertex that contributes most to the reconstructed vertex
-    std::map<SimVertexBarcode, std::pair<int, double>> fmap;
+    std::map<SimVertexBarcode, std::pair<int, long double>> fmap;
     for (const auto& [vtxId, weight] : contributingTruthVertices) {
       ++fmap[vtxId].first;
       fmap[vtxId].second += weight;
     }
-    double truthMajorityVertexTrackWeights = 0;
+    long double truthMajorityVertexTrackWeights = 0;
     SimVertexBarcode truthMajorityVertexId{0};
     for (const auto& [vtxId, counter] : fmap) {
       if (counter.second > truthMajorityVertexTrackWeights) {
@@ -498,9 +500,9 @@ ProcessCode VertexNTupleWriter::writeT(
       }
     }
 
-    double sumPt2 = calcSumPt2(m_cfg, vtx);
+    long double sumPt2 = calcSumPt2(m_cfg, vtx);
 
-    double vertexMatchFraction =
+    long double vertexMatchFraction =
         truthMajorityVertexTrackWeights / totalTrackWeight;
     RecoVertexClassification recoVertexClassification =
         RecoVertexClassification::Unknown;
@@ -563,14 +565,14 @@ ProcessCode VertexNTupleWriter::writeT(
     m_recoZ.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eZ]);
     m_recoT.push_back(vtx.fullPosition()[Acts::CoordinateIndices::eTime]);
 
-    double varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
-                                       Acts::CoordinateIndices::eX);
-    double varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
-                                       Acts::CoordinateIndices::eY);
-    double varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
-                                       Acts::CoordinateIndices::eZ);
-    double varTime = vtx.fullCovariance()(Acts::CoordinateIndices::eTime,
-                                          Acts::CoordinateIndices::eTime);
+    long double varX = vtx.fullCovariance()(Acts::CoordinateIndices::eX,
+                                            Acts::CoordinateIndices::eX);
+    long double varY = vtx.fullCovariance()(Acts::CoordinateIndices::eY,
+                                            Acts::CoordinateIndices::eY);
+    long double varZ = vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
+                                            Acts::CoordinateIndices::eZ);
+    long double varTime = vtx.fullCovariance()(Acts::CoordinateIndices::eTime,
+                                               Acts::CoordinateIndices::eTime);
 
     m_covXX.push_back(varX);
     m_covYY.push_back(varY);
@@ -589,10 +591,10 @@ ProcessCode VertexNTupleWriter::writeT(
     m_covZT.push_back(vtx.fullCovariance()(Acts::CoordinateIndices::eZ,
                                            Acts::CoordinateIndices::eTime));
 
-    double sumPt2 = calcSumPt2(m_cfg, vtx);
+    long double sumPt2 = calcSumPt2(m_cfg, vtx);
     m_sumPt2.push_back(sumPt2);
 
-    double recoVertexTrackWeights = 0;
+    long double recoVertexTrackWeights = 0;
     for (const Acts::TrackAtVertex& trk : tracksAtVtx) {
       if (trk.trackWeight < m_cfg.minTrkWeight) {
         continue;
@@ -631,18 +633,18 @@ ProcessCode VertexNTupleWriter::writeT(
       }
       m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
 
-      double truthPrimaryVertexDensity =
+      long double truthPrimaryVertexDensity =
           calculateTruthPrimaryVertexDensity(m_cfg, truthVertices, vtx);
       m_truthPrimaryVertexDensity.push_back(truthPrimaryVertexDensity);
 
-      double truthVertexTrackWeights =
+      long double truthVertexTrackWeights =
           toTruthMatching.truthMajorityTrackWeights;
       m_truthVertexTrackWeights.push_back(truthVertexTrackWeights);
 
-      double truthVertexMatchRatio = toTruthMatching.matchFraction;
+      long double truthVertexMatchRatio = toTruthMatching.matchFraction;
       m_truthVertexMatchRatio.push_back(truthVertexMatchRatio);
 
-      double recoVertexContamination = 1 - truthVertexMatchRatio;
+      long double recoVertexContamination = 1 - truthVertexMatchRatio;
       m_recoVertexContamination.push_back(recoVertexContamination);
 
       RecoVertexClassification recoVertexClassification =
@@ -950,7 +952,7 @@ void VertexNTupleWriter::writeTrackInfo(
             pull(diffMom[2], momCov(2, 2), "q/p", false, logger()));
 
         const auto& recoUnitDir = paramsAtVtx->direction();
-        double overlap = trueUnitDir.dot(recoUnitDir);
+        long double overlap = trueUnitDir.dot(recoUnitDir);
         innerMomOverlap.push_back(overlap);
       } else {
         innerResPhi.push_back(nan);
@@ -1004,7 +1006,7 @@ void VertexNTupleWriter::writeTrackInfo(
             pull(diffMomFitted[2], momCovFitted(2, 2), "q/p", true, logger()));
 
         const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
-        double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
+        long double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
         innerMomOverlapFitted.push_back(overlapFitted);
       } else {
         innerResPhiFitted.push_back(nan);

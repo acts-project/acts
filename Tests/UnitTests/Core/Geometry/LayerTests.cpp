@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(LayerConstruction) {
       Surface::makeShared<SurfaceStub>(), Surface::makeShared<SurfaceStub>()};
   std::unique_ptr<ApproachDescriptor> ad(
       new GenericApproachDescriptor(aSurfaces));
-  const double thickness(1.0);
+  const long double thickness(1.0);
   LayerStub approachDescriptorConstructed(nullptr, thickness, std::move(ad));
   /// Construction with (minimal) approach descriptor
   BOOST_CHECK(approachDescriptorConstructed.constructedOk());
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(LayerProperties) {
   std::unique_ptr<ApproachDescriptor> ad(
       new GenericApproachDescriptor(aSurfaces));
   auto adPtr = ad.get();
-  const double thickness(1.0);
+  const long double thickness(1.0);
   LayerStub layerStub(nullptr, thickness, std::move(ad));
   //
   /// surfaceArray()

@@ -31,7 +31,7 @@ class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
     std::string outputPath;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
-    double Bz;
+    long double Bz;
   };
 
   /// constructor

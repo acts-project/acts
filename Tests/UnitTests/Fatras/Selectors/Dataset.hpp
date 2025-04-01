@@ -16,7 +16,8 @@ namespace Dataset {
 
 using namespace Acts::UnitLiterals;
 
-ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double z, double eta) {
+ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, long double z,
+                                  long double eta) {
   const auto id = ActsFatras::Barcode().setVertexPrimary(1).setParticle(1);
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0.0, 0.0, z, 0.0)

@@ -58,7 +58,7 @@ using TrackContainer =
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
 struct SimpleReverseFilteringLogic {
-  double momentumThreshold = 0;
+  long double momentumThreshold = 0;
 
   bool doBackwardFiltering(
       Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
@@ -68,11 +68,11 @@ struct SimpleReverseFilteringLogic {
 };
 
 struct SimpleOutlierFinder {
-  double chi2Cut = std::numeric_limits<double>::infinity();
+  long double chi2Cut = std::numeric_limits<long double>::infinity();
 
   bool isOutlier(
       Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
-    double chi2 = Acts::calculatePredictedChi2(trackState);
+    long double chi2 = Acts::calculatePredictedChi2(trackState);
     return chi2 > chi2Cut;
   }
 };
@@ -171,8 +171,8 @@ ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
-    double reverseFilteringMomThreshold,
-    Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
+    long double reverseFilteringMomThreshold,
+    Acts::FreeToBoundCorrection freeToBoundCorrection, long double chi2Cut,
     const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));

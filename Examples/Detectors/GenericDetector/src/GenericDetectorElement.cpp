@@ -18,7 +18,7 @@ namespace ActsExamples {
 GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier,
     std::shared_ptr<const Acts::Transform3> transform,
-    std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+    std::shared_ptr<const Acts::PlanarBounds> pBounds, long double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : Acts::DetectorElementBase(),
       m_elementIdentifier(identifier),
@@ -34,7 +34,7 @@ GenericDetectorElement::GenericDetectorElement(
 GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier,
     std::shared_ptr<const Acts::Transform3> transform,
-    std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
+    std::shared_ptr<const Acts::DiscBounds> dBounds, long double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : Acts::DetectorElementBase(),
       m_elementIdentifier(identifier),
@@ -60,7 +60,7 @@ Acts::Surface& GenericDetectorElement::surface() {
   return *m_elementSurface;
 }
 
-double GenericDetectorElement::thickness() const {
+long double GenericDetectorElement::thickness() const {
   return m_elementThickness;
 }
 

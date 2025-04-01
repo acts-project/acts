@@ -40,8 +40,8 @@ struct EigenStepperDefaultExtension {
   template <int i, typename stepper_t>
   bool k(const typename stepper_t::State& state, const stepper_t& stepper,
          const IVolumeMaterial* volumeMaterial, Vector3& knew,
-         const Vector3& bField, std::array<double, 4>& kQoP,
-         const double h = 0., const Vector3& kprev = Vector3::Zero())
+         const Vector3& bField, std::array<long double, 4>& kQoP,
+         const long double h = 0., const Vector3& kprev = Vector3::Zero())
     requires(i >= 0 && i <= 3)
   {
     (void)volumeMaterial;
@@ -71,7 +71,8 @@ struct EigenStepperDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
-                const IVolumeMaterial* volumeMaterial, const double h) const {
+                const IVolumeMaterial* volumeMaterial,
+                const long double h) const {
     (void)volumeMaterial;
 
     propagateTime(state, stepper, h);
@@ -93,7 +94,7 @@ struct EigenStepperDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename stepper_t>
   bool finalize(typename stepper_t::State& state, const stepper_t& stepper,
-                const IVolumeMaterial* volumeMaterial, const double h,
+                const IVolumeMaterial* volumeMaterial, const long double h,
                 FreeMatrix& D) const {
     (void)volumeMaterial;
 
@@ -111,7 +112,7 @@ struct EigenStepperDefaultExtension {
   /// @param [in] h Step size
   template <typename stepper_t>
   void propagateTime(typename stepper_t::State& state, const stepper_t& stepper,
-                     const double h) const {
+                     const long double h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
@@ -136,7 +137,7 @@ struct EigenStepperDefaultExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename stepper_t>
   bool transportMatrix(typename stepper_t::State& state,
-                       const stepper_t& stepper, const double h,
+                       const stepper_t& stepper, const long double h,
                        FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
@@ -166,7 +167,7 @@ struct EigenStepperDefaultExtension {
 
     D = FreeMatrix::Identity();
 
-    double half_h = h * 0.5;
+    long double half_h = h * 0.5;
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) idendity
     auto dFdT = D.block<3, 3>(0, 4);

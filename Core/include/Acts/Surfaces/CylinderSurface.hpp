@@ -54,9 +54,10 @@ class CylinderSurface : public RegularSurface {
   /// @param avphi The phi value from which the opening angle spans (both sides)
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
-  CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = std::numbers::pi, double avphi = 0.,
-                  double bevelMinZ = 0., double bevelMaxZ = 0.);
+  CylinderSurface(const Transform3& transform, long double radius,
+                  long double halfz, long double halfphi = std::numbers::pi,
+                  long double avphi = 0., long double bevelMinZ = 0.,
+                  long double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
   ///
@@ -174,7 +175,7 @@ class CylinderSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
   ///
@@ -192,7 +193,7 @@ class CylinderSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      double tolerance = s_onSurfaceTolerance) const final;
+      long double tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -201,8 +202,9 @@ class CylinderSurface : public RegularSurface {
   /// @param direction is the global momentum direction at the starting point
   ///
   /// @return is the correction factor due to incident
-  double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& direction) const final;
+  long double pathCorrection(const GeometryContext& gctx,
+                             const Vector3& position,
+                             const Vector3& direction) const final;
 
   /// Return method for properly formatted output string
   std::string name() const override;

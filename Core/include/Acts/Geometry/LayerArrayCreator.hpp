@@ -59,8 +59,8 @@ class LayerArrayCreator : public ILayerArrayCreator {
   ///
   /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray> layerArray(
-      const GeometryContext& gctx, const LayerVector& layersInput, double min,
-      double max, BinningType bType = arbitrary,
+      const GeometryContext& gctx, const LayerVector& layersInput,
+      long double min, long double max, BinningType bType = arbitrary,
       AxisDirection aDir = AxisDirection::AxisX) const override;
 
   /// set logging instance
@@ -85,7 +85,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
   std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
                                                    AxisDirection aDir,
-                                                   double offset) const;
+                                                   long double offset) const;
 };
 
 }  // namespace Acts

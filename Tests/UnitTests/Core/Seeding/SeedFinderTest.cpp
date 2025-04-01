@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
   auto start_read = std::chrono::system_clock::now();
   std::vector<const SpacePoint*> spVec = readFile(file);
   auto end_read = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_read = end_read - start_read;
+  std::chrono::duration<long double> elapsed_read = end_read - start_read;
 
   // Config
   Acts::SpacePointContainerConfig spConfig;
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
                           top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::chrono::duration<long double> elapsed_seconds = end - start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
   std::cout << "Number of regions: " << seedVector.size() << std::endl;
   int numSeeds = 0;

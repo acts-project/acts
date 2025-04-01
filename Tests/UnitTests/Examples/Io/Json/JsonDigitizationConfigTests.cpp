@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
         }
       ]
 })");
-  double radius = 5.;
-  double halfZ = 8.;
+  long double radius = 5.;
+  long double halfZ = 8.;
   Fixture<ActsExamples::RandomEngine> f(
       123567,
       Acts::Surface::makeShared<Acts::StrawSurface>(
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
     BOOST_TEST_INFO("Comparing smeared measurement "
                     << i << " originating from bound parameter "
                     << s.indices[i]);
-    double ref = f.boundParams[s.indices[i]];
+    long double ref = f.boundParams[s.indices[i]];
     if (s.forcePositive[i]) {
       ref = std::abs(ref);
     }

@@ -24,10 +24,10 @@ namespace Acts {
 /// @param minPoints Minimum number of seeds to create a cluster
 /// @return an unordered map representing the clusters, the keys the ID of the primary seed of each cluster and the stored value a vector of seed IDs.
 std::vector<std::vector<std::size_t>> dbscanSeedClustering(
-    const std::vector<std::array<double, 4>>& input, float epsilon = 0.03,
+    const std::vector<std::array<long double, 4>>& input, float epsilon = 0.03,
     int minPoints = 2) {
   // Initialize a DBScan of dimension 4 (phi, eta, z, Pt)
-  using DBSCAN = Acts::DBScan<4, double, 4>;
+  using DBSCAN = Acts::DBScan<4, long double, 4>;
   DBSCAN dbscan(epsilon, minPoints, true);
 
   // Cluster track with DBScan

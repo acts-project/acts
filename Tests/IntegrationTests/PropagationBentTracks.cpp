@@ -32,8 +32,8 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
-                                               double bz) {
+std::vector<long double> xPositionsOfPassedSurfaces(
+    Acts::Navigator::Config navCfg, long double bz) {
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Acts::Test::CubicTrackingGeometry cubicBuilder(geoCtx);
 
@@ -66,7 +66,7 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 
   const auto &stepLog = res->get<Acts::detail::SteppingLogger::result_type>();
 
-  std::vector<double> xPositions;
+  std::vector<long double> xPositions;
   for (const auto &step : stepLog.steps) {
     if (step.surface) {
       xPositions.push_back(step.surface->center(geoCtx)[Acts::ePos0]);

@@ -49,7 +49,7 @@ namespace {
 struct DebugVisitor {
   std::string operator()(int value) { return std::to_string(value); }
 
-  std::string operator()(double value) { return std::to_string(value); }
+  std::string operator()(long double value) { return std::to_string(value); }
 
   std::string operator()(std::string value) { return value; }
 };
@@ -58,7 +58,8 @@ struct DebugVisitor {
 std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     dd4hep::DetElement worldDetElement, const Logger& logger,
     BinningType bTypePhi, BinningType bTypeR, BinningType bTypeZ,
-    double layerEnvelopeR, double layerEnvelopeZ, double defaultLayerThickness,
+    long double layerEnvelopeR, long double layerEnvelopeZ,
+    long double defaultLayerThickness,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors,
     const Acts::GeometryContext& gctx,
@@ -152,8 +153,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     dd4hep::DetElement subDetector, const Logger& logger, BinningType bTypePhi,
-    BinningType bTypeR, BinningType bTypeZ, double layerEnvelopeR,
-    double layerEnvelopeZ, double defaultLayerThickness) {
+    BinningType bTypeR, BinningType bTypeZ, long double layerEnvelopeR,
+    long double layerEnvelopeZ, long double defaultLayerThickness) {
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(logger);
   // create local logger for conversion
@@ -187,7 +188,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     collectCompounds_dd4hep(subDetector, compounds);
 
     // get z position to distinguish positive & negative endcap
-    double zPos = 0.;
+    long double zPos = 0.;
     // flags to catch if sub volumes have been set already
     bool nEndCap = false;
     bool pEndCap = false;
@@ -404,9 +405,9 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           "Cylinder has wrong shape - needs to be TGeoTubeSeg!");
     }
     // get the dimension of TGeo and convert lengths
-    double rMin = tube->GetRmin() * UnitConstants::cm - layerEnvelopeR;
-    double rMax = tube->GetRmax() * UnitConstants::cm + layerEnvelopeR;
-    double halfZ = tube->GetDz() * UnitConstants::cm + layerEnvelopeZ;
+    long double rMin = tube->GetRmin() * UnitConstants::cm - layerEnvelopeR;
+    long double rMax = tube->GetRmax() * UnitConstants::cm + layerEnvelopeR;
+    long double halfZ = tube->GetDz() * UnitConstants::cm + layerEnvelopeZ;
     ACTS_VERBOSE(
         "Extracting cylindrical volume bounds ( rmin / rmax / "
         "halfZ )=  ( "
@@ -424,10 +425,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     // configure the passive layer builder
     Acts::PassiveLayerBuilder::Config plbConfig;
     plbConfig.layerIdentification = subDetector.name();
-    plbConfig.centralLayerRadii = std::vector<double>(1, 0.5 * (rMax + rMin));
-    plbConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
+    plbConfig.centralLayerRadii =
+        std::vector<long double>(1, 0.5 * (rMax + rMin));
+    plbConfig.centralLayerHalflengthZ = std::vector<long double>(1, halfZ);
     plbConfig.centralLayerThickness =
-        std::vector<double>(1, std::abs(rMax - rMin));
+        std::vector<long double>(1, std::abs(rMax - rMin));
     plbConfig.centralLayerMaterial = {plMaterial};
     auto pcLayerBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         plbConfig, logger.clone(std::string("D2A_PL:") + subDetector.name()));

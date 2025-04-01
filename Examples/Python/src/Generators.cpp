@@ -105,8 +105,9 @@ void addGenerators(Context& ctx) {
       std::shared_ptr<ActsExamples::GaussianDisplacedVertexPositionGenerator>>(
       mex, "GaussianDisplacedVertexPositionGenerator")
       .def(py::init<>())
-      .def(py::init([](double rMean, double rStdDev, double zMean,
-                       double zStdDev, double tMean, double tStdDev) {
+      .def(py::init([](long double rMean, long double rStdDev,
+                       long double zMean, long double zStdDev,
+                       long double tMean, long double tStdDev) {
              ActsExamples::GaussianDisplacedVertexPositionGenerator g;
              g.rMean = rMean;
              g.rStdDev = rStdDev;
@@ -182,21 +183,21 @@ void addGenerators(Context& ctx) {
         .def_readwrite("charge", &Config::charge)
         .def_property(
             "p", [](Config& cfg) { return std::pair{cfg.pMin, cfg.pMax}; },
-            [](Config& cfg, std::pair<double, double> value) {
+            [](Config& cfg, std::pair<long double, long double> value) {
               cfg.pMin = value.first;
               cfg.pMax = value.second;
             })
         .def_property(
             "phi",
             [](Config& cfg) { return std::pair{cfg.phiMin, cfg.phiMax}; },
-            [](Config& cfg, std::pair<double, double> value) {
+            [](Config& cfg, std::pair<long double, long double> value) {
               cfg.phiMin = value.first;
               cfg.phiMax = value.second;
             })
         .def_property(
             "theta",
             [](Config& cfg) { return std::pair{cfg.thetaMin, cfg.thetaMax}; },
-            [](Config& cfg, std::pair<double, double> value) {
+            [](Config& cfg, std::pair<long double, long double> value) {
               cfg.thetaMin = value.first;
               cfg.thetaMax = value.second;
             })
@@ -206,7 +207,7 @@ void addGenerators(Context& ctx) {
               return std::pair{Acts::AngleHelpers::etaFromTheta(cfg.thetaMin),
                                Acts::AngleHelpers::etaFromTheta(cfg.thetaMax)};
             },
-            [](Config& cfg, std::pair<double, double> value) {
+            [](Config& cfg, std::pair<long double, long double> value) {
               cfg.thetaMin = Acts::AngleHelpers::thetaFromEta(value.first);
               cfg.thetaMax = Acts::AngleHelpers::thetaFromEta(value.second);
             });
@@ -230,7 +231,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::PoissonMultiplicityGenerator>>(
       mex, "PoissonMultiplicityGenerator")
       .def(py::init<>())
-      .def(py::init([](double mean) {
+      .def(py::init([](long double mean) {
              ActsExamples::PoissonMultiplicityGenerator g;
              g.mean = mean;
              return g;

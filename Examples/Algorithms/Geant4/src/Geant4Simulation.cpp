@@ -148,7 +148,7 @@ ProcessCode Geant4SimulationBase::execute(const AlgorithmContext& ctx) const {
     ACTS_DEBUG("Step merging: No steps recorded");
   } else {
     ACTS_DEBUG("Step merging: mean hits per hit: "
-               << static_cast<double>(eventStore().numberGeantSteps) /
+               << static_cast<long double>(eventStore().numberGeantSteps) /
                       eventStore().hits.size());
     ACTS_DEBUG(
         "Step merging: max hits per hit: " << eventStore().maxStepsForHit);

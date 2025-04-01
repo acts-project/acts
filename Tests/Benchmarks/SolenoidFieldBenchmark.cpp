@@ -37,17 +37,17 @@ int main(int argc, char* argv[]) {
     runs_solenoid = std::stoi(argv[3]);
   }
 
-  const double L = 5.8_m;
-  const double R = (2.56 + 2.46) * 0.5 * 0.5_m;
+  const long double L = 5.8_m;
+  const long double R = (2.56 + 2.46) * 0.5 * 0.5_m;
   const std::size_t nCoils = 1154;
-  const double bMagCenter = 2_T;
+  const long double bMagCenter = 2_T;
   const std::size_t nBinsR = 150;
   const std::size_t nBinsZ = 200;
 
-  double rMin = -0.1;
-  double rMax = R * 2.;
-  double zMin = 2 * (-L / 2.);
-  double zMax = 2 * (L / 2.);
+  long double rMin = -0.1;
+  long double rMax = R * 2.;
+  long double zMin = 2 * (-L / 2.);
+  long double zMax = 2 * (L / 2.);
 
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
@@ -56,12 +56,13 @@ int main(int argc, char* argv[]) {
   Acts::MagneticFieldContext mctx{};
 
   std::minstd_rand rng;
-  std::uniform_real_distribution<double> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
-  std::uniform_real_distribution<double> rDist(0, R * 1.5);
-  std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
-                                                 std::numbers::pi);
+  std::uniform_real_distribution<long double> zDist(1.5 * (-L / 2.),
+                                                    1.5 * L / 2.);
+  std::uniform_real_distribution<long double> rDist(0, R * 1.5);
+  std::uniform_real_distribution<long double> phiDist(-std::numbers::pi,
+                                                      std::numbers::pi);
   auto genPos = [&]() -> Acts::Vector3 {
-    const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
+    const long double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
 
@@ -155,12 +156,12 @@ int main(int argc, char* argv[]) {
     Acts::Vector3 pos{0, 0, 0};
     Acts::Vector3 dir{};
     dir.setRandom();
-    double h = 1e-3;
+    long double h = 1e-3;
     std::vector<Acts::Vector3> steps;
     steps.reserve(iters_map);
     for (std::size_t i = 0; i < iters_map; i++) {
       pos += dir * h;
-      double z = pos[Acts::eFreePos2];
+      long double z = pos[Acts::eFreePos2];
       if (Acts::VectorHelpers::perp(pos) > rMax || z >= zMax || z < zMin) {
         break;
       }
