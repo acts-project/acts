@@ -105,8 +105,23 @@ class EventGenerator final : public ActsExamples::IReader {
     /// The random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
 
+    /// If true, print the listing of the generated event. This can be very
+    /// verbose
     bool printListing = false;
-    double spatialVertexThreshold = 1 * Acts::UnitConstants::nm;
+
+    /// The spatial vertex threshold below which to consider primary vertices
+    /// candidates identical.
+    double primaryVertexSpatialThreshold = 1 * Acts::UnitConstants::nm;
+
+    /// The spatial vertex threshold below which to consider secondary vertices
+    /// candidates identical.
+    double vertexSpatialThreshold = 1 * Acts::UnitConstants::um;
+
+    /// If true, merge secondary vertices that are close to their parent vertex
+    bool mergeSecondaries = true;
+
+    /// If true, check the consistency of the generated event.
+    bool checkConsistency = false;
   };
 
   EventGenerator(const Config& cfg, Acts::Logging::Level lvl);

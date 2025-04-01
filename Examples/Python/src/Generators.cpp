@@ -73,14 +73,12 @@ void addGenerators(Context& ctx) {
         .def_readwrite("vertex", &Generator::vertex)
         .def_readwrite("particles", &Generator::particles);
 
-    py::class_<Config>(gen, "Config")
-        .def(py::init<>())
-        .def_readwrite("outputParticles", &Config::outputParticles)
-        .def_readwrite("outputVertices", &Config::outputVertices)
-        .def_readwrite("outputEvent", &Config::outputEvent)
-        .def_readwrite("generators", &Config::generators)
-        .def_readwrite("randomNumbers", &Config::randomNumbers)
-        .def_readwrite("printListing", &Config::printListing);
+    auto config = py::class_<Config>(gen, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT(config, outputParticles, outputVertices, outputEvent,
+                       generators, randomNumbers, printListing,
+                       checkConsistency, primaryVertexSpatialThreshold,
+                       vertexSpatialThreshold, mergeSecondaries);
   }
 
   py::class_<
