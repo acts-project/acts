@@ -38,20 +38,41 @@ class Channelizer {
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const Acts::BinUtility& segmentation, double thickness) const {
-    // Drfted surface and scalor 2D to 3D segement    
-    auto [ driftedSegment, dScalor ] = m_surfaceDrift.toReadout(
+    // Drfted surface and scalor 2D to 3D segment
+    auto drifted = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
-    // Applies the surface mask     
+    if (!drifted.ok()) {
+      return drifted.error();
+    }
+    // The drifted and the full segment
+    auto [driftedSegment, fullSegement] = drifted.value();
+
+    // Applies the surface mask
     auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
     if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
     }
-    // Now Channelize, i.e. segments are mapped to the readout grid 
+
+    // Now Channelize, i.e. segments are mapped to the readout grid
     auto segments =
         m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
-    // Apply the drift scaling to the segments
-    std::for_each(segments.begin(), segments.end(),
-                 [dScalor](auto& seg) { seg.activation *= dScalor; });
+
+    double driftedPathLength = (driftedSegment[1] - driftedSegment[0]).norm();
+    // In case we have close-to-nominal incident, we could run into numerical
+    // problems, we'll take a 0.1 permille of the thickness as a threshold
+    if (std::abs(driftedPathLength) < 0.0001 * thickness &&
+        segments.size() == 1) {
+      segments[0].activation = thickness;
+      return segments;
+    }
+
+    double fullPathLength = (fullSegement[1] - fullSegement[0]).norm();
+    double sclale2Dto3D = fullPathLength / driftedPathLength;
+    // scale the activations
+    for (auto& segment : segments) {
+      segment.activation *= sclale2Dto3D;
+    }
+
     return segments;
   }
 };
