@@ -24,7 +24,6 @@
 #include <iostream>
 
 namespace Acts {
-
 class LayerCreator;
 class Surface;
 class DetecorElementBase;
