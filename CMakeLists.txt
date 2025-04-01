@@ -278,6 +278,7 @@ set(_acts_covfie_version 0.10.0)
 set(_acts_vecmem_version 1.4.0)
 set(_acts_algebraplugins_version 0.22.0)
 set(_acts_annoy_version 1.17.3)
+set(_acts_gnn_cuda_version 11.2)
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -434,7 +435,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_EXATRKX)
     find_package(Torch REQUIRED)
     if(ACTS_EXATRKX_ENABLE_CUDA)
-        find_package(CUDAToolkit REQUIRED)
+        find_package(CUDAToolkit ${_acts_gnn_cuda_version} REQUIRED)
         enable_cuda()
         add_subdirectory(thirdparty/FRNN)
         message(STATUS "Build Exa.TrkX plugin with CUDA")

@@ -11,36 +11,53 @@ add_library(
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
     target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
+    target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
+    set_target_properties(
+        ActsPluginExaTrkX
+        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
+    )
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:-g
+            --generate-line-info
+            --extended-lambda>
+    )
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g --generate-line-info>
+    )
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
+    )
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
+    )
+else()
+    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    option(ACTS_EXATRKX_OLD_MMG_API OFF)
-
-    #target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCpp.cpp)
-
-    if(ACTS_EXATRKX_OLD_MMG_API)
-        target_compile_definitions(
-            ActsPluginExaTrkX
-            PRIVATE ACTS_EXATRKX_OLD_MMG_API
-        )
-    endif()
+    target_compile_definitions(
+        ActsPluginExaTrkX
+        PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
+    )
 
     target_sources(ActsPluginExaTrkX PRIVATE src/GraphCreatorWrapperCpu.cpp)
 
     if(ACTS_EXATRKX_ENABLE_CUDA)
+        find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
+        target_link_libraries(
+            ActsPluginExaTrkX
+            PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
+        )
         target_sources(ActsPluginExaTrkX PRIVATE src/ModuleMapCuda.cu)
-
-        #if(ACTS_EXATRKX_OLD_MMG_API)
-        #    target_sources(
-        #        ActsPluginExaTrkX
-        #        PRIVATE src/GraphCreatorWrapperCuda.cu
-        #    )
-        #else()
-        #    target_sources(
-        #        ActsPluginExaTrkX
-        #        PRIVATE src/GraphCreatorWrapperCuda2.cu
-        #    )
-        #endif()
+    else()
+        find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
+        target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU)
     endif()
 endif()
 
@@ -109,38 +126,7 @@ target_link_libraries(
         ActsCore
         Boost::boost
         torch # TODO try to make this private again (torch::Device is leaking)
-    #std::filesystem
 )
-
-if(ACTS_EXATRKX_ENABLE_CUDA)
-    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
-    target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
-    set_target_properties(
-        ActsPluginExaTrkX
-        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
-    )
-    target_compile_options(
-        ActsPluginExaTrkX
-        PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:-g
-            --generate-line-info
-            --extended-lambda>
-    )
-    target_compile_options(
-        ActsPluginExaTrkX
-        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-g --generate-line-info>
-    )
-    target_compile_options(
-        ActsPluginExaTrkX
-        PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
-    )
-    target_compile_definitions(
-        ActsPluginExaTrkX
-        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
-    )
-else()
-    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
-endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
     target_compile_definitions(
@@ -157,7 +143,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
         PUBLIC ACTS_EXATRKX_TORCH_BACKEND
     )
 
-    find_package(TorchScatter)
+    find_package(TorchScatter QUIET)
     if(NOT TARGET TorchScatter::TorchScatter)
         message(
             WARNING
@@ -174,28 +160,11 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     endif()
 endif()
 
-if(ACTS_EXATRKX_ENABLE_MODULEMAP)
-    target_compile_definitions(
-        ActsPluginExaTrkX
-        PUBLIC ACTS_EXATRKX_WITH_MODULEMAP
-    )
-    if(ACTS_EXATRKX_ENABLE_CUDA)
-        find_package(ModuleMapGraph REQUIRED COMPONENTS CPU GPU)
-        target_link_libraries(
-            ActsPluginExaTrkX
-            PRIVATE ModuleMapGraph::CPU ModuleMapGraph::GPU
-        )
-    else()
-        find_package(ModuleMapGraph REQUIRED COMPONENTS CPU)
-        target_link_libraries(ActsPluginExaTrkX PRIVATE ModuleMapGraph::CPU)
-    endif()
-endif()
-
 if(ACTS_EXATRKX_ENABLE_NVTX)
     if(NOT ACTS_EXATRKX_ENABLE_CUDA)
         message(FATAL_ERROR "Need cuda for nvtx")
     endif()
-    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::nvToolsExt)
+    target_link_libraries(ActsPluginExaTrkX PUBLIC CUDA::nvtx3)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_NVTX)
 endif()
 
