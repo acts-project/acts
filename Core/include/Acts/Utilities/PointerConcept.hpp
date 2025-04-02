@@ -28,7 +28,7 @@ concept SmartPointerConcept = requires(Pointer_t ptr) {
   {
     ptr.operator->()
   } -> std::same_as<std::add_pointer_t<typename Pointer_t::element_type>>;
-  /** @brief dereference operator element_type& operator->() const; */
+  /** @brief dereference operator element_type& operator*() const; */
   { ptr.operator*() } -> std::same_as<typename Pointer_t::element_type&>;
   /** @brief Simple cast to check for if(ptr) */
   { ptr.operator bool() };
@@ -39,6 +39,8 @@ concept PointerConcept =
 }  // namespace Acts
 
 namespace std {
+/** @brief  This specialization allows std::remove_pointer to work with types satisfying 
+ *          Acts::SmartPointerConcept, similar to how it works with raw pointers */
 template <Acts::SmartPointerConcept T>
 struct remove_pointer<T> {
   typedef typename T::element_type type;

@@ -19,13 +19,13 @@ namespace Test {
 
 template <typename T> 
     bool testPointer(const T /*ptr*/) {
-        std::cout<<"Object of "<<typeid(T).name()<<" does not pass the pointer concept "<<std::endl;
+        BOOST_TEST_MESSAGE("Object of "<<typeid(T).name()<<" does not pass the pointer concept ");
         return false;
     }
 
 template <PointerConcept T>
     bool testPointer(const T /*ptr*/) {
-        std::cout<<"Object of "<<typeid(T).name()<<" passes the pointer concept "<<std::endl;
+        BOOST_TEST_MESSAGE("Object of "<<typeid(T).name()<<" passes the pointer concept ");
         return true;
     }
 
@@ -45,6 +45,14 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
   
     BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<int>{nullptr}));
     BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<const int>{nullptr}));
+
+    // Class with partial pointer-like behavior
+    struct PartialPointerLike {
+        int* ptr = nullptr;
+        int* operator->() const { return ptr; }
+        // Missing operator*() and operator bool()
+    };
+    BOOST_CHECK(!testPointer(PartialPointerLike{}));
 
 }
 BOOST_AUTO_TEST_SUITE_END()
