@@ -15,8 +15,13 @@ from acts.examples import (
 
 import acts.examples.dd4hep
 import acts.examples.geant4
-import acts.examples.geant4.dd4hep
 from acts.examples.odd import getOpenDataDetector
+
+try:
+    import acts.examples.geant4.geomodel
+except ImportError:
+    # geomodel is optional for this script
+    pass
 
 u = acts.UnitConstants
 
@@ -24,7 +29,7 @@ _material_recording_executed = False
 
 
 def runMaterialRecording(
-    detectorConstructionFactory,
+    detector,
     outputDir,
     tracksPerEvent=10000,
     s=None,
@@ -67,7 +72,7 @@ def runMaterialRecording(
 
     g4Alg = acts.examples.geant4.Geant4MaterialRecording(
         level=acts.logging.INFO,
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         randomNumbers=rnd,
         inputParticles=evGen.config.outputParticles,
         outputMaterialTracks="material-tracks",
@@ -102,29 +107,17 @@ def main():
 
     args = p.parse_args()
 
-    detectorConstructionFactory = None
+    detector = None
     if args.input == "":
-        detector, trackingGeometry, decorators = getOpenDataDetector()
-
-        detectorConstructionFactory = (
-            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-        )
+        detector = getOpenDataDetector()
     elif args.input.endswith(".gdml"):
-        detectorConstructionFactory = (
-            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
-        )
+        detector = acts.examples.geant4.GdmlDetector(path=args.input)
     elif args.input.endswith(".sqlite") or args.input.endswith(".db"):
-        import acts.examples.geant4.geomodel
-
-        geoModelTree = acts.geomodel.readFromDb(args.input)
-        detectorConstructionFactory = (
-            acts.examples.geant4.geomodel.GeoModelDetectorConstructionFactory(
-                geoModelTree
-            )
-        )
+        gmdConfig = acts.geomodel.GeoModelDetector.Config(path=args.input)
+        detector = acts.geomodel.GeoModelDetector(gmdConfig)
 
     runMaterialRecording(
-        detectorConstructionFactory=detectorConstructionFactory,
+        detector=detector,
         tracksPerEvent=args.tracks,
         outputDir=os.getcwd(),
         s=acts.examples.Sequencer(events=args.events, numThreads=1),

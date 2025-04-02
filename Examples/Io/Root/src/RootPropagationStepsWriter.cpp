@@ -9,15 +9,12 @@
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Propagator/ConstrainedStep.hpp>
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
 
 #include <ios>
 #include <memory>
@@ -194,9 +191,10 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_dz.push_back(direction.z());
 
       double accuracy = step.stepSize.accuracy();
-      double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
-      double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
-      double user = step.stepSize.value(Acts::ConstrainedStep::user);
+      double actor =
+          step.stepSize.value(Acts::ConstrainedStep::Type::Navigator);
+      double aborter = step.stepSize.value(Acts::ConstrainedStep::Type::Actor);
+      double user = step.stepSize.value(Acts::ConstrainedStep::Type::User);
       double actAbs = std::abs(actor);
       double accAbs = std::abs(accuracy);
       double aboAbs = std::abs(aborter);

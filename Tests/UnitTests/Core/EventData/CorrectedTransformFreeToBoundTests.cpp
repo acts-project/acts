@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -33,7 +34,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr ActsScalar eps = 0.01;
+constexpr double eps = 0.01;
 }
 
 BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   const auto loc0 = 0.0;
   const auto loc1 = 0.0;
   const auto phi = 0.0;
-  const auto theta = M_PI / 4;
+  const auto theta = std::numbers::pi / 4.;
   const auto qOverP = 1 / 1_GeV;
   const auto t = 1_ns;
 
@@ -54,9 +55,10 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   const auto resTime = 0.01_ns;
 
   // construct two parallel plane surfaces with normal in x direction
-  ActsScalar distance = 10_mm;
-  auto eSurface = CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
-                      .planeSurface();
+  double distance = 10_mm;
+  std::shared_ptr<PlaneSurface> eSurface =
+      CurvilinearSurface(Vector3(distance, 0, 0), Vector3::UnitX())
+          .planeSurface();
 
   // the bound parameters at the starting plane
   BoundVector sBoundParams = BoundVector::Zero();
@@ -81,7 +83,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   Vector3 tpos = intersection.position();
   auto s = intersection.pathLength();
 
-  BOOST_CHECK_EQUAL(s, distance * std::sqrt(2));
+  BOOST_CHECK_EQUAL(s, distance * std::numbers::sqrt2);
 
   // construct the free parameters vector
   FreeVector eFreeParams = FreeVector::Zero();

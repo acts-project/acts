@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -25,16 +25,14 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-struct AlgorithmContext;
-
-using TrackParameterWriter = WriterT<TrackParametersContainer>;
 
 /// Write out the track parameters from both simulation and those estimated from
 /// reconstructed seeds into a TTree
 ///
 /// Each entry in the TTree corresponds to one seed for optimum writing
 /// speed. The event number is part of the written data.
-class RootTrackParameterWriter final : public TrackParameterWriter {
+class RootTrackParameterWriter final
+    : public WriterT<TrackParametersContainer> {
  public:
   struct Config {
     /// Input estimated track parameters collection.
@@ -61,8 +59,8 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrackParameterWriter(const Config& config,
-                           Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit RootTrackParameterWriter(
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
   ~RootTrackParameterWriter() override;
@@ -87,9 +85,9 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
                                                          "InputProtoTracks"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+  ReadDataHandle<MeasurementParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+  ReadDataHandle<MeasurementSimHitsMap> m_inputMeasurementSimHitsMap{
       this, "InputMeasurementSimHitsMap"};
 
   /// Mutex used to protect multi-threaded writes

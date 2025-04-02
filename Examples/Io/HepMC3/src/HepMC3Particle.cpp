@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
 namespace ActsExamples {
@@ -16,19 +17,19 @@ namespace ActsExamples {
 SimBarcode HepMC3Particle::barcode(
     const HepMC3::ConstGenParticlePtr& particle) {
   // TODO this is probably not quite right
-  return particle->id();
+  return SimBarcode{static_cast<SimBarcode::Value>(particle->id())};
 }
 
 SimParticle HepMC3Particle::particle(
     const HepMC3::ConstGenParticlePtr& particle) {
   SimBarcode particleId = barcode(particle);
   Acts::PdgParticle pdg = static_cast<Acts::PdgParticle>(particle->pid());
-  SimParticle fw(particleId, pdg, Acts::findCharge(pdg).value_or(0),
-                 particle->generated_mass());
+  SimParticleState fw(particleId, pdg, Acts::findCharge(pdg).value_or(0),
+                      particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsoluteMomentum(particle->momentum().p3mod());
-  return fw;
+  return SimParticle(fw, fw);
 }
 
 int HepMC3Particle::id(const std::shared_ptr<HepMC3::GenParticle>& particle) {

@@ -19,8 +19,6 @@
 #include <any>
 #include <vector>
 
-#include <math.h>
-
 namespace Acts {
 
 struct SpacePointContainerConfig {

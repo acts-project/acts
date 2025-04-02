@@ -23,12 +23,12 @@ class Vertex {
   /// @brief Construct for vertex at given 3d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector3& position);
+  explicit Vertex(const Vector3& position);
 
   /// @brief Construct for vertex at given 4d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector4& position);
+  explicit Vertex(const Vector4& position);
 
   /// @brief Vertex constructor
   ///
@@ -50,7 +50,7 @@ class Vertex {
   Vector3 position() const;
 
   /// @return Returns time
-  ActsScalar time() const;
+  double time() const;
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
@@ -86,7 +86,7 @@ class Vertex {
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(ActsScalar time);
+  void setTime(double time);
 
   /// @brief Sets 3x3 covariance
   ///

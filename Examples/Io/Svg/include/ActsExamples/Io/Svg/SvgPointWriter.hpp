@@ -82,19 +82,20 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
     std::string outputDir;                   ///< where to place output files
     std::size_t outputPrecision = 6;         ///< floating point precision
 
-    Acts::ActsScalar spSize = 10.;  //!< size of the space point to be drawn
+    double spSize = 10.;  //!< size of the space point to be drawn
     Acts::Svg::Style spStyle =
         s_pointStyle;  //!< The style of the space point to be drawn
 
     std::string infoBoxTitle = "";  //!< If an info box title is set, draw it
+    Acts::Svg::Style infoTitleStyle = s_infoStyle;
     Acts::Svg::Style infoBoxStyle = s_infoStyle;  // The style of the info box
 
     bool projectionXY = true;  ///< xy projection
-    std::array<Acts::ActsScalar, 2> zRangeXY = {
-        std::numeric_limits<Acts::ActsScalar>::lowest(),
-        std::numeric_limits<Acts::ActsScalar>::max()};  ///< View range in z of
-                                                        ///< the XY view
-    bool projectionZR = true;                           ///< zr projection
+    std::array<double, 2> zRangeXY = {
+        std::numeric_limits<double>::lowest(),
+        std::numeric_limits<double>::max()};  ///< View range in z of
+                                              ///< the XY view
+    bool projectionZR = true;                 ///< zr projection
 
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry =
         nullptr;  ///< The tracking geometry, a set pointer will cause the
@@ -104,8 +105,8 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
         s_backgroundTrackingGeometryOptions;
   };
 
-  SvgPointWriter(const Config& cfg,
-                 Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit SvgPointWriter(const Config& cfg,
+                          Acts::Logging::Level level = Acts::Logging::INFO);
 
  protected:
   ActsExamples::ProcessCode writeT(
@@ -170,7 +171,8 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
         auto xyIbox = Acts::Svg::infoBox(
             static_cast<actsvg::scalar>(point3D.x() + 10.),
             static_cast<actsvg::scalar>(point3D.y() - 10.), m_cfg.infoBoxTitle,
-            {"Position: " + Acts::toString(point3D)}, m_cfg.infoBoxStyle, p);
+            m_cfg.infoTitleStyle, {"Position: " + Acts::toString(point3D)},
+            m_cfg.infoBoxStyle, p);
         xyView.add_object(xyIbox);
       }
     }

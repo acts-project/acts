@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/ProxyAccessor.hpp"
@@ -21,6 +22,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
@@ -56,9 +58,13 @@ struct TestOutlierFinder {
     if (!state.hasCalibrated() || !state.hasPredicted()) {
       return false;
     }
-    auto residuals = (state.effectiveCalibrated() -
-                      state.effectiveProjector() * state.predicted())
-                         .eval();
+    auto subspaceHelper = state.projectorSubspaceHelper();
+    auto projector =
+        subspaceHelper.fullProjector()
+            .topLeftCorner(state.calibratedSize(), Acts::eBoundSize)
+            .eval();
+    auto residuals =
+        (state.effectiveCalibrated() - projector * state.predicted()).eval();
     auto distance = residuals.norm();
     return (distanceMax <= distance);
   }
@@ -77,7 +83,7 @@ struct TestReverseFilteringLogic {
   template <typename traj_t>
   bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
-    auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
+    auto momentum = std::abs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
     return (momentum <= momentumMax);
   }
@@ -90,7 +96,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
       stepper, std::move(navigator));
@@ -105,7 +111,7 @@ auto makeConstantFieldPropagator(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(
-      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::VERBOSE));
+      cfg, Acts::getDefaultLogger("Navigator", Acts::Logging::INFO));
   auto field =
       std::make_shared<Acts::ConstantBField>(Acts::Vector3(0.0, 0.0, bz));
   stepper_t stepper(std::move(field));
@@ -138,11 +144,11 @@ struct FitterTester {
   MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
   MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
   MeasurementResolutionMap resolutions = {
-      {Acts::GeometryIdentifier().setVolume(2), resPixel},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(4), resStrip1},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(6), resStrip0},
-      {Acts::GeometryIdentifier().setVolume(3).setLayer(8), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(2), resPixel},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(2), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(4), resStrip1},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(6), resStrip0},
+      {Acts::GeometryIdentifier().withVolume(3).withLayer(8), resStrip1},
   };
 
   // simulation propagator
@@ -231,7 +237,7 @@ struct FitterTester {
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyway for consistency
-    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Forward();
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -285,12 +291,13 @@ struct FitterTester {
     // create a track near the tracker exit for outward->inward filtering
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
-    Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.direction(), start.qOverP(), start.covariance(),
-        Acts::ParticleHypothesis::pion());
+    Acts::BoundTrackParameters startOuter =
+        Acts::BoundTrackParameters::createCurvilinear(
+            posOuter, start.direction(), start.qOverP(), start.covariance(),
+            Acts::ParticleHypothesis::pion());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction = Acts::Direction::Backward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Backward();
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -340,7 +347,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker exit
     Acts::Vector3 center(3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();
@@ -561,7 +568,7 @@ struct FitterTester {
     // create a boundless target surface near the tracker entry
     Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
-    auto targetSurface =
+    std::shared_ptr<Acts::PlaneSurface> targetSurface =
         Acts::CurvilinearSurface(center, normal).planeSurface();
 
     options.referenceSurface = targetSurface.get();

@@ -27,9 +27,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/TrackStateCreator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
@@ -177,13 +176,13 @@ class BranchStopper {
   using BranchStopperResult =
       Acts::CombinatorialKalmanFilterBranchStopperResult;
 
-  struct BrachState {
+  struct BranchState {
     std::size_t nPixelHoles = 0;
     std::size_t nStripHoles = 0;
   };
 
-  static constexpr Acts::ProxyAccessor<BrachState> branchStateAccessor =
-      Acts::ProxyAccessor<BrachState>(Acts::hashString("MyBranchState"));
+  static constexpr Acts::ProxyAccessor<BranchState> branchStateAccessor =
+      Acts::ProxyAccessor<BranchState>(Acts::hashString("MyBranchState"));
 
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
 
@@ -205,7 +204,7 @@ class BranchStopper {
           } else if constexpr (std::is_same_v<
                                    T, Acts::TrackSelector::EtaBinnedConfig>) {
             double theta = trackState.parameters()[Acts::eBoundTheta];
-            double eta = -std::log(std::tan(0.5 * theta));
+            double eta = Acts::AngleHelpers::etaFromTheta(theta);
             return config.hasCuts(eta) ? &config.getCuts(eta) : nullptr;
           }
         },
@@ -265,9 +264,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source links input collection");
-  }
   if (m_cfg.inputInitialTrackParameters.empty()) {
     throw std::invalid_argument(
         "Missing initial track parameters input collection");
@@ -290,13 +286,12 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
   if (m_cfg.trackSelectorCfg.has_value()) {
     m_trackSelector = std::visit(
         [](const auto& cfg) -> std::optional<Acts::TrackSelector> {
-          return {cfg};
+          return Acts::TrackSelector(cfg);
         },
         m_cfg.trackSelectorCfg.value());
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
   m_inputSeeds.maybeInitialize(m_cfg.inputSeeds);
   m_outputTracks.initialize(m_cfg.outputTracks);
@@ -305,7 +300,6 @@ TrackFindingAlgorithm::TrackFindingAlgorithm(Config config,
 ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
   const SimSeedContainer* seeds = nullptr;
 
@@ -325,33 +319,40 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
-  MeasurementSelector measSel{
-      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
   using Extensions = Acts::CombinatorialKalmanFilterExtensions<TrackContainer>;
 
   BranchStopper branchStopper(m_cfg);
-
-  Extensions extensions;
-  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
-      &calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
-      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
-  extensions.measurementSelector.connect<&MeasurementSelector::select>(
-      &measSel);
-  extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
+  MeasurementSelector measSel{
+      Acts::MeasurementSelector(m_cfg.measurementSelectorCfg)};
 
   IndexSourceLinkAccessor slAccessor;
-  slAccessor.container = &sourceLinks;
-  Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
-      slAccessorDelegate;
-  slAccessorDelegate.connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+  slAccessor.container = &measurements.orderedIndices();
+
+  using TrackStateCreatorType =
+      Acts::TrackStateCreator<IndexSourceLinkAccessor::Iterator,
+                              TrackContainer>;
+  TrackStateCreatorType trackStateCreator;
+  trackStateCreator.sourceLinkAccessor
+      .template connect<&IndexSourceLinkAccessor::range>(&slAccessor);
+  trackStateCreator.calibrator
+      .template connect<&MeasurementCalibratorAdapter::calibrate>(&calibrator);
+  trackStateCreator.measurementSelector
+      .template connect<&MeasurementSelector::select>(&measSel);
+
+  Extensions extensions;
+  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()<
+      typename TrackContainer::TrackStateContainerBackend>>(&kfUpdater);
+  extensions.branchStopper.connect<&BranchStopper::operator()>(&branchStopper);
+  extensions.createTrackStates
+      .template connect<&TrackStateCreatorType ::createTrackStates>(
+          &trackStateCreator);
 
   Acts::PropagatorPlainOptions firstPropOptions(ctx.geoContext,
                                                 ctx.magFieldContext);
   firstPropOptions.maxSteps = m_cfg.maxSteps;
-  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward
-                                                   : Acts::Direction::Forward;
+  firstPropOptions.direction = m_cfg.reverseSearch ? Acts::Direction::Backward()
+                                                   : Acts::Direction::Forward();
   firstPropOptions.constrainToVolumeIds = m_cfg.constrainToVolumeIds;
   firstPropOptions.endOfWorldVolumeIds = m_cfg.endOfWorldVolumeIds;
 
@@ -364,13 +365,14 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Set the CombinatorialKalmanFilter options
   TrackFinderOptions firstOptions(ctx.geoContext, ctx.magFieldContext,
-                                  ctx.calibContext, slAccessorDelegate,
-                                  extensions, firstPropOptions);
+                                  ctx.calibContext, extensions,
+                                  firstPropOptions);
+
   firstOptions.targetSurface = m_cfg.reverseSearch ? pSurface.get() : nullptr;
 
   TrackFinderOptions secondOptions(ctx.geoContext, ctx.magFieldContext,
-                                   ctx.calibContext, slAccessorDelegate,
-                                   extensions, secondPropOptions);
+                                   ctx.calibContext, extensions,
+                                   secondPropOptions);
   secondOptions.targetSurface = m_cfg.reverseSearch ? nullptr : pSurface.get();
   secondOptions.skipPrePropagationUpdate = true;
 
@@ -403,8 +405,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   // Note that not all backends support PODs as column types
-  tracks.addColumn<BranchStopper::BrachState>("MyBranchState");
-  tracksTemp.addColumn<BranchStopper::BrachState>("MyBranchState");
+  tracks.addColumn<BranchStopper::BranchState>("MyBranchState");
+  tracksTemp.addColumn<BranchStopper::BranchState>("MyBranchState");
 
   tracks.addColumn<unsigned int>("trackGroup");
   tracksTemp.addColumn<unsigned int>("trackGroup");
@@ -418,6 +420,16 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
   auto addTrack = [&](const TrackProxy& track) {
     ++m_nFoundTracks;
 
+    // trim the track if requested
+    if (m_cfg.trimTracks) {
+      Acts::trimTrack(track, true, true, true, true);
+    }
+    Acts::calculateTrackQuantities(track);
+
+    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
+      return;
+    }
+
     // flag seeds which are covered by the track
     visitSeedIdentifiers(track, [&](const SeedIdentifier& seedIdentifier) {
       if (auto it = discoveredSeeds.find(seedIdentifier);
@@ -425,16 +437,6 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         it->second = true;
       }
     });
-
-    // trim the track if requested
-    if (m_cfg.trimTracks) {
-      Acts::trimTrack(track, true, true, true);
-    }
-    Acts::calculateTrackQuantities(track);
-
-    if (m_trackSelector.has_value() && !m_trackSelector->isValidTrack(track)) {
-      return;
-    }
 
     ++m_nSelectedTracks;
 
@@ -500,8 +502,8 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
       auto trackCandidate = tracksTemp.makeTrack();
       trackCandidate.copyFrom(firstTrack, true);
 
-      auto firstSmoothingResult =
-          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger());
+      Acts::Result<void> firstSmoothingResult{
+          Acts::smoothTrack(ctx.geoContext, trackCandidate, logger())};
       if (!firstSmoothingResult.ok()) {
         m_nFailedSmoothing++;
         ACTS_ERROR("First smoothing for seed "
@@ -534,10 +536,22 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
         }
 
         if (firstMeasurementOpt.has_value()) {
-          auto& firstMeasurement = firstMeasurementOpt.value();
+          TrackContainer::TrackStateProxy firstMeasurement{
+              firstMeasurementOpt.value()};
+          TrackContainer::ConstTrackStateProxy firstMeasurementConst{
+              firstMeasurement};
 
           Acts::BoundTrackParameters secondInitialParameters =
-              trackCandidate.createParametersFromState(firstMeasurement);
+              trackCandidate.createParametersFromState(firstMeasurementConst);
+
+          if (!secondInitialParameters.referenceSurface().insideBounds(
+                  secondInitialParameters.localPosition())) {
+            m_nSkippedSecondPass++;
+            ACTS_DEBUG(
+                "Smoothing of first pass fit produced out-of-bounds parameters "
+                "relative to the surface. Skipping second pass.");
+            continue;
+          }
 
           auto secondRootBranch = tracksTemp.makeTrack();
           secondRootBranch.copyFrom(trackCandidate, false);
@@ -651,7 +665,7 @@ ProcessCode TrackFindingAlgorithm::execute(const AlgorithmContext& ctx) const {
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, tracks);
+    computeSharedHits(tracks, measurements);
   }
 
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
@@ -688,6 +702,7 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   ACTS_INFO("- found tracks: " << m_nFoundTracks);
   ACTS_INFO("- selected tracks: " << m_nSelectedTracks);
   ACTS_INFO("- stopped branches: " << m_nStoppedBranches);
+  ACTS_INFO("- skipped second pass: " << m_nSkippedSecondPass);
 
   auto memoryStatistics =
       m_memoryStatistics.combine([](const auto& a, const auto& b) {
@@ -699,6 +714,56 @@ ProcessCode TrackFindingAlgorithm::finalize() {
   memoryStatistics.toStream(ss);
   ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
+}
+
+// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
+// TODO we should make a common implementation in the core at some point
+void TrackFindingAlgorithm::computeSharedHits(
+    TrackContainer& tracks, const MeasurementContainer& measurements) const {
+  // Compute shared hits from all the reconstructed tracks
+  // Compute nSharedhits and Update ckf results
+  // hit index -> list of multi traj indexes [traj, meas]
+
+  std::vector<std::size_t> firstTrackOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+  std::vector<std::size_t> firstStateOnTheHit(
+      measurements.size(), std::numeric_limits<std::size_t>::max());
+
+  for (auto track : tracks) {
+    for (auto state : track.trackStatesReversed()) {
+      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        continue;
+      }
+
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
+                                 .template get<IndexSourceLink>()
+                                 .index();
+
+      // Check if hit not already used
+      if (firstTrackOnTheHit.at(hitIndex) ==
+          std::numeric_limits<std::size_t>::max()) {
+        firstTrackOnTheHit.at(hitIndex) = track.index();
+        firstStateOnTheHit.at(hitIndex) = state.index();
+        continue;
+      }
+
+      // if already used, control if first track state has been marked
+      // as shared
+      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+
+      auto firstState = tracks.getTrack(indexFirstTrack)
+                            .container()
+                            .trackStateContainer()
+                            .getTrackState(indexFirstState);
+      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
+        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      }
+
+      // Decorate this track state
+      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+    }
+  }
 }
 
 }  // namespace ActsExamples

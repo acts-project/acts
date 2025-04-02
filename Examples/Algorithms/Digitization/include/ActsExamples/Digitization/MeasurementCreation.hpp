@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <array>
@@ -20,30 +20,30 @@
 #include <vector>
 
 namespace ActsExamples {
-class IndexSourceLink;
 
 /// Struct to identify digitized parameters
 ///
 /// Is public as it is also used by the I/O system
 struct DigitizedParameters {
   std::vector<Acts::BoundIndices> indices = {};
-  std::vector<Acts::ActsScalar> values = {};
-  std::vector<Acts::ActsScalar> variances = {};
+  std::vector<double> values = {};
+  std::vector<double> variances = {};
 
   Cluster cluster;
 };
 
 /// Helper method for created a measurement from digitized parameters
 ///
+/// @param container The measurement container to insert into
+/// @param geometryId The geometry ID of the measurement surface
 /// @param dParams The digitized parameters of variable size
-/// @param isl The indexed source link for the measurement
 ///
 /// To be used also by the e I/O system
 ///
 /// @return the measurement proxy
 ActsExamples::VariableBoundMeasurementProxy createMeasurement(
-    MeasurementContainer& container, const DigitizedParameters& dParams,
-    const IndexSourceLink& isl) noexcept(false);
+    MeasurementContainer& container, Acts::GeometryIdentifier geometryId,
+    const DigitizedParameters& dParams) noexcept(false);
 
 /// Construct the constituents of a measurement.
 ///

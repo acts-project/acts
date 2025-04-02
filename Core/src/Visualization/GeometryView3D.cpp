@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -36,17 +35,8 @@
 #include <cmath>
 #include <filesystem>
 #include <memory>
-#include <ostream>
 #include <utility>
 #include <vector>
-
-namespace Acts::Experimental {
-ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
-ViewConfig s_viewPassive = {.color = {240, 280, 0}};
-ViewConfig s_viewVolume = {.color = {220, 220, 0}};
-ViewConfig s_viewGrid = {.color = {220, 0, 0}};
-ViewConfig s_viewLine = {.color = {0, 0, 220}};
-}  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
@@ -89,9 +79,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
   auto axes = surfaceArray.getAxes();
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
     // Cylinder surface array
-    if (binning[0] == BinningValue::binPhi &&
-        binning[1] == BinningValue::binZ) {
-      double R = arrayExtent.medium(BinningValue::binR) + gridConfig.offset;
+    if (binning[0] == AxisDirection::AxisPhi &&
+        binning[1] == AxisDirection::AxisZ) {
+      double R = arrayExtent.medium(AxisDirection::AxisR) + gridConfig.offset;
       auto phiValues = axes[0]->getBinEdges();
       auto zValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
@@ -113,9 +103,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
         }
       }
 
-    } else if (binning[0] == BinningValue::binR &&
-               binning[1] == BinningValue::binPhi) {
-      double z = arrayExtent.medium(BinningValue::binZ) + gridConfig.offset;
+    } else if (binning[0] == AxisDirection::AxisR &&
+               binning[1] == AxisDirection::AxisPhi) {
+      double z = arrayExtent.medium(AxisDirection::AxisZ) + gridConfig.offset;
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
@@ -318,7 +308,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   auto direction = Vector3(end - start).normalized();
   double hlength = 0.5 * Vector3(end - start).norm();
 
-  auto unitVectors = makeCurvilinearUnitVectors(direction);
+  auto unitVectors = createCurvilinearUnitVectors(direction);
   RotationMatrix3 lrotation;
   lrotation.col(0) = unitVectors.first;
   lrotation.col(1) = unitVectors.second;

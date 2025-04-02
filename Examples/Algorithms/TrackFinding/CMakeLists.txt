@@ -10,6 +10,7 @@ add_library(
     src/TrackParamsEstimationAlgorithm.cpp
     src/MuonHoughSeeder.cpp
     src/GbtsSeedingAlgorithm.cpp
+    src/TrackParamsLookupEstimation.cpp
 )
 
 target_include_directories(
@@ -19,13 +20,11 @@ target_include_directories(
 
 target_link_libraries(
     ActsExamplesTrackFinding
-    PUBLIC
-        ActsCore
-        ActsExamplesFramework
-        ActsExamplesIoJson
-        ActsExamplesMagneticField
+    PUBLIC ActsCore ActsExamplesFramework ActsExamplesMagneticField
     PRIVATE ROOT::Core ROOT::Geom ROOT::Graf ROOT::Hist ROOT::Gpad
 )
+
+acts_compile_headers(ActsExamplesTrackFinding GLOB "include/**/*.hpp")
 
 # If Hashing examples are enabled, add them to the build
 if(ACTS_BUILD_EXAMPLES_HASHING)

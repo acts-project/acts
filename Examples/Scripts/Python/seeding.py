@@ -59,6 +59,8 @@ def runSeeding(
         ParticleConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
 
     s = s or acts.examples.Sequencer(
@@ -85,7 +87,6 @@ def runSeeding(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
-        preSelectParticles=None,
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -97,9 +98,19 @@ def runSeeding(
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         rnd=rnd,
     )
+
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-2.5, 2.5),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     from acts.examples.reconstruction import (
         addSeeding,
-        TruthSeedRanges,
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
     )
@@ -108,10 +119,9 @@ def runSeeding(
         s,
         trackingGeometry,
         field,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
-            deltaR=(1 * u.mm, 60 * u.mm),
+            deltaR=(1 * u.mm, 300 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
@@ -127,7 +137,6 @@ def runSeeding(
         seedingAlgorithm=seedingAlgorithm,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
-        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
         outputDirRoot=outputDir,
     )
     return s
@@ -147,8 +156,9 @@ if "__main__" == __name__:
     )
 
     args = p.parse_args()
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    # detector = getOpenDataDetector()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

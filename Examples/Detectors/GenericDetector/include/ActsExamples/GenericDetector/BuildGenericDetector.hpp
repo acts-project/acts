@@ -31,11 +31,7 @@
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
-#include <array>
-#include <cmath>
 #include <cstddef>
-#include <iostream>
-#include <list>
 #include <memory>
 #include <string>
 #include <utility>
@@ -108,7 +104,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 /// return a unique vector to the tracking geometry
 template <typename detector_element_t>
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename detector_element_t::ContextType& gctxIn,
+    const Acts::GeometryContext& gctxIn,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,
     std::size_t level,
@@ -160,20 +156,21 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
   Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
-                                    Acts::BinningValue::binPhi);
+                                    Acts::AxisDirection::AxisPhi);
   pCylinderUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::open, Acts::BinningValue::binZ);
+      Acts::BinUtility(10, -1, 1, Acts::open, Acts::AxisDirection::AxisZ);
   auto pCylinderMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pCylinderUtility);
   // - disc
-  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open, Acts::BinningValue::binR);
+  Acts::BinUtility pDiscUtility(10, 0, 1, Acts::open,
+                                Acts::AxisDirection::AxisR);
   pDiscUtility +=
-      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::BinningValue::binPhi);
+      Acts::BinUtility(10, -1, 1, Acts::closed, Acts::AxisDirection::AxisPhi);
   auto pDiscMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pDiscUtility);
   // - plane
   Acts::BinUtility pPlaneUtility(1, -1, 1, Acts::open,
-                                 Acts::BinningValue::binX);
+                                 Acts::AxisDirection::AxisX);
   auto pPlaneMaterial =
       std::make_shared<const Acts::ProtoSurfaceMaterial>(pPlaneUtility);
 
@@ -782,7 +779,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
           Acts::getDefaultLogger("TrackerGeometryBuilder", volumeLLevel));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry(gctx);
-  /// return the tracking geometry
+  // return the tracking geometry
   return trackingGeometry;
 }
 

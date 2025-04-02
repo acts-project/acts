@@ -11,11 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <iosfwd>
 #include <memory>
-#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -47,8 +47,6 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
     eSize
   };
 
-  CutoutCylinderVolumeBounds() = delete;
-
   /// Constructor from defining parameters
   ///
   /// @param rmin Minimum radius at the "choke points"
@@ -66,14 +64,12 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CutoutCylinderVolumeBounds(const std::array<double, eSize>& values) noexcept(
-      false)
+  explicit CutoutCylinderVolumeBounds(
+      const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
     buildSurfaceBounds();
   }
-
-  ~CutoutCylinderVolumeBounds() override = default;
 
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eCutoutCylinder;
@@ -114,13 +110,13 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
-  /// for that fully describe the shape's extent
+  /// Get the canonical binning direction, i.e. the axis values
+  /// that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binR, Acts::BinningValue::binPhi,
-            Acts::BinningValue::binZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisR, AxisPhi, AxisZ};
   };
 
   /// Write information about this instance to an outstream
@@ -150,25 +146,5 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. || get(eMedR) <= 0. || get(eMaxR) <= 0. ||
-      get(eMinR) >= get(eMedR) || get(eMinR) >= get(eMaxR) ||
-      get(eMedR) >= get(eMaxR)) {
-    throw std::invalid_argument(
-        "CutoutCylinderVolumeBounds: invalid radial input.");
-  }
-  if (get(eHalfLengthZ) <= 0 || get(eHalfLengthZcutout) <= 0. ||
-      get(eHalfLengthZcutout) > get(eHalfLengthZ)) {
-    throw std::invalid_argument(
-        "CutoutCylinderVolumeBounds: invalid longitudinal input.");
-  }
-}
 
 }  // namespace Acts

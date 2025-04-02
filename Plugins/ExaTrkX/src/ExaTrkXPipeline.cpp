@@ -36,52 +36,70 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 }
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
-    std::vector<float> &features, std::vector<int> &spacepointIDs,
-    const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
-  auto t0 = std::chrono::high_resolution_clock::now();
-  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size(),
-                                              m_graphConstructor->device());
-  auto t1 = std::chrono::high_resolution_clock::now();
-
-  if (timing != nullptr) {
-    timing->graphBuildingTime = t1 - t0;
+    std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
+    std::vector<int> &spacepointIDs, const ExaTrkXHook &hook,
+    ExaTrkXTiming *timing) const {
+  ExecutionContext ctx;
+  ctx.device = m_graphConstructor->device();
+#ifndef ACTS_EXATRKX_CPUONLY
+  if (ctx.device.type() == torch::kCUDA) {
+    ctx.stream = c10::cuda::getStreamFromPool(ctx.device.index());
   }
+#endif
 
-  hook(nodes, edges, {});
+  try {
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto [nodeFeatures, edgeIndex, edgeFeatures] =
+        (*m_graphConstructor)(features, spacepointIDs.size(), moduleIds, ctx);
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-  std::any edge_weights;
-  if (timing != nullptr) {
+    if (timing != nullptr) {
+      timing->graphBuildingTime = t1 - t0;
+    }
+
+    hook(nodeFeatures, edgeIndex, {});
+
+    std::any edgeScores;
     timing->classifierTimes.clear();
-  }
 
-  for (auto edgeClassifier : m_edgeClassifiers) {
+    for (auto edgeClassifier : m_edgeClassifiers) {
+      t0 = std::chrono::high_resolution_clock::now();
+      auto [newNodeFeatures, newEdgeIndex, newEdgeFeatures, newEdgeScores] =
+          (*edgeClassifier)(std::move(nodeFeatures), std::move(edgeIndex),
+                            std::move(edgeFeatures), ctx);
+      t1 = std::chrono::high_resolution_clock::now();
+
+      if (timing != nullptr) {
+        timing->classifierTimes.push_back(t1 - t0);
+      }
+
+      nodeFeatures = std::move(newNodeFeatures);
+      edgeFeatures = std::move(newEdgeFeatures);
+      edgeIndex = std::move(newEdgeIndex);
+      edgeScores = std::move(newEdgeScores);
+
+      hook(nodeFeatures, edgeIndex, edgeScores);
+    }
+
     t0 = std::chrono::high_resolution_clock::now();
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(
-        std::move(nodes), std::move(edges), edgeClassifier->device());
+    auto res = (*m_trackBuilder)(std::move(nodeFeatures), std::move(edgeIndex),
+                                 std::move(edgeScores), spacepointIDs, ctx);
     t1 = std::chrono::high_resolution_clock::now();
 
     if (timing != nullptr) {
-      timing->classifierTimes.push_back(t1 - t0);
+      timing->trackBuildingTime = t1 - t0;
     }
 
-    nodes = std::move(newNodes);
-    edges = std::move(newEdges);
-    edge_weights = std::move(newWeights);
-
-    hook(nodes, edges, edge_weights);
+    return res;
+  } catch (Acts::NoEdgesError &) {
+    ACTS_WARNING("No egdges left in GNN pipeline, return 0 track candidates");
+    if (timing != nullptr) {
+      while (timing->classifierTimes.size() < m_edgeClassifiers.size()) {
+        timing->classifierTimes.push_back({});
+      }
+    }
+    return {};
   }
-
-  t0 = std::chrono::high_resolution_clock::now();
-  auto res = (*m_trackBuilder)(std::move(nodes), std::move(edges),
-                               std::move(edge_weights), spacepointIDs,
-                               m_trackBuilder->device());
-  t1 = std::chrono::high_resolution_clock::now();
-
-  if (timing != nullptr) {
-    timing->trackBuildingTime = t1 - t0;
-  }
-
-  return res;
 }
 
 }  // namespace Acts

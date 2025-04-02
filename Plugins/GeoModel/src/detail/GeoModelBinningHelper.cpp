@@ -8,14 +8,16 @@
 
 #include "Acts/Plugins/GeoModel/detail/GeoModelBinningHelper.hpp"
 
+#include <numbers>
+
 #include <boost/algorithm/string.hpp>
 
-Acts::Experimental::ProtoBinning
-Acts::detail::GeoModelBinningHelper::toProtoBinning(
+std::tuple<Acts::ProtoAxis, std::size_t>
+Acts::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
   boost::split(binningTokens, binning, boost::is_any_of(","));
-  BinningValue bValue = toBinningValue(binningTokens[0]);
+  AxisDirection bValue = toAxisDirection(binningTokens[0]);
 
   std::vector<std::string> binningDetails = {binningTokens.begin() + 1,
                                              binningTokens.end()};
@@ -43,12 +45,12 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
   // Bool auto_range
   bool autoRange = true;
   // The Range
-  ActsScalar rangeMin = 0.;
-  ActsScalar rangeMax = 0.;
-  if (bValue == BinningValue::binPhi &&
+  double rangeMin = 0.;
+  double rangeMax = 0.;
+  if (bValue == AxisDirection::AxisPhi &&
       boundaryType == AxisBoundaryType::Closed) {
-    rangeMin = -M_PI;
-    rangeMax = M_PI;
+    rangeMin = -std::numbers::pi;
+    rangeMax = std::numbers::pi;
   } else {
     if (binningDetails.size() > 3u && binningDetails[3] != "*") {
       autoRange = false;
@@ -72,9 +74,8 @@ Acts::detail::GeoModelBinningHelper::toProtoBinning(
           "GeoModelBinningHelper: Range maximum is not defined.");
     }
   }
-
-  return autoRange ? Experimental::ProtoBinning(bValue, boundaryType, nBins,
-                                                nExpansion)
-                   : Experimental::ProtoBinning(bValue, boundaryType, rangeMin,
-                                                rangeMax, nBins, nExpansion);
+  auto pAxis = autoRange
+                   ? ProtoAxis(bValue, boundaryType, nBins)
+                   : ProtoAxis(bValue, boundaryType, rangeMin, rangeMax, nBins);
+  return {pAxis, nExpansion};
 }

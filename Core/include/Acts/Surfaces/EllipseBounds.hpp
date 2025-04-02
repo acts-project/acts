@@ -13,14 +13,10 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
-#include <cmath>
-#include <cstdlib>
-#include <exception>
 #include <iosfwd>
-#include <stdexcept>
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -46,8 +42,6 @@ class EllipseBounds : public PlanarBounds {
     eSize = 6
   };
 
-  EllipseBounds() = delete;
-
   /// Constructor for full of an ellipsoid ring
   ///
   /// @param innerRx The inner ellipse radius in x
@@ -56,8 +50,9 @@ class EllipseBounds : public PlanarBounds {
   /// @param outerRy The outer ellipse radius in y
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
-  EllipseBounds(double innerRx, double innerRy, double outerRx, double outerRy,
-                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+  explicit EllipseBounds(double innerRx, double innerRy, double outerRx,
+                         double outerRy, double halfPhi = std::numbers::pi,
+                         double averagePhi = 0.) noexcept(false)
       : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
         m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();
@@ -66,14 +61,13 @@ class EllipseBounds : public PlanarBounds {
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  EllipseBounds(const std::array<double, eSize>& values) noexcept(false)
+  explicit EllipseBounds(const std::array<double, eSize>& values) noexcept(
+      false)
       : m_values(values), m_boundingBox(values[eInnerRy], values[eOuterRy]) {
     checkConsistency();
   }
 
-  ~EllipseBounds() override = default;
-
-  BoundsType type() const final;
+  BoundsType type() const final { return SurfaceBounds::eEllipse; }
 
   /// Return the bound values as dynamically sized vector
   ///
@@ -83,6 +77,8 @@ class EllipseBounds : public PlanarBounds {
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
   /// tol1 is given
+  ///
+  /// @warning This **only** works for tolerance-based checks
   ///
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param boundaryTolerance boundary check directive
@@ -118,28 +114,5 @@ class EllipseBounds : public PlanarBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 };
-
-inline std::vector<double> EllipseBounds::values() const {
-  std::vector<double> valvector;
-  valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
-  return valvector;
-}
-
-inline void EllipseBounds::checkConsistency() noexcept(false) {
-  if (get(eInnerRx) >= get(eOuterRx) || get(eInnerRx) < 0. ||
-      get(eOuterRx) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along x axis");
-  }
-  if (get(eInnerRy) >= get(eOuterRy) || get(eInnerRy) < 0. ||
-      get(eOuterRy) <= 0.) {
-    throw std::invalid_argument("EllipseBounds: invalid along y axis.");
-  }
-  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument("EllipseBounds: invalid phi sector setup.");
-  }
-  if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("EllipseBounds: invalid phi positioning.");
-  }
-}
 
 }  // namespace Acts

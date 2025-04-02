@@ -18,7 +18,6 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
-#include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -43,15 +42,11 @@ class FatrasSimulation final : public IAlgorithm {
   struct Config {
     /// The particles input collection.
     std::string inputParticles;
-    /// The simulated particles initial state collection.
-    std::string outputParticlesInitial;
-    /// The simulated particles final state collection.
-    std::string outputParticlesFinal;
+    /// The simulated particles collection.
+    std::string outputParticles;
     /// The simulated hits output collection.
     std::string outputSimHits;
     /// Parametrisation of nuclear interaction
-    std::string imputParametrisationNuclearInteraction =
-        "nuclearInteractionParameters";
     /// Random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
     /// The tracking geometry that should be used.
@@ -110,10 +105,8 @@ class FatrasSimulation final : public IAlgorithm {
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
-  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
-      this, "OutputParticlesInitial"};
-  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
-      this, "OutputParticlesFinal"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 
  private:
   Config m_cfg;

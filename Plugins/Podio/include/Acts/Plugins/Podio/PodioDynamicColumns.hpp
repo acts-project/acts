@@ -18,7 +18,7 @@
 namespace Acts::podio_detail {
 
 struct ConstDynamicColumnBase {
-  ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
+  explicit ConstDynamicColumnBase(std::string_view name) : m_name{name} {}
 
   virtual ~ConstDynamicColumnBase() = default;
 
@@ -45,7 +45,8 @@ struct ConstDynamicColumn : public ConstDynamicColumnBase {
 };
 
 struct DynamicColumnBase : public ConstDynamicColumnBase {
-  DynamicColumnBase(std::string_view name) : ConstDynamicColumnBase{name} {}
+  explicit DynamicColumnBase(std::string_view name)
+      : ConstDynamicColumnBase{name} {}
 
   virtual std::any get(std::size_t i) = 0;
   std::any get(std::size_t i) const override = 0;
@@ -67,8 +68,8 @@ struct DynamicColumnBase : public ConstDynamicColumnBase {
 
 template <typename T>
 struct DynamicColumn : public DynamicColumnBase {
-  DynamicColumn(std::string_view name,
-                podio::UserDataCollection<T> collection = {})
+  explicit DynamicColumn(std::string_view name,
+                         podio::UserDataCollection<T> collection = {})
       : DynamicColumnBase(name), m_collection{std::move(collection)} {}
 
   std::any get(std::size_t i) override { return &m_collection.vec().at(i); }

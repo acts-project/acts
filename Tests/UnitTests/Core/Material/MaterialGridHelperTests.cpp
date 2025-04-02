@@ -15,7 +15,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
@@ -23,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -39,8 +40,8 @@ using MaterialGrid3D =
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
 BOOST_AUTO_TEST_CASE(Square_Grid_test) {
-  BinUtility bu(7, -3., 3., open, BinningValue::binX);
-  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
+  BinUtility bu(7, -3., 3., open, AxisDirection::AxisX);
+  bu += BinUtility(3, -2., 2., open, AxisDirection::AxisY);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -60,10 +61,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -100,7 +99,7 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
-  Material vacuum;
+  Material vacuum = Material::Vacuum();
 
   MaterialSlab matprop1(mat1, 1);
   MaterialSlab matprop2(mat2, 1);
@@ -130,8 +129,9 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
 /// @brief Various test for the Material in the case of a Cylindrical volume
 /// with a 2D grid
 BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
-  BinUtility bu(2, -2., 2., open, BinningValue::binZ);
-  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
+  BinUtility bu(2, -2., 2., open, AxisDirection::AxisZ);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
+                   AxisDirection::AxisPhi);
   auto bd = bu.binningData();
   std::function<Acts::Vector2(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -152,10 +152,8 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[0], bd[0].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -192,7 +190,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
-  Material vacuum;
+  Material vacuum = Material::Vacuum();
 
   MaterialSlab matprop1(mat1, 1);
   MaterialSlab matprop2(mat2, 1);
@@ -221,9 +219,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cuboid volume
 BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
-  BinUtility bu(7, -3., 3., open, BinningValue::binX);
-  bu += BinUtility(3, -2., 2., open, BinningValue::binY);
-  bu += BinUtility(2, -1., 1., open, BinningValue::binZ);
+  BinUtility bu(7, -3., 3., open, AxisDirection::AxisX);
+  bu += BinUtility(3, -2., 2., open, AxisDirection::AxisY);
+  bu += BinUtility(2, -1., 1., open, AxisDirection::AxisZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -244,12 +242,9 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
-      bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -286,7 +281,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
-  Material vacuum;
+  Material vacuum = Material::Vacuum();
 
   MaterialSlab matprop1(mat1, 1);
   MaterialSlab matprop2(mat2, 1);
@@ -315,9 +310,10 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
 
 /// @brief Various test for the Material in the case of a Cylindrical volume
 BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
-  BinUtility bu(4, 1., 4., open, BinningValue::binR);
-  bu += BinUtility(3, -M_PI, M_PI, closed, BinningValue::binPhi);
-  bu += BinUtility(2, -2., 2., open, BinningValue::binZ);
+  BinUtility bu(4, 1., 4., open, AxisDirection::AxisR);
+  bu += BinUtility(3, -std::numbers::pi, std::numbers::pi, closed,
+                   AxisDirection::AxisPhi);
+  bu += BinUtility(2, -2., 2., open, AxisDirection::AxisZ);
   auto bd = bu.binningData();
   std::function<Acts::Vector3(Acts::Vector3)> transfoGlobalToLocal;
 
@@ -341,12 +337,9 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BOOST_CHECK_EQUAL(Grid.minPosition()[1], bd[1].min);
   BOOST_CHECK_EQUAL(Grid.minPosition()[2], bd[2].min);
 
-  float max1 =
-      bd[0].max + std::fabs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
-  float max2 =
-      bd[1].max + std::fabs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
-  float max3 =
-      bd[2].max + std::fabs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
+  float max1 = bd[0].max + std::abs(bd[0].max - bd[0].min) / (bd[0].bins() - 1);
+  float max2 = bd[1].max + std::abs(bd[1].max - bd[1].min) / (bd[1].bins() - 1);
+  float max3 = bd[2].max + std::abs(bd[2].max - bd[2].min) / (bd[2].bins() - 1);
 
   BOOST_CHECK_EQUAL(Grid.maxPosition()[0], max1);
   BOOST_CHECK_EQUAL(Grid.maxPosition()[1], max2);
@@ -384,7 +377,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   std::vector<std::pair<MaterialSlab, std::vector<Vector3>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
-  Material vacuum;
+  Material vacuum = Material::Vacuum();
 
   MaterialSlab matprop1(mat1, 1);
   MaterialSlab matprop2(mat2, 1);

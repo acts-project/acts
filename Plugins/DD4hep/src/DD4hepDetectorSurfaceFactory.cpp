@@ -15,7 +15,6 @@
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
-#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 
 #include "DD4hep/DetElement.h"
@@ -114,7 +113,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   }
 
   // Attach surface material if present
-  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface.get(),
+  attachSurfaceMaterial(gctx, "acts_surface_", dd4hepElement, *sSurface,
                         dd4hepDetElement->thickness(), options);
   // return the surface
   return {dd4hepDetElement, sSurface};
@@ -150,16 +149,19 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
 void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     const GeometryContext& gctx, const std::string& prefix,
     const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
-    ActsScalar thickness, const Options& options) const {
+    double thickness, const Options& options) const {
   // Bool proto material overrules converted material
   bool protoMaterial =
       getParamOr<bool>(prefix + "_proto_material", dd4hepElement, false);
   if (protoMaterial) {
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
-    Experimental::BinningDescription pmBinning{
-        DD4hepBinningHelpers::convertBinning(
-            dd4hepElement, prefix + "_proto_material_binning")};
-    ACTS_VERBOSE(" - converted binning is " << pmBinning.toString());
+    auto materialBinning = DD4hepBinningHelpers::convertBinning(
+        dd4hepElement, prefix + "_proto_material_binning");
+    std::vector<ProtoAxis> pmBinning = {};
+    for (const auto& [axis, bins] : materialBinning) {
+      pmBinning.push_back(axis);
+    }
+    ACTS_VERBOSE(" - converted binning is " << pmBinning);
     Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
         gctx, surface, pmBinning);
 

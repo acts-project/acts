@@ -97,7 +97,9 @@ struct Factory {
 
   MapHelper m_helper;
 
-  MutablePodioTrackStateContainer create() { return {m_helper}; }
+  MutablePodioTrackStateContainer create() {
+    return MutablePodioTrackStateContainer{m_helper};
+  }
 };
 
 using CommonTests = MultiTrajectoryTestsCommon<Factory>;
@@ -200,6 +202,11 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
 BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   CommonTests ct;
   ct.testMultiTrajectoryExtraColumnsRuntime();
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryAllocateCalibratedInit) {
+  CommonTests ct;
+  ct.testMultiTrajectoryAllocateCalibratedInit(rng);
 }
 
 BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {

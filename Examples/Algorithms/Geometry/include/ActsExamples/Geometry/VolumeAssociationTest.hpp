@@ -33,7 +33,7 @@ class VolumeAssociationTest final : public IAlgorithm {
     /// The random number service
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The random number range
-    std::vector<Acts::ActsScalar> randomRange = {};
+    std::vector<double> randomRange = {};
     /// The detector
     std::shared_ptr<const Acts::Experimental::Detector> detector = nullptr;
   };
@@ -42,8 +42,8 @@ class VolumeAssociationTest final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param level is the logging level
-  VolumeAssociationTest(const Config& cfg,
-                        Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit VolumeAssociationTest(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Run the random point association test
   ///

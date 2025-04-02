@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -47,7 +48,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   // The transform of the 1st surface
   Vector3 ipos = {-0.5 * nSurfacesX * 2 * radius + radius,
                   -0.5 * nSurfacesY * 2 * radius + radius, 0.};
-  AngleAxis3 rotation(M_PI / 2, Acts::Vector3(0., 1., 0.));
+  AngleAxis3 rotation(std::numbers::pi / 2., Acts::Vector3(0., 1., 0.));
 
   Vector3 pos = ipos;
 
@@ -62,19 +63,23 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
     }
   }
 
-  std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesY * 2 * radius, halfZ};
+  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
   mlCfg.name = "Multi_Layer_With_Wires";
   mlCfg.mlSurfaces = strawSurfaces;
   mlCfg.mlBounds = vBounds;
   mlCfg.mlBinning = {
-      ProtoBinning(Acts::BinningValue::binX, Acts::AxisBoundaryType::Bound,
-                   -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::BinningValue::binY, Acts::AxisBoundaryType::Bound,
-                   -vBounds[1], vBounds[1], nSurfacesY, 0u)};
+      std::make_pair(
+          ProtoAxis(Acts::AxisDirection::AxisX, Acts::AxisBoundaryType::Bound,
+                    -vBounds[0], vBounds[0], nSurfacesX),
+          1u),
+      std::make_pair(
+          ProtoAxis(Acts::AxisDirection::AxisY, Acts::AxisBoundaryType::Bound,
+                    -vBounds[1], vBounds[1], nSurfacesY),
+          0u)};
 
   MultiWireStructureBuilder mlBuilder(mlCfg);
   auto [volumes, portals, roots] = mlBuilder.construct(tContext);

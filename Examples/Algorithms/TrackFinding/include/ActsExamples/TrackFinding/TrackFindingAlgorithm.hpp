@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/TrackSelector.hpp"
@@ -28,20 +25,20 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <atomic>
 #include <cstddef>
-#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <variant>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <tbb/combinable.h>
+#pragma GCC diagnostic pop
 
 namespace Acts {
 class MagneticFieldProvider;
@@ -56,8 +53,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
-                                             TrackContainer>;
+      Acts::CombinatorialKalmanFilterOptions<TrackContainer>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
@@ -84,8 +80,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Input seeds. These are optional and allow for seed deduplication.
@@ -160,9 +154,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  template <typename source_link_accessor_container_t>
-  void computeSharedHits(const source_link_accessor_container_t& sourceLinks,
-                         TrackContainer& tracks) const;
+  void computeSharedHits(TrackContainer& tracks,
+                         const MeasurementContainer& measurements) const;
 
   ActsExamples::ProcessCode finalize() override;
 
@@ -172,8 +165,6 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
@@ -188,6 +179,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   mutable std::atomic<std::size_t> m_nFoundTracks{0};
   mutable std::atomic<std::size_t> m_nSelectedTracks{0};
   mutable std::atomic<std::size_t> m_nStoppedBranches{0};
+  mutable std::atomic<std::size_t> m_nSkippedSecondPass{0};
 
   mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
       m_memoryStatistics{[]() {
@@ -195,57 +187,5 @@ class TrackFindingAlgorithm final : public IAlgorithm {
         return mtj->statistics();
       }};
 };
-
-// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
-// TODO we should make a common implementation in the core at some point
-template <typename source_link_accessor_container_t>
-void TrackFindingAlgorithm::computeSharedHits(
-    const source_link_accessor_container_t& sourceLinks,
-    TrackContainer& tracks) const {
-  // Compute shared hits from all the reconstructed tracks
-  // Compute nSharedhits and Update ckf results
-  // hit index -> list of multi traj indexes [traj, meas]
-
-  std::vector<std::size_t> firstTrackOnTheHit(
-      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
-  std::vector<std::size_t> firstStateOnTheHit(
-      sourceLinks.size(), std::numeric_limits<std::size_t>::max());
-
-  for (auto track : tracks) {
-    for (auto state : track.trackStatesReversed()) {
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        continue;
-      }
-
-      std::size_t hitIndex = state.getUncalibratedSourceLink()
-                                 .template get<IndexSourceLink>()
-                                 .index();
-
-      // Check if hit not already used
-      if (firstTrackOnTheHit.at(hitIndex) ==
-          std::numeric_limits<std::size_t>::max()) {
-        firstTrackOnTheHit.at(hitIndex) = track.index();
-        firstStateOnTheHit.at(hitIndex) = state.index();
-        continue;
-      }
-
-      // if already used, control if first track state has been marked
-      // as shared
-      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
-      int indexFirstState = firstStateOnTheHit.at(hitIndex);
-
-      auto firstState = tracks.getTrack(indexFirstTrack)
-                            .container()
-                            .trackStateContainer()
-                            .getTrackState(indexFirstState);
-      if (!firstState.typeFlags().test(Acts::TrackStateFlag::SharedHitFlag)) {
-        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-      }
-
-      // Decorate this track state
-      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-    }
-  }
-}
 
 }  // namespace ActsExamples

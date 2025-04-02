@@ -13,6 +13,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <iostream>
@@ -47,16 +48,18 @@ class SeedFinderOrthogonal {
    * has leaf size 4.
    */
   using tree_t =
-      KDTree<NDims, const external_spacepoint_t *, ActsScalar, std::array, 4>;
+      KDTree<NDims, const external_spacepoint_t *, double, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
    *
    * @param config The configuration parameters for this seed finder.
+   * @param logger The ACTS logger.
    */
-  SeedFinderOrthogonal(
-      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config);
-
+  explicit SeedFinderOrthogonal(
+      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("Finder", Logging::Level::INFO));
   /**
    * @brief Destroy the orthogonal seed finder object.
    */
@@ -66,7 +69,11 @@ class SeedFinderOrthogonal {
   SeedFinderOrthogonal(const SeedFinderOrthogonal<external_spacepoint_t> &) =
       delete;
   SeedFinderOrthogonal<external_spacepoint_t> &operator=(
-      const SeedFinderOrthogonal<external_spacepoint_t> &) = default;
+      const SeedFinderOrthogonal<external_spacepoint_t> &) = delete;
+  SeedFinderOrthogonal(
+      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
+  SeedFinderOrthogonal<external_spacepoint_t> &operator=(
+      SeedFinderOrthogonal<external_spacepoint_t> &&) noexcept = default;
 
   /**
    * @brief Perform seed finding, appending seeds to a container.
@@ -238,6 +245,16 @@ class SeedFinderOrthogonal {
    * @brief The configuration for the seeding algorithm.
    */
   Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+
+  /**
+   * @brief Get the logger.
+   */
+  const Logger &logger() const { return *m_logger; }
+
+  /**
+   * @brief The logger
+   */
+  std::unique_ptr<const Acts::Logger> m_logger{getDummyLogger().clone()};
 };
 }  // namespace Acts
 

@@ -27,9 +27,12 @@ class Result {
   /// Private constructor which accepts an external variant.
   /// This is used by the factory static methods to set up
   /// the variant unambiguously in all cases.
-  Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
+  explicit Result(std::variant<T, E>&& var) : m_var(std::move(var)) {}
 
  public:
+  using ValueType = T;
+  using ErrorType = E;
+
   /// Default construction is disallowed.
   Result() = delete;
 
@@ -40,12 +43,12 @@ class Result {
   Result<T, E>& operator=(const Result<T, E>& other) = delete;
 
   /// Move construction is allowed
-  Result(Result<T, E>&& other) : m_var(std::move(other.m_var)) {}
+  Result(Result<T, E>&& other) noexcept : m_var(std::move(other.m_var)) {}
 
   /// Move assignment is allowed
   /// @param other The other result instance, rvalue reference
   /// @return The assigned instance
-  Result<T, E>& operator=(Result<T, E>&& other) {
+  Result<T, E>& operator=(Result<T, E>&& other) noexcept {
     m_var = std::move(other.m_var);
     return *this;
   }
@@ -63,7 +66,8 @@ class Result {
   /// @param value The potential value, could be an actual valid value or an
   /// error.
   template <typename T2>
-  Result(T2 value) noexcept
+  Result(T2 value) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
     requires(!std::same_as<T, E> && !std::constructible_from<T, E> &&
              !std::convertible_to<T, E> && !std::constructible_from<E, T> &&
              !std::convertible_to<E, T> &&
@@ -172,6 +176,144 @@ class Result {
     return std::move(std::get<T>(m_var));
   }
 
+  /// Retrieves the valid value from the result object, or returns a default
+  /// value if no valid value exists.
+  ///
+  /// @param[in] v The default value to use if no valid value exists.
+  /// @note This is the lvalue version.
+  /// @note This function always returns by value.
+  /// @return Either the valid value, or the given substitute.
+  template <typename U>
+  std::conditional_t<std::is_reference_v<U>, const T&, T> value_or(U&& v) const&
+    requires(std::same_as<std::decay_t<U>, T>)
+  {
+    if (ok()) {
+      return value();
+    } else {
+      return std::forward<U>(v);
+    }
+  }
+
+  /// Retrieves the valid value from the result object, or returns a default
+  /// value if no valid value exists.
+  ///
+  /// @param[in] v The default value to use if no valid value exists.
+  /// @note This is the rvalue version which moves the value out.
+  /// @note This function always returns by value.
+  /// @return Either the valid value, or the given substitute.
+  template <typename U>
+  T value_or(U&& v) &&
+    requires(std::same_as<std::decay_t<U>, T>)
+  {
+    if (ok()) {
+      return std::move(*this).value();
+    } else {
+      return std::forward<U>(v);
+    }
+  }
+
+  /// Transforms the value contained in this result.
+  ///
+  /// Applying a function `f` to a valid value `x` returns `f(x)`, while
+  /// applying `f` to an invalid value returns another invalid value.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the lvalue version.
+  /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto transform(C&& callable) const&
+    requires std::invocable<C, const T&>
+  {
+    using CallableReturnType = decltype(std::declval<C>()(std::declval<T>()));
+    using R = Result<std::decay_t<CallableReturnType>, E>;
+    if (ok()) {
+      return R::success(callable(value()));
+    } else {
+      return R::failure(error());
+    }
+  }
+
+  /// Transforms the value contained in this result.
+  ///
+  /// Applying a function `f` to a valid value `x` returns `f(x)`, while
+  /// applying `f` to an invalid value returns another invalid value.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the rvalue version.
+  /// @note This functions is `fmap` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto transform(C&& callable) &&
+    requires std::invocable<C, T&&>
+  {
+    using CallableReturnType = decltype(std::declval<C>()(std::declval<T>()));
+    using R = Result<std::decay_t<CallableReturnType>, E>;
+    if (ok()) {
+      return R::success(callable(std::move(*this).value()));
+    } else {
+      return R::failure(std::move(*this).error());
+    }
+  }
+
+  /// Bind a function to this result monadically.
+  ///
+  /// This function takes a function `f` and, if this result contains a valid
+  /// value `x`, returns `f(x)`. If the type of `x` is `T`, then `f` is
+  /// expected to accept type `T` and return `Result<U>`. In this case,
+  /// `transform` would return the unhelpful type `Result<Result<U>>`, so
+  /// `and_then` strips away the outer layer to return `Result<U>`. If the
+  /// value is invalid, this returns an invalid value in `Result<U>`.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the lvalue version.
+  /// @note This functions is `>>=` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto and_then(C&& callable) const&
+    requires std::invocable<C, const T&>
+  {
+    using R = decltype(std::declval<C>()(std::declval<T>()));
+
+    static_assert(std::same_as<typename R::ErrorType, ErrorType>,
+                  "bind must take a callable with the same error type");
+
+    if (ok()) {
+      return callable(value());
+    } else {
+      return R::failure(error());
+    }
+  }
+
+  /// Bind a function to this result monadically.
+  ///
+  /// This function takes a function `f` and, if this result contains a valid
+  /// value `x`, returns `f(x)`. If the type of `x` is `T`, then `f` is
+  /// expected to accept type `T` and return `Result<U>`. In this case,
+  /// `transform` would return the unhelpful type `Result<Result<U>>`, so
+  /// `and_then` strips away the outer layer to return `Result<U>`. If the
+  /// value is invalid, this returns an invalid value in `Result<U>`.
+  ///
+  /// @param[in] callable The transformation function to apply.
+  /// @note This is the rvalue version.
+  /// @note This functions is `>>=` on the functor in `A` of `Result<A, E>`.
+  /// @return The modified valid value if exists, or an error otherwise.
+  template <typename C>
+  auto and_then(C&& callable) &&
+    requires std::invocable<C, T&&>
+  {
+    using R = decltype(std::declval<C>()(std::declval<T>()));
+
+    static_assert(std::same_as<typename R::ErrorType, ErrorType>,
+                  "bind must take a callable with the same error type");
+
+    if (ok()) {
+      return callable(std::move(*this).value());
+    } else {
+      return R::failure(std::move(*this).error());
+    }
+  }
+
  private:
   std::variant<T, E> m_var;
 
@@ -216,7 +358,7 @@ class Result<void, E> {
 
   /// Move constructor
   /// @param other The other result object, rvalue ref
-  Result(Result<void, E>&& other) : m_opt(std::move(other.m_opt)) {}
+  Result(Result<void, E>&& other) noexcept : m_opt(std::move(other.m_opt)) {}
 
   /// Move assignment operator
   /// @param other The other result object, rvalue ref
@@ -230,7 +372,9 @@ class Result<void, E> {
   /// @tparam E2 The type of the actual error
   /// @param error The instance of the actual error
   template <typename E2>
-  Result(E2 error) noexcept : m_opt(std::move(error)) {}
+  Result(E2 error) noexcept  // NOLINT(google-explicit-constructor)
+                             // ^ Conversion here is crucial for ergonomics
+      : m_opt(std::move(error)) {}
 
   /// Assignment operator from an error.
   /// @tparam E2 The type of the actual error
@@ -272,8 +416,24 @@ class Result<void, E> {
   /// @return Reference to the error
   E error() && noexcept { return std::move(m_opt.value()); }
 
+  void value() const { checkValueAccess(); }
+
  private:
   std::optional<E> m_opt;
+
+  void checkValueAccess() const {
+    if (m_opt.has_value()) {
+      if constexpr (std::is_same_v<E, std::error_code>) {
+        std::stringstream ss;
+        const auto& e = m_opt.value();
+        ss << "Value called on error value: " << e.category().name() << ": "
+           << e.message() << " [" << e.value() << "]";
+        throw std::runtime_error(ss.str());
+      } else {
+        throw std::runtime_error("Value called on error value");
+      }
+    }
+  }
 };
 
 }  // namespace Acts

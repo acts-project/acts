@@ -8,17 +8,15 @@
 
 #pragma once
 
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
-#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cmath>
 #include <limits>
 #include <random>
-#include <string>
-#include <tuple>
 #include <utility>
 
 namespace ActsExamples::Digitization {
@@ -145,7 +143,7 @@ struct Uniform {
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
       : binningData(
-            Acts::open, Acts::BinningValue::binX,
+            Acts::open, Acts::AxisDirection::AxisX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
 
@@ -183,7 +181,7 @@ struct Digital {
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
       : binningData(
-            Acts::open, Acts::BinningValue::binX,
+            Acts::open, Acts::AxisDirection::AxisX,
             static_cast<std::size_t>((range_.second - range_.first) / pitch),
             range_.first, range_.second) {}
 

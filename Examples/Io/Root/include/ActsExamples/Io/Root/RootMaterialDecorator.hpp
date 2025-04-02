@@ -64,7 +64,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
     std::string sentag = "_sen";
     /// The bin number tag
     std::string ntag = "n";
-    /// The value tag -> binning values: binZ, binR, binPhi, etc.
+    /// The value tag -> binning values: AxisZ, AxisR, AxisPhi, etc.
     std::string vtag = "v";
     /// The option tag -> binning options: open, closed
     std::string otag = "o";
@@ -128,7 +128,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
 
   /// Return the maps
   const Acts::DetectorMaterialMaps materialMaps() const {
-    return std::make_pair(m_surfaceMaterialMap, m_volumeMaterialMap);
+    return {m_surfaceMaterialMap, m_volumeMaterialMap};
   }
 
   /// Get readonly access to the config parameters

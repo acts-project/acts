@@ -41,8 +41,6 @@ def main():
         ".gitignore",
         "README.md",
         "CMakeLists.txt",
-        "DetUtils.h",
-        "CommandLineArguments.h",
         # Filename not completed in source
         "vertexing_event_mu20_beamspot.csv",
         "vertexing_event_mu20_tracks.csv",
@@ -59,6 +57,7 @@ def main():
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
         "lazy_autodoc.py",
+        "codegen/src/codegen/sympy_common.py",
     )
 
     suffix_header = (

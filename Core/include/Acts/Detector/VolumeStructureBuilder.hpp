@@ -42,7 +42,7 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
     /// The starting transform
     Transform3 transform = Transform3::Identity();
     /// The values (if already defined)
-    std::vector<ActsScalar> boundValues = {};
+    std::vector<double> boundValues = {};
     /// The optional extent to feed into the values
     std::optional<Extent> extent = std::nullopt;
     /// Some auxiliary information
@@ -53,10 +53,10 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param mlogger logging instance for screen output
-  VolumeStructureBuilder(const Config& cfg,
-                         std::unique_ptr<const Logger> mlogger =
-                             getDefaultLogger("VolumeStructureBuilder",
-                                              Logging::INFO));
+  explicit VolumeStructureBuilder(const Config& cfg,
+                                  std::unique_ptr<const Logger> mlogger =
+                                      getDefaultLogger("VolumeStructureBuilder",
+                                                       Logging::INFO));
 
   /// The interface definition for internal structure creation
   ///

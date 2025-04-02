@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <vector>
 
@@ -57,7 +58,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(
-      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
+      gridXY, {AxisDirection::AxisX, AxisDirection::AxisY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -67,10 +68,10 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   std::vector<actsvg::svg::object> targets = {};
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
-      ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
+      double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
       for (auto [iy, y] : Acts::enumerate(edgesY)) {
         if (iy > 0u) {
-          ActsScalar yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
+          double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
           auto g = gridXY.globalBinFromPosition(p);
@@ -109,8 +110,10 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 4), BinningValue::binX",
-      "- axis 1 : AxisBoundaryType::Bound, (-200, 200, 6), BinningValue::binY"};
+      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 4), "
+      "AxisDirection::AxisX",
+      "- axis 1 : AxisBoundaryType::Bound, (-200, 200, 6), "
+      "AxisDirection::AxisY"};
 
   auto caption = actsvg::draw::text("caption", {-180, -220}, captionText);
 
@@ -134,7 +137,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(
-      gridXY, {BinningValue::binX, BinningValue::binY}, cOptions);
+      gridXY, {AxisDirection::AxisX, AxisDirection::AxisY}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
@@ -145,10 +148,10 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   std::size_t ig = 0;
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
-      ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
+      double xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
       for (auto [iy, y] : Acts::enumerate(edgesY)) {
         if (iy > 0u) {
-          ActsScalar yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
+          double yp = 0.8 * edgesY[iy] + 0.2 * edgesY[iy - 1u];
           decltype(gridXY)::point_t p = {xp, yp};
           // Get local and global index
           auto g = gridXY.globalBinFromPosition(p);
@@ -185,8 +188,10 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Open, (-200., 200, 4), BinningValue::binX",
-      "- axis 1 : AxisBoundaryType::Open, (-200, 200, 6), BinningValue::binY"};
+      "- axis 0 : AxisBoundaryType::Open, (-200., 200, 4), "
+      "AxisDirection::AxisX",
+      "- axis 1 : AxisBoundaryType::Open, (-200, 200, 6), "
+      "AxisDirection::AxisY"};
 
   auto caption = actsvg::draw::text("caption", {-180, -220}, captionText);
   auto oGrid = actsvg::display::grid("OpenGridXY", pGrid);
@@ -206,12 +211,12 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   // z-phi Axes & Grid
   Axis axisZ(AxisBound, -200., 200., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 6);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 6);
   Grid gridZPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisZ, axisPhi);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(
-      gridZPhi, {BinningValue::binZ, BinningValue::binPhi}, cOptions);
+      gridZPhi, {AxisDirection::AxisZ, AxisDirection::AxisPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_z_phi);
 
   pGrid._reference_r = 80.;
@@ -224,10 +229,10 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   std::size_t ig = 0;
   for (auto [iz, z] : Acts::enumerate(edgesZ)) {
     if (iz > 0u) {
-      ActsScalar zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
+      double zp = 0.2 * edgesZ[iz] + 0.8 * edgesZ[iz - 1u];
       for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
         if (iphi > 0u) {
-          ActsScalar phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
+          double phip = 0.8 * edgesPhi[iphi] + 0.2 * edgesPhi[iphi - 1u];
           decltype(gridZPhi)::point_t p = {zp, phip};
           // Get local and global index
           auto g = gridZPhi.globalBinFromPosition(p);
@@ -263,8 +268,10 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 3), BinningValue::binZ",
-      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 6), BinningValue::binPhi",
+      "- axis 0 : AxisBoundaryType::Bound, (-200., 200, 3), "
+      "AxisDirection::AxisZ",
+      "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 6), "
+      "AxisDirection::AxisPhi",
       "- draw reference radius set to 80"};
 
   auto caption = actsvg::draw::text("caption", {-180, -270}, captionText);
@@ -285,12 +292,12 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   // r-phi Axes & Grid
   Axis axisR(AxisBound, 100., 400., 3);
-  Axis axisPhi(AxisClosed, -M_PI, M_PI, 4);
+  Axis axisPhi(AxisClosed, -std::numbers::pi, std::numbers::pi, 4);
   Grid gridRPhi(Type<std::tuple<GlobalBin, LocalBin>>, axisR, axisPhi);
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(
-      gridRPhi, {BinningValue::binR, BinningValue::binPhi}, cOptions);
+      gridRPhi, {AxisDirection::AxisR, AxisDirection::AxisPhi}, cOptions);
   BOOST_CHECK_EQUAL(pGrid._type, actsvg::proto::grid::type::e_r_phi);
 
   // Labelling the grid tiles
@@ -301,10 +308,10 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
   std::size_t ig = 0;
   for (auto [ir, r] : Acts::enumerate(edgesR)) {
     if (ir > 0u) {
-      ActsScalar rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);
+      double rp = 0.5 * (edgesR[ir] + edgesR[ir - 1u]);
       for (auto [iphi, phi] : Acts::enumerate(edgesPhi)) {
         if (iphi > 0u) {
-          ActsScalar phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
+          double phip = 0.5 * (edgesPhi[iphi] + edgesPhi[iphi - 1u]);
           decltype(gridRPhi)::point_t p = {rp, phip};
           // Get local and global index
           auto g = gridRPhi.globalBinFromPosition(p);
@@ -346,7 +353,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   std::vector<std::string> captionText = {
       "Binning schema for global and local bins: ",
-      "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), binR",
+      "- axis 0 : AxisBoundaryType::Bound, (100., 400, 3), AxisR",
       "- axis 1 : AxisBoundaryType::Closed, (-PI, PI, 4), "
       "binPhi"};
 

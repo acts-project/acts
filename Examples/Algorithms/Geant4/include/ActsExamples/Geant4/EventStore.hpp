@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "ActsExamples/EventData/PropagationSummary.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -21,8 +22,10 @@
 #include "G4Types.hh"
 
 namespace ActsExamples {
-
 class WhiteBoard;
+}
+
+namespace ActsExamples::Geant4 {
 
 /// Common event store for all Geant4 related sub algorithms
 struct EventStore {
@@ -33,11 +36,13 @@ struct EventStore {
   /// Use a std::set here because it allows for fast insertion and ensures
   /// uniqueness. Thus particle collisions are detected early.
   using ParticleContainer =
-      std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+      std::set<SimParticle, ActsExamples::detail::CompareParticleId>;
 
-  /// Initial and final particle collections
+  /// Initial particle collection
   ParticleContainer particlesInitial;
-  ParticleContainer particlesFinal;
+
+  /// Simulated particle collection
+  ParticleContainer particlesSimulated;
 
   /// The hits in sensitive detectors
   SimHitContainer::sequence_type hits;
@@ -51,6 +56,9 @@ struct EventStore {
 
   /// Tracks recorded in material mapping
   std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> materialTracks;
+
+  /// Stepping records for step plotting
+  std::unordered_map<G4int, PropagationSummary> propagationRecords;
 
   /// Particle hit count (for hit indexing)
   std::unordered_map<SimBarcode, std::size_t> particleHitCount;
@@ -78,4 +86,4 @@ struct EventStore {
   std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

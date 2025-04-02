@@ -11,11 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <memory>
-#include <vector>
+#include <sstream>
 
 namespace Acts {
 
@@ -37,22 +35,22 @@ class ISurfaceMaterial {
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
-  ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
+  explicit ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
 
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
   /// @param mappingType is the type of surface mapping associated to the surface
-  ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
+  explicit ISurfaceMaterial(double splitFactor, Acts::MappingType mappingType)
       : m_splitFactor(splitFactor), m_mappingType(mappingType) {}
 
   /// Destructor
   virtual ~ISurfaceMaterial() = default;
 
-  /// Scale operator
+  /// Scale material
   ///
-  /// @param scale is the scale factor applied
-  virtual ISurfaceMaterial& operator*=(double scale) = 0;
+  /// @param factor is the scale factor applied
+  virtual ISurfaceMaterial& scale(double factor) = 0;
 
   /// Return method for full material description of the Surface
   /// - from local coordinate on the surface
@@ -117,10 +115,21 @@ class ISurfaceMaterial {
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream& toStream(std::ostream& sl) const = 0;
 
+  /// @brief output into a string
+  ///
+  /// @return the string representation
+  std::string toString() const {
+    std::stringstream sstrm;
+    toStream(sstrm);
+    return sstrm.str();
+  }
+
  protected:
-  double m_splitFactor{1.};  //!< the split factor in favour of oppositePre
-  MappingType m_mappingType{
-      Acts::MappingType::Default};  //!< Use the default mapping type by default
+  /// the split factor in favour of oppositePre
+  double m_splitFactor{1.};
+
+  /// Use the default mapping type by default
+  MappingType m_mappingType{Acts::MappingType::Default};
 };
 
 inline double ISurfaceMaterial::factor(Direction pDir,
@@ -128,9 +137,9 @@ inline double ISurfaceMaterial::factor(Direction pDir,
   if (mStage == Acts::MaterialUpdateStage::FullUpdate) {
     return 1.;
   } else if (mStage == Acts::MaterialUpdateStage::PreUpdate) {
-    return pDir == Direction::Negative ? m_splitFactor : 1 - m_splitFactor;
+    return pDir == Direction::Negative() ? m_splitFactor : 1 - m_splitFactor;
   } else /*if (mStage == Acts::MaterialUpdateStage::PostUpdate)*/ {
-    return pDir == Direction::Positive ? m_splitFactor : 1 - m_splitFactor;
+    return pDir == Direction::Positive() ? m_splitFactor : 1 - m_splitFactor;
   }
 }
 
@@ -139,10 +148,10 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
-  if (plainMatProp.isValid()) {
+  if (!plainMatProp.isVacuum()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
-      return MaterialSlab();
+      return MaterialSlab::Nothing();
     }
     plainMatProp.scaleThickness(scaleFactor);
   }
@@ -154,10 +163,10 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
-  if (plainMatProp.isValid()) {
+  if (!plainMatProp.isVacuum()) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
-      return MaterialSlab();
+      return MaterialSlab::Nothing();
     }
     plainMatProp.scaleThickness(scaleFactor);
   }

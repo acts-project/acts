@@ -100,8 +100,8 @@ class SeedingAlgorithm final : public IAlgorithm {
   Acts::SeedFinder<SpacePointProxy_t,
                    Acts::CylindricalSpacePointGrid<SpacePointProxy_t>>
       m_seedFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_bottomBinFinder;
-  std::unique_ptr<const Acts::GridBinFinder<2ul>> m_topBinFinder;
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_bottomBinFinder{nullptr};
+  std::unique_ptr<const Acts::GridBinFinder<3ul>> m_topBinFinder{nullptr};
 
   Config m_cfg;
 
@@ -111,7 +111,7 @@ class SeedingAlgorithm final : public IAlgorithm {
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   static inline bool itkFastTrackingCuts(float bottomRadius, float cotTheta) {
-    static float rMin = 50.;
+    static float rMin = 45.;
     static float cotThetaMax = 1.5;
 
     if (bottomRadius < rMin &&
@@ -125,7 +125,7 @@ class SeedingAlgorithm final : public IAlgorithm {
     // At small r we remove points beyond |z| > 200.
     float r = sp.radius();
     float zabs = std::abs(sp.z());
-    if (zabs > 200. && r < 50.) {
+    if (zabs > 200. && r < 45.) {
       return false;
     }
 

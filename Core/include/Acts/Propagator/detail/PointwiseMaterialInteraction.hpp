@@ -17,6 +17,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -50,7 +51,7 @@ struct PointwiseMaterialInteraction {
   const Direction navDir;
 
   /// The effective, passed material properties including the path correction.
-  MaterialSlab slab = MaterialSlab(0.);
+  MaterialSlab slab = MaterialSlab::Nothing();
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 0.;
   /// Expected phi variance due to the interactions.
@@ -121,7 +122,7 @@ struct PointwiseMaterialInteraction {
     slab.scaleThickness(pathCorrection);
 
     // Check if the evaluated material is valid
-    return slab.isValid();
+    return !slab.isVacuum();
   }
 
   /// @brief This function evaluate the material effects
@@ -146,7 +147,7 @@ struct PointwiseMaterialInteraction {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
-    const auto nextE = std::hypot(mass, momentum) - Eloss * navDir;
+    const auto nextE = fastHypot(mass, momentum) - Eloss * navDir;
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material

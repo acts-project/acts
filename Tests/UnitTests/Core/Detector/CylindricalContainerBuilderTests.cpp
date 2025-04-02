@@ -13,7 +13,6 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -30,11 +29,13 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <any>
 #include <cmath>
 #include <iterator>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -60,9 +61,8 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
                         DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
-    Acts::GeometryIdentifier geoID;
-    geoID.setVolume(ccache.volumeCount);
-    dVolume.assignGeometryId(geoID);
+    dVolume.assignGeometryId(
+        Acts::GeometryIdentifier().withVolume(ccache.volumeCount));
   }
 
   void assignGeometryId(
@@ -83,19 +83,19 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
                     std::invalid_argument);
   // misconfiguration - 1D binning not in z, r, phi
   misCfg.builders = {nullptr};
-  misCfg.binning = {Acts::BinningValue::binX};
+  misCfg.binning = {Acts::AxisDirection::AxisX};
   BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning not in z, r,
   misCfg.builders = {nullptr, nullptr};
-  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binPhi};
+  misCfg.binning = {Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisPhi};
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
   // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
-  misCfg.binning = {Acts::BinningValue::binZ, Acts::BinningValue::binR};
+  misCfg.binning = {Acts::AxisDirection::AxisZ, Acts::AxisDirection::AxisR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 }
@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   CylindricalContainerBuilder::Config tripleZCfg;
   tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
-  tripleZCfg.binning = {BinningValue::binZ};
+  tripleZCfg.binning = {AxisDirection::AxisZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
-  tripleZCfg.portalMaterialBinning[2u] = BinningDescription{
-      {ProtoBinning(BinningValue::binZ, Acts::AxisBoundaryType::Bound, 50),
-       ProtoBinning(BinningValue::binPhi, Acts::AxisBoundaryType::Closed, -M_PI,
-                    M_PI, 12)}};
+  tripleZCfg.portalMaterialBinning[2u] = std::vector<ProtoAxis>{
+      {ProtoAxis(AxisDirection::AxisZ, Acts::AxisBoundaryType::Bound, 50),
+       ProtoAxis(AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
+                 -std::numbers::pi, std::numbers::pi, 12)}};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {BinningValue::binR};
+  barrelRCfg.binning = {AxisDirection::AxisR};
   barrelRCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
   auto barrelR = std::make_shared<CylindricalContainerBuilder>(
@@ -198,19 +198,21 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   // Create the container builder
   CylindricalContainerBuilder::Config barrelPhiCfg;
   barrelPhiCfg.auxiliary = "*** Test 2 - Build segmented phi barrel ***";
-  barrelPhiCfg.binning = {BinningValue::binPhi};
+  barrelPhiCfg.binning = {AxisDirection::AxisPhi};
 
   unsigned int phiSectors = 5;
-  Acts::ActsScalar phiHalfSector = M_PI / phiSectors;
+  double phiHalfSector = std::numbers::pi / phiSectors;
 
   std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
   for (unsigned int i = 0; i < phiSectors; ++i) {
     // The volume bounds
     Acts::CylinderVolumeBounds volumeBounds(
-        10., 100., 100., phiHalfSector, -M_PI + (2u * i + 1u) * phiHalfSector);
-    // The surface boudns
-    Acts::CylinderBounds surfaceBounds(50., 90., 0.99 * phiHalfSector,
-                                       -M_PI + (2u * i + 1u) * phiHalfSector);
+        10., 100., 100., phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
+    // The surface bounds
+    Acts::CylinderBounds surfaceBounds(
+        50., 90., 0.99 * phiHalfSector,
+        -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
     auto builder = std::make_shared<
         CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(
@@ -264,7 +266,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelRCfg;
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
-  barrelRCfg.binning = {BinningValue::binR};
+  barrelRCfg.binning = {AxisDirection::AxisR};
 
   auto barrel = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
@@ -279,7 +281,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config barrelEndcapCfg;
   barrelEndcapCfg.builders = {endcapN, barrel, endcapP};
-  barrelEndcapCfg.binning = {BinningValue::binZ};
+  barrelEndcapCfg.binning = {AxisDirection::AxisZ};
 
   auto barrelEndcap = std::make_shared<CylindricalContainerBuilder>(
       barrelEndcapCfg,
@@ -288,7 +290,7 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   // Create the barrel container builder
   CylindricalContainerBuilder::Config detectorCfg;
   detectorCfg.builders = {beampipe, barrelEndcap};
-  detectorCfg.binning = {BinningValue::binR};
+  detectorCfg.binning = {AxisDirection::AxisR};
 
   auto detector = std::make_shared<CylindricalContainerBuilder>(
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));

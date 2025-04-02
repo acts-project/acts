@@ -40,7 +40,6 @@ def run() -> None:
     role_instances = {k: set() for k in roles}
 
     role_instances["type"] |= {
-        "Acts::ActsScalar",
         "Acts::ActsVector",
         "Acts::ActsMatrix",
         "Acts::ActsSquareMatrix",
@@ -77,6 +76,7 @@ def run() -> None:
         "Acts::Geant4PhysicalVolumeSelectors::NameSelector",
         "Acts::Geant4PhysicalVolumeSelectors::PositionSelector",
         "Acts::OrientedSurface",
+        "Acts::TrackStateCreator",
     }
 
     role_instances["class"] |= {
@@ -97,6 +97,8 @@ def run() -> None:
         "Acts::GenericCuboidVolumeBounds",
         "Acts::TrapezoidVolumeBounds",
         "Acts::CylinderVolumeStack",
+        "Acts::CuboidVolumeStack",
+        "Acts::VolumeStack",
         "Acts::GeometryObject",
         "Acts::TrackContainer",
         "Acts::ConeLayer",
@@ -118,6 +120,7 @@ def run() -> None:
         "Acts::Logging::DefaultFilterPolicy",
         "Acts::Logging::DefaultPrintPolicy",
         "Acts::SourceLink",
+        "Acts::JsonDetectorElement",
     }
 
     role_instances["func"] = {
@@ -131,9 +134,8 @@ def run() -> None:
     }
 
     role_instances["enum"] = {
-        "Acts::BinningValue",
+        "Acts::AxisDirection",
         "Acts::BinningType",
-        "Acts::BinningValue",
         "Acts::BoundIndices",
         "Acts::FreeIndices",
         "Acts::MagneticFieldError",

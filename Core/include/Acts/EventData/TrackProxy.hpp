@@ -21,7 +21,6 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
-#include <type_traits>
 
 namespace Acts {
 
@@ -112,16 +111,29 @@ class TrackProxy {
   ///
   /// @{
 
-  /// Copy constructor from a mutable track proxy. This is always valid, either
-  /// mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy(const MutableTrackProxy& other)
+  /// Copy constructor: const to const or mutable to mutable
+  /// @param other the other track proxy
+  TrackProxy(const TrackProxy& other) = default;
+
+  /// Copy assignment operator: const to const or mutable to mutable
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const TrackProxy& other) = default;
+
+  /// Constructor from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  explicit TrackProxy(const MutableTrackProxy& other)
+    requires ReadOnly
       : m_container{other.m_container}, m_index{other.m_index} {}
 
-  /// Copy assignment operator from mutable track proxy. This is always valid,
-  /// either mutable to mutable or mutable to const
-  /// @param other the other track state proxy
-  TrackProxy& operator=(const MutableTrackProxy& other) {
+  /// Copy assignment operator from mutable track proxy
+  /// @note Only available if the track proxy is read-only
+  /// @param other the other track proxy
+  /// @return reference to this track proxy
+  TrackProxy& operator=(const MutableTrackProxy& other)
+    requires ReadOnly
+  {
     m_container = other.m_container;
     m_index = other.m_index;
     return *this;
@@ -243,27 +255,27 @@ class TrackProxy {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+  double theta() const { return parameters()[eBoundTheta]; }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+  double phi() const { return parameters()[eBoundPhi]; }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+  double loc0() const { return parameters()[eBoundLoc0]; }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+  double loc1() const { return parameters()[eBoundLoc1]; }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  ActsScalar time() const { return parameters()[eBoundTime]; }
+  double time() const { return parameters()[eBoundTime]; }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+  double qOverP() const { return parameters()[eBoundQOverP]; }
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
@@ -284,17 +296,17 @@ class TrackProxy {
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
-  ActsScalar charge() const { return particleHypothesis().qFromQOP(qOverP()); }
+  double charge() const { return particleHypothesis().qFromQOP(qOverP()); }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
-  ActsScalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
   /// @return The track transverse momentum value
-  ActsScalar transverseMomentum() const {
+  double transverseMomentum() const {
     return std::sin(theta()) * absoluteMomentum();
   }
 
@@ -324,7 +336,8 @@ class TrackProxy {
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
-  /// Return the number of measurements for the track. Const version
+  /// Return a mutable reference to the number of measurements for the track.
+  /// Mutable version
   /// @note Only available if the track proxy is not read-only
   /// @return The number of measurements
   unsigned int& nMeasurements()
@@ -333,8 +346,7 @@ class TrackProxy {
     return component<unsigned int, hashString("nMeasurements")>();
   }
 
-  /// Return a mutable reference to the number of measurements for the track.
-  /// Mutable version
+  /// Return the number of measurements for the track. Const version
   /// @return The number of measurements
   unsigned int nMeasurements() const {
     return component<unsigned int, hashString("nMeasurements")>();
@@ -577,9 +589,6 @@ class TrackProxy {
       // append track states (cheap), but they're in the wrong order
       for (const auto& srcTrackState : other.trackStatesReversed()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
-        if (srcTrackState.hasCalibrated()) {
-          destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
-        }
         destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
                                 true);
       }
@@ -710,7 +719,7 @@ class TrackProxy {
   constexpr T& component(std::string_view key)
     requires(!ReadOnly)
   {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// Retrieve a const reference to a component
@@ -738,7 +747,7 @@ class TrackProxy {
   /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
-    return m_container->template component<T>(hashString(key), m_index);
+    return m_container->template component<T>(hashStringDynamic(key), m_index);
   }
 
   /// @}

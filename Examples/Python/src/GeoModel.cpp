@@ -17,12 +17,18 @@
 #include "Acts/Plugins/GeoModel/GeoModelBlueprintCreater.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelConverters.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "ActsExamples/GeoModelDetector/GeoModelDetector.hpp"
+#include "ActsExamples/ITkModuleSplitting/ITkModuleSplitting.hpp"
 
 #include <string>
 
@@ -35,6 +41,7 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace Acts::Python {
+
 void addGeoModel(Context& ctx) {
   auto m = ctx.get("main");
 
@@ -46,7 +53,28 @@ void addGeoModel(Context& ctx) {
 
   py::class_<Acts::GeoModelDetectorElement,
              std::shared_ptr<Acts::GeoModelDetectorElement>>(
-      gm, "GeoModelDetectorElement");
+      gm, "GeoModelDetectorElement")
+      .def("logVolName", &Acts::GeoModelDetectorElement::logVolName)
+      .def("databaseEntryName",
+           &Acts::GeoModelDetectorElement::databaseEntryName)
+      .def("surface", [](Acts::GeoModelDetectorElement self) {
+        return self.surface().getSharedPtr();
+      });
+
+  {
+    auto f =
+        py::class_<ActsExamples::GeoModelDetector, ActsExamples::Detector,
+                   std::shared_ptr<ActsExamples::GeoModelDetector>>(
+            gm, "GeoModelDetector")
+            .def(py::init<const ActsExamples::GeoModelDetector::Config&>());
+
+    auto c = py::class_<ActsExamples::GeoModelDetector::Config>(f, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT(c, path, logLevel);
+
+    // patch the constructor
+    patchKwargsConstructor(c);
+  }
 
   // Shape converters
   {
@@ -181,8 +209,61 @@ void addGeoModel(Context& ctx) {
         .def_readwrite(
             "topBoundsOverride",
             &Acts::GeoModelBlueprintCreater::Options::topBoundsOverride)
-        .def_readwrite("table",
-                       &Acts::GeoModelBlueprintCreater::Options::table);
+        .def_readwrite("table", &Acts::GeoModelBlueprintCreater::Options::table)
+        .def_readwrite("dotGraph",
+                       &Acts::GeoModelBlueprintCreater::Options::dotGraph);
   }
+
+  gm.def(
+      "splitBarrelModule",
+      [](const Acts::GeometryContext& gctx,
+         std::shared_ptr<const GeoModelDetectorElement> detElement,
+         unsigned nSegments, Acts::Logging::Level logLevel) {
+        auto logger = Acts::getDefaultLogger("ITkSlitBarrel", logLevel);
+        auto name = detElement->databaseEntryName();
+
+        auto factory = [&](const auto& trafo, const auto& bounds) {
+          return Acts::GeoModelDetectorElement::createDetectorElement<
+              Acts::PlaneSurface, Acts::RectangleBounds>(
+              detElement->physicalVolume(), bounds, trafo,
+              detElement->thickness());
+        };
+
+        return ActsExamples::ITk::splitBarrelModule(gctx, detElement, nSegments,
+                                                    factory, name, *logger);
+      },
+      "gxtx"_a, "detElement"_a, "nSegments"_a,
+      "logLevel"_a = Acts::Logging::INFO);
+
+  gm.def(
+      "splitDiscModule",
+      [](const Acts::GeometryContext& gctx,
+         std::shared_ptr<const GeoModelDetectorElement> detElement,
+         const std::vector<std::pair<double, double>>& patterns,
+         Acts::Logging::Level logLevel) {
+        auto logger = Acts::getDefaultLogger("ITkSlitBarrel", logLevel);
+        auto name = detElement->databaseEntryName();
+
+        auto factory = [&](const auto& trafo, const auto& bounds) {
+          return Acts::GeoModelDetectorElement::createDetectorElement<
+              Acts::DiscSurface, Acts::AnnulusBounds>(
+              detElement->physicalVolume(), bounds, trafo,
+              detElement->thickness());
+        };
+
+        return ActsExamples::ITk::splitDiscModule(gctx, detElement, patterns,
+                                                  factory, name, *logger);
+      },
+      "gxtx"_a, "detElement"_a, "splitRanges"_a,
+      "logLevel"_a = Acts::Logging::INFO);
+
+  py::class_<Acts::GeoModelDetectorElementITk,
+             std::shared_ptr<Acts::GeoModelDetectorElementITk>>(
+      gm, "GeoModelDetectorElementITk")
+      .def("surface", [](Acts::GeoModelDetectorElementITk& self) {
+        return self.surface().getSharedPtr();
+      });
+  gm.def("convertToItk", &GeoModelDetectorElementITk::convertFromGeomodel);
 }
+
 }  // namespace Acts::Python

@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.covariance() = cov;
   BOOST_CHECK_EQUAL(t.covariance(), cov);
 
-  auto surface =
+  std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0})
           .planeSurface();
 
@@ -445,6 +445,24 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   for (const auto [e, ts] : zip(exp, t.trackStates())) {
     BOOST_CHECK_EQUAL(ts.jacobian(), Acts::BoundMatrix::Identity() * e);
   }
+}
+
+BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  constexpr static std::size_t kMeasurementSize = 3;
+
+  auto track1 = tc.makeTrack();
+  auto ts = track1.appendTrackState(TrackStatePropMask::Calibrated);
+  ts.allocateCalibrated(kMeasurementSize);
+  ts.setProjectorSubspaceIndices(BoundSubspaceIndices{});
+
+  auto tsCopy = track1.appendTrackState(TrackStatePropMask::Calibrated);
+  tsCopy.copyFrom(ts, TrackStatePropMask::Calibrated, false);
+
+  BOOST_CHECK_EQUAL(ts.calibratedSize(), tsCopy.calibratedSize());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -10,17 +10,15 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorState.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <limits>
 
 namespace ActsFatras::detail {
 
@@ -53,7 +51,7 @@ struct SimulationActor {
   Particle initialParticle;
 
   /// Relative tolerance of the particles proper time limit
-  Particle::Scalar properTimeRelativeTolerance = 1e-3;
+  double properTimeRelativeTolerance = 1e-3;
 
   /// Simulate the interaction with a single surface.
   ///
@@ -69,7 +67,17 @@ struct SimulationActor {
   void act(propagator_state_t &state, stepper_t &stepper,
            navigator_t &navigator, result_type &result,
            const Acts::Logger &logger) const {
-    assert(generator && "The generator pointer must be valid");
+    assert(generator != nullptr && "The generator pointer must be valid");
+
+    if (state.stage == Acts::PropagatorStage::prePropagation) {
+      // first step is special: there is no previous state and we need to arm
+      // the decay simulation for all future steps.
+      result.particle =
+          makeParticle(initialParticle, state, stepper, navigator);
+      result.properTimeLimit =
+          decay.generateProperTimeLimit(*generator, initialParticle);
+      return;
+    }
 
     // actors are called once more after the propagation terminated
     if (!result.isAlive) {
@@ -82,28 +90,11 @@ struct SimulationActor {
       return;
     }
 
-    // check if we are still on the start surface and skip if so
-    if ((navigator.startSurface(state.navigation) != nullptr) &&
-        (navigator.startSurface(state.navigation) ==
-         navigator.currentSurface(state.navigation))) {
-      return;
-    }
-
     // update the particle state first. this also computes the proper time which
     // needs the particle state from the previous step for reference. that means
     // this must happen for every step (not just on surface) and before
     // everything, e.g. any interactions that could modify the state.
-    if (std::isnan(result.properTimeLimit)) {
-      // first step is special: there is no previous state and we need to arm
-      // the decay simulation for all future steps.
-      result.particle =
-          makeParticle(initialParticle, state, stepper, navigator);
-      result.properTimeLimit =
-          decay.generateProperTimeLimit(*generator, initialParticle);
-    } else {
-      result.particle =
-          makeParticle(result.particle, state, stepper, navigator);
-    }
+    result.particle = makeParticle(result.particle, state, stepper, navigator);
 
     // decay check. needs to happen at every step, not just on surfaces.
     if (std::isfinite(result.properTimeLimit) &&
@@ -131,8 +122,10 @@ struct SimulationActor {
       const auto stepSize = properTimeDiff *
                             result.particle.absoluteMomentum() /
                             result.particle.mass();
+      stepper.releaseStepSize(state.stepping,
+                              Acts::ConstrainedStep::Type::User);
       stepper.updateStepSize(state.stepping, stepSize,
-                             Acts::ConstrainedStep::user);
+                             Acts::ConstrainedStep::Type::User);
     }
 
     // arm the point-like interaction limits in the first step
@@ -166,7 +159,7 @@ struct SimulationActor {
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
         // again: interact only if there is valid material to interact with
-        if (slab.isValid()) {
+        if (!slab.isVacuum()) {
           // adapt material for non-zero incidence
           auto normal = surface.normal(state.geoContext, before.position(),
                                        before.direction());
@@ -187,7 +180,7 @@ struct SimulationActor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar{0.5} * (before.fourPosition() + after.fourPosition()),
+          0.5 * (before.fourPosition() + after.fourPosition()),
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
 
       after.setNumberOfHits(result.hits.size());

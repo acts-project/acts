@@ -1,9 +1,4 @@
-add_library(
-    ActsExamplesPropagation
-    SHARED
-    src/PropagationAlgorithm.cpp
-    src/SimHitToSummaryConversion.cpp
-)
+add_library(ActsExamplesPropagation SHARED src/PropagationAlgorithm.cpp)
 
 target_include_directories(
     ActsExamplesPropagation
@@ -14,6 +9,8 @@ target_link_libraries(
     ActsExamplesPropagation
     PUBLIC ActsCore ActsExamplesFramework
 )
+
+acts_compile_headers(ActsExamplesPropagation GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesPropagation

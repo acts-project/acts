@@ -12,7 +12,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldError.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -146,7 +145,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   struct Cache {
     /// @brief Constructor with magnetic field context
-    Cache(const MagneticFieldContext& /*mctx*/) {}
+    explicit Cache(const MagneticFieldContext& /*mctx*/) {}
 
     std::optional<FieldCell> fieldCell;
     bool initialized = false;
@@ -175,7 +174,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @brief default constructor
   ///
-  InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
+  explicit InterpolatedBFieldMap(Config cfg) : m_cfg{std::move(cfg)} {
     typename Grid::index_t minBin{};
     minBin.fill(1);
     m_lowerLeft = m_cfg.grid.lowerLeftBinEdge(minBin);
@@ -307,18 +306,6 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
       lcache.fieldCell = *res;
     }
     return Result<Vector3>::success((*lcache.fieldCell).getField(gridPosition));
-  }
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
-  ///
-  /// @note currently the derivative is not calculated
-  /// @note Cache is not used currently
-  /// @todo return derivative
-  Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
-      MagneticFieldProvider::Cache& cache) const final {
-    (void)derivative;
-    return getField(position, cache);
   }
 
  private:

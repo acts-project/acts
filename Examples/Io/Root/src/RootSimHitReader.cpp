@@ -29,7 +29,7 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
@@ -103,6 +103,8 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
                              << availableEvents().second);
 }
 
+RootSimHitReader::~RootSimHitReader() = default;
+
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
@@ -144,8 +146,8 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
       break;
     }
 
-    const Acts::GeometryIdentifier geoid = m_uint64Columns.at("geometry_id");
-    const SimBarcode pid = m_uint64Columns.at("particle_id");
+    const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
+    const SimBarcode pid{m_uint64Columns.at("particle_id")};
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {

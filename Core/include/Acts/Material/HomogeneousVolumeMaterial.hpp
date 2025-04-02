@@ -25,7 +25,7 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Explicit constructor
   ///
   /// @param material is the material held by this
-  HomogeneousVolumeMaterial(const Material& material);
+  explicit HomogeneousVolumeMaterial(const Material& material);
 
   /// Copy Constructor
   ///
@@ -46,11 +46,6 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   HomogeneousVolumeMaterial& operator=(const HomogeneousVolumeMaterial& hvm) =
       default;
 
-  /// Equality operator
-  ///
-  /// @param hvm is the source material
-  bool operator==(const HomogeneousVolumeMaterial& hvm) const;
-
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
@@ -64,17 +59,21 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
-  Material m_material = Material();
+  Material m_material;
+
+  /// @brief Check if two materials are exactly equal.
+  ///
+  /// This is a strict equality check, i.e. the materials must have identical
+  /// properties.
+  ///
+  /// @param lhs is the left hand side material
+  /// @param rhs is the right hand side material
+  ///
+  /// @return true if the materials are equal
+  friend constexpr bool operator==(const HomogeneousVolumeMaterial& lhs,
+                                   const HomogeneousVolumeMaterial& rhs) {
+    return lhs.m_material == rhs.m_material;
+  }
 };
-
-inline const Material HomogeneousVolumeMaterial::material(
-    const Vector3& /*position*/) const {
-  return (m_material);
-}
-
-inline bool HomogeneousVolumeMaterial::operator==(
-    const HomogeneousVolumeMaterial& hvm) const {
-  return (m_material == hvm.m_material);
-}
 
 }  // namespace Acts

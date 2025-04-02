@@ -118,7 +118,8 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
     Acts::GaussianTrackDensity::Config trkDensityCfg;
     trkDensityCfg.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
-    return std::make_unique<Seeder>(Seeder::Config{trkDensityCfg});
+    return std::make_unique<Seeder>(
+        Seeder::Config{Acts::GaussianTrackDensity(trkDensityCfg)});
   }
 
   if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
@@ -249,7 +250,8 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
       // Count the number of particles associated with each vertex
       std::size_t particleCount = 0;
       for (const auto& particle : truthParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++particleCount;
         }
       }

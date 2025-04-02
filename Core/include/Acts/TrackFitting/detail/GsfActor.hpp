@@ -12,14 +12,9 @@
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfComponentMerging.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
@@ -28,7 +23,6 @@
 
 #include <ios>
 #include <map>
-#include <numeric>
 
 namespace Acts::detail {
 
@@ -53,8 +47,8 @@ struct GsfResult {
   std::size_t measurementHoles = 0;
   std::size_t processedStates = 0;
 
-  std::vector<const Acts::Surface*> visitedSurfaces;
-  std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
+  std::vector<const Surface*> visitedSurfaces;
+  std::vector<const Surface*> surfacesVisitedBwdAgain;
 
   /// Statistics about material encounterings
   Updatable<std::size_t> nInvalidBetheHeitler;
@@ -74,7 +68,7 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  using ComponentCache = Acts::GsfComponent;
+  using ComponentCache = GsfComponent;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t>;
@@ -189,7 +183,7 @@ struct GsfActor {
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
-    using Status [[maybe_unused]] = Acts::Intersection3D::Status;
+    using Status [[maybe_unused]] = IntersectionStatus;
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
@@ -241,9 +235,8 @@ struct GsfActor {
     }
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      cmp.singleStepper(stepper).transportCovarianceToBound(
-          singleState.stepping, surface);
+      cmp.singleStepper(stepper).transportCovarianceToBound(cmp.state(),
+                                                            surface);
     }
 
     if (haveMaterial) {
@@ -323,13 +316,20 @@ struct GsfActor {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);
     }
+  }
 
-    // Break the navigation if we found all measurements
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool checkAbort(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                  const navigator_t& /*navigator*/, const result_type& result,
+                  const Logger& /*logger*/) const {
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
       ACTS_VERBOSE("Stop navigation because all measurements are found");
-      navigator.navigationBreak(state.navigation, true);
+      return true;
     }
+
+    return false;
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -371,12 +371,12 @@ struct GsfActor {
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
-        old_bound.position(state.stepping.geoContext), state.options.direction,
+        old_bound.position(state.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
     const auto pathCorrection = surface.pathCorrection(
-        state.stepping.geoContext,
-        old_bound.position(state.stepping.geoContext), old_bound.direction());
+        state.geoContext, old_bound.position(state.geoContext),
+        old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     const double pathXOverX0 = slab.thicknessInX0();
@@ -415,7 +415,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           return p_prev * (gaussian.mean - 1.);
         } else {
           return p_prev * (1. / gaussian.mean - 1.);
@@ -430,7 +430,7 @@ struct GsfActor {
       auto new_cov = old_bound.covariance().value();
 
       const auto varInvP = [&]() {
-        if (state.options.direction == Direction::Forward) {
+        if (state.options.direction == Direction::Forward()) {
           const auto f = 1. / (p_prev * gaussian.mean);
           return f * f * gaussian.var;
         } else {
@@ -484,14 +484,14 @@ struct GsfActor {
       // we set ignored components to missed, so we can remove them after
       // the loop
       if (tmpStates.weights.at(idx) < m_cfg.weightCutoff) {
-        cmp.status() = Intersection3D::Status::missed;
+        cmp.status() = IntersectionStatus::unreachable;
         continue;
       }
 
       auto proxy = tmpStates.traj.getTrackState(idx);
 
       cmp.pars() =
-          MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
+          MultiTrajectoryHelpers::freeFiltered(state.geoContext, proxy);
       cmp.cov() = proxy.filteredCovariance();
       cmp.weight() = tmpStates.weights.at(idx);
     }
@@ -534,9 +534,9 @@ struct GsfActor {
           state.geoContext, freeParams.template segment<3>(eFreePos0),
           freeParams.template segment<3>(eFreeDir0));
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = Acts::BoundMatrix::Identity();
-      cmp.derivative() = Acts::FreeVector::Zero();
-      cmp.jacTransport() = Acts::FreeMatrix::Identity();
+      cmp.jacobian() = BoundMatrix::Identity();
+      cmp.derivative() = FreeVector::Zero();
+      cmp.jacTransport() = FreeMatrix::Identity();
     }
   }
 
@@ -574,8 +574,7 @@ struct GsfActor {
 
       // If at least one component is no outlier, we consider the whole thing
       // as a measurementState
-      if (trackStateProxy.typeFlags().test(
-              Acts::TrackStateFlag::MeasurementFlag)) {
+      if (trackStateProxy.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
         is_valid_measurement = true;
       }
 
@@ -621,7 +620,7 @@ struct GsfActor {
         stepper.particleHypothesis(state.stepping));
 
     // Return success
-    return Acts::Result<void>::success();
+    return Result<void>::success();
   }
 
   template <typename propagator_state_t, typename stepper_t,
@@ -640,9 +639,8 @@ struct GsfActor {
     // components should behave the same
     bool isHole = true;
 
-    auto cmps = stepper.componentIterable(state.stepping);
-    for (auto cmp : cmps) {
-      auto singleState = cmp.singleState(state);
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto& singleState = cmp.state();
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       // There is some redundant checking inside this function, but do this for
@@ -790,7 +788,7 @@ struct GsfActor {
 
   /// Set the relevant options that can be set from the Options struct all in
   /// one place
-  void setOptions(const Acts::GsfOptions<traj_t>& options) {
+  void setOptions(const GsfOptions<traj_t>& options) {
     m_cfg.maxComponents = options.maxComponents;
     m_cfg.extensions = options.extensions;
     m_cfg.abortOnError = options.abortOnError;

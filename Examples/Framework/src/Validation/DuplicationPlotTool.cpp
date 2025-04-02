@@ -8,9 +8,8 @@
 
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <TEfficiency.h>
 #include <TProfile.h>
@@ -98,7 +97,7 @@ void ActsExamples::DuplicationPlotTool::fill(
 
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
-    const ActsFatras::Particle& truthParticle,
+    const SimParticleState& truthParticle,
     std::size_t nDuplicatedTracks) const {
   const auto t_phi = phi(truthParticle.direction());
   const auto t_eta = eta(truthParticle.direction());

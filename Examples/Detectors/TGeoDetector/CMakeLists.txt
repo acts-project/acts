@@ -9,6 +9,7 @@ target_include_directories(
     ActsExamplesDetectorTGeo
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+
 target_link_libraries(
     ActsExamplesDetectorTGeo
     PUBLIC
@@ -17,7 +18,11 @@ target_link_libraries(
         ActsPluginJson
         ActsExamplesFramework
         ActsExamplesDetectorGeneric
+        ActsExamplesDetectorsCommon
+        ActsExamplesITkModuleSplitting
 )
+
+acts_compile_headers(ActsExamplesDetectorTGeo GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesDetectorTGeo

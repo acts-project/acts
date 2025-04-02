@@ -44,4 +44,6 @@ set_property(
     PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Pythia8_INCLUDE_DIR}
 )
 
+add_library(Pythia8::Pythia8 ALIAS Pythia8)
+
 mark_as_advanced(Pythia8_FOUND Pythia8_INCLUDE_DIR Pythia8_LIBRARY)
