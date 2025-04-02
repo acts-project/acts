@@ -151,6 +151,10 @@ class ProtoLayerCreator {
   std::vector<ProtoLayerSurfaces> positiveProtoLayers(
       const Acts::GeometryContext& gctx) const;
 
+  /// @brief get the configuration
+  /// @return the configuration
+  const Config& config() const { return m_cfg; }
+
  private:
   /// @brief private helper method to create the proto layers on the
   /// left respectively right side

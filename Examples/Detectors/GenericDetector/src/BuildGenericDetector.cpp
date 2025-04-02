@@ -8,10 +8,339 @@
 
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <cmath>
 #include <numbers>
 
+using namespace Acts::UnitLiterals;
+
 namespace ActsExamples {
+
+namespace Generic {
+namespace {
+
+constexpr float pixelCentralModuleT = 0.15f;
+constexpr float pixelEndcapModuleT = 0.15f;
+
+constexpr float shortStripCentralModuleT = 0.25f;
+constexpr float shortStripEndcapModuleT = 0.25f;
+
+constexpr float longStripCentralModuleT = 0.35f;
+constexpr float longStripEndcapModuleT = 0.35f;
+
+ProtoLayerCreator createPixelProtoLayerCreator(
+    const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>& pCentralModuleMaterial,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>& pEndcapModuleMaterial,
+    Acts::Logging::Level layerLLevel) {
+  // envelope for layers
+  std::pair<double, double> pcEnvelope(2., 2.);
+
+  // configure the pixel proto layer builder
+  ProtoLayerCreator::Config pplConfig;
+  pplConfig.detectorElementFactory = detectorElementFactory;
+
+  // standard, an approach envelope
+  pplConfig.approachSurfaceEnvelope = 1.;
+  // BARREL :
+  // 4 pixel layers
+  // configure the central barrel
+  pplConfig.centralLayerBinMultipliers = {1, 1};
+  pplConfig.centralLayerRadii = {32., 72., 116., 172.};
+  pplConfig.centralLayerEnvelopes = {pcEnvelope, pcEnvelope, pcEnvelope,
+                                     pcEnvelope};
+  pplConfig.centralModuleBinningSchema = {
+      {16, 14}, {32, 14}, {52, 14}, {78, 14}};
+  pplConfig.centralModuleTiltPhi = {0.14, 0.14, 0.14, 0.14};
+  pplConfig.centralModuleHalfX = {8.4, 8.4, 8.4, 8.4};
+  pplConfig.centralModuleHalfY = {36., 36., 36., 36.};
+  pplConfig.centralModuleThickness = {pixelCentralModuleT, pixelCentralModuleT,
+                                      pixelCentralModuleT, pixelCentralModuleT};
+  pplConfig.centralModuleMaterial = {
+      pCentralModuleMaterial, pCentralModuleMaterial, pCentralModuleMaterial,
+      pCentralModuleMaterial};
+
+  // no frontside/backside
+  pplConfig.centralModuleFrontsideStereo = {};
+  pplConfig.centralModuleBacksideStereo = {};
+  pplConfig.centralModuleBacksideGap = {};
+  // mPositions
+  std::vector<std::vector<Acts::Vector3>> pplCentralModulePositions;
+  for (std::size_t plb = 0; plb < pplConfig.centralLayerRadii.size(); ++plb) {
+    // call the helper function
+    pplCentralModulePositions.push_back(
+        modulePositionsCylinder(pplConfig.centralLayerRadii[plb],
+                                0.5,  // 1 mm stagger
+                                pplConfig.centralModuleHalfY[plb],
+                                2.,  // 4 mm module overlap in z
+                                pplConfig.centralModuleBinningSchema[plb]));
+  }
+  pplConfig.centralModulePositions = pplCentralModulePositions;
+  // ENDCAP :
+  // 7 pixel layers each side
+  // configure the endcaps
+  pplConfig.posnegLayerBinMultipliers = {1, 1};
+
+  pplConfig.posnegLayerPositionsZ = {
+      600. * Acts::UnitConstants::mm, 700. * Acts::UnitConstants::mm,
+      820. * Acts::UnitConstants::mm, 960. * Acts::UnitConstants::mm,
+      1100 * Acts::UnitConstants::mm, 1300 * Acts::UnitConstants::mm,
+      1500 * Acts::UnitConstants::mm};
+
+  pplConfig.posnegLayerEnvelopeR = {
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm};
+  std::vector<double> perHX = {8.4, 8.4};     // half length x
+  std::vector<double> perHY = {36., 36.};     // half length y
+  std::vector<std::size_t> perBP = {40, 68};  // bins in phi
+  std::vector<double> perT = {pixelEndcapModuleT,
+                              pixelEndcapModuleT};  // module thickness
+  std::vector<std::size_t> perBX = {336, 336};      // bins in x
+  std::vector<std::size_t> perBY = {1280, 1280};    // bins in y
+  std::vector<int> perRS = {-1, -1};                // readout side
+  std::vector<double> perLA = {0., 0.};             // lorentz angle
+  std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> perM = {
+      pEndcapModuleMaterial, pEndcapModuleMaterial};  // material
+
+  pplConfig.posnegModuleMinHalfX = std::vector<std::vector<double>>(7, perHX);
+  pplConfig.posnegModuleMaxHalfX = {};
+  pplConfig.posnegModuleHalfY = std::vector<std::vector<double>>(7, perHY);
+  pplConfig.posnegModulePhiBins =
+      std::vector<std::vector<std::size_t>>(7, perBP);
+  pplConfig.posnegModuleThickness = std::vector<std::vector<double>>(7, perT);
+  pplConfig.posnegModuleMaterial =
+      std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
+          7, perM);
+
+  // no frontside/backside
+  pplConfig.posnegModuleFrontsideStereo = {};
+  pplConfig.posnegModuleBacksideStereo = {};
+  pplConfig.posnegModuleBacksideGap = {};
+  // mPositions
+  std::vector<std::vector<std::vector<Acts::Vector3>>> pplPosnegModulePositions;
+  for (std::size_t id = 0; id < pplConfig.posnegLayerPositionsZ.size(); ++id) {
+    pplPosnegModulePositions.push_back(modulePositionsDisc(
+        pplConfig.posnegLayerPositionsZ[id], 0.0, {4.0, 4.0}, {0.5, 0.}, 30.,
+        176., pplConfig.posnegModulePhiBins[id],
+        pplConfig.posnegModuleHalfY[id]));
+  }
+  pplConfig.posnegModulePositions = pplPosnegModulePositions;
+
+  /// The ProtoLayer creator
+  ProtoLayerCreator pplCreator(
+      pplConfig, Acts::getDefaultLogger("PixelProtoLayerCreator", layerLLevel));
+
+  return pplCreator;
+}
+
+ProtoLayerCreator createShortStripProtoLayerCreator(
+    const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>&
+        ssCentralModuleMaterial,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>& ssEndcapModuleMaterial,
+    Acts::Logging::Level layerLLevel) {
+  // envelope double
+  std::pair<double, double> ssEnvelope(2., 2.);
+
+  // ----------------------------------------------------------------------------
+  // Configure the short strip proto layer builder
+  ProtoLayerCreator::Config ssplConfig;
+  ssplConfig.detectorElementFactory = detectorElementFactory;
+
+  // configure the central barrel
+  ssplConfig.centralLayerBinMultipliers = {1, 1};
+  ssplConfig.centralLayerRadii = {260., 360., 500., 660.};
+  ssplConfig.centralLayerEnvelopes = {ssEnvelope, ssEnvelope, ssEnvelope,
+                                      ssEnvelope};
+
+  ssplConfig.centralModuleBinningSchema = {
+      {40, 21}, {56, 21}, {78, 21}, {102, 21}};
+  ssplConfig.centralModuleTiltPhi = {-0.15, -0.15, -0.15, -0.15};
+  ssplConfig.centralModuleHalfX = {24., 24., 24., 24.};
+  ssplConfig.centralModuleHalfY = {54., 54., 54., 54.};
+  ssplConfig.centralModuleThickness = {
+      shortStripCentralModuleT, shortStripCentralModuleT,
+      shortStripCentralModuleT, shortStripCentralModuleT};
+
+  ssplConfig.centralModuleMaterial = {
+      ssCentralModuleMaterial, ssCentralModuleMaterial, ssCentralModuleMaterial,
+      ssCentralModuleMaterial};
+  ssplConfig.centralModuleFrontsideStereo = {};
+  ssplConfig.centralModuleBacksideStereo = {};
+  ssplConfig.centralModuleBacksideGap = {};
+  // mPositions
+  std::vector<std::vector<Acts::Vector3>> ssplCentralModulePositions;
+  for (std::size_t sslb = 0; sslb < ssplConfig.centralLayerRadii.size();
+       ++sslb) {
+    // call the helper function
+    ssplCentralModulePositions.push_back(
+        modulePositionsCylinder(ssplConfig.centralLayerRadii[sslb],
+                                3.,  // 3 mm stagger
+                                ssplConfig.centralModuleHalfY[sslb],
+                                5.,  // 5 mm module overlap
+                                ssplConfig.centralModuleBinningSchema[sslb]));
+  }
+  ssplConfig.centralModulePositions = ssplCentralModulePositions;
+
+  // configure the endcaps
+  std::vector<double> mrMinHx = {16.4, 24.2, 32.2};
+  std::vector<double> mrMaxHx = {24.2, 32.2, 40.0};
+  std::vector<double> mrHy = {78., 78., 78.};
+
+  std::vector<std::size_t> mPhiBins = {54, 56, 60};
+  std::vector<double> mThickness = {shortStripEndcapModuleT,
+                                    shortStripEndcapModuleT,
+                                    shortStripEndcapModuleT};
+  std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
+      ssEndcapModuleMaterial, ssEndcapModuleMaterial, ssEndcapModuleMaterial};
+
+  ssplConfig.posnegLayerBinMultipliers = {1, 2};
+
+  ssplConfig.posnegLayerPositionsZ = {1220., 1500., 1800., 2150., 2550., 2950.};
+  std::size_t nposnegs = ssplConfig.posnegLayerPositionsZ.size();
+  ssplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
+
+  ssplConfig.posnegModuleMinHalfX =
+      std::vector<std::vector<double>>(nposnegs, mrMinHx);
+  ssplConfig.posnegModuleMaxHalfX =
+      std::vector<std::vector<double>>(nposnegs, mrMaxHx);
+  ssplConfig.posnegModuleHalfY =
+      std::vector<std::vector<double>>(nposnegs, mrHy);
+  ssplConfig.posnegModulePhiBins =
+      std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
+  ssplConfig.posnegModuleThickness =
+      std::vector<std::vector<double>>(nposnegs, mThickness);
+
+  ssplConfig.posnegModuleMaterial =
+      std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
+          nposnegs, mMaterial);
+
+  ssplConfig.posnegModuleFrontsideStereo = {};
+  ssplConfig.posnegModuleBacksideStereo = {};
+  ssplConfig.posnegModuleBacksideGap = {};
+
+  // mPositions
+  std::vector<std::vector<std::vector<Acts::Vector3>>>
+      ssplPosnegModulePositions;
+  for (std::size_t id = 0; id < ssplConfig.posnegLayerPositionsZ.size(); ++id) {
+    ssplPosnegModulePositions.push_back(modulePositionsDisc(
+        ssplConfig.posnegLayerPositionsZ[id], 6.0, {3., 3., 3.}, {0., 0., 0.},
+        240., 700., ssplConfig.posnegModulePhiBins[id],
+        ssplConfig.posnegModuleHalfY[id]));
+  }
+  ssplConfig.posnegModulePositions = ssplPosnegModulePositions;
+
+  // The ProtoLayer creator
+  ProtoLayerCreator ssplCreator(
+      ssplConfig,
+      Acts::getDefaultLogger("SStripProtoLayerCreator", layerLLevel));
+
+  return ssplCreator;
+}
+
+ProtoLayerCreator createLongStripProtoLayerCreator(
+    const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>&
+        lsCentralModuleMaterial,
+    const std::shared_ptr<const Acts::ISurfaceMaterial>& lsEndcapModuleMaterial,
+    Acts::Logging::Level layerLLevel) {
+  // envelope double
+  std::pair<double, double> lsEnvelope(2., 2.);
+
+  // The proto layer creator
+  ProtoLayerCreator::Config lsplConfig;
+  lsplConfig.detectorElementFactory = detectorElementFactory;
+
+  // configure the central barrel
+  lsplConfig.centralLayerBinMultipliers = {1, 1};
+  lsplConfig.centralLayerRadii = {820., 1020.};
+  lsplConfig.centralLayerEnvelopes = {lsEnvelope, lsEnvelope};
+
+  lsplConfig.centralModuleBinningSchema = {{120, 21}, {152, 21}};
+  lsplConfig.centralModuleTiltPhi = {-0.15, -0.15};
+  lsplConfig.centralModuleHalfX = {24., 24.};
+  lsplConfig.centralModuleHalfY = {54., 54.};
+  lsplConfig.centralModuleThickness = {longStripCentralModuleT,
+                                       longStripCentralModuleT};
+  lsplConfig.centralModuleMaterial = {lsCentralModuleMaterial,
+                                      lsCentralModuleMaterial};
+
+  lsplConfig.centralModuleFrontsideStereo = {};
+  lsplConfig.centralModuleBacksideStereo = {};
+  lsplConfig.centralModuleBacksideGap = {};
+  // mPositions
+  std::vector<std::vector<Acts::Vector3>> lslbCentralModulePositions;
+  for (std::size_t lslb = 0; lslb < lsplConfig.centralLayerRadii.size();
+       ++lslb) {
+    // call the helper function
+    lslbCentralModulePositions.push_back(
+        modulePositionsCylinder(lsplConfig.centralLayerRadii[lslb],
+                                3.,  // 3 mm stagger
+                                lsplConfig.centralModuleHalfY[lslb],
+                                5.,  // 5 mm module overlap
+                                lsplConfig.centralModuleBinningSchema[lslb]));
+  }
+
+  lsplConfig.centralModulePositions = lslbCentralModulePositions;
+  // configure the endcaps
+  std::vector<double> mrMinHx = {54., 66.};
+  std::vector<double> mrMaxHx = {64.2, 72.};
+  std::vector<double> mrHy = {78., 78.};
+  std::vector<std::size_t> mPhiBins = {48, 50};
+  std::vector<double> mThickness = {longStripEndcapModuleT,
+                                    longStripEndcapModuleT};
+  std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
+      lsEndcapModuleMaterial, lsEndcapModuleMaterial};
+
+  // endcap
+  lsplConfig.posnegLayerBinMultipliers = {1, 2};
+  lsplConfig.posnegLayerPositionsZ = {1220., 1500., 1800., 2150., 2550., 2950.};
+  std::size_t nposnegs = lsplConfig.posnegLayerPositionsZ.size();
+  lsplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
+
+  lsplConfig.posnegModuleMinHalfX =
+      std::vector<std::vector<double>>(nposnegs, mrMinHx);
+  lsplConfig.posnegModuleMaxHalfX =
+      std::vector<std::vector<double>>(nposnegs, mrMaxHx);
+  lsplConfig.posnegModuleHalfY =
+      std::vector<std::vector<double>>(nposnegs, mrHy);
+  lsplConfig.posnegModulePhiBins =
+      std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
+  lsplConfig.posnegModuleThickness =
+      std::vector<std::vector<double>>(nposnegs, mThickness);
+
+  lsplConfig.posnegModuleMaterial =
+      std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
+          nposnegs, mMaterial);
+  lsplConfig.posnegModuleFrontsideStereo = {};
+  lsplConfig.posnegModuleBacksideStereo = {};
+  lsplConfig.posnegModuleBacksideGap = {};
+
+  // mPositions
+  std::vector<std::vector<std::vector<Acts::Vector3>>>
+      lssbPosnegModulePositions;
+  for (std::size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size(); ++id) {
+    lssbPosnegModulePositions.push_back(modulePositionsDisc(
+        lsplConfig.posnegLayerPositionsZ[id],
+        8.0,  // staggering of rings, we put the disk structure in between
+        {3., 3.}, {0., 0.}, 750., 1020., lsplConfig.posnegModulePhiBins[id],
+        lsplConfig.posnegModuleHalfY[id]));
+  }
+  lsplConfig.posnegModulePositions = lssbPosnegModulePositions;
+
+  // The ProtoLayer creator
+  ProtoLayerCreator lsplCreator(
+      lsplConfig,
+      Acts::getDefaultLogger("LStripProtoLayerCreator", layerLLevel));
+
+  return lsplCreator;
+}
+
+}  // namespace
+}  // namespace Generic
 
 std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     const Acts::GeometryContext& gctxIn,
@@ -121,19 +450,14 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   // Pixel detector
   //-------------------------------------------------------------------------------------
   // some prep work
-  // envelope for layers
-  std::pair<double, double> pcEnvelope(2., 2.);
-
-  float pCentralModuleT = 0.15f;
-  float pEndcapModuleT = 0.15f;
 
   // Module material properties - X0, L0, A, Z, Rho
   // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
   const auto silicon = Acts::Material::fromMassDensity(
       static_cast<float>(95.7_mm), static_cast<float>(465.2_mm), 28.03f, 14.f,
       static_cast<float>(2.32e-3_g / 1_cm3));
-  Acts::MaterialSlab pcModuleMaterial(silicon, pCentralModuleT);
-  Acts::MaterialSlab peModuleMaterial(silicon, pEndcapModuleT);
+  Acts::MaterialSlab pcModuleMaterial(silicon, pixelCentralModuleT);
+  Acts::MaterialSlab peModuleMaterial(silicon, pixelEndcapModuleT);
   // Layer material properties - thickness, X0, L0, A, Z, Rho
   Acts::MaterialSlab pcmbProperties(silicon, static_cast<float>(1.5_mm));
   Acts::MaterialSlab pcmecProperties(silicon, static_cast<float>(1.5_mm));
@@ -156,101 +480,9 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     pEndcapModuleMaterial = pPlaneMaterial;
   }
 
-  // configure the pixel proto layer builder
-  ProtoLayerCreator::Config pplConfig;
-  pplConfig.detectorElementFactory = detectorElementFactory;
-
-  // standard, an approach envelope
-  pplConfig.approachSurfaceEnvelope = 1.;
-  // BARREL :
-  // 4 pixel layers
-  // configure the central barrel
-  pplConfig.centralLayerBinMultipliers = {1, 1};
-  pplConfig.centralLayerRadii = {32., 72., 116., 172.};
-  pplConfig.centralLayerEnvelopes = {pcEnvelope, pcEnvelope, pcEnvelope,
-                                     pcEnvelope};
-  pplConfig.centralModuleBinningSchema = {
-      {16, 14}, {32, 14}, {52, 14}, {78, 14}};
-  pplConfig.centralModuleTiltPhi = {0.14, 0.14, 0.14, 0.14};
-  pplConfig.centralModuleHalfX = {8.4, 8.4, 8.4, 8.4};
-  pplConfig.centralModuleHalfY = {36., 36., 36., 36.};
-  pplConfig.centralModuleThickness = {pCentralModuleT, pCentralModuleT,
-                                      pCentralModuleT, pCentralModuleT};
-  pplConfig.centralModuleMaterial = {
-      pCentralModuleMaterial, pCentralModuleMaterial, pCentralModuleMaterial,
-      pCentralModuleMaterial};
-
-  // no frontside/backside
-  pplConfig.centralModuleFrontsideStereo = {};
-  pplConfig.centralModuleBacksideStereo = {};
-  pplConfig.centralModuleBacksideGap = {};
-  // mPositions
-  std::vector<std::vector<Acts::Vector3>> pplCentralModulePositions;
-  for (std::size_t plb = 0; plb < pplConfig.centralLayerRadii.size(); ++plb) {
-    // call the helper function
-    pplCentralModulePositions.push_back(
-        modulePositionsCylinder(pplConfig.centralLayerRadii[plb],
-                                0.5,  // 1 mm stagger
-                                pplConfig.centralModuleHalfY[plb],
-                                2.,  // 4 mm module overlap in z
-                                pplConfig.centralModuleBinningSchema[plb]));
-  }
-  pplConfig.centralModulePositions = pplCentralModulePositions;
-  // ENDCAP :
-  // 7 pixel layers each side
-  // configure the endcaps
-  pplConfig.posnegLayerBinMultipliers = {1, 1};
-
-  pplConfig.posnegLayerPositionsZ = {
-      600. * Acts::UnitConstants::mm, 700. * Acts::UnitConstants::mm,
-      820. * Acts::UnitConstants::mm, 960. * Acts::UnitConstants::mm,
-      1100 * Acts::UnitConstants::mm, 1300 * Acts::UnitConstants::mm,
-      1500 * Acts::UnitConstants::mm};
-
-  pplConfig.posnegLayerEnvelopeR = {
-      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
-      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
-      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
-      1. * Acts::UnitConstants::mm};
-  std::vector<double> perHX = {8.4, 8.4};     // half length x
-  std::vector<double> perHY = {36., 36.};     // half length y
-  std::vector<std::size_t> perBP = {40, 68};  // bins in phi
-  std::vector<double> perT = {pEndcapModuleT,
-                              pEndcapModuleT};    // module thickness
-  std::vector<std::size_t> perBX = {336, 336};    // bins in x
-  std::vector<std::size_t> perBY = {1280, 1280};  // bins in y
-  std::vector<int> perRS = {-1, -1};              // readout side
-  std::vector<double> perLA = {0., 0.};           // lorentz angle
-  std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> perM = {
-      pEndcapModuleMaterial, pEndcapModuleMaterial};  // material
-
-  pplConfig.posnegModuleMinHalfX = std::vector<std::vector<double>>(7, perHX);
-  pplConfig.posnegModuleMaxHalfX = {};
-  pplConfig.posnegModuleHalfY = std::vector<std::vector<double>>(7, perHY);
-  pplConfig.posnegModulePhiBins =
-      std::vector<std::vector<std::size_t>>(7, perBP);
-  pplConfig.posnegModuleThickness = std::vector<std::vector<double>>(7, perT);
-  pplConfig.posnegModuleMaterial =
-      std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
-          7, perM);
-
-  // no frontside/backside
-  pplConfig.posnegModuleFrontsideStereo = {};
-  pplConfig.posnegModuleBacksideStereo = {};
-  pplConfig.posnegModuleBacksideGap = {};
-  // mPositions
-  std::vector<std::vector<std::vector<Acts::Vector3>>> pplPosnegModulePositions;
-  for (std::size_t id = 0; id < pplConfig.posnegLayerPositionsZ.size(); ++id) {
-    pplPosnegModulePositions.push_back(modulePositionsDisc(
-        pplConfig.posnegLayerPositionsZ[id], 0.0, {4.0, 4.0}, {0.5, 0.}, 30.,
-        176., pplConfig.posnegModulePhiBins[id],
-        pplConfig.posnegModuleHalfY[id]));
-  }
-  pplConfig.posnegModulePositions = pplPosnegModulePositions;
-
-  /// The ProtoLayer creator
-  ProtoLayerCreator pplCreator(
-      pplConfig, Acts::getDefaultLogger("PixelProtoLayerCreator", layerLLevel));
+  ProtoLayerCreator pplCreator = createPixelProtoLayerCreator(
+      detectorElementFactory, pCentralModuleMaterial, pEndcapModuleMaterial,
+      layerLLevel);
 
   // configure pixel layer builder
   LayerBuilder::Config plbConfig;
@@ -332,15 +564,10 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     //-------------------------------------------------------------------------------------
     // some prep work
 
-    float ssCentralModuleT = 0.25f;
-    float ssEndcapModuleT = 0.25f;
-    // envelope double
-    std::pair<double, double> ssEnvelope(2., 2.);
-
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material sscMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialSlab sscModuleMaterial(silicon, ssCentralModuleT);
-    Acts::MaterialSlab sseModuleMaterial(silicon, ssEndcapModuleT);
+    Acts::MaterialSlab sscModuleMaterial(silicon, shortStripCentralModuleT);
+    Acts::MaterialSlab sseModuleMaterial(silicon, shortStripEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho
     Acts::MaterialSlab ssbmProperties(silicon, 2_mm);
@@ -366,98 +593,11 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
       ssEndcapModuleMaterial = pPlaneMaterial;
     }
 
-    // ----------------------------------------------------------------------------
-    // Configure the short strip proto layer builder
-    ProtoLayerCreator::Config ssplConfig;
-    ssplConfig.detectorElementFactory = detectorElementFactory;
+    ProtoLayerCreator ssplCreator = createShortStripProtoLayerCreator(
+        detectorElementFactory, ssCentralModuleMaterial, ssEndcapModuleMaterial,
+        layerLLevel);
 
-    // configure the central barrel
-    ssplConfig.centralLayerBinMultipliers = {1, 1};
-    ssplConfig.centralLayerRadii = {260., 360., 500., 660.};
-    ssplConfig.centralLayerEnvelopes = {ssEnvelope, ssEnvelope, ssEnvelope,
-                                        ssEnvelope};
-
-    ssplConfig.centralModuleBinningSchema = {
-        {40, 21}, {56, 21}, {78, 21}, {102, 21}};
-    ssplConfig.centralModuleTiltPhi = {-0.15, -0.15, -0.15, -0.15};
-    ssplConfig.centralModuleHalfX = {24., 24., 24., 24.};
-    ssplConfig.centralModuleHalfY = {54., 54., 54., 54.};
-    ssplConfig.centralModuleThickness = {ssCentralModuleT, ssCentralModuleT,
-                                         ssCentralModuleT, ssCentralModuleT};
-
-    ssplConfig.centralModuleMaterial = {
-        ssCentralModuleMaterial, ssCentralModuleMaterial,
-        ssCentralModuleMaterial, ssCentralModuleMaterial};
-    ssplConfig.centralModuleFrontsideStereo = {};
-    ssplConfig.centralModuleBacksideStereo = {};
-    ssplConfig.centralModuleBacksideGap = {};
-    // mPositions
-    std::vector<std::vector<Acts::Vector3>> ssplCentralModulePositions;
-    for (std::size_t sslb = 0; sslb < ssplConfig.centralLayerRadii.size();
-         ++sslb) {
-      // call the helper function
-      ssplCentralModulePositions.push_back(
-          modulePositionsCylinder(ssplConfig.centralLayerRadii[sslb],
-                                  3.,  // 3 mm stagger
-                                  ssplConfig.centralModuleHalfY[sslb],
-                                  5.,  // 5 mm module overlap
-                                  ssplConfig.centralModuleBinningSchema[sslb]));
-    }
-    ssplConfig.centralModulePositions = ssplCentralModulePositions;
-
-    // configure the endcaps
-    std::vector<double> mrMinHx = {16.4, 24.2, 32.2};
-    std::vector<double> mrMaxHx = {24.2, 32.2, 40.0};
-    std::vector<double> mrHy = {78., 78., 78.};
-
-    std::vector<std::size_t> mPhiBins = {54, 56, 60};
-    std::vector<double> mThickness = {ssEndcapModuleT, ssEndcapModuleT,
-                                      ssEndcapModuleT};
-    std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
-        ssEndcapModuleMaterial, ssEndcapModuleMaterial, ssEndcapModuleMaterial};
-
-    ssplConfig.posnegLayerBinMultipliers = {1, 2};
-
-    ssplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
-                                        2150., 2550., 2950.};
-    std::size_t nposnegs = ssplConfig.posnegLayerPositionsZ.size();
-    ssplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
-
-    ssplConfig.posnegModuleMinHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMinHx);
-    ssplConfig.posnegModuleMaxHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMaxHx);
-    ssplConfig.posnegModuleHalfY =
-        std::vector<std::vector<double>>(nposnegs, mrHy);
-    ssplConfig.posnegModulePhiBins =
-        std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
-    ssplConfig.posnegModuleThickness =
-        std::vector<std::vector<double>>(nposnegs, mThickness);
-
-    ssplConfig.posnegModuleMaterial =
-        std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
-            nposnegs, mMaterial);
-
-    ssplConfig.posnegModuleFrontsideStereo = {};
-    ssplConfig.posnegModuleBacksideStereo = {};
-    ssplConfig.posnegModuleBacksideGap = {};
-
-    // mPositions
-    std::vector<std::vector<std::vector<Acts::Vector3>>>
-        ssplPosnegModulePositions;
-    for (std::size_t id = 0; id < ssplConfig.posnegLayerPositionsZ.size();
-         ++id) {
-      ssplPosnegModulePositions.push_back(modulePositionsDisc(
-          ssplConfig.posnegLayerPositionsZ[id], 6.0, {3., 3., 3.}, {0., 0., 0.},
-          240., 700., ssplConfig.posnegModulePhiBins[id],
-          ssplConfig.posnegModuleHalfY[id]));
-    }
-    ssplConfig.posnegModulePositions = ssplPosnegModulePositions;
-
-    // The ProtoLayer creator
-    ProtoLayerCreator ssplCreator(
-        ssplConfig,
-        Acts::getDefaultLogger("SStripProtoLayerCreator", layerLLevel));
+    std::size_t nposnegs = ssplCreator.config().posnegLayerPositionsZ.size();
 
     // configure short strip layer builder
     LayerBuilder::Config sslbConfig;
@@ -506,16 +646,11 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     //-------------------------------------------------------------------------------------
 
     // some prep work
-    // envelope double
-    std::pair<double, double> lsEnvelope(2., 2.);
-
-    float lsCentralModuleT = 0.35f;
-    float lsEndcapModuleT = 0.35f;
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialSlab lscModuleMaterial(silicon, lsCentralModuleT);
-    Acts::MaterialSlab lseModuleMaterial(silicon, lsEndcapModuleT);
+    Acts::MaterialSlab lscModuleMaterial(silicon, longStripCentralModuleT);
+    Acts::MaterialSlab lseModuleMaterial(silicon, longStripEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho - barrel
     Acts::MaterialSlab lsbmProperties(silicon, 2.5_mm);
@@ -541,90 +676,9 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
       lsEndcapModuleMaterial = pPlaneMaterial;
     }
 
-    // The proto layer creator
-    ProtoLayerCreator::Config lsplConfig;
-    lsplConfig.detectorElementFactory = detectorElementFactory;
-
-    // configure the central barrel
-    lsplConfig.centralLayerBinMultipliers = {1, 1};
-    lsplConfig.centralLayerRadii = {820., 1020.};
-    lsplConfig.centralLayerEnvelopes = {lsEnvelope, lsEnvelope};
-
-    lsplConfig.centralModuleBinningSchema = {{120, 21}, {152, 21}};
-    lsplConfig.centralModuleTiltPhi = {-0.15, -0.15};
-    lsplConfig.centralModuleHalfX = {24., 24.};
-    lsplConfig.centralModuleHalfY = {54., 54.};
-    lsplConfig.centralModuleThickness = {lsCentralModuleT, lsCentralModuleT};
-    lsplConfig.centralModuleMaterial = {lsCentralModuleMaterial,
-                                        lsCentralModuleMaterial};
-
-    lsplConfig.centralModuleFrontsideStereo = {};
-    lsplConfig.centralModuleBacksideStereo = {};
-    lsplConfig.centralModuleBacksideGap = {};
-    // mPositions
-    std::vector<std::vector<Acts::Vector3>> lslbCentralModulePositions;
-    for (std::size_t lslb = 0; lslb < lsplConfig.centralLayerRadii.size();
-         ++lslb) {
-      // call the helper function
-      lslbCentralModulePositions.push_back(
-          modulePositionsCylinder(lsplConfig.centralLayerRadii[lslb],
-                                  3.,  // 3 mm stagger
-                                  lsplConfig.centralModuleHalfY[lslb],
-                                  5.,  // 5 mm module overlap
-                                  lsplConfig.centralModuleBinningSchema[lslb]));
-    }
-
-    lsplConfig.centralModulePositions = lslbCentralModulePositions;
-    // configure the endcaps
-    mrMinHx = {54., 66.};
-    mrMaxHx = {64.2, 72.};
-    mrHy = {78., 78.};
-    mPhiBins = {48, 50};
-    mThickness = {lsEndcapModuleT, lsEndcapModuleT};
-    mMaterial = {lsEndcapModuleMaterial, lsEndcapModuleMaterial};
-
-    // endcap
-    lsplConfig.posnegLayerBinMultipliers = {1, 2};
-    lsplConfig.posnegLayerPositionsZ = {1220., 1500., 1800.,
-                                        2150., 2550., 2950.};
-    nposnegs = lsplConfig.posnegLayerPositionsZ.size();
-    lsplConfig.posnegLayerEnvelopeR = std::vector<double>(nposnegs, 5.);
-
-    lsplConfig.posnegModuleMinHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMinHx);
-    lsplConfig.posnegModuleMaxHalfX =
-        std::vector<std::vector<double>>(nposnegs, mrMaxHx);
-    lsplConfig.posnegModuleHalfY =
-        std::vector<std::vector<double>>(nposnegs, mrHy);
-    lsplConfig.posnegModulePhiBins =
-        std::vector<std::vector<std::size_t>>(nposnegs, mPhiBins);
-    lsplConfig.posnegModuleThickness =
-        std::vector<std::vector<double>>(nposnegs, mThickness);
-
-    lsplConfig.posnegModuleMaterial =
-        std::vector<std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>>>(
-            nposnegs, mMaterial);
-    lsplConfig.posnegModuleFrontsideStereo = {};
-    lsplConfig.posnegModuleBacksideStereo = {};
-    lsplConfig.posnegModuleBacksideGap = {};
-
-    // mPositions
-    std::vector<std::vector<std::vector<Acts::Vector3>>>
-        lssbPosnegModulePositions;
-    for (std::size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size();
-         ++id) {
-      lssbPosnegModulePositions.push_back(modulePositionsDisc(
-          lsplConfig.posnegLayerPositionsZ[id],
-          8.0,  // staggering of rings, we put the disk structure in between
-          {3., 3.}, {0., 0.}, 750., 1020., lsplConfig.posnegModulePhiBins[id],
-          lsplConfig.posnegModuleHalfY[id]));
-    }
-    lsplConfig.posnegModulePositions = lssbPosnegModulePositions;
-
-    // The ProtoLayer creator
-    ProtoLayerCreator lsplCreator(
-        lsplConfig,
-        Acts::getDefaultLogger("LStripProtoLayerCreator", layerLLevel));
+    ProtoLayerCreator lsplCreator = createLongStripProtoLayerCreator(
+        detectorElementFactory, lsCentralModuleMaterial, lsEndcapModuleMaterial,
+        layerLLevel);
 
     // configure short strip layer builder
     LayerBuilder::Config lslbConfig;
