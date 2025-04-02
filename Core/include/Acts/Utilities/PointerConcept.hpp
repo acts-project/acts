@@ -43,6 +43,6 @@ namespace std {
  *          Acts::SmartPointerConcept, similar to how it works with raw pointers */
 template <Acts::SmartPointerConcept T>
 struct remove_pointer<T> {
-  typedef typename T::element_type type;
+  using type = typename T::element_type;
 };
 }  // namespace std
