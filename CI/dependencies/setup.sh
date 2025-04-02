@@ -85,7 +85,7 @@ if [ -z "${env_file:-}" ]; then
   if [ -n "${GITHUB_ACTIONS:-}" ]; then
     env_file="${GITHUB_ENV}"
   else
-    echo "No destination specified via -d and not running in GitHub Actions"
+    echo "No environment file specified via -e and not running in GitHub Actions"
     exit 1
   fi
 fi
