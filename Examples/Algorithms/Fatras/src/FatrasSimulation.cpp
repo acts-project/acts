@@ -243,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   // fatal error leads to panic
   if (!ret.ok()) {
     ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "
-                        << ret.error());
+                        << ret.error().message());
     return ProcessCode::ABORT;
   }
   // failed particles are just logged. assumes that failed particles are due
