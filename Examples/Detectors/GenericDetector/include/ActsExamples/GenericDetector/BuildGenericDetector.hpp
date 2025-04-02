@@ -46,43 +46,6 @@ class ISurfaceMaterial;
 
 namespace ActsExamples::Generic {
 
-/// Helper method for positioning
-/// @param radius is the cylinder radius
-/// @param zStagger is the radial staggering along z
-/// @param moduleHalfLength is the module length (longitudinal)
-/// @param lOverlap is the overlap of the modules (longitudinal)
-/// @binningSchema is the way the bins are laid out rphi x z
-std::vector<Acts::Vector3> modulePositionsCylinder(
-    double radius, double zStagger, double moduleHalfLength, double lOverlap,
-    const std::pair<int, int>& binningSchema);
-
-/// Helper method for positioning
-/// @param z is the z position of the ring
-/// @param radius is the ring radius
-/// @param phiStagger is the radial staggering along phi
-/// @param lOverlap is the overlap of the modules
-/// @param nPhiBins is the number of bins in phi
-std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
-                                               double phiStagger,
-                                               double phiSubStagger,
-                                               int nPhiBins);
-
-/// Helper method for positioning
-/// @param z is the nominal z posiiton of the dis
-/// @param ringStagger is the staggering of the different rings
-/// @param phiStagger is the staggering on a ring in phi : it is even/odd
-/// @param phiSubStagger is the sub staggering on a ring in phi : it affects
-/// 0/4/8 and 3/6
-/// @param innerRadius is the inner Radius for the disc
-/// @param outerRadius is the outer Radius for the disc
-/// @param discBinning is the binning setup in r, phi
-/// @param moduleHalfLength is pair of phibins and module length
-std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
-    double z, double ringStagger, std::vector<double> phiStagger,
-    std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<std::size_t>& discBinning,
-    const std::vector<double>& moduleHalfLength);
-
 /// Global method to build the generic tracking geometry
 ///
 /// @tparam detector_element_t is the actual type of the detector
