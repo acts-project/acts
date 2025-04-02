@@ -157,7 +157,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   }
 
   // configure the pixel proto layer builder
-  typename ProtoLayerCreator::Config pplConfig;
+  ProtoLayerCreator::Config pplConfig;
   pplConfig.detectorElementFactory = detectorElementFactory;
 
   // standard, an approach envelope
@@ -253,7 +253,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
       pplConfig, Acts::getDefaultLogger("PixelProtoLayerCreator", layerLLevel));
 
   // configure pixel layer builder
-  typename LayerBuilder::Config plbConfig;
+  LayerBuilder::Config plbConfig;
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
   // material concentration alsways outside the modules
@@ -368,7 +368,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
 
     // ----------------------------------------------------------------------------
     // Configure the short strip proto layer builder
-    typename ProtoLayerCreator::Config ssplConfig;
+    ProtoLayerCreator::Config ssplConfig;
     ssplConfig.detectorElementFactory = detectorElementFactory;
 
     // configure the central barrel
@@ -460,7 +460,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
         Acts::getDefaultLogger("SStripProtoLayerCreator", layerLLevel));
 
     // configure short strip layer builder
-    typename LayerBuilder::Config sslbConfig;
+    LayerBuilder::Config sslbConfig;
     sslbConfig.layerCreator = layerCreator;
     sslbConfig.layerIdentification = "SStrip";
 
@@ -542,7 +542,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     }
 
     // The proto layer creator
-    typename ProtoLayerCreator::Config lsplConfig;
+    ProtoLayerCreator::Config lsplConfig;
     lsplConfig.detectorElementFactory = detectorElementFactory;
 
     // configure the central barrel
@@ -627,7 +627,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
         Acts::getDefaultLogger("LStripProtoLayerCreator", layerLLevel));
 
     // configure short strip layer builder
-    typename LayerBuilder::Config lslbConfig;
+    LayerBuilder::Config lslbConfig;
     lslbConfig.layerCreator = layerCreator;
     lslbConfig.layerIdentification = "LStrip";
     lslbConfig.centralLayerMaterialConcentration = {-1, -1};
