@@ -44,8 +44,7 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
     BOOST_CHECK(testPointer(std::shared_ptr<const int>{nullptr}));
   
     BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<int>{nullptr}));
-
-    // BOOST_CHECK(testPointer(std::unique_ptr<int []>{nullptr}));
+    BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<const int>{nullptr}));
 
 }
 BOOST_AUTO_TEST_SUITE_END()

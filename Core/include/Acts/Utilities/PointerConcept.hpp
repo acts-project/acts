@@ -30,6 +30,8 @@ concept SmartPointerConcept = requires(Pointer_t ptr) {
   } -> std::same_as<std::add_pointer_t<typename Pointer_t::element_type>>;
   /** @brief dereference operator element_type& operator->() const; */
   { ptr.operator*() } -> std::same_as<typename Pointer_t::element_type&>;
+  /** @brief Simple cast to check for if(ptr) */
+  { ptr.operator bool() };
 };
 template <typename Pointer_t>
 concept PointerConcept =
