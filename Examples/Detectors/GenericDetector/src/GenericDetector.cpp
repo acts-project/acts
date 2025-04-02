@@ -18,10 +18,6 @@ GenericDetector::GenericDetector(const Config& cfg)
       m_cfg(cfg) {
   m_nominalGeometryContext = Acts::GeometryContext();
 
-  std::vector<std::shared_ptr<GenericDetectorElement>> specificDetectorStore;
-
-  // count the modules
-
   auto detectorElementFactory =
       [this](std::shared_ptr<const Acts::Transform3> transform,
              std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
