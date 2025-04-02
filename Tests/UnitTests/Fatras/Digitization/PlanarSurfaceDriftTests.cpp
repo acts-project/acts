@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
         fsout << " " << vertex + 1;
       }
       fsout << "\n";
-      fsout.close();
     }
+    fsout.close();
   }
 
   fiout << "l 1 2\n";
