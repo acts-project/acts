@@ -34,15 +34,24 @@ concept SmartPointerConcept = requires(Pointer_t ptr) {
   { ptr.operator bool() };
 };
 template <typename Pointer_t>
-concept PointerConcept =
-    (std::is_pointer_v<Pointer_t> || SmartPointerConcept<Pointer_t>);
-}  // namespace Acts
-
-namespace std {
+concept PointerConcept = (std::is_pointer_v<Pointer_t> || SmartPointerConcept<Pointer_t>);
+/** @brief Introduce the Acts version of the pointer remove type trait because we want to
+ *         fetch the underlying type for the pointer concept and std::library does not allow
+ *         for an extension of the std::remove_pointer;
+ */
+template <typename T> struct remove_pointer{
+    using type = T;
+};
 /** @brief  This specialization allows std::remove_pointer to work with types satisfying 
  *          Acts::SmartPointerConcept, similar to how it works with raw pointers */
-template <Acts::SmartPointerConcept T>
-struct remove_pointer<T> {
-  using type = typename T::element_type;
+template <SmartPointerConcept T> struct remove_pointer<T>{
+    using type = typename T::element_type;
 };
-}  // namespace std
+/** @brief ordinary specialization for pointers */
+template <PointerConcept T> struct remove_pointer<T>{
+    using type = std::remove_pointer_t<T>;
+};
+template <typename T> using remove_pointer_t = remove_pointer<T>::type;
+
+}  // namespace Acts
+

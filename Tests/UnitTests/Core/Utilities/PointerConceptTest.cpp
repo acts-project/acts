@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
   
     BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<int>{nullptr}));
     BOOST_CHECK(testPointer(detail_lt::TransitiveConstPointer<const int>{nullptr}));
-
     // Class with partial pointer-like behavior
     struct PartialPointerLike {
         int* ptr = nullptr;
@@ -54,6 +53,12 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
     };
     BOOST_CHECK(!testPointer(PartialPointerLike{}));
 
+    /** Ensure that the remove_pointer_t trait is doing what's supposed to do */
+    static_assert(std::is_same_v<remove_pointer_t<std::unique_ptr<int>>, int>);
+    static_assert(std::is_same_v<remove_pointer_t<std::shared_ptr<int>>, int>);
+    static_assert(std::is_same_v<remove_pointer_t<int>, int>);
+    static_assert(std::is_same_v<remove_pointer_t<int*>, int>);
+    
 }
 BOOST_AUTO_TEST_SUITE_END()
 
