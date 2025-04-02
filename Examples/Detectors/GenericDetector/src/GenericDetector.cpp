@@ -35,7 +35,7 @@ GenericDetector::GenericDetector(const Config& cfg)
   m_trackingGeometry = Generic::buildDetector(
       m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
       m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
-      m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
+      m_cfg.layerLogLevel, m_cfg.volumeLogLevel, m_cfg.gen3);
 }
 
 }  // namespace ActsExamples

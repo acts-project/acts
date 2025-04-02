@@ -64,6 +64,8 @@ namespace ActsExamples::Generic {
 /// @param surfaceLLevel is the surface building logging level
 /// @param layerLLevel is the layer building logging level
 /// @param volumeLLevel is the volume building logging level
+/// @param gen3 is a flag to control the geometry construction: false -> Gen1,
+///            true -> Gen3
 /// return a unique vector to the tracking geometry
 std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     const Acts::GeometryContext& gctxIn,
@@ -73,6 +75,6 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     bool protoMaterial = false,
     Acts::Logging::Level surfaceLLevel = Acts::Logging::INFO,
     Acts::Logging::Level layerLLevel = Acts::Logging::INFO,
-    Acts::Logging::Level volumeLLevel = Acts::Logging::INFO);
+    Acts::Logging::Level volumeLLevel = Acts::Logging::INFO, bool gen3 = false);
 
 }  // namespace ActsExamples::Generic

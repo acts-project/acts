@@ -325,15 +325,20 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     std::size_t level,
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator,
     bool protoMaterial, Acts::Logging::Level surfaceLLevel,
-    Acts::Logging::Level layerLLevel, Acts::Logging::Level volumeLLevel) {
+    Acts::Logging::Level layerLLevel, Acts::Logging::Level volumeLLevel,
+    bool gen3) {
   Gen1GenericDetectorBuilder::Config cfg;
   cfg.detectorElementFactory = detectorElementFactory;
   cfg.protoMaterial = protoMaterial;
   cfg.layerLogLevel = layerLLevel;
-  Gen1GenericDetectorBuilder builder(cfg, level, std::move(matDecorator),
-                                     surfaceLLevel, layerLLevel, volumeLLevel);
 
-  return builder.buildTrackingGeometry(gctxIn);
+  if (gen3) {
+    return Gen3GenericDetectorBuilder(cfg).buildTrackingGeometry(gctxIn);
+  } else {
+    return Gen1GenericDetectorBuilder(cfg).buildTrackingGeometry(
+        gctxIn, level, std::move(matDecorator), surfaceLLevel, layerLLevel,
+        volumeLLevel);
+  }
 }
 
 }  // namespace ActsExamples
