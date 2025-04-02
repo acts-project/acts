@@ -20,14 +20,20 @@ namespace ActsExamples {
 namespace Generic {
 namespace {
 
-constexpr float pixelCentralModuleT = 0.15f;
-constexpr float pixelEndcapModuleT = 0.15f;
+constexpr float kPixelCentralModuleT = 0.15f;
+constexpr float kPixelEndcapModuleT = 0.15f;
 
-constexpr float shortStripCentralModuleT = 0.25f;
-constexpr float shortStripEndcapModuleT = 0.25f;
+constexpr float kShortStripCentralModuleT = 0.25f;
+constexpr float kShortStripEndcapModuleT = 0.25f;
 
-constexpr float longStripCentralModuleT = 0.35f;
-constexpr float longStripEndcapModuleT = 0.35f;
+constexpr float kLongStripCentralModuleT = 0.35f;
+constexpr float kLongStripEndcapModuleT = 0.35f;
+
+// Module material properties - X0, L0, A, Z, Rho
+// Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
+static const auto kSiliconMaterial = Acts::Material::fromMassDensity(
+    static_cast<float>(95.7_mm), static_cast<float>(465.2_mm), 28.03f, 14.f,
+    static_cast<float>(2.32e-3_g / 1_cm3));
 
 ProtoLayerCreator createPixelProtoLayerCreator(
     const ProtoLayerCreator::DetectorElementFactory& detectorElementFactory,
@@ -55,8 +61,9 @@ ProtoLayerCreator createPixelProtoLayerCreator(
   pplConfig.centralModuleTiltPhi = {0.14, 0.14, 0.14, 0.14};
   pplConfig.centralModuleHalfX = {8.4, 8.4, 8.4, 8.4};
   pplConfig.centralModuleHalfY = {36., 36., 36., 36.};
-  pplConfig.centralModuleThickness = {pixelCentralModuleT, pixelCentralModuleT,
-                                      pixelCentralModuleT, pixelCentralModuleT};
+  pplConfig.centralModuleThickness = {
+      kPixelCentralModuleT, kPixelCentralModuleT, kPixelCentralModuleT,
+      kPixelCentralModuleT};
   pplConfig.centralModuleMaterial = {
       pCentralModuleMaterial, pCentralModuleMaterial, pCentralModuleMaterial,
       pCentralModuleMaterial};
@@ -96,12 +103,12 @@ ProtoLayerCreator createPixelProtoLayerCreator(
   std::vector<double> perHX = {8.4, 8.4};     // half length x
   std::vector<double> perHY = {36., 36.};     // half length y
   std::vector<std::size_t> perBP = {40, 68};  // bins in phi
-  std::vector<double> perT = {pixelEndcapModuleT,
-                              pixelEndcapModuleT};  // module thickness
-  std::vector<std::size_t> perBX = {336, 336};      // bins in x
-  std::vector<std::size_t> perBY = {1280, 1280};    // bins in y
-  std::vector<int> perRS = {-1, -1};                // readout side
-  std::vector<double> perLA = {0., 0.};             // lorentz angle
+  std::vector<double> perT = {kPixelEndcapModuleT,
+                              kPixelEndcapModuleT};  // module thickness
+  std::vector<std::size_t> perBX = {336, 336};       // bins in x
+  std::vector<std::size_t> perBY = {1280, 1280};     // bins in y
+  std::vector<int> perRS = {-1, -1};                 // readout side
+  std::vector<double> perLA = {0., 0.};              // lorentz angle
   std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> perM = {
       pEndcapModuleMaterial, pEndcapModuleMaterial};  // material
 
@@ -162,8 +169,8 @@ ProtoLayerCreator createShortStripProtoLayerCreator(
   ssplConfig.centralModuleHalfX = {24., 24., 24., 24.};
   ssplConfig.centralModuleHalfY = {54., 54., 54., 54.};
   ssplConfig.centralModuleThickness = {
-      shortStripCentralModuleT, shortStripCentralModuleT,
-      shortStripCentralModuleT, shortStripCentralModuleT};
+      kShortStripCentralModuleT, kShortStripCentralModuleT,
+      kShortStripCentralModuleT, kShortStripCentralModuleT};
 
   ssplConfig.centralModuleMaterial = {
       ssCentralModuleMaterial, ssCentralModuleMaterial, ssCentralModuleMaterial,
@@ -191,9 +198,9 @@ ProtoLayerCreator createShortStripProtoLayerCreator(
   std::vector<double> mrHy = {78., 78., 78.};
 
   std::vector<std::size_t> mPhiBins = {54, 56, 60};
-  std::vector<double> mThickness = {shortStripEndcapModuleT,
-                                    shortStripEndcapModuleT,
-                                    shortStripEndcapModuleT};
+  std::vector<double> mThickness = {kShortStripEndcapModuleT,
+                                    kShortStripEndcapModuleT,
+                                    kShortStripEndcapModuleT};
   std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
       ssEndcapModuleMaterial, ssEndcapModuleMaterial, ssEndcapModuleMaterial};
 
@@ -263,8 +270,8 @@ ProtoLayerCreator createLongStripProtoLayerCreator(
   lsplConfig.centralModuleTiltPhi = {-0.15, -0.15};
   lsplConfig.centralModuleHalfX = {24., 24.};
   lsplConfig.centralModuleHalfY = {54., 54.};
-  lsplConfig.centralModuleThickness = {longStripCentralModuleT,
-                                       longStripCentralModuleT};
+  lsplConfig.centralModuleThickness = {kLongStripCentralModuleT,
+                                       kLongStripCentralModuleT};
   lsplConfig.centralModuleMaterial = {lsCentralModuleMaterial,
                                       lsCentralModuleMaterial};
 
@@ -290,8 +297,8 @@ ProtoLayerCreator createLongStripProtoLayerCreator(
   std::vector<double> mrMaxHx = {64.2, 72.};
   std::vector<double> mrHy = {78., 78.};
   std::vector<std::size_t> mPhiBins = {48, 50};
-  std::vector<double> mThickness = {longStripEndcapModuleT,
-                                    longStripEndcapModuleT};
+  std::vector<double> mThickness = {kLongStripEndcapModuleT,
+                                    kLongStripEndcapModuleT};
   std::vector<std::shared_ptr<const Acts::ISurfaceMaterial>> mMaterial = {
       lsEndcapModuleMaterial, lsEndcapModuleMaterial};
 
@@ -451,16 +458,13 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   //-------------------------------------------------------------------------------------
   // some prep work
 
-  // Module material properties - X0, L0, A, Z, Rho
-  // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-  const auto silicon = Acts::Material::fromMassDensity(
-      static_cast<float>(95.7_mm), static_cast<float>(465.2_mm), 28.03f, 14.f,
-      static_cast<float>(2.32e-3_g / 1_cm3));
-  Acts::MaterialSlab pcModuleMaterial(silicon, pixelCentralModuleT);
-  Acts::MaterialSlab peModuleMaterial(silicon, pixelEndcapModuleT);
+  Acts::MaterialSlab pcModuleMaterial(kSiliconMaterial, kPixelCentralModuleT);
+  Acts::MaterialSlab peModuleMaterial(kSiliconMaterial, kPixelEndcapModuleT);
   // Layer material properties - thickness, X0, L0, A, Z, Rho
-  Acts::MaterialSlab pcmbProperties(silicon, static_cast<float>(1.5_mm));
-  Acts::MaterialSlab pcmecProperties(silicon, static_cast<float>(1.5_mm));
+  Acts::MaterialSlab pcmbProperties(kSiliconMaterial,
+                                    static_cast<float>(1.5_mm));
+  Acts::MaterialSlab pcmecProperties(kSiliconMaterial,
+                                     static_cast<float>(1.5_mm));
 
   // Module, central and disc material
   std::shared_ptr<const Acts::ISurfaceMaterial> pCentralMaterial =
@@ -566,12 +570,14 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material sscMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialSlab sscModuleMaterial(silicon, shortStripCentralModuleT);
-    Acts::MaterialSlab sseModuleMaterial(silicon, shortStripEndcapModuleT);
+    Acts::MaterialSlab sscModuleMaterial(kSiliconMaterial,
+                                         kShortStripCentralModuleT);
+    Acts::MaterialSlab sseModuleMaterial(kSiliconMaterial,
+                                         kShortStripEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    Acts::MaterialSlab ssbmProperties(silicon, 2_mm);
-    Acts::MaterialSlab ssecmProperties(silicon, 2.5_mm);
+    Acts::MaterialSlab ssbmProperties(kSiliconMaterial, 2_mm);
+    Acts::MaterialSlab ssecmProperties(kSiliconMaterial, 2.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> ssCentralMaterial =
@@ -649,12 +655,14 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialSlab lscModuleMaterial(silicon, longStripCentralModuleT);
-    Acts::MaterialSlab lseModuleMaterial(silicon, longStripEndcapModuleT);
+    Acts::MaterialSlab lscModuleMaterial(kSiliconMaterial,
+                                         kLongStripCentralModuleT);
+    Acts::MaterialSlab lseModuleMaterial(kSiliconMaterial,
+                                         kLongStripEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho - barrel
-    Acts::MaterialSlab lsbmProperties(silicon, 2.5_mm);
-    Acts::MaterialSlab lsecmProperties(silicon, 3.5_mm);
+    Acts::MaterialSlab lsbmProperties(kSiliconMaterial, 2.5_mm);
+    Acts::MaterialSlab lsecmProperties(kSiliconMaterial, 3.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> lsCentralMaterial =
