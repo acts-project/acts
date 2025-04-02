@@ -44,10 +44,11 @@ struct PlanarSurfaceDrift {
   /// sensor.
   ///
   /// @note The readout is alwayws emulated at the central surface,
-  /// as the mask will be deployed there.
+  /// as the mask will be deployed there, and the measurement is
+  /// presented there/
   ///
   /// @return a tuple of the (drifted) Segment on the readout surface
-  /// ( @note without masking ), and original 3D segment
+  /// ( @note without masking ), and original 3D segment (in local 3D frame)
   Acts::Result<std::tuple<Segment2D, Segment3D>> toReadout(
       const Acts::GeometryContext& gctx, const Acts::Surface& surface,
       double thickness, const Acts::Vector3& pos, const Acts::Vector3& dir,

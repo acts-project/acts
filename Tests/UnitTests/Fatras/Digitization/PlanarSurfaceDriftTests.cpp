@@ -212,6 +212,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDriftEnhancedTests) {
     Acts::Vector3 oExit = readoutSurface->transform(tContext) * oSegment[1];
     writeSegment(scenario + "drifted_3D", oEntry, oExit);
 
+    // Checking if entry and exit position are correct
     BOOST_CHECK(oEntry.isApprox(intersectionPositions[0u], Acts::s_epsilon));
     BOOST_CHECK(oExit.isApprox(intersectionPositions[2u], Acts::s_epsilon));
 
