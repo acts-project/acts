@@ -83,7 +83,7 @@ class AveragingScopedTimer {
     Sample(const Sample&) = delete;
     Sample& operator=(const Sample&) = delete;
     /// @brief Move constructor that transfers ownership of timing to new sample
-    Sample(Sample&&);
+    Sample(Sample&& /*other*/);
     Sample& operator=(Sample&&) = delete;
 
    private:
