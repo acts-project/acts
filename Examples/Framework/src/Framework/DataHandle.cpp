@@ -66,9 +66,9 @@ void WriteDataHandleBase::initialize(std::string_view key) {
   m_key = key;
 }
 
-void DataHandleBase::maybeInitialize(std::string_view key) {
-  if (!key.empty()) {
-    m_key = key;
+void DataHandleBase::maybeInitialize(std::optional<std::string_view> key) {
+  if (key.has_value() && !key.value().empty()) {
+    m_key = key.value();
   }
 }
 
@@ -85,6 +85,7 @@ void WriteDataHandleBase::emulate(StateMapType& state,
   }
 
   ACTS_INFO("-> " << name() << " '" << key() << "':");
+  ACTS_INFO("   " << symbol(typeInfo().name()));
 
   if (auto it = state.find(key()); it != state.end()) {
     const auto& source = *it->second;

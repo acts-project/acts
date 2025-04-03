@@ -94,6 +94,8 @@ try:
     podioEnabled = True
 except ModuleNotFoundError:
     podioEnabled = False
+except ImportError:
+    podioEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 
