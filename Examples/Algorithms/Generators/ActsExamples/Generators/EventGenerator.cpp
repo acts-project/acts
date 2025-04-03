@@ -21,6 +21,7 @@
 #include <limits>
 #include <memory>
 #include <ostream>
+#include <span>
 #include <stdexcept>
 
 #include <HepMC3/GenEvent.h>
@@ -85,6 +86,73 @@ std::pair<std::size_t, std::size_t> EventGenerator::availableEvents() const {
   return {0u, std::numeric_limits<std::size_t>::max()};
 }
 
+namespace {
+std::shared_ptr<HepMC3::GenEvent> mergeHepMC3Events(
+    std::span<std::shared_ptr<HepMC3::GenEvent>> genEvents,
+    const Acts::Logger& logger) {
+  Acts::AveragingScopedTimer mergeTimer("Merging generator events", logger(),
+                                        Acts::Logging::DEBUG);
+
+  std::vector<std::shared_ptr<HepMC3::GenParticle>> particles;
+
+  auto event = std::make_shared<HepMC3::GenEvent>();
+  event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
+
+  for (auto& genEvent : genEvents) {
+    auto sample = mergeTimer.sample();
+    particles.clear();
+    particles.reserve(genEvent->particles_size());
+
+    auto copyAttributes = [&](const auto& src, auto& dst) {
+      for (auto& attr : src.attribute_names()) {
+        auto value = src.attribute_as_string(attr);
+        dst.add_attribute(attr,
+                          std::make_shared<HepMC3::StringAttribute>(value));
+      }
+    };
+
+    copyAttributes(*genEvent, *event);
+
+    // Add to combined event
+    for (auto& srcParticle : genEvent->particles()) {
+      if (srcParticle->id() - 1 != static_cast<int>(particles.size())) {
+        throw std::runtime_error("Particle id is not consecutive");
+      }
+      auto particle = std::make_shared<HepMC3::GenParticle>();
+      particle->set_momentum(srcParticle->momentum());
+      particle->set_generated_mass(srcParticle->generated_mass());
+      particle->set_pid(srcParticle->pid());
+      particle->set_status(srcParticle->status());
+
+      particles.push_back(particle);
+      event->add_particle(particle);
+
+      copyAttributes(*srcParticle, *particle);
+    }
+
+    for (auto& srcVertex : genEvent->vertices()) {
+      auto vertex = std::make_shared<HepMC3::GenVertex>(srcVertex->position());
+      vertex->set_status(srcVertex->status());
+
+      event->add_vertex(vertex);
+
+      copyAttributes(*srcVertex, *vertex);
+
+      for (auto& srcParticle : srcVertex->particles_in()) {
+        auto& particle = particles.at(srcParticle->id() - 1);
+        vertex->add_particle_in(particle);
+      }
+      for (auto& srcParticle : srcVertex->particles_out()) {
+        auto& particle = particles.at(srcParticle->id() - 1);
+        vertex->add_particle_out(particle);
+      }
+    }
+  }
+
+  return event;
+}
+}  // namespace
+
 ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
   ACTS_VERBOSE("EventGenerator::read");
   std::vector<SimParticle> particlesUnordered;
@@ -92,23 +160,17 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
 
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
-  auto event = std::make_shared<HepMC3::GenEvent>();
-  event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
-  event->set_event_number(ctx.eventNumber);
+  std::vector<std::shared_ptr<HepMC3::GenEvent>> genEvents;
 
   std::size_t nPrimaryVertices = 0;
   ACTS_VERBOSE("Using " << m_cfg.generators.size() << " generators");
   {
-    Acts::AveragingScopedTimer mergeTimer("Merging generator events", logger(),
-                                          Acts::Logging::DEBUG);
     Acts::AveragingScopedTimer genTimer("Generating primary vertices", logger(),
                                         Acts::Logging::DEBUG);
 
     for (std::size_t iGenerate = 0; iGenerate < m_cfg.generators.size();
          ++iGenerate) {
       auto& generate = m_cfg.generators[iGenerate];
-
-      std::vector<std::shared_ptr<HepMC3::GenParticle>> particles;
 
       // generate the primary vertices from this generator
       assert(generate.multiplicity != nullptr);
@@ -152,60 +214,15 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
                             return ss.str();
                           }());
         }
-        sample.reset();                       // reset the gen timer
-        sample.emplace(mergeTimer.sample());  // start the merge timer
+        genEvents.push_back(genEvent);
 
-        particles.clear();
-        particles.reserve(genEvent->particles_size());
-
-        auto copyAttributes = [&](const auto& src, auto& dst) {
-          for (auto& attr : src.attribute_names()) {
-            auto value = src.attribute_as_string(attr);
-            dst.add_attribute(attr,
-                              std::make_shared<HepMC3::StringAttribute>(value));
-          }
-        };
-
-        copyAttributes(*genEvent, *event);
-
-        // Add to combined event
-        for (auto& srcParticle : genEvent->particles()) {
-          if (srcParticle->id() - 1 != static_cast<int>(particles.size())) {
-            throw std::runtime_error("Particle id is not consecutive");
-          }
-          auto particle = std::make_shared<HepMC3::GenParticle>();
-          particle->set_momentum(srcParticle->momentum());
-          particle->set_generated_mass(srcParticle->generated_mass());
-          particle->set_pid(srcParticle->pid());
-          particle->set_status(srcParticle->status());
-
-          particles.push_back(particle);
-          event->add_particle(particle);
-
-          copyAttributes(*srcParticle, *particle);
-        }
-
-        for (auto& srcVertex : genEvent->vertices()) {
-          auto vertex =
-              std::make_shared<HepMC3::GenVertex>(srcVertex->position());
-          vertex->set_status(srcVertex->status());
-
-          event->add_vertex(vertex);
-
-          copyAttributes(*srcVertex, *vertex);
-
-          for (auto& srcParticle : srcVertex->particles_in()) {
-            auto& particle = particles.at(srcParticle->id() - 1);
-            vertex->add_particle_in(particle);
-          }
-          for (auto& srcParticle : srcVertex->particles_out()) {
-            auto& particle = particles.at(srcParticle->id() - 1);
-            vertex->add_particle_out(particle);
-          }
-        }
+        sample.reset();  // reset the gen timer
       }
     }
   }
+
+  auto event = mergeHepMC3Events(genEvents, logger());
+  event->set_event_number(ctx.eventNumber);
 
   ACTS_VERBOSE("Vertices size: " << event->vertices_size());
   if (m_cfg.printListing) {
