@@ -8,6 +8,7 @@ import subprocess
 import sys
 import re
 import collections
+import shutil
 
 import pytest
 
@@ -1369,6 +1370,7 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
         tarfile_name = tmp_path / "models.tar"
         urllib.request.urlretrieve(url, tarfile_name)
         tarfile.open(tarfile_name).extractall(tmp_path)
+        shutil.copyfile("torch_models/embed.pt", "onnx_models/embed.pt")
 
     script = (
         Path(__file__).parent.parent.parent.parent
