@@ -76,13 +76,13 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
   /// @param level is the logging level
   EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode convert(const AlgorithmContext& ctx,
-                      const podio::Frame& frame) const final;
-
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const override;
+
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
                        std::vector<SimParticle>& particles,
                        ParentRelationship& parentRelationship,
@@ -90,8 +90,7 @@ class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
-  static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
-                                std::vector<SimParticle>::iterator end);
+  static void setSubParticleIds(std::span<SimParticle> particles);
 
   Config m_cfg;
 

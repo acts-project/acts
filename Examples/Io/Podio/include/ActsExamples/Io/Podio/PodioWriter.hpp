@@ -41,14 +41,14 @@ class PodioWriter final : public IWriter {
   PodioWriter(const Config& config, Acts::Logging::Level level);
   ~PodioWriter() override;
 
-  std::string name() const final;
+  std::string name() const override;
 
   /// Readonly access to the config
   const Config& config() const;
 
-  ProcessCode finalize() final;
+  ProcessCode finalize() override;
 
-  ProcessCode write(const AlgorithmContext& ctx) final;
+  ProcessCode write(const AlgorithmContext& ctx) override;
 
  private:
   const Acts::Logger& logger() const { return *m_logger; }
