@@ -110,6 +110,9 @@ class EventGenerator final : public ActsExamples::IReader {
     /// verbose
     bool printListing = false;
 
+    /// Merge primary vertices
+    bool mergePrimaries = true;
+
     /// The spatial vertex threshold below which to consider primary vertices
     /// candidates identical.
     double primaryVertexSpatialThreshold = 1 * Acts::UnitConstants::nm;

@@ -156,6 +156,8 @@ def addParticleGun(
                         randomizeCharge=particleConfig.randomizeCharge,
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
+                        # Merging particle gun vertices does not make sense
+                        mergePrimaries=None,
                     )
                 ),
             )

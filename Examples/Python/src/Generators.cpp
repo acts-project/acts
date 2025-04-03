@@ -77,8 +77,9 @@ void addGenerators(Context& ctx) {
 
     ACTS_PYTHON_STRUCT(config, outputParticles, outputVertices, outputEvent,
                        generators, randomNumbers, printListing,
-                       checkConsistency, primaryVertexSpatialThreshold,
-                       vertexSpatialThreshold, mergeSecondaries);
+                       checkConsistency, mergePrimaries,
+                       primaryVertexSpatialThreshold, vertexSpatialThreshold,
+                       mergeSecondaries);
   }
 
   py::class_<
