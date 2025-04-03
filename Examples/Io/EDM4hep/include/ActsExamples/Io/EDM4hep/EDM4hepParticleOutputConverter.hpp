@@ -37,14 +37,14 @@ class EDM4hepParticleOutputConverter final : public EDM4hepOutputConverter {
   /// @params lvl is the logging level
   EDM4hepParticleOutputConverter(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const final;
-
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::vector<std::string> collections() const final;
+  std::vector<std::string> collections() const override;
 
  private:
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};

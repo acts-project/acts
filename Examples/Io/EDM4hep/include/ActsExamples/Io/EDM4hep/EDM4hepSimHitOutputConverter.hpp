@@ -49,17 +49,16 @@ class EDM4hepSimHitOutputConverter final : public EDM4hepOutputConverter {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
+ private:
   /// Access to the collections
-  std::vector<std::string> collections() const final;
+  std::vector<std::string> collections() const override;
 
- protected:
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
- private:
   Config m_cfg;
 
   ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
