@@ -294,7 +294,7 @@ jobs:
       - name: Configure
         run: >
           ccache -z &&
-          && cmake -B build -S .
+          cmake -B build -S .
           --preset=github-ci
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
