@@ -380,8 +380,8 @@ void EventGenerator::convertHepMC3ToInternalEdm(
   // Find all vertices whose incoming particles are either all beam particles or
   // that don't have any incoming particles
   {
-    Acts::ScopedTimer timer("Finding primary vertex clusters",
-                            Acts::Logging::DEBUG, logger());
+    Acts::ScopedTimer timer("Finding primary vertex clusters", logger(),
+                            Acts::Logging::DEBUG);
     // @TODO: Maybe to it the other way round: go through particles and check if we already have that vertex?
     for (const auto& vertex : genEvent.vertices()) {
       if (vertex->particles_in().empty() ||
@@ -439,7 +439,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
   std::size_t nPrimaryVertices = 0;
   {
     Acts::ScopedTimer timer("Converting HepMC3 vertices to internal EDM",
-                            Acts::Logging::DEBUG, logger());
+                            logger(), Acts::Logging::DEBUG);
 
     std::size_t nUndecayedParticles = 0;
     for (const auto& particle : genEvent.particles()) {
@@ -496,8 +496,8 @@ void EventGenerator::convertHepMC3ToInternalEdm(
   }
 
   {
-    Acts::ScopedTimer timer("Sorting particles and vertices",
-                            Acts::Logging::DEBUG, logger());
+    Acts::ScopedTimer timer("Sorting particles and vertices", logger(),
+                            Acts::Logging::DEBUG);
 
     std::ranges::sort(particlesUnordered, [](const auto& a, const auto& b) {
       return a.particleId() < b.particleId();
