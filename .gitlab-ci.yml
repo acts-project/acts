@@ -206,11 +206,7 @@ build_gnn_tensorrt:
     - cd ..
     - mkdir build
     - >
-      cmake -B build -S src
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON
-      -DACTS_EXATRKX_ENABLE_TORCH=OFF
-      -DACTS_EXATRKX_ENABLE_CUDA=ON
-      -DACTS_EXATRKX_ENABLE_TENSORRT=ON
+      cmake -B build -S src --preset gitlab-ci-tensorrt
       -DPython_EXECUTABLE=$(which python3)
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
     - ccache -z
@@ -327,7 +323,7 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - python3 -m pip install histcmp==0.6.8 matplotlib
+    - python3 -m pip install histcmp==0.8.1 matplotlib
     - python3 -m pip install -r src/Examples/Scripts/requirements.txt
     - geant4-config --install-datasets
     - venv_python=$(which python3)
@@ -403,13 +399,13 @@ linux_ubuntu_2204:
     DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
   image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
 
-linux_ubuntu_2204_clang:
+linux_ubuntu_2404_clang19:
   extends: .linux_ubuntu_extra
   variables:
-    CXX: clang++
+    CXX: clang++-19
     CXXSTD: 20
-    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.$DEPENDENCY_TAG.tar.zst
-  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2204:71
+    DEPENDENCY_URL: https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.$DEPENDENCY_TAG.tar.zst
+  image: registry.cern.ch/ghcr.io/acts-project/ubuntu2404_clang19:75
 
 
 ######################

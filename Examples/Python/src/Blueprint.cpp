@@ -12,6 +12,7 @@
 #include "Acts/Geometry/BlueprintNode.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
+#include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
@@ -24,8 +25,10 @@
 
 #include <fstream>
 #include <random>
+#include <stdexcept>
 #include <utility>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -216,6 +219,7 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::BlueprintOptions;
   using Acts::Experimental::CuboidContainerBlueprintNode;
   using Acts::Experimental::CylinderContainerBlueprintNode;
+  using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
@@ -247,9 +251,7 @@ void addBlueprint(Context& ctx) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, envelope);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
@@ -462,6 +464,45 @@ void addBlueprint(Context& ctx) {
         return child;
       },
       py::arg("name"));
+
+  auto geoIdNode =
+      py::class_<GeometryIdentifierBlueprintNode, BlueprintNode,
+                 std::shared_ptr<GeometryIdentifierBlueprintNode>>(
+          m, "GeometryIdentifierBlueprintNode")
+          .def(py::init<>())
+          .def("setLayerIdTo", &GeometryIdentifierBlueprintNode::setLayerIdTo,
+               py::arg("value"))
+          .def("incrementLayerIds",
+               &GeometryIdentifierBlueprintNode::incrementLayerIds,
+               py::arg("start") = 0)
+          .def("setAllVolumeIdsTo",
+               &GeometryIdentifierBlueprintNode::setAllVolumeIdsTo,
+               py::arg("value"))
+          // Need to do some massaging to avoid copy issues
+          .def(
+              "sortBy",
+              [](GeometryIdentifierBlueprintNode& self,
+                 const py::function& func) -> GeometryIdentifierBlueprintNode& {
+                if (func.is_none()) {
+                  throw std::invalid_argument(
+                      "sortBy requires a comparison function");
+                }
+                return self.sortBy(
+                    [func](const TrackingVolume& a, const TrackingVolume& b) {
+                      return func(&a, &b).cast<bool>();
+                    });
+              },
+              py::arg("compare"));
+
+  auto geoIdFactory = [](BlueprintNode& self) {
+    auto child = std::make_shared<GeometryIdentifierBlueprintNode>();
+    self.addChild(child);
+    return child;
+  };
+
+  blueprintNode.def("GeometryIdentifier", geoIdFactory)
+      .def("withGeometryIdentifier", geoIdFactory);
+  addContextManagerProtocol(geoIdNode);
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,

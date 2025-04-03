@@ -63,39 +63,21 @@ void addTruthTracking(Context& ctx) {
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config);
 
+    {
+      auto mc = py::class_<Alg::MeasurementCounter>(alg, "MeasurementCounter")
+                    .def(py::init<>())
+                    .def("addCounter", &Alg::MeasurementCounter::addCounter);
+    }
+
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(inputParticleMeasurementsMap);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(rhoMin);
-    ACTS_PYTHON_MEMBER(rhoMax);
-    ACTS_PYTHON_MEMBER(absZMin);
-    ACTS_PYTHON_MEMBER(absZMax);
-    ACTS_PYTHON_MEMBER(timeMin);
-    ACTS_PYTHON_MEMBER(timeMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(etaMin);
-    ACTS_PYTHON_MEMBER(etaMax);
-    ACTS_PYTHON_MEMBER(absEtaMin);
-    ACTS_PYTHON_MEMBER(absEtaMax);
-    ACTS_PYTHON_MEMBER(mMin);
-    ACTS_PYTHON_MEMBER(mMax);
-    ACTS_PYTHON_MEMBER(ptMin);
-    ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(hitsMin);
-    ACTS_PYTHON_MEMBER(hitsMax);
-    ACTS_PYTHON_MEMBER(measurementsMin);
-    ACTS_PYTHON_MEMBER(measurementsMax);
-    ACTS_PYTHON_MEMBER(removeCharged);
-    ACTS_PYTHON_MEMBER(removeNeutral);
-    ACTS_PYTHON_MEMBER(removeSecondaries);
-    ACTS_PYTHON_MEMBER(excludeAbsPdgs);
-    ACTS_PYTHON_MEMBER(minPrimaryVertexId);
-    ACTS_PYTHON_MEMBER(maxPrimaryVertexId);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(
+        c, inputParticles, inputParticleMeasurementsMap, inputMeasurements,
+        outputParticles, rhoMin, rhoMax, absZMin, absZMax, timeMin, timeMax,
+        phiMin, phiMax, etaMin, etaMax, absEtaMin, absEtaMax, mMin, mMax, ptMin,
+        ptMax, hitsMin, hitsMax, measurementsMin, measurementsMax,
+        removeCharged, removeNeutral, removeSecondaries, excludeAbsPdgs,
+        minPrimaryVertexId, maxPrimaryVertexId, measurementCounter);
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
     pythonRangeProperty(c, "absZ", &Config::absZMin, &Config::absZMax);
@@ -124,24 +106,10 @@ void addTruthTracking(Context& ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(loc0Min);
-    ACTS_PYTHON_MEMBER(loc0Max);
-    ACTS_PYTHON_MEMBER(loc1Min);
-    ACTS_PYTHON_MEMBER(loc1Max);
-    ACTS_PYTHON_MEMBER(timeMin);
-    ACTS_PYTHON_MEMBER(timeMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(etaMin);
-    ACTS_PYTHON_MEMBER(etaMax);
-    ACTS_PYTHON_MEMBER(absEtaMin);
-    ACTS_PYTHON_MEMBER(absEtaMax);
-    ACTS_PYTHON_MEMBER(ptMin);
-    ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, inputTrackParameters, outputTrackParameters, loc0Min,
+                       loc0Max, loc1Min, loc1Max, timeMin, timeMax, phiMin,
+                       phiMax, etaMin, etaMax, absEtaMin, absEtaMax, ptMin,
+                       ptMax);
 
     pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
     pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);

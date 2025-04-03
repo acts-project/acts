@@ -53,6 +53,7 @@ target_sources(
         MaterialDesignatorBlueprintNode.cpp
         VolumeAttachmentStrategy.cpp
         VolumeResizeStrategy.cpp
+        GeometryIdentifierBlueprintNode.cpp
         TrackingGeometryVisitor.cpp
         TrapezoidPortalShell.cpp
         VolumeStack.cpp

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TrackTruthMatcher.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"

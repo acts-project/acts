@@ -6,17 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
+#include "ActsExamples/Utilities/PrototracksToTracks.hpp"
 
 #include "Acts/EventData/SourceLink.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 #include <algorithm>
+#include <limits>
 
 namespace ActsExamples {
 
@@ -24,6 +22,7 @@ PrototracksToTracks::PrototracksToTracks(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("PrototracksToTracks", lvl), m_cfg(std::move(cfg)) {
   m_outputTracks.initialize(m_cfg.outputTracks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
 }
 
@@ -37,11 +36,23 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
   const auto& prototracks = m_inputProtoTracks(ctx);
   ACTS_DEBUG("Received " << prototracks.size() << " prototracks");
 
+  const TrackParametersContainer* trackParameters = nullptr;
+  if (m_inputTrackParameters.isInitialized()) {
+    trackParameters = &m_inputTrackParameters(ctx);
+
+    if (trackParameters->size() != prototracks.size()) {
+      throw std::runtime_error(
+          "Number of prototracks and track parameters do not match");
+    }
+  }
+
   float avgSize = 0;
   std::size_t minSize = std::numeric_limits<std::size_t>::max();
   std::size_t maxSize = 0;
 
-  for (const auto& protoTrack : prototracks) {
+  for (std::size_t i = 0; i < prototracks.size(); ++i) {
+    const auto& protoTrack = prototracks[i];
+
     if (protoTrack.empty()) {
       continue;
     }
@@ -65,6 +76,16 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
     track.nMeasurements() = static_cast<std::uint32_t>(protoTrack.size());
     track.nHoles() = 0;
     track.nOutliers() = 0;
+
+    if (trackParameters != nullptr) {
+      const auto& trackParams = trackParameters->at(i);
+
+      track.setReferenceSurface(trackParams.referenceSurface().getSharedPtr());
+      track.parameters() = trackParams.parameters();
+      if (trackParams.covariance().has_value()) {
+        track.covariance() = *trackParams.covariance();
+      }
+    }
   }
 
   ConstTrackContainer constTracks{
@@ -73,7 +94,10 @@ ProcessCode PrototracksToTracks::execute(const AlgorithmContext& ctx) const {
       std::make_shared<Acts::ConstVectorMultiTrajectory>(std::move(*mtj))};
 
   ACTS_DEBUG("Produced " << constTracks.size() << " tracks");
-  ACTS_DEBUG("Avg track size: " << avgSize / constTracks.size());
+  ACTS_DEBUG(
+      "Avg track size: " << (constTracks.size() > 0
+                                 ? avgSize / constTracks.size()
+                                 : std::numeric_limits<float>::quiet_NaN()));
   ACTS_DEBUG("Min track size: " << minSize << ", max track size " << maxSize);
 
   m_outputTracks(ctx, std::move(constTracks));
