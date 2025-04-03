@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 namespace Acts {
@@ -38,7 +39,10 @@ class GenericDetectorBuilder {
     bool protoMaterial;
   };
 
-  explicit GenericDetectorBuilder(const Config& cfg);
+  explicit GenericDetectorBuilder(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("GenDetBldr", Acts::Logging::INFO));
 
  protected:
   ProtoLayerCreator createPixelProtoLayerCreator();
@@ -46,6 +50,9 @@ class GenericDetectorBuilder {
   ProtoLayerCreator createLongStripProtoLayerCreator();
 
   Config m_cfg;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const Acts::Logger& logger() const { return *m_logger; }
 
   std::shared_ptr<const Acts::ISurfaceMaterial> m_beamPipeMaterial;
   std::shared_ptr<const Acts::ISurfaceMaterial> m_pstMaterial;
