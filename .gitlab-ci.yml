@@ -355,7 +355,7 @@ linux_test_examples:
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rFsv -k "test_full_chain_odd_example_pythia_geant4" -v -s
+    - pytest -rFsv -k "not exatrkx" -v -s
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -440,7 +440,7 @@ linux_physmon:
     - cmake --build build -- -j6
     - ccache -s
 
-    - ctest --test-dir build #-j$(nproc)
+    - ctest --test-dir build -j$(nproc)
     - cmake --build build --target integrationtests
 
     # Install main project
@@ -534,7 +534,7 @@ linux_ubuntu_2404_clang19:
     - cmake --build build -- -j6
     - ccache -s
 
-    - ctest --test-dir build #-j$(nproc)
+    - ctest --test-dir build -j$(nproc)
 
 
 lcg_105:
