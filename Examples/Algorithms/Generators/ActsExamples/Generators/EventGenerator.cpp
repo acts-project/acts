@@ -410,7 +410,7 @@ void EventGenerator::convertHepMC3ToInternalEdm(
                              .cwiseAbs()
                              .maxCoeff() < m_cfg.primaryVertexSpatialThreshold;
                 });
-            it != vertexClusters.end()) {
+            it != vertexClusters.end() && m_cfg.mergePrimaries) {
           // Add the vertex to the cluster
           it->push_back(vertex);
         } else {
