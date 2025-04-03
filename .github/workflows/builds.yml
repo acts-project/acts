@@ -366,7 +366,7 @@ jobs:
             ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
 
       - name: Configure
-        run: |
+        run: >
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
