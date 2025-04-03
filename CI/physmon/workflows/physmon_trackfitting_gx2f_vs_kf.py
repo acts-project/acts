@@ -13,9 +13,10 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     MomentumConfig,
-    ParticleSelectorConfig,
     addFatras,
     addDigitization,
+    ParticleSelectorConfig,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -68,12 +69,6 @@ with tempfile.TemporaryDirectory() as temp:
         field,
         rnd=rnd,
         enableInteractions=True,
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(0.9 * u.GeV, None),
-            measurements=(7, None),
-            removeNeutral=True,
-            removeSecondaries=True,
-        ),
     )
 
     addDigitization(
@@ -84,12 +79,22 @@ with tempfile.TemporaryDirectory() as temp:
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
+    )
+
     addSeeding(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
-        inputParticles="particles_input",
+        inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.muon,
     )
