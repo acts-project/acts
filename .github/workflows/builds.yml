@@ -230,35 +230,35 @@ jobs:
         with:
           name: physmon
           path: physmon
-  #
-  # linux_physmon_perf_report:
-  #   needs: [linux_physmon]
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - name: Install dependencies
-  #       run: pip3 install spyral-cli==1.1.2
-  #
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: physmon
-  #         path: physmon
-  #
-  #     - name: Store metrics
-  #       env:
-  #         SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-  #       run: |
-  #         ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-  #         ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
-  #         git config --global user.email "action@github.com"
-  #         git config --global user.name "GitHub Action"
-  #         git clone git@github.com:acts-project/runtime_metrics.git
-  #         spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-  #         cd runtime_metrics
-  #         git add -A
-  #         git commit -m"update metrics"
-  #         git push
-  #
+
+  linux_physmon_perf_report:
+    needs: [linux_physmon]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install dependencies
+        run: pip3 install spyral-cli==1.1.2
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: physmon
+          path: physmon
+
+      - name: Store metrics
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git clone git@github.com:acts-project/runtime_metrics.git
+          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
+          cd runtime_metrics
+          git add -A
+          git commit -m"update metrics"
+          git push
+
   linux_ubuntu_extra:
     runs-on: ubuntu-latest
     strategy:
