@@ -14,6 +14,8 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
+#include <memory>
+
 using namespace Acts::UnitLiterals;
 
 namespace ActsExamples::Generic {
@@ -159,7 +161,9 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
 
 }  // namespace
 
-GenericDetectorBuilder::GenericDetectorBuilder(const Config& cfg) : m_cfg(cfg) {
+GenericDetectorBuilder::GenericDetectorBuilder(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {
   // Prepare the proto material - in case it's designed to do so
   // - cylindrical
   Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed,
@@ -403,9 +407,8 @@ ProtoLayerCreator GenericDetectorBuilder::createPixelProtoLayerCreator() {
   pplConfig.posnegModulePositions = pplPosnegModulePositions;
 
   /// The ProtoLayer creator
-  ProtoLayerCreator pplCreator(
-      pplConfig,
-      Acts::getDefaultLogger("PixelProtoLayerCreator", m_cfg.layerLogLevel));
+  ProtoLayerCreator pplCreator(pplConfig,
+                               logger().clone("PPLCrtr", m_cfg.layerLogLevel));
 
   return pplCreator;
 }
@@ -505,8 +508,7 @@ ProtoLayerCreator GenericDetectorBuilder::createShortStripProtoLayerCreator() {
 
   // The ProtoLayer creator
   ProtoLayerCreator ssplCreator(
-      ssplConfig,
-      Acts::getDefaultLogger("SStripProtoLayerCreator", m_cfg.layerLogLevel));
+      ssplConfig, logger().clone("SSPLCrtr", m_cfg.layerLogLevel));
 
   return ssplCreator;
 }
@@ -598,8 +600,7 @@ ProtoLayerCreator GenericDetectorBuilder::createLongStripProtoLayerCreator() {
 
   // The ProtoLayer creator
   ProtoLayerCreator lsplCreator(
-      lsplConfig,
-      Acts::getDefaultLogger("LStripProtoLayerCreator", m_cfg.layerLogLevel));
+      lsplConfig, logger().clone("LSPLCrtr", m_cfg.layerLogLevel));
 
   return lsplCreator;
 }

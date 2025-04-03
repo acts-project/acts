@@ -43,30 +43,29 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   // configure surface array creator
   Acts::SurfaceArrayCreator::Config sacConfig;
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
-      sacConfig, Acts::getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
+      sacConfig, logger().clone("SurfaceArrayCreator", surfaceLLevel));
   // configure the layer creator that uses the surface array creator
   Acts::LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
   auto layerCreator = std::make_shared<const Acts::LayerCreator>(
-      lcConfig, Acts::getDefaultLogger("LayerCreator", layerLLevel));
+      lcConfig, logger().clone("LayerCreator", layerLLevel));
   // configure the layer array creator
   Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      lacConfig, Acts::getDefaultLogger("LayerArrayCreator", layerLLevel));
+      lacConfig, logger().clone("LayerArrayCreator", layerLLevel));
   // tracking volume array creator
   Acts::TrackingVolumeArrayCreator::Config tvacConfig;
   auto tVolumeArrayCreator =
       std::make_shared<const Acts::TrackingVolumeArrayCreator>(
           tvacConfig,
-          Acts::getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
+          logger().clone("TrackingVolumeArrayCreator", volumeLLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
   auto cylinderVolumeHelper =
       std::make_shared<const Acts::CylinderVolumeHelper>(
-          cvhConfig,
-          Acts::getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
+          cvhConfig, logger().clone("CylinderVolumeHelper", volumeLLevel));
   //-------------------------------------------------------------------------------------
   // vector of the volume builders
   std::vector<std::shared_ptr<const Acts::ITrackingVolumeBuilder>>
@@ -84,7 +83,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   bplConfig.centralLayerThickness = std::vector<double>(1, 0.8);
   bplConfig.centralLayerMaterial = {m_beamPipeMaterial};
   auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
-      bplConfig, Acts::getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
+      bplConfig, logger().clone("BeamPipeLayerBuilder", layerLLevel));
   // create the volume for the beam pipe
   Acts::CylinderVolumeBuilder::Config bpvConfig;
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -95,8 +94,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   bpvConfig.buildToRadiusZero = true;
   auto beamPipeVolumeBuilder =
       std::make_shared<const Acts::CylinderVolumeBuilder>(
-          bpvConfig,
-          Acts::getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
+          bpvConfig, logger().clone("BeamPipeVolumeBuilder", volumeLLevel));
   // add to the list of builders
   volumeBuilders.push_back(beamPipeVolumeBuilder);
 
@@ -132,7 +130,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   }
   // define the builder
   auto pixelLayerBuilder = std::make_shared<const LayerBuilder>(
-      plbConfig, Acts::getDefaultLogger("PixelLayerBuilder", layerLLevel));
+      plbConfig, logger().clone("PixelLayerBuilder", layerLLevel));
   //-------------------------------------------------------------------------------------
   // build the pixel volume
   Acts::CylinderVolumeBuilder::Config pvbConfig;
@@ -143,7 +141,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
                               5. * Acts::UnitConstants::mm};
   pvbConfig.layerBuilder = pixelLayerBuilder;
   auto pixelVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
-      pvbConfig, Acts::getDefaultLogger("PixelVolumeBuilder", volumeLLevel));
+      pvbConfig, logger().clone("PixelVolumeBuilder", volumeLLevel));
   // add to the list of builders
   volumeBuilders.push_back(pixelVolumeBuilder);
 
@@ -161,7 +159,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
     pstConfig.centralLayerThickness = std::vector<double>(1, 1.8);
     pstConfig.centralLayerMaterial = {m_pstMaterial};
     auto pstBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
-        pstConfig, Acts::getDefaultLogger("PSTBuilder", layerLLevel));
+        pstConfig, logger().clone("PSTLayerBuilder", layerLLevel));
     // create the volume for the beam pipe
     Acts::CylinderVolumeBuilder::Config pstvolConfig;
     pstvolConfig.trackingVolumeHelper = cylinderVolumeHelper;
@@ -169,7 +167,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
     pstvolConfig.buildToRadiusZero = false;
     pstvolConfig.layerBuilder = pstBuilder;
     auto pstVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
-        pstvolConfig, Acts::getDefaultLogger("PSTVolumeBuilder", volumeLLevel));
+        pstvolConfig, logger().clone("PSTVolumeBuilder", volumeLLevel));
     // add to the detector builds
     volumeBuilders.push_back(pstVolumeBuilder);
 
@@ -211,7 +209,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
 
     // define the builder
     auto sstripLayerBuilder = std::make_shared<const LayerBuilder>(
-        sslbConfig, Acts::getDefaultLogger("SStripLayerBuilder", layerLLevel));
+        sslbConfig, logger().clone("SStripLayerBuilder", layerLLevel));
     //-------------------------------------------------------------------------------------
     // build the pixel volume
     Acts::CylinderVolumeBuilder::Config ssvbConfig;
@@ -221,8 +219,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
     ssvbConfig.layerBuilder = sstripLayerBuilder;
     auto sstripVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
-            ssvbConfig,
-            Acts::getDefaultLogger("SStripVolumeBuilder", volumeLLevel));
+            ssvbConfig, logger().clone("SStripVolumeBuilder", volumeLLevel));
 
     //-------------------------------------------------------------------------------------
     // add to the list of builders
@@ -259,7 +256,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
 
     // define the builder
     auto lstripLayerBuilder = std::make_shared<const LayerBuilder>(
-        lslbConfig, Acts::getDefaultLogger("LStripLayerBuilder", layerLLevel));
+        lslbConfig, logger().clone("LStripLayerBuilder", layerLLevel));
     //-------------------------------------------------------------------------------------
     // build the pixel volume
     Acts::CylinderVolumeBuilder::Config lsvbConfig;
@@ -269,8 +266,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
     lsvbConfig.layerBuilder = lstripLayerBuilder;
     auto lstripVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
-            lsvbConfig,
-            Acts::getDefaultLogger("LStripVolumeBuilder", volumeLLevel));
+            lsvbConfig, logger().clone("LStripVolumeBuilder", volumeLLevel));
     // add to the list of builders
     volumeBuilders.push_back(lstripVolumeBuilder);
   }
@@ -291,7 +287,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   auto cylinderGeometryBuilder =
       std::make_shared<const Acts::TrackingGeometryBuilder>(
           tgConfig,
-          Acts::getDefaultLogger("TrackerGeometryBuilder", volumeLLevel));
+          logger().clone("CylinderGeometryBuilder", Acts::Logging::INFO));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry(gctx);
   // return the tracking geometry
