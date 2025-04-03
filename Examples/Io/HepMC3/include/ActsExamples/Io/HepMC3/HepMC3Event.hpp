@@ -8,16 +8,19 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 
-#include <HepMC3/FourVector.h>
-#include <HepMC3/GenEvent.h>
-#include <HepMC3/GenParticle.h>
-#include <HepMC3/GenVertex.h>
+#include <span>
+
+namespace HepMC3 {
+class GenEvent;
+}
 
 namespace ActsExamples::HepMC3Event {
+
+std::shared_ptr<HepMC3::GenEvent> mergeHepMC3Events(
+    std::span<const HepMC3::GenEvent*> genEvents, const Acts::Logger& logger);
 
 ///
 /// Setter
