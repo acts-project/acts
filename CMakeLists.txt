@@ -508,8 +508,8 @@ if(ACTS_BUILD_EXAMPLES)
 
     find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 
-    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.3.0
-    if(${HEPMC3_VERSION} VERSION_LESS 3.3.0)
+    # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
+    if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
         add_library(HepMC3::HepMC3 SHARED IMPORTED)
         set_property(
             TARGET HepMC3::HepMC3
