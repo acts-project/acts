@@ -12,6 +12,7 @@
 #include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderPortalShell.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <variant>
@@ -25,9 +26,13 @@ namespace Acts::Experimental {
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  using BinningConfig = std::variant<
-      std::vector<std::tuple<CylinderVolumeBounds::Face, ProtoAxis, ProtoAxis>>,
-      std::vector<std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>>;
+  using CylinderBinning = std::tuple<CylinderVolumeBounds::Face, ProtoAxis,
+                                     AxisDirection, ProtoAxis, AxisDirection>;
+  using CuboidBinning = std::tuple<CuboidVolumeBounds::Face, ProtoAxis,
+                                   AxisDirection, ProtoAxis, AxisDirection>;
+
+  using BinningConfig =
+      std::variant<std::vector<CylinderBinning>, std::vector<CuboidBinning>>;
 
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
@@ -78,48 +83,50 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cylinder to configure
   /// @param loc0 The first binning configuration along local axis 0
+  /// @param aDir0 The direction of the first binning configuration
   /// @param loc1 The second binning configuration along local axis 1
+  /// @param aDir1 The direction of the second binning configuration
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
       CylinderVolumeBounds::Face face, const ProtoAxis& loc0,
-      const ProtoAxis& loc1);
+      AxisDirection aDir0, const ProtoAxis& loc1, AxisDirection aDir1);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cuboid to configure
   /// @param loc0 The first binning configuration along local axis 0
+  /// @param aDir0 The direction of the first binning configuration
   /// @param loc1 The second binning configuration along local axis 1
+  /// @param aDir1 The direction of the second binning configuration
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
                                                  const ProtoAxis& loc0,
-                                                 const ProtoAxis& loc1);
+                                                 AxisDirection aDir0,
+                                                 const ProtoAxis& loc1,
+                                                 AxisDirection aDir1);
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
-  void handleCylinderBinning(
-      CylinderPortalShell& cylShell,
-      const std::vector<
-          std::tuple<CylinderPortalShell::Face, ProtoAxis, ProtoAxis>>& binning,
-      const Logger& logger);
+  void handleCylinderBinning(CylinderPortalShell& cylShell,
+                             const std::vector<CylinderBinning>& binning,
+                             const Logger& logger);
 
-  void handleCuboidBinning(
-      CuboidPortalShell& cuboidShell,
-      const std::vector<
-          std::tuple<CuboidVolumeBounds::Face, ProtoAxis, ProtoAxis>>& binning,
-      const Logger& logger);
+  void handleCuboidBinning(CuboidPortalShell& cuboidShell,
+                           const std::vector<CuboidBinning>& binning,
+                           const Logger& logger);
 
   void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
-                                  const ProtoAxis& loc0, const ProtoAxis& loc1,
+                                  AxisDirection aDir0, AxisDirection aDir1,
                                   const Logger& logger = getDummyLogger());
 
-  void validateCuboidFaceConfig(const ProtoAxis& loc0, const ProtoAxis& loc1,
+  void validateCuboidFaceConfig(AxisDirection aDir0, AxisDirection aDir1,
                                 const Logger& logger = getDummyLogger());
 
   std::string m_name{};

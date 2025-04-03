@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -56,7 +57,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
+    std::map<unsigned int, std::vector<std::tuple<ProtoAxis, AxisDirection>>>
+        portalMaterialBinning = {};
     /// An eventual reverse geometry id generation
     bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output

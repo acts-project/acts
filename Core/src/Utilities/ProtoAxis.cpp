@@ -10,44 +10,20 @@
 
 #include <sstream>
 
-namespace {
-void checkConsistency(Acts::AxisDirection aDir, Acts::AxisBoundaryType abType) {
-  if (abType == Acts::AxisBoundaryType::Closed &&
-      aDir != Acts::AxisDirection::AxisPhi &&
-      aDir != Acts::AxisDirection::AxisRPhi) {
-    std::string msg =
-        "ProtoAxis: Invalid axis boundary type 'Closed' for direction '";
-    msg += axisDirectionName(aDir) +
-           "'. Closed boundary type is only valid for "
-           "AxisPhi and AxisRPhi directions.";
-    throw std::invalid_argument(msg);
-  }
-}
-}  // namespace
-
-Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
+Acts::ProtoAxis::ProtoAxis(Acts::AxisBoundaryType abType,
                            const std::vector<double>& edges)
-    : m_axisDir(aDir), m_axis(IAxis::createVariable(abType, edges)) {
-  checkConsistency(aDir, abType);
-}
+    : m_axis(IAxis::createVariable(abType, edges)) {}
 
-Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
-                           double minE, double maxE, std::size_t nbins)
-    : m_axisDir(aDir),
-      m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {
-  checkConsistency(aDir, abType);
-}
-
-Acts::ProtoAxis::ProtoAxis(AxisDirection aDir, AxisBoundaryType abType,
+Acts::ProtoAxis::ProtoAxis(AxisBoundaryType abType, double minE, double maxE,
                            std::size_t nbins)
-    : m_axisDir(aDir),
-      m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
-      m_autorange(true) {
-  checkConsistency(aDir, abType);
-}
+    : m_axis(IAxis::createEquidistant(abType, minE, maxE, nbins)) {}
+
+Acts::ProtoAxis::ProtoAxis(AxisBoundaryType abType, std::size_t nbins)
+    : m_axis(IAxis::createEquidistant(abType, 0., 1., nbins)),
+      m_autorange(true) {}
 
 Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
-    : m_axisDir(other.m_axisDir), m_autorange(other.m_autorange) {
+    : m_autorange(other.m_autorange) {
   const auto& axis = other.getAxis();
   if (!m_autorange) {
     const auto& edges = axis.getBinEdges();
@@ -65,7 +41,6 @@ Acts::ProtoAxis::ProtoAxis(const ProtoAxis& other)
 
 Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
   if (this != &other) {
-    m_axisDir = other.m_axisDir;
     m_autorange = other.m_autorange;
     const auto& axis = other.getAxis();
     if (!m_autorange) {
@@ -82,10 +57,6 @@ Acts::ProtoAxis& Acts::ProtoAxis::operator=(const ProtoAxis& other) {
     }
   }
   return *this;
-}
-
-Acts::AxisDirection Acts::ProtoAxis::getAxisDirection() const {
-  return m_axisDir;
 }
 
 const Acts::IAxis& Acts::ProtoAxis::getAxis() const {
@@ -128,8 +99,7 @@ void Acts::ProtoAxis::toStream(std::ostream& os) const {
 std::string Acts::ProtoAxis::toString() const {
   std::stringstream ss;
   const auto& axis = getAxis();
-  ss << "ProtoAxis: " << axis.getNBins() << " bins in "
-     << axisDirectionName(getAxisDirection());
+  ss << "ProtoAxis: " << axis.getNBins() << " bins";
   ss << (axis.getType() == AxisType::Variable ? ", variable "
                                               : ", equidistant ");
   if (!m_autorange) {
@@ -141,11 +111,27 @@ std::string Acts::ProtoAxis::toString() const {
   return ss.str();
 }
 
-// ostream operator implementation
+// Ostream operator implementation
 std::ostream& Acts::operator<<(std::ostream& os,
                                const std::vector<ProtoAxis>& as) {
   for (const auto& a : as) {
     os << a.toString() << '\n';
+  }
+  return os;
+}
+
+// Ostream operation implementation for directed proto axis
+std::ostream& Acts::operator<<(std::ostream& os, const DirectedProtoAxis& a) {
+  const auto& [axis, aDir] = a;
+  os << axis.toString() << ", direction: " << axisDirectionName(aDir) << '\n';
+  return os;
+}
+
+// Ostream operator implementation vector of directed proto axes
+std::ostream& Acts::operator<<(std::ostream& os,
+                               const std::vector<DirectedProtoAxis>& as) {
+  for (const auto& a : as) {
+    os << a << '\n';
   }
   return os;
 }

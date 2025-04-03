@@ -15,6 +15,7 @@
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
@@ -83,7 +84,8 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Definition of Supports
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
-    std::vector<std::tuple<ProtoAxis, std::size_t>> binnings = {};
+    std::vector<std::tuple<ProtoAxis, AxisDirection, std::size_t>> binnings =
+        {};
     /// Optional extent (if already parsed), will trigger binning autorange
     /// check
     std::optional<Extent> extent = std::nullopt;

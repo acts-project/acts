@@ -105,24 +105,26 @@ class BinUtility {
   /// Create from ProtoAxis
   ///
   /// @param pAxis the ProtoAxis to be used
-  explicit BinUtility(const ProtoAxis& pAxis)
+  /// @param aDir the axis direction
+  explicit BinUtility(const ProtoAxis& pAxis, AxisDirection aDir)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    m_binningData.emplace_back(pAxis);
+    m_binningData.emplace_back(BinningData(pAxis, aDir));
   }
 
   /// Create from ProtoAxis
   ///
-  /// @param pAxes the ProtoAxes to be used
-  explicit BinUtility(const std::vector<ProtoAxis>& pAxes)
+  /// @param pAxes the ProtoAxes to be used with axis directions
+  explicit BinUtility(
+      const std::vector<std::tuple<ProtoAxis, AxisDirection>>& pAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {
     m_binningData.reserve(3);
-    for (const auto& pAxis : pAxes) {
-      m_binningData.emplace_back(pAxis);
+    for (const auto& [pAxis, aDir] : pAxes) {
+      m_binningData.emplace_back(BinningData(pAxis, aDir));
     }
   }
 

@@ -13,10 +13,12 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 namespace Acts {
-/// @brief Description of a ProtoAxis which holds an IAxis
-/// and lets the user to define a certain axis type, boundary type
-/// and associated binning.
+/// This class is a pure run-time placeholder for the axis definition
 ///
 /// The IAxis allows via the visitor pattern to access the actual axis type
 /// which helps to create grid creation code by the compiler as done
@@ -28,30 +30,26 @@ class ProtoAxis {
  public:
   /// Convenience constructors - for variable binning
   ///
-  /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param edges the bin edges (variable binning)
-  ProtoAxis(AxisDirection aDir, Acts::AxisBoundaryType abType,
-            const std::vector<double>& edges);
+  ProtoAxis(Acts::AxisBoundaryType abType, const std::vector<double>& edges);
 
   /// Convenience constructors - for equidistant binning
   ///
-  /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param minE the lowest edge of the binning
   /// @param maxE the highest edge of the binning
   /// @param nbins the number of bins
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, double minE,
-            double maxE, std::size_t nbins);
+  ProtoAxis(AxisBoundaryType abType, double minE, double maxE,
+            std::size_t nbins);
 
   /// Placeholder constructor for auto-range binning
   ///
-  /// @param aDir the value/cast in which this is binned
   /// @param abType the axis boundary type
   /// @param nbins the number of bins
   ///
   /// @note that auto-range is only supported for equidistant binning
-  ProtoAxis(AxisDirection aDir, AxisBoundaryType abType, std::size_t nbins);
+  ProtoAxis(AxisBoundaryType abType, std::size_t nbins);
 
   /// Custom copy constructor
   /// @param other is the right hand side ProtoAxis
@@ -63,11 +61,6 @@ class ProtoAxis {
 
   ProtoAxis(ProtoAxis&&) = default;
   ProtoAxis& operator=(ProtoAxis&&) = default;
-
-  /// @brief returns the axis direction
-  ///
-  /// @return @c AxisDirection of this axis
-  AxisDirection getAxisDirection() const;
 
   /// @brief Return the IAxis representation
   ///
@@ -111,9 +104,6 @@ class ProtoAxis {
   /// @param os output stream
   void toStream(std::ostream& os) const;
 
-  /// The axis direction
-  AxisDirection m_axisDir = AxisDirection::AxisX;
-
   /// The axis representation
   std::unique_ptr<IAxis> m_axis = nullptr;
 
@@ -153,12 +143,6 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a) {
 /// @return an IGrid unique ptr and hence transfers ownership
 template <typename payload_t>
 std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
-  // Validate axis compatibility
-  if (a.getAxisDirection() == b.getAxisDirection()) {
-    throw std::invalid_argument(
-        "ProtoAxis::makeGrid: Axes must have different directions");
-  }
-
   if (a.isAutorange() || b.isAutorange()) {
     throw std::invalid_argument(
         "ProtoAxis::makeGrid: Auto-range of the proto axis is not (yet) "
@@ -175,6 +159,13 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   });
 }
 
+using DirectedProtoAxis = std::tuple<ProtoAxis, AxisDirection>;
+
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
+
+std::ostream& operator<<(std::ostream& os, const DirectedProtoAxis& a);
+
+std::ostream& operator<<(std::ostream& os,
+                         const std::vector<DirectedProtoAxis>& a);
 
 }  // namespace Acts

@@ -496,9 +496,9 @@ BOOST_AUTO_TEST_CASE(Material) {
   using enum AxisBoundaryType;
 
   root.addMaterial("Material", [&](auto& mat) {
-    mat.configureFace(NegativeDisc, {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
-    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 20});
-    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 25}, {AxisZ, Bound, 30});
+    mat.configureFace(NegativeDisc, {Bound, 5}, AxisR, {Bound, 10}, AxisPhi);
+    mat.configureFace(PositiveDisc, {Bound, 15}, AxisR, {Bound, 20}, AxisPhi);
+    mat.configureFace(OuterCylinder, {Bound, 25}, AxisRPhi, {Bound, 30}, AxisZ);
 
     mat.addStaticVolume(std::move(cyl));
   });
@@ -526,10 +526,14 @@ BOOST_AUTO_TEST_CASE(Material) {
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
 
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(0).getAxis().getNBins(), 5);
-  BOOST_CHECK_EQUAL(negDiscMat.binning().at(1).getAxis().getNBins(), 10);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(0).getAxis().getNBins(), 15);
-  BOOST_CHECK_EQUAL(posDiscMat.binning().at(1).getAxis().getNBins(), 20);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(negDiscMat.binning().at(0)).getAxis().getNBins(), 5);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(negDiscMat.binning().at(1)).getAxis().getNBins(), 10);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(posDiscMat.binning().at(0)).getAxis().getNBins(), 15);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(posDiscMat.binning().at(1)).getAxis().getNBins(), 20);
 
   // Check outer cylinder material
   const auto* outerCyl = child.portals()
@@ -539,8 +543,12 @@ BOOST_AUTO_TEST_CASE(Material) {
   BOOST_CHECK_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
-  BOOST_CHECK_EQUAL(outerCylMat.binning().at(1).getAxis().getNBins(), 30);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(outerCylMat.binning().at(0)).getAxis().getNBins(),
+      25);
+  BOOST_CHECK_EQUAL(
+      std::get<ProtoAxis>(outerCylMat.binning().at(1)).getAxis().getNBins(),
+      30);
 
   // Check that other faces have no material
   for (std::size_t i = 0; i < child.portals().size(); i++) {
@@ -568,7 +576,7 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::NegativeDisc,
-                             {AxisZ, Bound, 5}, {AxisPhi, Bound, 10});
+                             {Bound, 5}, AxisZ, {Bound, 10}, AxisPhi);
                        }),
       std::invalid_argument);
 
@@ -577,7 +585,7 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CylinderVolumeBounds::Face::OuterCylinder,
-                             {AxisR, Bound, 5}, {AxisR, Bound, 10});
+                             {Bound, 5}, AxisR, {Bound, 10}, AxisR);
                        }),
       std::invalid_argument);
 
@@ -587,7 +595,7 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeXFace,
-                             {AxisX, Bound, 5}, {AxisZ, Bound, 10});
+                             {Bound, 5}, AxisX, {Bound, 10}, AxisZ);
                        }),
       std::invalid_argument);
 
@@ -596,7 +604,7 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::PositiveYFace,
-                             {AxisY, Bound, 5}, {AxisX, Bound, 10});
+                             {Bound, 5}, AxisY, {Bound, 10}, AxisX);
                        }),
       std::invalid_argument);
 
@@ -605,7 +613,7 @@ BOOST_AUTO_TEST_CASE(MaterialInvalidAxisDirections) {
                        [&](auto& mat) {
                          mat.configureFace(
                              CuboidVolumeBounds::Face::NegativeZFace,
-                             {AxisZ, Bound, 5}, {AxisY, Bound, 10});
+                             {Bound, 5}, AxisZ, {Bound, 10}, AxisY);
                        }),
       std::invalid_argument);
 }
@@ -625,9 +633,9 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+                              {Bound, 5}, AxisR, {Bound, 10}, AxisPhi);
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
+                              {Bound, 5}, AxisX, {Bound, 10}, AxisY);
           }),
       std::invalid_argument);
 
@@ -637,9 +645,9 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
           "Material",
           [&](auto& mat) {
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
-                              {AxisX, Bound, 5}, {AxisY, Bound, 10});
+                              {Bound, 5}, AxisX, {Bound, 10}, AxisY);
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
-                              {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
+                              {Bound, 5}, AxisR, {Bound, 10}, AxisPhi);
           }),
       std::invalid_argument);
 }
@@ -664,12 +672,12 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   auto mat = std::make_shared<MaterialDesignatorBlueprintNode>("Material");
 
   // Configure material for different faces with different binning
-  mat->configureFace(NegativeXFace, {AxisX, Bound, 5}, {AxisY, Bound, 10});
-  mat->configureFace(PositiveXFace, {AxisX, Bound, 15}, {AxisY, Bound, 20});
-  mat->configureFace(NegativeYFace, {AxisX, Bound, 25}, {AxisY, Bound, 30});
-  mat->configureFace(PositiveYFace, {AxisX, Bound, 35}, {AxisY, Bound, 40});
-  mat->configureFace(NegativeZFace, {AxisX, Bound, 45}, {AxisY, Bound, 50});
-  mat->configureFace(PositiveZFace, {AxisX, Bound, 55}, {AxisY, Bound, 60});
+  mat->configureFace(NegativeXFace, {Bound, 5}, AxisX, {Bound, 10}, AxisY);
+  mat->configureFace(PositiveXFace, {Bound, 15}, AxisX, {Bound, 20}, AxisY);
+  mat->configureFace(NegativeYFace, {Bound, 25}, AxisX, {Bound, 30}, AxisY);
+  mat->configureFace(PositiveYFace, {Bound, 35}, AxisX, {Bound, 40}, AxisY);
+  mat->configureFace(NegativeZFace, {Bound, 45}, AxisX, {Bound, 50}, AxisY);
+  mat->configureFace(PositiveZFace, {Bound, 55}, AxisX, {Bound, 60}, AxisY);
 
   mat->addChild(std::make_shared<StaticBlueprintNode>(std::move(cuboid)));
 
@@ -695,38 +703,63 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
     CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
     switch (face) {
       case NegativeXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(), 5);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
+                          5);
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           10);
         break;
       case PositiveXFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
                           15);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           20);
         break;
       case NegativeYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
                           25);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           30);
         break;
       case PositiveYFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
                           35);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           40);
         break;
       case NegativeZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
                           45);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           50);
         break;
       case PositiveZFace:
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(0).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(0))
+                              .getAxis()
+                              .getNBins(),
                           55);
-        BOOST_CHECK_EQUAL(gridMaterial.binning().at(1).getAxis().getNBins(),
+        BOOST_CHECK_EQUAL(std::get<ProtoAxis>(gridMaterial.binning().at(1))
+                              .getAxis()
+                              .getNBins(),
                           60);
         break;
     }

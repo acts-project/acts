@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
@@ -111,6 +112,7 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
-using ProtoGridSurfaceMaterial = ProtoSurfaceMaterialT<std::vector<ProtoAxis>>;
+using ProtoGridSurfaceMaterial =
+    ProtoSurfaceMaterialT<std::vector<std::tuple<ProtoAxis, AxisDirection>>>;
 
 }  // namespace Acts

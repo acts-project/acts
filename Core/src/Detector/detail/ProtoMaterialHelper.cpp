@@ -12,22 +12,22 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-std::vector<Acts::ProtoAxis>
+std::vector<std::tuple<Acts::ProtoAxis, Acts::AxisDirection>>
 Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
-    const std::vector<ProtoAxis>& bDescription) {
+    const std::vector<std::tuple<ProtoAxis, AxisDirection>>& bDescription) {
   // The binning description, with eventually fixed range
-  std::vector<ProtoAxis> fbDescription;
+  std::vector<std::tuple<ProtoAxis, AxisDirection>> fbDescription;
   // Measure the surface
   Extent sExtent = surface.polyhedronRepresentation(gctx, 1).extent();
-  for (const auto& b : bDescription) {
-    ProtoAxis fBinning(b);
+  for (const auto& [b, aDir] : bDescription) {
+    ProtoAxis fAxis(b);
     // Check if the binning needs to be fixed
-    if (fBinning.isAutorange()) {
-      auto range = sExtent.range(b.getAxisDirection());
-      fBinning.setRange(range.min(), range.max());
+    if (fAxis.isAutorange()) {
+      auto range = sExtent.range(aDir);
+      fAxis.setRange(range.min(), range.max());
     }
-    fbDescription.emplace_back(std::move(fBinning));
+    fbDescription.emplace_back(fAxis, aDir);
   }
   // Create the new proto material description and assign it
   auto protoMaterial =

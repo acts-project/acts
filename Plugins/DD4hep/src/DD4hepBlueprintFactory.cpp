@@ -122,9 +122,9 @@ void Acts::Experimental::DD4hepBlueprintFactory::recursiveParse(
           auto pmProtoAxis = DD4hepBinningHelpers::convertBinning(
               dd4hepElement, pmName + "_binning");
           // Strip out the axis without expansion
-          std::vector<ProtoAxis> pmAxisBare = {};
-          for (const auto& pma : pmProtoAxis) {
-            pmAxisBare.push_back(std::get<ProtoAxis>(pma));
+          std::vector<std::tuple<ProtoAxis, AxisDirection>> pmAxisBare = {};
+          for (const auto& [pAxis, aDir, nB] : pmProtoAxis) {
+            pmAxisBare.push_back({pAxis, aDir});
           }
           current->portalMaterialBinning[p] = pmAxisBare;
           ACTS_VERBOSE(ofs << " - binning description is "

@@ -157,9 +157,9 @@ void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
     ACTS_VERBOSE(" - proto material binning for passive surface found.");
     auto materialBinning = DD4hepBinningHelpers::convertBinning(
         dd4hepElement, prefix + "_proto_material_binning");
-    std::vector<ProtoAxis> pmBinning = {};
-    for (const auto& [axis, bins] : materialBinning) {
-      pmBinning.push_back(axis);
+    std::vector<std::tuple<ProtoAxis, AxisDirection>> pmBinning = {};
+    for (const auto& [axis, axisDir, bins] : materialBinning) {
+      pmBinning.push_back({axis, axisDir});
     }
     ACTS_VERBOSE(" - converted binning is " << pmBinning);
     Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(

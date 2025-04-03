@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -99,7 +100,8 @@ struct Node final {
   std::vector<AxisDirection> binning = {};
 
   /// Portal proto material binning
-  std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
+  std::map<unsigned int, std::vector<std::tuple<ProtoAxis, AxisDirection>>>
+      portalMaterialBinning = {};
 
   /// Auxiliary information
   std::vector<std::string> auxiliary = {};

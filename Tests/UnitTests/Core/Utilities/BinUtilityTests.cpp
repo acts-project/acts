@@ -136,13 +136,13 @@ BOOST_AUTO_TEST_CASE(BinUtility_from_ProtoAxis) {
   using enum AxisDirection;
   using enum AxisBoundaryType;
 
-  ProtoAxis epabX(AxisX, Bound, 0.0, 1.0, 10);
-  BinUtility buX(epabX);
+  ProtoAxis epabX(Bound, 0.0, 1.0, 10);
+  BinUtility buX(epabX, AxisX);
   BOOST_CHECK_EQUAL(buX.bins(), std::size_t{10});
   BOOST_CHECK_EQUAL(buX.dimensions(), std::size_t{1});
 
-  ProtoAxis epabY(AxisY, Bound, 0.0, 1.0, 10);
-  BinUtility buXY({epabX, epabY});
+  ProtoAxis epabY(Bound, 0.0, 1.0, 10);
+  BinUtility buXY({{epabX, AxisX}, {epabY, AxisY}});
   BOOST_CHECK_EQUAL(buXY.bins(), std::size_t{100});
   BOOST_CHECK_EQUAL(buXY.dimensions(), std::size_t{2});
 }

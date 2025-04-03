@@ -11,11 +11,13 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <memory>
 #include <string>
+#include <tuple>
 
 namespace Acts::Experimental {
 class IExternalStructureBuilder;
@@ -43,7 +45,8 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
+    std::map<unsigned int, std::vector<std::tuple<ProtoAxis, AxisDirection>>>
+        portalMaterialBinning = {};
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
     /// Auxiliary information

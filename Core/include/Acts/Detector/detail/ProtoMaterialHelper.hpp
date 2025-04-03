@@ -9,7 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 
@@ -26,9 +30,9 @@ namespace Experimental::detail::ProtoMaterialHelper {
 ///
 /// @return an (eventual) updated binning description for structured
 ///         screen logging output
-std::vector<ProtoAxis> attachProtoMaterial(
+std::vector<std::tuple<ProtoAxis, AxisDirection>> attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
-    const std::vector<ProtoAxis>& bDescription);
+    const std::vector<std::tuple<ProtoAxis, AxisDirection>>& bDescription);
 
 }  // namespace Experimental::detail::ProtoMaterialHelper
 }  // namespace Acts

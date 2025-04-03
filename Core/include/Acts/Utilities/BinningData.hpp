@@ -178,9 +178,10 @@ class BinningData {
   /// Constructor from ProtoAxis
   ///
   /// @param pAxis is the ProtoAxis object
+  /// @param aDir the axis direction
   ///
-  explicit BinningData(const ProtoAxis& pAxis)
-      : binvalue(pAxis.getAxisDirection()), subBinningData(nullptr) {
+  explicit BinningData(const ProtoAxis& pAxis, AxisDirection aDir)
+      : binvalue(aDir), subBinningData(nullptr) {
     const auto& axis = pAxis.getAxis();
     type = axis.getType() == AxisType::Equidistant ? equidistant : arbitrary;
     option = axis.getBoundaryType() == AxisBoundaryType::Closed ? closed : open;
