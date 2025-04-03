@@ -54,7 +54,7 @@ class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
 
   /// Read out data from the input stream.
   ProcessCode convert(const AlgorithmContext& ctx,
-                      const podio::Frame& frame) const final;
+                      const podio::Frame& frame) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

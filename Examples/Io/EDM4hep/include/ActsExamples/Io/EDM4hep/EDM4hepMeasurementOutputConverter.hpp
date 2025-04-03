@@ -50,15 +50,14 @@ class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::vector<std::string> collections() const final;
+  std::vector<std::string> collections() const override;
 
- protected:
+ private:
   /// This implementation converts the measurements to EDM4hep.
   ///
   /// @param ctx The Algorithm context with per event information
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
- private:
   Config m_cfg;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,

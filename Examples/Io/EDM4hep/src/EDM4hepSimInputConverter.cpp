@@ -110,10 +110,12 @@ void EDM4hepSimInputConverter::graphviz(
 
   for (const auto& particle : particles) {
     if (particle.particleId().generation() == 0) {
-      primaryVertices.insert(particle.particleId().vertexPrimary());
+      primaryVertices.insert(
+          static_cast<unsigned int>(particle.particleId().vertexPrimary()));
 
-      os << vid(particle.particleId().vertexPrimary()) << " -> "
-         << pid(particle) << ";\n";
+      os << vid(static_cast<unsigned int>(
+                particle.particleId().vertexPrimary()))
+         << " -> " << pid(particle) << ";\n";
     }
 
     os << pid(particle) << " [label=\"" << plabel(particle) << "\"];\n";
@@ -232,8 +234,10 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
                  << (unorderedParticlesInitial.size() - startSize)
                  << " particles and " << nSecondaryVertices
                  << " secondary vertices in " << maxGen << " generations");
-    setSubParticleIds(std::next(unorderedParticlesInitial.begin(), startSize),
-                      unorderedParticlesInitial.end());
+    std::span particleSpan{
+        std::next(unorderedParticlesInitial.begin(), startSize),
+        unorderedParticlesInitial.end()};
+    setSubParticleIds(particleSpan);
   }
 
   ACTS_DEBUG("Found " << unorderedParticlesInitial.size() << " particles");
@@ -301,12 +305,6 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     // modified version for the "final" state (i.e. after simulation)
     SimParticle particleSimulated = particleInitial;
 
-    // Acts::Vector4 vtxPos4 = {inParticle.getVertex()[0],
-    //                          inParticle.getVertex()[1],
-    //                          inParticle.getVertex()[2],
-    //                          inParticle.getTime()};
-    // vtxPos4.head<3>() *= Acts::UnitConstants::mm;
-    // vtxPos4[3] *= Acts::UnitConstants::ns;
     Acts::Vector4 vtxPos4 = convertPosition4(inParticle);
 
     // Find or create a vertex object for the source of this particle
@@ -327,7 +325,7 @@ ProcessCode EDM4hepSimInputConverter::convert(const AlgorithmContext& ctx,
     for (const auto& daughter : inParticle.getDaughters()) {
       if (!daughter.vertexIsNotEndpointOfParent()) {
         Acts::Vector4 pos4 = convertPosition4(daughter);
-        time = pos4[Acts::eFreeTime];
+        time = static_cast<float>(pos4[Acts::eFreeTime]);
         // The current parent particle decays (eventually), and this daughter's
         // vertex should have this one an incoming!
         auto daughterIt = edm4hepParticleMap.find(daughter.getObjectID().index);
@@ -564,7 +562,8 @@ void EDM4hepSimInputConverter::processChildren(
   for (const auto& daughter : inParticle.getDaughters()) {
     SimParticle particle = EDM4hepUtil::readParticle(daughter);
 
-    auto pid = parentId.makeDescendant(nParticles++);
+    auto pid = parentId.makeDescendant(nParticles);
+    nParticles += 1;
     if (daughter.vertexIsNotEndpointOfParent()) {
       // incoming particle survived, interaction via descendant
     } else {
@@ -601,18 +600,17 @@ void EDM4hepSimInputConverter::processChildren(
 }
 
 void EDM4hepSimInputConverter::setSubParticleIds(
-    std::vector<SimParticle>::iterator begin,
-    std::vector<SimParticle>::iterator end) {
+    std::span<SimParticle> particles) {
   std::vector<std::size_t> numByGeneration;
   numByGeneration.reserve(10);
 
-  for (auto it = begin; it != end; ++it) {
-    auto& particle = *it;
+  for (auto& particle : particles) {
     const auto pid = particle.particleId();
     if (pid.generation() >= numByGeneration.size()) {
       numByGeneration.resize(pid.generation() + 1, 0);
     }
-    unsigned int nextSubParticle = numByGeneration[pid.generation()]++;
+    unsigned long nextSubParticle = numByGeneration[pid.generation()];
+    numByGeneration[pid.generation()] += 1;
 
     auto newPid = particle.particleId().setSubParticle(nextSubParticle);
     particle.setParticleId(newPid);

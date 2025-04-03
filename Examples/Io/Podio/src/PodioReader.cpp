@@ -11,6 +11,8 @@
 #include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 
+#include <filesystem>
+
 #include <podio/Frame.h>
 #include <tbb/enumerable_thread_specific.h>
 
@@ -64,8 +66,8 @@ PodioReader::~PodioReader() = default;
 
 ProcessCode PodioReader::read(const AlgorithmContext& context) {
   ACTS_DEBUG("Reading EDM4hep inputs");
-  podio::Frame frame =
-      m_impl->reader().readEntry(m_impl->m_cfg.category, context.eventNumber);
+  podio::Frame frame = m_impl->reader().readEntry(
+      m_impl->m_cfg.category, static_cast<unsigned int>(context.eventNumber));
   m_impl->m_frameWriteHandle(context, std::move(frame));
 
   return ProcessCode::SUCCESS;
