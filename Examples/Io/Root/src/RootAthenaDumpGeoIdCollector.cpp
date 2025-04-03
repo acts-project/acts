@@ -163,4 +163,36 @@ ProcessCode RootAthenaDumpGeoIdCollector::read(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
+ProcessCode RootAthenaDumpGeoIdCollector::finalize() {
+  if (m_cfg.outputFileName.empty()) {
+    ACTS_INFO("Don't save map to file");
+    return ProcessCode::SUCCESS;
+  }
+
+  if (m_cfg.geometryIdMap->size() < m_detectorElementMap.size()) {
+    ACTS_WARNING(
+        "Exporting map that does not contain mappings for all sensitive "
+        "surfaces! "
+        << m_detectorElementMap.size() - m_cfg.geometryIdMap->size()
+        << " missing!");
+  }
+
+  std::ofstream outfile(m_cfg.outputFileName);
+  if (!outfile) {
+    ACTS_ERROR("Cannot open '" << m_cfg.outputFileName << "' for writing");
+    return ProcessCode::ABORT;
+  }
+
+  ACTS_INFO("Write geometry identifier mapping to '" << m_cfg.outputFileName
+                                                     << "'");
+  outfile << "athena_id,acts_id\n";
+
+  const auto& athenaToActsGeoId = m_cfg.geometryIdMap->left;
+  for (auto [athenaId, actsId] : athenaToActsGeoId) {
+    outfile << athenaId << "," << actsId.value() << "\n";
+  }
+
+  return ProcessCode::SUCCESS;
+}
+
 }  // namespace ActsExamples

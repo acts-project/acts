@@ -108,7 +108,8 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
                              "RootAthenaDumpGeoIdCollector", treename,
-                             inputfile, trackingGeometry, geometryIdMap);
+                             inputfile, trackingGeometry, geometryIdMap,
+                             outputFileName);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,

@@ -28,6 +28,7 @@
 
 #include <memory>
 
+#include <boost/algorithm/string.hpp>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -457,7 +458,34 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
   py::class_<GeometryIdMapActsAthena, std::shared_ptr<GeometryIdMapActsAthena>>(
       mex, "GeometryIdMapActsAthena")
-      .def(py::init<>());
+      .def(py::init<>())
+      .def_static(
+          "fromCsv",
+          [](const std::string &filename) {
+            std::ifstream inputfile(filename);
+            if (!inputfile) {
+              throw std::invalid_argument("Could not open '" + filename + "'");
+            }
+
+            auto map = std::make_shared<GeometryIdMapActsAthena>();
+
+            // Read the header first and don't process it
+            std::string line;
+            std::getline(inputfile, line);
+
+            // Read the tokens in the vector
+            std::vector<std::string> tokens;
+            for (; std::getline(inputfile, line);) {
+              boost::split(tokens, line, boost::is_any_of(","));
+              auto athenaId = std::stoul(tokens.at(0));
+              auto actsId = std::stoul(tokens.at(1));
+              map->left.insert({athenaId, Acts::GeometryIdentifier{actsId}});
+              tokens.clear();
+            }
+
+            return map;
+          },
+          "filename"_a);
 }
 
 }  // namespace Acts::Python

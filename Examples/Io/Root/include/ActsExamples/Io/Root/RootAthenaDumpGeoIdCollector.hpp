@@ -43,6 +43,8 @@ class RootAthenaDumpGeoIdCollector : public IReader {
     std::string treename;
     /// Name of inputfile
     std::vector<std::string> inputfile;
+    /// Name of the output csv (optional)
+    std::string outputFileName;
 
     /// The map where the algorithm reads into
     std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
@@ -71,6 +73,9 @@ class RootAthenaDumpGeoIdCollector : public IReader {
   ///
   /// @param context The algorithm context
   ProcessCode read(const ActsExamples::AlgorithmContext &ctx) override;
+
+  /// Finalize the algorithm. If configured, write the output map here
+  ProcessCode finalize() override;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }
