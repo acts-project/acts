@@ -13,7 +13,7 @@ inputs:
   spack_version:
     description: 'Version of Spack to use'
     required: false
-    default: 'develop-2025-03-23'
+    default: 'develop-2025-03-30'
 
 runs:
   using: 'composite'
