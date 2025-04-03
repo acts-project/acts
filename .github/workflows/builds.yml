@@ -191,7 +191,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && python3 -m pip install histcmp==0.6.8 matplotlib
+          && python3 -m pip install histcmp==0.8.1 matplotlib
           && python3 -m pip install -r Examples/Scripts/requirements.txt
           && geant4-config --install-datasets
           && venv_python=$(which python3)

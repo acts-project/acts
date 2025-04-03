@@ -5,6 +5,7 @@
 .*Duplicate explicit target name: .*
 .*undefined label: .*class_acts_1_1_convex_polygon_bounds_3_01_polygon_dynamic_01_4.*
 .*undefined label: .*class_acts_1_1_grid_surface_material_t.*
+.*undefined label: .*class_acts_1_1_i_grid_surface_material.*
 .*undefined label: .*namespace_acts_.*
 # I think these are because we use specialization
 .*undefined label: .*bdt.*
