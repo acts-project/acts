@@ -133,7 +133,6 @@ with tempfile.TemporaryDirectory() as temp:
         s,
         trackingGeometry,
         field,
-        directNavigation=False,
         reverseFilteringMomThreshold=0 * u.GeV,
     )
 
