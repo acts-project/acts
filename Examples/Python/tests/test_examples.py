@@ -1360,14 +1360,16 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    if backend == "onnx":
-        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
-    else:
-        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+    # Extract both models, since we currently don't have a working implementation
+    # of metric learning with ONNX and we need to use torch here
+    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
 
-    tarfile_name = tmp_path / "models.tar"
-    urllib.request.urlretrieve(url, tarfile_name)
-    tarfile.open(tarfile_name).extractall(tmp_path)
+    for url in [onnx_url, torch_url]:
+        tarfile_name = tmp_path / "models.tar"
+        urllib.request.urlretrieve(url, tarfile_name)
+        tarfile.open(tarfile_name).extractall(tmp_path)
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
