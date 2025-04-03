@@ -159,7 +159,7 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   });
 }
 
-using DirectedProtoAxis = std::tuple<ProtoAxis, AxisDirection>;
+using DirectedProtoAxis = DirectedProtoAxis;
 
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
 

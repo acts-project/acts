@@ -117,8 +117,7 @@ class BinUtility {
   /// Create from ProtoAxis
   ///
   /// @param pAxes the ProtoAxes to be used with axis directions
-  explicit BinUtility(
-      const std::vector<std::tuple<ProtoAxis, AxisDirection>>& pAxes)
+  explicit BinUtility(const std::vector<DirectedProtoAxis>& pAxes)
       : m_binningData(),
         m_transform(Transform3::Identity()),
         m_itransform(Transform3::Identity()) {

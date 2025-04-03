@@ -45,7 +45,7 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, std::vector<std::tuple<ProtoAxis, AxisDirection>>>
+    std::map<unsigned int, std::vector<DirectedProtoAxis>>
         portalMaterialBinning = {};
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;

@@ -30,9 +30,9 @@ namespace Experimental::detail::ProtoMaterialHelper {
 ///
 /// @return an (eventual) updated binning description for structured
 ///         screen logging output
-std::vector<std::tuple<ProtoAxis, AxisDirection>> attachProtoMaterial(
+std::vector<DirectedProtoAxis> attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
-    const std::vector<std::tuple<ProtoAxis, AxisDirection>>& bDescription);
+    const std::vector<DirectedProtoAxis>& bDescription);
 
 }  // namespace Experimental::detail::ProtoMaterialHelper
 }  // namespace Acts

@@ -113,6 +113,6 @@ class ProtoSurfaceMaterialT : public ISurfaceMaterial {
 using ProtoSurfaceMaterial = ProtoSurfaceMaterialT<Acts::BinUtility>;
 
 using ProtoGridSurfaceMaterial =
-    ProtoSurfaceMaterialT<std::vector<std::tuple<ProtoAxis, AxisDirection>>>;
+    ProtoSurfaceMaterialT<std::vector<DirectedProtoAxis>>;
 
 }  // namespace Acts

@@ -12,12 +12,12 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-std::vector<std::tuple<Acts::ProtoAxis, Acts::AxisDirection>>
+std::vector<Acts::DirectedProtoAxis>
 Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
     const GeometryContext& gctx, Surface& surface,
-    const std::vector<std::tuple<ProtoAxis, AxisDirection>>& bDescription) {
+    const std::vector<DirectedProtoAxis>& bDescription) {
   // The binning description, with eventually fixed range
-  std::vector<std::tuple<ProtoAxis, AxisDirection>> fbDescription;
+  std::vector<DirectedProtoAxis> fbDescription;
   // Measure the surface
   Extent sExtent = surface.polyhedronRepresentation(gctx, 1).extent();
   for (const auto& [b, aDir] : bDescription) {
