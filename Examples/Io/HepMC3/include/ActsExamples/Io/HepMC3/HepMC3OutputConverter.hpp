@@ -29,7 +29,7 @@ class HepMC3OutputConverter : public IAlgorithm {
     std::string inputVertices;
     std::string outputEvent;
   };
-  HepMC3OutputConverter(const Config& config, Acts::Logging::Level);
+  HepMC3OutputConverter(const Config& config, Acts::Logging::Level level);
 
   const Config& config() const { return m_cfg; }
 

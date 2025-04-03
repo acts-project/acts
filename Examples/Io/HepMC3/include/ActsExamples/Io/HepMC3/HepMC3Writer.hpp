@@ -44,7 +44,7 @@ class HepMC3AsciiWriter final
   /// @param [in] level The level of the logger
   HepMC3AsciiWriter(const Config& config, Acts::Logging::Level level);
 
-  ~HepMC3AsciiWriter();
+  ~HepMC3AsciiWriter() override;
 
   /// Writing events to file.
   ///
