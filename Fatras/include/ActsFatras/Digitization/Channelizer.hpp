@@ -38,29 +38,39 @@ class Channelizer {
       const Hit& hit, const Acts::Surface& surface,
       const Acts::GeometryContext& gctx, const Acts::Vector3& driftDir,
       const Acts::BinUtility& segmentation, double thickness) const {
-    auto driftedSegment = m_surfaceDrift.toReadout(
+    // Drfted surface and scalor 2D to 3D segment
+    auto drifted = m_surfaceDrift.toReadout(
         gctx, surface, thickness, hit.position(), hit.direction(), driftDir);
+    if (!drifted.ok()) {
+      return drifted.error();
+    }
+    // The drifted and the full segment
+    auto [driftedSegment, fullSegement] = drifted.value();
 
+    // Applies the surface mask
     auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
-
     if (!maskedSegmentRes.ok()) {
       return maskedSegmentRes.error();
     }
 
-    // Now Channelize
+    // Now Channelize, i.e. segments are mapped to the readout grid
     auto segments =
         m_segmentizer.segments(gctx, surface, segmentation, *maskedSegmentRes);
 
-    // Go from 2D-path to 3D-path by applying thickness
-    const auto path2D = std::accumulate(
-        segments.begin(), segments.end(), 0.0,
-        [](double sum, const auto& seg) { return sum + seg.activation; });
+    double driftedPathLength = (driftedSegment[1] - driftedSegment[0]).norm();
+    // In case we have close-to-nominal incident, we could run into numerical
+    // problems, we'll take a 0.1 permille of the thickness as a threshold
+    if (std::abs(driftedPathLength) < 0.0001 * thickness &&
+        segments.size() == 1) {
+      segments[0].activation = thickness;
+      return segments;
+    }
 
-    for (auto& seg : segments) {
-      auto r = path2D != 0.0 ? (seg.activation / path2D) : 1.0;
-      auto segThickness = r * thickness;
-
-      seg.activation = std::hypot(segThickness, seg.activation);
+    double fullPathLength = (fullSegement[1] - fullSegement[0]).norm();
+    double sclale2Dto3D = fullPathLength / driftedPathLength;
+    // scale the activations
+    for (auto& segment : segments) {
+      segment.activation *= sclale2Dto3D;
     }
 
     return segments;
