@@ -1785,6 +1785,8 @@ def addExaTrkX(
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
+        "modelPath": str(modelDir / "embed.pt"),
+        "selectedFeatures": [0, 1, 2],
     }
 
     filterConfig = {
@@ -1798,8 +1800,6 @@ def addExaTrkX(
     }
 
     if backend == ExaTrkXBackend.Torch:
-        metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
-        metricLearningConfig["selectedFeatures"] = [0, 1, 2]
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
@@ -1813,12 +1813,11 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
-        metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
-        metricLearningConfig["spacepointFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
-        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
+        # There is currently no implementation of a Metric learning based fully on ONNX
+        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
