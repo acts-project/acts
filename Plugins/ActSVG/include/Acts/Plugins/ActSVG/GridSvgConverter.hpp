@@ -36,7 +36,7 @@ using AxisBound = std::tuple<std::array<double, 2u>, AxisDirection>;
 /// Nested Options struct
 struct Options {
   /// A The style for the surfaces
-  Style style{{150, 150, 150}, 0.5};
+  Style style = defaultGridStyle;
   /// Optional bound - in case of 1-dim grid
   std::optional<AxisBound> optionalBound;
 };
