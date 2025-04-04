@@ -1620,8 +1620,15 @@ class Gx2Fitter {
 
       if (tipIndex != gx2fResult.lastMeasurementIndex) {
         ACTS_INFO("Final fit used unreachable measurements.");
-        return Experimental::GlobalChiSquareFitterError::
-            UsedUnreachableMeasurements;
+        tipIndex = gx2fResult.lastMeasurementIndex;
+
+        // It could happen, that no measurements were found. Then the track
+        // would be empty and the following operations would be invalid.
+        if (tipIndex == Acts::MultiTrajectoryTraits::kInvalid) {
+          ACTS_INFO("Did not find any measurements in final propagation.");
+          return Experimental::GlobalChiSquareFitterError::
+              NotEnoughMeasurements;
+        }
       }
     }
 
