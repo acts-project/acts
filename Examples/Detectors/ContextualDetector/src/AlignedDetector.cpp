@@ -22,7 +22,7 @@ namespace ActsExamples {
 AlignedDetector::AlignedDetector(const Config& cfg)
     : GenericDetector(cfg, NoBuildTag{}), m_cfg(cfg) {
   if (m_cfg.mode == Config::Mode::External) {
-    InternallyAlignedDetectorElement::ContextType nominalContext;
+    ExternallyAlignedDetectorElement::ContextType nominalContext;
     m_nominalGeometryContext = Acts::GeometryContext(nominalContext);
   } else {
     InternallyAlignedDetectorElement::ContextType nominalContext;
