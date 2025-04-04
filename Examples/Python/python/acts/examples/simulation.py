@@ -138,6 +138,7 @@ def addParticleGun(
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                mergePrimaries=False,
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
                     mean=acts.Vector4(0, 0, 0, 0),
@@ -156,6 +157,7 @@ def addParticleGun(
                         randomizeCharge=particleConfig.randomizeCharge,
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
+                        # Merging particle gun vertices does not make sense
                     )
                 ),
             )
@@ -234,6 +236,8 @@ def addPythia8(
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
     writeHepMC3: Optional[Path] = None,
+    outputEvent: Optional[str] = None,
+    printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -332,6 +336,8 @@ def addPythia8(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent=outputEvent,
+        printListing=printListing,
     )
     s.addReader(evGen)
 

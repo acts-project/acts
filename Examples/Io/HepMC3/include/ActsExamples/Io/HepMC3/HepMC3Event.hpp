@@ -8,16 +8,19 @@
 
 #pragma once
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 
-#include <HepMC3/FourVector.h>
-#include <HepMC3/GenEvent.h>
-#include <HepMC3/GenParticle.h>
-#include <HepMC3/GenVertex.h>
+#include <span>
+
+namespace HepMC3 {
+class GenEvent;
+}
 
 namespace ActsExamples::HepMC3Event {
+
+std::shared_ptr<HepMC3::GenEvent> mergeHepMC3Events(
+    std::span<const HepMC3::GenEvent*> genEvents, const Acts::Logger& logger);
 
 ///
 /// Setter
@@ -66,15 +69,13 @@ void shiftPositionTo(HepMC3::GenEvent& event, const double time);
 /// @brief Adds a new particle
 /// @param event event in HepMC data type
 /// @param particle new particle that will be added
-void addParticle(HepMC3::GenEvent& event,
-                 const std::shared_ptr<SimParticle>& particle);
+void addParticle(HepMC3::GenEvent& event, const SimParticle& particle);
 
 /// @brief Adds a new vertex
 /// @param event event in HepMC data type
 /// @param vertex new vertex that will be added
 /// @note The statuses are not represented in Acts and therefore set to 0
-void addVertex(HepMC3::GenEvent& event,
-               const std::shared_ptr<SimVertex>& vertex);
+void addVertex(HepMC3::GenEvent& event, const SimVertex& vertex);
 ///
 /// Remover
 ///
@@ -82,16 +83,14 @@ void addVertex(HepMC3::GenEvent& event,
 /// @brief Removes a particle from the record
 /// @param event event in HepMC data type
 /// @param particle particle that will be removed
-void removeParticle(HepMC3::GenEvent& event,
-                    const std::shared_ptr<SimParticle>& particle);
+void removeParticle(HepMC3::GenEvent& event, const SimParticle& particle);
 
 /// @brief Removes a vertex from the record
 /// @note The identification of the vertex is potentially unstable (c.f.
 /// HepMC3Event::compareVertices())
 /// @param event event in HepMC data type
 /// @param vertex vertex that will be removed
-void removeVertex(HepMC3::GenEvent& event,
-                  const std::shared_ptr<SimVertex>& vertex);
+void removeVertex(HepMC3::GenEvent& event, const SimVertex& vertex);
 
 ///
 /// Getter
