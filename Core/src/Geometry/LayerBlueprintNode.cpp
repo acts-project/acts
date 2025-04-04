@@ -69,9 +69,10 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
   Extent extent;
 
   if (!impl().m_protoLayer.has_value()) {
-    ProtoLayer protoLayer{gctx, impl().m_surfaces,
-                          impl().m_transform.inverse()};
-    ACTS_VERBOSE(prefix() << "Built proto layer: " << protoLayer);
+    impl().m_protoLayer.emplace(gctx, impl().m_surfaces,
+                                impl().m_transform.inverse());
+    ACTS_VERBOSE(prefix() << "Built proto layer: "
+                          << impl().m_protoLayer.value());
   } else {
     ACTS_VERBOSE(prefix() << "Using provided proto layer");
   }
@@ -147,12 +148,29 @@ const std::string& LayerBlueprintNode::name() const {
 LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
     std::vector<std::shared_ptr<Surface>> surfaces) {
   impl().m_surfaces = std::move(surfaces);
+  impl().m_protoLayer.reset();
   return *this;
 }
 
 const std::vector<std::shared_ptr<Surface>>& LayerBlueprintNode::surfaces()
     const {
   return impl().m_surfaces;
+}
+
+LayerBlueprintNode& LayerBlueprintNode::setProtoLayer(
+    std::optional<MutableProtoLayer> protoLayer) {
+  impl().m_protoLayer = std::move(protoLayer);
+  impl().m_surfaces.clear();
+  // also take ownership of the surfaces now
+  for (auto& surface : impl().m_protoLayer.value().surfaces()) {
+    impl().m_surfaces.push_back(surface->getSharedPtr());
+  }
+  return *this;
+}
+
+const MutableProtoLayer* LayerBlueprintNode::protoLayer() const {
+  return impl().m_protoLayer.has_value() ? &impl().m_protoLayer.value()
+                                         : nullptr;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setTransform(

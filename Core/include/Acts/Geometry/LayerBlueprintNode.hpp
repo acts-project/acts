@@ -68,6 +68,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
 
   /// Register a set of surfaces with the layer node.
   /// @param surfaces The surfaces to register
+  /// @note This will clear any previously registered proto layer
   /// @return Reference to this node for chaining
   LayerBlueprintNode& setSurfaces(
       std::vector<std::shared_ptr<Surface>> surfaces);
@@ -76,10 +77,17 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @return The registered surfaces
   const std::vector<std::shared_ptr<Surface>>& surfaces() const;
 
+  /// Register a proto layer with the layer node.
+  /// @param protoLayer The proto layer to register
+  /// @note This will clear any previously registered surfaces
+  /// @return Reference to this node for chaining
   LayerBlueprintNode& setProtoLayer(
       std::optional<MutableProtoLayer> protoLayer);
 
-  const MutableProtoLayer& protoLayer() const;
+  /// Access the registered proto layer.
+  /// @note This will return nullptr if no proto layer is registered or built yet
+  /// @return The registered proto layer
+  const MutableProtoLayer* protoLayer() const;
 
   /// Set the transformation of the layer node.
   /// This can be used to specifically orient the resulting layer volume.
