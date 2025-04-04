@@ -180,20 +180,6 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
         PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${_python_dir}/acts
     )
     list(APPEND py_files examples/geant4/__init__.py)
-
-    if(ACTS_BUILD_EXAMPLES_HEPMC3)
-        target_link_libraries(
-            ActsPythonBindingsGeant4
-            PUBLIC ActsExamplesEventRecording
-        )
-        target_sources(ActsPythonBindingsGeant4 PRIVATE src/Geant4HepMC3.cpp)
-        list(APPEND py_files examples/geant4/hepmc3.py)
-    else()
-        target_sources(
-            ActsPythonBindingsGeant4
-            PRIVATE src/Geant4HepMC3Stub.cpp
-        )
-    endif()
 endif()
 
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
