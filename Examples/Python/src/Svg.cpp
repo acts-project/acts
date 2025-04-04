@@ -12,14 +12,17 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GridPortalLink.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Plugins/ActSVG/DetectorSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp"
@@ -199,6 +202,66 @@ std::vector<actsvg::svg::object> drawDetector(
   return svgDetViews;
 }
 
+struct SurfaceArrayCollector {
+  std::vector<std::tuple<Acts::GeometryIdentifier, const Acts::SurfaceArray*>>
+      surfaceArrays;
+  // Visitor pattern to collect the surface arrays
+  void operator()(const Acts::TrackingVolume* tVolume) {
+    // This is trying Gen1 first
+    const auto& cLayers = tVolume->confinedLayers();
+    if (cLayers != nullptr) {
+      for (const auto& layer : cLayers->arrayObjects()) {
+        if (layer != nullptr) {
+          const auto& surfaceArray = layer->surfaceArray();
+          if (surfaceArray != nullptr) {
+            surfaceArrays.emplace_back(layer->geometryId(), surfaceArray);
+          }
+        }
+      }
+    }
+    // Now trey Gen2
+    auto sArrayPolicy = dynamic_cast<const Acts::SurfaceArrayNavigationPolicy*>(
+        tVolume->navigationPolicy());
+    if (sArrayPolicy != nullptr) {
+      surfaceArrays.emplace_back(tVolume->geometryId(),
+                                 &sArrayPolicy->surfaceArray());
+    }
+  }
+};
+
+// Helper function to be picked to draw surface arrays
+std::vector<actsvg::svg::object> drawSurfaceArrays(
+    const Acts::GeometryContext& gctx, const TrackingGeometry& tGeometry) {
+  // The svg objects to be returned
+  std::vector<actsvg::svg::object> svgSurfaceArrays;
+
+  std::vector<const Acts::SurfaceArray*> surfaceArrays;
+  // Retrieve the surface arrays from the geometry
+  // - try Gen1 first
+  SurfaceArrayCollector saCollector;
+  tGeometry.visitVolumes(saCollector);
+  // Now draw the surface arrays
+  for (const auto& [geoId, surfaceArray] : saCollector.surfaceArrays) {
+    // Get the surface array and convert it
+    auto pIndexedSurfaceGrid =
+        Svg::SurfaceArrayConverter::convert(gctx, *surfaceArray);
+
+    // Decide the xy / rz view on the grid
+    const auto& [pSurfaces, pGrid, pAssociations] = pIndexedSurfaceGrid;
+    std::string sArrayName =
+        "SurfaceArray_vol" + std::to_string(geoId.volume());
+    sArrayName += "_lay" + std::to_string(geoId.layer());
+    if (pGrid._type == actsvg::proto::grid::e_r_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "xy_" + sArrayName));
+    } else if (pGrid._type == actsvg::proto::grid::e_z_phi) {
+      svgSurfaceArrays.emplace_back(
+          Svg::View::xy(pIndexedSurfaceGrid, "zphi_" + sArrayName));
+    }
+  }
+  return svgSurfaceArrays;
+}
+
 }  // namespace
 
 namespace Acts::Python {
@@ -207,7 +270,32 @@ void addSvg(Context& ctx) {
 
   auto svg = m.def_submodule("svg");
 
-  svg.def("toFile", &Svg::toFile);
+  {
+    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
+            py::arg("filename"));
+  }
+
+  py::class_<actsvg::svg::object>(svg, "object")
+      .def_readwrite("id", &actsvg::svg::object::_id);
+
+  py::class_<actsvg::svg::file>(svg, "file")
+      .def(py::init<>())
+      .def("addObject", &actsvg::svg::file::add_object)
+      .def("addObjects", &actsvg::svg::file::add_objects)
+      .def("clip",
+           [](actsvg::svg::file& self, std::array<actsvg::scalar, 4> box) {
+             self.set_view_box(box);
+           })
+      .def("write", [](actsvg::svg::file& self, const std::string& filename) {
+        std::ofstream file(filename);
+        file << self;
+        file.close();
+      });
+
+  {
+    svg.def("toFile", &Acts::Svg::toFile, py::arg("objects"),
+            py::arg("filename"));
+  }
 
   // Core components, added as an acts.svg submodule
   {
@@ -351,7 +439,13 @@ void addSvg(Context& ctx) {
   }
 
   // How a detector is drawn: Svg Detector options & drawning
-  { svg.def("drawDetector", &drawDetector); }
+  {
+    svg.def("drawDetector", &drawDetector);
+  }
+
+  {
+    svg.def("drawSurfaceArrays", &drawSurfaceArrays);
+  }
 
   // Legacy geometry drawing
   {
