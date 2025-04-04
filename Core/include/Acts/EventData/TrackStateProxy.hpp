@@ -41,7 +41,6 @@ using ConstIf = std::conditional_t<select, const T, T>;
 template <typename T>
 class TransitiveConstPointer {
  public:
-
   using element_type = T;
   TransitiveConstPointer() = default;
   explicit TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
