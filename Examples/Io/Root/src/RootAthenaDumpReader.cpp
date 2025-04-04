@@ -231,8 +231,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   */
 
   for (const auto& file : m_cfg.inputfiles) {
-    m_inputchain->Add(file.c_str());
     ACTS_DEBUG("Adding file '" << file << "' to tree " << m_cfg.treename);
+    m_inputchain->Add(file.c_str());
   }
 
   m_events = m_inputchain->GetEntries();
