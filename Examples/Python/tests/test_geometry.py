@@ -24,7 +24,11 @@ from helpers import dd4hepEnabled
         ),
         (functools.partial(AlignedDetector, iovSize=1), False, 450),
     ],
-    ids=["generic", "odd", "aligned"],
+    ids=[
+        "generic",
+        "odd",
+        "aligned",
+    ],
 )
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
