@@ -11,7 +11,8 @@ from helpers import dd4hepEnabled
 @pytest.mark.parametrize(
     "detectorFactory,aligned,nobj",
     [
-        (GenericDetector, True, 450),
+        (functools.partial(GenericDetector, gen3=False), True, 450),
+        (functools.partial(GenericDetector, gen3=True), True, 450),
         pytest.param(
             getOpenDataDetector,
             True,
@@ -39,6 +40,7 @@ from helpers import dd4hepEnabled
     ],
     ids=[
         "generic",
+        "generic-gen3",
         "odd",
         "aligned-internal",
         "aligned-external",
