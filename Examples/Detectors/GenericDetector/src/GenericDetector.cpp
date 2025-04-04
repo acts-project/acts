@@ -18,18 +18,24 @@ GenericDetector::GenericDetector(const Config& cfg)
       m_cfg(cfg) {
   m_nominalGeometryContext = Acts::GeometryContext();
 
-  std::vector<std::vector<std::shared_ptr<GenericDetectorElement>>>
-      specificDetectorStore;
-  m_trackingGeometry = Generic::buildDetector<GenericDetectorElement>(
-      m_nominalGeometryContext, specificDetectorStore, m_cfg.buildLevel,
+  auto detectorElementFactory =
+      [this](std::shared_ptr<const Acts::Transform3> transform,
+             std::shared_ptr<const Acts::PlanarBounds> bounds, double thickness,
+             std::shared_ptr<const Acts::ISurfaceMaterial> material)
+      -> std::shared_ptr<GenericDetectorElement> {
+    GenericDetectorElement::Identifier id =
+        static_cast<GenericDetectorElement::Identifier>(m_detectorStore.size());
+    auto detElem = std::make_shared<GenericDetectorElement>(
+        id, std::move(transform), std::move(bounds), thickness,
+        std::move(material));
+    m_detectorStore.push_back(detElem);
+    return detElem;
+  };
+
+  m_trackingGeometry = Generic::buildDetector(
+      m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
       m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.surfaceLogLevel,
       m_cfg.layerLogLevel, m_cfg.volumeLogLevel);
-
-  for (const auto& something : specificDetectorStore) {
-    for (const auto& element : something) {
-      m_detectorStore.push_back(element);
-    }
-  }
 }
 
 }  // namespace ActsExamples
