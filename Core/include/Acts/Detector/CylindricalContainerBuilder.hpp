@@ -19,7 +19,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {

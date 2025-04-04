@@ -11,13 +11,11 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <memory>
 #include <string>
-#include <tuple>
 
 namespace Acts::Experimental {
 class IExternalStructureBuilder;

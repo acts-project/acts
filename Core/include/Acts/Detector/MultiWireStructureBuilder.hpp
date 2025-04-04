@@ -14,7 +14,6 @@
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
@@ -43,8 +42,7 @@ class MultiWireStructureBuilder {
     std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
-    std::vector<std::tuple<ProtoAxis, AxisDirection, std::size_t>> mlBinning =
-        {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
     float toleranceOverlap = 10.;

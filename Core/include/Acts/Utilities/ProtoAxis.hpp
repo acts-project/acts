@@ -14,7 +14,6 @@
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <memory>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
