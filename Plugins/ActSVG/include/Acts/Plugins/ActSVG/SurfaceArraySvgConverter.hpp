@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include <actsvg/meta.hpp>
 
@@ -23,17 +24,14 @@ class SurfaceArray;
 
 namespace Svg {
 
-using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
-using ProtoSurfaces = std::vector<ProtoSurface>;
-using ProtoGrid = actsvg::proto::grid;
-using ProtoAssociations = std::vector<std::vector<std::size_t>>;
-
 namespace SurfaceArrayConverter {
 
 /// Nested options struct
 struct Options {
   /// Hierarchy map of styles
   GeometryHierarchyMap<Style> surfaceStyles;
+  /// The Grid converter options
+  GridConverter::Options gridOptions;
 };
 
 /// Convert a surface array into needed constituents
@@ -42,13 +40,15 @@ struct Options {
 /// @param surfaceArray is the surface to convert
 /// @param cOptions the conversion options
 ///
-/// @note the type of view is auto-generated from the binning information
+/// @note the type of view is auto-generated from the binning information,
+/// @note it transforms the surface array into an indexed array of surfaces
+///       and then uses these proto objects, one can thus directly use the
+///       view function of the indexed surface grid
 ///
 /// @return a collection of proto surface object and a grid, and associations
-std::tuple<std::vector<ProtoSurfaces>, ProtoGrid,
-           std::vector<ProtoAssociations>>
-convert(const GeometryContext& gctx, const SurfaceArray& surfaceArray,
-        const Options& cOptions);
+ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
+                                const SurfaceArray& surfaceArray,
+                                const Options& cOptions = Options());
 
 }  // namespace SurfaceArrayConverter
 

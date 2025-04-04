@@ -522,6 +522,10 @@ class TrackingVolume : public Volume {
   /// @param policy is the navigation policy to be registered
   void setNavigationPolicy(std::unique_ptr<INavigationPolicy> policy);
 
+  /// Return the navigation policy
+  /// @return the navigation policy
+  const INavigationPolicy* navigationPolicy() const;
+
   /// Populate the navigation stream with navigation candidates from this
   /// volume. Internally, this consults the registered navigation policy, where
   /// the default is a noop.
