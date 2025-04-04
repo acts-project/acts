@@ -159,7 +159,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   if (m_model->GetOutputTypeInfo(0)
           .GetTensorTypeAndShapeInfo()
           .GetDimensionsCount() == 2) {
-    scores.reshape({scores.numel(), 1});
+    scores = scores.reshape({scores.numel(), 1});
   }
 
   std::vector<Ort::Value> outputTensors;
@@ -171,7 +171,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   m_model->Run(options, inputNames.data(), inputTensors.data(),
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
-  scores.squeeze();
+  scores = scores.squeeze();
 
   ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
                << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
