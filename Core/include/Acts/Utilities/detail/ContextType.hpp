@@ -105,6 +105,10 @@ class ContextType {
   /// @return Boolean indicating whether a type is present
   bool hasValue() const { return m_data.has_value(); }
 
+  /// Get the type of the contained value
+  /// @return The type of the contained value
+  const std::type_info& type() const noexcept { return m_data.type(); }
+
  private:
   std::any m_data;
 };
