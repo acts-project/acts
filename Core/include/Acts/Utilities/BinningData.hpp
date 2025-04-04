@@ -177,7 +177,7 @@ class BinningData {
 
   /// Constructor from DirectedProtoAxis
   ///
-  /// @param pAxis is the ProtoAxis object
+  /// @param dpAxis is the ProtoAxis object
   ///
   explicit BinningData(const DirectedProtoAxis& dpAxis)
       : binvalue(dpAxis.getAxisDirection()), subBinningData(nullptr) {

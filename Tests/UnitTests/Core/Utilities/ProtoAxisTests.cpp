@@ -18,7 +18,6 @@ BOOST_AUTO_TEST_SUITE(ProtoAxis)
 
 BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
   // Bound, equidistant axis
@@ -97,7 +96,6 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
 
 BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
   // Bound, equidistant axis, autorange
@@ -157,10 +155,9 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
 
 BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
-  // Bound, equidistant axis
+  // Bound, variable axis
   Acts::ProtoAxis vpab(Bound, {0.0, 1.0, 10});
 
   // Direct access
@@ -212,6 +209,40 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
 
   // Invalid constructor, nbins < 1
   BOOST_CHECK_THROW(Acts::ProtoAxis(Bound, {3., 2., 1}), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DirectedProtoAxisOfAllSorts) {
+  using enum Acts::AxisBoundaryType;
+  using enum Acts::AxisDirection;
+  using enum Acts::AxisType;
+
+  // Bound, variable axis - directed at x
+  Acts::DirectedProtoAxis vpab(AxisX, Bound, {0.0, 1.0, 10});
+  BOOST_CHECK(vpab.getAxisDirection() == AxisX);
+  std::string rvString =
+      "DirectedProtoAxis: 2 bins in AxisX, variable within [0, 10]";
+  std::string ovString = vpab.toString();
+  BOOST_CHECK_EQUAL(rvString, ovString);
+
+  // Bound, equidistant axis, autorange - directed at y
+  Acts::DirectedProtoAxis epa(AxisY, Bound, 10);
+  BOOST_CHECK(epa.getAxisDirection() == AxisY);
+  BOOST_CHECK(epa.getAxis().isEquidistant());
+  BOOST_CHECK(epa.isAutorange());
+  std::string reString =
+      "DirectedProtoAxis: 10 bins in AxisY, equidistant within automatic range";
+  std::string oeString = epa.toString();
+  BOOST_CHECK_EQUAL(reString, oeString);
+
+  // Bound, equidistant axis - directed at z
+  Acts::DirectedProtoAxis epab(AxisZ, Bound, 0.0, 1.0, 10);
+  BOOST_CHECK(epab.getAxisDirection() == AxisZ);
+  BOOST_CHECK(epab.getAxis().isEquidistant());
+  BOOST_CHECK(!epab.isAutorange());
+  std::string rString =
+      "DirectedProtoAxis: 10 bins in AxisZ, equidistant within [0, 1]";
+  std::string oString = epab.toString();
+  BOOST_CHECK_EQUAL(rString, oString);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
