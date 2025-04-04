@@ -119,8 +119,8 @@ double LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
   return 1.;
 }
 
-Vector3 LineSurface::binningPosition(const GeometryContext& gctx,
-                                     BinningValue /*bValue*/) const {
+Vector3 LineSurface::referencePosition(const GeometryContext& gctx,
+                                       AxisDirection /*aDir*/) const {
   return center(gctx);
 }
 
@@ -132,7 +132,7 @@ Vector3 LineSurface::normal(const GeometryContext& gctx, const Vector3& pos,
 
 const SurfaceBounds& LineSurface::bounds() const {
   if (m_bounds) {
-    return (*m_bounds.get());
+    return *m_bounds;
   }
   return s_noBounds;
 }

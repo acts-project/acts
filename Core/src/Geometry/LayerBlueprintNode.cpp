@@ -15,7 +15,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 
-namespace Acts {
+namespace Acts::Experimental {
 
 Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
@@ -52,23 +52,23 @@ Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
 void LayerBlueprintNode::buildVolume(const Extent& extent,
                                      const Logger& logger) {
   ACTS_VERBOSE(prefix() << "Building volume for layer " << name());
-  using enum BinningValue;
+  using enum AxisDirection;
   using enum LayerType;
 
   std::shared_ptr<VolumeBounds> bounds;
   switch (m_layerType) {
     case Cylinder:
     case Disc: {
-      double minR = extent.min(binR);
-      double maxR = extent.max(binR);
-      double hlZ = extent.interval(binZ) / 2.0;
+      double minR = extent.min(AxisR);
+      double maxR = extent.max(AxisR);
+      double hlZ = extent.interval(AxisZ) / 2.0;
       bounds = std::make_shared<CylinderVolumeBounds>(minR, maxR, hlZ);
       break;
     }
     case Plane: {
-      double hlX = extent.interval(binX) / 2.0;
-      double hlY = extent.interval(binY) / 2.0;
-      double hlZ = extent.interval(binZ) / 2.0;
+      double hlX = extent.interval(AxisX) / 2.0;
+      double hlY = extent.interval(AxisY) / 2.0;
+      double hlZ = extent.interval(AxisZ) / 2.0;
       bounds = std::make_shared<CuboidVolumeBounds>(hlX, hlY, hlZ);
       break;
     }
@@ -79,8 +79,18 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
   ACTS_VERBOSE(prefix() << " -> bounds: " << *bounds);
 
   Transform3 transform = m_transform;
-  transform.translation() =
-      Vector3{extent.medium(binX), extent.medium(binY), extent.medium(binZ)};
+  Vector3 translation = Vector3::Zero();
+  if (m_useCenterOfGravity.at(toUnderlying(AxisX))) {
+    translation.x() = extent.medium(AxisX);
+  }
+  if (m_useCenterOfGravity.at(toUnderlying(AxisY))) {
+    translation.y() = extent.medium(AxisY);
+  }
+  if (m_useCenterOfGravity.at(toUnderlying(AxisZ))) {
+    translation.z() = extent.medium(AxisZ);
+  }
+
+  transform.translation() = translation;
 
   ACTS_VERBOSE(prefix() << " -> adjusted transform:\n" << transform.matrix());
 
@@ -132,6 +142,12 @@ const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
   return m_layerType;
 }
 
+LayerBlueprintNode& LayerBlueprintNode::setUseCenterOfGravity(bool x, bool y,
+                                                              bool z) {
+  m_useCenterOfGravity = {x, y, z};
+  return *this;
+}
+
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
   ss << "<b>" << name() << "</b>";
@@ -146,4 +162,4 @@ void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   BlueprintNode::addToGraphviz(os);
 }
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

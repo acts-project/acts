@@ -17,7 +17,6 @@
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -38,15 +37,14 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 
-#include <cmath>
 #include <random>
 #include <string>
 
 namespace {
+
 using namespace Acts;
 using namespace ActsAlignment;
 using namespace Acts::Test;
@@ -93,7 +91,7 @@ struct TelescopeDetector {
   /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
-  TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
+  explicit TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)
       : geoContext(gctx) {
     // Construct the rotation
     rotation.col(0) = Acts::Vector3(0, 0, -1);
@@ -158,7 +156,7 @@ struct TelescopeDetector {
     // Create the layer array
     std::unique_ptr<const LayerArray> layArr(layArrCreator.layerArray(
         geoContext, layVec, positions.front() - 2._mm, positions.back() + 2._mm,
-        BinningType::arbitrary, BinningValue::binX));
+        BinningType::arbitrary, AxisDirection::AxisX));
 
     // Build the tracking volume
     auto trackVolume = std::make_shared<TrackingVolume>(
@@ -205,7 +203,7 @@ ConstantFieldPropagator makeConstantFieldPropagator(
 }
 
 // Construct initial track parameters.
-CurvilinearTrackParameters makeParameters() {
+BoundTrackParameters makeParameters() {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -226,8 +224,8 @@ CurvilinearTrackParameters makeParameters() {
   // define a track in the transverse plane along x
   Vector4 mPos4(-1_m, loc0, loc1, t);
 
-  return CurvilinearTrackParameters(mPos4, phi, theta, qOverP, cov,
-                                    ParticleHypothesis::pion());
+  return BoundTrackParameters::createCurvilinear(mPos4, phi, theta, qOverP, cov,
+                                                 ParticleHypothesis::pion());
 }
 
 // detector resolutions
@@ -241,7 +239,7 @@ struct KalmanFitterInputTrajectory {
   // The source links
   std::vector<TestSourceLink> sourceLinks;
   // The start parameters
-  std::optional<CurvilinearTrackParameters> startParameters;
+  std::optional<BoundTrackParameters> startParameters;
 };
 
 ///
@@ -373,7 +371,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Test the align method
   std::vector<std::vector<TestSourceLink>> trajCollection;
   trajCollection.reserve(10);
-  std::vector<CurvilinearTrackParameters> sParametersCollection;
+  std::vector<BoundTrackParameters> sParametersCollection;
   sParametersCollection.reserve(10);
   for (const auto& traj : trajectories) {
     trajCollection.push_back(traj.sourceLinks);

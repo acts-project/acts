@@ -7,9 +7,11 @@ import acts
 import acts.examples
 from acts.examples.simulation import (
     addPythia8,
-    addFatras,
     ParticleSelectorConfig,
+    addGenParticleSelection,
+    addFatras,
     addDigitization,
+    addDigiParticleSelection,
 )
 
 from acts.examples.reconstruction import (
@@ -204,20 +206,18 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         trackingGeometry,
         field,
-        preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta),
-            pt=(150 * u.MeV, None),
-        ),
-        postSelectParticles=ParticleSelectorConfig(
-            pt=(1.0 * u.GeV, None),
-            eta=(-eta, eta),
-            hits=(9, None),
-            removeNeutral=True,
-        ),
         enableInteractions=True,
         # outputDirRoot=outputDir,  # RootParticle ERROR when setting the outputDirRoot
         outputDirCsv=outputDir if saveFiles else None,
@@ -234,12 +234,22 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     import numpy as np
 
     cotThetaMax = 1 / (np.tan(2 * np.arctan(np.exp(-eta))))  # =1/tan(2×atan(e^(-eta)))
     seedFinderConfigArg = SeedFinderConfigArg(
         r=(None, 200 * u.mm),  # rMin=default, 33mm
-        deltaR=(1 * u.mm, 60 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
         collisionRegion=(-250 * u.mm, 250 * u.mm),
         z=(-2000 * u.mm, 2000 * u.mm),
         maxSeedsPerSpM=maxSeedsPerSpM,

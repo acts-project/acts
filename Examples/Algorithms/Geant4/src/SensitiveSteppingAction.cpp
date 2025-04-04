@@ -98,7 +98,7 @@ Acts::detail::Step stepFromG4Step(const G4Step* step) {
   auto [preStepPosition, preStepMomentum, postStepPosition, postStepMomentum] =
       kinematicsOfStep(step);
 
-  pStep.navDir = Acts::Direction::Forward;
+  pStep.navDir = Acts::Direction::Forward();
   pStep.position = 0.5 * (preStepPosition + postStepPosition).block<3, 1>(0, 0);
   pStep.momentum = 0.5 * (preStepMomentum + postStepMomentum).block<3, 1>(0, 0);
   pStep.nTotalTrials = 1;
@@ -218,7 +218,7 @@ void SensitiveSteppingAction::UserSteppingAction(const G4Step* step) {
       double zDirVtx = track->GetVertexMomentumDirection().z();
       double absMomentum = track->GetMomentum().mag() * convertEnergy;
 
-      PropagationSummary iSummary(Acts::CurvilinearTrackParameters(
+      PropagationSummary iSummary(Acts::BoundTrackParameters::createCurvilinear(
           Acts::Vector4(xVtx, yVtx, zVtx, 0.),
           Acts::Vector3(xDirVtx, yDirVtx, zDirVtx), absCharge / absMomentum,
           std::nullopt, Acts::ParticleHypothesis::pion()));

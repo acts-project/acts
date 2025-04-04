@@ -12,7 +12,7 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -36,8 +36,8 @@ class IGeometryIdGenerator;
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
-/// @note allowed BinningValue(s) for the cuboid container builder are
-/// {binX}, {binY}, {binZ}.
+/// @note allowed AxisDirection(s) for the cuboid container builder are
+/// {AxisX}, {AxisY}, {AxisZ}.
 ///
 /// @note Connecting containers isn't functional yet due to the underlying
 /// issues in the CuboidDetectorHelper
@@ -48,8 +48,8 @@ class CuboidalContainerBuilder : public IDetectorComponentBuilder {
   struct Config {
     /// The configured volume builders
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
-    /// Binning prescription of attachment
-    BinningValue binning{};
+    /// Axis direction for the binning
+    AxisDirection binning{};
     /// The root volume finder
     std::shared_ptr<const IRootVolumeFinderBuilder> rootVolumeFinderBuilder =
         nullptr;
@@ -65,10 +65,10 @@ class CuboidalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  CuboidalContainerBuilder(const Config& cfg,
-                           std::unique_ptr<const Logger> logger =
-                               getDefaultLogger("CuboidalContainerBuilder",
-                                                Logging::INFO));
+  explicit CuboidalContainerBuilder(
+      const Config& cfg,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("CuboidalContainerBuilder", Logging::INFO));
 
   /// Constructor from blueprint and logging level
   ///
@@ -84,8 +84,9 @@ class CuboidalContainerBuilder : public IDetectorComponentBuilder {
   /// @note that the naming of the builders is taken from the bluprint nodes
   ///
   /// @return a cylindrical container builder representing this blueprint
-  CuboidalContainerBuilder(const Acts::Experimental::Blueprint::Node& bpNode,
-                           Acts::Logging::Level logLevel = Acts::Logging::INFO);
+  explicit CuboidalContainerBuilder(
+      const Acts::Experimental::Gen2Blueprint::Node& bpNode,
+      Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
   /// The final implementation of the cylindrical container builder
   ///

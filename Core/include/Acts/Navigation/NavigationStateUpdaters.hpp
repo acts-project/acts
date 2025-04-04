@@ -14,7 +14,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -86,7 +86,7 @@ class SingleObjectNavigation : public navigation_type {
  public:
   /// Convenience constructor
   /// @param so the single object
-  SingleObjectNavigation(const object_type* so) : m_object(so) {
+  explicit SingleObjectNavigation(const object_type* so) : m_object(so) {
     if (so == nullptr) {
       throw std::invalid_argument("SingleObjectNavigation: object is nullptr");
     }
@@ -195,7 +195,7 @@ class IndexedGridNavigation : public navigation_type {
   grid_type grid;
 
   /// These are the cast parameters - copied from constructor
-  std::array<BinningValue, grid_type::DIM> casts{};
+  std::array<AxisDirection, grid_type::DIM> casts{};
 
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
@@ -205,7 +205,7 @@ class IndexedGridNavigation : public navigation_type {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   IndexedGridNavigation(grid_type&& igrid,
-                        const std::array<BinningValue, grid_type::DIM>& icasts,
+                        const std::array<AxisDirection, grid_type::DIM>& icasts,
                         const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
@@ -262,7 +262,7 @@ class ChainedNavigation : public navigation_type {
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedNavigation(const std::tuple<updators_t...>&& upts)
+  explicit ChainedNavigation(const std::tuple<updators_t...>&& upts)
       : updators(std::move(upts)) {}
 
   /// A combined navigation state updated to fill the candidates from

@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   LayerArrayCreator::Config lacConfig;
   LayerArrayCreator lac = LayerArrayCreator(lacConfig);
   auto layers = lac.layerArray(tContext, {pCylinderLayer}, rMin, rMid,
-                               arbitrary, BinningValue::binR);
+                               arbitrary, AxisDirection::AxisR);
 
   auto innerVolume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), vCylinderInner, nullptr, std::move(layers),
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   TrackingVolumeArrayCreator tvac = TrackingVolumeArrayCreator(tvacConfig);
 
   auto volumes = tvac.trackingVolumeArray(tContext, {innerVolume, outerVolume},
-                                          BinningValue::binR);
+                                          AxisDirection::AxisR);
 
   auto vCylinderTop = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 110.);
 
@@ -119,11 +119,11 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
 BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
   unsigned int volID = 1;
   auto assignGeoIds = [&volID](Experimental::DetectorVolume& dVol) -> void {
-    dVol.assignGeometryId(GeometryIdentifier().setVolume(volID));
+    dVol.assignGeometryId(GeometryIdentifier().withVolume(volID));
     unsigned int pID = 1;
     for (auto& p : dVol.portalPtrs()) {
       p->surface().assignGeometryId(
-          GeometryIdentifier().setVolume(volID).setBoundary(pID));
+          GeometryIdentifier().withVolume(volID).withBoundary(pID));
     }
     volID++;
   };
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
   auto pCylinderSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), pCylinder);
   pCylinderSurface->assignSurfaceMaterial(surfaceMaterial);
-  pCylinderSurface->assignGeometryId(GeometryIdentifier().setSensitive(1));
+  pCylinderSurface->assignGeometryId(GeometryIdentifier().withSensitive(1));
 
   auto layer0 = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Layer0", nominal, std::move(vCylinderL0),

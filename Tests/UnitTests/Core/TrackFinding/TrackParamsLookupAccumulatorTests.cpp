@@ -19,7 +19,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/TrackFinding/TrackParamsLookupAccumulator.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
@@ -43,13 +43,6 @@ using CellBound = std::pair<std::shared_ptr<Acts::BoundTrackParameters>,
 
 using GridBound = Acts::Grid<CellBound, Axis, Axis>;
 using AccBound = Acts::TrackParamsLookupAccumulator<GridBound>;
-
-using CellCurvilinear =
-    std::pair<std::shared_ptr<Acts::CurvilinearTrackParameters>,
-              std::shared_ptr<Acts::CurvilinearTrackParameters>>;
-
-using GridCurvilinear = Acts::Grid<CellCurvilinear, Axis, Axis>;
-using AccCurvilinear = Acts::TrackParamsLookupAccumulator<GridCurvilinear>;
 
 using CellFree = std::pair<std::shared_ptr<Acts::FreeTrackParameters>,
                            std::shared_ptr<Acts::FreeTrackParameters>>;
@@ -83,20 +76,20 @@ BOOST_AUTO_TEST_CASE(Exceptions) {
   auto hypothesis1 = Acts::ParticleHypothesis::electron();
   auto hypothesis2 = Acts::ParticleHypothesis::muon();
 
-  auto pars1 = Acts::BoundTrackParameters::create(surf1, gctx, pos, dir, 1. / P,
+  auto pars1 = Acts::BoundTrackParameters::create(gctx, surf1, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis1)
                    .value();
 
-  auto pars2 = Acts::BoundTrackParameters::create(surf2, gctx, pos, dir, 1. / P,
+  auto pars2 = Acts::BoundTrackParameters::create(gctx, surf2, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis1)
                    .value();
 
-  auto pars3 = Acts::BoundTrackParameters::create(surf1, gctx, pos, dir, 1. / P,
+  auto pars3 = Acts::BoundTrackParameters::create(gctx, surf1, pos, dir, 1. / P,
                                                   std::nullopt, hypothesis2)
                    .value();
 
   auto pars4 = Acts::BoundTrackParameters::create(
-                   surf1, gctx, pos, dir, -1. / P, std::nullopt, hypothesis2)
+                   gctx, surf1, pos, dir, -1. / P, std::nullopt, hypothesis2)
                    .value();
 
   // Get the point of the grid
@@ -121,9 +114,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
   // Instantiate grids
   GridBound gridBound(axisGen());
   AccBound accBound(gridBound);
-
-  GridCurvilinear gridCurvilinear(axisGen());
-  AccCurvilinear accCurvilinear(gridCurvilinear);
 
   GridFree gridFree(axisGen());
   AccFree accFree(gridFree);
@@ -171,18 +161,14 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
       // Fill in each grid
       auto parsBound = Acts::BoundTrackParameters::create(
-                           surf, gctx, fourPositions.at(j), direction, 1. / P,
+                           gctx, surf, fourPositions.at(j), direction, 1. / P,
                            std::nullopt, hypothesis)
                            .value();
-
-      auto parsCurvilinear = Acts::CurvilinearTrackParameters(
-          fourPositions.at(j), direction, 1. / P, std::nullopt, hypothesis);
 
       auto parsFree = Acts::FreeTrackParameters(
           fourPositions.at(j), direction, 1. / P, std::nullopt, hypothesis);
 
       accBound.addTrack(parsBound, parsBound, loc);
-      accCurvilinear.addTrack(parsCurvilinear, parsCurvilinear, loc);
       accFree.addTrack(parsFree, parsFree, loc);
     }
     avgPoss.push_back(avgPos / fourPositions.size());
@@ -191,11 +177,9 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
 
   // Finalize and compare
   GridBound avgGridBound = accBound.finalizeLookup();
-  GridCurvilinear avgGridCurvilinear = accCurvilinear.finalizeLookup();
   GridFree avgGridFree = accFree.finalizeLookup();
   for (std::size_t i = 0; i < avgGridBound.size(); i++) {
     auto [ipBound, refBound] = avgGridBound.at(i);
-    auto [ipCurvilinear, refCurvilinear] = avgGridCurvilinear.at(i);
     auto [ipFree, refFree] = avgGridFree.at(i);
 
     Acts::Vector4 avgPos = avgPoss.at(i);
@@ -207,10 +191,6 @@ BOOST_AUTO_TEST_CASE(Accumulation) {
     CHECK_CLOSE_ABS(ipBound->fourPosition(gctx), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipBound->direction(), avgDir, 1e-3);
     CHECK_CLOSE_ABS(ipBound->absoluteMomentum(), avgP, 1e-3);
-
-    CHECK_CLOSE_ABS(ipCurvilinear->fourPosition(), avgPos, 1e-3);
-    CHECK_CLOSE_ABS(ipCurvilinear->direction(), avgDir, 1e-3);
-    CHECK_CLOSE_ABS(ipCurvilinear->absoluteMomentum(), avgP, 1e-3);
 
     CHECK_CLOSE_ABS(ipFree->fourPosition(), avgPos, 1e-3);
     CHECK_CLOSE_ABS(ipFree->direction(), avgDir, 1e-3);

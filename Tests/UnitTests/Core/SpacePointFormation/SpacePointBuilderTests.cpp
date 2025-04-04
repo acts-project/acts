@@ -49,8 +49,8 @@ using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 
 /// Construct initial track parameters.
-CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
-                                          double q) {
+BoundTrackParameters makeParameters(double phi, double theta, double p,
+                                    double q) {
   // create covariance matrix from reasonable standard deviations
   BoundVector stddev;
   stddev[eBoundLoc0] = 100_um;
@@ -62,8 +62,8 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
-                                    ParticleHypothesis::pionLike(q));
+  return BoundTrackParameters::createCurvilinear(
+      mPos4, phi, theta, q / p, cov, ParticleHypothesis::pionLike(q));
 }
 
 std::pair<Vector3, Vector3> stripEnds(
@@ -107,11 +107,11 @@ const MeasurementResolution resPixel = {MeasurementType::eLoc01,
 const MeasurementResolution resStrip = {MeasurementType::eLoc01,
                                         {100_um, 100_um}};
 const MeasurementResolutionMap resolutions = {
-    {GeometryIdentifier().setVolume(2), resPixel},
-    {GeometryIdentifier().setVolume(3).setLayer(2), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(4), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(6), resStrip},
-    {GeometryIdentifier().setVolume(3).setLayer(8), resStrip},
+    {GeometryIdentifier().withVolume(2), resPixel},
+    {GeometryIdentifier().withVolume(3).withLayer(2), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(4), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(6), resStrip},
+    {GeometryIdentifier().withVolume(3).withLayer(8), resStrip},
 };
 
 std::default_random_engine rng(42);

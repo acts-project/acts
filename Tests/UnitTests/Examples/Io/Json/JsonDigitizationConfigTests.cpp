@@ -46,7 +46,7 @@ struct Fixture {
 
   Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
       : rng(rngSeed),
-        gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
+        gid(Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(
             3)),
         pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
         surface(std::move(surf)) {
@@ -157,9 +157,9 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
 
   Acts::BinUtility segmentation;
   segmentation +=
-      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::BinningValue::binX);
+      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::AxisDirection::AxisX);
   segmentation +=
-      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::BinningValue::binY);
+      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::AxisDirection::AxisY);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;

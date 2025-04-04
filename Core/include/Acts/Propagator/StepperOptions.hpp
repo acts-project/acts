@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+
 #include <functional>
 #include <limits>
 
@@ -33,6 +35,9 @@ struct StepperPlainOptions {
 
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
+
+  /// Initial step size
+  double initialStepSize = 10 * Acts::UnitConstants::m;
 
   /// Absolute maximum step size
   double maxStepSize = std::numeric_limits<double>::max();

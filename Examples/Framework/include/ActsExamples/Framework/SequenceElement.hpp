@@ -25,8 +25,11 @@ class SequenceElement {
  public:
   virtual ~SequenceElement() = default;
 
-  /// The algorithm name.
+  /// The sequence element name.
   virtual std::string name() const = 0;
+
+  /// The sequence element type name, used for debug output
+  virtual std::string_view typeName() const = 0;
 
   /// Initialize the algorithm
   virtual ProcessCode initialize() = 0;
@@ -45,11 +48,9 @@ class SequenceElement {
   void registerWriteHandle(const DataHandleBase& handle);
   void registerReadHandle(const DataHandleBase& handle);
 
-  template <typename T>
-  friend class WriteDataHandle;
+  friend class DataHandleBase;
 
-  template <typename T>
-  friend class ReadDataHandle;
+  friend class BufferedReader;
 
   std::vector<const DataHandleBase*> m_writeHandles;
   std::vector<const DataHandleBase*> m_readHandles;

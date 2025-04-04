@@ -85,40 +85,28 @@ struct CylinderVolumeStack::VolumeTuple {
 };
 
 CylinderVolumeStack::CylinderVolumeStack(std::vector<Volume*>& volumes,
-                                         BinningValue direction,
-                                         AttachmentStrategy strategy,
-                                         ResizeStrategy resizeStrategy,
+                                         AxisDirection direction,
+                                         VolumeAttachmentStrategy strategy,
+                                         VolumeResizeStrategy resizeStrategy,
                                          const Logger& logger)
-    : Volume(initialVolume(volumes)),
-      m_direction(direction),
-      m_resizeStrategy(resizeStrategy),
-      m_volumes(volumes) {
+    : VolumeStack(volumes, direction, resizeStrategy) {
   initializeOuterVolume(direction, strategy, logger);
 }
 
-Volume& CylinderVolumeStack::initialVolume(
-    const std::vector<Volume*>& volumes) {
-  if (volumes.empty()) {
-    throw std::invalid_argument(
-        "CylinderVolumeStack requires at least one volume");
-  }
-  return *volumes.front();
-}
-
-void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
-                                                AttachmentStrategy strategy,
-                                                const Logger& logger) {
+void CylinderVolumeStack::initializeOuterVolume(
+    AxisDirection direction, VolumeAttachmentStrategy strategy,
+    const Logger& logger) {
   ACTS_DEBUG("Creating CylinderVolumeStack from "
              << m_volumes.size() << " volumes in direction "
-             << binningValueName(direction));
+             << axisDirectionName(direction));
   if (m_volumes.empty()) {
     throw std::invalid_argument(
         "CylinderVolumeStack requires at least one volume");
   }
 
-  if (direction != Acts::BinningValue::binZ &&
-      direction != Acts::BinningValue::binR) {
-    throw std::invalid_argument(binningValueName(direction) +
+  if (direction != Acts::AxisDirection::AxisZ &&
+      direction != Acts::AxisDirection::AxisR) {
+    throw std::invalid_argument(axisDirectionName(direction) +
                                 " is not supported ");
   }
 
@@ -161,7 +149,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
   ACTS_VERBOSE("Checking volume alignment");
   checkVolumeAlignment(volumeTuples, logger);
 
-  if (direction == Acts::BinningValue::binZ) {
+  if (direction == Acts::AxisDirection::AxisZ) {
     ACTS_VERBOSE("Sorting by volume z position");
     std::ranges::sort(volumeTuples, {}, [](const auto& v) {
       return v.localTransform.translation()[eZ];
@@ -222,7 +210,7 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     // @TODO: We probably can reuse m_transform
     m_groupTransform = m_transform;
 
-  } else if (direction == Acts::BinningValue::binR) {
+  } else if (direction == Acts::AxisDirection::AxisR) {
     ACTS_VERBOSE("Sorting by volume r middle point");
     std::ranges::sort(volumeTuples, {}, [](const auto& v) { return v.midR(); });
 
@@ -280,15 +268,15 @@ void CylinderVolumeStack::initializeOuterVolume(BinningValue direction,
     m_groupTransform = m_transform;
 
   } else {
-    ACTS_ERROR("Binning in " << binningValueName(direction)
+    ACTS_ERROR("Binning in " << axisDirectionName(direction)
                              << " is not supported");
-    throw std::invalid_argument(binningValueName(direction) +
+    throw std::invalid_argument(axisDirectionName(direction) +
                                 " is not supported ");
   }
 }
 
 void CylinderVolumeStack::overlapPrint(
-    BinningValue direction, const CylinderVolumeStack::VolumeTuple& a,
+    AxisDirection direction, const CylinderVolumeStack::VolumeTuple& a,
     const CylinderVolumeStack::VolumeTuple& b, const Logger& logger) {
   if (logger().doPrint(Acts::Logging::DEBUG)) {
     std::stringstream ss;
@@ -299,36 +287,34 @@ void CylinderVolumeStack::overlapPrint(
     int w = 9;
 
     ACTS_VERBOSE("Checking overlap between");
-    if (direction == BinningValue::binZ) {
-      ss << " - "
-         << " z: [ " << std::setw(w) << a.minZ() << " <- " << std::setw(w)
-         << a.midZ() << " -> " << std::setw(w) << a.maxZ() << " ]";
+    if (direction == AxisDirection::AxisZ) {
+      ss << " - " << " z: [ " << std::setw(w) << a.minZ() << " <- "
+         << std::setw(w) << a.midZ() << " -> " << std::setw(w) << a.maxZ()
+         << " ]";
       ACTS_VERBOSE(ss.str());
 
       ss.str("");
-      ss << " - "
-         << " z: [ " << std::setw(w) << b.minZ() << " <- " << std::setw(w)
-         << b.midZ() << " -> " << std::setw(w) << b.maxZ() << " ]";
+      ss << " - " << " z: [ " << std::setw(w) << b.minZ() << " <- "
+         << std::setw(w) << b.midZ() << " -> " << std::setw(w) << b.maxZ()
+         << " ]";
       ACTS_VERBOSE(ss.str());
     } else {
-      ss << " - "
-         << " r: [ " << std::setw(w) << a.minR() << " <-> " << std::setw(w)
-         << a.maxR() << " ]";
+      ss << " - " << " r: [ " << std::setw(w) << a.minR() << " <-> "
+         << std::setw(w) << a.maxR() << " ]";
       ACTS_VERBOSE(ss.str());
 
       ss.str("");
-      ss << " - "
-         << " r: [ " << std::setw(w) << b.minR() << " <-> " << std::setw(w)
-         << b.maxR() << " ]";
+      ss << " - " << " r: [ " << std::setw(w) << b.minR() << " <-> "
+         << std::setw(w) << b.maxR() << " ]";
       ACTS_VERBOSE(ss.str());
     }
   }
 }
 
 std::vector<CylinderVolumeStack::VolumeTuple>
-CylinderVolumeStack::checkOverlapAndAttachInZ(
-    std::vector<VolumeTuple>& volumes,
-    CylinderVolumeStack::AttachmentStrategy strategy, const Logger& logger) {
+CylinderVolumeStack::checkOverlapAndAttachInZ(std::vector<VolumeTuple>& volumes,
+                                              VolumeAttachmentStrategy strategy,
+                                              const Logger& logger) {
   // Preconditions: volumes are sorted by z
   std::vector<VolumeTuple> gapVolumes;
   for (std::size_t i = 0; i < volumes.size() - 1; i++) {
@@ -336,7 +322,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(BinningValue::binZ, a, b, logger);
+    overlapPrint(AxisDirection::AxisZ, a, b, logger);
 
     if (a.maxZ() > b.minZ()) {
       ACTS_ERROR(" -> Overlap in z");
@@ -354,7 +340,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
 
       ACTS_VERBOSE("Synchronizing bounds in z with strategy: " << strategy);
       switch (strategy) {
-        case AttachmentStrategy::Midpoint: {
+        case VolumeAttachmentStrategy::Midpoint: {
           ACTS_VERBOSE(" -> Strategy: Expand both volumes to midpoint");
 
           double aZMidNew = (a.minZ() + a.maxZ()) / 2.0 + gapWidth / 4.0;
@@ -389,7 +375,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
 
           break;
         }
-        case AttachmentStrategy::First: {
+        case VolumeAttachmentStrategy::First: {
           ACTS_VERBOSE(" -> Strategy: Expand first volume");
           double aZMidNew = (a.minZ() + b.minZ()) / 2.0;
           double aHlZNew = (b.minZ() - a.minZ()) / 2.0;
@@ -408,7 +394,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
 
           break;
         }
-        case AttachmentStrategy::Second: {
+        case VolumeAttachmentStrategy::Second: {
           ACTS_VERBOSE(" -> Strategy: Expand second volume");
           double bZMidNew = (a.maxZ() + b.maxZ()) / 2.0;
           double bHlZNew = (b.maxZ() - a.maxZ()) / 2.0;
@@ -426,7 +412,7 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
           b.updatedBounds->set(CylinderVolumeBounds::eHalfLengthZ, bHlZNew);
           break;
         }
-        case AttachmentStrategy::Gap: {
+        case VolumeAttachmentStrategy::Gap: {
           ACTS_VERBOSE(" -> Strategy: Create a gap volume");
           double gapHlZ = (b.minZ() - a.maxZ()) / 2.0;
           double gapMidZ = (b.minZ() + a.maxZ()) / 2.0;
@@ -461,16 +447,16 @@ CylinderVolumeStack::checkOverlapAndAttachInZ(
 }
 
 std::vector<CylinderVolumeStack::VolumeTuple>
-CylinderVolumeStack::checkOverlapAndAttachInR(
-    std::vector<VolumeTuple>& volumes,
-    CylinderVolumeStack::AttachmentStrategy strategy, const Logger& logger) {
+CylinderVolumeStack::checkOverlapAndAttachInR(std::vector<VolumeTuple>& volumes,
+                                              VolumeAttachmentStrategy strategy,
+                                              const Logger& logger) {
   std::vector<VolumeTuple> gapVolumes;
   for (std::size_t i = 0; i < volumes.size() - 1; i++) {
     std::size_t j = i + 1;
     auto& a = volumes.at(i);
     auto& b = volumes.at(j);
 
-    overlapPrint(BinningValue::binR, a, b, logger);
+    overlapPrint(AxisDirection::AxisR, a, b, logger);
 
     if (a.maxR() > b.minR()) {
       ACTS_ERROR(" -> Overlap in r");
@@ -488,7 +474,7 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
 
       ACTS_VERBOSE("Synchronizing bounds in r with strategy: " << strategy);
       switch (strategy) {
-        case AttachmentStrategy::Midpoint: {
+        case VolumeAttachmentStrategy::Midpoint: {
           ACTS_VERBOSE(" -> Strategy: Expand both volumes to midpoint");
 
           a.set({{CylinderVolumeBounds::eMaxR, a.maxR() + gapWidth / 2.0}});
@@ -496,21 +482,21 @@ CylinderVolumeStack::checkOverlapAndAttachInR(
 
           break;
         }
-        case AttachmentStrategy::First: {
+        case VolumeAttachmentStrategy::First: {
           ACTS_VERBOSE(" -> Strategy: Expand first volume");
 
           a.set({{CylinderVolumeBounds::eMaxR, b.minR()}});
 
           break;
         }
-        case AttachmentStrategy::Second: {
+        case VolumeAttachmentStrategy::Second: {
           ACTS_VERBOSE(" -> Strategy: Expand second volume");
 
           b.set({{CylinderVolumeBounds::eMinR, a.maxR()}});
 
           break;
         }
-        case AttachmentStrategy::Gap: {
+        case VolumeAttachmentStrategy::Gap: {
           ACTS_VERBOSE(" -> Strategy: Create a gap volume");
 
           auto gapBounds = std::make_shared<CylinderVolumeBounds>(
@@ -758,7 +744,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
         m_gaps, [&](const auto& gap) { return vol == gap.get(); });
   };
 
-  if (m_direction == BinningValue::binZ) {
+  if (m_direction == AxisDirection::AxisZ) {
     ACTS_VERBOSE("Stack direction is z");
 
     std::vector<VolumeTuple> volumeTuples;
@@ -789,7 +775,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
     if (same(newHlZ, oldHlZ)) {
       ACTS_VERBOSE("Halflength z is the same, no z resize needed");
     } else {
-      if (m_resizeStrategy == ResizeStrategy::Expand) {
+      if (m_resizeStrategy == VolumeResizeStrategy::Expand) {
         if (newMinZ < oldMinZ) {
           ACTS_VERBOSE("Expanding first volume to new z bounds");
 
@@ -823,7 +809,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
           last.setLocalTransform(Transform3{Translation3{0, 0, newMidZLast}},
                                  m_groupTransform);
         }
-      } else if (m_resizeStrategy == ResizeStrategy::Gap) {
+      } else if (m_resizeStrategy == VolumeResizeStrategy::Gap) {
         ACTS_VERBOSE("Creating gap volumes to fill the new z bounds");
 
         auto printGapDimensions = [&](const VolumeTuple& gap,
@@ -920,7 +906,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
       m_volumes.push_back(vt.volume);
     }
 
-  } else if (m_direction == BinningValue::binR) {
+  } else if (m_direction == AxisDirection::AxisR) {
     ACTS_VERBOSE("Stack direction is r");
 
     std::vector<VolumeTuple> volumeTuples;
@@ -948,7 +934,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
     if (oldMinR == newMinR && oldMaxR == newMaxR) {
       ACTS_VERBOSE("Radii are the same, no r resize needed");
     } else {
-      if (m_resizeStrategy == ResizeStrategy::Expand) {
+      if (m_resizeStrategy == VolumeResizeStrategy::Expand) {
         if (oldMinR > newMinR) {
           // expand innermost volume
           auto& first = volumeTuples.front();
@@ -971,7 +957,7 @@ void CylinderVolumeStack::update(std::shared_ptr<VolumeBounds> volbounds,
                                    << last.minR() << " <-> " << last.maxR()
                                    << " ]");
         }
-      } else if (m_resizeStrategy == ResizeStrategy::Gap) {
+      } else if (m_resizeStrategy == VolumeResizeStrategy::Gap) {
         auto printGapDimensions = [&](const VolumeTuple& gap,
                                       const std::string& prefix = "") {
           ACTS_VERBOSE(" -> gap" << prefix << ": [ " << gap.minZ() << " <- "
@@ -1079,49 +1065,6 @@ void CylinderVolumeStack::checkNoPhiOrBevel(const CylinderVolumeBounds& bounds,
         "CylinderVolumeStack requires all volumes to have a bevel angle of "
         "0");
   }
-}
-
-std::shared_ptr<Volume> CylinderVolumeStack::addGapVolume(
-    const Transform3& transform, const std::shared_ptr<VolumeBounds>& bounds) {
-  auto gapVolume = std::make_shared<Volume>(transform, bounds);
-  m_gaps.push_back(gapVolume);
-  return gapVolume;
-}
-
-const std::vector<std::shared_ptr<Volume>>& CylinderVolumeStack::gaps() const {
-  return m_gaps;
-}
-
-std::ostream& operator<<(std::ostream& os,
-                         CylinderVolumeStack::AttachmentStrategy strategy) {
-  switch (strategy) {
-    case CylinderVolumeStack::AttachmentStrategy::First:
-      os << "First";
-      break;
-    case CylinderVolumeStack::AttachmentStrategy::Second:
-      os << "Second";
-      break;
-    case CylinderVolumeStack::AttachmentStrategy::Midpoint:
-      os << "Midpoint";
-      break;
-    case CylinderVolumeStack::AttachmentStrategy::Gap:
-      os << "Gap";
-      break;
-  }
-  return os;
-}
-
-std::ostream& operator<<(std::ostream& os,
-                         CylinderVolumeStack::ResizeStrategy strategy) {
-  switch (strategy) {
-    case CylinderVolumeStack::ResizeStrategy::Expand:
-      os << "Expand";
-      break;
-    case CylinderVolumeStack::ResizeStrategy::Gap:
-      os << "Gap";
-      break;
-  }
-  return os;
 }
 
 }  // namespace Acts
