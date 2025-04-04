@@ -308,7 +308,7 @@ std::tuple<ClusterContainer, MeasurementContainer,
            std::unordered_map<int, std::size_t>>
 RootAthenaDumpReader::readMeasurements(
     SimParticleContainer& particles, const Acts::GeometryContext& gctx) const {
-  ClusterContainer clusters(nCL);
+  ClusterContainer clusters;
   clusters.reserve(nCL);
 
   MeasurementContainer measurements;
