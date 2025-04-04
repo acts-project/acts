@@ -18,7 +18,7 @@ namespace ActsExamples {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public Detector {
+class AlignedDetector : public GenericDetector {
  public:
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
