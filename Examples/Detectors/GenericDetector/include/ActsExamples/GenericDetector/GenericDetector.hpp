@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DetectorCommons/Detector.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
 #include <memory>
@@ -36,6 +37,14 @@ class GenericDetector : public Detector {
   };
 
   explicit GenericDetector(const Config& cfg);
+
+ protected:
+  struct NoBuildTag {};
+  explicit GenericDetector(const Config& cfg, NoBuildTag /*tag*/);
+
+  void buildTrackingGeometry(
+      const Generic::ProtoLayerCreator::DetectorElementFactory&
+          detectorElementFactory);
 
  private:
   Config m_cfg;
