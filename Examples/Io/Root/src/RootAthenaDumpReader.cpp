@@ -78,8 +78,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacepoints) {
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputClusters.initialize(m_cfg.outputClusters);
     if (!m_cfg.noTruth) {
-      m_outputClusters.initialize(m_cfg.outputClusters);
       m_outputParticles.initialize(m_cfg.outputParticles);
       m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
       m_outputParticleMeasMap.initialize(m_cfg.outputParticleMeasurementsMap);
@@ -294,6 +294,7 @@ RootAthenaDumpReader::readMeasurements(
 
   // We cannot use im for the index since we might skip measurements
   std::unordered_map<int, std::size_t> imIdxMap;
+  imIdxMap.reserve(nCL);
 
   for (int im = 0; im < nCL; im++) {
     if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
@@ -306,8 +307,6 @@ RootAthenaDumpReader::readMeasurements(
 
     // Make cluster
     // TODO refactor Cluster class so it is not so tedious
-    Cluster cluster;
-
     const auto& etas = CLetas->at(im);
     const auto& phis = CLetas->at(im);
     const auto& tots = CLtots->at(im);
@@ -317,30 +316,40 @@ RootAthenaDumpReader::readMeasurements(
     const auto [minEta, maxEta] = std::minmax_element(etas.begin(), etas.end());
     const auto [minPhi, maxPhi] = std::minmax_element(phis.begin(), phis.end());
 
-    cluster.sizeLoc0 = *maxEta - *minEta;
-    cluster.sizeLoc1 = *maxPhi - *minPhi;
+    Cluster cluster;
+    if (m_cfg.readCellData) {
+      cluster.channels.reserve(etas.size());
 
-    if (totalTot == 0.0) {
-      ACTS_VERBOSE("total time over threshold is 0, set all activations to 0");
-      nTotalTotZero++;
-    }
+      cluster.sizeLoc0 = *maxEta - *minEta;
+      cluster.sizeLoc1 = *maxPhi - *minPhi;
 
-    for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
-      // Make best out of what we have:
-      // Weight the overall collected charge corresponding to the
-      // time-over-threshold of each cell Use this as activation (does this make
-      // sense?)
-      auto activation =
-          (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
+      if (totalTot == 0.0) {
+        ACTS_VERBOSE(
+            "total time over threshold is 0, set all activations to 0");
+        nTotalTotZero++;
+      }
 
-      // This bases every cluster at zero, but shouldn't matter right now
-      ActsFatras::Segmentizer::Bin2D bin;
-      bin[0] = eta - *minEta;
-      bin[1] = phi - *minPhi;
+      for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
+        // Make best out of what we have:
+        // Weight the overall collected charge corresponding to the
+        // time-over-threshold of each cell Use this as activation (does this
+        // make sense?)
+        auto activation =
+            (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
 
-      // Of course we have no Segment2D because this is not Fatras
-      cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
-                                    activation);
+        // This bases every cluster at zero, but shouldn't matter right now
+        ActsFatras::Segmentizer::Bin2D bin;
+        bin[0] = eta - *minEta;
+        bin[1] = phi - *minPhi;
+
+        // Of course we have no Segment2D because this is not Fatras
+        cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
+                                      activation);
+      }
+
+      ACTS_VERBOSE("- shape: " << cluster.channels.size()
+                               << "cells, dimensions: " << cluster.sizeLoc0
+                               << ", " << cluster.sizeLoc1);
     }
 
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
@@ -356,16 +365,7 @@ RootAthenaDumpReader::readMeasurements(
     cluster.etaAngle = CLeta_angle[im];
     cluster.phiAngle = CLphi_angle[im];
 
-    ACTS_VERBOSE("CL shape: " << cluster.channels.size()
-                              << "cells, dimensions: " << cluster.sizeLoc0
-                              << ", " << cluster.sizeLoc1);
-
-    clusters[im] = cluster;
-
     // Measurement creation
-    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", "
-                                << CLloc_direction2[im] << ", "
-                                << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
     Acts::GeometryIdentifier geoId;
@@ -402,8 +402,8 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      const double tol = (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
-      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
+      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {},
+                                        Acts::s_onSurfaceTolerance);
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
@@ -437,8 +437,10 @@ RootAthenaDumpReader::readMeasurements(
     }
 
     std::size_t measIndex = measurements.size();
+    ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
+    clusters.push_back(cluster);
 
     if (!m_cfg.noTruth) {
       // Create measurement particles map and particles container
@@ -474,7 +476,8 @@ RootAthenaDumpReader::readMeasurements(
                              << " clusters have zero time-over-threshold");
   }
 
-  return {clusters, measurements, measPartMap, imIdxMap};
+  return {std::move(clusters), std::move(measurements), std::move(measPartMap),
+          std::move(imIdxMap)};
 }
 
 std::tuple<SimSpacePointContainer, SimSpacePointContainer,
@@ -621,7 +624,8 @@ RootAthenaDumpReader::readSpacepoints(
   ACTS_DEBUG("Created " << stripSpacePoints.size() << " "
                         << " strip space points");
 
-  return {spacePoints, pixelSpacePoints, stripSpacePoints};
+  return {std::move(spacePoints), std::move(pixelSpacePoints),
+          std::move(stripSpacePoints)};
 }
 
 std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
@@ -631,6 +635,7 @@ RootAthenaDumpReader::reprocessParticles(
   std::vector<ActsExamples::SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
+  newMeasPartMap.reserve(measPartMap.size());
 
   const auto partMeasMap = invertIndexMultimap(measPartMap);
 
@@ -677,7 +682,7 @@ RootAthenaDumpReader::reprocessParticles(
 
   ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of "
                                              << particles.size() << " remain");
-  return {particleVectorToSet(newParticles), newMeasPartMap};
+  return {particleVectorToSet(newParticles), std::move(newMeasPartMap)};
 }
 
 ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
