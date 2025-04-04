@@ -79,6 +79,9 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
 
+echo "OLDSTATE IS:"
+echo "$oldstate"
+echo "END OF OLDSTATE"
 eval "$oldstate"
 echo "State AFTER our setup:"
 set +o
