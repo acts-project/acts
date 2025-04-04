@@ -47,10 +47,6 @@ using namespace ActsExamples;
 using namespace Acts;
 using namespace Acts::Python;
 
-namespace Acts::Python {
-void addGeant4HepMC3(Context& ctx);
-}
-
 struct ExperimentalSensitiveCandidates
     : public Geant4::SensitiveCandidatesBase {
   std::shared_ptr<const Experimental::Detector> detector;
@@ -346,6 +342,4 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = mod;
-
-  addGeant4HepMC3(ctx);
 }
