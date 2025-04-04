@@ -39,7 +39,7 @@ SurfaceArrayNavigationPolicy::SurfaceArrayNavigationPolicy(
 
   ACTS_VERBOSE("Number of surfaces passed to the surface array creation: "
                << surfaces.size());
-  if (surfaces.size() == 0) {
+  if (surfaces.empty()) {
     ACTS_ERROR("The number of surfaces is 0!");
     throw std::runtime_error("Cannot create surface array with zero surfaces");
   }
