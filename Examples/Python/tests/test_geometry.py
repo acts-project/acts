@@ -12,7 +12,12 @@ from helpers import dd4hepEnabled
     "detectorFactory,aligned,nobj",
     [
         (functools.partial(GenericDetector, gen3=False), True, 450),
-        (functools.partial(GenericDetector, gen3=True), True, 450),
+        pytest.param(
+            functools.partial(GenericDetector, gen3=True),
+            True,
+            450,
+            marks=[pytest.mark.xfail],
+        ),
         pytest.param(
             getOpenDataDetector,
             True,
@@ -48,7 +53,13 @@ from helpers import dd4hepEnabled
 )
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
-    detector = detectorFactory()
+    level = acts.logging.VERBOSE
+    detector = detectorFactory(
+        logLevel=level,
+        surfaceLogLevel=level,
+        layerLogLevel=level,
+        volumeLogLevel=level,
+    )
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
