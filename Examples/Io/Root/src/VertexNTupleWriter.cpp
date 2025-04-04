@@ -224,7 +224,8 @@ VertexNTupleWriter::VertexNTupleWriter(const VertexNTupleWriter::Config& config,
   m_inputTruthVertices.initialize(m_cfg.inputTruthVertices);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputSelectedParticles.initialize(m_cfg.inputSelectedParticles);
-  m_inputTrackParticleMatching.maybeInitialize(m_cfg.inputTrackParticleMatching);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
 
   if (m_cfg.writeTrackInfo && !m_inputTracks.isInitialized()) {
     throw std::invalid_argument("Missing input tracks collection");
