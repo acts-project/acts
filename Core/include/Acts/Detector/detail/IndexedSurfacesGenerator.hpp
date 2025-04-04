@@ -24,7 +24,7 @@ namespace Acts::detail::IndexedSurfacesGenerator {
 /// @param gctx the geometry context
 /// @param surfaces the surfaces to be indexed
 /// @param rGenerator the reference generator
-/// @param pAxis the proto axis
+/// @param pAxis the proto axis (directed)
 /// @param pFillExpansion the fill expansion
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
@@ -33,7 +33,7 @@ template <template <typename> class indexed_updator, typename surface_container,
           typename reference_generator>
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const reference_generator& rGenerator, const ProtoAxis& pAxis,
+    const reference_generator& rGenerator, const DirectedProtoAxis& pAxis,
     std::size_t pFillExpansion, const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axis create the grid
@@ -75,9 +75,9 @@ Experimental::InternalNavigationDelegate createInternalNavigation(
 /// @param gctx the geometry context
 /// @param surfaces the surfaces to be indexed
 /// @param rGenerator the reference generator
-/// @param pAxisA the first proto axis
+/// @param pAxisA the first proto axis (directed)
 /// @param fillExpansionA the fill expansion of the first axis
-/// @param pAxisB the second proto axis
+/// @param pAxisB the second proto axis (directed)
 /// @param fillExpansionB the fill expansion of the second axis
 /// @param assignToAll the indices assigned to all bins
 /// @param transform the transform into the local binning schema
@@ -87,8 +87,8 @@ template <template <typename> class indexed_updator, typename surface_container,
           typename reference_generator>
 Experimental::InternalNavigationDelegate createInternalNavigation(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const reference_generator& rGenerator, const ProtoAxis& pAxisA,
-    std::size_t fillExpansionA, const ProtoAxis& pAxisB,
+    const reference_generator& rGenerator, const DirectedProtoAxis& pAxisA,
+    std::size_t fillExpansionA, const DirectedProtoAxis& pAxisB,
     std::size_t fillExpansionB, const std::vector<std::size_t> assignToAll = {},
     const Transform3 transform = Transform3::Identity()) {
   // Let the axes create the grid

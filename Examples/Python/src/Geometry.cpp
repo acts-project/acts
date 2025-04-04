@@ -463,15 +463,12 @@ void addExperimentalGeometry(Context& ctx) {
   {
     // Be able to construct a proto binning
     py::class_<ProtoAxis>(m, "ProtoAxis")
-        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
-                      const std::vector<double>&>(),
-             "bValue"_a, "bType"_a, "e"_a)
-        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, double,
-                      double, std::size_t>(),
-             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
-        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
-                      std::size_t>(),
-             "bValue"_a, "bType"_a, "nbins"_a);
+        .def(py::init<Acts::AxisBoundaryType, const std::vector<double>&>(),
+             "bType"_a, "e"_a)
+        .def(py::init<Acts::AxisBoundaryType, double, double, std::size_t>(),
+             "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
+        .def(py::init<Acts::AxisBoundaryType, std::size_t>(), "bType"_a,
+             "nbins"_a);
   }
 
   {

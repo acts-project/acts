@@ -37,7 +37,7 @@ class MultiWireInternalStructureBuilder
     std::vector<std::shared_ptr<Acts::Surface>> iSurfaces;
 
     /// Definition of Binning
-    std::vector<std::tuple<Acts::ProtoAxis, std::size_t>> binning;
+    std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>> binning;
 
     /// Extra information, mainly for screen output
     std::string auxiliary = "";

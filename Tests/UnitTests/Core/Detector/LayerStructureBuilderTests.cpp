@@ -68,8 +68,9 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {
-      {ProtoAxis(Acts::AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
-                 -std::numbers::pi, std::numbers::pi, 22u),
+      {DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
+                         Acts::AxisBoundaryType::Closed, -std::numbers::pi,
+                         std::numbers::pi, 22u),
        1u}};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
@@ -188,12 +189,12 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {
-      {Acts::ProtoAxis{Acts::AxisDirection::AxisZ,
-                       Acts::AxisBoundaryType::Bound, -480., 480., 14u},
+      {Acts::DirectedProtoAxis{Acts::AxisDirection::AxisZ,
+                               Acts::AxisBoundaryType::Bound, -480., 480., 14u},
        1u},
-      {Acts::ProtoAxis(Acts::AxisDirection::AxisPhi,
-                       Acts::AxisBoundaryType::Closed, -std::numbers::pi,
-                       std::numbers::pi, 32u),
+      {Acts::DirectedProtoAxis(Acts::AxisDirection::AxisPhi,
+                               Acts::AxisBoundaryType::Closed,
+                               -std::numbers::pi, std::numbers::pi, 32u),
        1u}};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(

@@ -195,7 +195,7 @@ Acts::GeoModelBlueprintCreater::createNode(
   std::string entryType = entryTypeSplit[0u];
 
   // Check if material has to be attached
-  std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning;
+  std::map<unsigned int, std::vector<DirectedProtoAxis>> portalMaterialBinning;
   if (!entry.materials.empty()) {
     for (const auto& material : entry.materials) {
       std::vector<std::string> materialTokens;
@@ -211,14 +211,14 @@ Acts::GeoModelBlueprintCreater::createNode(
         std::vector<std::string> binningTokens;
         boost::split(binningTokens, materialTokens[1u], boost::is_any_of(";"));
 
-        std::vector<ProtoAxis> protoBinnings;
+        std::vector<DirectedProtoAxis> protoBinnings;
         for (const auto& bToken : binningTokens) {
           ACTS_VERBOSE("   - Binning: " << bToken);
-          protoBinnings.push_back(std::get<ProtoAxis>(
-              detail::GeoModelBinningHelper::toProtoAxis(bToken)));
+          auto [dpAxis, nB] =
+              detail::GeoModelBinningHelper::toProtoAxis(bToken, extent);
+          protoBinnings.push_back(dpAxis);
         }
-        portalMaterialBinning[portalNumber] =
-            std::vector<ProtoAxis>{protoBinnings};
+        portalMaterialBinning[portalNumber] = protoBinnings;
       }
     }
     ACTS_VERBOSE("Node " << entry.name << " has "
