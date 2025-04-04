@@ -96,6 +96,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("event_number", &event_number);
   m_inputchain->SetBranchAddress("nSE", &nSE);
   m_inputchain->SetBranchAddress("SEID", SEID);
+
+  // Cluster features
   m_inputchain->SetBranchAddress("nCL", &nCL);
   m_inputchain->SetBranchAddress("CLindex", CLindex);
   m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
@@ -138,6 +140,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
   }
 
+  // Particle features
   if (!m_cfg.noTruth) {
     m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
     m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
@@ -163,6 +166,7 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
   }
 
+  // Spacepoint features
   m_inputchain->SetBranchAddress("nSP", &nSP);
   m_inputchain->SetBranchAddress("SPindex", SPindex);
   m_inputchain->SetBranchAddress("SPx", SPx);
@@ -171,7 +175,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index);
   m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index);
   m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap);
-
   if (m_haveStripFeatures) {
     m_inputchain->SetBranchAddress("SPradius", SPradius);
     m_inputchain->SetBranchAddress("SPcovr", SPcovr);
