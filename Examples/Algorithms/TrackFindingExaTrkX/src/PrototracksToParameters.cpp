@@ -123,12 +123,14 @@ ProcessCode PrototracksToParameters::execute(
     }
 
     // Make the seed
+    auto result =
+        track | std::views::filter([&](auto i) {
+          return i < indexToSpacepoint.size() &&
+                 indexToSpacepoint.at(i) != nullptr;
+        }) |
+        std::views::transform([&](auto i) { return indexToSpacepoint.at(i); });
     tmpSps.clear();
-    std::transform(track.begin(), track.end(), std::back_inserter(tmpSps),
-                   [&](auto i) { return indexToSpacepoint[i]; });
-    tmpSps.erase(std::remove_if(tmpSps.begin(), tmpSps.end(),
-                                [](auto sp) { return sp == nullptr; }),
-                 tmpSps.end());
+    std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
       ACTS_WARNING("Could not find all spacepoints, skip");
