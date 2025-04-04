@@ -56,7 +56,8 @@ void addVertexing(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HoughVertexFinderAlgorithm, mex,
                                 "HoughVertexFinderAlgorithm", inputSpacepoints,
-                                outputVertices);
+                                outputVertices, targetSPs, minAbsEta, maxAbsEta, 
+                                minHits, defVtxPosition);
 }
 
 }  // namespace Acts::Python

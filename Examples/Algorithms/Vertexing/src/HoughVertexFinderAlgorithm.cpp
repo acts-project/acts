@@ -39,6 +39,11 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
   const std::vector<SimSpacePoint>& inputSpacepoints = m_inputSpacepoints(ctx);
 
   Acts::HoughVertexFinder<SimSpacePoint>::Config houghVtxCfg;
+  houghVtxCfg.targetSPs = m_cfg.targetSPs;
+  houghVtxCfg.minAbsEta = m_cfg.minAbsEta;
+  houghVtxCfg.maxAbsEta = m_cfg.maxAbsEta;
+  houghVtxCfg.minHits = m_cfg.minHits;
+  houghVtxCfg.defVtxPosition = m_cfg.defVtxPosition;
   Acts::HoughVertexFinder<SimSpacePoint> HoughVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time

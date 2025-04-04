@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -32,9 +33,11 @@ namespace Acts {
 /// @class HoughVertexFinder
 ///
 /// @brief Implements the vertex finder based on the spacepoints using Hough transform
+/// For more information, see arXiv:2410.14494
 /// 0. Assumes there is only 1 vertex and that it has a high multiplicity
 /// 1. Estimates what eta range is really necessary
-/// 2. Creates Hough space from spacepoints within that eta range
+/// 2. Creates Hough space (z_vtx - cot(theta)) from spacepoints within that eta
+/// range
 /// 3. Subtracts the coincidentally crossed lines in the Hough space
 /// 4. Makes a projection to the Z axis and finds a peak - that is the vertex
 /// position
@@ -52,7 +55,7 @@ class HoughVertexFinder {
     /// Minimum and maximum ranges in |eta|; the |eta| will not be
     /// set outside these bounds even if targetSPs is not reached
     float minAbsEta = 0.3f;
-    float maxAbsEta = 3.0f;
+    float maxAbsEta = 4.0f;
 
     /// Minimum number of hits in Hough plane to consider
     /// the cell to contain a track
@@ -62,29 +65,39 @@ class HoughVertexFinder {
     /// to fill in the cot(theta) direction
     std::uint32_t fillNeighbours = 0;
 
-    /// Approximate amount of measurements in the |eta| range expressed
+    /// The algorithm dynamically choose |eta| range necessary to
+    /// have a reasonable precision, based on the distribution
+    /// of the measurements.
+    /// The first |eta| range starts at 0., the others start at
+    /// the endpoint of the previous range.
+    std::vector<float> absEtaRanges{2.f, 4.f};
+    /// The amount of measurements in the |eta| range expressed
     /// as a fraction of all measurements within the whole |eta| range.
     /// Measurements are assumed to be distributed uniformly with
-    /// the |eta| range. The first |eta| range starts at 0., the others
-    /// start at the endpoint of the previous range.
-    std::vector<float> absEtaRanges{2., 4.};
-    std::vector<float> absEtaFractions{0.4, 0.6};
+    /// the |eta| range.
+    std::vector<float> absEtaFractions{0.4f, 0.6f};
 
-    /// Iterations along Z axis. The algorithm may reduce the range
-    /// in Z (to reduce time) and increase the number of bins in Z (to achieve
-    /// more precise result).
+    /// The algorithm starts peak searching considering wide range
+    /// in Z and then iteratively constrain itself to narrower ranges
+    /// around previously found peak. At the same time it may adapt
+    /// other Hough-image parameters in each step.
     std::vector<float> rangeIterZ{200.f * UnitConstants::mm,
                                   30.f * UnitConstants::mm,
                                   16.f * UnitConstants::mm};
+    /// Number of bins along z-axis of the Hough image for each iteration
     std::vector<std::uint32_t> nBinsZIterZ{800, 180, 80};
+    /// Number of bins along cot(theta)-axis of the Hough image for
+    /// each iteration
     std::vector<std::uint32_t> nBinsCotThetaIterZ{8000, 8000, 8000};
 
-    /// For every magnitude (in natural logarithm) below targetSPs, the number
-    /// of bins in cot(theta) will decrease by this factor. Thus, the actual
+    /// If the actual number of measurements is below "targetSPs", then
+    /// the number of bins along cot(theta)-axis decreases. Thus, the actual
     /// number of bins can be smaller than stated in "nBinsCotThetaIterZ".
+    /// For every magnitude (in natural logarithm) below targetSPs, the number
+    /// of bins in cot(theta) will decrease by this factor.
     float binsCotThetaDecrease = 1.35f;
 
-    /// Width of the peak used for more precise z-position estimate
+    /// Width of the peak when estimating vertex position
     std::uint32_t peakWidth = 3;
 
     /// Default position of the vertex in X, Y, and Z coordinates
@@ -103,8 +116,9 @@ class HoughVertexFinder {
       std::unique_ptr<const Logger> lgr = getDefaultLogger("HoughVertexFinder",
                                                            Logging::INFO));
 
+  using HoughCount_t = std::uint16_t;
   using HoughAxis = Axis<AxisType::Equidistant, AxisBoundaryType::Open>;
-  using HoughHist = Grid<std::uint32_t, HoughAxis, HoughAxis>;
+  using HoughHist = Grid<HoughCount_t, HoughAxis, HoughAxis>;
 
   /// @brief Finds the vertex based on the provided spacepoints
   /// @param spacepoints Vector of the input spacepoints; they do not need to be sorted anyhow
@@ -133,11 +147,10 @@ class HoughVertexFinder {
   /// @brief Finds the peak in the Z axis projection of the Hough space
   /// @param houghZProjection Hough space projection after the cleaning procedure
   /// @param vtxZPositions Bins position in the Hough space projection
-  /// @param numZBins Number of bins in the Hough space projection
   /// @return Position of the peak
   Acts::Result<float> findHoughPeak(
       const std::vector<std::uint32_t>& houghZProjection,
-      const std::vector<float>& vtxZPositions, std::uint32_t numZBins) const;
+      const std::vector<float>& vtxZPositions) const;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;

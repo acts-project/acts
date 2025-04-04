@@ -27,6 +27,14 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
     std::string inputSpacepoints;
     /// Output vertex collection
     std::string outputVertices;
+
+    /// Configuration for the HoughVertexFinder
+    /// See HoughVertexFinder.hpp for description
+    std::uint32_t targetSPs = 10000;
+    float minAbsEta = 0.3f;
+    float maxAbsEta = 4.0f;
+    std::uint32_t minHits = 4;
+    Acts::Vector3 defVtxPosition{0.f, 0.f, 0.f};
   };
 
   HoughVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
@@ -35,7 +43,7 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
