@@ -74,6 +74,10 @@ class SurfaceArrayNavigationPolicy : public INavigationPolicy {
     return os;
   }
 
+  /// Const reference access to the layer array
+  /// @return The surface array
+  const SurfaceArray& surfaceArray() const;
+
  private:
   std::unique_ptr<SurfaceArray> m_surfaceArray{};
   const TrackingVolume& m_volume;
