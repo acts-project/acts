@@ -32,8 +32,8 @@ class DetecorElementBase;
 namespace ActsExamples::Generic {
 
 struct ProtoLayerSurfaces {
-  Acts::ProtoLayer protoLayer;
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  Acts::MutableProtoLayer protoLayer;
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   std::size_t bins0;
   std::size_t bins1;
 };
