@@ -215,7 +215,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       // 1D surface binning
       if (binnings.size() == 1) {
         ACTS_DEBUG("- creating a 1D internal binning and portal navigation");
-        auto [protoAxis, fillExpansion] = binnings.at(0);
+        const auto& [protoAxis, fillExpansion] = binnings.at(0);
         internalCandidatesUpdater =
             Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
                 Experimental::IndexedSurfacesNavigation>(
@@ -223,8 +223,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
                 assignToAll);
       } else if (binnings.size() == 2u) {
         ACTS_DEBUG("- creating a 2D internal binning and portal navigation");
-        auto [protoAxisA, fillExpansionA] = binnings.at(0);
-        auto [protoAxisB, fillExpansionB] = binnings.at(1);
+        const auto& [protoAxisA, fillExpansionA] = binnings.at(0);
+        const auto& [protoAxisB, fillExpansionB] = binnings.at(1);
         internalCandidatesUpdater =
             Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
                 Experimental::IndexedSurfacesNavigation>(
