@@ -25,7 +25,7 @@ AlignedDetector::AlignedDetector(const Config& cfg)
     : Detector(Acts::getDefaultLogger("AlignedDetector", cfg.logLevel)),
       m_cfg(cfg) {
   if (m_cfg.mode == Config::Mode::External) {
-    InternallyAlignedDetectorElement::ContextType nominalContext;
+    ExternallyAlignedDetectorElement::ContextType nominalContext;
     m_nominalGeometryContext = Acts::GeometryContext(nominalContext);
   } else {
     InternallyAlignedDetectorElement::ContextType nominalContext;
