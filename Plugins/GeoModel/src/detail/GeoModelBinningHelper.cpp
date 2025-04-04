@@ -12,7 +12,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-std::tuple<Acts::ProtoAxis, Acts::AxisDirection, std::size_t>
+std::tuple<Acts::DirectedProtoAxis, std::size_t>
 Acts::detail::GeoModelBinningHelper::toProtoAxis(
     const std::string& binning, const std::optional<Extent>& extent) {
   std::vector<std::string> binningTokens;
@@ -74,7 +74,8 @@ Acts::detail::GeoModelBinningHelper::toProtoAxis(
           "GeoModelBinningHelper: Range maximum is not defined.");
     }
   }
-  auto pAxis = autoRange ? ProtoAxis(boundaryType, nBins)
-                         : ProtoAxis(boundaryType, rangeMin, rangeMax, nBins);
-  return {pAxis, axisDir, nExpansion};
+  auto pAxis = autoRange ? DirectedProtoAxis(axisDir, boundaryType, nBins)
+                         : DirectedProtoAxis(axisDir, boundaryType, rangeMin,
+                                             rangeMax, nBins);
+  return {pAxis, nExpansion};
 }

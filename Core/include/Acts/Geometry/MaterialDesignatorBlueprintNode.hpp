@@ -26,10 +26,10 @@ namespace Acts::Experimental {
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  using CylinderBinning = std::tuple<CylinderVolumeBounds::Face, ProtoAxis,
-                                     AxisDirection, ProtoAxis, AxisDirection>;
-  using CuboidBinning = std::tuple<CuboidVolumeBounds::Face, ProtoAxis,
-                                   AxisDirection, ProtoAxis, AxisDirection>;
+  using CylinderBinning = std::tuple<CylinderVolumeBounds::Face,
+                                     DirectedProtoAxis, DirectedProtoAxis>;
+  using CuboidBinning = std::tuple<CuboidVolumeBounds::Face, DirectedProtoAxis,
+                                   DirectedProtoAxis>;
 
   using BinningConfig =
       std::variant<std::vector<CylinderBinning>, std::vector<CuboidBinning>>;
@@ -83,32 +83,26 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cylinder to configure
   /// @param loc0 The first binning configuration along local axis 0
-  /// @param aDir0 The direction of the first binning configuration
-  /// @param loc1 The second binning configuration along local axis 1
-  /// @param aDir1 The direction of the second binning configuration
+  /// @param loc1 The first binning configuration along local axis 1
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(
-      CylinderVolumeBounds::Face face, const ProtoAxis& loc0,
-      AxisDirection aDir0, const ProtoAxis& loc1, AxisDirection aDir1);
+      CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+      const DirectedProtoAxis& loc1);
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cuboid to configure
   /// @param loc0 The first binning configuration along local axis 0
-  /// @param aDir0 The direction of the first binning configuration
   /// @param loc1 The second binning configuration along local axis 1
-  /// @param aDir1 The direction of the second binning configuration
   /// @return The material designator node
   /// @note If this node has previously been configured with a different volume
   ///       shape, this will throw an exception.
   MaterialDesignatorBlueprintNode& configureFace(CuboidVolumeBounds::Face face,
-                                                 const ProtoAxis& loc0,
-                                                 AxisDirection aDir0,
-                                                 const ProtoAxis& loc1,
-                                                 AxisDirection aDir1);
+                                                 const DirectedProtoAxis& loc0,
+                                                 const DirectedProtoAxis& loc1);
 
  private:
   /// @copydoc BlueprintNode::addToGraphviz

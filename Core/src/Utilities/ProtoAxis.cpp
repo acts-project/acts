@@ -120,11 +120,43 @@ std::ostream& Acts::operator<<(std::ostream& os,
   return os;
 }
 
-// Ostream operation implementation for directed proto axis
-std::ostream& Acts::operator<<(std::ostream& os, const DirectedProtoAxis& a) {
-  const auto& [axis, aDir] = a;
-  os << axis.toString() << ", direction: " << axisDirectionName(aDir) << '\n';
-  return os;
+Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                           AxisBoundaryType abType,
+                                           const std::vector<double>& edges)
+    : ProtoAxis(abType, edges), m_direction(axisDir) {}
+
+Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                           AxisBoundaryType abType, double minE,
+                                           double maxE, std::size_t nbins)
+    : ProtoAxis(abType, minE, maxE, nbins), m_direction(axisDir) {}
+
+Acts::DirectedProtoAxis::DirectedProtoAxis(AxisDirection axisDir,
+                                           AxisBoundaryType abType,
+                                           std::size_t nbins)
+    : ProtoAxis(abType, nbins), m_direction(axisDir) {}
+
+Acts::AxisDirection Acts::DirectedProtoAxis::getAxisDirection() const {
+  return m_direction;
+}
+
+void Acts::DirectedProtoAxis::toStream(std::ostream& os) const {
+  os << toString();
+}
+
+std::string Acts::DirectedProtoAxis::toString() const {
+  std::stringstream ss;
+  const auto& axis = getAxis();
+  ss << "DirectedProtoAxis: " << axis.getNBins() << " bins in "
+     << axisDirectionName(m_direction);
+  ss << (axis.getType() == AxisType::Variable ? ", variable "
+                                              : ", equidistant ");
+  if (!m_autorange) {
+    const auto& edges = axis.getBinEdges();
+    ss << "within [" << edges.front() << ", " << edges.back() << "]";
+  } else {
+    ss << "within automatic range";
+  }
+  return ss.str();
 }
 
 // Ostream operator implementation vector of directed proto axes

@@ -67,15 +67,18 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     const auto& extent = fCache.sExtent.value();
     // Check if the binning
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
-    for (auto& [b, axisDir, bExp] : fCache.binnings) {
-      if (extent.constrains(axisDir)) {
-        ACTS_VERBOSE("Binning '" << axisDirectionName(axisDir)
+    for (auto& [dpAxis, bExp] : fCache.binnings) {
+      if (extent.constrains(dpAxis.getAxisDirection())) {
+        ACTS_VERBOSE("Binning '" << axisDirectionName(dpAxis.getAxisDirection())
                                  << "' is patched.");
-        ACTS_VERBOSE(" <- from : [" << b.getAxis().getBinEdges().front() << ", "
-                                    << b.getAxis().getBinEdges().back() << "]");
-        b.setRange(extent.min(axisDir), extent.max(axisDir));
-        ACTS_VERBOSE(" -> to   : [" << b.getAxis().getBinEdges().front() << ", "
-                                    << b.getAxis().getBinEdges().back() << "]");
+        ACTS_VERBOSE(" <- from : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
+        dpAxis.setRange(extent.min(dpAxis.getAxisDirection()),
+                        extent.max(dpAxis.getAxisDirection()));
+        ACTS_VERBOSE(" -> to   : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
       }
     }
   }

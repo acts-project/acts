@@ -20,14 +20,14 @@ Acts::Experimental::detail::ProtoMaterialHelper::attachProtoMaterial(
   std::vector<DirectedProtoAxis> fbDescription;
   // Measure the surface
   Extent sExtent = surface.polyhedronRepresentation(gctx, 1).extent();
-  for (const auto& [b, aDir] : bDescription) {
-    ProtoAxis fAxis(b);
+  for (const auto& dpAxis : bDescription) {
+    DirectedProtoAxis fAxis(dpAxis);
     // Check if the binning needs to be fixed
     if (fAxis.isAutorange()) {
-      auto range = sExtent.range(aDir);
+      auto range = sExtent.range(dpAxis.getAxisDirection());
       fAxis.setRange(range.min(), range.max());
     }
-    fbDescription.emplace_back(fAxis, aDir);
+    fbDescription.emplace_back(fAxis);
   }
   // Create the new proto material description and assign it
   auto protoMaterial =

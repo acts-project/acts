@@ -94,7 +94,7 @@ void MaterialDesignatorBlueprintNode::handleCylinderBinning(
   ACTS_DEBUG(prefix() << "Binning is set to compatible type");
   using enum CylinderVolumeBounds::Face;
 
-  for (const auto& [face, loc0, aDir0, loc1, aDir1] : binning) {
+  for (const auto& [face, loc0, loc1] : binning) {
     auto* portal = cylShell.portal(face);
     if (portal == nullptr) {
       ACTS_ERROR(prefix() << "Portal is nullptr");
@@ -105,7 +105,7 @@ void MaterialDesignatorBlueprintNode::handleCylinderBinning(
                         << loc1 << " to face " << face);
     portal->surface().assignSurfaceMaterial(
         std::make_shared<ProtoGridSurfaceMaterial>(
-            std::vector<DirectedProtoAxis>{{loc0, aDir0}, {loc1, aDir1}}));
+            std::vector<DirectedProtoAxis>{loc0, loc1}));
   }
 }
 
@@ -135,7 +135,7 @@ void MaterialDesignatorBlueprintNode::handleCuboidBinning(
   ACTS_DEBUG(prefix() << "Binning is set to compatible type");
   using enum CuboidVolumeBounds::Face;
 
-  for (const auto& [face, loc0, aDir0, loc1, aDir1] : binning) {
+  for (const auto& [face, loc0, loc1] : binning) {
     auto* portal = cuboidShell.portal(face);
     if (portal == nullptr) {
       ACTS_ERROR(prefix() << "Portal is nullptr");
@@ -147,7 +147,7 @@ void MaterialDesignatorBlueprintNode::handleCuboidBinning(
 
     portal->surface().assignSurfaceMaterial(
         std::make_shared<ProtoGridSurfaceMaterial>(
-            std::vector<DirectedProtoAxis>{{loc0, aDir0}, {loc1, aDir1}}));
+            std::vector<DirectedProtoAxis>{loc0, loc1}));
   }
 }
 
@@ -227,59 +227,62 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
   ss << "" + name() + "";
   ss << "<br/><i>MaterialDesignator</i>";
 
-  std::visit(
-      overloaded{
-          [&](const std::vector<CylinderBinning>& binning) {
-            ss << "<br/><i>Cylinder Binning</i>";
-            for (const auto& [face, loc0, aDir0, loc1, aDir1] : binning) {
-              ss << "<br/>" << face;
-              ss << ": " << aDir0 << "=" << loc0.getAxis().getNBins();
-              ss << ", " << aDir1 << "=" << loc1.getAxis().getNBins();
-            }
-          },
-          [&](const std::vector<CuboidBinning>& binning) {
-            ss << "<br/><i>Cuboid Binning</i>";
-            for (const auto& [face, loc0, aDir0, loc1, aDir1] : binning) {
-              ss << "<br/>" << face;
-              ss << ": " << aDir0 << "=" << loc0.getAxis().getNBins();
-              ss << ", " << aDir1 << "=" << loc1.getAxis().getNBins();
-            }
-          },
-          [](const auto& /*binning*/) {
-            // No output in all other cases
-          }},
-      m_binning.value());
+  std::visit(overloaded{[&](const std::vector<CylinderBinning>& binning) {
+                          ss << "<br/><i>Cylinder Binning</i>";
+                          for (const auto& [face, loc0, loc1] : binning) {
+                            ss << "<br/>" << face;
+                            ss << ": " << loc0.getAxisDirection() << "="
+                               << loc0.getAxis().getNBins();
+                            ss << ", " << loc1.getAxisDirection() << "="
+                               << loc1.getAxis().getNBins();
+                          }
+                        },
+                        [&](const std::vector<CuboidBinning>& binning) {
+                          ss << "<br/><i>Cuboid Binning</i>";
+                          for (const auto& [face, loc0, loc1] : binning) {
+                            ss << "<br/>" << face;
+                            ss << ": " << loc0.getAxisDirection() << "="
+                               << loc0.getAxis().getNBins();
+                            ss << ", " << loc1.getAxisDirection() << "="
+                               << loc1.getAxis().getNBins();
+                          }
+                        },
+                        [](const auto& /*binning*/) {
+                          // No output in all other cases
+                        }},
+             m_binning.value());
   os << GraphViz::Node{
       .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Hexagon};
   BlueprintNode::addToGraphviz(os);
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CylinderVolumeBounds::Face face, const ProtoAxis& loc0, AxisDirection aDir0,
-    const ProtoAxis& loc1, AxisDirection aDir1) {
-  validateCylinderFaceConfig(face, aDir0, aDir1);
+    CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+    const DirectedProtoAxis& loc1) {
+  validateCylinderFaceConfig(face, loc0.getAxisDirection(),
+                             loc1.getAxisDirection());
 
   if (!m_binning.has_value()) {
     m_binning = std::vector<CylinderBinning>{};
   }
 
   auto& binning = std::get<std::vector<CylinderBinning>>(m_binning.value());
-  binning.emplace_back(face, loc0, aDir0, loc1, aDir1);
+  binning.emplace_back(face, loc0, loc1);
 
   return *this;
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
-    CuboidVolumeBounds::Face face, const ProtoAxis& loc0, AxisDirection aDir0,
-    const ProtoAxis& loc1, AxisDirection aDir1) {
-  validateCuboidFaceConfig(aDir0, aDir1);
+    CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
+    const DirectedProtoAxis& loc1) {
+  validateCuboidFaceConfig(loc0.getAxisDirection(), loc1.getAxisDirection());
 
   if (!m_binning.has_value()) {
     m_binning = std::vector<CuboidBinning>{};
   }
 
   auto& binning = std::get<std::vector<CuboidBinning>>(m_binning.value());
-  binning.emplace_back(face, loc0, aDir0, loc1, aDir1);
+  binning.emplace_back(face, loc0, loc1);
 
   return *this;
 }

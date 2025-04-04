@@ -406,23 +406,22 @@ void addBlueprint(Context& ctx) {
       },
       py::arg("name"), py::arg("direction"));
 
-  auto matNode =
-      py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
-                 std::shared_ptr<MaterialDesignatorBlueprintNode>>(
-          m, "MaterialDesignatorBlueprintNode")
-          .def(py::init<const std::string&>(), "name"_a)
-          .def(
-              "configureFace",
-              py::overload_cast<CylinderVolumeBounds::Face, const ProtoAxis&,
-                                AxisDirection, const ProtoAxis&, AxisDirection>(
-                  &MaterialDesignatorBlueprintNode::configureFace),
-              "face"_a, "loc0"_a, "aDir0"_a, "loc1"_a, "aDir1"_a)
-          .def(
-              "configureFace",
-              py::overload_cast<CuboidVolumeBounds::Face, const ProtoAxis&,
-                                AxisDirection, const ProtoAxis&, AxisDirection>(
-                  &MaterialDesignatorBlueprintNode::configureFace),
-              "face"_a, "loc0"_a, "aDir0"_a, "loc1"_a, "aDir1"_a);
+  auto matNode = py::class_<MaterialDesignatorBlueprintNode, BlueprintNode,
+                            std::shared_ptr<MaterialDesignatorBlueprintNode>>(
+                     m, "MaterialDesignatorBlueprintNode")
+                     .def(py::init<const std::string&>(), "name"_a)
+                     .def("configureFace",
+                          py::overload_cast<CylinderVolumeBounds::Face,
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a)
+                     .def("configureFace",
+                          py::overload_cast<CuboidVolumeBounds::Face,
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
+                              &MaterialDesignatorBlueprintNode::configureFace),
+                          "face"_a, "loc0"_a, "loc1"_a);
 
   addContextManagerProtocol(matNode);
 

@@ -430,8 +430,8 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   using enum AxisBoundaryType;
 
   // Bound, equidistant axis
-  ProtoAxis epab(Bound, 0.0, 1.0, 10);
-  BinningData bEpab(epab, AxisX);
+  DirectedProtoAxis epab(AxisX, Bound, 0.0, 1.0, 10);
+  BinningData bEpab(epab);
 
   BOOST_CHECK_EQUAL(bEpab.bins(), std::size_t{10});
   BOOST_CHECK_EQUAL(bEpab.min, 0.);
@@ -441,16 +441,16 @@ BOOST_AUTO_TEST_CASE(BinningData_from_ProtoAxis) {
   BOOST_CHECK(bEpab.type == equidistant);
 
   // Bound, equidistant axis, autorange
-  ProtoAxis epa(Bound, 10);
-  BinningData bEpa(epa, AxisY);
+  DirectedProtoAxis epa(AxisY, Bound, 10);
+  BinningData bEpa(epa);
   BOOST_CHECK(bEpa.binvalue == AxisY);
   BOOST_CHECK_EQUAL(bEpa.bins(), std::size_t{10});
   BOOST_CHECK(bEpa.option == open);
   BOOST_CHECK(bEpa.type == equidistant);
 
   // Bound, equidistant axis
-  ProtoAxis vpab(Bound, {0.0, 1.0, 10});
-  BinningData bVpab(vpab, AxisZ);
+  DirectedProtoAxis vpab(AxisZ, Bound, {0.0, 1.0, 10});
+  BinningData bVpab(vpab);
   BOOST_CHECK(bVpab.binvalue == AxisZ);
   BOOST_CHECK_EQUAL(bVpab.bins(), std::size_t{2});
   BOOST_CHECK(bVpab.option == open);

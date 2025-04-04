@@ -272,9 +272,9 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
     using enum CylinderVolumeBounds::Face;
 
     // Configure cylinder faces with proper binning
-    mat.configureFace(OuterCylinder, {Bound, 20}, AxisRPhi, {Bound, 20}, AxisZ);
-    mat.configureFace(NegativeDisc, {Bound, 15}, AxisR, {Bound, 25}, AxisPhi);
-    mat.configureFace(PositiveDisc, {Bound, 15}, AxisR, {Bound, 25}, AxisPhi);
+    mat.configureFace(OuterCylinder, {AxisRPhi, Bound, 20}, {AxisZ, Bound, 20});
+    mat.configureFace(NegativeDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
+    mat.configureFace(PositiveDisc, {AxisR, Bound, 15}, {AxisPhi, Bound, 25});
 
     mat.addCylinderContainer("Detector", AxisDirection::AxisR, [&](auto& det) {
       det.addCylinderContainer("Pixel", AxisDirection::AxisZ, [&](auto& cyl) {
@@ -422,12 +422,12 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
     using enum CuboidVolumeBounds::Face;
 
     // Configure valid axis combinations for each face type
-    mat.configureFace(NegativeXFace, {Bound, 20}, AxisX, {Bound, 20}, AxisY);
-    mat.configureFace(PositiveXFace, {Bound, 20}, AxisX, {Bound, 20}, AxisY);
-    mat.configureFace(NegativeYFace, {Bound, 15}, AxisX, {Bound, 25}, AxisY);
-    mat.configureFace(PositiveYFace, {Bound, 15}, AxisX, {Bound, 25}, AxisY);
-    mat.configureFace(NegativeZFace, {Bound, 15}, AxisX, {Bound, 25}, AxisY);
-    mat.configureFace(PositiveZFace, {Bound, 15}, AxisX, {Bound, 25}, AxisY);
+    mat.configureFace(NegativeXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
+    mat.configureFace(PositiveXFace, {AxisX, Bound, 20}, {AxisY, Bound, 20});
+    mat.configureFace(NegativeYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(PositiveYFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(NegativeZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
+    mat.configureFace(PositiveZFace, {AxisX, Bound, 15}, {AxisY, Bound, 25});
 
     mat.addStaticVolume(
         base, std::make_shared<CuboidVolumeBounds>(100_mm, 100_mm, 100_mm),

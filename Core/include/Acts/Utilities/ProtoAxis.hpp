@@ -62,6 +62,8 @@ class ProtoAxis {
   ProtoAxis(ProtoAxis&&) = default;
   ProtoAxis& operator=(ProtoAxis&&) = default;
 
+  ~ProtoAxis() = default;
+
   /// @brief Return the IAxis representation
   ///
   /// @return @c AxisType of this axis
@@ -104,6 +106,7 @@ class ProtoAxis {
   /// @param os output stream
   void toStream(std::ostream& os) const;
 
+ protected:
   /// The axis representation
   std::unique_ptr<IAxis> m_axis = nullptr;
 
@@ -159,11 +162,66 @@ std::unique_ptr<IGrid> makeGrid(const ProtoAxis& a, const ProtoAxis& b) {
   });
 }
 
-using DirectedProtoAxis = std::tuple<ProtoAxis, AxisDirection>;
+/// A Directed proto axis
+struct DirectedProtoAxis : public ProtoAxis {
+ public:
+  /// Convenience constructors - for variable binning
+  ///
+  /// @param axisDir the axis direction
+  /// @param abType the axis boundary type
+  /// @param edges the bin edges (variable binning)
+  DirectedProtoAxis(AxisDirection axisDir, AxisBoundaryType abType,
+                    const std::vector<double>& edges);
+
+  /// Convenience constructors - for equidistant binning
+  ///
+  /// @param axisDir the axis direction
+  /// @param abType the axis boundary type
+  /// @param minE the lowest edge of the binning
+  /// @param maxE the highest edge of the binning
+  /// @param nbins the number of bins
+  DirectedProtoAxis(AxisDirection axisDir, AxisBoundaryType abType, double minE,
+                    double maxE, std::size_t nbins);
+
+  /// Placeholder constructor for auto-range binning
+  ///
+  /// @param axisDir the axis direction
+  /// @param abType the axis boundary type
+  /// @param nbins the number of bins
+  ///
+  /// @note that auto-range is only supported for equidistant binning
+  DirectedProtoAxis(AxisDirection axisDir, AxisBoundaryType abType,
+                    std::size_t nbins);
+
+  virtual ~DirectedProtoAxis() = default;
+
+  /// Access to the AxisDirection
+  /// @return the axis direction
+  AxisDirection getAxisDirection() const;
+
+  /// Dump into a string
+  /// @return the string representation
+  std::string toString() const;
+
+ private:
+  /// @brief Hidden friend ostream operator
+  /// @param os the output stream
+  /// @param a the proto axis
+  /// @return the streamed into operator
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const DirectedProtoAxis& a) {
+    os << a.toString();
+    return os;
+  }
+
+  /// Dispatch to the correct stream operator
+  /// @param os output stream
+  void toStream(std::ostream& os) const;
+
+  AxisDirection m_direction;
+};
 
 std::ostream& operator<<(std::ostream& os, const std::vector<ProtoAxis>& a);
-
-std::ostream& operator<<(std::ostream& os, const DirectedProtoAxis& a);
 
 std::ostream& operator<<(std::ostream& os,
                          const std::vector<DirectedProtoAxis>& a);

@@ -10,11 +10,11 @@
 
 #include <numbers>
 
-std::vector<std::tuple<Acts::ProtoAxis, Acts::AxisDirection, std::size_t>>
+std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>>
 Acts::DD4hepBinningHelpers::convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
   // Return proto binning vector
-  std::vector<std::tuple<ProtoAxis, AxisDirection, std::size_t>> protoBinnings;
+  std::vector<std::tuple<DirectedProtoAxis, std::size_t>> protoBinnings;
 
   for (const auto &[ab, axisDir] : allowedBinnings) {
     auto type =
@@ -34,9 +34,8 @@ Acts::DD4hepBinningHelpers::convertBinning(
       // Equidistant binning
       if (aType == AxisType::Equidistant) {
         if (autoRange) {
-          protoBinnings.emplace_back(
-              std::tuple<ProtoAxis, AxisDirection, std::size_t>{
-                  ProtoAxis(bType, nBins), axisDir, nExpansion});
+          protoBinnings.emplace_back(DirectedProtoAxis(axisDir, bType, nBins),
+                                     nExpansion);
         } else {
           // Equidistant binning
           double minDefault =
@@ -53,8 +52,7 @@ Acts::DD4hepBinningHelpers::convertBinning(
             bType = Acts::AxisBoundaryType::Closed;
           }
           protoBinnings.emplace_back(
-              std::tuple<ProtoAxis, AxisDirection, std::size_t>{
-                  ProtoAxis(bType, min, max, nBins), axisDir, nExpansion});
+              DirectedProtoAxis(axisDir, bType, min, max, nBins), nExpansion);
         }
       } else {
         // Variable binning
@@ -68,9 +66,8 @@ Acts::DD4hepBinningHelpers::convertBinning(
             (edges.back() - edges.front()) > 1.9 * std::numbers::pi) {
           bType = Acts::AxisBoundaryType::Closed;
         }
-        protoBinnings.emplace_back(
-            std::tuple<ProtoAxis, AxisDirection, std::size_t>{
-                ProtoAxis(bType, edges), axisDir, nExpansion});
+        protoBinnings.emplace_back(DirectedProtoAxis(axisDir, bType, edges),
+                                   nExpansion);
       }
     }
   }

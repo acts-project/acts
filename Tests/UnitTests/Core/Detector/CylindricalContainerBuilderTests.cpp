@@ -129,11 +129,10 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.binning = {AxisDirection::AxisZ};
   tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
   // Create a materialBinning
-  tripleZCfg.portalMaterialBinning[2u] = std::vector<DirectedProtoAxis>{
-      {ProtoAxis(Acts::AxisBoundaryType::Bound, 50), AxisDirection::AxisZ},
-      {ProtoAxis(Acts::AxisBoundaryType::Closed, -std::numbers::pi,
-                 std::numbers::pi, 12),
-       AxisDirection::AxisPhi}};
+  tripleZCfg.portalMaterialBinning[2u] = {
+      DirectedProtoAxis(AxisDirection::AxisZ, AxisBoundaryType::Bound, 50),
+      DirectedProtoAxis(AxisDirection::AxisPhi, Acts::AxisBoundaryType::Closed,
+                        -std::numbers::pi, std::numbers::pi, 12)};
 
   // Let's test the reverse generation
   tripleZCfg.geoIdReverseGen = true;
