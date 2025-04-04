@@ -12,6 +12,7 @@
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
@@ -320,10 +321,13 @@ std::unique_ptr<const Acts::TrackingGeometry>
 Gen3GenericDetectorBuilder::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
   using enum Acts::AxisDirection;
+  using namespace Acts::UnitLiterals;
+  using namespace Acts::Experimental;
+
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
 
-  using namespace Acts::Experimental;
   Blueprint::Config cfg;
+  cfg.envelope = Acts::ExtentEnvelope{{.x = {5_mm, 5_mm}}};
   Blueprint root{cfg};
 
   // @TODO: Add beampipe passive layer
@@ -332,7 +336,7 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   ProtoLayerCreator pplCreator = createPixelProtoLayerCreator();
 
   root.addCylinderContainer("Pixel", AxisZ, [&](auto& pixel) {
-    pixel.addCylinderContainer("Pixel_Barrel", AxisZ, [&](auto& barrel) {
+    pixel.addCylinderContainer("Pixel_Barrel", AxisR, [&](auto& barrel) {
       auto protoLayerSurfaces = pplCreator.centralProtoLayers(gctx);
       ACTS_INFO("Adding " << protoLayerSurfaces.size()
                           << " central proto layers to "
@@ -345,11 +349,46 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
             "Pixel_Barrel_L" + std::to_string(idx), [&](auto& layer) {
               ACTS_VERBOSE("Adding layer " << layer.name());
               layer.setProtoLayer(pl);
+              // @TODO: Configure navigation policy from bins
 
               ACTS_VERBOSE(
                   "-> Number of surfaces: " << layer.surfaces().size());
             });
       }
+
+      pixel.addCylinderContainer("Pixel_nEC", AxisZ, [&](auto& endcap) {
+        auto protoLayerSurfaces = pplCreator.negativeProtoLayers(gctx);
+        ACTS_INFO("Adding " << protoLayerSurfaces.size()
+                            << " negative proto layers to "
+                            << "Pixel_nEC");
+        for (const auto& [idx, temp] :
+
+             Acts::enumerate(protoLayerSurfaces)) {
+          auto& [pl, surfaces, bins0, bins1] = temp;
+          endcap.addLayer("Pixel_nEC_L" + std::to_string(idx),
+                          [&](auto& layer) {
+                            // @TODO: Configure navigation policy from bins
+                            ACTS_VERBOSE("Adding layer " << layer.name());
+                            layer.setProtoLayer(pl);
+                          });
+        }
+      });
+
+      pixel.addCylinderContainer("Pixel_pEC", AxisZ, [&](auto& endcap) {
+        auto protoLayerSurfaces = pplCreator.positiveProtoLayers(gctx);
+        ACTS_INFO("Adding " << protoLayerSurfaces.size()
+                            << " positive proto layers to "
+                            << "Pixel_pEC");
+        for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+          auto& [pl, surfaces, bins0, bins1] = temp;
+          endcap.addLayer("Pixel_pEC_L" + std::to_string(idx),
+                          [&](auto& layer) {
+                            // @TODO: Configure navigation policy from bins
+                            ACTS_VERBOSE("Adding layer " << layer.name());
+                            layer.setProtoLayer(pl);
+                          });
+        }
+      });
     });
   });
 
@@ -357,7 +396,10 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   // @TODO: Add Short Strip
   // @TODO: Add Long Strip
 
-  return nullptr;
+  BlueprintOptions options;
+  auto trackingGeometry =
+      root.construct(options, gctx, *logger().clone("Blprnt"));
+  return trackingGeometry;
 }
 
 }  // namespace
