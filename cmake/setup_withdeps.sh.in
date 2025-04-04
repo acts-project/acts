@@ -9,7 +9,7 @@
 # This script sets up the ACTS Examples environment in a somewhat robust way.
 
 oldstate="$(set +o)"
-echo "State BEFORE our setup:"
+echo "State BEFORE our setup: $-"
 set +o
 echo "---------------"
 
@@ -61,11 +61,18 @@ if [[ -d "@Geant4_DIR@" ]]; then
   . @Geant4_INCLUDE_DIR@/../../bin/geant4.sh
 fi
 if [[ -d "@DD4hep_DIR@" ]]; then
+  prevstate=$-
+
   set +e
   . @DD4hep_INCLUDE_DIRS@/../bin/thisdd4hep.sh
   # Without this, DD4hep's Xerces-C XML parsing fails with:
   # > Could not load a transcoding service
   export LC_ALL=C
+
+  if [[ "$prevstate" == *e* ]]; then
+    # -e was set before, re-enabling
+    set -e
+  fi
 fi
 if [[ -d "@podio_DIR@" ]]; then
   export LD_LIBRARY_PATH="@podio_LIBRARY_DIR@:${LD_LIBRARY_PATH}"
@@ -79,10 +86,6 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
 
-echo "OLDSTATE IS:"
-echo "$oldstate"
-echo "END OF OLDSTATE"
-eval "$oldstate"
-echo "State AFTER our setup:"
+echo "State AFTER our setup: $-"
 set +o
 echo "---------------"
