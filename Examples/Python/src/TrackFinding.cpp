@@ -23,6 +23,7 @@
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
+#include "ActsExamples/TrackFinding/MuonSegmentFinder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -182,7 +183,11 @@ void addTrackFinding(Context& ctx) {
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonSegmentFinder, mex,
+                                "MuonSegmentFinder", inHoughSeeds, outSegments);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
