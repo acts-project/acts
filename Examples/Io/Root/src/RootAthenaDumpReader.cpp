@@ -373,6 +373,10 @@ RootAthenaDumpReader::readMeasurements(
         cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
                                       activation);
       }
+
+      ACTS_VERBOSE("- shape: " << cluster.channels.size()
+                               << "cells, dimensions: " << cluster.sizeLoc0
+                               << ", " << cluster.sizeLoc1);
     }
 
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
@@ -388,16 +392,7 @@ RootAthenaDumpReader::readMeasurements(
     cluster.etaAngle = CLeta_angle[im];
     cluster.phiAngle = CLphi_angle[im];
 
-    ACTS_VERBOSE("CL shape: " << cluster.channels.size()
-                              << "cells, dimensions: " << cluster.sizeLoc0
-                              << ", " << cluster.sizeLoc1);
-
-    clusters[im] = cluster;
-
     // Measurement creation
-    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", "
-                                << CLloc_direction2[im] << ", "
-                                << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
     Acts::GeometryIdentifier geoId;
@@ -469,8 +464,10 @@ RootAthenaDumpReader::readMeasurements(
     }
 
     std::size_t measIndex = measurements.size();
+    ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
     createMeasurement(measurements, geoId, digiPars);
+    clusters.push_back(cluster);
 
     if (!m_cfg.noTruth) {
       // Create measurement particles map and particles container
