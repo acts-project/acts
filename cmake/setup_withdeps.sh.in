@@ -8,11 +8,6 @@
 
 # This script sets up the ACTS Examples environment in a somewhat robust way.
 
-oldstate="$(set +o)"
-echo "State BEFORE our setup: $-"
-set +o
-echo "---------------"
-
 if [ -n "${ZSH_VERSION:-}" ]; then
     script_dir=${0:a:h}
 elif [ -n "${BASH_VERSION:-}" ]; then
@@ -85,7 +80,3 @@ if [[ -d "@EDM4HEP_DIR@" ]]; then
   export DYLD_LIBRARY_PATH="@EDM4HEP_LIBRARY_DIR@/lib:${DYLD_LIBRARY_PATH}"
   export ROOT_INCLUDE_PATH="@EDM4HEP_INCLUDE_DIR@:${ROOT_INCLUDE_PATH}"
 fi
-
-echo "State AFTER our setup: $-"
-set +o
-echo "---------------"
