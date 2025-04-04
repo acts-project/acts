@@ -189,7 +189,7 @@ as the approximation of $y(t_{n+1})$ like
 
 $$
   \begin{aligned}
-    y_{n+1} &= y_n + \frac 1 6 h ( k_1 + 2 k_2 + 2 k_2 + k_4)\\
+    y_{n+1} &= y_n + \frac 1 6 h ( k_1 + 2 k_2 + 2 k_3 + k_4)\\
     t_{n+1} &= t_n + h
   \end{aligned}
 $$
