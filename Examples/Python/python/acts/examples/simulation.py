@@ -138,6 +138,7 @@ def addParticleGun(
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
+                mergePrimaries=False,
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
                     mean=acts.Vector4(0, 0, 0, 0),
@@ -157,7 +158,6 @@ def addParticleGun(
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
                         # Merging particle gun vertices does not make sense
-                        mergePrimaries=False,
                     )
                 ),
             )
