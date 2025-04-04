@@ -183,7 +183,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
 endif()
 
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesHepMC3)
+    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoHepMC3)
     target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
     list(APPEND py_files examples/hepmc3.py)
 else()
