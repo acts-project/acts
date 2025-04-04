@@ -2,10 +2,12 @@
 
 import os
 import json
+from pathlib import Path
 
 import acts
 from acts import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
+import argparse
 from acts.examples import (
     WhiteBoard,
     AlgorithmContext,
@@ -15,13 +17,14 @@ from acts.examples import (
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
+    GenericDetector,
 )
 
 
 def runGeometry(
     trackingGeometry,
     decorators,
-    outputDir,
+    outputDir: Path,
     events=1,
     outputObj=True,
     outputCsv=True,
@@ -40,29 +43,40 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            # if not os.path.isdir(outputDir + "/csv"):
-            #    os.makedirs(outputDir + "/csv")
+            csvDir = outputDir / "csv"
+            if not csvDir.exists():
+                csvDir.mkdir(parents=True)
+            elif not csvDir.is_dir():
+                raise RuntimeError(f"Output directory {csvDir} is not a directory")
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "csv"),
+                outputDir=str(csvDir),
                 writePerEvent=True,
             )
             writer.write(context)
 
         if outputObj:
+            objDir = outputDir / "obj"
+            if not objDir.exists():
+                objDir.mkdir(parents=True)
+            elif not objDir.is_dir():
+                raise RuntimeError(f"Output directory {objDir} is not a directory")
             writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=os.path.join(outputDir, "obj")
+                level=acts.logging.INFO, outputDir=str(objDir)
             )
             writer.write(context, trackingGeometry)
 
         if outputJson:
-            # if not os.path.isdir(outputDir + "/json"):
-            #    os.makedirs(outputDir + "/json")
+            jsonDir = outputDir / "json"
+            if not jsonDir.exists():
+                jsonDir.mkdir(parents=True)
+            elif not jsonDir.is_dir():
+                raise RuntimeError(f"Output directory {jsonDir} is not a directory")
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "json"),
+                outputDir=str(jsonDir),
                 writePerEvent=True,
                 writeSensitive=True,
             )
@@ -81,7 +95,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "geometry-map"),
+                fileName=str(jsonDir / "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -89,13 +103,22 @@ def runGeometry(
 
 
 if "__main__" == __name__:
+    p = argparse.ArgumentParser()
+    p.add_argument("--verbosity", "-v", default=0, action="count")
+    args = p.parse_args()
+    logLevel = acts.logging.INFO
+    if args.verbosity == 1:
+        logLevel = acts.logging.DEBUG
+    elif args.verbosity >= 2:
+        logLevel = acts.logging.VERBOSE
+
     # detector = AlignedDetector()
-    # detector = GenericDetector()
-    detector = getOpenDataDetector()
+    detector = GenericDetector(gen3=True, logLevel=logLevel)
+    # detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
-    runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
+    runGeometry(trackingGeometry, decorators, outputDir=Path.cwd())
 
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
