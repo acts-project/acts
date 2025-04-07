@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                             .at(static_cast<std::size_t>(NegativeDisc))
                             .surface()
                             .surfaceMaterial();
-  BOOST_CHECK_NE(negDisc, nullptr);
+  BOOST_REQUIRE_NE(negDisc, nullptr);
   const auto& negDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*negDisc);
   // Check positive disc material
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                             .at(static_cast<std::size_t>(PositiveDisc))
                             .surface()
                             .surfaceMaterial();
-  BOOST_CHECK_NE(posDisc, nullptr);
+  BOOST_REQUIRE_NE(posDisc, nullptr);
   const auto& posDiscMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*posDisc);
 
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(Material) {
                              .at(static_cast<std::size_t>(OuterCylinder))
                              .surface()
                              .surfaceMaterial();
-  BOOST_CHECK_NE(outerCyl, nullptr);
+  BOOST_REQUIRE_NE(outerCyl, nullptr);
   const auto& outerCylMat =
       dynamic_cast<const ProtoGridSurfaceMaterial&>(*outerCyl);
   BOOST_CHECK_EQUAL(outerCylMat.binning().at(0).getAxis().getNBins(), 25);
@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
   // Check that material is attached to all faces
   for (std::size_t i = 0; i < child.portals().size(); i++) {
     const auto* material = child.portals().at(i).surface().surfaceMaterial();
-    BOOST_CHECK_NE(material, nullptr);
+    BOOST_REQUIRE_NE(material, nullptr);
 
     const auto& gridMaterial =
         dynamic_cast<const ProtoGridSurfaceMaterial&>(*material);
