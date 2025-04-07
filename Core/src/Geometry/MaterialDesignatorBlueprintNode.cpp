@@ -15,11 +15,14 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
+
+#include <boost/core/demangle.hpp>
 
 namespace Acts::Experimental {
 
@@ -28,6 +31,15 @@ namespace {
 class CylinderProtoDesignator;
 class CuboidProtoDesignator;
 class NullDesignator;
+template <typename face_enum_t, typename shell_type_t>
+class HomogeneousMaterialDesignator;
+
+using CylinderHomogeneousMaterialDesignator =
+    HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
+                                  CylinderPortalShell>;
+
+using CuboidHomogeneousMaterialDesignator =
+    HomogeneousMaterialDesignator<CuboidVolumeBounds::Face, CuboidPortalShell>;
 
 class DesignatorBase {
  public:
@@ -43,43 +55,31 @@ class DesignatorBase {
       const DesignatorBase& other) const = 0;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& other) const = 0;
+      const CylinderProtoDesignator& /*other*/) const {
+    throw std::runtime_error("Merging of these types is not implemented");
+  }
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& other) const = 0;
+      const CuboidProtoDesignator& /*other*/) const {
+    throw std::runtime_error("Merging of these types is not implemented");
+  }
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& other) const = 0;
+      const NullDesignator& /*other*/) const {
+    throw std::runtime_error("Merging of these types is not implemented");
+  }
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const CylinderHomogeneousMaterialDesignator& /*other*/) const {
+    throw std::runtime_error("Merging of these types is not implemented");
+  }
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const CuboidHomogeneousMaterialDesignator& /*other*/) const {
+    throw std::runtime_error("Merging of these types is not implemented");
+  }
 
   virtual void graphvizLabel(std::ostream& os) const = 0;
-};
-
-class NullDesignator : public DesignatorBase {
- public:
-  void apply(PortalShellBase& /*shell*/, const Logger& /*logger*/,
-             const std::string& /*prefix*/) override {
-    throw std::runtime_error("NullDesignator has no apply");
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const DesignatorBase& other) const override {
-    return other.merged(*this);
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& other) const override;
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& other) const override;
-
-  std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const override {
-    return std::make_unique<NullDesignator>();
-  }
-
-  void graphvizLabel(std::ostream& /*os*/) const override {
-    throw std::runtime_error("NullDesignator has no label");
-  }
 };
 
 class CylinderProtoDesignator : public DesignatorBase {
@@ -123,7 +123,7 @@ class CylinderProtoDesignator : public DesignatorBase {
   void graphvizLabel(std::ostream& os) const override {
     os << "<br/><i>Cylinder Binning</i>";
     for (const auto& [face, loc0, loc1] : m_binning) {
-      os << "<br/>" << face;
+      os << "<br/> at: " << face;
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
       os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
     }
@@ -139,12 +139,6 @@ class CylinderProtoDesignator : public DesignatorBase {
     auto merged = std::make_unique<CylinderProtoDesignator>(*this);
     std::ranges::copy(other.m_binning, std::back_inserter(merged->m_binning));
     return merged;
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& /*other*/) const override {
-    throw std::runtime_error(
-        "CylinderProtoDesignator cannot be merged with CuboidProtoDesignator");
   }
 
   std::unique_ptr<DesignatorBase> merged(
@@ -182,6 +176,12 @@ class CylinderProtoDesignator : public DesignatorBase {
                                     "Phi plane faces are not supported");
         break;
     }
+
+    if (std::ranges::find_if(m_binning, [&](const auto& bin) {
+          return std::get<0>(bin) == face;
+        }) != m_binning.end()) {
+      throw std::invalid_argument(prefix + "Cylinder face already configured");
+    }
   }
 
   std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
@@ -194,7 +194,7 @@ class CuboidProtoDesignator : public DesignatorBase {
   CuboidProtoDesignator(Face face, const DirectedProtoAxis& loc0,
                         const DirectedProtoAxis& loc1,
                         const std::string& prefix) {
-    validate(loc0, loc1, prefix);
+    validate(face, loc0, loc1, prefix);
 
     m_binning.emplace_back(face, loc0, loc1);
   }
@@ -228,7 +228,7 @@ class CuboidProtoDesignator : public DesignatorBase {
   void graphvizLabel(std::ostream& os) const override {
     os << "<br/><i>Cuboid Binning</i>";
     for (const auto& [face, loc0, loc1] : m_binning) {
-      os << "<br/>" << face;
+      os << "<br/> at: " << face;
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
       os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
     }
@@ -237,12 +237,6 @@ class CuboidProtoDesignator : public DesignatorBase {
   std::unique_ptr<DesignatorBase> merged(
       const DesignatorBase& other) const override {
     return other.merged(*this);
-  }
-
-  std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& /*other*/) const override {
-    throw std::runtime_error(
-        "CuboidProtoDesignator cannot be merged with CylinderProtoDesignator");
   }
 
   std::unique_ptr<DesignatorBase> merged(
@@ -258,8 +252,8 @@ class CuboidProtoDesignator : public DesignatorBase {
   }
 
  private:
-  void validate(const DirectedProtoAxis& loc0, const DirectedProtoAxis& loc1,
-                const std::string& prefix) {
+  void validate(Face face, const DirectedProtoAxis& loc0,
+                const DirectedProtoAxis& loc1, const std::string& prefix) {
     using enum CuboidVolumeBounds::Face;
     using enum AxisDirection;
 
@@ -268,20 +262,134 @@ class CuboidProtoDesignator : public DesignatorBase {
       throw std::invalid_argument(prefix +
                                   "Cuboid faces must use (x, y) binning");
     }
+
+    if (std::ranges::find_if(m_binning, [&](const auto& bin) {
+          return std::get<0>(bin) == face;
+        }) != m_binning.end()) {
+      throw std::invalid_argument(prefix + "Cuboid face already configured");
+    }
   }
 
   std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
 };
 
-std::unique_ptr<DesignatorBase> NullDesignator::merged(
-    const CylinderProtoDesignator& other) const {
-  return std::make_unique<CylinderProtoDesignator>(other);
-}
+template <typename face_enum_t, typename shell_type_t>
+class HomogeneousMaterialDesignator : public DesignatorBase {
+ public:
+  using FaceType = face_enum_t;
+  using ShellType = shell_type_t;
 
-std::unique_ptr<DesignatorBase> NullDesignator::merged(
-    const CuboidProtoDesignator& other) const {
-  return std::make_unique<CuboidProtoDesignator>(other);
-}
+  HomogeneousMaterialDesignator(
+      FaceType face,
+      std::shared_ptr<const HomogeneousSurfaceMaterial> material) {
+    m_materials.emplace_back(face, std::move(material));
+  }
+
+  void apply(PortalShellBase& shell, const Logger& logger,
+             const std::string& prefix) override {
+    auto* concreteShell = dynamic_cast<ShellType*>(&shell);
+    if (concreteShell == nullptr) {
+      ACTS_ERROR(prefix << "Concrete shell type mismatch: configured for "
+                        << boost::core::demangle(typeid(ShellType).name())
+                        << " but received "
+                        << boost::core::demangle(typeid(shell).name()));
+
+      throw std::invalid_argument(prefix + "Concrete shell type mismatch");
+    }
+
+    for (const auto& [face, material] : m_materials) {
+      auto* portal = concreteShell->portal(face);
+      if (portal == nullptr) {
+        ACTS_ERROR(prefix << "Portal is nullptr");
+        throw std::runtime_error("Portal is nullptr");
+      }
+
+      portal->surface().assignSurfaceMaterial(material);
+    }
+  }
+
+  constexpr std::string_view shellTypeName() const {
+    if constexpr (std::is_same_v<ShellType, CylinderPortalShell>) {
+      return "Cylinder";
+    } else if constexpr (std::is_same_v<ShellType, CuboidPortalShell>) {
+      return "Cuboid";
+    } else {
+      throw std::runtime_error("Unknown shell type");
+    }
+  }
+
+  void graphvizLabel(std::ostream& os) const override {
+    os << "<br/><i>Homog. " << shellTypeName() << " material</i>";
+    for (const auto& [face, material] : m_materials) {
+      os << "<br/> at: " << face;
+    }
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const HomogeneousMaterialDesignator& other) const override {
+    auto merged = std::make_unique<HomogeneousMaterialDesignator>(*this);
+    std::ranges::copy(other.m_materials,
+                      std::back_inserter(merged->m_materials));
+    return merged;
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& /*other*/) const override {
+    return std::make_unique<HomogeneousMaterialDesignator>(*this);
+  }
+
+ private:
+  std::vector<
+      std::pair<FaceType, std::shared_ptr<const HomogeneousSurfaceMaterial>>>
+      m_materials;
+};
+
+class NullDesignator : public DesignatorBase {
+ public:
+  void apply(PortalShellBase& /*shell*/, const Logger& /*logger*/,
+             const std::string& /*prefix*/) override {
+    throw std::runtime_error("NullDesignator has no apply");
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CylinderProtoDesignator& other) const override {
+    return std::make_unique<CylinderProtoDesignator>(other);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CuboidProtoDesignator& other) const override {
+    return std::make_unique<CuboidProtoDesignator>(other);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& /*other*/) const override {
+    return std::make_unique<NullDesignator>();
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CylinderHomogeneousMaterialDesignator& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CuboidHomogeneousMaterialDesignator& other) const override {
+    return other.merged(*this);
+  }
+
+  void graphvizLabel(std::ostream& /*os*/) const override {
+    throw std::runtime_error("NullDesignator has no label");
+  }
+};
 
 }  // namespace
 
@@ -393,8 +501,8 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
   }
 
   std::stringstream ss;
-  ss << "" + name() + "";
-  ss << "<br/><i>MaterialDesignator</i>";
+  ss << "<b>" + name() + "</b>";
+  ss << "<br/>MaterialDesignator";
 
   impl().m_designator->graphvizLabel(ss);
 
@@ -413,10 +521,40 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 }
 
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CylinderVolumeBounds::Face face,
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+
+  impl().m_designator = impl().m_designator->merged(
+      HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
+                                    CylinderPortalShell>(face,
+                                                         std::move(material)));
+
+  return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
   impl().m_designator = impl().m_designator->merged(
       CuboidProtoDesignator(face, loc0, loc1, prefix()));
+
+  return *this;
+}
+
+MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
+    CuboidVolumeBounds::Face face,
+    std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material) {
+  if (material == nullptr) {
+    throw std::invalid_argument(prefix() + "Material is nullptr");
+  }
+
+  impl().m_designator = impl().m_designator->merged(
+      HomogeneousMaterialDesignator<CuboidVolumeBounds::Face,
+                                    CuboidPortalShell>(face,
+                                                       std::move(material)));
 
   return *this;
 }

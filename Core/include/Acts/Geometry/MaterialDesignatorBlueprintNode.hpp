@@ -12,7 +12,10 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
 
-namespace Acts::Experimental {
+namespace Acts {
+class HomogeneousSurfaceMaterial;
+
+namespace Experimental {
 
 namespace detail {
 class MaterialDesignatorBlueprintNodeImpl;
@@ -85,6 +88,17 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
 
   /// Configure the designator with a cuboid face and corresponding binning
   /// information.
+  /// @param face The face of the cylinder to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      CylinderVolumeBounds::Face face,
+      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
+
+  /// Configure the designator with a cuboid face and corresponding binning
+  /// information.
   /// @note This method can be called multiple times to configure different faces.
   /// @param face The face of the cuboid to configure
   /// @param loc0 The first binning configuration along local axis 0
@@ -96,6 +110,17 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
                                                  const DirectedProtoAxis& loc0,
                                                  const DirectedProtoAxis& loc1);
 
+  /// Configure the designator with a cuboid face and a homogeneous surface
+  /// material.
+  /// @param face The face of the cuboid to configure
+  /// @param material The material to use
+  /// @return The material designator node
+  /// @note If this node has previously been configured with a different volume
+  ///       shape, this will throw an exception.
+  MaterialDesignatorBlueprintNode& configureFace(
+      CuboidVolumeBounds::Face face,
+      std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> material);
+
  private:
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
@@ -106,4 +131,5 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   std::unique_ptr<detail::MaterialDesignatorBlueprintNodeImpl> m_impl;
 };
 
-}  // namespace Acts::Experimental
+}  // namespace Experimental
+}  // namespace Acts
