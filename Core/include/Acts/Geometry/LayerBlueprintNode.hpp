@@ -12,19 +12,19 @@
 
 #include <ostream>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 /// The layer node is essentially an auto-sizing wrapper around a set of
 /// surfaces.
 /// @note This implementation is **preliminary** and will likely change
 ///       in the future.
-/// It defers most of the functionality to @ref Acts::StaticBlueprintNode,
+/// It defers most of the functionality to @ref Acts::Experimental::StaticBlueprintNode,
 /// after the initial volume creation is completed.
 ///
 /// The layer volume is created to wrap around the surfaces registered with
 /// this node. The orientation of the resulting volume defaults to the identity
 /// matrix. If another orientation is desired, this can be set with the @ref
-/// Acts::LayerBlueprintNode::setTransform. See @ref Acts::ProtoLayer for
+/// Acts::Experimental::LayerBlueprintNode::setTransform. See @ref Acts::ProtoLayer for
 /// details on the auto-sizing from surfaces.
 ///
 class LayerBlueprintNode : public StaticBlueprintNode {
@@ -56,7 +56,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// -# Register the surfaces with the volume
   /// -# Return the volume
   /// @note At least one surfaces needs to be registered via
-  ///       @ref Acts::LayerBlueprintNode::setSurfaces before
+  ///       @ref Acts::Experimental::LayerBlueprintNode::setSurfaces before
   ///       geometry construction.
   Volume& build(const BlueprintOptions& options, const GeometryContext& gctx,
                 const Logger& logger = Acts::getDummyLogger()) override;
@@ -96,6 +96,14 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @return Reference to this node for chaining
   LayerBlueprintNode& setLayerType(LayerType layerType);
 
+  /// Set the layer volume to be centered on the center of gravity of the
+  /// surfaces.
+  /// @param x Whether to center the layer volume on the x-axis
+  /// @param y Whether to center the layer volume on the y-axis
+  /// @param z Whether to center the layer volume on the z-axis
+  /// @return Reference to this node for chaining
+  LayerBlueprintNode& setUseCenterOfGravity(bool x, bool y, bool z);
+
   /// Access the layer type of the layer node.
   /// @return The layer type
   const LayerType& layerType() const;
@@ -121,7 +129,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   }
 
  private:
-  /// @copydoc Acts::BlueprintNode::addToGraphviz
+  /// @copydoc Acts::Experimental::BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
   /// Helper method that performs the volume creation from the configured
@@ -136,6 +144,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   Transform3 m_transform = Transform3::Identity();
   ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
   LayerType m_layerType = LayerType::Cylinder;
+  std::array<bool, 3> m_useCenterOfGravity = {true, true, true};
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

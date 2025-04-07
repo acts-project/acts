@@ -20,6 +20,7 @@ enum class CombinatorialKalmanFilterError {
   OutputConversionFailed,
   MeasurementSelectionFailed,
   PropagationReachesMaxSteps,
+  NoMeasurementExpected
 };
 
 std::error_code make_error_code(Acts::CombinatorialKalmanFilterError e);

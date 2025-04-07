@@ -218,29 +218,17 @@ void addSvg(Context& ctx) {
   // Core components, added as an acts.svg submodule
   {
     auto c = py::class_<Svg::Style>(svg, "Style").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::Style);
-    ACTS_PYTHON_MEMBER(fillColor);
-    ACTS_PYTHON_MEMBER(fillOpacity);
-    ACTS_PYTHON_MEMBER(highlightColor);
-    ACTS_PYTHON_MEMBER(highlights);
-    ACTS_PYTHON_MEMBER(strokeWidth);
-    ACTS_PYTHON_MEMBER(strokeColor);
-    ACTS_PYTHON_MEMBER(highlightStrokeWidth);
-    ACTS_PYTHON_MEMBER(highlightStrokeColor);
-    ACTS_PYTHON_MEMBER(fontSize);
-    ACTS_PYTHON_MEMBER(fontColor);
-    ACTS_PYTHON_MEMBER(quarterSegments);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, fillColor, fillOpacity, highlightColor, highlights,
+                       strokeWidth, strokeColor, highlightStrokeWidth,
+                       highlightStrokeColor, fontSize, fontColor,
+                       quarterSegments);
   }
 
   // How surfaces should be drawn: Svg Surface options & drawning
   {
     auto c = py::class_<Svg::SurfaceConverter::Options>(svg, "SurfaceOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::SurfaceConverter::Options);
-    ACTS_PYTHON_MEMBER(style);
-    ACTS_PYTHON_MEMBER(templateSurface);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, style, templateSurface);
 
     // Define the proto surface
     py::class_<Svg::ProtoSurface>(svg, "ProtoSurface");
@@ -270,11 +258,7 @@ void addSvg(Context& ctx) {
     auto c = py::class_<Svg::PortalConverter::Options>(svg, "PortalOptions")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::PortalConverter::Options);
-    ACTS_PYTHON_MEMBER(surfaceOptions);
-    ACTS_PYTHON_MEMBER(linkLength);
-    ACTS_PYTHON_MEMBER(volumeIndices);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, surfaceOptions, linkLength, volumeIndices);
 
     // Define the proto portal
     py::class_<Svg::ProtoPortal>(svg, "ProtoPortal");
@@ -337,16 +321,12 @@ void addSvg(Context& ctx) {
   {
     auto gco = py::class_<Svg::GridConverter::Options>(svg, "GridOptions")
                    .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(gco, Svg::GridConverter::Options);
-    ACTS_PYTHON_MEMBER(style);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(gco, style);
 
     auto isco = py::class_<Svg::IndexedSurfacesConverter::Options>(
                     svg, "IndexedSurfacesOptions")
                     .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(isco, Svg::IndexedSurfacesConverter::Options);
-    ACTS_PYTHON_MEMBER(gridOptions);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(isco, gridOptions);
   }
 
   // How detector volumes are drawn: Svg DetectorVolume options & drawning
@@ -355,12 +335,8 @@ void addSvg(Context& ctx) {
                  svg, "DetectorVolumeOptions")
                  .def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::DetectorVolumeConverter::Options);
-    ACTS_PYTHON_MEMBER(portalIndices);
-    ACTS_PYTHON_MEMBER(portalOptions);
-    ACTS_PYTHON_MEMBER(surfaceOptions);
-    ACTS_PYTHON_MEMBER(indexedSurfacesOptions);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, portalIndices, portalOptions, surfaceOptions,
+                       indexedSurfacesOptions);
 
     // Define the proto volume & indexed surface grid
     py::class_<Svg::ProtoVolume>(svg, "ProtoVolume");
@@ -399,17 +375,8 @@ void addSvg(Context& ctx) {
 
     auto c = py::class_<Svg::LayerConverter::Options>(svg, "LayerOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::LayerConverter::Options);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(surfaceStyles);
-    ACTS_PYTHON_MEMBER(zRange);
-    ACTS_PYTHON_MEMBER(phiRange);
-    ACTS_PYTHON_MEMBER(gridInfo);
-    ACTS_PYTHON_MEMBER(moduleInfo);
-    ACTS_PYTHON_MEMBER(projectionInfo);
-    ACTS_PYTHON_MEMBER(labelProjection);
-    ACTS_PYTHON_MEMBER(labelGauge);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, name, surfaceStyles, zRange, phiRange, gridInfo,
+                       moduleInfo, projectionInfo, labelProjection, labelGauge);
   }
 
   {
@@ -425,10 +392,7 @@ void addSvg(Context& ctx) {
     auto c = py::class_<Svg::TrackingGeometryConverter::Options>(
                  svg, "TrackingGeometryOptions")
                  .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Svg::TrackingGeometryConverter::Options);
-    ACTS_PYTHON_MEMBER(prefix);
-    ACTS_PYTHON_MEMBER(layerOptions);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, prefix, layerOptions);
   }
 
   // Components from the ActsExamples - part of acts.examples
@@ -444,10 +408,7 @@ void addSvg(Context& ctx) {
                                    &Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_MEMBER(converterOptions);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, outputDir, converterOptions);
   }
   {
     using Writer = ActsExamples::SvgPointWriter<ActsExamples::SimSpacePoint>;
@@ -460,14 +421,10 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
-    ACTS_PYTHON_MEMBER(writerName);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(inputCollection);
-    ACTS_PYTHON_MEMBER(infoBoxTitle);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
+                       infoBoxTitle, outputDir);
   }
+
   {
     using Writer =
         ActsExamples::SvgPointWriter<ActsExamples::SimHit,
@@ -481,13 +438,8 @@ void addSvg(Context& ctx) {
                  py::overload_cast<const AlgorithmContext&>(&Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
-    ACTS_PYTHON_MEMBER(writerName);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(inputCollection);
-    ACTS_PYTHON_MEMBER(infoBoxTitle);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, writerName, trackingGeometry, inputCollection,
+                       infoBoxTitle, outputDir);
   }
 }
 }  // namespace Acts::Python

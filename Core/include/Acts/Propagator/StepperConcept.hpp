@@ -27,15 +27,9 @@ concept CommonStepper = requires {
   typename Stepper::Jacobian;
   typename Stepper::Covariance;
   typename Stepper::BoundState;
-  typename Stepper::CurvilinearState;
 
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
-
-    requires requires(const BoundVector& bv, const BoundSquareMatrix& bm,
-                      const Surface& sf, const double d) {
-      { s.resetState(t, bv, bm, sf, d) } -> std::same_as<void>;
-    };
 
     requires requires(const Surface& sf, bool b,
                       const FreeToBoundCorrection& corr) {
@@ -48,7 +42,7 @@ concept CommonStepper = requires {
     requires requires(bool b) {
       {
         s.curvilinearState(t, b)
-      } -> std::same_as<typename Stepper::CurvilinearState>;
+      } -> std::same_as<typename Stepper::BoundState>;
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,

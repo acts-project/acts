@@ -33,11 +33,13 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_bound) {
   double qop = 0.125;
 
   // Build a surface
-  auto pSurface = CurvilinearSurface(position, direction).planeSurface();
+  std::shared_ptr<PlaneSurface> pSurface =
+      CurvilinearSurface(position, direction).planeSurface();
 
   // Other rotated surface
   Vector3 odirection = Vector3(6., 2., 8.).normalized();
-  auto oSurface = CurvilinearSurface(position, odirection).planeSurface();
+  std::shared_ptr<PlaneSurface> oSurface =
+      CurvilinearSurface(position, odirection).planeSurface();
 
   // The free parameter vector
   FreeVector freeParameters;
@@ -108,7 +110,8 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_curvilinear) {
   Vector3 direction = Vector3(5., 2., 7.).normalized();
 
   // Build a surface, starting surface for curvilinear
-  auto pSurface = CurvilinearSurface(position, direction).planeSurface();
+  std::shared_ptr<PlaneSurface> pSurface =
+      CurvilinearSurface(position, direction).planeSurface();
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();
@@ -160,7 +163,8 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   Vector3 direction = Vector3(5., 2., 7.).normalized();
 
   // Build a surface, starting surface for curvilinear
-  auto pSurface = CurvilinearSurface(position, direction).planeSurface();
+  std::shared_ptr<PlaneSurface> pSurface =
+      CurvilinearSurface(position, direction).planeSurface();
 
   // Build covariance matrices for bound and free case
   BoundSquareMatrix boundCovariance = 0.025 * BoundSquareMatrix::Identity();

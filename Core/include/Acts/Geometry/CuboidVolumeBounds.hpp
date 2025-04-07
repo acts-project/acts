@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -16,6 +17,7 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -57,6 +59,18 @@ class CuboidVolumeBounds : public VolumeBounds {
     eSize
   };
 
+  /// Enum describing the possible faces of a cuboid volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    NegativeZFace = BoundarySurfaceFace::negativeFaceXY,
+    PositiveZFace = BoundarySurfaceFace::positiveFaceXY,
+    NegativeXFace = BoundarySurfaceFace::negativeFaceYZ,
+    PositiveXFace = BoundarySurfaceFace::positiveFaceYZ,
+    NegativeYFace = BoundarySurfaceFace::negativeFaceZX,
+    PositiveYFace = BoundarySurfaceFace::positiveFaceZX
+  };
+
   CuboidVolumeBounds() = delete;
 
   /// Constructor - the box boundaries
@@ -69,7 +83,10 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  CuboidVolumeBounds(const std::array<double, eSize>& values);
+  explicit CuboidVolumeBounds(const std::array<double, eSize>& values);
+
+  CuboidVolumeBounds(
+      std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
   /// Copy Constructor
   ///
@@ -149,6 +166,21 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param keyValues the initializer list of key value pairs
   void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
+  /// Convert axis direction to a corresponding bound value
+  /// in local coordinate convention
+  /// @param direction the axis direction to convert
+  static BoundValues boundsFromAxisDirection(AxisDirection direction);
+
+  /// Convert axis direction to a set of corresponding cuboid faces
+  /// in local coordinate convention
+  /// @param direction the axis direction to convert
+  /// @return A tuple of cuboid faces with the following ordering convention:
+  /// (1) negative face orthogonal to the axis direction
+  /// (2) positive face orthogonal to the axis direction
+  /// (3) list of side faces parallel to the axis direction
+  static std::tuple<Face, Face, std::array<Face, 4>> facesFromAxisDirection(
+      AxisDirection direction);
+
   /// Output Method for std::ostream
   ///
   /// @param os is ostream operator to be dumped into
@@ -169,4 +201,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
+
+std::ostream& operator<<(std::ostream& os, CuboidVolumeBounds::Face face);
+
 }  // namespace Acts
