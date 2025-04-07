@@ -508,15 +508,15 @@ struct GsfActor {
         continue;
       }
 
-      auto& cmp = *res;
-      auto freeParams = cmp.pars();
-      cmp.jacToGlobal() = surface.boundToFreeJacobian(
+      auto& stepperCmp = *res;
+      auto freeParams = stepperCmp.pars();
+      stepperCmp.jacToGlobal() = surface.boundToFreeJacobian(
           state.geoContext, freeParams.template segment<3>(eFreePos0),
           freeParams.template segment<3>(eFreeDir0));
-      cmp.pathAccumulated() = state.stepping.pathAccumulated;
-      cmp.jacobian() = BoundMatrix::Identity();
-      cmp.derivative() = FreeVector::Zero();
-      cmp.jacTransport() = FreeMatrix::Identity();
+      stepperCmp.pathAccumulated() = state.stepping.pathAccumulated;
+      stepperCmp.jacobian() = BoundMatrix::Identity();
+      stepperCmp.derivative() = FreeVector::Zero();
+      stepperCmp.jacTransport() = FreeMatrix::Identity();
     }
 
     // TODO check if we can avoid this reweighting here
