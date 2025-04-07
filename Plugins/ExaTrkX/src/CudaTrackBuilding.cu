@@ -30,7 +30,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   const auto numEdges = static_cast<std::size_t>(edgeTensor.size(1));
 
   if (numEdges == 0) {
-    ACTS_WARNING("No edges remained after edge classification");
+    ACTS_DEBUG("No edges remained after edge classification");
     return {};
   }
 
