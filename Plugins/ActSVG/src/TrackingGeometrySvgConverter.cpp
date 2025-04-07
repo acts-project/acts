@@ -335,12 +335,13 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
             std::stringstream ss;
             ss << surface->geometryId();
             auto object = actsvg::display::surface(ss.str(), proto, _view);
-            objects.push_back(object);
 
             if (highlightMaterial && surface->surfaceMaterial() != nullptr) {
               object._stroke._sc._rgb = {255, 0, 0};
               object._stroke._width = 1.5;
             }
+
+            objects.push_back(object);
           }
         }
       },
