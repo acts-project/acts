@@ -194,7 +194,7 @@ template <typename Callable>
 struct CallableHook : public Acts::GeometryIdentifierHook {
   Callable callable;
 
-  CallableHook(const Callable& c) : callable(c) {}
+  explicit CallableHook(const Callable& c) : callable(c) {}
 
   Acts::GeometryIdentifier decorateIdentifier(
       Acts::GeometryIdentifier identifier,
@@ -209,8 +209,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
   auto hookImpl = [&](GeometryIdentifier orig, const Surface& srf) {
     ++extra;
     extraMap[&srf] = extra;
-    orig.setExtra(extra);
-    return orig;
+    return orig.withExtra(extra);
   };
   CallableHook<decltype(hookImpl)> hook{hookImpl};
 
@@ -305,19 +304,46 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
 
 BOOST_AUTO_TEST_CASE(TrackingGeometry_testVisitSurfaces) {
   GeometryIdentifierHook hook{};
-  TrackingGeometry tGeometry = makeTrackingGeometry(hook);
+  auto tGeometry = makeTrackingGeometry(hook);
 
-  // this will also cover TrackingVolume::visitSurfaces
-  // it's a pretty bare-bones test, and only asserts that the
-  // method is called on the expected number of surfaces
+  // Test visitSurfaces
   std::size_t nSurfaces = 0;
   tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
   BOOST_CHECK_EQUAL(nSurfaces, 9u);
 
-  // this will also cover TrackingVolume::visitVolumes
+  // Test visitVolumes
   std::size_t nVolumes = 0;
   tGeometry.visitVolumes([&nVolumes](const auto*) { nVolumes++; });
-  BOOST_CHECK_EQUAL(nVolumes, 5u);
+  BOOST_CHECK_EQUAL(nVolumes,
+                    5u);  // World + Inner + InnerInner + InnerOuter + Outer
+
+  // Test apply with mutable visitor
+  bool volumeCalled = false;
+  tGeometry.apply([&](TrackingVolume& /*volume*/) { volumeCalled = true; });
+  BOOST_CHECK(volumeCalled);
+
+  // Test apply with const visitor
+  bool constVolumeCalled = false;
+  tGeometry.apply(
+      [&](const TrackingVolume& /*volume*/) { constVolumeCalled = true; });
+  BOOST_CHECK(constVolumeCalled);
+
+  // Test apply with overloaded visitor
+  bool surfaceCalled = false;
+  bool portalCalled = false;
+  tGeometry.apply(overloaded{
+      [&](Surface& /*surface*/) { surfaceCalled = true; },
+      [&](Portal& /*portal*/) { portalCalled = true; },
+      [&](TrackingVolume& /*volume*/) {},
+  });
+  BOOST_CHECK(surfaceCalled);
+  // Gen 1 geometry
+  BOOST_CHECK(!portalCalled);
+
+  // Test apply with lambda visitor
+  bool lambdaVolumeCalled = false;
+  tGeometry.apply([&](Volume& /*volume*/) { lambdaVolumeCalled = true; });
+  BOOST_CHECK(lambdaVolumeCalled);
 }
 
 }  // namespace Acts::Test

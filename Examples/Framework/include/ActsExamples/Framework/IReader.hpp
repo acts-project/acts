@@ -48,6 +48,9 @@ class IReader : public SequenceElement {
 
   /// Fulfill the algorithm interface
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
+
+  /// Return the type for debug output
+  std::string_view typeName() const override { return "Reader"; }
 };
 
 }  // namespace ActsExamples

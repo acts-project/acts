@@ -42,8 +42,6 @@ class AtlasStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   struct Config {
     std::shared_ptr<const MagneticFieldProvider> bField;
@@ -160,7 +158,9 @@ class AtlasStepper {
     state.pathAccumulated = 0;
     state.nSteps = 0;
     state.nStepTrials = 0;
-    state.stepSize = ConstrainedStep(state.options.maxStepSize);
+    state.stepSize = ConstrainedStep();
+    state.stepSize.setAccuracy(state.options.initialStepSize);
+    state.stepSize.setUser(state.options.maxStepSize);
     state.previousStepSize = 0;
     state.statistics = StepperStatistics();
 
@@ -508,7 +508,7 @@ class AtlasStepper {
 
     // Fill the end parameters
     auto parameters = BoundTrackParameters::create(
-        surface.getSharedPtr(), state.options.geoContext, pos4, dir, qOverP,
+        state.options.geoContext, surface.getSharedPtr(), pos4, dir, qOverP,
         std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
@@ -542,8 +542,7 @@ class AtlasStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
-                                    bool transportCov = true) const {
+  BoundState curvilinearState(State& state, bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -566,13 +565,13 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
-                                          state.particleHypothesis);
+    BoundTrackParameters parameters = BoundTrackParameters::createCurvilinear(
+        pos4, dir, qOverP, std::move(covOpt), state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
-    return CurvilinearState(std::move(parameters), jacobian.transpose(),
-                            state.pathAccumulated);
+    return BoundState(std::move(parameters), jacobian.transpose(),
+                      state.pathAccumulated);
   }
 
   /// The state update method
@@ -1189,6 +1188,36 @@ class AtlasStepper {
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
+    const auto calcStepSizeScaling =
+        [&](const double errorEstimate_) -> double {
+      // For details about these values see ATL-SOFT-PUB-2009-001
+      constexpr double lower = 0.25;
+      constexpr double upper = 4.0;
+      // This is given by the order of the Runge-Kutta method
+      constexpr double exponent = 0.25;
+
+      double x = state.options.stepTolerance / errorEstimate_;
+
+      if constexpr (exponent == 0.25) {
+        // This is 3x faster than std::pow
+        x = std::sqrt(std::sqrt(x));
+      } else {
+        x = std::pow(x, exponent);
+      }
+
+      return std::clamp(x, lower, upper);
+    };
+
+    const auto isErrorTolerable = [&](const double errorEstimate_) {
+      // For details about these values see ATL-SOFT-PUB-2009-001
+      constexpr double marginFactor = 4.0;
+
+      return errorEstimate_ <= marginFactor * state.options.stepTolerance;
+    };
+
+    double EST = 0;
+    double initialH = h;
+
     std::size_t nStepTrials = 0;
     while (h != 0.) {
       nStepTrials++;
@@ -1269,12 +1298,13 @@ class AtlasStepper {
       //
       // This is (h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>())
       // in EigenStepper
-      double EST =
-          2. * h *
-          (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
-           std::abs((C1 + C6) - (C3 + C4)));
-      if (std::abs(EST) > std::abs(state.options.stepTolerance)) {
-        h = h * .5;
+      EST = 2. * std::abs(h) *
+            (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
+             std::abs((C1 + C6) - (C3 + C4)));
+      EST = std::max(1e-20, EST);
+      if (!isErrorTolerable(EST)) {
+        const double stepSizeScaling = calcStepSizeScaling(EST);
+        h *= stepSizeScaling;
         // neutralize the sign of h again
         state.stepSize.setAccuracy(h * propDir);
         //        dltm = 0.;
@@ -1413,6 +1443,14 @@ class AtlasStepper {
     state.pathAccumulated += h;
     ++state.nSteps;
     state.nStepTrials += nStepTrials;
+
+    const double stepSizeScaling = calcStepSizeScaling(EST);
+    const double nextAccuracy = std::abs(h * stepSizeScaling);
+    const double previousAccuracy = std::abs(state.stepSize.accuracy());
+    const double initialStepLength = std::abs(initialH);
+    if (nextAccuracy < initialStepLength || nextAccuracy > previousAccuracy) {
+      state.stepSize.setAccuracy(nextAccuracy);
+    }
 
     return h;
   }

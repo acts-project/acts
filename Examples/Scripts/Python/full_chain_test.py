@@ -333,12 +333,14 @@ def full_chain(args):
         seedingConfigFile = geo_dir / "itk-hgtd/geoSelection-ITk.json"
         # args.material_config defaulted in itk.buildITkGeometry: geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
         bFieldFile = geo_dir / "bfield/ATLAS-BField-xyz.root"
-        detector, trackingGeometry, decorators = itk.buildITkGeometry(
+        detector = itk.buildITkGeometry(
             geo_dir,
             customMaterialFile=args.material_config,
             material=not args.bf_constant,
             logLevel=acts.logging.Level(args.loglevel),
         )
+        trackingGeometry = detector.trackingGeometry()
+        decorators = detector.contextDecorators()
     # fmt: on
 
     if args.bf_constant:
@@ -727,14 +729,9 @@ def full_chain(args):
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                pTMax=1400,
-                pTMin=0.5,
-                phiMax=math.pi,
-                phiMin=-math.pi,
-                etaMax=4,
-                etaMin=-4,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             ambiVolumeFile=args.ambi_config,
             **writeCovMat,

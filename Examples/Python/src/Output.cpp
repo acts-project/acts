@@ -69,12 +69,7 @@ void register_csv_bfield_writer_binding(
                py::arg("config"), py::arg("level"));
   auto c = py::class_<Config>(w, (std::string("Config") + name).c_str())
                .def(py::init<>());
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-  ACTS_PYTHON_MEMBER(fileName);
-  ACTS_PYTHON_MEMBER(bField);
-  ACTS_PYTHON_MEMBER(range);
-  ACTS_PYTHON_MEMBER(bins);
-  ACTS_PYTHON_STRUCT_END();
+  ACTS_PYTHON_STRUCT(c, fileName, bField, range, bins);
 }
 }  // namespace
 
@@ -96,16 +91,9 @@ void addOutput(Context& ctx) {
   {
     auto c = py::class_<ViewConfig>(m, "ViewConfig").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, ViewConfig);
-    ACTS_PYTHON_MEMBER(visible);
-    ACTS_PYTHON_MEMBER(color);
-    ACTS_PYTHON_MEMBER(offset);
-    ACTS_PYTHON_MEMBER(lineThickness);
-    ACTS_PYTHON_MEMBER(surfaceThickness);
-    ACTS_PYTHON_MEMBER(quarterSegments);
-    ACTS_PYTHON_MEMBER(triangulate);
-    ACTS_PYTHON_MEMBER(outputName);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, visible, color, offset, lineThickness,
+                       surfaceThickness, quarterSegments, triangulate,
+                       outputName);
 
     patchKwargsConstructor(c);
 
@@ -132,16 +120,10 @@ void addOutput(Context& ctx) {
                                    &Writer::write));
 
     auto c = py::class_<Writer::Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
-    ACTS_PYTHON_MEMBER(outputScalor);
-    ACTS_PYTHON_MEMBER(outputPrecision);
-    ACTS_PYTHON_MEMBER(outputDir);
-    ACTS_PYTHON_MEMBER(containerView);
-    ACTS_PYTHON_MEMBER(volumeView);
-    ACTS_PYTHON_MEMBER(sensitiveView);
-    ACTS_PYTHON_MEMBER(passiveView);
-    ACTS_PYTHON_MEMBER(gridView);
-    ACTS_PYTHON_STRUCT_END();
+
+    ACTS_PYTHON_STRUCT(c, outputScalor, outputPrecision, outputDir,
+                       containerView, volumeView, sensitiveView, passiveView,
+                       gridView);
   }
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

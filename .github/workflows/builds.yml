@@ -191,7 +191,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && python3 -m pip install histcmp==0.6.8 matplotlib
+          && python3 -m pip install histcmp==0.8.1 matplotlib
           && python3 -m pip install -r Examples/Scripts/requirements.txt
           && geant4-config --install-datasets
           && venv_python=$(which python3)
@@ -249,10 +249,10 @@ jobs:
           - image: ubuntu2204
             std: 20
             cxx: g++
-          - image: ubuntu2204
+          - image: ubuntu2404_clang19
             std: 20
-            cxx: clang++
-    container: ghcr.io/acts-project/${{ matrix.image }}:71
+            cxx: clang++-19
+    container: ghcr.io/acts-project/${{ matrix.image }}:75
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING

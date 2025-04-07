@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -15,7 +15,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 
 #include <algorithm>
-#include <ranges>
+#include <numeric>
 #include <stdexcept>
 
 #include <boost/algorithm/string/join.hpp>
@@ -36,7 +36,8 @@ void CylinderPortalShell::fill(TrackingVolume& volume) {
 SingleCylinderPortalShell::SingleCylinderPortalShell(TrackingVolume& volume)
     : m_volume{&volume} {
   if (m_volume->volumeBounds().type() != VolumeBounds::BoundsType::eCylinder) {
-    throw std::invalid_argument("Invalid volume bounds type");
+    throw std::invalid_argument(
+        "CylinderPortalShell: Invalid volume bounds type");
   }
 
   const auto& bounds =

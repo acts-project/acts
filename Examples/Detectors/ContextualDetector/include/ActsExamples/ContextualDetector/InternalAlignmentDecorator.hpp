@@ -32,9 +32,8 @@ class InternallyAlignedDetectorElement;
 /// geometry context carries the full transform store (payload)
 class InternalAlignmentDecorator : public AlignmentDecorator {
  public:
-  using LayerStore =
+  using DetectorStore =
       std::vector<std::shared_ptr<InternallyAlignedDetectorElement>>;
-  using DetectorStore = std::vector<LayerStore>;
 
   /// @brief nested configuration struct
   struct Config : public AlignmentDecorator::Config {
@@ -46,10 +45,10 @@ class InternalAlignmentDecorator : public AlignmentDecorator {
   ///
   /// @param cfg Configuration struct
   /// @param logger The logging framework
-  InternalAlignmentDecorator(const Config& cfg,
-                             std::unique_ptr<const Acts::Logger> logger =
-                                 Acts::getDefaultLogger("AlignmentDecorator",
-                                                        Acts::Logging::INFO));
+  explicit InternalAlignmentDecorator(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger =
+          Acts::getDefaultLogger("AlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
   ~InternalAlignmentDecorator() override = default;

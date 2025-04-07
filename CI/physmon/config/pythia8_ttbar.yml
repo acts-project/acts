@@ -7,17 +7,17 @@ histograms:
   vt:
     nbins: 100
     min: 0
-    max: 1e5
+    max: 20000
 
   "vx|vy":
     nbins: 100
-    min: -100
-    max: 100
+    min: -15
+    max: 15
 
   vz:
     nbins: 100
-    min: -1e4
-    max: 1e4
+    min: -1000
+    max: 1000
 
   eta:
     nbins: 100

@@ -53,11 +53,12 @@ void addRootInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::RootAthenaDumpReader, mex, "RootAthenaDumpReader", treename,
-      inputfile, outputMeasurements, outputPixelSpacePoints,
+      inputfiles, outputMeasurements, outputPixelSpacePoints,
       outputStripSpacePoints, outputSpacePoints, outputClusters,
-      outputMeasurementParticlesMap, outputParticles, onlyPassedParticles,
-      skipOverlapSPsPhi, skipOverlapSPsEta, geometryIdMap, trackingGeometry,
-      absBoundaryTolerance);
+      outputMeasurementParticlesMap, outputParticleMeasurementsMap,
+      outputParticles, onlySpacepoints, onlyPassedParticles, skipOverlapSPsPhi,
+      skipOverlapSPsEta, geometryIdMap, trackingGeometry, absBoundaryTolerance,
+      onlySpacepoints, noTruth, readCellData);
 
 #ifdef WITH_GEOMODEL_PLUGIN
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootAthenaDumpGeoIdCollector, mex,
@@ -68,38 +69,23 @@ void addRootInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
                              outputSimHits);
-}
 
-{
-  auto rmd =
-      py::class_<RootMaterialDecorator, Acts::IMaterialDecorator,
-                 std::shared_ptr<RootMaterialDecorator>>(
-          mex, "RootMaterialDecorator")
-          .def(py::init<RootMaterialDecorator::Config, Acts::Logging::Level>(),
-               py::arg("config"), py::arg("level"));
+  {
+    auto rmd =
+        py::class_<RootMaterialDecorator, Acts::IMaterialDecorator,
+                   std::shared_ptr<RootMaterialDecorator>>(
+            mex, "RootMaterialDecorator")
+            .def(
+                py::init<RootMaterialDecorator::Config, Acts::Logging::Level>(),
+                py::arg("config"), py::arg("level"));
 
-  using Config = RootMaterialDecorator::Config;
-  auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
+    using Config = RootMaterialDecorator::Config;
+    auto c = py::class_<Config>(rmd, "Config").def(py::init<>());
 
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-  ACTS_PYTHON_MEMBER(voltag);
-  ACTS_PYTHON_MEMBER(boutag);
-  ACTS_PYTHON_MEMBER(laytag);
-  ACTS_PYTHON_MEMBER(apptag);
-  ACTS_PYTHON_MEMBER(sentag);
-  ACTS_PYTHON_MEMBER(ntag);
-  ACTS_PYTHON_MEMBER(vtag);
-  ACTS_PYTHON_MEMBER(otag);
-  ACTS_PYTHON_MEMBER(mintag);
-  ACTS_PYTHON_MEMBER(maxtag);
-  ACTS_PYTHON_MEMBER(ttag);
-  ACTS_PYTHON_MEMBER(x0tag);
-  ACTS_PYTHON_MEMBER(l0tag);
-  ACTS_PYTHON_MEMBER(atag);
-  ACTS_PYTHON_MEMBER(ztag);
-  ACTS_PYTHON_MEMBER(rhotag);
-  ACTS_PYTHON_MEMBER(fileName);
-  ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, voltag, boutag, laytag, apptag, sentag, ntag, vtag,
+                       otag, mintag, maxtag, ttag, x0tag, l0tag, atag, ztag,
+                       rhotag, fileName);
+  }
 }
 
 }  // namespace Acts::Python

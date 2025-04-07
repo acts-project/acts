@@ -9,19 +9,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/TestSourceLink.hpp"
@@ -29,27 +24,17 @@
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/Zip.hpp"
 
-#include <algorithm>
-#include <array>
-#include <functional>
-#include <map>
 #include <memory>
 #include <optional>
 #include <random>
@@ -113,12 +98,14 @@ auto makeDefaultGsfOptions() {
 struct MultiCmpsParsInterface : public BoundTrackParameters {
   MultiComponentBoundTrackParameters multi_pars;
 
-  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
+  explicit MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
       : BoundTrackParameters(p.referenceSurface().getSharedPtr(),
                              p.parameters(), p.covariance(), electron),
         multi_pars(p) {}
 
-  operator MultiComponentBoundTrackParameters() const { return multi_pars; }
+  explicit operator MultiComponentBoundTrackParameters() const {
+    return multi_pars;
+  }
 };
 
 auto makeParameters() {
@@ -134,8 +121,8 @@ auto makeParameters() {
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_e / 1_GeV,
-                                      cov, electron);
+  Acts::BoundTrackParameters cp = Acts::BoundTrackParameters::createCurvilinear(
+      mPos4, 0_degree, 90_degree, 1_e / 1_GeV, cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();
@@ -241,7 +228,8 @@ BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   // create a boundless target surface near the tracker exit
   Acts::Vector3 center(-3._m, 0., 0.);
   Acts::Vector3 normal(1., 0., 0.);
-  auto targetSurface = Acts::CurvilinearSurface(center, normal).planeSurface();
+  std::shared_ptr<PlaneSurface> targetSurface =
+      Acts::CurvilinearSurface(center, normal).planeSurface();
 
   options.referenceSurface = targetSurface.get();
 

@@ -32,8 +32,6 @@ class SympyStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   struct Config {
     std::shared_ptr<const MagneticFieldProvider> bField;
@@ -309,8 +307,7 @@ class SympyStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
-                                    bool transportCov = true) const;
+  BoundState curvilinearState(State& state, bool transportCov = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///
@@ -379,11 +376,6 @@ class SympyStepper {
  protected:
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
-
- private:
-  Result<double> stepImpl(State& state, Direction propDir, double stepTolerance,
-                          double stepSizeCutOff,
-                          std::size_t maxRungeKuttaStepTrials) const;
 };
 
 template <>

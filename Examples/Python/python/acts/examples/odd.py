@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 import acts
 import acts.examples
+import warnings
 
 
 def getOpenDataDetectorDirectory():
@@ -76,13 +77,13 @@ def getOpenDataDetector(
 
     def geoid_hook(geoid, surface):
         gctx = acts.GeometryContext()
-        if geoid.volume() in volumeRadiusCutsMap:
+        if geoid.volume in volumeRadiusCutsMap:
             r = math.sqrt(surface.center(gctx)[0] ** 2 + surface.center(gctx)[1] ** 2)
 
-            geoid.setExtra(1)
-            for cut in volumeRadiusCutsMap[geoid.volume()]:
+            geoid.extra = 1
+            for cut in volumeRadiusCutsMap[geoid.volume]:
                 if r > cut:
-                    geoid.setExtra(geoid.extra() + 1)
+                    geoid.extra += 1
 
         return geoid
 
@@ -100,5 +101,7 @@ def getOpenDataDetector(
         geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
         materialDecorator=mdecorator,
     )
-    detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        detector = acts.examples.dd4hep.DD4hepDetector(dd4hepConfig)
     return detector
