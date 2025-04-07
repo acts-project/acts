@@ -112,6 +112,8 @@ struct GsfOptions {
 
   bool disableAllMaterialHandling = false;
 
+  bool useExternalSurfaces = false;
+
   std::string_view finalMultiComponentStateColumn = "";
 
   ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;

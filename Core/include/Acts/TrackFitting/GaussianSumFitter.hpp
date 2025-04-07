@@ -144,9 +144,12 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      for (auto it = begin; it != end; ++it) {
-        propOptions.navigation.insertExternalSurface(
-            options.extensions.surfaceAccessor(SourceLink{*it})->geometryId());
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
       }
 
       propOptions.actorList.template get<GsfActor>()
@@ -164,9 +167,12 @@ struct GaussianSumFitter {
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
-      for (auto it = begin; it != end; ++it) {
-        propOptions.navigation.insertExternalSurface(
-            options.extensions.surfaceAccessor(SourceLink{*it})->geometryId());
+      if (options.useExternalSurfaces) {
+        for (auto it = begin; it != end; ++it) {
+          propOptions.navigation.insertExternalSurface(
+              options.extensions.surfaceAccessor(SourceLink{*it})
+                  ->geometryId());
+        }
       }
 
       propOptions.actorList.template get<GsfActor>()
