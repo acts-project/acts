@@ -457,10 +457,14 @@ RootAthenaDumpReader::readMeasurements(
       digiPars.variances = {locCov[0], locCov[3]};
       digiPars.values = localParams;
     } else {
-      digiPars.indices = {Acts::eBoundLoc0};
       assert(!locCov.empty());
-      digiPars.variances = {locCov[0]};
-      digiPars.values = {localParams[0]};
+      // index can be -2/2 for endcap or 0 for barrel
+      // choose index of local measurement depending on that
+      const static std::array boundLoc = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      auto i = CLbarrel_endcap[im] == 0 ? 0 : 1;
+      digiPars.variances = {locCov[i]};
+      digiPars.values = {localParams[i]};
+      digiPars.indices = {boundLoc[i]};
     }
 
     std::size_t measIndex = measurements.size();
