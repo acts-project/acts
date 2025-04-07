@@ -37,23 +37,14 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     auto f =
         py::class_<DD4hepDetector, Detector, std::shared_ptr<DD4hepDetector>>(
             m, "DD4hepDetector")
-            .def(py::init<const DD4hepDetector::Config&>());
+            .def(py::init<const DD4hepDetector::Config&>())
+            .def_property_readonly("field", &DD4hepDetector::field);
 
     auto c = py::class_<DD4hepDetector::Config>(f, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, DD4hepDetector::Config);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_MEMBER(dd4hepLogLevel);
-    ACTS_PYTHON_MEMBER(xmlFileNames);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(bTypePhi);
-    ACTS_PYTHON_MEMBER(bTypeR);
-    ACTS_PYTHON_MEMBER(bTypeZ);
-    ACTS_PYTHON_MEMBER(envelopeR);
-    ACTS_PYTHON_MEMBER(envelopeZ);
-    ACTS_PYTHON_MEMBER(defaultLayerThickness);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, logLevel, dd4hepLogLevel, xmlFileNames, name,
+                       bTypePhi, bTypeR, bTypeZ, envelopeR, envelopeZ,
+                       defaultLayerThickness, materialDecorator,
+                       geometryIdentifierHook);
 
     patchKwargsConstructor(c);
   }
@@ -100,12 +91,8 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   {
     using Options = Acts::Experimental::DD4hepDetectorStructure::Options;
     auto o = py::class_<Options>(m, "DD4hepDetectorOptions").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(o, Options);
-    ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_MEMBER(emulateToGraph);
-    ACTS_PYTHON_MEMBER(geoIdGenerator);
-    ACTS_PYTHON_MEMBER(materialDecorator);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(o, logLevel, emulateToGraph, geoIdGenerator,
+                       materialDecorator);
 
     patchKwargsConstructor(o);
 
