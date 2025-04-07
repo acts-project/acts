@@ -129,6 +129,8 @@ struct GsfActor {
     std::map<MultiTrajectoryTraits::IndexType, double> weights;
   };
 
+  using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
+
   /// @brief GSF actor operation
   ///
   /// @tparam propagator_state_t is the type of Propagator state
