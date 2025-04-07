@@ -62,7 +62,7 @@ class DD4hepDetectorSurfaceFactory {
     /// matching and conversion statistics: materials
     std::size_t convertedMaterials = 0;
     /// The collected binnings
-    std::vector<std::tuple<ProtoAxis, std::size_t>> binnings = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
     /// The collected supports
     std::vector<Experimental::ProtoSupport> supports = {};
     /// Optionally provide an Extent object to measure the sensitives
