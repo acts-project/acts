@@ -25,6 +25,10 @@ namespace Acts::Experimental {
 
 namespace {
 
+class CylinderProtoDesignator;
+class CuboidProtoDesignator;
+class NullDesignator;
+
 class DesignatorBase {
  public:
   virtual ~DesignatorBase() = default;
@@ -35,29 +39,59 @@ class DesignatorBase {
   using FaceVariant =
       std::variant<CylinderVolumeBounds::Face, CuboidVolumeBounds::Face>;
 
-  virtual void configureFace(FaceVariant face, const DirectedProtoAxis& loc0,
-                             const DirectedProtoAxis& loc1,
-                             const std::string& prefix) = 0;
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const = 0;
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const CylinderProtoDesignator& other) const = 0;
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const CuboidProtoDesignator& other) const = 0;
+
+  virtual std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& other) const = 0;
 
   virtual void graphvizLabel(std::ostream& os) const = 0;
+};
+
+class NullDesignator : public DesignatorBase {
+ public:
+  void apply(PortalShellBase& /*shell*/, const Logger& /*logger*/,
+             const std::string& /*prefix*/) override {
+    throw std::runtime_error("NullDesignator has no apply");
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CylinderProtoDesignator& other) const override;
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CuboidProtoDesignator& other) const override;
+
+  std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& /*other*/) const override {
+    return std::make_unique<NullDesignator>();
+  }
+
+  void graphvizLabel(std::ostream& /*os*/) const override {
+    throw std::runtime_error("NullDesignator has no label");
+  }
 };
 
 class CylinderProtoDesignator : public DesignatorBase {
  public:
   using Face = CylinderVolumeBounds::Face;
 
-  void configureFace(FaceVariant face, const DirectedProtoAxis& loc0,
-                     const DirectedProtoAxis& loc1,
-                     const std::string& prefix) override {
-    auto* cylFace = std::get_if<Face>(&face);
-    if (cylFace == nullptr) {
-      throw std::invalid_argument(prefix +
-                                  "Cylinder faces must use a valid face");
-    }
+  CylinderProtoDesignator(Face face, const DirectedProtoAxis& loc0,
+                          const DirectedProtoAxis& loc1,
+                          const std::string& prefix) {
+    validate(face, loc0, loc1, prefix);
 
-    validate(*cylFace, loc0, loc1, prefix);
-
-    m_binning.emplace_back(*cylFace, loc0, loc1);
+    m_binning.emplace_back(face, loc0, loc1);
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
@@ -93,6 +127,29 @@ class CylinderProtoDesignator : public DesignatorBase {
       os << ": " << loc0.getAxisDirection() << "=" << loc0.getAxis().getNBins();
       os << ", " << loc1.getAxisDirection() << "=" << loc1.getAxis().getNBins();
     }
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CylinderProtoDesignator& other) const override {
+    auto merged = std::make_unique<CylinderProtoDesignator>(*this);
+    std::ranges::copy(other.m_binning, std::back_inserter(merged->m_binning));
+    return merged;
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CuboidProtoDesignator& /*other*/) const override {
+    throw std::runtime_error(
+        "CylinderProtoDesignator cannot be merged with CuboidProtoDesignator");
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& /*other*/) const override {
+    return std::make_unique<CylinderProtoDesignator>(*this);
   }
 
  private:
@@ -134,18 +191,12 @@ class CuboidProtoDesignator : public DesignatorBase {
  public:
   using Face = CuboidVolumeBounds::Face;
 
-  void configureFace(FaceVariant face, const DirectedProtoAxis& loc0,
-                     const DirectedProtoAxis& loc1,
-                     const std::string& prefix) override {
-    auto* cuboidFace = std::get_if<Face>(&face);
-    if (cuboidFace == nullptr) {
-      throw std::invalid_argument(prefix +
-                                  "Cuboid faces must use a valid face");
-    }
-
+  CuboidProtoDesignator(Face face, const DirectedProtoAxis& loc0,
+                        const DirectedProtoAxis& loc1,
+                        const std::string& prefix) {
     validate(loc0, loc1, prefix);
 
-    m_binning.emplace_back(*cuboidFace, loc0, loc1);
+    m_binning.emplace_back(face, loc0, loc1);
   }
 
   void apply(PortalShellBase& shell, const Logger& logger,
@@ -183,6 +234,29 @@ class CuboidProtoDesignator : public DesignatorBase {
     }
   }
 
+  std::unique_ptr<DesignatorBase> merged(
+      const DesignatorBase& other) const override {
+    return other.merged(*this);
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CylinderProtoDesignator& /*other*/) const override {
+    throw std::runtime_error(
+        "CuboidProtoDesignator cannot be merged with CylinderProtoDesignator");
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const CuboidProtoDesignator& other) const override {
+    auto merged = std::make_unique<CuboidProtoDesignator>(*this);
+    std::ranges::copy(other.m_binning, std::back_inserter(merged->m_binning));
+    return merged;
+  }
+
+  std::unique_ptr<DesignatorBase> merged(
+      const NullDesignator& /*other*/) const override {
+    return std::make_unique<CuboidProtoDesignator>(*this);
+  }
+
  private:
   void validate(const DirectedProtoAxis& loc0, const DirectedProtoAxis& loc1,
                 const std::string& prefix) {
@@ -198,6 +272,16 @@ class CuboidProtoDesignator : public DesignatorBase {
 
   std::vector<std::tuple<Face, DirectedProtoAxis, DirectedProtoAxis>> m_binning;
 };
+
+std::unique_ptr<DesignatorBase> NullDesignator::merged(
+    const CylinderProtoDesignator& other) const {
+  return std::make_unique<CylinderProtoDesignator>(other);
+}
+
+std::unique_ptr<DesignatorBase> NullDesignator::merged(
+    const CuboidProtoDesignator& other) const {
+  return std::make_unique<CuboidProtoDesignator>(other);
+}
 
 }  // namespace
 
@@ -223,7 +307,8 @@ class MaterialDesignatorBlueprintNodeImpl {
 
   std::string m_name{};
 
-  std::unique_ptr<DesignatorBase> m_designator{nullptr};
+  std::unique_ptr<DesignatorBase> m_designator{
+      std::make_unique<NullDesignator>()};
 };
 
 }  // namespace detail
@@ -321,11 +406,8 @@ void MaterialDesignatorBlueprintNode::addToGraphviz(std::ostream& os) const {
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  if (!impl().m_designator) {
-    impl().m_designator = std::make_unique<CylinderProtoDesignator>();
-  }
-
-  impl().m_designator->configureFace(face, loc0, loc1, prefix());
+  impl().m_designator = impl().m_designator->merged(
+      CylinderProtoDesignator(face, loc0, loc1, prefix()));
 
   return *this;
 }
@@ -333,11 +415,8 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
 MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
-  if (!impl().m_designator) {
-    impl().m_designator = std::make_unique<CuboidProtoDesignator>();
-  }
-
-  impl().m_designator->configureFace(face, loc0, loc1, prefix());
+  impl().m_designator = impl().m_designator->merged(
+      CuboidProtoDesignator(face, loc0, loc1, prefix()));
 
   return *this;
 }
