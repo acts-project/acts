@@ -138,7 +138,6 @@ def addParticleGun(
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
-                mergePrimaries=False,
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
                     mean=acts.Vector4(0, 0, 0, 0),
@@ -165,6 +164,7 @@ def addParticleGun(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        mergePrimaries=False,
     )
     s.addReader(evGen)
 
