@@ -584,8 +584,6 @@ struct GsfActor {
     addCombinedState(result, tmpStates, surface);
     result.lastMeasurementTip = result.currentTip;
 
-    using FiltProjector =
-        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
     FiltProjector proj{tmpStates.traj, tmpStates.weights};
 
     std::vector<std::tuple<double, BoundVector, BoundMatrix>> v;
