@@ -44,7 +44,7 @@ namespace {
 /// @param extent the extent from which the range is taken
 ///
 void adaptBinningRange(
-    std::vector<std::tuple<Acts::ProtoAxis, std::size_t>>& pBinning,
+    std::vector<std::tuple<Acts::DirectedProtoAxis, std::size_t>>& pBinning,
     const Acts::Extent& extent) {
   for (auto& [pb, pe] : pBinning) {
     // Starting values
@@ -201,7 +201,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     } else {
       // Sort the binning for conventions
       std::ranges::sort(binnings, {}, [](const auto& b) {
-        return std::get<ProtoAxis>(b).getAxisDirection();
+        return std::get<DirectedProtoAxis>(b).getAxisDirection();
       });
       // Check if autorange for binning applies
       if (m_cfg.extent.has_value()) {
@@ -215,7 +215,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
       // 1D surface binning
       if (binnings.size() == 1) {
         ACTS_DEBUG("- creating a 1D internal binning and portal navigation");
-        auto [protoAxis, fillExpansion] = binnings.at(0);
+        const auto& [protoAxis, fillExpansion] = binnings.at(0);
         internalCandidatesUpdater =
             Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
                 Experimental::IndexedSurfacesNavigation>(
@@ -223,8 +223,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
                 assignToAll);
       } else if (binnings.size() == 2u) {
         ACTS_DEBUG("- creating a 2D internal binning and portal navigation");
-        auto [protoAxisA, fillExpansionA] = binnings.at(0);
-        auto [protoAxisB, fillExpansionB] = binnings.at(1);
+        const auto& [protoAxisA, fillExpansionA] = binnings.at(0);
+        const auto& [protoAxisB, fillExpansionB] = binnings.at(1);
         internalCandidatesUpdater =
             Acts::detail::IndexedSurfacesGenerator::createInternalNavigation<
                 Experimental::IndexedSurfacesNavigation>(

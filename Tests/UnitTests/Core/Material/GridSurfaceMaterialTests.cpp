@@ -147,8 +147,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
       Acts::Material::fromMolarDensity(31.0, 32.0, 33.0, 34.0, 35.0), 4.0);
 
   // Bound, equidistant axis
-  Acts::ProtoAxis pAxisX(Acts::AxisDirection::AxisX,
-                         Acts::AxisBoundaryType::Bound, 0.0, 5.0, 5);
+  Acts::ProtoAxis pAxisX(Acts::AxisBoundaryType::Bound, 0.0, 5.0, 5);
 
   auto localX = std::make_unique<const LocalAccessX>();
   Acts::GridAccess::BoundToGridLocal1DimDelegate bToX;
@@ -185,8 +184,7 @@ BOOST_AUTO_TEST_CASE(GridMaterial1D) {
 
   // Try the same with Closed access
   // Bound, equidistant axis
-  Acts::ProtoAxis pAxisPhi(Acts::AxisDirection::AxisPhi,
-                           Acts::AxisBoundaryType::Closed, -std::numbers::pi,
+  Acts::ProtoAxis pAxisPhi(Acts::AxisBoundaryType::Closed, -std::numbers::pi,
                            std::numbers::pi, 8);
 
   auto localPhi = std::make_unique<const LocalAccessPhi>();
@@ -258,10 +256,8 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   BOOST_CHECK(material2x3[1][1].material().X0() == 12.);
   BOOST_CHECK(material2x3[1][2].material().X0() == 22.);
 
-  Acts::ProtoAxis pAxisX(Acts::AxisDirection::AxisX,
-                         Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
-  Acts::ProtoAxis pAxisY(Acts::AxisDirection::AxisY,
-                         Acts::AxisBoundaryType::Bound, -1.5, 1.5, 3);
+  Acts::ProtoAxis pAxisX(Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
+  Acts::ProtoAxis pAxisY(Acts::AxisBoundaryType::Bound, -1.5, 1.5, 3);
 
   std::vector<std::vector<Acts::MaterialSlab>> materialXY = material2x3;
 
@@ -304,10 +300,8 @@ BOOST_AUTO_TEST_CASE(GridMaterial2D) {
   // Let's try a ZPhi model as well
   auto materialZPhi = material2x3;
 
-  Acts::ProtoAxis pAxisZ(Acts::AxisDirection::AxisZ,
-                         Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
-  Acts::ProtoAxis pAxisPhi(Acts::AxisDirection::AxisPhi,
-                           Acts::AxisBoundaryType::Closed, -std::numbers::pi,
+  Acts::ProtoAxis pAxisZ(Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
+  Acts::ProtoAxis pAxisPhi(Acts::AxisBoundaryType::Closed, -std::numbers::pi,
                            std::numbers::pi, 3);
 
   auto localZPhi = std::make_unique<const LocalToZPhi>(1.);
@@ -458,8 +452,7 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial1D) {
       Acts::IndexedMaterialAccessor{std::move(materialStorage)};
 
   // An X proto axis
-  Acts::ProtoAxis pAxisX(Acts::AxisDirection::AxisX,
-                         Acts::AxisBoundaryType::Bound, 0.0, 9.0, 9);
+  Acts::ProtoAxis pAxisX(Acts::AxisBoundaryType::Bound, 0.0, 9.0, 9);
 
   auto localXidx = std::make_unique<const LocalAccessX>();
   Acts::IndexedSurfaceMaterial<EqGrid>::BoundToGridLocalDelegate bToXidx;
@@ -555,10 +548,8 @@ BOOST_AUTO_TEST_CASE(GridIndexedMaterial2D) {
   Acts::GridAccess::GlobalToGridLocal2DimDelegate gToZphiT2;
   gToZphiT2.connect<&GlobalToZPhi::g2ZPhi>(std::move(globalToGridT2));
 
-  Acts::ProtoAxis pAxisZ(Acts::AxisDirection::AxisZ,
-                         Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
-  Acts::ProtoAxis pAxisPhi(Acts::AxisDirection::AxisPhi,
-                           Acts::AxisBoundaryType::Closed, -std::numbers::pi,
+  Acts::ProtoAxis pAxisZ(Acts::AxisBoundaryType::Bound, -1.0, 1.0, 2);
+  Acts::ProtoAxis pAxisPhi(Acts::AxisBoundaryType::Closed, -std::numbers::pi,
                            std::numbers::pi, 4);
 
   std::vector<std::vector<std::size_t>> indexPayload = {
