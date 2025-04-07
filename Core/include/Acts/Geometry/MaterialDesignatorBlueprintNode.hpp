@@ -9,35 +9,27 @@
 #pragma once
 
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/CuboidPortalShell.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderPortalShell.hpp"
-#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/ProtoAxis.hpp"
-
-#include <variant>
 
 namespace Acts::Experimental {
 
+namespace detail {
+class MaterialDesignatorBlueprintNodeImpl;
+}
+
 /// This node type registers material proxies into its child volume during the
-/// blueprint construction. It is configured ahead of time which volume faces to
-/// mark up, and how do to so.
+/// blueprint construction. It is configured ahead of time which volume faces
+/// to mark up, and how do to so.
 /// @note This node can only have a single child. This is not an error during
 ///       tree building, but during geometry construction.
 class MaterialDesignatorBlueprintNode final : public BlueprintNode {
  public:
-  using CylinderBinning = std::tuple<CylinderVolumeBounds::Face,
-                                     DirectedProtoAxis, DirectedProtoAxis>;
-  using CuboidBinning = std::tuple<CuboidVolumeBounds::Face, DirectedProtoAxis,
-                                   DirectedProtoAxis>;
-
-  using BinningConfig =
-      std::variant<std::vector<CylinderBinning>, std::vector<CuboidBinning>>;
-
   /// Main constructor for the material designator node.
   /// @param name The name of the node (for debug only)
-  explicit MaterialDesignatorBlueprintNode(const std::string& name)
-      : m_name(name) {}
+  explicit MaterialDesignatorBlueprintNode(const std::string& name);
+
+  ~MaterialDesignatorBlueprintNode() override;
 
   /// @copydoc BlueprintNode::name
   const std::string& name() const override;
@@ -46,8 +38,8 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   void toStream(std::ostream& os) const override;
 
   /// This method participates in the geometry construction.
-  /// It checks that this node only has a single child, is correctly configured,
-  /// and forwards the call.
+  /// It checks that this node only has a single child, is correctly
+  /// configured, and forwards the call.
   /// @param options The global blueprint options
   /// @param gctx The geometry context (nominal usually)
   /// @param logger The logger to use
@@ -108,24 +100,10 @@ class MaterialDesignatorBlueprintNode final : public BlueprintNode {
   /// @copydoc BlueprintNode::addToGraphviz
   void addToGraphviz(std::ostream& os) const override;
 
-  void handleCylinderBinning(CylinderPortalShell& cylShell,
-                             const std::vector<CylinderBinning>& binning,
-                             const Logger& logger);
+  detail::MaterialDesignatorBlueprintNodeImpl& impl();
+  const detail::MaterialDesignatorBlueprintNodeImpl& impl() const;
 
-  void handleCuboidBinning(CuboidPortalShell& cuboidShell,
-                           const std::vector<CuboidBinning>& binning,
-                           const Logger& logger);
-
-  void validateCylinderFaceConfig(CylinderVolumeBounds::Face face,
-                                  AxisDirection aDir0, AxisDirection aDir1,
-                                  const Logger& logger = getDummyLogger());
-
-  void validateCuboidFaceConfig(AxisDirection aDir0, AxisDirection aDir1,
-                                const Logger& logger = getDummyLogger());
-
-  std::string m_name{};
-
-  std::optional<BinningConfig> m_binning{};
+  std::unique_ptr<detail::MaterialDesignatorBlueprintNodeImpl> m_impl;
 };
 
 }  // namespace Acts::Experimental
