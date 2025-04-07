@@ -210,8 +210,9 @@ LayerBlueprintNode& LayerBlueprintNode::setUseCenterOfGravity(bool x, bool y,
 
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
-  ss << "<br/>";
-  ss << impl().m_layerType;
+  ss << "<br/><b>" + name() + "</b>";
+  ss << "<br/>Layer";
+  ss << "<br/><i>" << impl().m_layerType << "</i>";
 
   GraphViz::Node node{
       .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Diamond};
