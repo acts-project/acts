@@ -123,6 +123,7 @@
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "ON",
