@@ -1,3 +1,3 @@
 set(unittest_extra_libraries ActsExamplesIoRoot)
 
-add_unittest(RootSimhitReaderWriter SimhitReaderWriterTests.cpp)
+add_unittest_if(RootSimhitReaderWriter SimhitReaderWriterTests.cpp ACTS_BUILD_EXAMPLES_ROOT)
