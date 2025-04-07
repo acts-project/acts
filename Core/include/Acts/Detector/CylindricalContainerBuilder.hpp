@@ -56,7 +56,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
     /// Material binning to be assigned to portals
-    std::map<unsigned int, std::vector<ProtoAxis>> portalMaterialBinning = {};
+    std::map<unsigned int, std::vector<DirectedProtoAxis>>
+        portalMaterialBinning = {};
     /// An eventual reverse geometry id generation
     bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output
