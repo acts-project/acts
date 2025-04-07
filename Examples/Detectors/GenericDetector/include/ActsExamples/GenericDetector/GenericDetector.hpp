@@ -13,7 +13,9 @@
 #include "ActsExamples/GenericDetector/ProtoLayerCreator.hpp"
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 class IMaterialDecorator;
@@ -34,6 +36,7 @@ class GenericDetector : public Detector {
     bool buildProto = false;
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
     bool gen3 = false;
+    std::optional<std::filesystem::path> graphvizFile;
   };
 
   explicit GenericDetector(const Config& cfg);
