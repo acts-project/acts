@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/TrackingVolume.hpp"
-
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -653,10 +652,6 @@ void TrackingVolume::setNavigationPolicy(
 
   m_navigationPolicy = std::move(policy);
   m_navigationPolicy->connect(m_navigationDelegate);
-}
-
-const INavigationPolicy* TrackingVolume::navigationPolicy() const {
-  return m_navigationPolicy.get();
 }
 
 void TrackingVolume::initializeNavigationCandidates(

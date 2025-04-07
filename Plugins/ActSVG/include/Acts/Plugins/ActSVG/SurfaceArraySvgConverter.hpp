@@ -41,7 +41,7 @@ struct Options {
 /// @param cOptions the conversion options
 ///
 /// @note the type of view is auto-generated from the binning information,
-/// @note it transforms the surface array into an indexed array of surfaces
+///       it transforms the surface array into an indexed array of surfaces
 ///       and then uses these proto objects, one can thus directly use the
 ///       view function of the indexed surface grid
 ///
