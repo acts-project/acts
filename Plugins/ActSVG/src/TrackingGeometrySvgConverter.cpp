@@ -12,7 +12,9 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-std::vector<actsvg::svg::object> Acts::Svg::TrackingGeometryConverter::convert(
+namespace Acts::Svg {
+
+std::vector<actsvg::svg::object> TrackingGeometryConverter::convert(
     const GeometryContext& gctx, const TrackingGeometry& tGeometry,
     const TrackingGeometryConverter::Options& cOptions) {
   // Get the world volume
@@ -38,7 +40,7 @@ std::vector<actsvg::svg::object> Acts::Svg::TrackingGeometryConverter::convert(
   return finalViews;
 }
 
-void Acts::Svg::TrackingGeometryConverter::convert(
+void TrackingGeometryConverter::convert(
     const GeometryContext& gctx, const TrackingVolume& tVolume,
     const TrackingGeometryConverter::Options& cOptions,
     TrackingGeometryConverter::State& cState) {
@@ -90,8 +92,7 @@ void Acts::Svg::TrackingGeometryConverter::convert(
   }
 }
 
-std::array<actsvg::svg::object, 2>
-Acts::Svg::TrackingGeometryProjections::convert(
+std::array<actsvg::svg::object, 2> TrackingGeometryProjections::convert(
     const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
     const TrackingGeometryProjections::Options& cOptions) {
   // The projections
@@ -115,3 +116,4 @@ Acts::Svg::TrackingGeometryProjections::convert(
   }
   return {xyView, zrView};
 }
+}  // namespace Acts::Svg
