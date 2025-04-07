@@ -290,4 +290,12 @@ void TrackingGeometry::apply(TrackingGeometryMutableVisitor& visitor) {
   highestTrackingVolume()->apply(visitor);
 }
 
+TrackingGeometry::Generation TrackingGeometry::generation() const {
+  if (highestTrackingVolume()->portals().empty()) {
+    return Generation::One;
+  } else {
+    return Generation::Three;
+  }
+}
+
 }  // namespace Acts
