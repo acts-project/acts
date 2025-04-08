@@ -42,7 +42,7 @@ class MultiWireStructureBuilder {
     std::vector<double> mlBounds = {};
 
     // The binning of the multi wire structure
-    std::vector<std::tuple<ProtoAxis, std::size_t>> mlBinning = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> mlBinning = {};
 
     /// A tolerance config
     float toleranceOverlap = 10.;

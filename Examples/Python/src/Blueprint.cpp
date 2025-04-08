@@ -412,12 +412,14 @@ void addBlueprint(Context& ctx) {
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
                           py::overload_cast<CylinderVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
                           py::overload_cast<CuboidVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 

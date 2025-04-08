@@ -45,8 +45,8 @@ inline AxisDirection toAxisDirection(const std::string& binning) {
 /// @param binning the binning string
 /// @param extent the extent of the binning
 ///
-/// @return a ProtoAxis object
-std::tuple<Acts::ProtoAxis, std::size_t> toProtoAxis(
+/// @return a DirectedProtoAxis object and the bin expansion
+std::tuple<Acts::DirectedProtoAxis, std::size_t> toProtoAxis(
     const std::string& binning,
     const std::optional<Extent>& extent = std::nullopt);
 
