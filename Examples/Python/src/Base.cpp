@@ -159,6 +159,8 @@ void addLogging(Acts::Python::Context& ctx) {
         };
   };
 
+  py::class_<Logger>(m, "Logger");
+
   auto logger =
       py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(logging, "Logger")
           .def("log", &PythonLogger::log)
