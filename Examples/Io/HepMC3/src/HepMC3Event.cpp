@@ -94,13 +94,13 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Event::mergeHepMC3Events(
   auto event = std::make_shared<HepMC3::GenEvent>();
   event->set_units(HepMC3::Units::GEV, HepMC3::Units::MM);
 
-  for (auto& genEvent : genEvents) {
+  for (const auto& genEvent : genEvents) {
     auto sample = mergeTimer.sample();
     particles.clear();
     particles.reserve(genEvent->particles_size());
 
     auto copyAttributes = [&](const auto& src, auto& dst) {
-      for (auto& attr : src.attribute_names()) {
+      for (const auto& attr : src.attribute_names()) {
         auto value = src.attribute_as_string(attr);
         dst.add_attribute(attr,
                           std::make_shared<HepMC3::StringAttribute>(value));
@@ -110,7 +110,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Event::mergeHepMC3Events(
     copyAttributes(*genEvent, *event);
 
     // Add to combined event
-    for (auto& srcParticle : genEvent->particles()) {
+    for (const auto& srcParticle : genEvent->particles()) {
       if (srcParticle->id() - 1 != static_cast<int>(particles.size())) {
         throw std::runtime_error("Particle id is not consecutive");
       }
@@ -126,7 +126,7 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Event::mergeHepMC3Events(
       copyAttributes(*srcParticle, *particle);
     }
 
-    for (auto& srcVertex : genEvent->vertices()) {
+    for (const auto& srcVertex : genEvent->vertices()) {
       auto vertex = std::make_shared<HepMC3::GenVertex>(srcVertex->position());
       vertex->set_status(srcVertex->status());
 
@@ -134,12 +134,12 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Event::mergeHepMC3Events(
 
       copyAttributes(*srcVertex, *vertex);
 
-      for (auto& srcParticle : srcVertex->particles_in()) {
-        auto& particle = particles.at(srcParticle->id() - 1);
+      for (const auto& srcParticle : srcVertex->particles_in()) {
+        const auto& particle = particles.at(srcParticle->id() - 1);
         vertex->add_particle_in(particle);
       }
-      for (auto& srcParticle : srcVertex->particles_out()) {
-        auto& particle = particles.at(srcParticle->id() - 1);
+      for (const auto& srcParticle : srcVertex->particles_out()) {
+        const auto& particle = particles.at(srcParticle->id() - 1);
         vertex->add_particle_out(particle);
       }
     }

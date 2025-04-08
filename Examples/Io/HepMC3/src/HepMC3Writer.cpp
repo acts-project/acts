@@ -8,8 +8,6 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
-#include "ActsExamples/Utilities/Paths.hpp"
-
 #include <HepMC3/WriterAscii.h>
 
 namespace ActsExamples {
@@ -21,8 +19,8 @@ HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
     throw std::invalid_argument("Missing output file path");
   }
 
-  auto absolute = std::filesystem::absolute(m_cfg.outputPath);
-  if (!std::filesystem::exists(absolute.parent_path())) {
+  if (auto absolute = std::filesystem::absolute(m_cfg.outputPath);
+      std::filesystem::exists(absolute.parent_path())) {
     throw std::invalid_argument("Output directory does not exist: " +
                                 absolute.parent_path().string());
   }
@@ -41,7 +39,7 @@ ProcessCode HepMC3AsciiWriter::writeT(
   ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
                           << m_cfg.outputPath);
 
-  auto write = [&event](HepMC3::Writer& writer) -> ProcessCode {
+  auto write = [&event](HepMC3::Writer& writer) {
     writer.write_event(*event);
     if (writer.failed()) {
       return ProcessCode::ABORT;
@@ -63,7 +61,7 @@ ProcessCode HepMC3AsciiWriter::writeT(
   } else {
     ACTS_VERBOSE("Writing to single file " << m_cfg.outputPath);
     // Take the lock until the end of the function
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::scoped_lock lock(m_mutex);
     return write(*m_writer);
   }
 }

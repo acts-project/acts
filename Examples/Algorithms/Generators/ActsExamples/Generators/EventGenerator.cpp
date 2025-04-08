@@ -58,7 +58,7 @@ EventGenerator::EventGenerator(const Config& cfg, Acts::Logging::Level lvl)
     throw std::invalid_argument("No generators are configured");
   }
 
-  for (auto& generator : m_cfg.generators) {
+  for (const auto& generator : m_cfg.generators) {
     if (generator.multiplicity == nullptr) {
       throw std::invalid_argument("Missing multiplicity generator");
     }
@@ -159,7 +159,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
   }
 
   auto event = HepMC3Event::mergeHepMC3Events(eventPtrs, logger());
-  event->set_event_number(ctx.eventNumber);
+  event->set_event_number(static_cast<int>(ctx.eventNumber));
 
   ACTS_VERBOSE("Vertices size: " << event->vertices_size());
   if (m_cfg.printListing) {
@@ -397,7 +397,6 @@ void EventGenerator::convertHepMC3ToInternalEdm(
 
     std::size_t nUndecayedParticles = 0;
     for (const auto& particle : genEvent.particles()) {
-      // if (particle->status() == kUndecayedParticleStatus) {
       if (particle->end_vertex() == nullptr) {
         nUndecayedParticles += 1;
       }

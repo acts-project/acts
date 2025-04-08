@@ -61,7 +61,7 @@ ProcessCode HepMC3OutputConverter::execute(const AlgorithmContext& ctx) const {
     hepmc3Particle->set_status(1);
     genEvent->add_particle(hepmc3Particle);
     ACTS_VERBOSE("Adding particle with barcode " << inParticle.particleId());
-    barcodeMap.insert({inParticle.particleId(), hepmc3Particle});
+    barcodeMap.try_emplace(inParticle.particleId(), hepmc3Particle);
   }
 
   for (const auto& inVertex : inputVertices) {
