@@ -37,6 +37,7 @@ class GenericDetectorBuilder {
     ProtoLayerCreator::DetectorElementFactory detectorElementFactory;
     Acts::Logging::Level layerLogLevel;
     bool protoMaterial;
+    std::size_t buildLevel = 3;
   };
 
   explicit GenericDetectorBuilder(
