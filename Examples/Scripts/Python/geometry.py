@@ -113,12 +113,26 @@ if "__main__" == __name__:
         logLevel = acts.logging.VERBOSE
 
     # detector = AlignedDetector()
-    detector = GenericDetector(gen3=True, logLevel=logLevel)
+    detector = GenericDetector(
+        gen3=True, logLevel=logLevel, graphvizFile=Path.cwd() / "GenericDetector.dot"
+    )
     # detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
     runGeometry(trackingGeometry, decorators, outputDir=Path.cwd())
+
+    gctx = acts.GeometryContext()
+    # proto = acts.svg.convertTrackingGeometry(gctx, trackingGeometry)
+    objects = acts.svg.drawTrackingGeometry(
+        gctx, trackingGeometry, "zr", drawSurfaces=True, highlightMaterial=True
+    )
+
+    # objects = acts.svg.drawProtoDetector(proto, "generic", "zr")
+
+    # obj = acts.svg.view.zr(detector=proto, identification="test")
+
+    acts.svg.toFile(objects, "test.svg")
 
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
