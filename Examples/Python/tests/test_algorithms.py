@@ -61,8 +61,7 @@ def test_algorithm_interface(alg):
 def test_g4_algorithms():
     from acts.examples.geant4 import Geant4Simulation
 
-    for alg in (Geant4Simulation,):
-        assert hasattr(alg, "Config")
+    assert hasattr(Geant4Simulation, "Config")
 
 
 def test_special_algorithm_interfaces():
