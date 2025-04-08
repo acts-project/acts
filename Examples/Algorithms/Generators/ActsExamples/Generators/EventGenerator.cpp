@@ -107,7 +107,6 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
       auto& generate = m_cfg.generators[iGenerate];
 
       // generate the primary vertices from this generator
-      assert(generate.multiplicity != nullptr);
       std::size_t multiplicity = (*generate.multiplicity)(rng);
       ACTS_VERBOSE("Generating " << multiplicity << " primary vertices");
       for (std::size_t n = multiplicity; 0 < n; --n) {
@@ -115,12 +114,10 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
         nPrimaryVertices += 1;
 
         // generate primary vertex position
-        assert(generate.vertex != nullptr);
         auto vertexPosition = (*generate.vertex)(rng);
         ACTS_VERBOSE("Generate vertex at " << vertexPosition.transpose());
 
         // generate particles associated to this vertex
-        assert(generate.particles != nullptr);
         auto genEvent = (*generate.particles)(rng);
         if (genEvent->length_unit() != HepMC3::Units::MM) {
           throw std::runtime_error("EventGenerator: length unit is not mm");
@@ -445,7 +442,6 @@ void EventGenerator::convertHepMC3ToInternalEdm(
 
   ACTS_DEBUG("Converted " << particlesUnordered.size() << " particles and "
                           << verticesUnordered.size() << " vertices");
-  // for(std::size_t i =0;i<)
 
   if (m_cfg.printListing) {
     ACTS_VERBOSE("Converted event record:\n"
@@ -487,80 +483,6 @@ void EventGenerator::convertHepMC3ToInternalEdm(
                                  particlesUnordered.end()};
   SimVertexContainer vertices{verticesUnordered.begin(),
                               verticesUnordered.end()};
-
-  // std::vector<SimVertexBarcode> vertexBarcodes;
-  // vertexBarcodes.resize(genEvent.vertices_size());
-
-  // for(const auto& inParticle : genEvent.particles()) {
-  //   // According to https://arxiv.org/pdf/1912.08005 status 1 is "Undecayed
-  //   physical particle" if (inParticle->status() != 1) {
-  //     continue;
-  //   }
-
-  //   SimBarcode particleId{0u};
-  //   particleId.setParticle(particles.size() + 1);
-
-  //   const auto* productionVertex = inParticle->production_vertex().get();
-  //   if (productionVertex != nullptr) {
-  //     const int vertexIndex = productionVertex->id();
-  //     SimVertexBarcode vertexBarcode = vertexBarcodes.at(vertexIndex);
-  //     if (vertexBarcode == SimVertexBarcode{0u}) {
-  //       // We have not seen this vertex before, create a new one
-  //       SimVertex vertex;
-  //     }
-  //   }
-  // }
-
-  // auto updateParticleInPlace = [&](SimParticle& particle) {
-  //   // only set the primary vertex, leave everything else as-is
-  //   // using the number of primary vertices as the index ensures
-  //   // that barcode=0 is not used, since it is used elsewhere
-  //   // to signify elements w/o an associated particle.
-  //   const auto pid = SimBarcode{particle.particleId()}.setVertexPrimary(
-  //       nPrimaryVertices);
-  //   // move particle to the vertex
-  //   const auto pos4 = (vertexPosition + particle.fourPosition()).eval();
-  //   ACTS_VERBOSE(" - particle at " << pos4.transpose());
-  //   // `withParticleId` returns a copy because it changes the identity
-  //   particle = particle.withParticleId(pid);
-  //   particle.initial().setPosition4(pos4);
-  //   particle.final().setPosition4(pos4);
-  // };
-  // for (auto& vertexParticle : newParticles) {
-  //   updateParticleInPlace(vertexParticle);
-  // }
-
-  // auto updateVertexInPlace = [&](SimVertex& vertex) {
-  //   // only set the primary vertex, leave everything else as-is
-  //   // using the number of primary vertices as the index ensures
-  //   // that barcode=0 is not used, since it is used elsewhere
-  //   // to signify elements w/o an associated particle.
-  //   vertex.id = SimVertexBarcode{vertex.vertexId()}.setVertexPrimary(
-  //       nPrimaryVertices);
-  //   // move vertex
-  //   const auto pos4 = (vertexPosition + vertex.position4).eval();
-  //   ACTS_VERBOSE(" - vertex at " << pos4.transpose());
-  //   vertex.position4 = pos4;
-
-  //   for (auto& particleId : vertex.incoming) {
-  //     particleId =
-  //         SimBarcode{particleId}.setVertexPrimary(nPrimaryVertices);
-  //   }
-  //   for (auto& particleId : vertex.outgoing) {
-  //     particleId =
-  //         SimBarcode{particleId}.setVertexPrimary(nPrimaryVertices);
-  //   }
-  // };
-  // for (auto& vertex : newVertices) {
-  //   updateVertexInPlace(vertex);
-  // }
-
-  // ACTS_VERBOSE("event=" << ctx.eventNumber << " generator=" << iGenerate
-  //                       << " primary_vertex=" << nPrimaryVertices
-  //                       << " n_particles=" << newParticles.size());
-
-  // particles.merge(std::move(newParticles));
-  // vertices.merge(std::move(newVertices));
 
   // move generated event to the store
   m_outputParticles(ctx, std::move(particles));

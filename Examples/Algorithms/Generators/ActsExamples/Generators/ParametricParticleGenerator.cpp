@@ -110,10 +110,6 @@ std::shared_ptr<HepMC3::GenEvent> ParametricParticleGenerator::operator()(
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (std::size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
-    // all particles are treated as originating from the same primary vertex
-    // const auto pid = SimBarcode(0u).setParticle(ip);
-    // primaryVertex.outgoing.insert(pid);
-
     // draw parameters
     const unsigned int type = m_particleTypeChoice(rng);
     const Acts::PdgParticle pdg = m_pdgChoices[type];
