@@ -103,7 +103,7 @@ option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HASHING "Build Hashing-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" OFF)
+option(ACTS_BUILD_EXAMPLES_ROOT "Build modules based on ROOT I/O" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
