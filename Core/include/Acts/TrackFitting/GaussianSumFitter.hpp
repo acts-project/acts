@@ -334,7 +334,12 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
-      const auto& params = *fwdGsfResult.lastMeasurementState;
+      assert(!fwdGsfResult.lastMeasurementComponents.empty());
+      assert(fwdGsfResult.lastMeasurementSurface != nullptr);
+      MultiComponentBoundTrackParameters params(
+          fwdGsfResult.lastMeasurementSurface->getSharedPtr(),
+          fwdGsfResult.lastMeasurementComponents,
+          sParameters.particleHypothesis());
       auto state = m_propagator.template makeState<decltype(bwdPropOptions),
                                                    MultiStepperSurfaceReached>(
           target, bwdPropOptions);
