@@ -318,13 +318,29 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
           auto object = actsvg::display::volume(id, volume, _view);
           objects.push_back(object);
 
+          std::vector<std::string> lines;
+
           std::stringstream ss;
-          ss << tv->geometryId();
+          ss << "ID: " << tv->geometryId();
+          lines.push_back(ss.str());
+
+          ss.str("");
+          ss << tv->volumeBounds();
+          std::string bounds = ss.str();
+          // split at first space after 40 characters
+          ss.str("");
+          for (std::size_t i = 0; i < bounds.size(); ++i) {
+            ss << bounds[i];
+            if (ss.str().size() > 40 && bounds[i] == ' ') {
+              lines.push_back(ss.str());
+              ss.str("");
+            }
+          }
 
           auto text = actsvg::draw::connected_info_box(
               "info_volume_" + volume._name, {0, 0}, volume._name,
               {{._rgb{200, 200, 200}}}, {._fc{._rgb{0, 0, 0}}, ._size = 24},
-              {ss.str()}, {{._rgb{220, 220, 220}}},
+              lines, {{._rgb{220, 220, 220}}},
               {._fc{._rgb{0, 0, 0}}, ._size = 24}, {}, object);
 
           objects.push_back(text);
