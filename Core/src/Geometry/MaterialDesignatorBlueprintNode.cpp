@@ -48,6 +48,8 @@ class DesignatorBase {
   virtual void apply(PortalShellBase& shell, const Logger& logger,
                      const std::string& prefix) = 0;
 
+  virtual std::string label() const = 0;
+
   using FaceVariant =
       std::variant<CylinderVolumeBounds::Face, CuboidVolumeBounds::Face>;
 
@@ -55,29 +57,19 @@ class DesignatorBase {
       const DesignatorBase& other) const = 0;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CylinderProtoDesignator& /*other*/) const {
-    throw std::runtime_error("Merging of these types is not implemented");
-  }
+      const CylinderProtoDesignator& other) const;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CuboidProtoDesignator& /*other*/) const {
-    throw std::runtime_error("Merging of these types is not implemented");
-  }
+      const CuboidProtoDesignator& other) const;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const NullDesignator& /*other*/) const {
-    throw std::runtime_error("Merging of these types is not implemented");
-  }
+      const NullDesignator& other) const;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CylinderHomogeneousMaterialDesignator& /*other*/) const {
-    throw std::runtime_error("Merging of these types is not implemented");
-  }
+      const CylinderHomogeneousMaterialDesignator& other) const;
 
   virtual std::unique_ptr<DesignatorBase> merged(
-      const CuboidHomogeneousMaterialDesignator& /*other*/) const {
-    throw std::runtime_error("Merging of these types is not implemented");
-  }
+      const CuboidHomogeneousMaterialDesignator& other) const;
 
   virtual void graphvizLabel(std::ostream& os) const = 0;
 };
@@ -93,6 +85,8 @@ class CylinderProtoDesignator : public DesignatorBase {
 
     m_binning.emplace_back(face, loc0, loc1);
   }
+
+  std::string label() const override { return "CylinderProtoDesignator"; }
 
   void apply(PortalShellBase& shell, const Logger& logger,
              const std::string& prefix) override {
@@ -199,6 +193,8 @@ class CuboidProtoDesignator : public DesignatorBase {
     m_binning.emplace_back(face, loc0, loc1);
   }
 
+  std::string label() const override { return "CuboidProtoDesignator"; }
+
   void apply(PortalShellBase& shell, const Logger& logger,
              const std::string& prefix) override {
     auto* cuboidShell = dynamic_cast<CuboidPortalShell*>(&shell);
@@ -285,6 +281,10 @@ class HomogeneousMaterialDesignator : public DesignatorBase {
     m_materials.emplace_back(face, std::move(material));
   }
 
+  std::string label() const override {
+    return std::string{shellTypeName()} + " HomogeneousMaterialDesignator";
+  }
+
   void apply(PortalShellBase& shell, const Logger& logger,
              const std::string& prefix) override {
     auto* concreteShell = dynamic_cast<ShellType*>(&shell);
@@ -356,6 +356,8 @@ class NullDesignator : public DesignatorBase {
     throw std::runtime_error("NullDesignator has no apply");
   }
 
+  std::string label() const override { return "NullDesignator"; }
+
   std::unique_ptr<DesignatorBase> merged(
       const DesignatorBase& other) const override {
     return other.merged(*this);
@@ -390,6 +392,40 @@ class NullDesignator : public DesignatorBase {
     throw std::runtime_error("NullDesignator has no label");
   }
 };
+
+inline std::string mergingError(const DesignatorBase& lhs,
+                                const DesignatorBase& rhs) {
+  return "MaterialDesignator: Merging of " + lhs.label() + " with " +
+         rhs.label() +
+         " is not supported. This means you are trying to "
+         "configure the same face with different binning or "
+         "materials. Please check your configuration.";
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const CylinderProtoDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const CuboidProtoDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const NullDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const CylinderHomogeneousMaterialDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
+
+inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
+    const CuboidHomogeneousMaterialDesignator& other) const {
+  throw std::runtime_error(mergingError(*this, other));
+}
 
 }  // namespace
 
