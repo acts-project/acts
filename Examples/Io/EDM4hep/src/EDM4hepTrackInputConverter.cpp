@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepTrackReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackInputConverter.hpp"
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
@@ -18,31 +18,16 @@
 
 namespace ActsExamples {
 
-EDM4hepTrackReader::EDM4hepTrackReader(const Config& config,
-                                       Acts::Logging::Level level)
-    : m_cfg(config),
-      m_logger(Acts::getDefaultLogger("EDM4hepSimHitReader", level)) {
-  if (m_cfg.outputTracks.empty()) {
-    throw std::invalid_argument("Missing output trajectories collection");
-  }
-
+EDM4hepTrackInputConverter::EDM4hepTrackInputConverter(
+    const Config& config, Acts::Logging::Level level)
+    : EDM4hepInputConverter("EDM4hepTrackInputConverter", level,
+                            config.inputFrame),
+      m_cfg(config) {
   m_outputTracks.initialize(m_cfg.outputTracks);
-
-  m_eventsRange = {0, reader().getEntries("events")};
 }
 
-std::pair<std::size_t, std::size_t> EDM4hepTrackReader::availableEvents()
-    const {
-  return m_eventsRange;
-}
-
-std::string EDM4hepTrackReader::EDM4hepTrackReader::name() const {
-  return "EDM4hepTrackReader";
-}
-
-ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
-  podio::Frame frame = reader().readEntry("events", ctx.eventNumber);
-
+ProcessCode EDM4hepTrackInputConverter::convert(
+    const AlgorithmContext& ctx, const podio::Frame& frame) const {
   const auto& trackCollection =
       frame.get<edm4hep::TrackCollection>(m_cfg.inputTracks);
 
@@ -64,16 +49,6 @@ ProcessCode EDM4hepTrackReader::read(const AlgorithmContext& ctx) {
   m_outputTracks(ctx, std::move(constTracks));
 
   return ProcessCode::SUCCESS;
-}
-
-Acts::PodioUtil::ROOTReader& EDM4hepTrackReader::reader() {
-  bool exists = false;
-  auto& reader = m_reader.local(exists);
-  if (!exists) {
-    reader.openFile(m_cfg.inputPath);
-  }
-
-  return reader;
 }
 
 }  // namespace ActsExamples
