@@ -45,14 +45,14 @@ class Gen1GenericDetectorBuilder : public GenericDetectorBuilder {
   using GenericDetectorBuilder::GenericDetectorBuilder;
 
   std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
-      const Acts::GeometryContext& gctx, int level,
+      const Acts::GeometryContext& gctx,
       std::shared_ptr<const Acts::IMaterialDecorator> matDecorator,
       Acts::Logging::Level surfaceLLevel, Acts::Logging::Level volumeLLevel);
 };
 
 std::unique_ptr<const Acts::TrackingGeometry>
 Gen1GenericDetectorBuilder::buildTrackingGeometry(
-    const Acts::GeometryContext& gctx, int level,
+    const Acts::GeometryContext& gctx,
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator,
     Acts::Logging::Level surfaceLLevel, Acts::Logging::Level volumeLLevel) {
   ACTS_INFO("Building tracking geometry for Generic Detector in Gen1 mode");
@@ -136,7 +136,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   plbConfig.centralLayerMaterial = {
       m_pixelCentralMaterial, m_pixelCentralMaterial, m_pixelCentralMaterial,
       m_pixelCentralMaterial};
-  if (level > 0) {
+  if (m_cfg.buildLevel > 0) {
     // material concentration is always behind the layer in the pixels
     plbConfig.posnegLayerMaterialConcentration = std::vector<int>(7, 0);
     // layer structure surface has pixel material properties
@@ -165,7 +165,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   // add to the list of builders
   volumeBuilders.push_back(pixelVolumeBuilder);
 
-  if (level > 1) {
+  if (m_cfg.buildLevel > 1) {
     ACTS_DEBUG("Building PST");
     //-------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------
@@ -218,7 +218,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
         m_shortStripCentralMaterial, m_shortStripCentralMaterial,
         m_shortStripCentralMaterial, m_shortStripCentralMaterial};
 
-    if (level > 2) {
+    if (m_cfg.buildLevel > 2) {
       sslbConfig.negativeProtoLayers = ssplCreator.negativeProtoLayers(gctx);
       sslbConfig.positiveProtoLayers = ssplCreator.positiveProtoLayers(gctx);
 
@@ -267,7 +267,7 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
                                        m_longStripCentralMaterial};
     lslbConfig.centralProtoLayers = lsplCreator.centralProtoLayers(gctx);
 
-    if (level > 2) {
+    if (m_cfg.buildLevel > 2) {
       lslbConfig.posnegLayerMaterialConcentration =
           std::vector<int>(nposnegs, 0);
       lslbConfig.posnegLayerMaterial =
@@ -493,6 +493,7 @@ void GenericDetector::buildTrackingGeometry(
   cfg.detectorElementFactory = detectorElementFactory;
   cfg.protoMaterial = m_cfg.buildProto;
   cfg.layerLogLevel = m_cfg.layerLogLevel;
+  cfg.buildLevel = m_cfg.buildLevel;
 
   if (m_cfg.gen3) {
     m_trackingGeometry =
@@ -502,7 +503,7 @@ void GenericDetector::buildTrackingGeometry(
   } else {
     m_trackingGeometry =
         Generic::Gen1GenericDetectorBuilder(cfg, logger().clone())
-            .buildTrackingGeometry(m_nominalGeometryContext, m_cfg.buildLevel,
+            .buildTrackingGeometry(m_nominalGeometryContext,
                                    m_cfg.materialDecorator,
                                    m_cfg.surfaceLogLevel, m_cfg.volumeLogLevel);
   }
