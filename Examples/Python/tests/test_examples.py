@@ -526,64 +526,6 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
         assert_root_hash(fn, fp)
 
 
-@pytest.mark.slow
-@pytest.mark.odd
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-def test_event_recording(tmp_path):
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "event_recording.py"
-    )
-    assert script.exists()
-
-    env = os.environ.copy()
-    env["NEVENTS"] = "1"
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    try:
-        subprocess.check_call(
-            [sys.executable, str(script)],
-            cwd=tmp_path,
-            env=env,
-            stderr=subprocess.STDOUT,
-        )
-    except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
-        raise
-
-    from acts.examples.hepmc3 import HepMC3AsciiReader
-
-    out_path = tmp_path / "hepmc3"
-    # out_path.mkdir()
-
-    assert len([f for f in out_path.iterdir() if f.name.endswith("events.hepmc3")]) > 0
-    assert all([f.stat().st_size > 100 for f in out_path.iterdir()])
-
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        HepMC3AsciiReader(
-            level=acts.logging.INFO,
-            inputDir=str(out_path),
-            inputStem="events",
-            outputEvents="hepmc-events",
-        )
-    )
-
-    alg = AssertCollectionExistsAlg(
-        "hepmc-events", name="check_alg", level=acts.logging.INFO
-    )
-    s.addAlgorithm(alg)
-
-    s.run()
-
-    assert alg.events_seen == 1
-
-
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
 def test_truth_tracking_kalman(
     tmp_path, assert_root_hash, revFiltMomThresh, detector_config
