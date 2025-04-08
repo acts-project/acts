@@ -2032,6 +2032,113 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
   }
 }
+
+BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZ) {
+  double hlZ = 400_mm;
+  double rMin = 100_mm;
+  double rMax = 200_mm;
+
+  // Create two cylinder volumes stacked in z
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+  auto bounds2 = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+
+  Transform3 transform1 = Transform3::Identity();
+  transform1.translate(Vector3{0_mm, 0_mm, -hlZ});
+  auto vol1 = std::make_shared<Volume>(transform1, bounds1);
+
+  Transform3 transform2 = Transform3::Identity();
+  transform2.translate(Vector3{0_mm, 0_mm, hlZ});
+  auto vol2 = std::make_shared<Volume>(transform2, bounds2);
+
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  // Test with Gap for negative z and Expand for positive z
+  CylinderVolumeStack cylStack(
+      volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
+      {VolumeResizeStrategy::Gap, VolumeResizeStrategy::Expand}, *logger);
+
+  // Update bounds to test only positive z expansion
+  auto newBounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 3 * hlZ);
+  Transform3 newTransform =
+      Transform3::Identity() * Translation3{0_mm, 0_mm, hlZ};
+  cylStack.update(newBounds, newTransform, *logger);
+  // Check that first volume maintains its size and position
+  auto* firstVol = volumes.front();
+  BOOST_CHECK_EQUAL(firstVol, vol1.get());
+  auto firstBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&firstVol->volumeBounds());
+  BOOST_REQUIRE(firstBounds != nullptr);
+  BOOST_CHECK_EQUAL(firstBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
+  BOOST_CHECK_EQUAL(firstBounds->get(CylinderVolumeBounds::eMinR), rMin);
+  BOOST_CHECK_EQUAL(firstBounds->get(CylinderVolumeBounds::eMaxR), rMax);
+  BOOST_CHECK_CLOSE(firstVol->center()[eZ], -hlZ, 1e-10);
+
+  // Check that second volume was expanded in positive z
+  auto* lastVol = volumes.back();
+  BOOST_CHECK_EQUAL(lastVol, vol2.get());
+  auto lastBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&lastVol->volumeBounds());
+  BOOST_REQUIRE(lastBounds != nullptr);
+  BOOST_CHECK_EQUAL(lastBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                    2 * hlZ);
+  BOOST_CHECK_EQUAL(lastBounds->get(CylinderVolumeBounds::eMinR), rMin);
+  BOOST_CHECK_EQUAL(lastBounds->get(CylinderVolumeBounds::eMaxR), rMax);
+  BOOST_CHECK_CLOSE(lastVol->center()[eZ], 2 * hlZ, 1e-10);
+
+  // No gap volumes should be created since only positive z changed
+  BOOST_CHECK_EQUAL(volumes.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeR) {
+  double hlZ = 400_mm;
+  double rMin1 = 100_mm;
+  double rMax1 = 200_mm;
+  double rMin2 = 200_mm;
+  double rMax2 = 300_mm;
+
+  // Create two cylinder volumes stacked in r
+  auto bounds1 = std::make_shared<CylinderVolumeBounds>(rMin1, rMax1, hlZ);
+  auto bounds2 = std::make_shared<CylinderVolumeBounds>(rMin2, rMax2, hlZ);
+
+  Transform3 transform = Transform3::Identity();
+  auto vol1 = std::make_shared<Volume>(transform, bounds1);
+  auto vol2 = std::make_shared<Volume>(transform, bounds2);
+
+  std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  // Test with Gap for inner radius and Expand for outer radius
+  CylinderVolumeStack cylStack(
+      volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
+      {VolumeResizeStrategy::Gap, VolumeResizeStrategy::Expand}, *logger);
+
+  // Update bounds to test only outer radius expansion
+  auto newBounds = std::make_shared<CylinderVolumeBounds>(rMin1, 500_mm, hlZ);
+  cylStack.update(newBounds, std::nullopt, *logger);
+
+  // Check that inner volume maintains its size
+  auto* innerVol = volumes.front();
+  BOOST_CHECK_EQUAL(innerVol, vol1.get());
+  auto innerBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&innerVol->volumeBounds());
+  BOOST_REQUIRE(innerBounds != nullptr);
+  BOOST_CHECK_EQUAL(innerBounds->get(CylinderVolumeBounds::eMinR), rMin1);
+  BOOST_CHECK_EQUAL(innerBounds->get(CylinderVolumeBounds::eMaxR), rMax1);
+  BOOST_CHECK_EQUAL(innerBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
+
+  // Check that outer volume was expanded only in outer radius
+  auto* outerVol = volumes.back();
+  BOOST_CHECK_EQUAL(outerVol, vol2.get());
+  auto outerBounds =
+      dynamic_cast<const CylinderVolumeBounds*>(&outerVol->volumeBounds());
+  BOOST_REQUIRE(outerBounds != nullptr);
+  BOOST_CHECK_EQUAL(outerBounds->get(CylinderVolumeBounds::eMinR), rMin2);
+  BOOST_CHECK_EQUAL(outerBounds->get(CylinderVolumeBounds::eMaxR), 500_mm);
+  BOOST_CHECK_EQUAL(outerBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
+
+  // No gap volumes should be created since only outer radius changed
+  BOOST_CHECK_EQUAL(volumes.size(), 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test
