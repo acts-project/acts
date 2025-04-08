@@ -46,7 +46,7 @@ ActsFatras::PlanarSurfaceDrift::toReadout(const Acts::GeometryContext& gctx,
     driftedExit -= driftScale * driftDir;
   }
   // The drifted segment and the original segment
-  return std::tuple<Segment2D, Segment3D>{
+  return std::tuple{
       Segment2D{driftedEntry.segment<2>(0), driftedExit.segment<2>(0)},
       Segment3D{entry, exit}};
 }
