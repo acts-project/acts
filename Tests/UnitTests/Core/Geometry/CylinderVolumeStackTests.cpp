@@ -1970,12 +1970,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZ) {
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eMinR), rMin);
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eMaxR), rMax);
-    if (i == 1) {
-      BOOST_CHECK_CLOSE(volumes[i]->center()[eZ], -2 * hlZ, 1e-10);
-    } else {
-      BOOST_CHECK_CLOSE(volumes[i]->center()[eZ], 0 * hlZ, 1e-10);
-    }
   }
+  BOOST_CHECK_CLOSE(volumes[1]->center()[eZ], -2 * hlZ, 1e-10);
+  BOOST_CHECK_CLOSE(volumes[2]->center()[eZ], 0, 1e-10);
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
@@ -2042,12 +2039,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eHalfLengthZ), hlZ);
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eMinR), rMin);
     BOOST_CHECK_EQUAL(volBounds->get(CylinderVolumeBounds::eMaxR), rMax);
-    if (i == 1) {
-      BOOST_CHECK_CLOSE(volumes[i]->center()[eZ], 0 * hlZ, 1e-10);
-    } else {
-      BOOST_CHECK_CLOSE(volumes[i]->center()[eZ], 2 * hlZ, 1e-10);
-    }
   }
+  BOOST_CHECK_CLOSE(volumes[1]->center()[eZ], 0, 1e-10);
+  BOOST_CHECK_CLOSE(volumes[2]->center()[eZ], 2 * hlZ, 1e-10);
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
