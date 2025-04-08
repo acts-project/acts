@@ -335,6 +335,9 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
   void buildShortStrip(Acts::Experimental::BlueprintNode& parent,
                        const Acts::GeometryContext& gctx);
 
+  void buildLongStrip(Acts::Experimental::BlueprintNode& parent,
+                      const Acts::GeometryContext& gctx);
+
   static std::shared_ptr<const Acts::HomogeneousSurfaceMaterial> asHomogeneous(
       std::string_view debugLabel,
       const std::shared_ptr<const Acts::ISurfaceMaterial>& material) {
@@ -386,6 +389,7 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
 
     if (m_cfg.buildLevel > 1) {
       buildShortStrip(detector, gctx);
+      buildLongStrip(detector, gctx);
     }
   });
 
@@ -618,6 +622,107 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
   });
 }
 
+void Gen3GenericDetectorBuilder::buildLongStrip(
+    Acts::Experimental::BlueprintNode& parent,
+    const Acts::GeometryContext& gctx) {
+  using enum Acts::AxisDirection;
+  using namespace Acts::Experimental;
+  using namespace Acts::UnitLiterals;
+  using enum Acts::CylinderVolumeBounds::Face;
+  using AttachmentStrategy = Acts::VolumeAttachmentStrategy;
+  using ResizeStrategy = Acts::VolumeResizeStrategy;
+
+  ACTS_DEBUG("Building Long Strip");
+
+  ProtoLayerCreator lsplCreator = createLongStripProtoLayerCreator();
+
+  parent.addCylinderContainer("LongStrip", AxisZ, [&](auto& lstrip) {
+    lstrip.setAttachmentStrategy(AttachmentStrategy::Gap);
+    lstrip.setResizeStrategy(ResizeStrategy::Gap);
+
+    lstrip.addCylinderContainer("LongStrip_Barrel", AxisR, [&](auto& barrel) {
+      barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
+      barrel.setResizeStrategy(ResizeStrategy::Gap);
+
+      auto protoLayerSurfaces = lsplCreator.centralProtoLayers(gctx);
+      ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                           << " central proto layers to "
+                           << "LongStrip_Barrel");
+      for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+        auto& [pl, surfaces, bins0, bins1] = temp;
+        std::string layerName = "LongStrip_Barrel_L" + std::to_string(idx);
+        barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
+          mat.configureFace(
+              InnerCylinder,
+              asHomogeneous("LongStrip", m_longStripCentralMaterial));
+          mat.addLayer(layerName, [&](auto& layer) {
+            // @TODO: Configure navigation policy from bins
+            ACTS_VERBOSE("Adding layer " << layer.name());
+            layer.setProtoLayer(pl);
+            layer.setEnvelope(
+                Acts::ExtentEnvelope{{.z = {0_mm, 0_mm}, .r = {5_mm, 5_mm}}});
+          });
+        });
+      }
+    });
+
+    if (m_cfg.buildLevel > 2) {
+      lstrip.addCylinderContainer("LongStrip_nEC", AxisZ, [&](auto& endcap) {
+        endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+        endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+        auto protoLayerSurfaces = lsplCreator.negativeProtoLayers(gctx);
+
+        ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                             << " negative proto layers to "
+                             << "LongStrip_nEC");
+        for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+          auto& [pl, surfaces, bins0, bins1] = temp;
+          std::string layerName = "LongStrip_nEC_L" + std::to_string(idx);
+          endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+            mat.configureFace(
+                NegativeDisc,
+                asHomogeneous("LongStrip", m_longStripEndcapMaterial));
+            mat.addLayer(layerName, [&](auto& layer) {
+              // @TODO: Configure navigation policy from bins
+              ACTS_VERBOSE("Adding layer " << layer.name());
+              layer.setProtoLayer(pl);
+              layer.setEnvelope(
+                  Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+            });
+          });
+        }
+      });
+
+      lstrip.addCylinderContainer("LongStrip_pEC", AxisZ, [&](auto& endcap) {
+        endcap.setAttachmentStrategy(AttachmentStrategy::Gap);
+        endcap.setResizeStrategy(ResizeStrategy::Gap);
+
+        auto protoLayerSurfaces = lsplCreator.positiveProtoLayers(gctx);
+
+        ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+                             << " positive proto layers to "
+                             << "LongStrip_pEC");
+        for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
+          auto& [pl, surfaces, bins0, bins1] = temp;
+          std::string layerName = "LongStrip_pEC_L" + std::to_string(idx);
+          endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
+            mat.configureFace(
+                PositiveDisc,
+                asHomogeneous("LongStrip", m_longStripEndcapMaterial));
+            mat.addLayer(layerName, [&](auto& layer) {
+              // @TODO: Configure navigation policy from bins
+              ACTS_VERBOSE("Adding layer " << layer.name());
+              layer.setProtoLayer(pl);
+              layer.setEnvelope(
+                  Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {0_mm, 0_mm}}});
+            });
+          });
+        }
+      });
+    }
+  });
+}
 }  // namespace
 }  // namespace Generic
 
@@ -657,10 +762,10 @@ void GenericDetector::buildTrackingGeometry(
             << m_nominalGeometryContext.type().name() << std::endl;
 
   //   m_trackingGeometry = Generic::buildDetector(
-  //       m_nominalGeometryContext, detectorElementFactory, m_cfg.buildLevel,
-  //       m_cfg.materialDecorator, m_cfg.buildProto, m_cfg.logLevel,
-  //       m_cfg.surfaceLogLevel, m_cfg.layerLogLevel, m_cfg.volumeLogLevel,
-  //       m_cfg.gen3);
+  //       m_nominalGeometryContext, detectorElementFactory,
+  //       m_cfg.buildLevel, m_cfg.materialDecorator, m_cfg.buildProto,
+  //       m_cfg.logLevel, m_cfg.surfaceLogLevel, m_cfg.layerLogLevel,
+  //       m_cfg.volumeLogLevel, m_cfg.gen3);
 
   Generic::GenericDetectorBuilder::Config cfg;
   cfg.detectorElementFactory = detectorElementFactory;
