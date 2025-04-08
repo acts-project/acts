@@ -344,9 +344,10 @@ class HomogeneousMaterialDesignator : public DesignatorBase {
 
 class NullDesignator : public DesignatorBase {
  public:
-  void apply(PortalShellBase& /*shell*/, const Logger& /*logger*/,
-             const std::string& /*prefix*/) override {
-    throw std::runtime_error("NullDesignator has no apply");
+  void apply(PortalShellBase& /*shell*/, const Logger& logger,
+             const std::string& prefix) override {
+    ACTS_WARNING(prefix << "MaterialDesignator was not configured with any "
+                        << "material designation! Check your configuration.");
   }
 
   std::string label() const override { return "NullDesignator"; }
@@ -381,8 +382,8 @@ class NullDesignator : public DesignatorBase {
     return other.merged(*this);
   }
 
-  void graphvizLabel(std::ostream& /*os*/) const override {
-    throw std::runtime_error("NullDesignator has no label");
+  void graphvizLabel(std::ostream& os) const override {
+    os << "<br/><i>NullDesignator</i>";
   }
 };
 
