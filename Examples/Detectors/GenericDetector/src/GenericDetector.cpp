@@ -26,6 +26,7 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
@@ -97,9 +98,10 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
   // configure the beam pipe layer builder
   Acts::PassiveLayerBuilder::Config bplConfig;
   bplConfig.layerIdentification = "BeamPipe";
-  bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
-  bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 3000.);
-  bplConfig.centralLayerThickness = std::vector<double>(1, 0.8);
+  bplConfig.centralLayerRadii = std::vector<double>(1, kBeamPipeRadius);
+  bplConfig.centralLayerHalflengthZ =
+      std::vector<double>(1, kBeamPipeHalfLengthZ);
+  bplConfig.centralLayerThickness = std::vector<double>(1, kBeamPipeThickness);
   bplConfig.centralLayerMaterial = {m_beamPipeMaterial};
   auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
       bplConfig, logger().clone("BeamPipeLayerBuilder", m_cfg.layerLogLevel));
@@ -175,9 +177,9 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
     // Configuration
     Acts::PassiveLayerBuilder::Config pstConfig;
     pstConfig.layerIdentification = "PST";
-    pstConfig.centralLayerRadii = std::vector<double>(1, 200.);
-    pstConfig.centralLayerHalflengthZ = std::vector<double>(1, 2800.);
-    pstConfig.centralLayerThickness = std::vector<double>(1, 1.8);
+    pstConfig.centralLayerRadii = std::vector<double>(1, kPstRadius);
+    pstConfig.centralLayerHalflengthZ = std::vector<double>(1, kPstHalfLengthZ);
+    pstConfig.centralLayerThickness = std::vector<double>(1, kPstThickness);
     pstConfig.centralLayerMaterial = {m_pstMaterial};
     auto pstBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         pstConfig, logger().clone("PSTLayerBuilder", m_cfg.layerLogLevel));
