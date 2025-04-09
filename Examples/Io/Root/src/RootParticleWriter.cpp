@@ -119,8 +119,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
     m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
     // particle constants
-    std::cout << "PARTICLE " << particle.pdg() << " m=" << particle.mass()
-              << " q=" << particle.charge() << std::endl;
     if (std::isfinite(particle.mass())) {
       m_m.push_back(
           Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
