@@ -8,6 +8,7 @@
 
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
+#include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <cmath>
@@ -313,7 +314,20 @@ std::unique_ptr<const Acts::TrackingGeometry>
 Gen3GenericDetectorBuilder::buildTrackingGeometry(
     const Acts::GeometryContext& /*gctx*/) {
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
-  throw std::logic_error("Gen3GenericDetectorBuilder is not implemented");
+
+  using namespace Acts::Experimental;
+  Blueprint::Config cfg;
+  Blueprint root{cfg};
+
+  // @TODO: Add beampipe passive layer
+  // @TODO: Add Pixel
+
+  ProtoLayerCreator pplCreator = createPixelProtoLayerCreator();
+
+  // @TODO: Add Pixel Support Tube
+  // @TODO: Add Short Strip
+  // @TODO: Add Long Strip
+
   return nullptr;
 }
 
