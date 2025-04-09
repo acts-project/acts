@@ -9,6 +9,7 @@
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include "Acts/Definitions/ParticleData.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ScopedTimer.hpp"
@@ -19,8 +20,10 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
+#include <any>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <span>
 #include <stdexcept>
@@ -298,8 +301,24 @@ void EventGenerator::handleVertex(const HepMC3::GenVertex& genVertex,
           .setParticle(nParticles);
 
       Acts::PdgParticle pdg{particle->pdg_id()};
-      double mass = Acts::findMass(pdg).value();
-      double charge = Acts::findCharge(pdg).value();
+      double mass = 0.0;
+      double charge = 0.0;
+
+      if (pdg != Acts::PdgParticle::eInvalid) {
+        if (auto massOpt = Acts::findMass(pdg); massOpt.has_value()) {
+          mass = massOpt.value();
+        } else {
+          ACTS_ERROR("No mass found for PDG ID " << pdg);
+          throw std::bad_optional_access{};
+        }
+
+        if (auto chargeOpt = Acts::findCharge(pdg); chargeOpt.has_value()) {
+          charge = chargeOpt.value();
+        } else {
+          ACTS_ERROR("No charge found for PDG ID " << pdg);
+          throw std::bad_optional_access{};
+        }
+      }
 
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initial().setPosition4(vertex.position4);
@@ -336,7 +355,6 @@ void EventGenerator::convertHepMC3ToInternalEdm(
   {
     Acts::ScopedTimer timer("Finding primary vertex clusters", logger(),
                             Acts::Logging::DEBUG);
-    // @TODO: Maybe to it the other way round: go through particles and check if we already have that vertex?
     for (const auto& vertex : genEvent.vertices()) {
       if (vertex->particles_in().empty() ||
           std::ranges::all_of(vertex->particles_in(), [](const auto& particle) {
