@@ -28,11 +28,15 @@
 
 #include <numbers>
 
+// @TODO: Remove this once debugging is complete
+#include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
+#include <actsvg/core.hpp>
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts::Test {
 
-auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::VERBOSE);
+auto logger = Acts::getDefaultLogger("UnitTests", Acts::Logging::INFO);
 
 struct Fixture {
   Logging::Level m_level;
@@ -1897,6 +1901,38 @@ BOOST_DATA_TEST_CASE(JoinCylinderVolumeSingle,
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
+
+constexpr actsvg::style::rgb kBlack = {0, 0, 0};
+constexpr actsvg::style::rgb kRed = {255, 0, 0};
+constexpr actsvg::style::rgb kGreen = {0, 255, 0};
+constexpr actsvg::style::rgb kBlue = {0, 0, 255};
+
+void convertVolume(std::vector<actsvg::svg::object>& objects, const Volume& vol,
+                   auto view, actsvg::style::rgb rgb = kBlack,
+                   double width = 1.0) {
+  GeometryContext gctx;
+  auto orientedSurfaces = vol.volumeBounds().orientedSurfaces(vol.transform());
+  std::size_t i = 0;
+  for (const auto& [surface, direction] : orientedSurfaces) {
+    auto proto = Svg::SurfaceConverter::convert(gctx, *surface, {});
+
+    objects.push_back(actsvg::display::surface("surface_" + std::to_string(i++),
+                                               proto, view));
+
+    objects.back()._stroke._sc._rgb = rgb;
+    objects.back()._stroke._width = width;
+    objects.back()._fill._fc._opacity = 0.0;
+  }
+}
+
+void drawVolume(std::vector<actsvg::svg::object>& objects, double rMin,
+                double rMax, double hlZ, Transform3 transform, auto view,
+                actsvg::style::rgb rgb = kBlack, double width = 1.0) {
+  auto bounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, hlZ);
+  auto vol = std::make_shared<Volume>(transform, bounds);
+  convertVolume(objects, *vol, view, rgb, width);
+}
+
 BOOST_AUTO_TEST_CASE(AsymmetricResizeZ) {
   double hlZ = 400_mm;
   double rMin = 100_mm;
@@ -1920,10 +1956,20 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZ) {
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::z_r view;
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+  convertVolume(objects, *vol3, view);
+
   // Test with Gap for negative z and Expand for positive z
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
       {VolumeResizeStrategy::Gap, VolumeResizeStrategy::Expand}, *logger);
+
+  // convertVolume(objects, cylStack, view, kGreen, 3);
+
   // Initial stack spans [-3*hlZ, 3*hlZ]. Update bounds to test asymmetric
   // resize in z only New bounds should span [-4*hlZ, 4*hlZ] to ensure we only
   // grow
@@ -1931,7 +1977,27 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZ) {
   Transform3 newTransform =
       Transform3::Identity() * Translation3{0_mm, 0_mm, 0_mm};
 
+  auto debugVolume = std::make_shared<Volume>(newTransform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
   cylStack.update(newBounds, newTransform, *logger);
+
+  drawVolume(objects, rMin, rMax, hlZ / 2,
+             Transform3{Translation3{0_mm, 0_mm, -3.5 * hlZ}}, view, kGreen, 3);
+
+  drawVolume(objects, rMin, rMax, hlZ,
+             Transform3{Translation3{0_mm, 0_mm, -2 * hlZ}}, view, kGreen, 3);
+
+  drawVolume(objects, rMin, rMax, hlZ,
+             Transform3{Translation3{0_mm, 0_mm, 0 * hlZ}}, view, kGreen, 3);
+
+  drawVolume(objects, rMin, rMax, hlZ * 1.5,
+             Transform3{Translation3{0_mm, 0_mm, 2.5 * hlZ}}, view, kGreen, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+  Svg::toFile(objects, "AsymmetricResizeZ_volumes.svg");
 
   // Check that we have one gap volume at negative z
   BOOST_CHECK_EQUAL(volumes.size(), 4);  // Original 3 + 1 gap volume
@@ -1976,6 +2042,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZ) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
   double rMin = 100_mm;
   double rMax = 200_mm;
@@ -1994,6 +2063,11 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
   auto vol3 = std::make_shared<Volume>(transform3, bounds3);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+  convertVolume(objects, *vol3, view);
+
   // Test with Expand for inner radius and Gap for outer radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
@@ -2002,6 +2076,17 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
   // Update bounds to test asymmetric expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 4 * hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume =
+      std::make_shared<Volume>(Transform3::Identity(), newBounds);
+  Geometry::convertVolume(objects, *debugVolume, view, Geometry::kRed, 3);
+
+  for (auto* vol : volumes) {
+    Geometry::convertVolume(objects, *vol, view, Geometry::kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricResizeZFlipped_volumes.svg");
+
   // Check that we have one gap volume at positive z
   BOOST_CHECK_EQUAL(volumes.size(), 4);  // Original 3 + 1 gap volume
 
@@ -2045,6 +2130,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeZFlipped) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
 
   // Create three cylinder volumes stacked in r with gaps
@@ -2058,6 +2146,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
   auto vol3 = std::make_shared<Volume>(transform, bounds3);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+  convertVolume(objects, *vol3, view);
+
   // Test with Gap for inner radius and Expand for outer radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Midpoint,
@@ -2066,6 +2158,21 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
   // Update bounds to test asymmetric resize in r only
   auto newBounds = std::make_shared<CylinderVolumeBounds>(50_mm, 500_mm, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  drawVolume(objects, 50_mm, 100_mm, hlZ, transform, view, kGreen, 3);
+  drawVolume(objects, 100_mm, 200_mm, hlZ, transform, view, kGreen, 3);
+  drawVolume(objects, 200_mm, 300_mm, hlZ, transform, view, kGreen, 3);
+  drawVolume(objects, 300_mm, 500_mm, hlZ, transform, view, kGreen, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricResizeR_volumes.svg");
+
   // Check that we have one gap volume at inner radius
   BOOST_CHECK_EQUAL(volumes.size(), 4);  // Original 3 + 1 gap volume
 
@@ -2100,6 +2207,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeR) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricResizeRFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
 
   // Create three cylinder volumes stacked in r
@@ -2113,6 +2223,11 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeRFlipped) {
   auto vol3 = std::make_shared<Volume>(transform, bounds3);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get(), vol3.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+  convertVolume(objects, *vol3, view);
+
   // Test with Expand for inner radius and Gap for outer radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
@@ -2121,6 +2236,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeRFlipped) {
   // Update bounds to test asymmetric expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(50_mm, 500_mm, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricResizeRFlipped_volumes.svg");
+
   // Check that we have one gap volume at outer radius
   BOOST_CHECK_EQUAL(volumes.size(), 4);  // Original 3 + 1 gap volume
 
@@ -2155,6 +2280,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricResizeRFlipped) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZ) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::z_r view;
+
   double hlZ = 400_mm;
   double rMin = 100_mm;
   double rMax = 200_mm;
@@ -2173,6 +2301,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZ) {
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Gap for negative z and Expand for positive z
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
@@ -2183,6 +2314,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZ) {
   Transform3 newTransform =
       Transform3::Identity() * Translation3{0_mm, 0_mm, hlZ};
   cylStack.update(newBounds, newTransform, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(newTransform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeZ_volumes.svg");
+
   // Check that first volume maintains its size and position
   auto* firstVol = volumes.front();
   BOOST_CHECK_EQUAL(firstVol, vol1.get());
@@ -2211,6 +2352,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZ) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::z_r view;
+
   double hlZ = 400_mm;
   double rMin = 100_mm;
   double rMax = 200_mm;
@@ -2228,6 +2372,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZFlipped) {
   auto vol2 = std::make_shared<Volume>(transform2, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Expand for negative z and Gap for positive z
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
@@ -2238,6 +2386,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZFlipped) {
   Transform3 newTransform =
       Transform3::Identity() * Translation3{0_mm, 0_mm, hlZ};
   cylStack.update(newBounds, newTransform, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(newTransform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeZFlipped_volumes.svg");
+
   // Check that first volume maintains its size and position
   auto* firstVol = volumes.front();
   BOOST_CHECK_EQUAL(firstVol, vol1.get());
@@ -2275,6 +2433,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZFlipped) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeR) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
   double rMin1 = 100_mm;
   double rMax1 = 200_mm;
@@ -2291,6 +2452,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeR) {
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
 
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Gap for inner radius and Expand for outer radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
@@ -2299,6 +2463,15 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeR) {
   // Update bounds to test only outer radius expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(rMin1, 500_mm, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeR_volumes.svg");
 
   // Check that inner volume maintains its size
   auto* innerVol = volumes.front();
@@ -2325,6 +2498,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeR) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
   double rMin1 = 100_mm;
   double rMax1 = 200_mm;
@@ -2340,6 +2516,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRFlipped) {
   auto vol2 = std::make_shared<Volume>(transform, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Expand for inner radius and Gap for outer radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
@@ -2348,6 +2528,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRFlipped) {
   // Update bounds to test only outer radius expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(rMin1, 500_mm, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeRFlipped_volumes.svg");
+
   // Check that inner volume maintains its size
   auto* innerVol = volumes.front();
   BOOST_CHECK_EQUAL(innerVol, vol1.get());
@@ -2385,6 +2575,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRFlipped) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegative) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::z_r view;
+
   double hlZ = 400_mm;
   double rMin = 100_mm;
   double rMax = 200_mm;
@@ -2402,6 +2595,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegative) {
   auto vol2 = std::make_shared<Volume>(transform2, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Gap for positive z and Expand for negative z
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
@@ -2412,6 +2609,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegative) {
   Transform3 newTransform =
       Transform3::Identity() * Translation3{0_mm, 0_mm, -hlZ};
   cylStack.update(newBounds, newTransform, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(newTransform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeZNegative_volumes.svg");
+
   // Check that first volume was expanded in negative z
   auto* firstVol = volumes.front();
   BOOST_CHECK_EQUAL(firstVol, vol1.get());
@@ -2440,6 +2647,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegative) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegativeFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::z_r view;
+
   double hlZ = 400_mm;
   double rMin = 100_mm;
   double rMax = 200_mm;
@@ -2457,6 +2667,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegativeFlipped) {
   auto vol2 = std::make_shared<Volume>(transform2, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Gap for negative z and Expand for positive z
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisZ, VolumeAttachmentStrategy::Gap,
@@ -2467,6 +2681,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegativeFlipped) {
   Transform3 newTransform =
       Transform3::Identity() * Translation3{0_mm, 0_mm, -hlZ};
   cylStack.update(newBounds, newTransform, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(newTransform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects,
+              "AsymmetricSingleSideResizeZNegativeFlipped_volumes.svg");
 
   // A gap volume should be created at negative z
   BOOST_CHECK_EQUAL(volumes.size(), 3);  // 2 volumes + 1 gap volume
@@ -2497,6 +2721,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeZNegativeFlipped) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegative) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
   double rMin1 = 100_mm;
   double rMax1 = 200_mm;
@@ -2512,6 +2739,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegative) {
   auto vol2 = std::make_shared<Volume>(transform, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Gap for outer radius and Expand for inner radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
@@ -2520,6 +2751,16 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegative) {
   // Update bounds to test only inner radius expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(50_mm, rMax2, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects, "AsymmetricSingleSideResizeRNegative_volumes.svg");
+
   // Check that first volume was expanded in inner radius
   auto* firstVol = volumes.front();
   BOOST_CHECK_EQUAL(firstVol, vol1.get());
@@ -2547,6 +2788,9 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegative) {
 }
 
 BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegativeFlipped) {
+  std::vector<actsvg::svg::object> objects;
+  actsvg::views::x_y view;
+
   double hlZ = 400_mm;
   double rMin1 = 100_mm;
   double rMax1 = 200_mm;
@@ -2562,6 +2806,10 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegativeFlipped) {
   auto vol2 = std::make_shared<Volume>(transform, bounds2);
 
   std::vector<Volume*> volumes = {vol1.get(), vol2.get()};
+
+  convertVolume(objects, *vol1, view);
+  convertVolume(objects, *vol2, view);
+
   // Test with Expand for outer radius and Gap for inner radius
   CylinderVolumeStack cylStack(
       volumes, AxisDirection::AxisR, VolumeAttachmentStrategy::Gap,
@@ -2570,6 +2818,17 @@ BOOST_AUTO_TEST_CASE(AsymmetricSingleSideResizeRNegativeFlipped) {
   // Update bounds to test only inner radius expansion
   auto newBounds = std::make_shared<CylinderVolumeBounds>(50_mm, rMax2, hlZ);
   cylStack.update(newBounds, std::nullopt, *logger);
+
+  auto debugVolume = std::make_shared<Volume>(transform, newBounds);
+  convertVolume(objects, *debugVolume, view, kRed, 3);
+
+  for (auto* vol : volumes) {
+    convertVolume(objects, *vol, view, kBlue, 3);
+  }
+
+  Svg::toFile(objects,
+              "AsymmetricSingleSideResizeRNegativeFlipped_volumes.svg");
+
   // A gap volume should be created at inner radius
   BOOST_CHECK_EQUAL(volumes.size(), 3);  // 2 volumes + 1 gap volume
 

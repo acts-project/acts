@@ -32,6 +32,8 @@ add_unittest(TrapezoidVolumeBounds TrapezoidVolumeBoundsTests.cpp)
 add_unittest(VolumeBounds VolumeBoundsTests.cpp)
 add_unittest(Volume VolumeTests.cpp)
 add_unittest(CylinderVolumeStack CylinderVolumeStackTests.cpp)
+# @TODO: Remove this once debugging is complete
+target_link_libraries(ActsUnitTestCylinderVolumeStack PRIVATE ActsPluginActSVG)
 add_unittest(CuboidVolumeStack CuboidVolumeStackTests.cpp)
 add_unittest(PortalLink PortalLinkTests.cpp)
 add_unittest(Portal PortalTests.cpp)
