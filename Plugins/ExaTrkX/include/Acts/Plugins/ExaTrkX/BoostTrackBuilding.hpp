@@ -21,6 +21,7 @@ namespace Acts {
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   struct Config {
+    bool doJunctionRemoval = false;
     bool doWalkthrough = false;
     float walkthroughCCCut = 0.01;
     float walkthroughLowCut = 0.1;
