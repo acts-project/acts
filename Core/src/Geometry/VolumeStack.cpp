@@ -15,7 +15,7 @@ VolumeStack::VolumeStack(
     std::pair<VolumeResizeStrategy, VolumeResizeStrategy> resizeStrategies)
     : Volume(initialVolume(volumes)),
       m_direction(direction),
-      m_resizeStrategies(resizeStrategies.first, resizeStrategies.second),
+      m_resizeStrategies{resizeStrategies.first, resizeStrategies.second},
       m_volumes(volumes) {}
 
 Volume& VolumeStack::initialVolume(std::span<Volume*> volumes) {
