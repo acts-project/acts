@@ -25,88 +25,7 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(scope="session")
-def hepmc_data_impl(tmp_path_factory):
-    import subprocess
-
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "event_recording.py"
-    )
-    assert script.exists()
-
-    with tempfile.TemporaryDirectory() as tmp_path:
-        env = os.environ.copy()
-        env["NEVENTS"] = "1"
-        subprocess.check_call([sys.executable, str(script)], cwd=tmp_path, env=env)
-
-        outfile = Path(tmp_path) / "hepmc3/event000000000-events.hepmc3"
-        # fake = Path("/scratch/pagessin/acts/hepmc3/event000000000-events.hepmc3")
-
-        # outfile.parent.mkdir()
-        # shutil.copy(fake, outfile)
-
-        assert outfile.exists()
-
-        yield outfile
-
-
-@pytest.fixture
-def hepmc_data(hepmc_data_impl: Path, tmp_path):
-    dest = tmp_path / hepmc_data_impl.name
-    shutil.copy(hepmc_data_impl, dest)
-
-    return dest
-
-
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-@pytest.mark.odd
-@pytest.mark.slow
-def test_hepmc3_histogram(hepmc_data, tmp_path):
-    from acts.examples.hepmc3 import (
-        HepMC3AsciiReader,
-        HepMCProcessExtractor,
-    )
-
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        HepMC3AsciiReader(
-            level=acts.logging.INFO,
-            inputDir=str(hepmc_data.parent),
-            inputStem="events",
-            outputEvents="hepmc-events",
-        )
-    )
-
-    s.addAlgorithm(
-        HepMCProcessExtractor(
-            level=acts.logging.INFO,
-            inputEvents="hepmc-events",
-            extractionProcess="Inelastic",
-        )
-    )
-
-    # This segfaults, see https://github.com/acts-project/acts/issues/914
-    # s.addWriter(
-    #     RootNuclearInteractionParametersWriter(
-    #         level=acts.logging.INFO, inputSimulationProcesses="event-fraction"
-    #     )
-    # )
-
-    alg = AssertCollectionExistsAlg(
-        "hepmc-events", name="check_alg", level=acts.logging.INFO
-    )
-    s.addAlgorithm(alg)
-
-    s.run()
-
-
-@pytest.mark.parametrize("per_event", [True, False])
+@pytest.mark.parametrize("per_event", [True, False], ids=["per_event", "combined"])
 def test_hepmc3_particle_writer(tmp_path, rng, per_event):
     from acts.examples.hepmc3 import (
         HepMC3AsciiWriter,
@@ -177,9 +96,6 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
                 nevts += 1
                 for evt in f:
                     assert len(evt.particles) == 4 + 2  # muons + beam particles
-                    print(evt)
-                    with (tmp_path / f"evt_{evt.event_number}.dot").open("w") as d:
-                        d.write(str(to_dot(evt)))
             assert nevts == 1
 
         except ImportError:
@@ -234,28 +150,18 @@ def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     s.run()
 
     assert out.exists(), f"File {out} does not exist"
-
-    import shutil
-
-    shutil.copy(out, Path.cwd() / "events.hepmc3")
+    with out.open("r") as f:
+        assert len(f.readlines()) == 18679
 
     try:
         import pyhepmc
-        from pyhepmc.view import to_dot
 
         nevts = 0
         with pyhepmc.open(out) as f:
             nevts += 1
             for evt in f:
-                pass
-                # assert len(evt.particles) == 2012
-                # print(evt)
-                # with open(f"pythia8_evt_{evt.event_number}.dot", "w") as d:
-                #     d.write(str(to_dot(evt)))
+                assert len(evt.particles) == 7433
         assert nevts == 1
 
     except ImportError:
         pass
-
-    # with out.open("r") as f:
-    #     assert len(f.readlines()) == 326237

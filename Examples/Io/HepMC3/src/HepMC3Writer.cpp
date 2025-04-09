@@ -20,7 +20,7 @@ HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
   }
 
   if (auto absolute = std::filesystem::absolute(m_cfg.outputPath);
-      std::filesystem::exists(absolute.parent_path())) {
+      !std::filesystem::exists(absolute.parent_path())) {
     throw std::invalid_argument("Output directory does not exist: " +
                                 absolute.parent_path().string());
   }
