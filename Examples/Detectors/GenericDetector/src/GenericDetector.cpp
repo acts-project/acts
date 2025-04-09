@@ -441,7 +441,7 @@ void Gen3GenericDetectorBuilder::buildPixel(
   auto& sensitive = pixel.addCylinderContainer("Pixel", AxisZ);
   sensitive.addCylinderContainer("Pixel_Barrel", AxisR, [&](auto& barrel) {
     barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
-    barrel.setResizeStrategy(ResizeStrategy::Gap);
+    barrel.setResizeStrategies(ResizeStrategy::Expand, ResizeStrategy::Gap);
 
     auto protoLayerSurfaces = pplCreator.centralProtoLayers(gctx);
     ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
