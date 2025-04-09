@@ -27,7 +27,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    float cut = 0.21;
+    float cut = 0.5;
   };
 
   OnnxEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
