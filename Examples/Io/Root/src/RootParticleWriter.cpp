@@ -125,6 +125,19 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
         Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
     m_q.push_back(
         Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
+    if (std::isfinite(particle.mass())) {
+      m_m.push_back(
+          Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
+    } else {
+      m_m.push_back(particle.mass());
+    }
+
+    if (std::isfinite(particle.charge())) {
+      m_q.push_back(
+          Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
+    } else {
+      m_q.push_back(particle.charge());
+    }
     // derived kinematic quantities
     m_eta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::eta(particle.direction())));
