@@ -104,6 +104,7 @@ def runGeometry(
 if "__main__" == __name__:
     p = argparse.ArgumentParser()
     p.add_argument("--verbosity", "-v", default=0, action="count")
+    p.add_argument("--level", "-l", default=3, type=int)
     args = p.parse_args()
     logLevel = acts.logging.INFO
     if args.verbosity == 1:
@@ -113,7 +114,10 @@ if "__main__" == __name__:
 
     # detector = AlignedDetector()
     detector = GenericDetector(
-        gen3=True, logLevel=logLevel, graphvizFile=Path.cwd() / "GenericDetector.dot"
+        gen3=True,
+        logLevel=logLevel,
+        graphvizFile=Path.cwd() / "GenericDetector.dot",
+        buildLevel=args.level,
     )
     # detector = getOpenDataDetector()
     trackingGeometry = detector.trackingGeometry()
