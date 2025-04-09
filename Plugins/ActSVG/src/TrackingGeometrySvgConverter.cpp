@@ -211,7 +211,7 @@ void convertPortalLink(const GeometryContext& gctx,
 }
 
 struct Visitor : TrackingGeometryVisitor {
-  explicit Visitor(const GeometryContext& gctx) : gctx(gctx) {}
+  explicit Visitor(const GeometryContext& gctxIn) : gctx(gctxIn) {}
 
   void visitSurface(const Surface& surface) override {
     auto proto = Svg::SurfaceConverter::convert(gctx, surface, {});
