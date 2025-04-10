@@ -133,6 +133,9 @@ void convertPortalLink(const GeometryContext& gctx,
                        const PortalLinkBase& portalLink, Direction direction,
                        std::vector<Svg::ProtoPortal::link>& links) {
   auto getCenters = [&](const GridPortalLink& grid, AxisDirection axis0) {
+    assert(grid.dim() == 2 ||
+           grid.dim() == 1 && "Grid has unexpected number of dimension");
+
     std::vector<Vector2> centers;
 
     const auto localBins = grid.grid().numLocalBinsAny();
