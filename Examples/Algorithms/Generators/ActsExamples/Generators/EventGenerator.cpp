@@ -320,6 +320,13 @@ void EventGenerator::handleVertex(const HepMC3::GenVertex& genVertex,
         }
       }
 
+      if (std::isnan(mass) || std::isnan(charge)) {
+        // This particle does not have a mass or a charge based on our data
+        // table:
+        // => We can't handle it
+        continue;
+      }
+
       SimParticle simParticle{particleId, pdg, charge, mass};
       simParticle.initial().setPosition4(vertex.position4);
 
