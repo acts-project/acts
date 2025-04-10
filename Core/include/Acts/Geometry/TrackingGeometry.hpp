@@ -206,11 +206,11 @@ class TrackingGeometry {
                  const ViewConfig& sensitiveViewConfig = s_viewSensitive) const;
 
   /// Which *type* of geometry this represents: Gen1 or Gen3
-  enum class Generation { One, Three };
+  enum class GeometryVersion { Gen1, Gen3 };
 
   /// Return the *generation* of this `TrackingGeometry`
   /// @return the generation of this `TrackingGeometry`
-  Generation generation() const;
+  GeometryVersion geometryVersion() const;
 
  private:
   // the known world

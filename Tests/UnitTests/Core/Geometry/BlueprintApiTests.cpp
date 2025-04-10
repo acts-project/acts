@@ -367,8 +367,8 @@ BOOST_AUTO_TEST_CASE(NodeApiTestContainers) {
   auto trackingGeometry = root->construct({}, gctx, *logger);
 
   BOOST_REQUIRE(trackingGeometry);
-  BOOST_CHECK(trackingGeometry->generation() ==
-              TrackingGeometry::Generation::Three);
+  BOOST_CHECK(trackingGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
 
   trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
     std::cout << volume->volumeName() << std::endl;
@@ -440,8 +440,8 @@ BOOST_AUTO_TEST_CASE(NodeApiTestCuboid) {
 
   auto trackingGeometry = root->construct({}, gctx, *logger);
   BOOST_REQUIRE(trackingGeometry);
-  BOOST_CHECK(trackingGeometry->generation() ==
-              TrackingGeometry::Generation::Three);
+  BOOST_CHECK(trackingGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

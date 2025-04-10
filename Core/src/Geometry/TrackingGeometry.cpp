@@ -290,11 +290,11 @@ void TrackingGeometry::apply(TrackingGeometryMutableVisitor& visitor) {
   highestTrackingVolume()->apply(visitor);
 }
 
-TrackingGeometry::Generation TrackingGeometry::generation() const {
+TrackingGeometry::GeometryVersion TrackingGeometry::geometryVersion() const {
   if (highestTrackingVolume()->portals().empty()) {
-    return Generation::One;
+    return GeometryVersion::Gen1;
   } else {
-    return Generation::Three;
+    return GeometryVersion::Gen3;
   }
 }
 

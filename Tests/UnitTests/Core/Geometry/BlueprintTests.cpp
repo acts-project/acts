@@ -195,7 +195,8 @@ BOOST_AUTO_TEST_CASE(Static) {
 
   BOOST_REQUIRE(tGeometry);
 
-  BOOST_CHECK(tGeometry->generation() == TrackingGeometry::Generation::Three);
+  BOOST_CHECK(tGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
 
   BOOST_CHECK_EQUAL(tGeometry->highestTrackingVolume()->volumes().size(), 1);
 
@@ -240,7 +241,8 @@ BOOST_AUTO_TEST_CASE(CylinderContainer) {
   }
 
   auto tGeometry = root->construct({}, gctx, *logger);
-  BOOST_CHECK(tGeometry->generation() == TrackingGeometry::Generation::Three);
+  BOOST_CHECK(tGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
 
   // 4 real volumes + 2 gaps
   BOOST_CHECK_EQUAL(countVolumes(*tGeometry), 6);
