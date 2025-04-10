@@ -127,14 +127,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
       }
     };
 
-    // @TODO: Remove again
-    if (!std::isfinite(particle.mass())) {
-      ACTS_ERROR("Particle mass is not finite: " << particle.mass());
-    }
-    if (!std::isfinite(particle.charge())) {
-      ACTS_ERROR("Particle charge is not finite: " << particle.charge());
-    }
-
     // particle constants
     m_m.push_back(
         divideAndClampIfFinite(particle.mass(), Acts::UnitConstants::GeV));
@@ -155,7 +147,6 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
 
-    // @FIXME: This won't work as it's computed from the mass
     m_eLoss.push_back(divideAndClampIfFinite(particle.energyLoss(),
                                              Acts::UnitConstants::GeV));
     m_pathInX0.push_back(
