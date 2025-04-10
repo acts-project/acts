@@ -161,6 +161,9 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaMemcpyAsync(cudaNodeFeaturePtr, features.data(),
                                   features.size() * sizeof(float),
                                   cudaMemcpyHostToDevice, stream));
+  ACTS_VERBOSE("Slice of node features[0:9,0:9]:\n"
+               << nodeFeatures.index({Slice(0, std::min(9ul, nHits)),
+                                      Slice(0, std::min(9ul, nFeatures))}));
 
   // Module IDs to device
   ScopedCudaPtr<std::uint64_t> cudaModuleIds(nHits, stream);
@@ -314,6 +317,29 @@ struct ArgsortFun {
 struct CastBoolToInt {
   int __device__ operator()(bool b) { return static_cast<int>(b); }
 };
+
+std::string debugPrintEdges(std::size_t nbEdges, const int *cudaSrc,
+                            const int *cudaDst) {
+  std::stringstream ss;
+  if (nbEdges == 0) {
+    return "zero edges remained";
+  }
+  nbEdges = std::min(10ul, nbEdges);
+  std::vector<int> src(nbEdges), dst(nbEdges);
+  ACTS_CUDA_CHECK(cudaDeviceSynchronize());
+  ACTS_CUDA_CHECK(cudaMemcpy(src.data(), cudaSrc, nbEdges * sizeof(int),
+                             cudaMemcpyDeviceToHost));
+  ACTS_CUDA_CHECK(cudaMemcpy(dst.data(), cudaDst, nbEdges * sizeof(int),
+                             cudaMemcpyDeviceToHost));
+  for (std::size_t i = 0; i < nbEdges; ++i) {
+    ss << src.at(i) << " ";
+  }
+  ss << "\n";
+  for (std::size_t i = 0; i < nbEdges; ++i) {
+    ss << dst.at(i) << " ";
+  }
+  return ss.str();
+}
 
 detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     detail::CUDA_hit_data<float> cuda_TThits, int *cuda_hit_indice,
@@ -503,6 +529,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     ACTS_CUDA_CHECK(cudaGetLastError());
   }
 
+  ACTS_VERBOSE("First 10 doublet edges:\n"
+               << debugPrintEdges(nb_doublet_edges,
+                                  cuda_reduced_M1_hits->data(),
+                                  cuda_reduced_M2_hits->data()));
   if (nb_doublet_edges == 0) {
     throw NoEdgesError{};
   }
@@ -698,6 +728,10 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
       cuda_graph_M2_hits, cuda_reduced_M2_hits->data(), cuda_mask.data(),
       cuda_mask_sum.data(), nb_doublet_edges);
   ACTS_CUDA_CHECK(cudaGetLastError());
+
+  ACTS_VERBOSE("First 10 doublet edges:\n"
+               << debugPrintEdges(nb_graph_edges, cuda_graph_M1_hits,
+                                  cuda_graph_M2_hits));
 
   detail::CUDA_edge_data<float> edge_data{};
   edge_data.nEdges = nb_graph_edges;
