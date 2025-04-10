@@ -118,20 +118,21 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_px.push_back(Acts::clampValue<float>(p * particle.direction().x()));
     m_py.push_back(Acts::clampValue<float>(p * particle.direction().y()));
     m_pz.push_back(Acts::clampValue<float>(p * particle.direction().z()));
-    // particle constants
-    if (std::isfinite(particle.mass())) {
-      m_m.push_back(
-          Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
-    } else {
-      m_m.push_back(particle.mass());
-    }
 
-    if (std::isfinite(particle.charge())) {
-      m_q.push_back(
-          Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
-    } else {
-      m_q.push_back(particle.charge());
-    }
+    auto divideAndClampIfFinite = [](auto num, auto denom) -> float {
+      if (std::isfinite(denom) && denom != 0.0) {
+        return Acts::clampValue<float>(num / denom);
+      } else {
+        return num;
+      }
+    };
+
+    // particle constants
+    m_m.push_back(
+        divideAndClampIfFinite(particle.mass(), Acts::UnitConstants::GeV));
+    m_q.push_back(
+        divideAndClampIfFinite(particle.charge(), Acts::UnitConstants::e));
+
     // derived kinematic quantities
     m_eta.push_back(Acts::clampValue<float>(
         Acts::VectorHelpers::eta(particle.direction())));
@@ -146,8 +147,8 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_generation.push_back(particle.particleId().generation());
     m_subParticle.push_back(particle.particleId().subParticle());
 
-    m_eLoss.push_back(Acts::clampValue<float>(particle.energyLoss() /
-                                              Acts::UnitConstants::GeV));
+    m_eLoss.push_back(divideAndClampIfFinite(particle.energyLoss(),
+                                             Acts::UnitConstants::GeV));
     m_pathInX0.push_back(
         Acts::clampValue<float>(particle.pathInX0() / Acts::UnitConstants::mm));
     m_pathInL0.push_back(
