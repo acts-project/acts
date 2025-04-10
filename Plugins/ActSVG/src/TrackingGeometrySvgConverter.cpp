@@ -256,29 +256,29 @@ struct Visitor : TrackingGeometryVisitor {
 
     // https://github.com/acts-project/actsvg/blob/2f1aaa58365a1dd1af62dc27aea5039459a65a38/meta/include/actsvg/display/geometry.hpp#L687-L692
     enum svgBv : unsigned int {
-      rinner = 0u,
-      router = 1u,
-      zpos = 2u,
-      zhalf = 3u,
-      phisec = 4u,
-      avgphi = 5u,
+      rInner = 0u,
+      rOuter = 1u,
+      zPos = 2u,
+      zHalf = 3u,
+      phiSec = 4u,
+      avgPhi = 5u,
     };
 
     using enum CylinderVolumeBounds::BoundValues;
     const auto& boundValues = volume.volumeBounds().values();
     if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
       pVolume._bound_values.resize(6);
-      pVolume._bound_values.at(svgBv::rinner) =
+      pVolume._bound_values.at(svgBv::rInner) =
           static_cast<actsvg::scalar>(boundValues[eMinR]);
-      pVolume._bound_values.at(svgBv::router) =
+      pVolume._bound_values.at(svgBv::rOuter) =
           static_cast<actsvg::scalar>(boundValues[eMaxR]);
-      pVolume._bound_values.at(svgBv::zpos) =
+      pVolume._bound_values.at(svgBv::zPos) =
           static_cast<actsvg::scalar>(volumeTransform.translation().z());
-      pVolume._bound_values.at(svgBv::zhalf) =
+      pVolume._bound_values.at(svgBv::zHalf) =
           static_cast<actsvg::scalar>(boundValues[eHalfLengthZ]);
-      pVolume._bound_values.at(svgBv::phisec) =
+      pVolume._bound_values.at(svgBv::phiSec) =
           static_cast<actsvg::scalar>(boundValues[eHalfPhiSector]);
-      pVolume._bound_values.at(svgBv::avgphi) =
+      pVolume._bound_values.at(svgBv::avgPhi) =
           static_cast<actsvg::scalar>(boundValues[eAveragePhi]);
     } else {
       throw std::invalid_argument("Unknown bounds type");
