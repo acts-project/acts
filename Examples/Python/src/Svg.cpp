@@ -59,14 +59,13 @@ using PortalCache = std::list<std::string>;
 
 // Helper lambda for view range selection
 bool viewRangeSel(const Svg::ProtoSurface& s, const Extent& vRange) {
-  bool accept = false;
   for (const auto& v : s._vertices) {
     if (vRange.contains(v)) {
-      accept = true;
-      break;
+      return true;
     }
   }
-  return accept;
+
+  return false;
 };
 
 /// @brief helper tuple to define which views and which range to be used
