@@ -4,7 +4,7 @@ import argparse
 
 import acts
 
-from acts.examples import CsvMuonSimHitReader, CsvDriftCircleReader, MuonHoughSeeder
+from acts.examples import CsvMuonSpacePointReader, CsvMuonSegmentReader, MuonHoughSeeder, MuonSegmentFinder
 
 # from acts.examples.reconstruction import (
 #     addSeeding,
@@ -21,30 +21,35 @@ rnd = acts.examples.RandomNumbers(seed=42)
 def runHoughFromCsv(inDir):
     # create temporary file with pixel SPs and run the seeding
 
-    s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
+    s = acts.examples.Sequencer(events=1000, numThreads=1, logLevel=acts.logging.VERBOSE)
 
     # Read input space points from input csv files
-    evReader = CsvMuonSimHitReader(
-        inputStem="MuonSimHit",
-        inputDir=os.path.dirname(inDir),
-        outputSimHits="MuonSimHits",
-        level=acts.logging.VERBOSE,
-    )
-    dcReader = CsvDriftCircleReader(
-        inputStem="MuonDriftCircle",
-        inputDir=os.path.dirname(inDir),
-        outputDriftCircles="MuonDriftCircles",
-        level=acts.logging.VERBOSE,
-    )
+    evReader = CsvMuonSpacePointReader(inputStem="SpacePoints",
+                                       inputDir=os.path.dirname(inDir),
+                                       outputSpacePoints="MuonSpacePoints",
+                                       level=acts.logging.VERBOSE)
+    
+    truthReader = CsvMuonSegmentReader(inputStem="MuonTruthSegment",
+                                    inputDir=os.path.dirname(inDir),
+                                    outputSegments="MuonTruthSegments",
+                                    level=acts.logging.VERBOSE)
+    
+
     # add csv reader
     s.addReader(evReader)
-    s.addReader(dcReader)
+    s.addReader(truthReader)
+    ### Add the hough seeder algorithm
     seeder = MuonHoughSeeder(
-        inSimHits=evReader.config.outputSimHits,
-        inDriftCircles=dcReader.config.outputDriftCircles,
-        level=acts.logging.VERBOSE,
-    )
+        inSpacePoints=evReader.config.outputSpacePoints,
+        inTruthSegments=truthReader.config.outputSegments,
+        outHoughMax="MuonHoughSeeds",
+        level=acts.logging.VERBOSE)
     s.addAlgorithm(seeder)
+    ### Add the segment finder algorithm
+    segmentMaker = MuonSegmentFinder(inHoughSeeds = seeder.config.outHoughMax,
+                                     outSegments="MuonSegments",
+                                     level=acts.logging.VERBOSE)
+    s.addAlgorithm(segmentMaker)
     s.run()
 
 
