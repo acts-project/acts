@@ -80,7 +80,7 @@ class HepMC3Reader final : public IReader {
  private:
   std::size_t determineNumEvents(HepMC3::Reader& reader) const;
 
-  std::unique_ptr<HepMC3::Reader> makeReader() const;
+  std::shared_ptr<HepMC3::Reader> makeReader() const;
 
   /// The configuration of this writer
   Config m_cfg;
@@ -96,7 +96,7 @@ class HepMC3Reader final : public IReader {
 
   std::mutex m_mutex;
 
-  std::unique_ptr<HepMC3::Reader> m_reader;
+  std::shared_ptr<HepMC3::Reader> m_reader;
 };
 
 }  // namespace ActsExamples

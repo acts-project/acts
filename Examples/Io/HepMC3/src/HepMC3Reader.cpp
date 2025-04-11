@@ -8,13 +8,12 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/Print.h>
 #include <HepMC3/Reader.h>
-#include <HepMC3/ReaderAscii.h>
+#include <HepMC3/ReaderFactory.h>
 #include <HepMC3/Units.h>
 
 namespace ActsExamples {
@@ -50,8 +49,8 @@ HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
                               << m_eventsRange.second << " events");
 }
 
-std::unique_ptr<HepMC3::Reader> HepMC3Reader::makeReader() const {
-  return std::make_unique<HepMC3::ReaderAscii>(m_cfg.inputPath);
+std::shared_ptr<HepMC3::Reader> HepMC3Reader::makeReader() const {
+  return HepMC3::deduce_reader(m_cfg.inputPath);
 }
 
 HepMC3Reader::~HepMC3Reader() = default;
