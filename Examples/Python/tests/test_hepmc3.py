@@ -140,7 +140,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
         npileup=10,
         outputDirCsv=None,
         outputDirRoot=None,
-        outputEvent="hepmc3_event",
         logLevel=acts.logging.INFO,
         vtxGen=vtxGen,
     )
@@ -150,7 +149,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
     s.addWriter(
         HepMC3Writer(
             acts.logging.VERBOSE,
-            inputEvent="hepmc3_event",
+            inputEvent="pythia8-event",
             outputPath=out,
             perEvent=False,
         )
@@ -161,7 +160,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
         [
             "particles_generated",
             "vertices_truth",
-            "hepmc3_event",
+            "pythia8-event",
         ],
         "check_alg",
         acts.logging.WARNING,
