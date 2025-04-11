@@ -11,6 +11,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <HepMC3/Print.h>
 #include <HepMC3/Units.h>
 
 namespace ActsExamples {
@@ -34,11 +35,11 @@ HepMC3AsciiReader::HepMC3AsciiReader(const HepMC3AsciiReader::Config& cfg,
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
-  if (m_cfg.outputEvents.empty()) {
+  if (m_cfg.outputEvent.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
 
-  m_outputEvents.initialize(m_cfg.outputEvents);
+  m_outputEvent.initialize(m_cfg.outputEvent);
 }
 
 std::string HepMC3AsciiReader::HepMC3AsciiReader::name() const {
@@ -50,8 +51,8 @@ std::pair<std::size_t, std::size_t> HepMC3AsciiReader::availableEvents() const {
 }
 
 ProcessCode HepMC3AsciiReader::read(const AlgorithmContext& ctx) {
-  std::vector<HepMC3::GenEvent> events;
-  HepMC3::GenEvent event(HepMC3::Units::GEV, HepMC3::Units::MM);
+  auto event =
+      std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".hepmc3",
                                ctx.eventNumber);
@@ -59,20 +60,21 @@ ProcessCode HepMC3AsciiReader::read(const AlgorithmContext& ctx) {
   ACTS_DEBUG("Attempting to read event from " << path);
   HepMC3::ReaderAscii reader(path);
 
-  reader.read_event(event);
-  while (!reader.failed()) {
-    events.push_back(std::move(event));
-    event.clear();
-    reader.read_event(event);
-  }
-
-  if (events.empty()) {
+  reader.read_event(*event);
+  if (reader.failed()) {
     return ProcessCode::ABORT;
   }
 
-  ACTS_VERBOSE(events.size()
-               << " events read, writing to " << m_cfg.outputEvents);
-  m_outputEvents(ctx, std::move(events));
+  if (m_cfg.printListing) {
+    ACTS_VERBOSE("Generated event:\n"
+                 << [&]() {
+                      std::stringstream ss;
+                      HepMC3::Print::listing(ss, *event);
+                      return ss.str();
+                    }());
+  }
+
+  m_outputEvent(ctx, std::move(event));
 
   reader.close();
   return ProcessCode::SUCCESS;
