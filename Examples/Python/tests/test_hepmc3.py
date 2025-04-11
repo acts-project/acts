@@ -28,7 +28,7 @@ pytestmark = [
 @pytest.mark.parametrize("per_event", [True, False], ids=["per_event", "combined"])
 def test_hepmc3_particle_writer(tmp_path, rng, per_event):
     from acts.examples.hepmc3 import (
-        HepMC3AsciiWriter,
+        HepMC3Writer,
         HepMC3OutputConverter,
     )
 
@@ -64,7 +64,7 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
     out.parent.mkdir(parents=True, exist_ok=True)
 
     s.addWriter(
-        HepMC3AsciiWriter(
+        HepMC3Writer(
             acts.logging.DEBUG,
             inputEvent="hepmc3_event",
             outputPath=out,
@@ -104,7 +104,7 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
 
 def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     from acts.examples.hepmc3 import (
-        HepMC3AsciiWriter,
+        HepMC3Writer,
         HepMC3OutputConverter,
     )
     from pythia8 import addPythia8
@@ -140,10 +140,11 @@ def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
     # )
 
     s.addWriter(
-        HepMC3AsciiWriter(
+        HepMC3Writer(
             acts.logging.VERBOSE,
             inputEvent="hepmc3_event",
             outputPath=out,
+            perEvent=False,
         )
     )
 

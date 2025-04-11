@@ -12,9 +12,8 @@
 
 namespace ActsExamples {
 
-HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
-                                     Acts::Logging::Level level)
-    : WriterT(config.inputEvent, "HepMC3AsciiWriter", level), m_cfg(config) {
+HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
+    : WriterT(config.inputEvent, "HepMC3Writer", level), m_cfg(config) {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
   }
@@ -31,9 +30,9 @@ HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
   }
 }
 
-HepMC3AsciiWriter::~HepMC3AsciiWriter() = default;
+HepMC3Writer::~HepMC3Writer() = default;
 
-ProcessCode HepMC3AsciiWriter::writeT(
+ProcessCode HepMC3Writer::writeT(
     const AlgorithmContext& ctx,
     const std::shared_ptr<HepMC3::GenEvent>& event) {
   ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
@@ -66,8 +65,8 @@ ProcessCode HepMC3AsciiWriter::writeT(
   }
 }
 
-ProcessCode HepMC3AsciiWriter::finalize() {
-  ACTS_VERBOSE("Finalizing HepMC3AsciiWriter");
+ProcessCode HepMC3Writer::finalize() {
+  ACTS_VERBOSE("Finalizing HepMC3Writer");
   if (m_writer) {
     m_writer->close();
   }

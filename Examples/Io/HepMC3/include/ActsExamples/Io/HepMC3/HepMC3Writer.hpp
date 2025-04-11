@@ -23,8 +23,7 @@ class Writer;
 namespace ActsExamples {
 
 /// HepMC3 event writer.
-class HepMC3AsciiWriter final
-    : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
+class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
  public:
   struct Config {
     /// If true, one file per event is written with the event number appended to
@@ -42,9 +41,9 @@ class HepMC3AsciiWriter final
   ///
   /// @param [in] config Config of the writer
   /// @param [in] level The level of the logger
-  HepMC3AsciiWriter(const Config& config, Acts::Logging::Level level);
+  HepMC3Writer(const Config& config, Acts::Logging::Level level);
 
-  ~HepMC3AsciiWriter() override;
+  ~HepMC3Writer() override;
 
   /// Writing events to file.
   ///
