@@ -162,7 +162,8 @@ class MuonSpacePoint {
  *         space point objects. The inner vector represents a collection of
  *         spacepoints that are close-by together in space, a so-called bucket
  */
-using MuonSpacePointContainer = std::vector<std::vector<MuonSpacePoint>>;
+using MuonSpacePointBucket = std::vector<MuonSpacePoint>;
+using MuonSpacePointContainer = std::vector<MuonSpacePointBucket>;
 
 /** @brief Print the Identifier's stationName to a string */
 std::string to_string(const MuonSpacePoint::MuonId::StationName st);
