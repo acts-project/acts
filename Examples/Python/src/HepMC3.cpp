@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3OutputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
@@ -36,5 +37,11 @@ void addHepMC3(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
                                 inputVertices, outputEvent);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HepMC3InputConverter, hepmc3, "HepMC3InputConverter",
+      inputEvent, outputParticles, outputVertices, printListing,
+      checkConsistency, mergePrimaries, primaryVertexSpatialThreshold,
+      vertexSpatialThreshold, mergeSecondaries);
 }
 }  // namespace Acts::Python
