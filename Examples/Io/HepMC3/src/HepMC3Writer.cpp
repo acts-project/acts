@@ -73,6 +73,8 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
       return std::make_unique<
           HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
           path);
+    default:
+      throw std::invalid_argument{"Unknown compression value"};
   }
 }
 
