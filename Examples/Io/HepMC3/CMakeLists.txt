@@ -1,12 +1,10 @@
 add_library(
     ActsExamplesIoHepMC3
     SHARED
-    src/HepMC3Event.cpp
-    src/HepMC3Particle.cpp
     src/HepMC3Reader.cpp
-    src/HepMC3Vertex.cpp
     src/HepMC3Writer.cpp
     src/HepMC3OutputConverter.cpp
+    src/HepMC3Util.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3
