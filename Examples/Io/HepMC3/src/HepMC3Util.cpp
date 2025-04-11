@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 
+#include <stdexcept>
+
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
@@ -93,6 +95,8 @@ std::string_view HepMC3Util::compressionExtension(Compression compression) {
       return ".bz2";
     case zstd:
       return ".zst";
+    default:
+      throw std::invalid_argument{"Unknown compression value"};
   }
 }
 
@@ -133,6 +137,8 @@ std::ostream& HepMC3Util::operator<<(std::ostream& os,
       return os << "bzip2";
     case zstd:
       return os << "zstd";
+    default:
+      throw std::invalid_argument{"Unknown compression value"};
   }
 }
 
