@@ -17,6 +17,7 @@
                 "ACTS_BUILD_PLUGIN_LEGACY": "ON",
                 "ACTS_BUILD_EXAMPLES_DD4HEP": "ON",
                 "ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS": "ON",
+                "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_UNITTESTS": "ON"
             }
         },
@@ -47,6 +48,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
+                "CMAKE_CXX_SCAN_FOR_MODULES": "OFF",
                 "CMAKE_FIND_FRAMEWORK": "LAST",
                 "ACTS_FORCE_ASSERTIONS": "ON",
                 "ACTS_ENABLE_LOG_FAILURE_THRESHOLD": "ON",
@@ -80,6 +82,14 @@
             "inherits": "ci-common",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "github-ci-no-root",
+            "displayName": "GitHub-CI (without ROOT)",
+            "inherits": "github-ci",
+            "cacheVariables": {
+                "ACTS_BUILD_EXAMPLES_ROOT": "OFF"
             }
         },
         {
@@ -122,6 +132,7 @@
                 "CMAKE_CXX_FLAGS": "-w",
                 "CMAKE_CUDA_FLAGS": "-w",
                 "ACTS_BUILD_PLUGIN_EXATRKX": "ON",
+                "ACTS_BUILD_EXAMPLES_ROOT": "ON",
                 "ACTS_BUILD_EXAMPLES_EXATRKX": "ON",
                 "ACTS_BUILD_UNITTESTS": "ON",
                 "ACTS_EXATRKX_ENABLE_TORCH": "ON",
