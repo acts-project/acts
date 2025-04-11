@@ -11,6 +11,8 @@ import acts.examples
 from acts.examples import Sequencer
 from acts import UnitConstants as u
 
+ScopedFailureThreshold = acts.logging.ScopedFailureThreshold
+
 from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
@@ -26,7 +28,7 @@ pytestmark = [
 
 
 @pytest.mark.parametrize("per_event", [True, False], ids=["per_event", "combined"])
-def test_hepmc3_particle_writer(tmp_path, rng, per_event):
+def test_hepmc3_writer(tmp_path, rng, per_event):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
         HepMC3OutputConverter,
@@ -60,7 +62,7 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
 
     s.addReader(evGen)
 
-    out = tmp_path / "out" / "events_pytest.hepmc3"
+    out = tmp_path / "out" / "pytest.hepmc3"
     out.parent.mkdir(parents=True, exist_ok=True)
 
     s.addWriter(
@@ -78,7 +80,7 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
         files = list(out.parent.iterdir())
         assert len(files) == 10
         assert all(f.suffix == ".hepmc3" for f in files)
-        assert all(f.stem.startswith("events_pytest") for f in files)
+        assert all(f.stem.startswith("event") for f in files)
         for f in files:
             with f.open("r") as f:
                 assert len(f.readlines()) == 25
@@ -102,7 +104,7 @@ def test_hepmc3_particle_writer(tmp_path, rng, per_event):
             pass
 
 
-def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
+def test_hepmc3_writer_pythia8(tmp_path, rng):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
         HepMC3OutputConverter,
@@ -166,3 +168,203 @@ def test_hepmc3_particle_writer_pythia8(tmp_path, rng):
 
     except ImportError:
         pass
+
+
+def test_hepmc3_reader(tmp_path, rng):
+    from acts.examples.hepmc3 import (
+        HepMC3Writer,
+        HepMC3Reader,
+    )
+
+    s = Sequencer(numThreads=1, events=12)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.DEBUG,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputParticles="particles_generated",
+        outputVertices="vertices_input",
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+
+    s.addReader(evGen)
+
+    out = tmp_path / "out" / "events_pytest.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.DEBUG,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            perEvent=False,
+        )
+    )
+
+    s.run()
+
+    assert out.exists(), f"File {out} does not exist"
+
+    # Without external event number, we need to read all events
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3Reader(
+            acts.logging.DEBUG,
+            inputPath=out,
+            perEvent=False,
+            outputEvent="hepmc3_event",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg("hepmc3_event", "check_alg", acts.logging.WARNING)
+    s.addAlgorithm(alg)
+
+    s.run()
+
+    assert alg.events_seen == 12
+
+    # With external event number, we can read a specific event
+    # Test 11 and 12 as both a lower number than is available and a higher number
+    # than is available is valid
+    for num in (11, 12):
+        s = Sequencer(numThreads=1)
+
+        s.addReader(
+            HepMC3Reader(
+                acts.logging.DEBUG,
+                inputPath=out,
+                perEvent=False,
+                outputEvent="hepmc3_event",
+                numEvents=num,
+            )
+        )
+
+        alg = AssertCollectionExistsAlg(
+            "hepmc3_event", "check_alg", acts.logging.WARNING
+        )
+        s.addAlgorithm(alg)
+
+        s.run()
+
+        assert alg.events_seen == num
+
+    s = Sequencer(numThreads=1)
+
+    s.addReader(
+        HepMC3Reader(
+            acts.logging.DEBUG,
+            inputPath=out,
+            perEvent=False,
+            outputEvent="hepmc3_event",
+            numEvents=13,
+        )
+    )
+
+    with ScopedFailureThreshold(acts.logging.MAX):
+        with pytest.raises(RuntimeError) as excinfo:
+            s.run()
+
+    assert "Failed to process event" in str(excinfo.value)
+
+
+def test_hepmc3_reader_per_event(tmp_path, rng):
+    from acts.examples.hepmc3 import (
+        HepMC3Writer,
+        HepMC3Reader,
+    )
+
+    s = Sequencer(numThreads=1, events=12)
+
+    evGen = acts.examples.EventGenerator(
+        level=acts.logging.DEBUG,
+        generators=[
+            acts.examples.EventGenerator.Generator(
+                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                vertex=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
+                particles=acts.examples.ParametricParticleGenerator(
+                    p=(100 * u.GeV, 100 * u.GeV),
+                    eta=(-2, 2),
+                    phi=(0, 360 * u.degree),
+                    randomizeCharge=True,
+                    numParticles=2,
+                ),
+            )
+        ],
+        outputParticles="particles_generated",
+        outputVertices="vertices_input",
+        outputEvent="hepmc3_event",
+        randomNumbers=rng,
+    )
+
+    s.addReader(evGen)
+
+    out = tmp_path / "out" / "pytest.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.DEBUG,
+            inputEvent="hepmc3_event",
+            outputPath=out,
+            perEvent=True,
+        )
+    )
+
+    s.run()
+
+    s = Sequencer(numThreads=1)
+
+    print(out)
+
+    import os
+
+    os.system(f"ls -l {out.parent}")
+    # assert False
+
+    s.addReader(
+        HepMC3Reader(
+            acts.logging.DEBUG,
+            inputPath=out,
+            perEvent=True,
+            outputEvent="hepmc3_event",
+        )
+    )
+
+    s.run()
+
+
+def test_hepmc3_reader_per_event_with_num_events(tmp_path, rng):
+    from acts.examples.hepmc3 import (
+        HepMC3Reader,
+    )
+
+    # Test that using both perEvent=True and numEvents raises an error
+    with pytest.raises(ValueError) as excinfo:
+        HepMC3Reader(
+            acts.logging.DEBUG,
+            inputPath="dummy.hepmc3",
+            perEvent=True,
+            outputEvent="hepmc3_event",
+            numEvents=5,
+        )
+
+    assert "perEvent and numEvents are mutually exclusive" in str(excinfo.value)

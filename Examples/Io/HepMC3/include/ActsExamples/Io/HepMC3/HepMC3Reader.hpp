@@ -12,8 +12,14 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
-#include <HepMC3/GenEvent.h>
-#include <HepMC3/ReaderAscii.h>
+#include <filesystem>
+#include <mutex>
+#include <string>
+
+namespace HepMC3 {
+class GenEvent;
+class Reader;
+}  // namespace HepMC3
 
 namespace ActsExamples {
 
@@ -21,32 +27,42 @@ namespace ActsExamples {
 class HepMC3Reader final : public IReader {
  public:
   struct Config {
-    // The input directory
-    std::string inputDir;
-    // The stem of input file names
-    std::string inputStem;
-    // The output collection
+    /// The input file path for reading HepMC3 events.
+    ///
+    /// This path is handled differently based on the perEvent flag:
+    /// - If perEvent is false: The path points to a single file containing all
+    /// events
+    /// - If perEvent is true: The path is used as a template for finding
+    /// per-event files
+    ///   in the format "event{number}-{filename}" in the parent directory
+    ///
+    /// When in per-event mode, the reader uses determineEventFilesRange() to
+    /// scan the directory for matching files and determine the available event
+    /// range.
+    std::filesystem::path inputPath;
+
+    /// If true, one file per event is read
+    bool perEvent = false;
+
+    /// The output collection
     std::string outputEvent;
-    // If true, print the event listing
+
+    /// If true, print the event listing
     bool printListing = false;
+
+    /// HepMC3 does not expose the number of events in the file, so we need to
+    /// provide it here if known, otherwise the reader will have to read the
+    /// whole file
+    std::optional<std::size_t> numEvents = std::nullopt;
   };
-
-  /// @brief Reads an event from file
-  /// @param reader reader of run files
-  /// @param event storage of the read event
-  /// @return boolean indicator if the reading was successful
-  bool readEvent(HepMC3::ReaderAscii& reader, HepMC3::GenEvent& event);
-
-  /// @brief Reports the status of the reader
-  /// @param reader reader of run files
-  /// @return boolean status indicator
-  bool status(HepMC3::ReaderAscii& reader);
 
   /// Construct the particle reader.
   ///
   /// @param [in] cfg The configuration object
   /// @param [in] lvl The logging level
   HepMC3Reader(const Config& cfg, Acts::Logging::Level lvl);
+
+  ~HepMC3Reader() override;
 
   std::string name() const override;
 
@@ -56,10 +72,16 @@ class HepMC3Reader final : public IReader {
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
 
+  ProcessCode finalize() override;
+
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
+  std::size_t determineNumEvents(HepMC3::Reader& reader) const;
+
+  std::unique_ptr<HepMC3::Reader> makeReader() const;
+
   /// The configuration of this writer
   Config m_cfg;
   /// Number of events
@@ -71,6 +93,10 @@ class HepMC3Reader final : public IReader {
 
   WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
       this, "OutputEvent"};
+
+  std::mutex m_mutex;
+
+  std::unique_ptr<HepMC3::Reader> m_reader;
 };
 
 }  // namespace ActsExamples
