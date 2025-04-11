@@ -95,6 +95,13 @@ class MuonHoughSeeder final : public IAlgorithm {
   MuonHoughMaxContainer constructEtaMaxima(const AlgorithmContext& ctx,
                                            const MuonSpacePointBucket& bucket,
                                            HoughPlane_t& plane) const;
+  /** @brief Extends the obtained eta maxima and tries to attach straight line parameters
+   *         in the non-precision plane (phi).
+   */
+  MuonHoughMaxContainer extendMaximaWithPhi(const AlgorithmContext& ctx,
+                                            MuonHoughMaxContainer&& etaMaxima,
+                                            HoughPlane_t& plane) const;
+
   /** @brief Displays the found maxima onto a TCanvas
    *  @param ctx: Algorithm context to fetch the truth segment parameters
    *  @param bucketId: identifier of the bucket to display on the Canvas and also
@@ -103,8 +110,8 @@ class MuonHoughSeeder final : public IAlgorithm {
    *  @param plane: Filled hough plane
    *  @param axis: Axis range needed to interpet the hough binning */
   void displayMaxima(const AlgorithmContext& ctx, const MuonId& bucketId,
-                    const MaximumVec_t& maxima, const HoughPlane_t& plane,
-                    const AxisRange_t& axis) const;
+                     const MaximumVec_t& maxima, const HoughPlane_t& plane,
+                     const AxisRange_t& axis) const;
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
