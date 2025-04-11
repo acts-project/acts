@@ -63,18 +63,25 @@ def runMaterialRecording(
                 ),
             )
         ],
-        outputParticles="particles_initial",
-        outputVertices="vertices_initial",
         randomNumbers=rnd,
     )
 
     s.addReader(evGen)
 
+    hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+        level=acts.logging.INFO,
+        inputEvent=evGen.config.outputEvent,
+        outputParticles="particles_initial",
+        outputVertices="vertices_initial",
+        mergePrimaries=False,
+    )
+    s.addAlgorithm(hepmc3Converter)
+
     g4Alg = acts.examples.geant4.Geant4MaterialRecording(
         level=acts.logging.INFO,
         detector=detector,
         randomNumbers=rnd,
-        inputParticles=evGen.config.outputParticles,
+        inputParticles=hepmc3Converter.config.outputParticles,
         outputMaterialTracks="material-tracks",
     )
 

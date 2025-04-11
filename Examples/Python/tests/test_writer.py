@@ -73,7 +73,7 @@ def test_obj_propagation_step_writer(tmp_path, trk_geo, conf_const, basic_prop_s
 @pytest.mark.csv
 def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     out = tmp_path / "csv"
 
@@ -83,7 +83,7 @@ def test_csv_particle_writer(tmp_path, conf_const, ptcl_gun):
         conf_const(
             CsvParticleWriter,
             acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             outputStem="particle",
             outputDir=str(out),
         )
@@ -125,7 +125,7 @@ def test_root_prop_step_writer(
 @pytest.mark.root
 def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
     s = Sequencer(numThreads=1, events=10)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     file = tmp_path / "particles.root"
 
@@ -135,7 +135,7 @@ def test_root_particle_writer(tmp_path, conf_const, ptcl_gun, assert_root_hash):
         conf_const(
             RootParticleWriter,
             acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             filePath=str(file),
         )
     )
@@ -495,7 +495,7 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
     from acts.examples.edm4hep import EDM4hepParticleWriter
 
     s = Sequencer(numThreads=1, events=10)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     out = tmp_path / "particles_edm4hep.root"
 
@@ -505,7 +505,7 @@ def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
         conf_const(
             EDM4hepParticleWriter,
             acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             outputPath=str(out),
         )
     )
