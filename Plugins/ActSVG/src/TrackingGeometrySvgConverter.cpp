@@ -304,7 +304,7 @@ std::vector<actsvg::svg::object> drawTrackingGeometry(
     const GeometryContext& gctx, const TrackingGeometry& tGeometry,
     std::variant<actsvg::views::x_y, actsvg::views::z_r> view,
     bool drawSurfaces, bool highlightMaterial) {
-  if (tGeometry.generation() != TrackingGeometry::Generation::Three) {
+  if (tGeometry.geometryVersion() != TrackingGeometry::GeometryVersion::Gen3) {
     throw std::invalid_argument{
         "Input tracking geometry needs to have been built in Gen3 mode"};
   }
