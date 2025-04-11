@@ -17,7 +17,6 @@
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <bitset>
-#include <format>
 #include <stdexcept>
 
 #include "CsvOutputData.hpp"

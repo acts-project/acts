@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <format>
 #include <stdexcept>
 
 #include "TBox.h"
@@ -173,11 +172,10 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
       }
     }
     const auto bucketId{bucket.front().id()};
-    m_outCanvas->SetTitle(std::format("Station {:}, side {:}, sector {:2d}",
-                                      to_string(bucketId.msStation()),
-                                      to_string(bucketId.side()),
-                                      bucketId.sector())
-                              .c_str());
+    m_outCanvas->SetTitle(Form("Station %s, side %s, sector %2d",
+                                      to_string(bucketId.msStation()).c_str(),
+                                      to_string(bucketId.side()).c_str(),
+                                      bucketId.sector()));
 
     /// Save the hough accumulator as histogram
     TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
@@ -185,10 +183,9 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
                            etaAxisRanges.xMax, etaPlane.nBinsY(),
                            etaAxisRanges.yMin, etaAxisRanges.yMax);
     houghHistoForPlot.SetTitle(
-        std::format("Station {:}, side {:}, sector {:2d}",
-                    to_string(bucketId.msStation()), to_string(bucketId.side()),
-                    bucketId.sector())
-            .c_str());
+        Form("Station %s, side %s, sector %2d",
+                    to_string(bucketId.msStation()).c_str(), to_string(bucketId.side()).c_str(),
+                    bucketId.sector()));
 
     for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
       for (int by = 0; by < houghHistoForPlot.GetNbinsY(); ++by) {
@@ -237,7 +234,7 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
     {
       auto tl = std::make_unique<TLatex>(
           gPad->GetLeftMargin() + 0.03, 1. - gPad->GetTopMargin() - 0.1,
-          std::format("Space points in station {:}", bucket.size()).c_str());
+          Form("Space points in station %lu", bucket.size()));
 
       tl->SetTextFont(43);
       tl->SetTextSize(24);
