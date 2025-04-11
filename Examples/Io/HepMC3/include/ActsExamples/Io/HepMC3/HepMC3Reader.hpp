@@ -26,7 +26,9 @@ class HepMC3AsciiReader final : public IReader {
     // The stem of input file names
     std::string inputStem;
     // The output collection
-    std::string outputEvents;
+    std::string outputEvent;
+    // If true, print the event listing
+    bool printListing = false;
   };
 
   /// @brief Reads an event from file
@@ -67,8 +69,8 @@ class HepMC3AsciiReader final : public IReader {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  WriteDataHandle<std::vector<HepMC3::GenEvent>> m_outputEvents{this,
-                                                                "OutputEvents"};
+  WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
+      this, "OutputEvent"};
 };
 
 }  // namespace ActsExamples
