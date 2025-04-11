@@ -32,7 +32,7 @@ void addHepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3AsciiReader, hepmc3,
                              "HepMC3AsciiReader", inputDir, inputStem,
-                             outputEvent, printListing);
+                             outputEvents);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
