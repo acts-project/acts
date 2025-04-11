@@ -24,16 +24,19 @@ def runHoughFromCsv(inDir):
     s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
 
     # Read input space points from input csv files
-    evReader = CsvMuonSpacePointReader(inputStem="SpacePoints",
-                                       inputDir=os.path.dirname(inDir),
-                                       outputSpacePoints="MuonSpacePoints",
-                                       level=acts.logging.VERBOSE)
-    
-    truthReader = CsvMuonSegmentReader(inputStem="MuonTruthSegment",
-                                    inputDir=os.path.dirname(inDir),
-                                    outputSegments="MuonTruthSegments",
-                                    level=acts.logging.VERBOSE)
-    
+    evReader = CsvMuonSpacePointReader(
+        inputStem="SpacePoints",
+        inputDir=os.path.dirname(inDir),
+        outputSpacePoints="MuonSpacePoints",
+        level=acts.logging.VERBOSE,
+    )
+
+    truthReader = CsvMuonSegmentReader(
+        inputStem="MuonTruthSegment",
+        inputDir=os.path.dirname(inDir),
+        outputSegments="MuonTruthSegments",
+        level=acts.logging.VERBOSE,
+    )    
 
     # add csv reader
     s.addReader(evReader)
@@ -43,7 +46,8 @@ def runHoughFromCsv(inDir):
         inSpacePoints=evReader.config.outputSpacePoints,
         inTruthSegments=truthReader.config.outputSegments,
         outHoughMax="MuonHoughSeeds",
-        level=acts.logging.VERBOSE)
+        level=acts.logging.VERBOSE,
+    )
     s.addAlgorithm(seeder)
     s.run()
 
