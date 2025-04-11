@@ -17,14 +17,13 @@
 
 #include "Acts/Utilities/StringHelpers.hpp"
 
-
 #include "TString.h"
 
 std::ostream& operator<<(std::ostream& ostr,
                          const ActsExamples::MuonSpacePoint::MuonId& id) {
   ostr << Form("%s in %2d on %s",
-                      ActsExamples::to_string(id.msStation()).c_str(), id.sector(),
-                      ActsExamples::to_string(id.side()).c_str());
+               ActsExamples::to_string(id.msStation()).c_str(), id.sector(),
+               ActsExamples::to_string(id.side()).c_str());
   return ostr;
 }
 std::ostream& operator<<(std::ostream& ostr,

@@ -173,19 +173,19 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
     }
     const auto bucketId{bucket.front().id()};
     m_outCanvas->SetTitle(Form("Station %s, side %s, sector %2d",
-                                      to_string(bucketId.msStation()).c_str(),
-                                      to_string(bucketId.side()).c_str(),
-                                      bucketId.sector()));
+                               to_string(bucketId.msStation()).c_str(),
+                               to_string(bucketId.side()).c_str(),
+                               bucketId.sector()));
 
     /// Save the hough accumulator as histogram
     TH2D houghHistoForPlot("houghHist", "HoughPlane;tan(#alpha);z0 [mm]",
                            etaPlane.nBinsX(), etaAxisRanges.xMin,
                            etaAxisRanges.xMax, etaPlane.nBinsY(),
                            etaAxisRanges.yMin, etaAxisRanges.yMax);
-    houghHistoForPlot.SetTitle(
-        Form("Station %s, side %s, sector %2d",
-                    to_string(bucketId.msStation()).c_str(), to_string(bucketId.side()).c_str(),
-                    bucketId.sector()));
+    houghHistoForPlot.SetTitle(Form("Station %s, side %s, sector %2d",
+                                    to_string(bucketId.msStation()).c_str(),
+                                    to_string(bucketId.side()).c_str(),
+                                    bucketId.sector()));
 
     for (int bx = 0; bx < houghHistoForPlot.GetNbinsX(); ++bx) {
       for (int by = 0; by < houghHistoForPlot.GetNbinsY(); ++by) {
