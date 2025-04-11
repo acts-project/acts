@@ -108,7 +108,7 @@ class MuonHoughSeeder final : public IAlgorithm {
    *                   to determine whether it's an eta / phi maximum
    *  @param maxima: List of maxima from the PeakFinder
    *  @param plane: Filled hough plane
-   *  @param axis: Axis range needed to interpet the hough binning */
+   *  @param axis: Axis range needed to interpret the hough binning */
   void displayMaxima(const AlgorithmContext& ctx, const MuonId& bucketId,
                      const MaximumVec_t& maxima, const HoughPlane_t& plane,
                      const AxisRange_t& axis) const;

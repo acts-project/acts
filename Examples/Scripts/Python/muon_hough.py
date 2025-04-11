@@ -48,6 +48,7 @@ def runHoughFromCsv(inDir):
         outHoughMax="MuonHoughSeeds",
         level=acts.logging.VERBOSE,
     )
+
     s.addAlgorithm(seeder)
     s.run()
 

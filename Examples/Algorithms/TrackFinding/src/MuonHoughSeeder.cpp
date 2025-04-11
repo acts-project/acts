@@ -127,7 +127,7 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
   MuonHoughMaxContainer etaMaxima{};
   AxisRange_t axisRanges{-3., 3., 100. * Acts::UnitConstants::m,
                          -100. * Acts::UnitConstants::m};
-  /** @brief Addapt the axis ranges of the y intercept */
+  /** brief Adapt the intercept axis ranges */
   for (const MuonSpacePoint& sp : bucket) {
     /** Require that the space point measures eta */
     if (!sp.id().measuresEta()) {
