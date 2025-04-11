@@ -35,8 +35,34 @@ except ImportError:
     _available_compression_modes = []
 
 
+compression_modes = pytest.mark.parametrize(
+    "compression",
+    acts.examples.hepmc3.availableCompressionModes(),
+    ids=[
+        c.name if c != cm.none else "uncompressed"
+        for c in acts.examples.hepmc3.availableCompressionModes()
+    ],
+)
+
+
+def handle_path(out, compression):
+    if compression == cm.none:
+        actual_path = out
+    else:
+        assert not out.exists()
+        actual_path = out.with_suffix(
+            f".hepmc3{acts.examples.hepmc3.compressionExtension(compression)}"
+        )
+        assert actual_path.suffix == acts.examples.hepmc3.compressionExtension(
+            compression
+        )
+    assert actual_path.exists()
+    return actual_path
+
+
 @pytest.mark.parametrize("per_event", [True, False], ids=["per_event", "combined"])
-def test_hepmc3_writer(tmp_path, rng, per_event):
+@compression_modes
+def test_hepmc3_writer(tmp_path, rng, per_event, compression):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -94,6 +120,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event):
             inputEvent="hepmc3_event",
             outputPath=out,
             perEvent=per_event,
+            compression=compression,
         )
     )
 
@@ -102,32 +129,41 @@ def test_hepmc3_writer(tmp_path, rng, per_event):
     if per_event:
         files = list(out.parent.iterdir())
         assert len(files) == 10
-        assert all(f.suffix == ".hepmc3" for f in files)
         assert all(f.stem.startswith("event") for f in files)
-        for f in files:
-            with f.open("r") as f:
-                assert len(f.readlines()) == 25
+        if compression == cm.none:
+            assert all(f.suffix == ".hepmc3" for f in files)
+            for f in files:
+                with f.open("r") as f:
+                    assert len(f.readlines()) == 25
+        else:
+            ext = acts.examples.hepmc3.compressionExtension(compression)
+            assert all(f.name.endswith(f".hepmc3{ext}") for f in files)
+
     else:
-        assert out.exists(), f"File {out} does not exist"
-        with out.open("r") as f:
-            assert len(f.readlines()) == 214
+        actual_path = handle_path(out, compression)
 
-        try:
-            import pyhepmc
-            from pyhepmc.view import to_dot
+        if compression == cm.none:
+            with actual_path.open("r") as f:
+                assert len(f.readlines()) == 214
 
-            nevts = 0
-            with pyhepmc.open(out) as f:
-                nevts += 1
-                for evt in f:
-                    assert len(evt.particles) == 4 + 2  # muons + beam particles
-            assert nevts == 1
+        # pyhepmc does not support zstd
+        if compression in (cm.lzma, cm.bzip2, cm.zlib):
+            try:
+                import pyhepmc
 
-        except ImportError:
-            pass
+                nevts = 0
+                with pyhepmc.open(actual_path) as f:
+                    nevts += 1
+                    for evt in f:
+                        assert len(evt.particles) == 4 + 2  # muons + beam particles
+                assert nevts == 1
+
+            except ImportError:
+                pass
 
 
-def test_hepmc3_writer_pythia8(tmp_path, rng):
+@compression_modes
+def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
@@ -160,6 +196,7 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
             inputEvent="pythia8-event",
             outputPath=out,
             perEvent=False,
+            compression=compression,
         )
     )
 
@@ -177,25 +214,31 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
 
     s.run()
 
-    assert out.exists(), f"File {out} does not exist"
-    with out.open("r") as f:
-        assert len(f.readlines()) == 18679
+    actual_path = handle_path(out, compression)
 
-    try:
-        import pyhepmc
+    assert actual_path.exists(), f"File {actual_path} does not exist"
 
-        nevts = 0
-        with pyhepmc.open(out) as f:
-            nevts += 1
-            for evt in f:
-                assert len(evt.particles) == 7433
-        assert nevts == 1
+    if compression == cm.none:
+        with actual_path.open("r") as f:
+            assert len(f.readlines()) == 18679
 
-    except ImportError:
-        pass
+    if compression in (cm.lzma, cm.bzip2, cm.zlib):
+        try:
+            import pyhepmc
+
+            nevts = 0
+            with pyhepmc.open(actual_path) as f:
+                nevts += 1
+                for evt in f:
+                    assert len(evt.particles) == 7433
+            assert nevts == 1
+
+        except ImportError:
+            pass
 
 
-def test_hepmc3_reader(tmp_path, rng):
+@compression_modes
+def test_hepmc3_reader(tmp_path, rng, compression):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
         HepMC3Reader,
@@ -235,12 +278,13 @@ def test_hepmc3_reader(tmp_path, rng):
             inputEvent="hepmc3_event",
             outputPath=out,
             perEvent=False,
+            compression=compression,
         )
     )
 
     s.run()
 
-    assert out.exists(), f"File {out} does not exist"
+    actual_path = handle_path(out, compression)
 
     # Without external event number, we need to read all events
     s = Sequencer(numThreads=1)
@@ -248,7 +292,7 @@ def test_hepmc3_reader(tmp_path, rng):
     s.addReader(
         HepMC3Reader(
             acts.logging.DEBUG,
-            inputPath=out,
+            inputPath=actual_path,
             perEvent=False,
             outputEvent="hepmc3_event",
         )
@@ -287,7 +331,7 @@ def test_hepmc3_reader(tmp_path, rng):
         s.addReader(
             HepMC3Reader(
                 acts.logging.DEBUG,
-                inputPath=out,
+                inputPath=actual_path,
                 perEvent=False,
                 outputEvent="hepmc3_event",
                 numEvents=num,
@@ -308,7 +352,7 @@ def test_hepmc3_reader(tmp_path, rng):
     s.addReader(
         HepMC3Reader(
             acts.logging.DEBUG,
-            inputPath=out,
+            inputPath=actual_path,
             perEvent=False,
             outputEvent="hepmc3_event",
             numEvents=13,
@@ -391,13 +435,6 @@ def test_hepmc3_reader_per_event(tmp_path, rng):
 
     s = Sequencer(numThreads=1)
 
-    print(out)
-
-    import os
-
-    os.system(f"ls -l {out.parent}")
-    # assert False
-
     s.addReader(
         HepMC3Reader(
             acts.logging.DEBUG,
@@ -430,108 +467,3 @@ def test_hepmc3_reader_per_event_with_num_events(tmp_path, rng):
 
 def test_hepmc3_compression_modes():
     assert cm.none in acts.examples.hepmc3.availableCompressionModes()
-
-
-@pytest.mark.parametrize(
-    "compression",
-    acts.examples.hepmc3.availableCompressionModes(),
-    ids=[c.name for c in acts.examples.hepmc3.availableCompressionModes()],
-)
-def test_hepmc3_writer_compression(tmp_path, rng, compression):
-    from acts.examples.hepmc3 import (
-        HepMC3Writer,
-        HepMC3Reader,
-    )
-
-    nevents = 10
-
-    s = Sequencer(numThreads=1, events=nevents)
-
-    evGen = acts.examples.EventGenerator(
-        level=acts.logging.DEBUG,
-        generators=[
-            acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                vertex=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns),
-                    mean=acts.Vector4(0, 0, 0, 0),
-                ),
-                particles=acts.examples.ParametricParticleGenerator(
-                    p=(100 * u.GeV, 100 * u.GeV),
-                    eta=(-2, 2),
-                    phi=(0, 360 * u.degree),
-                    randomizeCharge=True,
-                    numParticles=2,
-                ),
-            )
-        ],
-        outputEvent="hepmc3_event",
-        randomNumbers=rng,
-    )
-
-    s.addReader(evGen)
-
-    out = tmp_path / "out" / f"pytest.hepmc3"
-    out.parent.mkdir(parents=True, exist_ok=True)
-
-    s.addWriter(
-        HepMC3Writer(
-            acts.logging.DEBUG,
-            inputEvent="hepmc3_event",
-            outputPath=out,
-            perEvent=False,
-            compression=compression,
-        )
-    )
-
-    s.run()
-
-    if compression == cm.none:
-        actual_path = out
-    else:
-        assert not out.exists()
-        actual_path = out.with_suffix(
-            f".hepmc3{acts.examples.hepmc3.compressionExtension(compression)}"
-        )
-        assert actual_path.suffix == acts.examples.hepmc3.compressionExtension(
-            compression
-        )
-    assert actual_path.exists()
-
-    # pyhepmc does not support zstd
-    if compression in (cm.lzma, cm.bzip2, cm.zlib):
-        try:
-            import pyhepmc
-
-            nevts = 0
-            with pyhepmc.open(actual_path) as f:
-                print("OPEN!")
-                for evt in f:
-                    nevts += 1
-            assert nevts == nevents
-
-        except ImportError:
-            pass
-
-    # Now try reading the file
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        HepMC3Reader(
-            acts.logging.DEBUG,
-            inputPath=actual_path,
-            perEvent=False,
-            outputEvent="hepmc3_event",
-        )
-    )
-
-    alg = AssertCollectionExistsAlg(
-        ["hepmc3_event"],
-        "check_alg",
-        acts.logging.WARNING,
-    )
-    s.addAlgorithm(alg)
-
-    s.run()
-
-    assert alg.events_seen == nevents
