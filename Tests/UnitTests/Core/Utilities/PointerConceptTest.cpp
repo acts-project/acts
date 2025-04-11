@@ -15,8 +15,7 @@
 #include <iostream>
 #include <memory>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 template <typename T>
 bool testPointer(const T /*ptr*/) {
@@ -66,4 +65,3 @@ BOOST_AUTO_TEST_CASE(testConceptPass) {
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
-}  // namespace Acts

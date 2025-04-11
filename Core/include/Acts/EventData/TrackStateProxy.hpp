@@ -71,7 +71,7 @@ class TransitiveConstPointer {
 
   T& operator*() { return *m_ptr; }
 
-  operator bool() const { return m_ptr != nullptr; }
+  explicit operator bool() const { return m_ptr != nullptr; }
 
  private:
   T* ptr() const { return m_ptr; }
