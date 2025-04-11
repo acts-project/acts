@@ -32,7 +32,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     : WriterT(cfg.inputTracks, "TrackFinderPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
       m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
+      m_fakePlotTool(m_cfg.fakePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
   // tracks collection name is already checked by base ctor
@@ -71,7 +71,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
 
   // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
-  m_fakeRatePlotTool.book(m_fakeRatePlotCache);
+  m_fakePlotTool.book(m_fakePlotCache);
   m_duplicationPlotTool.book(m_duplicationPlotCache);
   m_trackSummaryPlotTool.book(m_trackSummaryPlotCache);
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -81,7 +81,7 @@ TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
 
 TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
-  m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
+  m_fakePlotTool.clear(m_fakePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
   for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -94,16 +94,16 @@ TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
 
 ProcessCode TrackFinderPerformanceWriter::finalize() {
   float eff_tracks = static_cast<float>(m_nTotalMatchedTracks) / m_nTotalTracks;
-  float fakeRate_tracks =
+  float fakeRatio_tracks =
       static_cast<float>(m_nTotalFakeTracks) / m_nTotalTracks;
-  float duplicationRate_tracks =
+  float duplicationRatio_tracks =
       static_cast<float>(m_nTotalDuplicateTracks) / m_nTotalTracks;
 
   float eff_particle =
       static_cast<float>(m_nTotalMatchedParticles) / m_nTotalParticles;
-  float fakeRate_particle =
+  float fakeRatio_particle =
       static_cast<float>(m_nTotalFakeParticles) / m_nTotalParticles;
-  float duplicationRate_particle =
+  float duplicationRatio_particle =
       static_cast<float>(m_nTotalDuplicateParticles) / m_nTotalParticles;
 
   ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
@@ -114,16 +114,16 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   ACTS_INFO(
       "Efficiency with tracks (nMatchedTracks/ nAllTracks) = " << eff_tracks);
   ACTS_INFO(
-      "Fake rate with tracks (nFakeTracks/nAllTracks) = " << fakeRate_tracks);
-  ACTS_INFO("Duplicate rate with tracks (nDuplicateTracks/nAllTracks) = "
-            << duplicationRate_tracks);
+      "Fake ratio with tracks (nFakeTracks/nAllTracks) = " << fakeRatio_tracks);
+  ACTS_INFO("Duplicate ratio with tracks (nDuplicateTracks/nAllTracks) = "
+            << duplicationRatio_tracks);
   ACTS_INFO("Efficiency with particles (nMatchedParticles/nTrueParticles) = "
             << eff_particle);
-  ACTS_INFO("Fake rate with particles (nFakeParticles/nTrueParticles) = "
-            << fakeRate_particle);
+  ACTS_INFO("Fake ratio with particles (nFakeParticles/nTrueParticles) = "
+            << fakeRatio_particle);
   ACTS_INFO(
-      "Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = "
-      << duplicationRate_particle);
+      "Duplicate ratio with particles (nDuplicateParticles/nTrueParticles) = "
+      << duplicationRatio_particle);
 
   auto writeFloat = [&](float f, const char* name) {
     TVectorF v(1);
@@ -134,7 +134,7 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
-    m_fakeRatePlotTool.write(m_fakeRatePlotCache);
+    m_fakePlotTool.write(m_fakePlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);
     m_trackSummaryPlotTool.write(m_trackSummaryPlotCache);
     for (const auto& [key, _] : m_cfg.subDetectorTrackSummaryVolumes) {
@@ -142,11 +142,11 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
     }
 
     writeFloat(eff_tracks, "eff_tracks");
-    writeFloat(fakeRate_tracks, "fakerate_tracks");
-    writeFloat(duplicationRate_tracks, "duplicaterate_tracks");
+    writeFloat(fakeRatio_tracks, "fakeratio_tracks");
+    writeFloat(duplicationRatio_tracks, "duplicateratio_tracks");
     writeFloat(eff_particle, "eff_particles");
-    writeFloat(fakeRate_particle, "fakerate_particles");
-    writeFloat(duplicationRate_particle, "duplicaterate_particles");
+    writeFloat(fakeRatio_particle, "fakeratio_particles");
+    writeFloat(duplicationRatio_particle, "duplicateratio_particles");
 
     if (m_matchingTree != nullptr) {
       m_matchingTree->Write();
@@ -241,12 +241,12 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalDuplicateTracks++;
     }
 
-    // Fill fake rate plots
-    m_fakeRatePlotTool.fill(
-        m_fakeRatePlotCache, fittedParameters,
+    // Fill fake raio plots
+    m_fakePlotTool.fill(
+        m_fakePlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Fake);
 
-    // Fill the duplication rate
+    // Fill the duplication ratio
     m_duplicationPlotTool.fill(
         m_duplicationPlotCache, fittedParameters,
         particleMatch.classification == TrackMatchClassification::Duplicate);
@@ -278,7 +278,7 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
       m_nTotalMatchedParticles += 1;
 
       // Check if the particle has more than one matched track for the duplicate
-      // rate
+      // rate/ratio
       if (nMatchedTracks > 1) {
         m_nTotalDuplicateParticles += 1;
       }
@@ -315,8 +315,8 @@ ProcessCode TrackFinderPerformanceWriter::writeT(
                                nMatchedTracks - 1);
 
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle.initial(),
-                            nMatchedTracks, nFakeTracks);
+    m_fakePlotTool.fill(m_fakePlotCache, particle.initial(), nMatchedTracks,
+                        nFakeTracks);
 
     m_nTotalParticles += 1;
   }
