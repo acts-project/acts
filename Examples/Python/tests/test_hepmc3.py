@@ -31,7 +31,6 @@ pytestmark = [
 def test_hepmc3_writer(tmp_path, rng, per_event):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
-        HepMC3OutputConverter,
     )
 
     s = Sequencer(numThreads=1, events=10)
@@ -54,13 +53,29 @@ def test_hepmc3_writer(tmp_path, rng, per_event):
                 ),
             )
         ],
-        outputParticles="particles_generated",
-        outputVertices="vertices_input",
         outputEvent="hepmc3_event",
         randomNumbers=rng,
     )
-
     s.addReader(evGen)
+
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.DEBUG,
+            inputEvent=evGen.config.outputEvent,
+            outputParticles="particles_generated",
+            outputVertices="vertices_truth",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        [
+            "particles_generated",
+            "vertices_truth",
+        ],
+        "check_alg",
+        acts.logging.WARNING,
+    )
+    s.addAlgorithm(alg)
 
     out = tmp_path / "out" / "pytest.hepmc3"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -107,8 +122,8 @@ def test_hepmc3_writer(tmp_path, rng, per_event):
 def test_hepmc3_writer_pythia8(tmp_path, rng):
     from acts.examples.hepmc3 import (
         HepMC3Writer,
-        HepMC3OutputConverter,
     )
+
     from pythia8 import addPythia8
 
     s = Sequencer(numThreads=1, events=1)
@@ -132,15 +147,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
 
     out = tmp_path / "events.hepmc3"
 
-    # s.addAlgorithm(
-    #     HepMC3OutputConverter(
-    #         level=acts.logging.VERBOSE,
-    #         inputParticles="particles_generated",
-    #         inputVertices="vertices_generated",
-    #         outputEvents="hepmc-events",
-    #     )
-    # )
-
     s.addWriter(
         HepMC3Writer(
             acts.logging.VERBOSE,
@@ -149,6 +155,18 @@ def test_hepmc3_writer_pythia8(tmp_path, rng):
             perEvent=False,
         )
     )
+
+    # Assert particles and vertices are present
+    alg = AssertCollectionExistsAlg(
+        [
+            "particles_generated",
+            "vertices_truth",
+            "hepmc3_event",
+        ],
+        "check_alg",
+        acts.logging.WARNING,
+    )
+    s.addAlgorithm(alg)
 
     s.run()
 
@@ -196,9 +214,6 @@ def test_hepmc3_reader(tmp_path, rng):
                 ),
             )
         ],
-        outputParticles="particles_generated",
-        outputVertices="vertices_input",
-        outputEvent="hepmc3_event",
         randomNumbers=rng,
     )
 
@@ -232,7 +247,24 @@ def test_hepmc3_reader(tmp_path, rng):
         )
     )
 
-    alg = AssertCollectionExistsAlg("hepmc3_event", "check_alg", acts.logging.WARNING)
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.DEBUG,
+            inputEvent="hepmc3_event",
+            outputParticles="particles_read",
+            outputVertices="vertices_read",
+        )
+    )
+
+    alg = AssertCollectionExistsAlg(
+        [
+            "particles_read",
+            "vertices_read",
+            "hepmc3_event",
+        ],
+        "check_alg",
+        acts.logging.WARNING,
+    )
     s.addAlgorithm(alg)
 
     s.run()
@@ -309,13 +341,30 @@ def test_hepmc3_reader_per_event(tmp_path, rng):
                 ),
             )
         ],
-        outputParticles="particles_generated",
-        outputVertices="vertices_input",
         outputEvent="hepmc3_event",
         randomNumbers=rng,
     )
 
     s.addReader(evGen)
+
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.DEBUG,
+            inputEvent="hepmc3_event",
+            outputParticles="particles_generated",
+            outputVertices="vertices_generated",
+        )
+    )
+    alg = AssertCollectionExistsAlg(
+        [
+            "particles_generated",
+            "vertices_generated",
+            "hepmc3_event",
+        ],
+        "check_alg",
+        acts.logging.WARNING,
+    )
+    s.addAlgorithm(alg)
 
     out = tmp_path / "out" / "pytest.hepmc3"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -330,6 +379,8 @@ def test_hepmc3_reader_per_event(tmp_path, rng):
     )
 
     s.run()
+
+    assert alg.events_seen == 12
 
     s = Sequencer(numThreads=1)
 
