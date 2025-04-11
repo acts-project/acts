@@ -18,7 +18,7 @@
 namespace ActsExamples {
 
 /// HepMC3 event reader.
-class HepMC3AsciiReader final : public IReader {
+class HepMC3Reader final : public IReader {
  public:
   struct Config {
     // The input directory
@@ -46,7 +46,7 @@ class HepMC3AsciiReader final : public IReader {
   ///
   /// @param [in] cfg The configuration object
   /// @param [in] lvl The logging level
-  HepMC3AsciiReader(const Config& cfg, Acts::Logging::Level lvl);
+  HepMC3Reader(const Config& cfg, Acts::Logging::Level lvl);
 
   std::string name() const override;
 

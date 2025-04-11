@@ -16,22 +16,22 @@
 
 namespace ActsExamples {
 
-bool HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,
-                                  HepMC3::GenEvent& event) {
+bool HepMC3Reader::readEvent(HepMC3::ReaderAscii& reader,
+                             HepMC3::GenEvent& event) {
   // Read event and store it
   return reader.read_event(event);
 }
 
-bool HepMC3AsciiReader::status(HepMC3::ReaderAscii& reader) {
+bool HepMC3Reader::status(HepMC3::ReaderAscii& reader) {
   return !reader.failed();
 }
 
-HepMC3AsciiReader::HepMC3AsciiReader(const HepMC3AsciiReader::Config& cfg,
-                                     Acts::Logging::Level lvl)
+HepMC3Reader::HepMC3Reader(const HepMC3Reader::Config& cfg,
+                           Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_eventsRange(
           determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".hepmc3")),
-      m_logger(Acts::getDefaultLogger("HepMC3AsciiReader", lvl)) {
+      m_logger(Acts::getDefaultLogger("HepMC3Reader", lvl)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
@@ -42,15 +42,15 @@ HepMC3AsciiReader::HepMC3AsciiReader(const HepMC3AsciiReader::Config& cfg,
   m_outputEvent.initialize(m_cfg.outputEvent);
 }
 
-std::string HepMC3AsciiReader::HepMC3AsciiReader::name() const {
-  return "HepMC3AsciiReader";
+std::string HepMC3Reader::name() const {
+  return "HepMC3Reader";
 }
 
-std::pair<std::size_t, std::size_t> HepMC3AsciiReader::availableEvents() const {
+std::pair<std::size_t, std::size_t> HepMC3Reader::availableEvents() const {
   return m_eventsRange;
 }
 
-ProcessCode HepMC3AsciiReader::read(const AlgorithmContext& ctx) {
+ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
   auto event =
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 

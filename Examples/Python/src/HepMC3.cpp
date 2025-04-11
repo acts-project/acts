@@ -26,13 +26,11 @@ void addHepMC3(Context& ctx) {
 
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3AsciiWriter, hepmc3,
-                             "HepMC3AsciiWriter", outputPath, perEvent,
-                             inputEvent);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3Writer, hepmc3, "HepMC3Writer",
+                             outputPath, perEvent, inputEvent);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3AsciiReader, hepmc3,
-                             "HepMC3AsciiReader", inputDir, inputStem,
-                             outputEvents);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3Reader, hepmc3, "HepMC3Reader",
+                             inputDir, inputStem, outputEvent, printListing);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
