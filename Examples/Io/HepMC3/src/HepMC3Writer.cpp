@@ -13,6 +13,7 @@
 #include <filesystem>
 
 #include <HepMC3/WriterAscii.h>
+#include <HepMC3/WriterGZ.h>
 
 namespace ActsExamples {
 
@@ -20,6 +21,15 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
     : WriterT(config.inputEvent, "HepMC3Writer", level), m_cfg(config) {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
+  }
+
+  if (std::ranges::none_of(HepMC3Util::availableCompressionModes(),
+                           [this](HepMC3Util::Compression c) {
+                             return c == this->m_cfg.compression;
+                           })) {
+    std::stringstream ss;
+    ss << "Unsupported compression mode: " << m_cfg.compression;
+    throw std::invalid_argument(ss.str());
   }
 
   if (!m_cfg.perEvent) {
@@ -35,7 +45,34 @@ HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
                                   absolute.parent_path().string());
     }
     // Create a single file writer
-    m_writer = std::make_unique<HepMC3::WriterAscii>(m_cfg.outputPath);
+    m_writer = createWriter(m_cfg.outputPath);
+  }
+}
+
+std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
+    const std::filesystem::path& target) {
+  std::filesystem::path path =
+      target.string() +
+      std::string{HepMC3Util::compressionExtension(m_cfg.compression)};
+
+  switch (m_cfg.compression) {
+    case HepMC3Util::Compression::none:
+      return std::make_unique<HepMC3::WriterAscii>(path);
+    case HepMC3Util::Compression::zlib:
+      return std::make_unique<
+          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(path);
+    case HepMC3Util::Compression::lzma:
+      return std::make_unique<
+          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::lzma>>(
+          path);
+    case HepMC3Util::Compression::bzip2:
+      return std::make_unique<
+          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::bz2>>(
+          path);
+    case HepMC3Util::Compression::zstd:
+      return std::make_unique<
+          HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
+          path);
   }
 }
 
@@ -61,9 +98,9 @@ ProcessCode HepMC3Writer::writeT(
                          m_cfg.outputPath.filename().string(), ctx.eventNumber);
 
     ACTS_VERBOSE("Writing per-event file " << perEventFile);
-    HepMC3::WriterAscii writer(perEventFile);
-    auto result = write(writer);
-    writer.close();
+    auto writer = createWriter(perEventFile);
+    auto result = write(*writer);
+    writer->close();
     return result;
   } else {
     ACTS_VERBOSE("Writing to single file " << m_cfg.outputPath);
