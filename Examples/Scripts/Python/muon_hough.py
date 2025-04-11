@@ -36,7 +36,7 @@ def runHoughFromCsv(inDir):
         inputDir=os.path.dirname(inDir),
         outputSegments="MuonTruthSegments",
         level=acts.logging.VERBOSE,
-    )    
+    )
 
     # add csv reader
     s.addReader(evReader)
