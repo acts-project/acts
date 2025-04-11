@@ -12,8 +12,16 @@
 
 #include <filesystem>
 
+#include <HepMC3/Version.h>
 #include <HepMC3/WriterAscii.h>
+
+#if HEPMC3_VERSION_CODE == 3002007
+#include "./CompressedIO.h"
+#endif
+
+#ifdef HEPMC3_USE_COMPRESSION
 #include <HepMC3/WriterGZ.h>
+#endif
 
 namespace ActsExamples {
 
@@ -58,6 +66,7 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
   switch (m_cfg.compression) {
     case HepMC3Util::Compression::none:
       return std::make_unique<HepMC3::WriterAscii>(path);
+#ifdef HEPMC3_USE_COMPRESSION
     case HepMC3Util::Compression::zlib:
       return std::make_unique<
           HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::z>>(path);
@@ -73,6 +82,7 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
       return std::make_unique<
           HepMC3::WriterGZ<HepMC3::WriterAscii, HepMC3::Compression::zstd>>(
           path);
+#endif
     default:
       throw std::invalid_argument{"Unknown compression value"};
   }
