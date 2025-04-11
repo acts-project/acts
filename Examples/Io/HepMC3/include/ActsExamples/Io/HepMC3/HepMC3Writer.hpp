@@ -13,6 +13,7 @@
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <filesystem>
+#include <mutex>
 #include <string>
 
 namespace HepMC3 {
@@ -30,10 +31,20 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
     /// the filename
     bool perEvent = false;
 
-    /// The output file path
+    /// The output file path for writing HepMC3 events.
+    ///
+    /// This path is handled differently based on the perEvent flag:
+    /// - If perEvent is false: The path points to a single file where all
+    /// events will be written
+    /// - If perEvent is true: The path is used as a template for creating
+    /// per-event files
+    ///   in the format "event{number}-{filename}" in the parent directory
+    ///
+    /// When in per-event mode, the writer uses perEventFilepath() to generate
+    /// the appropriate filename for each event.
     std::filesystem::path outputPath;
 
-    // The input collection
+    /// The input collection
     std::string inputEvent;
   };
 
