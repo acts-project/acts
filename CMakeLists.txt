@@ -133,7 +133,6 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
-
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
