@@ -14,6 +14,18 @@
 
 namespace Acts::detail {
 
+// TODO this is a workaround
+#ifdef __CUDACC__
+template <typename T>
+__global__ void iota(std::size_t size, T *array) {
+  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= size) {
+    return;
+  }
+  array[i] = i;
+}
+#endif
+
 inline void cudaAssert(cudaError_t code, const char *file, int line) {
   if (code != cudaSuccess) {
     std::stringstream ss;

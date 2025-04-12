@@ -85,14 +85,6 @@ __global__ void makeEdgeFeatures(std::size_t nEdges, const int *srcEdges,
   efPtr[5] = rphislope;
 }
 
-inline __global__ void setHitId(std::size_t nHits, std::uint64_t *hit_ids) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nHits) {
-    return;
-  }
-  hit_ids[i] = i;
-}
-
 __global__ void remapEdges(std::size_t nEdges, int *srcNodes, int *tgtNodes,
                            const std::uint64_t *hit_ids, std::size_t nAllNodes,
                            std::size_t nCompressedNodes) {

@@ -44,7 +44,8 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
 
   std::size_t numberLabels = detail::connectedComponentsCuda(
-      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream);
+      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream,
+      m_cfg.useOneBlockImplementation);
 
   // TODO not sure why there is an issue that is not detected in the unit tests
   numberLabels += 1;

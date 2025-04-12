@@ -230,8 +230,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   ScopedCudaPtr<std::uint64_t> cudaHitId(nHits, stream);
-  detail::setHitId<<<gridDimHits, blockDim, 0, stream>>>(nHits,
-                                                         cudaHitId.data());
+  detail::iota<<<gridDimHits, blockDim, 0, stream>>>(nHits, cudaHitId.data());
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   detail::mapModuleIdsToNbHits<<<gridDimHits, blockDim, 0, stream>>>(
