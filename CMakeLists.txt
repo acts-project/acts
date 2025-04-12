@@ -133,6 +133,7 @@ option(ACTS_COMPILE_HEADERS "Generate targets to compile header files" ON)
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
 include(ActsOptionHelpers)
+
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
@@ -145,6 +146,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
 )
 # core plugins might be required by examples or depend on each other
+
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR
