@@ -140,6 +140,15 @@ ProcessCode HepMC3Writer::queueForWriting(
                << m_eventQueue.size() << " would exceed maximum of "
                << m_cfg.maxEventsPending
                << ". Cannot proceed without changing event ordering");
+    ACTS_ERROR("queue=[" << [&]() {
+      std::vector<std::string> numbers;
+      numbers.reserve(m_eventQueue.size());
+      std::ranges::transform(
+          m_eventQueue, std::back_inserter(numbers),
+          [](const auto& pair) { return std::to_string(pair.first); });
+
+      return boost::algorithm::join(numbers, ", ");
+    }() << "]");
     return ProcessCode::ABORT;
   }
 
