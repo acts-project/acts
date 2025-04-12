@@ -67,7 +67,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
         HepMC3Writer,
     )
 
-    s = Sequencer(numThreads=1, events=10)
+    s = Sequencer(numThreads=10, events=100)
 
     evGen = acts.examples.EventGenerator(
         level=acts.logging.DEBUG,
@@ -128,7 +128,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
 
     if per_event:
         files = list(out.parent.iterdir())
-        assert len(files) == 10
+        assert len(files) == s.config.events
         assert all(f.stem.startswith("event") for f in files)
         if compression == cm.none:
             assert all(f.suffix == ".hepmc3" for f in files)
@@ -142,21 +142,22 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
     else:
         actual_path = handle_path(out, compression)
 
-        if compression == cm.none:
-            with actual_path.open("r") as f:
-                assert len(f.readlines()) == 214
-
         # pyhepmc does not support zstd
-        if compression in (cm.lzma, cm.bzip2, cm.zlib):
+        if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
             try:
                 import pyhepmc
 
                 nevts = 0
+                event_numbers = []
                 with pyhepmc.open(actual_path) as f:
-                    nevts += 1
                     for evt in f:
+                        nevts += 1
+                        event_numbers.append(evt.event_number)
                         assert len(evt.particles) == 4 + 2  # muons + beam particles
-                assert nevts == 1
+                assert nevts == s.config.events
+                assert event_numbers == list(
+                    range(s.config.events)
+                ), "Events are out of order"
 
             except ImportError:
                 pass
@@ -217,7 +218,8 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
     actual_path = handle_path(out, compression)
 
     assert actual_path.exists(), f"File {actual_path} does not exist"
-    if compression in (cm.lzma, cm.bzip2, cm.zlib):
+
+    if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
         try:
             import pyhepmc
 
@@ -239,10 +241,10 @@ def test_hepmc3_reader(tmp_path, rng, compression):
         HepMC3Reader,
     )
 
-    s = Sequencer(numThreads=1, events=12)
+    s = Sequencer(numThreads=1, events=120)
 
     evGen = acts.examples.EventGenerator(
-        level=acts.logging.DEBUG,
+        level=acts.logging.INFO,
         generators=[
             acts.examples.EventGenerator.Generator(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
@@ -269,7 +271,7 @@ def test_hepmc3_reader(tmp_path, rng, compression):
 
     s.addWriter(
         HepMC3Writer(
-            acts.logging.DEBUG,
+            acts.logging.INFO,
             inputEvent="hepmc3_event",
             outputPath=out,
             perEvent=False,
@@ -282,7 +284,8 @@ def test_hepmc3_reader(tmp_path, rng, compression):
     actual_path = handle_path(out, compression)
 
     # Without external event number, we need to read all events
-    s = Sequencer(numThreads=1)
+    # use multiple threads to test if seeking to the right event works
+    s = Sequencer(numThreads=10)
 
     s.addReader(
         HepMC3Reader(
@@ -315,13 +318,13 @@ def test_hepmc3_reader(tmp_path, rng, compression):
 
     s.run()
 
-    assert alg.events_seen == 12
+    assert alg.events_seen == 120
 
     # With external event number, we can read a specific event
-    # Test 11 and 12 as both a lower number than is available and a higher number
+    # Test 110 and 120 as both a lower number than is available and a higher number
     # than is available is valid
-    for num in (11, 12):
-        s = Sequencer(numThreads=1)
+    for num in (110, 120):
+        s = Sequencer(numThreads=10)
 
         s.addReader(
             HepMC3Reader(
@@ -350,7 +353,7 @@ def test_hepmc3_reader(tmp_path, rng, compression):
             inputPath=actual_path,
             perEvent=False,
             outputEvent="hepmc3_event",
-            numEvents=13,
+            numEvents=130,
         )
     )
 
