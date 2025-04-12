@@ -8,9 +8,11 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <filesystem>
+#include <stdexcept>
 
 #include <HepMC3/Version.h>
 #include <HepMC3/WriterAscii.h>
@@ -22,6 +24,8 @@
 #ifdef HEPMC3_USE_COMPRESSION
 #include <HepMC3/WriterGZ.h>
 #endif
+
+#include <boost/algorithm/string/join.hpp>
 
 namespace ActsExamples {
 
@@ -96,14 +100,6 @@ ProcessCode HepMC3Writer::writeT(
   ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
                           << m_cfg.outputPath);
 
-  auto write = [&event](HepMC3::Writer& writer) {
-    writer.write_event(*event);
-    if (writer.failed()) {
-      return ProcessCode::ABORT;
-    }
-    return ProcessCode::SUCCESS;
-  };
-
   if (m_cfg.perEvent) {
     std::filesystem::path perEventFile =
         perEventFilepath(m_cfg.outputPath.parent_path(),
@@ -111,15 +107,85 @@ ProcessCode HepMC3Writer::writeT(
 
     ACTS_VERBOSE("Writing per-event file " << perEventFile);
     auto writer = createWriter(perEventFile);
-    auto result = write(*writer);
+
+    writer->write_event(*event);
+    auto result = ProcessCode::SUCCESS;
+    if (writer->failed()) {
+      ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
+      result = ProcessCode::ABORT;
+    }
     writer->close();
     return result;
-  } else {
-    ACTS_VERBOSE("Writing to single file " << m_cfg.outputPath);
-    // Take the lock until the end of the function
-    std::scoped_lock lock(m_mutex);
-    return write(*m_writer);
   }
+
+  // Lock is needed both for the queueing as well as the flushing
+  std::scoped_lock lock(m_mutex);
+
+  if (auto pc = queueForWriting(ctx.eventNumber, event);
+      pc != ProcessCode::SUCCESS) {
+    return pc;
+  }
+
+  flushQueue();
+
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode HepMC3Writer::queueForWriting(
+    std::size_t eventNumber, std::shared_ptr<HepMC3::GenEvent> event) {
+  ACTS_DEBUG("Queueing event_number=" << eventNumber << ", current_length="
+                                      << m_eventQueue.size());
+  if (m_eventQueue.size() > m_cfg.maxEventsPending) {
+    ACTS_ERROR("Queue size of "
+               << m_eventQueue.size() << " would exceed maximum of "
+               << m_cfg.maxEventsPending
+               << ". Cannot proceed without changing event ordering");
+    return ProcessCode::ABORT;
+  }
+
+  ACTS_VERBOSE("Finding insert location for event number: " << eventNumber);
+  auto it = std::ranges::upper_bound(m_eventQueue, eventNumber, {},
+                                     [](const auto& v) { return v.first; });
+  if (it == m_eventQueue.end()) {
+    ACTS_VERBOSE("Insert location is at the end of the queue");
+  } else {
+    ACTS_VERBOSE("Insert location is before event number: " << it->first);
+  }
+
+  m_eventQueue.insert(it, {eventNumber, std::move(event)});
+
+  m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
+
+  return ProcessCode::SUCCESS;
+}
+
+ProcessCode HepMC3Writer::flushQueue() {
+  ACTS_DEBUG("Flushing queue, next_event=" << m_nextEvent << ", queue_length="
+                                           << m_eventQueue.size());
+
+  ACTS_VERBOSE("queue=[" << [&]() {
+    std::vector<std::string> numbers;
+    numbers.reserve(m_eventQueue.size());
+    std::ranges::transform(
+        m_eventQueue, std::back_inserter(numbers),
+        [](const auto& pair) { return std::to_string(pair.first); });
+
+    return boost::algorithm::join(numbers, ", ");
+  }() << "]");
+
+  while (!m_eventQueue.empty() && m_eventQueue.front().first == m_nextEvent) {
+    auto next = std::move(m_eventQueue.front());
+    ACTS_VERBOSE("Writing event number: " << next.first);
+    m_eventQueue.erase(m_eventQueue.begin());
+
+    m_writer->write_event(*next.second);
+    if (m_writer->failed()) {
+      ACTS_ERROR("Failed to write event number: " << next.first);
+      return ProcessCode::ABORT;
+    }
+    m_nextEvent++;
+  }
+  return ProcessCode::SUCCESS;
 }
 
 ProcessCode HepMC3Writer::finalize() {
@@ -127,6 +193,8 @@ ProcessCode HepMC3Writer::finalize() {
   if (m_writer) {
     m_writer->close();
   }
+  ACTS_DEBUG("max_queue_size=" << m_maxEventQueueSize
+                               << " limit=" << m_cfg.maxEventsPending);
   return ProcessCode::SUCCESS;
 }
 

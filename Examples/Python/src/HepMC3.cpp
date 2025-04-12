@@ -29,7 +29,8 @@ void addHepMC3(Context& ctx) {
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3Writer, hepmc3, "HepMC3Writer",
-                             outputPath, perEvent, inputEvent, compression);
+                             outputPath, perEvent, inputEvent, compression,
+                             maxEventsPending);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3Reader, hepmc3, "HepMC3Reader",
                              inputPath, perEvent, outputEvent, printListing,
