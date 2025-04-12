@@ -16,7 +16,6 @@
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
@@ -74,6 +73,10 @@ class Sequencer {
     /// number of parallel threads to run, negative for automatic
     /// determination
     int numThreads = -1;
+
+    std::size_t maxInFlightRange = 128;
+    float inFlightSyncTimeoutSeconds = 5;
+
     /// output directory for timing information, empty for working directory
     std::string outputDir;
     /// output name of the timing file
@@ -171,7 +174,6 @@ class Sequencer {
   };
 
   Config m_cfg;
-  tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
   std::vector<SequenceElementWithFpeResult> m_sequenceElements;

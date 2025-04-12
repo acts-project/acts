@@ -9,6 +9,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -20,6 +21,7 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/tbbWrap.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -28,6 +30,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -35,8 +38,7 @@
 #include <ratio>
 #include <stdexcept>
 #include <string>
-#include <string_view>
-#include <typeinfo>
+#include <thread>
 
 #include <TROOT.h>
 #include <boost/algorithm/string.hpp>
@@ -61,8 +63,6 @@ std::size_t saturatedAdd(std::size_t a, std::size_t b) {
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
-      m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
-                                         : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
   if (m_cfg.numThreads < -1 || m_cfg.numThreads == 0) {
     ACTS_ERROR("Number of threads must be -1 (automatic) or positive");
@@ -364,112 +364,272 @@ int Sequencer::run() {
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
-  m_taskArena.execute([&] {
-    tbbWrap::parallel_for(
-        tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
-        [&](const tbb::blocked_range<std::size_t>& r) {
-          std::vector<Duration> localClocksAlgorithms(names.size(),
-                                                      Duration::zero());
 
-          for (std::size_t event = r.begin(); event != r.end(); ++event) {
-            ACTS_DEBUG("start processing event " << event);
-            m_cfg.iterationCallback();
-            // Use per-event store
-            WhiteBoard eventStore(
-                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
-                                       m_cfg.logLevel),
-                m_whiteboardObjectAliases);
-            // If we ever wanted to run algorithms in parallel, this needs to
-            // be changed to Algorithm context copies
-            AlgorithmContext context(0, event, eventStore);
-            std::size_t ialgo = 0;
+  std::atomic<std::size_t> nextThreadId = 0;
+  tbb::enumerable_thread_specific<std::size_t> threadIds{
+      [&nextThreadId]() { return nextThreadId++; }};
 
-            /// Decorate the context
-            for (auto& cdr : m_decorators) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute context decorator: " << cdr->name());
-              if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to decorate event context");
-              }
-            }
+  std::atomic<std::size_t> nextEvent = eventsRange.first;
 
-            ACTS_VERBOSE("Execute sequence elements");
+  std::size_t nThreads = (m_cfg.numThreads < 0)
+                             ? std::thread::hardware_concurrency()
+                             : m_cfg.numThreads;
 
-            for (auto& [alg, fpe] : m_sequenceElements) {
-              std::optional<Acts::FpeMonitor> mon;
-              if (m_cfg.trackFpes) {
-                mon.emplace();
-                context.fpeMonitor = &mon.value();
-              }
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute " << alg->typeName() << ": "
-                                      << alg->name());
-              try {
-                if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                  throw std::runtime_error("Failed to process event data");
-                }
-              } catch (const std::exception& e) {
-                ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
-                                                << alg->name()
-                                                << "\": " << e.what());
-                throw;
-              }
-              ACTS_VERBOSE("Completed " << alg->typeName() << ": "
-                                        << alg->name());
+  std::vector<std::atomic<int>> inFlightEvents(nThreads);
+  for (auto& value : inFlightEvents) {
+    value = -1;
+  }
 
-              if (mon) {
-                auto& local = fpe.local();
+  auto processEvent = [&](std::size_t threadId, std::size_t event) {
+    std::vector<Duration> localClocksAlgorithms(names.size(), Duration::zero());
 
-                for (const auto& [count, type, st] :
-                     mon->result().stackTraces()) {
-                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
-                  if (nMasked < count) {
-                    std::stringstream ss;
-                    ss << "FPE of type " << type
-                       << " exceeded configured per-event threshold of "
-                       << nMasked << " (mask: " << maskLoc
-                       << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(
-                              *st, m_cfg.fpeStackTraceLength);
+    ACTS_DEBUG("start processing event " << event << " on thread " << threadId);
 
-                    m_nUnmaskedFpe += (count - nMasked);
+    m_cfg.iterationCallback();
+    // Use per-event store
+    WhiteBoard eventStore(
+        Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                               m_cfg.logLevel),
+        m_whiteboardObjectAliases);
+    // If we ever wanted to run algorithms in parallel, this
+    // needs to be changed to Algorithm context copies
+    AlgorithmContext context(0, event, eventStore);
+    std::size_t ialgo = 0;
 
-                    if (m_cfg.failOnFirstFpe) {
-                      ACTS_ERROR(ss.str());
-                      local.merge(mon->result());  // merge so we get correct
-                                                   // results after throwing
-                      throw FpeFailure{ss.str()};
-                    } else if (!local.contains(type, *st)) {
-                      ACTS_INFO(ss.str());
-                    }
-                  }
-                }
+    /// Decorate the context
+    for (auto& cdr : m_decorators) {
+      StopWatch sw(localClocksAlgorithms[ialgo++]);
+      ACTS_VERBOSE("Execute context decorator: " << cdr->name());
+      if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
+        throw std::runtime_error("Failed to decorate event context");
+      }
+    }
 
-                local.merge(mon->result());
-              }
-              context.fpeMonitor = nullptr;
-            }
+    ACTS_VERBOSE("Execute sequence elements");
 
-            nProcessedEvents++;
-            if (logger().level() <= Acts::Logging::DEBUG) {
-              ACTS_DEBUG("finished event " << event);
-            } else if (nTotalEvents <= 100) {
-              ACTS_INFO("finished event " << event);
-            } else if (nProcessedEvents % 100 == 0) {
-              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                         << " events processed");
+    for (auto& [alg, fpe] : m_sequenceElements) {
+      std::optional<Acts::FpeMonitor> mon;
+      if (m_cfg.trackFpes) {
+        mon.emplace();
+        context.fpeMonitor = &mon.value();
+      }
+      StopWatch sw(localClocksAlgorithms[ialgo++]);
+      ACTS_VERBOSE("Execute " << alg->typeName() << ": " << alg->name());
+      try {
+        if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+          throw std::runtime_error("Failed to process event data");
+        }
+      } catch (const std::exception& e) {
+        ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
+                                        << alg->name() << "\": " << e.what());
+        throw;
+      }
+      ACTS_VERBOSE("Completed " << alg->typeName() << ": " << alg->name());
+
+      if (mon) {
+        auto& local = fpe.local();
+
+        for (const auto& [count, type, st] : mon->result().stackTraces()) {
+          auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+          if (nMasked < count) {
+            std::stringstream ss;
+            ss << "FPE of type " << type
+               << " exceeded configured per-event threshold of " << nMasked
+               << " (mask: " << maskLoc << ") (seen: " << count << " FPEs)\n"
+               << Acts::FpeMonitor::stackTraceToString(
+                      *st, m_cfg.fpeStackTraceLength);
+
+            m_nUnmaskedFpe += (count - nMasked);
+
+            if (m_cfg.failOnFirstFpe) {
+              ACTS_ERROR(ss.str());
+              local.merge(mon->result());  // merge so we get correct
+                                           // results after throwing
+              throw FpeFailure{ss.str()};
+            } else if (!local.contains(type, *st)) {
+              ACTS_INFO(ss.str());
             }
           }
+        }
 
-          // add timing info to global information
-          {
-            tbbWrap::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
-            for (std::size_t i = 0; i < clocksAlgorithms.size(); ++i) {
-              clocksAlgorithms[i] += localClocksAlgorithms[i];
+        local.merge(mon->result());
+      }
+      context.fpeMonitor = nullptr;
+    }
+
+    nProcessedEvents++;
+    if (logger().level() <= Acts::Logging::DEBUG) {
+      ACTS_DEBUG("finished event " << event);
+    } else if (nTotalEvents <= 100) {
+      ACTS_INFO("finished event " << event);
+    } else if (nProcessedEvents % 100 == 0) {
+      ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                 << " events processed");
+    }
+
+    // add timing info to global information
+    {
+      tbbWrap::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
+      for (std::size_t i = 0; i < clocksAlgorithms.size(); ++i) {
+        clocksAlgorithms[i] += localClocksAlgorithms[i];
+      }
+    }
+  };
+
+  std::vector<std::pair<std::future<void>, std::thread>> threads;
+
+  std::atomic<bool> shutdown = false;
+
+  auto threadFunc = [&](std::size_t threadId, std::promise<void> promise) {
+    try {
+      ACTS_DEBUG("Start thread " << threadId);
+
+      int minInFlight = std::numeric_limits<int>::max();
+      int maxInFlight = std::numeric_limits<int>::lowest();
+      std::size_t nInFlight = 0;
+      std::size_t inFlightRange = 0;
+      std::size_t thisEventDistance = 0;
+
+      while (nextEvent < eventsRange.second && !shutdown) {
+        auto refresh = [&]() {
+          minInFlight = std::numeric_limits<int>::max();
+          maxInFlight = std::numeric_limits<int>::lowest();
+          nInFlight = 0;
+          for (const auto& aval : inFlightEvents) {
+            int val = aval.load();
+            if (val == -1) {
+              continue;
             }
+            minInFlight = std::min(minInFlight, val);
+            maxInFlight = std::max(maxInFlight, val);
+            nInFlight++;
           }
-        });
-  });
+
+          if (nInFlight == 0) {
+            inFlightRange = 0;
+          } else {
+            inFlightRange = maxInFlight - minInFlight + 1;
+          }
+
+          if (minInFlight == std::numeric_limits<int>::max()) {
+            thisEventDistance = 0;
+          } else {
+            thisEventDistance = nextEvent - minInFlight;
+          }
+        };
+
+        refresh();
+
+        auto printStatus = [&]() {
+          auto pval = [](const auto val) -> std::string {
+            if (val == std::numeric_limits<decltype(val)>::max() ||
+                val == std::numeric_limits<decltype(val)>::lowest()) {
+              return "none";
+            } else {
+              return std::to_string(val);
+            }
+          };
+          ACTS_DEBUG("in-flight events: number="
+                     << nInFlight << ", min=" << pval(minInFlight) << ", max="
+                     << pval(maxInFlight) << ", range=" << inFlightRange
+                     << ", this_ev_dist=" << thisEventDistance);
+        };
+
+        printStatus();
+
+        auto shouldWait = [&]() {
+          return inFlightRange >= m_cfg.maxInFlightRange ||
+                 thisEventDistance >= m_cfg.maxInFlightRange;
+        };
+
+        if (shouldWait()) {
+          ACTS_INFO("Waiting up to " << m_cfg.inFlightSyncTimeoutSeconds
+                                     << "s for other threads to catch up...");
+
+          printStatus();
+
+          using clock = std::chrono::high_resolution_clock;
+          auto start = clock::now();
+          float duration = 0;
+
+          while (duration < m_cfg.inFlightSyncTimeoutSeconds && shouldWait()) {
+            ACTS_VERBOSE("Thread " << threadId << " waited " << duration
+                                   << "s / " << m_cfg.inFlightSyncTimeoutSeconds
+                                   << "s for in-flight events to finish...");
+
+            printStatus();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::yield();
+            duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           clock::now() - start)
+                           .count() /
+                       1000.;
+            refresh();
+          }
+
+          refresh();
+
+          if (shouldWait()) {
+            ACTS_ERROR("Timeout waiting for in-flight events to finish");
+            shutdown = true;
+            throw std::runtime_error("Timeout waiting for in-flight events");
+          }
+        }
+
+        std::size_t event = nextEvent++;
+        ACTS_DEBUG("Thread " << threadId << " processing event " << event);
+        inFlightEvents.at(threadId).store(event);
+
+        ACTS_VERBOSE([&]() {
+          std::stringstream ss;
+          ss << " -> Thread status:\n";
+
+          for (const auto& [tid, aval] : Acts::enumerate(inFlightEvents)) {
+            ss << "- thread # ";
+            ss << std::setfill(' ') << std::setw(3);
+            ss << tid;
+            ss << " -> ";
+            ss << std::setfill(' ') << std::setw(10);
+            ss << aval.load();
+
+            if (tid == threadId) {
+              ss << " <- this thread";
+            }
+            ss << "\n";
+          }
+          return ss.str();
+        }());
+
+        processEvent(threadId, event);
+
+        inFlightEvents.at(threadId).store(-1);
+        std::this_thread::yield();
+      }
+
+      ACTS_DEBUG("End thread " << threadId);
+      promise.set_value();
+    } catch (const std::exception&) {
+      shutdown = true;
+      promise.set_exception(std::current_exception());
+    }
+  };
+
+  for (std::size_t t = 0; t < nThreads; t++) {
+    std::promise<void> prom;
+    threads.emplace_back(prom.get_future(),
+                         std::thread{threadFunc, t, std::move(prom)});
+  }
+
+  // Wait for threads to complete. This should happen both in the error case
+  // or the success case
+  for (auto& [future, thread] : threads) {
+    thread.join();
+  }
+
+  // Now that all threads are joined, we can check for exceptions
+  for (auto& [future, thread] : threads) {
+    future.get();
+  }
 
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {

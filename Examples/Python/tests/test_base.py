@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 import acts
@@ -79,6 +81,71 @@ def test_sequencer_multi_threaded(ptcl_gun, capfd):
     assert cap.err == ""
     assert "Create Sequencer" in cap.out
     assert "Processed 2 events" in cap.out
+
+
+class StallAlgorithm(acts.examples.IAlgorithm):
+    sleep: float = 1
+
+    def execute(self, ctx):
+
+        if ctx.eventNumber == 50:
+            print("BEGIN SLEEP")
+            time.sleep(self.sleep)
+            print("END OF SLEEP")
+        else:
+            time.sleep(0.01)
+
+        return acts.examples.ProcessCode.SUCCESS
+
+
+def test_sequencer_divergence():
+    s = acts.examples.Sequencer(
+        numThreads=5,
+        events=100,
+        logLevel=acts.logging.VERBOSE,
+        maxInFlightRange=10,
+        inFlightSyncTimeoutSeconds=0.5,
+    )
+
+    alg = StallAlgorithm(name="stall", level=acts.logging.INFO)
+    alg.sleep = 1
+    s.addAlgorithm(alg)
+
+    with pytest.raises(RuntimeError) as excinfo:
+        with acts.logging.ScopedFailureThreshold(acts.logging.MAX):
+            s.run()
+
+    assert "Timeout waiting for in-flight events" in str(excinfo.value)
+
+
+def test_sequencer_divergence_recover():
+    s = acts.examples.Sequencer(
+        numThreads=5,
+        events=100,
+        logLevel=acts.logging.VERBOSE,
+        maxInFlightRange=10,
+        inFlightSyncTimeoutSeconds=2,
+    )
+
+    class StallAlgorithm(acts.examples.IAlgorithm):
+        sleep: float = 1
+
+        def execute(self, ctx):
+
+            if ctx.eventNumber == 50:
+                print("BEGIN SLEEP")
+                time.sleep(self.sleep)
+                print("END OF SLEEP")
+            else:
+                time.sleep(0.01)
+
+            return acts.examples.ProcessCode.SUCCESS
+
+    alg = StallAlgorithm(name="stall", level=acts.logging.INFO)
+    alg.sleep = 1
+    s.addAlgorithm(alg)
+
+    s.run()
 
 
 def test_random_number():
