@@ -57,9 +57,18 @@ with tempfile.TemporaryDirectory() as temp:
                     acts.PdgParticle.eElectron,
                 ]
             ],
+            randomNumbers=rnd,
+            outputEvent="particle_gun_event",
+        )
+    )
+
+    s.addAlgorithm(
+        acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.INFO,
+            inputEvent=evGen.config.outputEvent,
             outputParticles="particles_generated",
             outputVertices="vertices_input",
-            randomNumbers=rnd,
+            mergePrimaries=False,
         )
     )
 
