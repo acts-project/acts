@@ -32,10 +32,12 @@
 #include <limits>
 #include <numeric>
 #include <ostream>
+#include <ranges>
 #include <ratio>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <typeinfo>
 
 #include <TROOT.h>
@@ -364,101 +366,110 @@ int Sequencer::run() {
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+
+  std::atomic<std::size_t> nextThreadId = 0;
+  tbb::enumerable_thread_specific<std::size_t> threadIds{
+      [&nextThreadId]() { return nextThreadId++; }};
+
+  std::atomic<std::size_t> nextEvent = eventsRange.first;
+
+  auto eventRange = std::views::iota(eventsRange.first, eventsRange.second);
   m_taskArena.execute([&] {
-    tbbWrap::parallel_for(
-        tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
-        [&](const tbb::blocked_range<std::size_t>& r) {
+    tbbWrap::parallel_for_each(
+        eventRange.begin(), eventRange.end(), [&](std::size_t) {
+          std::size_t threadId = threadIds.local();
+
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
 
-          for (std::size_t event = r.begin(); event != r.end(); ++event) {
-            ACTS_DEBUG("start processing event " << event);
-            m_cfg.iterationCallback();
-            // Use per-event store
-            WhiteBoard eventStore(
-                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
-                                       m_cfg.logLevel),
-                m_whiteboardObjectAliases);
-            // If we ever wanted to run algorithms in parallel, this needs to
-            // be changed to Algorithm context copies
-            AlgorithmContext context(0, event, eventStore);
-            std::size_t ialgo = 0;
+          std::size_t event = nextEvent++;
 
-            /// Decorate the context
-            for (auto& cdr : m_decorators) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute context decorator: " << cdr->name());
-              if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to decorate event context");
-              }
+          ACTS_DEBUG("start processing event " << event << " on thread "
+                                               << threadId);
+          m_cfg.iterationCallback();
+          // Use per-event store
+          WhiteBoard eventStore(
+              Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                                     m_cfg.logLevel),
+              m_whiteboardObjectAliases);
+          // If we ever wanted to run algorithms in parallel, this
+          // needs to be changed to Algorithm context copies
+          AlgorithmContext context(0, event, eventStore, threadId);
+          std::size_t ialgo = 0;
+
+          /// Decorate the context
+          for (auto& cdr : m_decorators) {
+            StopWatch sw(localClocksAlgorithms[ialgo++]);
+            ACTS_VERBOSE("Execute context decorator: " << cdr->name());
+            if (cdr->decorate(++context) != ProcessCode::SUCCESS) {
+              throw std::runtime_error("Failed to decorate event context");
             }
+          }
 
-            ACTS_VERBOSE("Execute sequence elements");
+          ACTS_VERBOSE("Execute sequence elements");
 
-            for (auto& [alg, fpe] : m_sequenceElements) {
-              std::optional<Acts::FpeMonitor> mon;
-              if (m_cfg.trackFpes) {
-                mon.emplace();
-                context.fpeMonitor = &mon.value();
+          for (auto& [alg, fpe] : m_sequenceElements) {
+            std::optional<Acts::FpeMonitor> mon;
+            if (m_cfg.trackFpes) {
+              mon.emplace();
+              context.fpeMonitor = &mon.value();
+            }
+            StopWatch sw(localClocksAlgorithms[ialgo++]);
+            ACTS_VERBOSE("Execute " << alg->typeName() << ": " << alg->name());
+            try {
+              if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to process event data");
               }
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute " << alg->typeName() << ": "
+            } catch (const std::exception& e) {
+              ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
+                                              << alg->name()
+                                              << "\": " << e.what());
+              throw;
+            }
+            ACTS_VERBOSE("Completed " << alg->typeName() << ": "
                                       << alg->name());
-              try {
-                if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                  throw std::runtime_error("Failed to process event data");
-                }
-              } catch (const std::exception& e) {
-                ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
-                                                << alg->name()
-                                                << "\": " << e.what());
-                throw;
-              }
-              ACTS_VERBOSE("Completed " << alg->typeName() << ": "
-                                        << alg->name());
 
-              if (mon) {
-                auto& local = fpe.local();
+            if (mon) {
+              auto& local = fpe.local();
 
-                for (const auto& [count, type, st] :
-                     mon->result().stackTraces()) {
-                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
-                  if (nMasked < count) {
-                    std::stringstream ss;
-                    ss << "FPE of type " << type
-                       << " exceeded configured per-event threshold of "
-                       << nMasked << " (mask: " << maskLoc
-                       << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(
-                              *st, m_cfg.fpeStackTraceLength);
+              for (const auto& [count, type, st] :
+                   mon->result().stackTraces()) {
+                auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+                if (nMasked < count) {
+                  std::stringstream ss;
+                  ss << "FPE of type " << type
+                     << " exceeded configured per-event threshold of "
+                     << nMasked << " (mask: " << maskLoc << ") (seen: " << count
+                     << " FPEs)\n"
+                     << Acts::FpeMonitor::stackTraceToString(
+                            *st, m_cfg.fpeStackTraceLength);
 
-                    m_nUnmaskedFpe += (count - nMasked);
+                  m_nUnmaskedFpe += (count - nMasked);
 
-                    if (m_cfg.failOnFirstFpe) {
-                      ACTS_ERROR(ss.str());
-                      local.merge(mon->result());  // merge so we get correct
-                                                   // results after throwing
-                      throw FpeFailure{ss.str()};
-                    } else if (!local.contains(type, *st)) {
-                      ACTS_INFO(ss.str());
-                    }
+                  if (m_cfg.failOnFirstFpe) {
+                    ACTS_ERROR(ss.str());
+                    local.merge(mon->result());  // merge so we get correct
+                                                 // results after throwing
+                    throw FpeFailure{ss.str()};
+                  } else if (!local.contains(type, *st)) {
+                    ACTS_INFO(ss.str());
                   }
                 }
-
-                local.merge(mon->result());
               }
-              context.fpeMonitor = nullptr;
-            }
 
-            nProcessedEvents++;
-            if (logger().level() <= Acts::Logging::DEBUG) {
-              ACTS_DEBUG("finished event " << event);
-            } else if (nTotalEvents <= 100) {
-              ACTS_INFO("finished event " << event);
-            } else if (nProcessedEvents % 100 == 0) {
-              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                         << " events processed");
+              local.merge(mon->result());
             }
+            context.fpeMonitor = nullptr;
+          }
+
+          nProcessedEvents++;
+          if (logger().level() <= Acts::Logging::DEBUG) {
+            ACTS_DEBUG("finished event " << event);
+          } else if (nTotalEvents <= 100) {
+            ACTS_INFO("finished event " << event);
+          } else if (nProcessedEvents % 100 == 0) {
+            ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                       << " events processed");
           }
 
           // add timing info to global information

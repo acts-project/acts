@@ -11,6 +11,7 @@
 #include <optional>
 
 #include <tbb/parallel_for.h>
+#include <tbb/parallel_for_each.h>
 #include <tbb/queuing_mutex.h>
 #include <tbb/task_arena.h>
 
@@ -69,13 +70,29 @@ class task_arena {
 /// Small wrapper for tbb::parallel_for.
 class parallel_for {
  public:
-  template <typename R, typename F>
-  parallel_for(const R& r, const F& f) {
+  template <typename R, typename F, typename... Args>
+  parallel_for(const R& r, const F& f, Args&&... args) {
     if (enableTBB()) {
-      tbb::parallel_for(r, f);
+      tbb::parallel_for(r, f, std::forward<Args>(args)...);
     } else {
       for (auto i = r.begin(); i != r.end(); ++i) {  // use default grainsize=1
         f(R(i, i + 1));
+      }
+    }
+  }
+};
+
+class parallel_for_each {
+ public:
+  template <typename begin_t, typename end_t, typename F, typename... Args>
+  parallel_for_each(begin_t&& begin, end_t&& end, const F& f, Args&&... args) {
+    if (enableTBB()) {
+      tbb::parallel_for_each(std::forward<begin_t>(begin),
+                             std::forward<end_t>(end), f,
+                             std::forward<Args>(args)...);
+    } else {
+      for (auto it = begin; it != end; ++it) {
+        f(*it);
       }
     }
   }
