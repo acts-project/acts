@@ -20,6 +20,7 @@ class Frame;
 
 namespace ActsExamples {
 
+/// Read in a track collection as EDM4hep from a @c podio::Frame.
 class EDM4hepTrackInputConverter : public EDM4hepInputConverter {
  public:
   struct Config {

@@ -18,7 +18,7 @@
 
 namespace ActsExamples {
 
-/// Write out a simhit collection to EDM4hep.
+/// Write out a simhit collection to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - particle ID

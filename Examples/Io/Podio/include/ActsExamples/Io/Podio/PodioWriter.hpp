@@ -21,6 +21,18 @@ namespace detail {
 class PodioWriterImpl;
 }  // namespace detail
 
+/// This writer writes events to a PODIO file in the form of frame.
+///
+/// The writer supports parallel execution by serializing the writes to the
+/// file.
+/// The writer is configured with a @c podio::Frame name to read from the white
+/// board. If empty, it will create a new frame.
+///
+/// The writer is also configured with a list of collection names to write to
+/// the file. The collections must be present in the event store and be of type
+/// @c podio::CollectionBase.
+///
+/// @note The writer uses a mutex to ensure thread safety when writing to the file.
 class PodioWriter final : public IWriter {
  public:
   struct Config {
@@ -31,23 +43,48 @@ class PodioWriter final : public IWriter {
     /// @note If not set, a new frame will be created.
     std::optional<std::string> inputFrame = std::nullopt;
 
-    /// The podio `category` name to write the frame to
+    /// The podio `category` name to write the frame to.
+    /// This is used to organize frames in the output file.
+    /// @note This field must not be empty.
     std::string category;
 
     /// The collection names to write to the output file.
+    /// @note Collection names must not be empty and must be unique.
+    /// The collections must be present in the event store.
     std::vector<std::string> collections;
   };
 
+  /// Construct the writer.
+  ///
+  /// @param config The configuration struct.
+  /// @param level The logging level.
+  /// @throw std::invalid_argument if category is empty or if collection names are empty or duplicate
   PodioWriter(const Config& config, Acts::Logging::Level level);
+
+  /// Destruct the writer.
   ~PodioWriter() override;
 
+  /// Get the name of the writer.
+  ///
+  /// @return The name of the writer.
   std::string name() const override;
 
   /// Readonly access to the config
+  ///
+  /// @return The configuration of the writer.
   const Config& config() const;
 
+  /// Finalize the writer.
+  /// This closes the output file and releases any resources.
+  ///
+  /// @return The process code.
   ProcessCode finalize() override;
 
+  /// Write an event to the output file.
+  ///
+  /// @param ctx The algorithm context.
+  /// @return The process code.
+  /// @return ProcessCode::ABORT if any collection is not initialized
   ProcessCode write(const AlgorithmContext& ctx) override;
 
  private:
