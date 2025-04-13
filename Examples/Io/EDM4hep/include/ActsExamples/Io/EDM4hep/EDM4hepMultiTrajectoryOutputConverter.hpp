@@ -19,7 +19,7 @@
 namespace ActsExamples {
 
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter to
-/// EDM4hep.
+/// EDM4hep objects.
 ///
 /// Inpersistent information:
 /// - trajectory state incomplete

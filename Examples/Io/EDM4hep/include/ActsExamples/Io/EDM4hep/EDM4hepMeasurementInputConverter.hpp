@@ -22,7 +22,7 @@ class Frame;
 
 namespace ActsExamples {
 
-/// Read in a measurement cluster collection from EDM4hep.
+/// Read in a measurement cluster collection as EDM4hep from a @c podio::Frame.
 ///
 /// Inpersistent information:
 /// - hit index

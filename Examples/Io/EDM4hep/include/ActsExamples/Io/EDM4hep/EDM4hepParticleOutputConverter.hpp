@@ -17,7 +17,7 @@
 
 namespace ActsExamples {
 
-/// Write particles to EDM4hep
+/// Write particles to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - particle ID

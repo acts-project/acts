@@ -18,7 +18,7 @@
 
 namespace ActsExamples {
 
-/// Write out a measurement cluster collection to EDM4hep.
+/// Write out a measurement cluster collection to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - hit index

@@ -12,10 +12,17 @@
 
 namespace ActsExamples {
 
+/// This is an abstract base class for EDM4hep output converters
+/// It's main job is to enforce the presence of  getter for the collection names
+/// that converter will write to. This is used by the @c Acts::PodioWriter to
+/// pick up the collections to write, as coordinated in python.
 class EDM4hepOutputConverter : public IAlgorithm {
  public:
   using IAlgorithm::IAlgorithm;
 
+  /// Get the collection names that this converter writes to.
+  ///
+  /// @return The collection names
   virtual std::vector<std::string> collections() const = 0;
 };
 

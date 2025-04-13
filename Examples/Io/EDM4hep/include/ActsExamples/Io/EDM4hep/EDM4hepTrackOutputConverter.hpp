@@ -21,6 +21,7 @@ class CollectionBase;
 
 namespace ActsExamples {
 
+/// Write out a track collection to EDM4hep objects
 class EDM4hepTrackOutputConverter : public EDM4hepOutputConverter {
  public:
   struct Config {
