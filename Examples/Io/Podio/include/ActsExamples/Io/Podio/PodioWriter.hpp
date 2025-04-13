@@ -29,7 +29,7 @@ class PodioWriter final : public IWriter {
 
     /// Retrieve a @c podio::Frame from the event store using this name.
     /// @note If not set, a new frame will be created.
-    std::string inputFrame = "";
+    std::optional<std::string> inputFrame = std::nullopt;
 
     /// The podio `category` name to write the frame to
     std::string category;

@@ -50,10 +50,10 @@ PodioWriter::PodioWriter(const Config& config, Acts::Logging::Level level)
   if (m_impl->m_cfg.category.empty()) {
     throw std::invalid_argument("Category name is not set");
   }
-  if (m_impl->m_cfg.inputFrame.empty()) {
+  if (!m_impl->m_cfg.inputFrame.has_value()) {
     ACTS_DEBUG("No input frame name set, will create a new one");
   } else {
-    m_impl->m_inputPodioFrame.initialize(m_impl->m_cfg.inputFrame);
+    m_impl->m_inputPodioFrame.initialize(m_impl->m_cfg.inputFrame.value());
   }
 
   std::set<std::string> collections;
