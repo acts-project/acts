@@ -30,9 +30,38 @@ using namespace Acts::GeoModelReader;
 using namespace Acts::Experimental;
 using namespace Acts::UnitLiterals;
 
-constexpr std::size_t nSectors = 8;
+namespace Acts::Test {
 
-BOOST_AUTO_TEST_SUITE(MuonGeometry);
+// This tests creates the blueprint for a mockup geometry of the muon system
+//  in the ATLAS experiment. The geometry is read from a SQLite database
+//  and the blueprint is built using the StaticBlueprintNode class.
+//  The test checks the number of children in each barrel cylinder and uses
+//  static blueprint ndoes
+// The following diagram shows the hierarchy of the geometry:
+/*
+                     +------+
+                     | root |
+                     +------+
+                        |
+         +--------------+--------------+--------------+
+         |                             |              |
+         v                             v              v
+     +-------------+           +--------------+   +--------------+
+     | InnerBarrel |           | MiddleBarrel |   | OuterBarrel  |
+     +-------------+           +--------------+   +--------------+
+        |                         |                  |
+        v                         v                  v
+     +-----------+             +-----------+       +-----------+
+     | Chamber1,2 |            | Chamber1,2 |      | Chamber1,2 |
+     +-----------+             +-----------+       +-----------+
+        |                         |                  |
+        v                         v                  v
+     +-----------------+     +-----------------+   +-----------------+
+     |  MultiLayer1,2  |     |  MultiLayer1,2  |   |  MultiLayer1,2  |
+     +-----------------+     +-----------------+   +-----------------+
+*/
+
+constexpr std::size_t nSectors = 8;
 
 using SensitiveSurfaces = std::vector<GeoModelSensitiveSurface>;
 using BoundingBoxesVols = std::vector<
@@ -42,13 +71,14 @@ using BoundingBoxesVols = std::vector<
 // function that builds the chamber tracking volumes
 std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
     const BoundingBoxesVols& boundingBoxes,
-    const SensitiveSurfaces& sensitiveSurfaces, const std::string& name) {
+    const SensitiveSurfaces& sensitiveSurfaces, const std::string& name,
+    const Logger& logger) {
   // the vector with the chamber nodes and the volumes
   std::vector<std::shared_ptr<StaticBlueprintNode>> volChamberNodes;
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
 
   for (std::size_t sector = 0; sector < nSectors; sector++) {
-    std::cout << "Barrel name: " << name << " sector: " << sector << std::endl;
+    ACTS_DEBUG("Barrel name: " << name << " sector: " << sector);
     // Find the bounding box for the given chamber name and sector
     auto it_first =
         std::ranges::find_if(boundingBoxes, [&name, &sector](const auto& pair) {
@@ -57,22 +87,18 @@ std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
                      std::string::npos;
         });
 
-    if (it_first == boundingBoxes.end()) {
-      std::cout << "Chamber name: " << name << " sector: " << sector
-                << std::endl;
-      throw std::runtime_error("Bounding Box not found");
-    }
+    // Check if the bounding box was found
+    BOOST_CHECK(it_first != boundingBoxes.end());
+
     auto it_second = std::find_if(
         it_first, boundingBoxes.end(), [&name, &sector](const auto& pair) {
           return pair.first->name().find(name) != std::string::npos &&
                  pair.first->name().find("_1_" + std::to_string(sector + 1)) !=
                      std::string::npos;
         });
-    if (it_second == boundingBoxes.end()) {
-      std::cout << "Chamber name: " << name << " sector: " << sector
-                << std::endl;
-      throw std::runtime_error("Bounding Box not found");
-    }
+    // Check if the second bounding box was found
+    BOOST_CHECK(it_second != boundingBoxes.end());
+
     auto vol1 = it_first->second;
     auto vol2 = it_second->second;
     Vector3 center = (vol1->center() + vol2->center()) / 2;
@@ -147,6 +173,8 @@ std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
   return barrelNode;
 }
 
+BOOST_AUTO_TEST_SUITE(GeoModelMuonMockupBluePrintTests)
+
 BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
   // Read the geomodel file to create the mockup geometry
 
@@ -174,11 +202,19 @@ BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
   std::cout << "box size=" << cache.boundingBoxes.size() << std::endl;
 
   auto innerBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BIL");
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BIL",
+                      *logger->clone(std::nullopt, Logging::DEBUG));
   auto middleBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BML");
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BML",
+                      *logger->clone(std::nullopt, Logging::DEBUG));
   auto outerBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BOL");
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BOL",
+                      *logger->clone(std::nullopt, Logging::DEBUG));
+
+  // Check the number of children in each barrel
+  BOOST_CHECK(innerBarrel->children().size() == nSectors);
+  BOOST_CHECK(middleBarrel->children().size() == nSectors);
+  BOOST_CHECK(outerBarrel->children().size() == nSectors);
 
   // Create the blueprint
   Blueprint::Config bpCfg;
@@ -197,3 +233,4 @@ BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
   auto trackingGeometry = root.construct({}, context, *logger);
 }
 BOOST_AUTO_TEST_SUITE_END()
+}  // namespace Acts::Test
