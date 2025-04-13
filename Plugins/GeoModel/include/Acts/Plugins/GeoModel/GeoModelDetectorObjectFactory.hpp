@@ -26,6 +26,7 @@ namespace Acts {
 class GeoModelDetectorObjectFactory {
  public:
   using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
+  using GeoModelVolumeBox = std::shared_ptr<Acts::Volume>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -49,8 +50,10 @@ class GeoModelDetectorObjectFactory {
   struct Cache {
     // The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-    // The created representation of bounding box
-    std::vector<GeoModelBoundingBox> boundingBoxes;
+    // The created representation of a pair of bounding boxes as DetectorVolumes
+    // for Gen2 and Volumes for Gen1/Gen3
+    std::vector<std::pair<GeoModelBoundingBox, GeoModelVolumeBox>>
+        boundingBoxes;
   };
 
   explicit GeoModelDetectorObjectFactory(
