@@ -177,7 +177,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   }
 
   return {std::move(nodeTensor), edgesAfterCut.clone(),
-          std::move(inEdgeFeatures), std::move(scores)};
+          std::move(inEdgeFeatures), scores.masked_select(filterMask)};
 }
 
 }  // namespace Acts
