@@ -10,7 +10,10 @@ add_library(
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
-    target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+    )
     target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
     target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
     set_target_properties(

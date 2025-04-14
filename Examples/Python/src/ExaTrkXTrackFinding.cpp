@@ -214,6 +214,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(useOneBlockImplementation);
+    ACTS_PYTHON_MEMBER(doJunctionRemoval);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif
@@ -448,7 +450,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
       ActsExamples::PrototracksToParameters, mex, "PrototracksToParameters",
       inputProtoTracks, inputSpacePoints, outputSeeds, outputParameters,
       outputProtoTracks, geometry, magneticField, buildTightSeeds,
-      minSpacepointDist, stripVolumes, initialVarInflation);
+      minSpacepointDist, stripVolumes, initialSigmas);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
