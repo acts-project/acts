@@ -62,7 +62,7 @@ ProcessCode CsvMuonSpacePointReader::read(const AlgorithmContext& ctx) {
         static_cast<MuonId::StationName>(0x0FF & data.sectorId)};
     MuonId::DetSide side{
         static_cast<MuonId::DetSide>(0x0FF & (data.sectorId >> 8))};
-    const int sector = static_cast<int>(0x0FF & (data.sectorId >> 16));
+    const auto sector = static_cast<int>(0x0FF & (data.sectorId >> 16));
     MuonId::TechField tech{
         static_cast<MuonId::TechField>(0x0FF & (data.sectorId >> 24))};
     MuonId id{};

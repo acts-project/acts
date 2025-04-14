@@ -73,7 +73,7 @@ std::string to_string(const StationName st) {
       return "EEL";
     default:
       return "Unknown";
-  };
+  }
 }
 std::string to_string(const TechField tech) {
   switch (tech) {
@@ -89,7 +89,7 @@ std::string to_string(const TechField tech) {
       return "Mm";
     default:
       return "Unknown";
-  };
+  }
 }
 std::string to_string(const DetSide side) {
   switch (side) {
@@ -99,7 +99,7 @@ std::string to_string(const DetSide side) {
       return "C-side";
     default:
       return "Unknown";
-  };
+  }
 }
 void MuonSpacePoint::MuonId::setChamber(StationName stName, DetSide side,
                                         int sector, TechField tech) {

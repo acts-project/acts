@@ -25,10 +25,6 @@
 #include "TMarker.h"
 #include "TStyle.h"
 
-namespace {
-std::mutex canvasMutex{};
-}
-
 namespace ActsExamples {
 
 // left solution
@@ -100,7 +96,8 @@ ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
   phiPlaneCfg.nBinsY = 10;
 
   // instantiate the hough plane
-  HoughPlane_t etaPlane{etaPlaneCfg}, phiPlane{phiPlaneCfg};
+  HoughPlane_t etaPlane{etaPlaneCfg};
+  HoughPlane_t phiPlane{phiPlaneCfg};
   MuonHoughMaxContainer outMaxima{};
 
   for (const MuonSpacePointContainer::value_type& bucket : gotSpacePoints) {
@@ -157,9 +154,9 @@ MuonHoughMaxContainer MuonHoughSeeder::constructEtaMaxima(
   }
   /** Extract the maxima from the peak */
   PeakFinderCfg_t peakFinderCfg{};
-  peakFinderCfg.fractionCutoff = 0.7;
-  peakFinderCfg.threshold = 3.;
-  peakFinderCfg.minSpacingBetweenPeaks = {0., 30.};
+  peakFinderCfg.fractionCutoff = 0.7f;
+  peakFinderCfg.threshold = 3.f;
+  peakFinderCfg.minSpacingBetweenPeaks = {0.f, 30.f};
 
   PeakFinder_t peakFinder{peakFinderCfg};
 
@@ -255,6 +252,7 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
   if (!m_outCanvas) {
     return;
   }
+  static std::mutex canvasMutex{};
   // read the hits and circles
   const MuonSegmentContainer& gotTruthSegs = m_inputTruthSegs(ctx);
   std::lock_guard guard{canvasMutex};
@@ -276,7 +274,7 @@ void MuonHoughSeeder::displayMaxima(const AlgorithmContext& ctx,
     }
   }
   /** Set the contours */
-  int maxHitsAsInt = static_cast<int>(plane.maxHits());
+  auto maxHitsAsInt = static_cast<int>(plane.maxHits());
   houghHistoForPlot.SetContour(maxHitsAsInt + 1);
   for (int k = 0; k < maxHitsAsInt + 1; ++k) {
     houghHistoForPlot.SetContourLevel(k, k - 0.5);
