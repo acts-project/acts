@@ -32,12 +32,10 @@
 #include <limits>
 #include <numeric>
 #include <ostream>
-#include <ranges>
 #include <ratio>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <thread>
 #include <typeinfo>
 
 #include <TROOT.h>
@@ -392,8 +390,8 @@ int Sequencer::run() {
                 Acts::getDefaultLogger("EventStore#" + std::to_string(event),
                                        m_cfg.logLevel),
                 m_whiteboardObjectAliases);
-            // If we ever wanted to run algorithms in parallel, this needs to be
-            // changed to Algorithm context copies
+            // If we ever wanted to run algorithms in parallel, this needs to
+            // be changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
             std::size_t ialgo = 0;
 
