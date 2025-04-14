@@ -82,22 +82,6 @@ class parallel_for {
   }
 };
 
-class parallel_for_each {
- public:
-  template <typename begin_t, typename end_t, typename F, typename... Args>
-  parallel_for_each(begin_t&& begin, end_t&& end, const F& f, Args&&... args) {
-    if (enableTBB()) {
-      tbb::parallel_for_each(std::forward<begin_t>(begin),
-                             std::forward<end_t>(end), f,
-                             std::forward<Args>(args)...);
-    } else {
-      for (auto it = begin; it != end; ++it) {
-        f(*it);
-      }
-    }
-  }
-};
-
 /// Small wrapper for tbb::queuing_mutex and tbb::queuing_mutex::scoped_lock.
 class queuing_mutex {
   std::optional<tbb::queuing_mutex> tbb;
