@@ -65,7 +65,7 @@ with tempfile.TemporaryDirectory() as temp:
     s.addAlgorithm(
         acts.examples.hepmc3.HepMC3InputConverter(
             level=acts.logging.INFO,
-            inputEvent=evGen.config.outputEvent,
+            inputEvent="particle_gun_event",
             outputParticles="particles_generated",
             outputVertices="vertices_input",
             mergePrimaries=False,
