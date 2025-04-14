@@ -50,8 +50,9 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackParameterSmearing, mex, "TrackParameterSmearing",
       inputTrackParameters, outputTrackParameters, sigmaLoc0, sigmaLoc0PtA,
       sigmaLoc0PtB, sigmaLoc1, sigmaLoc1PtA, sigmaLoc1PtB, sigmaTime, sigmaPhi,
-      sigmaTheta, sigmaPtRel, initialSigmas, initialSigmaPtRel,
-      initialVarInflation, particleHypothesis, randomNumbers);
+      sigmaTheta, sigmaPtRel, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, particleHypothesis,
+      randomNumbers);
 
   {
     using Alg = ActsExamples::ParticleSelector;
