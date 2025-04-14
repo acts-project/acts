@@ -394,7 +394,7 @@ int Sequencer::run() {
                 m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this
             // needs to be changed to Algorithm context copies
-            AlgorithmContext context(0, event, eventStore, threadId);
+            AlgorithmContext context(0, event, eventStore);
             std::size_t ialgo = 0;
 
             /// Decorate the context

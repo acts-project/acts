@@ -24,16 +24,11 @@ struct AlgorithmContext {
   /// @param alg is the algorithm/service/writer number
   /// @param event is the event number
   /// @param store is the event-wise event store
-  /// @param threadIndex is the thread index that the object was launched on
   ///
   /// @note the event dependent contexts are to be added by the
   /// Sequencer::m_decorators list
-  AlgorithmContext(std::size_t alg, std::size_t event, WhiteBoard& store,
-                   std::size_t thread = 0)
-      : algorithmNumber(alg),
-        eventNumber(event),
-        eventStore(store),
-        threadIndex(thread) {}
+  AlgorithmContext(std::size_t alg, std::size_t event, WhiteBoard& store)
+      : algorithmNumber(alg), eventNumber(event), eventStore(store) {}
 
   /// @brief ++operator overload to increase the algorithm number
   AlgorithmContext& operator++() {
@@ -48,7 +43,6 @@ struct AlgorithmContext {
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calibration context
-  std::size_t threadIndex;  ///< Thread index that the object was launched on
 
   Acts::FpeMonitor* fpeMonitor = nullptr;
 };
