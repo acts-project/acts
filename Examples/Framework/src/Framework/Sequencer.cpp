@@ -614,21 +614,30 @@ int Sequencer::run() {
     }
   };
 
-  for (std::size_t t = 0; t < nThreads; t++) {
-    std::promise<void> prom;
-    threads.emplace_back(prom.get_future(),
-                         std::thread{threadFunc, t, std::move(prom)});
-  }
+  if (nThreads > 1) {
+    // Multi-threaded mode: run a set of threads and wait for them to complete
+    for (std::size_t t = 0; t < nThreads; t++) {
+      std::promise<void> prom;
+      threads.emplace_back(prom.get_future(),
+                           std::thread{threadFunc, t, std::move(prom)});
+    }
 
-  // Wait for threads to complete. This should happen both in the error case
-  // or the success case
-  for (auto& [future, thread] : threads) {
-    thread.join();
-  }
+    // Wait for threads to complete. This should happen both in the error case
+    // or the success case
+    for (auto& [future, thread] : threads) {
+      thread.join();
+    }
 
-  // Now that all threads are joined, we can check for exceptions
-  for (auto& [future, thread] : threads) {
-    future.get();
+    // Now that all threads are joined, we can check for exceptions
+    for (auto& [future, thread] : threads) {
+      future.get();
+    }
+  } else {
+    // Single-thread mode: just run a for loop
+    for (std::size_t event = eventsRange.first; event < eventsRange.second;
+         ++event) {
+      processEvent(0, event);
+    }
   }
 
   ACTS_VERBOSE("Finalize sequence elements");

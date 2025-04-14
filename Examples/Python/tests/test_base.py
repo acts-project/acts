@@ -69,6 +69,7 @@ def test_sequencer_single_threaded(ptcl_gun, capfd):
     assert cap.err == ""
     assert "Create Sequencer (single-threaded)" in cap.out
     assert "Processed 2 events" in cap.out
+    print(cap.out)
 
 
 def test_sequencer_multi_threaded(ptcl_gun, capfd):
