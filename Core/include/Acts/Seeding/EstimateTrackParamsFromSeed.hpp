@@ -162,7 +162,10 @@ struct EstimateTrackParamCovarianceConfig {
                                1. * UnitConstants::e / UnitConstants::GeV,
                                1. * UnitConstants::ns};
 
-  /// The initial relative uncertainty of the q/pt
+  /// The initial sigma for the q/pt
+  double initialSigmaQoverPt = 0. * UnitConstants::e / UnitConstants::GeV;
+
+  /// The initial relative uncertainty sigma(pt)/pt
   double initialSigmaPtRel = 0.1;
 
   /// The inflation factors for the variances of the track parameters
