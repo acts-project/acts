@@ -130,7 +130,10 @@ __global__ void hookEdges(std::size_t numEdges, const TEdge *sourceEdges,
 
   bool changed = false;
   hookEdgesImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
-  atomicOr(globalChanged, changed);
+
+  if (__syncthreads_or(changed) && threadIdx.x == 0) {
+    atomicOr(globalChanged, true);
+  }
 }
 
 /// Shortcutting-kernel for implementing the FastSV loop on the host
@@ -145,7 +148,10 @@ __global__ void shortcut(std::size_t numNodes, const TEdge *sourceEdges,
 
   bool changed = false;
   shortcutImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
-  atomicOr(globalChanged, changed);
+
+  if (__syncthreads_or(changed) && threadIdx.x == 0) {
+    atomicOr(globalChanged, true);
+  }
 }
 
 template <typename T>
