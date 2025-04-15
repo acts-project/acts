@@ -16,7 +16,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
@@ -161,7 +161,7 @@ ProcessCode EventGenerator::read(const AlgorithmContext& ctx) {
     eventPtrs.push_back(evt.get());
   }
 
-  auto event = HepMC3Event::mergeHepMC3Events(eventPtrs, logger());
+  auto event = HepMC3Util::mergeEvents(eventPtrs, logger());
   event->set_event_number(static_cast<int>(ctx.eventNumber));
 
   ACTS_VERBOSE("Vertices size: " << event->vertices_size());
