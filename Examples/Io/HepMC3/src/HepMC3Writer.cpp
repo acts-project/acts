@@ -205,9 +205,12 @@ ProcessCode HepMC3Writer::writeT(
     auto it = std::ranges::upper_bound(m_eventQueue, ctx.eventNumber, {},
                                        [](const auto& v) { return v.first; });
     if (it == m_eventQueue.end()) {
-      ACTS_VERBOSE("Insert location is at the end of the queue");
+      ACTS_VERBOSE("Insert location for " << ctx.eventNumber
+                                          << " is at the end of the queue");
     } else {
-      ACTS_VERBOSE("Insert location is before event number: " << it->first);
+      ACTS_VERBOSE("Insert location for "
+                   << ctx.eventNumber
+                   << " is before event number: " << it->first);
     }
 
     m_eventQueue.insert(it, {ctx.eventNumber, event});
