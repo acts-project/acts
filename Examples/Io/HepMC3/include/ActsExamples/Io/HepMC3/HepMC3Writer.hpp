@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <map>
 #include <mutex>
+#include <semaphore>
 #include <string>
 
 namespace HepMC3 {
@@ -51,11 +52,20 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
     /// The compression mode to use for the output file
     HepMC3Util::Compression compression = HepMC3Util::Compression::none;
 
+    /// Write events in order of their event number. If `false`, events are
+    /// written in whatever order they are processed.
+    bool writeEventsInOrder = true;
+
     /// The maximum number of events to keep in the queue before writing
     /// The value depends on the number of core and therefore the worst-case
     /// distance between the *current* and the next event we can write to write
     /// in order.
-    std::size_t maxEventsPending = 128;
+    long maxEventsPending = 128;
+
+    /// When trying to write events in order, how long the writer should try to
+    /// wait to do this before failing. This is a safeguard to avoid permanent
+    /// hangs.
+    long long timeoutSeconds = 2;
   };
 
   /// Construct the writer.
@@ -84,22 +94,19 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   std::unique_ptr<HepMC3::Writer> createWriter(
       const std::filesystem::path& target);
 
-  ProcessCode queueForWriting(std::size_t eventNumber,
-                              std::shared_ptr<HepMC3::GenEvent> event);
-
-  ProcessCode flushQueue();
-
   /// The configuration of this writer
   Config m_cfg;
 
   std::mutex m_mutex;
 
   std::size_t m_nextEvent = 0;
-  std::vector<std::pair<std::size_t, std::shared_ptr<HepMC3::GenEvent>>>
+  std::vector<std::pair<long long, std::shared_ptr<HepMC3::GenEvent>>>
       m_eventQueue;
 
   // For reporting at the end of the job
   std::size_t m_maxEventQueueSize = 0;
+
+  std::counting_semaphore<> m_queueSemaphore;
 
   std::unique_ptr<HepMC3::Writer> m_writer;
 };
