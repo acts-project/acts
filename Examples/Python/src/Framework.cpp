@@ -116,7 +116,8 @@ void addFramework(Context& ctx) {
                  Acts::getDefaultLogger(name, level));
            }),
            py::arg("level"), py::arg("name") = "WhiteBoard")
-      .def("exists", &WhiteBoard::exists);
+      .def("exists", &WhiteBoard::exists)
+      .def_property_readonly("keys", &WhiteBoard::getKeys);
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<std::size_t, std::size_t, WhiteBoard&>())
@@ -180,18 +181,9 @@ void addFramework(Context& ctx) {
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
-  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-  ACTS_PYTHON_MEMBER(skip);
-  ACTS_PYTHON_MEMBER(events);
-  ACTS_PYTHON_MEMBER(logLevel);
-  ACTS_PYTHON_MEMBER(numThreads);
-  ACTS_PYTHON_MEMBER(outputDir);
-  ACTS_PYTHON_MEMBER(outputTimingFile);
-  ACTS_PYTHON_MEMBER(trackFpes);
-  ACTS_PYTHON_MEMBER(fpeMasks);
-  ACTS_PYTHON_MEMBER(failOnFirstFpe);
-  ACTS_PYTHON_MEMBER(fpeStackTraceLength);
-  ACTS_PYTHON_STRUCT_END();
+  ACTS_PYTHON_STRUCT(c, skip, events, logLevel, numThreads, outputDir,
+                     outputTimingFile, trackFpes, fpeMasks, failOnFirstFpe,
+                     fpeStackTraceLength);
 
   auto fpem =
       py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
@@ -204,12 +196,7 @@ void addFramework(Context& ctx) {
             return ss.str();
           });
 
-  ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
-  ACTS_PYTHON_MEMBER(file);
-  ACTS_PYTHON_MEMBER(lines);
-  ACTS_PYTHON_MEMBER(type);
-  ACTS_PYTHON_MEMBER(count);
-  ACTS_PYTHON_STRUCT_END();
+  ACTS_PYTHON_STRUCT(fpem, file, lines, type, count);
 
   struct FpeMonitorContext {
     std::optional<Acts::FpeMonitor> mon;

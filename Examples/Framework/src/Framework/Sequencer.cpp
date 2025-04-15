@@ -350,10 +350,14 @@ int Sequencer::run() {
   ACTS_VERBOSE("Initialize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Initialize " << alg->typeName() << ": " << alg->name());
-    if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize " << alg->typeName() << ": "
-                                         << alg->name());
-      throw std::runtime_error("Failed to process event data");
+    try {
+      if (alg->initialize() != ProcessCode::SUCCESS) {
+        throw std::runtime_error("Failed to process event data");
+      }
+    } catch (const std::exception& e) {
+      ACTS_FATAL("Failed to initialize " << alg->typeName() << " \""
+                                         << alg->name() << "\"" << e.what());
+      throw;
     }
   }
 
@@ -400,11 +404,18 @@ int Sequencer::run() {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << alg->typeName() << ": "
                                       << alg->name());
-              if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute " << alg->typeName() << ": "
-                                                << alg->name());
-                throw std::runtime_error("Failed to process event data");
+              try {
+                if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                  throw std::runtime_error("Failed to process event data");
+                }
+              } catch (const std::exception& e) {
+                ACTS_FATAL("Failed to execute " << alg->typeName() << " \""
+                                                << alg->name()
+                                                << "\": " << e.what());
+                throw;
               }
+              ACTS_VERBOSE("Completed " << alg->typeName() << ": "
+                                        << alg->name());
 
               if (mon) {
                 auto& local = fpe.local();
@@ -463,10 +474,14 @@ int Sequencer::run() {
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Finalize " << alg->typeName() << ": " << alg->name());
-    if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize " << alg->typeName() << ": "
-                                       << alg->name());
-      throw std::runtime_error("Failed to process event data");
+    try {
+      if (alg->finalize() != ProcessCode::SUCCESS) {
+        throw std::runtime_error("Failed to process event data");
+      }
+    } catch (const std::exception& e) {
+      ACTS_FATAL("Failed to finalize " << alg->typeName() << " \""
+                                       << alg->name() << "\"" << e.what());
+      throw;
     }
   }
 

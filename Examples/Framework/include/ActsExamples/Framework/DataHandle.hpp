@@ -55,7 +55,7 @@ class DataHandleBase {
 
   const std::string& name() const { return m_name; }
 
-  void maybeInitialize(std::string_view key);
+  void maybeInitialize(std::optional<std::string_view> key);
 
   virtual bool isCompatible(const DataHandleBase& other) const = 0;
 

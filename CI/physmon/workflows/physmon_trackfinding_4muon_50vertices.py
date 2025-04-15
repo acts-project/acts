@@ -172,6 +172,7 @@ with tempfile.TemporaryDirectory() as temp:
         outputVertices="ivf_notime_fittedVertices",
         vertexFinder=VertexFinder.Iterative,
         outputDirRoot=tp / "ivf_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -184,6 +185,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=False,  # Time seeding not implemented for the Gaussian seeder
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_gauss_notime",
+        writeTrackInfo=True,
     )
 
     addVertexFitting(
@@ -196,6 +198,7 @@ with tempfile.TemporaryDirectory() as temp:
         useTime=True,
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf_grid_time",
+        writeTrackInfo=True,
     )
 
     s.run()

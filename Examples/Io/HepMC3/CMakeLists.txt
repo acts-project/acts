@@ -6,6 +6,7 @@ add_library(
     src/HepMC3Reader.cpp
     src/HepMC3Vertex.cpp
     src/HepMC3Writer.cpp
+    src/HepMC3OutputConverter.cpp
 )
 target_include_directories(
     ActsExamplesIoHepMC3

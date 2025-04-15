@@ -46,8 +46,9 @@ ParticleSelectorConfig = namedtuple(
         "removeCharged",  # bool
         "removeNeutral",  # bool
         "removeSecondaries",  # bool
+        "nMeasurementsGroupMin",
     ],
-    defaults=[(None, None)] * 10 + [None] * 3,
+    defaults=[(None, None)] * 10 + [None] * 4,
 )
 
 
@@ -76,6 +77,7 @@ def _getParticleSelectionKWargs(config: ParticleSelectorConfig) -> dict:
         "removeCharged": config.removeCharged,
         "removeNeutral": config.removeNeutral,
         "removeSecondaries": config.removeSecondaries,
+        "measurementCounter": config.nMeasurementsGroupMin,
     }
 
 
@@ -154,6 +156,7 @@ def addParticleGun(
                         randomizeCharge=particleConfig.randomizeCharge,
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
+                        # Merging particle gun vertices does not make sense
                     )
                 ),
             )
@@ -161,6 +164,7 @@ def addParticleGun(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        mergePrimaries=False,
     )
     s.addReader(evGen)
 
@@ -231,6 +235,9 @@ def addPythia8(
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
+    writeHepMC3: Optional[Path] = None,
+    outputEvent: Optional[str] = None,
+    printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -257,6 +264,8 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    writeHepMC3 : Path|None
+        write directly from Pythia8 into HepMC3
     printPythiaEventListing
         None or "short" or "long"
     """
@@ -299,6 +308,7 @@ def addPythia8(
                         settings=hardProcess,
                         printLongEventListing=printLongEventListing,
                         printShortEventListing=printShortEventListing,
+                        writeHepMC3=writeHepMC3,
                     ),
                 ),
             )
@@ -326,6 +336,8 @@ def addPythia8(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent=outputEvent,
+        printListing=printListing,
     )
     s.addReader(evGen)
 
@@ -797,6 +809,7 @@ def addDigiParticleSelection(
         level=customLogLevel(),
         inputParticles="particles_simulated_selected",
         inputParticleMeasurementsMap="particle_measurements_map",
+        inputMeasurements="measurements",
         outputParticles="tmp_particles_digitized_selected",
     )
     s.addAlgorithm(selector)
