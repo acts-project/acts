@@ -122,6 +122,7 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
             outputPath=out,
             perEvent=per_event,
             compression=compression,
+            # writeEventsInOrder=False,
         )
     )
 
@@ -213,18 +214,20 @@ def common_evgen(rng):
 
 @pytest.mark.parametrize(
     "bufsize",
-    [
-        pytest.param(5, marks=pytest.mark.xfail),
-        15,
-    ],
-    ids=lambda v: f"buf={v}",
+    [1, 5, 15, 50],
+    ids=lambda v: f"buf{v}",
 )
 def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
+    """
+    This test simulates that one event takes significantly longer than the
+    other ones. In this case, the HepMC3 writer should keep a buffer of events
+    and wait until the trailing event comes in.
+    """
     from acts.examples.hepmc3 import (
         HepMC3Writer,
     )
 
-    s = Sequencer(numThreads=10, events=100)
+    s = Sequencer(numThreads=10, events=150)
 
     evGen = common_evgen(s)
 
@@ -243,14 +246,27 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
         )
     )
 
-    with ScopedFailureThreshold(acts.logging.MAX):
-        s.run()
+    s.run()
+
+    try:
+        import pyhepmc
+
+        nevts = 0
+        event_numbers = []
+        with pyhepmc.open(out) as f:
+            for evt in f:
+                nevts += 1
+                event_numbers.append(evt.event_number)
+        assert nevts == s.config.events
+        assert event_numbers == list(range(s.config.events)), "Events are out of order"
+
+    except ImportError:
+        pass
 
 
-def test_hepmc3_writer_stall_not_in_order(common_evgen, tmp_path):
+def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
     """
-    In principle: 10 threads and a buffer size of 5 should lead to a stall and subsequent crash.
-    With the writer not configured to write in order, this should not be the case.
+    Bypasses the event ordering. This test mainly checks that this code path completes
     """
     from acts.examples.hepmc3 import (
         HepMC3Writer,
@@ -272,11 +288,29 @@ def test_hepmc3_writer_stall_not_in_order(common_evgen, tmp_path):
             inputEvent=evGen.config.outputEvent,
             outputPath=out,
             maxEventsPending=5,
-            writeEventsInOrder=False,  # Should not crash in this case
+            writeEventsInOrder=False,
         )
     )
 
     s.run()
+
+    try:
+        import pyhepmc
+
+        nevts = 0
+        event_numbers = []
+        with pyhepmc.open(out) as f:
+            for evt in f:
+                nevts += 1
+                event_numbers.append(evt.event_number)
+        assert nevts == s.config.events
+        # We don't expect events to be in order, but they should be there
+        assert set(event_numbers) == set(
+            range(s.config.events)
+        ), "Event numbers are different"
+
+    except ImportError:
+        pass
 
 
 @compression_modes
@@ -341,10 +375,11 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
 
             nevts = 0
             with pyhepmc.open(actual_path) as f:
-                nevts += 1
                 for evt in f:
-                    assert len(evt.particles) == 7433
-            assert nevts == 1
+                    if evt.event_number == 0:
+                        assert len(evt.particles) == 7433
+                    nevts += 1
+            assert nevts == s.config.events
 
         except ImportError:
             pass
@@ -454,6 +489,11 @@ def test_hepmc3_reader(common_writer, rng, compression):
 
 @compression_modes
 def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression):
+    """
+    The HepMC3Reader can be configured to read a specific number of events. If
+    the explicit number of events is lower or equal to the actual number of
+    events, reading works as expected.
+    """
     from acts.examples.hepmc3 import (
         HepMC3Reader,
     )
@@ -492,6 +532,11 @@ def test_hepmc3_reader_explicit_num_events(common_writer, rng, compression):
 
 @compression_modes
 def test_hepmc3_reader_explicit_num_events_too_large(common_writer, rng, compression):
+    """
+    The HepMC3Reader can be configured to read a specific number of events. If
+    the explicit number of events is larger than the actual number of events,
+    the reader should throw an error.
+    """
     from acts.examples.hepmc3 import (
         HepMC3Reader,
     )

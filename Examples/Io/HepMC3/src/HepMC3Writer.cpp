@@ -13,6 +13,7 @@
 
 #include <filesystem>
 #include <stdexcept>
+#include <thread>
 
 #include <HepMC3/Version.h>
 #include <HepMC3/WriterAscii.h>
@@ -32,7 +33,7 @@ namespace ActsExamples {
 HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
     : WriterT(config.inputEvent, "HepMC3Writer", level),
       m_cfg(config),
-      m_queueSemaphore{m_cfg.maxEventsPending} {
+      m_queueSemaphore{static_cast<long>(m_cfg.maxEventsPending + 1)} {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
   }
@@ -96,6 +97,22 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
 
 HepMC3Writer::~HepMC3Writer() = default;
 
+ProcessCode HepMC3Writer::beginEvent() {
+  ACTS_VERBOSE("Begin event " << m_nextEvent);
+  if (!m_cfg.writeEventsInOrder) {
+    // Nothing to do if we don't write in order
+    return ProcessCode::SUCCESS;
+  }
+
+  ACTS_DEBUG("thread=" << std::this_thread::get_id() << ", event_nr="
+                       << m_nextEvent << " waiting for semaphore");
+  m_queueSemaphore.acquire();
+  ACTS_DEBUG("thread=" << std::this_thread::get_id()
+                       << ", event_nr=" << m_nextEvent << " have semaphore");
+
+  return ProcessCode::SUCCESS;
+}
+
 ProcessCode HepMC3Writer::writeT(
     const AlgorithmContext& ctx,
     const std::shared_ptr<HepMC3::GenEvent>& event) {
@@ -131,15 +148,11 @@ ProcessCode HepMC3Writer::writeT(
     return ProcessCode::SUCCESS;
   }
 
-  std::size_t nWritten = 0;
-
-  std::unique_lock lock{m_mutex, std::defer_lock};
+  std::scoped_lock lock{m_mutex};
 
   if (ctx.eventNumber == m_nextEvent) {
     ACTS_DEBUG("event_nr=" << ctx.eventNumber
                            << " is the next event -> writing");
-
-    lock.lock();
 
     // write
     m_writer->write_event(*event);
@@ -149,20 +162,39 @@ ProcessCode HepMC3Writer::writeT(
     }
     m_nextEvent++;
 
+    std::size_t nWritten = 1;
+
+    ACTS_VERBOSE("queue=[" << [&]() {
+      std::vector<std::string> numbers;
+      numbers.reserve(m_eventQueue.size());
+      std::ranges::transform(
+          m_eventQueue, std::back_inserter(numbers),
+          [](const auto& pair) { return std::to_string(pair.first); });
+
+      return boost::algorithm::join(numbers, ", ");
+    }() << "]");
+
+    while (!m_eventQueue.empty() &&
+           m_eventQueue.front().first == static_cast<long long>(m_nextEvent)) {
+      auto next = std::move(m_eventQueue.front());
+      ACTS_VERBOSE("Writing event number: " << next.first);
+      m_eventQueue.erase(m_eventQueue.begin());
+
+      m_writer->write_event(*next.second);
+      if (m_writer->failed()) {
+        ACTS_ERROR("Failed to write event number: " << next.first);
+        return ProcessCode::ABORT;
+      }
+      m_nextEvent++;
+      nWritten++;
+    }
+
+    ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent);
+    m_queueSemaphore.release(nWritten);
+
   } else {
     ACTS_DEBUG("event_nr=" << ctx.eventNumber
                            << " is not the next event -> queueing");
-
-    ACTS_DEBUG("event_nr=" << ctx.eventNumber << " waiting for semaphore");
-    if (!m_queueSemaphore.try_acquire_for(
-            std::chrono::seconds(m_cfg.timeoutSeconds))) {
-      ACTS_ERROR(
-          "Failed to acquire semaphore for event number: " << ctx.eventNumber);
-      return ProcessCode::ABORT;
-    }
-    ACTS_DEBUG("event_nr=" << ctx.eventNumber << " have semaphore");
-
-    lock.lock();
 
     ACTS_VERBOSE(
         "Finding insert location for event number: " << ctx.eventNumber);
@@ -177,34 +209,6 @@ ProcessCode HepMC3Writer::writeT(
     m_eventQueue.insert(it, {ctx.eventNumber, event});
     m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
   }
-
-  ACTS_DEBUG("queue=[" << [&]() {
-    std::vector<std::string> numbers;
-    numbers.reserve(m_eventQueue.size());
-    std::ranges::transform(
-        m_eventQueue, std::back_inserter(numbers),
-        [](const auto& pair) { return std::to_string(pair.first); });
-
-    return boost::algorithm::join(numbers, ", ");
-  }() << "]");
-
-  while (!m_eventQueue.empty() &&
-         m_eventQueue.front().first == static_cast<long long>(m_nextEvent)) {
-    auto next = std::move(m_eventQueue.front());
-    ACTS_VERBOSE("Writing event number: " << next.first);
-    m_eventQueue.erase(m_eventQueue.begin());
-
-    m_writer->write_event(*next.second);
-    if (m_writer->failed()) {
-      ACTS_ERROR("Failed to write event number: " << next.first);
-      return ProcessCode::ABORT;
-    }
-    m_nextEvent++;
-    nWritten++;
-  }
-
-  ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent);
-  m_queueSemaphore.release(nWritten);
 
   return ProcessCode::SUCCESS;
 }
