@@ -212,6 +212,31 @@ def common_evgen(rng):
     return func
 
 
+@pytest.fixture
+def common_writer(tmp_path, common_evgen, rng):
+    def func(s: Sequencer, compression: acts.examples.hepmc3.Compression):
+        from acts.examples.hepmc3 import HepMC3Writer
+
+        evGen = common_evgen(s)
+
+        out = tmp_path / "out" / "events_pytest.hepmc3"
+        out.parent.mkdir(parents=True, exist_ok=True)
+
+        s.addWriter(
+            HepMC3Writer(
+                acts.logging.INFO,
+                inputEvent=evGen.config.outputEvent,
+                outputPath=out,
+                perEvent=False,
+                compression=compression,
+            )
+        )
+
+        return out
+
+    return func
+
+
 @pytest.mark.parametrize(
     "bufsize",
     [1, 5, 15, 50],
@@ -383,54 +408,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
 
         except ImportError:
             pass
-
-
-@pytest.fixture
-def common_writer(tmp_path, rng):
-    def func(s: Sequencer, compression: acts.examples.hepmc3.Compression):
-        from acts.examples.hepmc3 import HepMC3Writer
-
-        evGen = acts.examples.EventGenerator(
-            level=acts.logging.INFO,
-            generators=[
-                acts.examples.EventGenerator.Generator(
-                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                    vertex=acts.examples.GaussianVertexGenerator(
-                        stddev=acts.Vector4(
-                            50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns
-                        ),
-                        mean=acts.Vector4(0, 0, 0, 0),
-                    ),
-                    particles=acts.examples.ParametricParticleGenerator(
-                        p=(100 * u.GeV, 100 * u.GeV),
-                        eta=(-2, 2),
-                        phi=(0, 360 * u.degree),
-                        randomizeCharge=True,
-                        numParticles=2,
-                    ),
-                )
-            ],
-            randomNumbers=rng,
-        )
-
-        s.addReader(evGen)
-
-        out = tmp_path / "out" / "events_pytest.hepmc3"
-        out.parent.mkdir(parents=True, exist_ok=True)
-
-        s.addWriter(
-            HepMC3Writer(
-                acts.logging.INFO,
-                inputEvent="hepmc3_event",
-                outputPath=out,
-                perEvent=False,
-                compression=compression,
-            )
-        )
-
-        return out
-
-    return func
 
 
 @compression_modes
@@ -614,8 +591,12 @@ def test_hepmc3_reader_skip_events(common_writer, rng, compression):
 
     s.run()
 
-    exp = list(range(skip, nevents))
-    assert alg.events_seen == set(exp)
+    exp = set(range(skip, nevents))
+    # We can't assert the correct number assignment without having to expose
+    # more of the FW The HepMC3Reader internally asserts that the even number
+    # read from the event is equal to the event number currently being
+    # processed.
+    assert alg.events_seen == exp
 
 
 def test_hepmc3_reader_per_event(tmp_path, rng):
