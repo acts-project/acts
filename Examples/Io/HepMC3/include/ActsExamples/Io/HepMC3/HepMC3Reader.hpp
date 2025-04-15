@@ -64,7 +64,7 @@ class HepMC3Reader final : public IReader {
     /// In multi-threading mode, the reader will need to buffer events to read
     /// them predictably and in order. This defines the maximum queue size being
     /// used. If this number is exceeded the reader will error out.
-    std::size_t maxEventBufferSize = 64;
+    std::size_t maxEventBufferSize = 128;
   };
 
   /// Construct the particle reader.
