@@ -150,6 +150,18 @@ ProcessCode HepMC3Writer::writeT(
 
   std::scoped_lock lock{m_mutex};
 
+  auto printQueue = [&]() {
+    ACTS_VERBOSE("queue=[" << [&]() {
+      std::vector<std::string> numbers;
+      numbers.reserve(m_eventQueue.size());
+      std::ranges::transform(
+          m_eventQueue, std::back_inserter(numbers),
+          [](const auto& pair) { return std::to_string(pair.first); });
+
+      return boost::algorithm::join(numbers, ", ");
+    }() << "]");
+  };
+
   if (ctx.eventNumber == m_nextEvent) {
     ACTS_DEBUG("event_nr=" << ctx.eventNumber
                            << " is the next event -> writing");
@@ -164,15 +176,7 @@ ProcessCode HepMC3Writer::writeT(
 
     std::size_t nWritten = 1;
 
-    ACTS_VERBOSE("queue=[" << [&]() {
-      std::vector<std::string> numbers;
-      numbers.reserve(m_eventQueue.size());
-      std::ranges::transform(
-          m_eventQueue, std::back_inserter(numbers),
-          [](const auto& pair) { return std::to_string(pair.first); });
-
-      return boost::algorithm::join(numbers, ", ");
-    }() << "]");
+    printQueue();
 
     while (!m_eventQueue.empty() &&
            m_eventQueue.front().first == static_cast<long long>(m_nextEvent)) {
@@ -207,6 +211,7 @@ ProcessCode HepMC3Writer::writeT(
     }
 
     m_eventQueue.insert(it, {ctx.eventNumber, event});
+    printQueue();
     m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
   }
 
