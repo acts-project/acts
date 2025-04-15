@@ -30,7 +30,9 @@
 namespace ActsExamples {
 
 HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputEvent, "HepMC3Writer", level), m_cfg(config) {
+    : WriterT(config.inputEvent, "HepMC3Writer", level),
+      m_cfg(config),
+      m_queueSemaphore{m_cfg.maxEventsPending} {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
   }
@@ -118,61 +120,65 @@ ProcessCode HepMC3Writer::writeT(
     return result;
   }
 
-  // Lock is needed both for the queueing as well as the flushing
-  std::scoped_lock lock(m_mutex);
-
-  if (auto pc = queueForWriting(ctx.eventNumber, event);
-      pc != ProcessCode::SUCCESS) {
-    return pc;
+  if (!m_cfg.writeEventsInOrder) {
+    std::scoped_lock lock{m_mutex};
+    // Unconditionally write events in whatever order they come in
+    m_writer->write_event(*event);
+    if (m_writer->failed()) {
+      ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
+      return ProcessCode::ABORT;
+    }
+    return ProcessCode::SUCCESS;
   }
 
-  flushQueue();
+  std::size_t nWritten = 0;
 
-  return ProcessCode::SUCCESS;
-}
+  std::unique_lock lock{m_mutex, std::defer_lock};
 
-ProcessCode HepMC3Writer::queueForWriting(
-    std::size_t eventNumber, std::shared_ptr<HepMC3::GenEvent> event) {
-  ACTS_DEBUG("Queueing event_number=" << eventNumber << ", current_length="
-                                      << m_eventQueue.size());
-  if (m_eventQueue.size() > m_cfg.maxEventsPending) {
-    ACTS_ERROR("Queue size of "
-               << m_eventQueue.size() << " would exceed maximum of "
-               << m_cfg.maxEventsPending
-               << ". Cannot proceed without changing event ordering");
-    ACTS_ERROR("queue=[" << [&]() {
-      std::vector<std::string> numbers;
-      numbers.reserve(m_eventQueue.size());
-      std::ranges::transform(
-          m_eventQueue, std::back_inserter(numbers),
-          [](const auto& pair) { return std::to_string(pair.first); });
+  if (ctx.eventNumber == m_nextEvent) {
+    ACTS_DEBUG("event_nr=" << ctx.eventNumber
+                           << " is the next event -> writing");
 
-      return boost::algorithm::join(numbers, ", ");
-    }() << "]");
-    return ProcessCode::ABORT;
-  }
+    lock.lock();
 
-  ACTS_VERBOSE("Finding insert location for event number: " << eventNumber);
-  auto it = std::ranges::upper_bound(m_eventQueue, eventNumber, {},
-                                     [](const auto& v) { return v.first; });
-  if (it == m_eventQueue.end()) {
-    ACTS_VERBOSE("Insert location is at the end of the queue");
+    // write
+    m_writer->write_event(*event);
+    if (m_writer->failed()) {
+      ACTS_ERROR("Failed to write event number: " << ctx.eventNumber);
+      return ProcessCode::ABORT;
+    }
+    m_nextEvent++;
+
   } else {
-    ACTS_VERBOSE("Insert location is before event number: " << it->first);
+    ACTS_DEBUG("event_nr=" << ctx.eventNumber
+                           << " is not the next event -> queueing");
+
+    ACTS_DEBUG("event_nr=" << ctx.eventNumber << " waiting for semaphore");
+    if (!m_queueSemaphore.try_acquire_for(
+            std::chrono::seconds(m_cfg.timeoutSeconds))) {
+      ACTS_ERROR(
+          "Failed to acquire semaphore for event number: " << ctx.eventNumber);
+      return ProcessCode::ABORT;
+    }
+    ACTS_DEBUG("event_nr=" << ctx.eventNumber << " have semaphore");
+
+    lock.lock();
+
+    ACTS_VERBOSE(
+        "Finding insert location for event number: " << ctx.eventNumber);
+    auto it = std::ranges::upper_bound(m_eventQueue, ctx.eventNumber, {},
+                                       [](const auto& v) { return v.first; });
+    if (it == m_eventQueue.end()) {
+      ACTS_VERBOSE("Insert location is at the end of the queue");
+    } else {
+      ACTS_VERBOSE("Insert location is before event number: " << it->first);
+    }
+
+    m_eventQueue.insert(it, {ctx.eventNumber, event});
+    m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
   }
 
-  m_eventQueue.insert(it, {eventNumber, std::move(event)});
-
-  m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
-
-  return ProcessCode::SUCCESS;
-}
-
-ProcessCode HepMC3Writer::flushQueue() {
-  ACTS_DEBUG("Flushing queue, next_event=" << m_nextEvent << ", queue_length="
-                                           << m_eventQueue.size());
-
-  ACTS_VERBOSE("queue=[" << [&]() {
+  ACTS_DEBUG("queue=[" << [&]() {
     std::vector<std::string> numbers;
     numbers.reserve(m_eventQueue.size());
     std::ranges::transform(
@@ -182,7 +188,8 @@ ProcessCode HepMC3Writer::flushQueue() {
     return boost::algorithm::join(numbers, ", ");
   }() << "]");
 
-  while (!m_eventQueue.empty() && m_eventQueue.front().first == m_nextEvent) {
+  while (!m_eventQueue.empty() &&
+         m_eventQueue.front().first == static_cast<long long>(m_nextEvent)) {
     auto next = std::move(m_eventQueue.front());
     ACTS_VERBOSE("Writing event number: " << next.first);
     m_eventQueue.erase(m_eventQueue.begin());
@@ -193,7 +200,12 @@ ProcessCode HepMC3Writer::flushQueue() {
       return ProcessCode::ABORT;
     }
     m_nextEvent++;
+    nWritten++;
   }
+
+  ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent);
+  m_queueSemaphore.release(nWritten);
+
   return ProcessCode::SUCCESS;
 }
 
