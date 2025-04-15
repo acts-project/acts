@@ -4,3 +4,4 @@ uproot
 awkward
 pytest-xdist
 pyyaml
+pyhepmc
