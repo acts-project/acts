@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import sys
 import os
+import time
 
 import pytest
 
@@ -161,6 +162,121 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
 
             except ImportError:
                 pass
+
+
+class StallAlgorithm(acts.examples.IAlgorithm):
+    sleep: float = 1
+
+    def execute(self, ctx):
+
+        if ctx.eventNumber == 50:
+            print("BEGIN SLEEP")
+            time.sleep(self.sleep)
+            print("END OF SLEEP")
+        else:
+            time.sleep(0.01)
+
+        return acts.examples.ProcessCode.SUCCESS
+
+
+@pytest.fixture
+def common_evgen(rng):
+    def func(s: Sequencer):
+        evGen = acts.examples.EventGenerator(
+            level=acts.logging.INFO,
+            generators=[
+                acts.examples.EventGenerator.Generator(
+                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
+                    vertex=acts.examples.GaussianVertexGenerator(
+                        stddev=acts.Vector4(
+                            50 * u.um, 50 * u.um, 150 * u.mm, 20 * u.ns
+                        ),
+                        mean=acts.Vector4(0, 0, 0, 0),
+                    ),
+                    particles=acts.examples.ParametricParticleGenerator(
+                        p=(100 * u.GeV, 100 * u.GeV),
+                        eta=(-2, 2),
+                        phi=(0, 360 * u.degree),
+                        randomizeCharge=True,
+                        numParticles=2,
+                    ),
+                )
+            ],
+            outputEvent="hepmc3_event",
+            randomNumbers=rng,
+        )
+        s.addReader(evGen)
+        return evGen
+
+    return func
+
+
+@pytest.mark.parametrize(
+    "bufsize",
+    [
+        pytest.param(5, marks=pytest.mark.xfail),
+        15,
+    ],
+    ids=lambda v: f"buf={v}",
+)
+def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
+    from acts.examples.hepmc3 import (
+        HepMC3Writer,
+    )
+
+    s = Sequencer(numThreads=10, events=100)
+
+    evGen = common_evgen(s)
+
+    out = tmp_path / "out" / "pytest.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    stall = StallAlgorithm(name="stall_alg", level=acts.logging.INFO)
+    s.addAlgorithm(stall)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.VERBOSE,
+            inputEvent=evGen.config.outputEvent,
+            outputPath=out,
+            maxEventsPending=bufsize,
+        )
+    )
+
+    with ScopedFailureThreshold(acts.logging.MAX):
+        s.run()
+
+
+def test_hepmc3_writer_stall_not_in_order(common_evgen, tmp_path):
+    """
+    In principle: 10 threads and a buffer size of 5 should lead to a stall and subsequent crash.
+    With the writer not configured to write in order, this should not be the case.
+    """
+    from acts.examples.hepmc3 import (
+        HepMC3Writer,
+    )
+
+    s = Sequencer(numThreads=10, events=100)
+
+    evGen = common_evgen(s)
+
+    out = tmp_path / "out" / "pytest.hepmc3"
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    stall = StallAlgorithm(name="stall_alg", level=acts.logging.INFO)
+    s.addAlgorithm(stall)
+
+    s.addWriter(
+        HepMC3Writer(
+            acts.logging.VERBOSE,
+            inputEvent=evGen.config.outputEvent,
+            outputPath=out,
+            maxEventsPending=5,
+            writeEventsInOrder=False,  # Should not crash in this case
+        )
+    )
+
+    s.run()
 
 
 @compression_modes

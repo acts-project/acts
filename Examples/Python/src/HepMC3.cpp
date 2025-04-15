@@ -30,7 +30,8 @@ void addHepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3Writer, hepmc3, "HepMC3Writer",
                              outputPath, perEvent, inputEvent, compression,
-                             maxEventsPending);
+                             maxEventsPending, writeEventsInOrder,
+                             timeoutSeconds);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3Reader, hepmc3, "HepMC3Reader",
                              inputPath, perEvent, outputEvent, printListing,
