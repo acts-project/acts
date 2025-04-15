@@ -70,8 +70,7 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
   explicit ParametricParticleGenerator(const Config& cfg);
 
   /// Generate a single primary vertex with the given number of particles.
-  std::pair<SimVertexContainer, SimParticleContainer> operator()(
-      RandomEngine& rng) override;
+  std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) override;
 
  private:
   using UniformIndex = std::uniform_int_distribution<std::uint8_t>;
@@ -80,12 +79,10 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
   Config m_cfg;
 
   // will be automatically set from PDG data tables
-  double m_charge{};
   double m_mass{};
 
   // (anti-)particle choice is one random draw but defines two properties
   std::array<Acts::PdgParticle, 2> m_pdgChoices{};
-  std::array<double, 2> m_qChoices{};
 
   UniformIndex m_particleTypeChoice;
   UniformReal m_phiDist;

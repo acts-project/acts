@@ -6,12 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-namespace Acts {
-namespace Python {
-struct Context;
-}  // namespace Python
-}  // namespace Acts
+#include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addGeant4HepMC3(Context& /*ctx*/) {}
+void addRootInput(Context& /*ctx*/) {}
+void addRootOutput(Context& /*ctx*/) {}
 }  // namespace Acts::Python

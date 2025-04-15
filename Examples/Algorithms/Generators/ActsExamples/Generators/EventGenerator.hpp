@@ -23,6 +23,11 @@
 #include <utility>
 #include <vector>
 
+namespace HepMC3 {
+class GenEvent;
+class GenVertex;
+}  // namespace HepMC3
+
 namespace ActsExamples {
 
 /// Event generator based on separate particles and vertex generators.
@@ -77,8 +82,7 @@ class EventGenerator final : public ActsExamples::IReader {
     ///
     /// @param rng Shared random number generator instance
     /// @return The vertex and particle containers
-    virtual std::pair<SimVertexContainer, SimParticleContainer> operator()(
-        RandomEngine& rng) = 0;
+    virtual std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) = 0;
   };
 
   /// @brief Combined struct which contains all generator components
@@ -94,10 +98,34 @@ class EventGenerator final : public ActsExamples::IReader {
     /// Name of the output vertex collection.
     std::string outputVertices;
 
+    /// Name of the output event collection.
+    std::optional<std::string> outputEvent = "hepmc3_event";
+
     /// List of generators that should be used to generate the event.
     std::vector<Generator> generators;
     /// The random number service.
     std::shared_ptr<const RandomNumbers> randomNumbers;
+
+    /// If true, print the listing of the generated event. This can be very
+    /// verbose
+    bool printListing = false;
+
+    /// Merge primary vertices
+    bool mergePrimaries = true;
+
+    /// The spatial vertex threshold below which to consider primary vertices
+    /// candidates identical.
+    double primaryVertexSpatialThreshold = 1 * Acts::UnitConstants::nm;
+
+    /// The spatial vertex threshold below which to consider secondary vertices
+    /// candidates identical.
+    double vertexSpatialThreshold = 1 * Acts::UnitConstants::um;
+
+    /// If true, merge secondary vertices that are close to their parent vertex
+    bool mergeSecondaries = true;
+
+    /// If true, check the consistency of the generated event.
+    bool checkConsistency = false;
   };
 
   EventGenerator(const Config& cfg, Acts::Logging::Level lvl);
@@ -116,12 +144,24 @@ class EventGenerator final : public ActsExamples::IReader {
  private:
   const Acts::Logger& logger() const { return *m_logger; }
 
+  void convertHepMC3ToInternalEdm(const AlgorithmContext& ctx,
+                                  const HepMC3::GenEvent& genEvent);
+
+  void handleVertex(const HepMC3::GenVertex& genVertex, SimVertex& vertex,
+                    std::vector<SimVertex>& vertices,
+                    std::vector<SimParticle>& particles,
+                    std::size_t& nSecondaryVertices, std::size_t& nParticles,
+                    std::vector<bool>& seenVertices);
+
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
   WriteDataHandle<SimVertexContainer> m_outputVertices{this, "OutputVertices"};
+
+  WriteDataHandle<std::shared_ptr<HepMC3::GenEvent>> m_outputEvent{
+      this, "OutputEvent"};
 };
 
 }  // namespace ActsExamples

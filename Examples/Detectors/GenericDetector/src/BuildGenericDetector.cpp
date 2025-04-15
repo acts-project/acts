@@ -83,7 +83,8 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   //-------------------------------------------------------------------------------------
   // BeamPipe material
   const auto beryllium = Acts::Material::fromMassDensity(
-      352.8_mm, 407_mm, 9.012, 4.0, 1.848_g / 1_cm3);
+      static_cast<float>(352.8_mm), static_cast<float>(407_mm), 9.012f, 4.0,
+      static_cast<float>(1.848_g / 1_cm3));
   std::shared_ptr<const Acts::ISurfaceMaterial> beamPipeMaterial =
       std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
           Acts::MaterialSlab(beryllium, 0.8_mm));
@@ -123,18 +124,19 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   // envelope for layers
   std::pair<double, double> pcEnvelope(2., 2.);
 
-  double pCentralModuleT = 0.15;
-  double pEndcapModuleT = 0.15;
+  float pCentralModuleT = 0.15f;
+  float pEndcapModuleT = 0.15f;
 
   // Module material properties - X0, L0, A, Z, Rho
   // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-  const auto silicon = Acts::Material::fromMassDensity(95.7_mm, 465.2_mm, 28.03,
-                                                       14., 2.32_g / 1_cm3);
+  const auto silicon = Acts::Material::fromMassDensity(
+      static_cast<float>(95.7_mm), static_cast<float>(465.2_mm), 28.03f, 14.f,
+      static_cast<float>(2.32e-3_g / 1_cm3));
   Acts::MaterialSlab pcModuleMaterial(silicon, pCentralModuleT);
   Acts::MaterialSlab peModuleMaterial(silicon, pEndcapModuleT);
   // Layer material properties - thickness, X0, L0, A, Z, Rho
-  Acts::MaterialSlab pcmbProperties(silicon, 1.5_mm);
-  Acts::MaterialSlab pcmecProperties(silicon, 1.5_mm);
+  Acts::MaterialSlab pcmbProperties(silicon, static_cast<float>(1.5_mm));
+  Acts::MaterialSlab pcmecProperties(silicon, static_cast<float>(1.5_mm));
 
   // Module, central and disc material
   std::shared_ptr<const Acts::ISurfaceMaterial> pCentralMaterial =
@@ -155,7 +157,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   }
 
   // configure the pixel proto layer builder
-  typename ProtoLayerCreator::Config pplConfig;
+  ProtoLayerCreator::Config pplConfig;
   pplConfig.detectorElementFactory = detectorElementFactory;
 
   // standard, an approach envelope
@@ -251,7 +253,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
       pplConfig, Acts::getDefaultLogger("PixelProtoLayerCreator", layerLLevel));
 
   // configure pixel layer builder
-  typename LayerBuilder::Config plbConfig;
+  LayerBuilder::Config plbConfig;
   plbConfig.layerCreator = layerCreator;
   plbConfig.layerIdentification = "Pixel";
   // material concentration alsways outside the modules
@@ -295,7 +297,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     // Material
     std::shared_ptr<const Acts::ISurfaceMaterial> pstMaterial =
         std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-            Acts::MaterialSlab(beryllium, 1.8_mm));
+            Acts::MaterialSlab(beryllium, static_cast<float>(1.8_mm)));
     if (protoMaterial) {
       pstMaterial = pCylinderMaterial;
     }
@@ -330,8 +332,8 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     //-------------------------------------------------------------------------------------
     // some prep work
 
-    double ssCentralModuleT = 0.25;
-    double ssEndcapModuleT = 0.25;
+    float ssCentralModuleT = 0.25f;
+    float ssEndcapModuleT = 0.25f;
     // envelope double
     std::pair<double, double> ssEnvelope(2., 2.);
 
@@ -366,7 +368,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
 
     // ----------------------------------------------------------------------------
     // Configure the short strip proto layer builder
-    typename ProtoLayerCreator::Config ssplConfig;
+    ProtoLayerCreator::Config ssplConfig;
     ssplConfig.detectorElementFactory = detectorElementFactory;
 
     // configure the central barrel
@@ -458,7 +460,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
         Acts::getDefaultLogger("SStripProtoLayerCreator", layerLLevel));
 
     // configure short strip layer builder
-    typename LayerBuilder::Config sslbConfig;
+    LayerBuilder::Config sslbConfig;
     sslbConfig.layerCreator = layerCreator;
     sslbConfig.layerIdentification = "SStrip";
 
@@ -507,8 +509,8 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     // envelope double
     std::pair<double, double> lsEnvelope(2., 2.);
 
-    double lsCentralModuleT = 0.35;
-    double lsEndcapModuleT = 0.35;
+    float lsCentralModuleT = 0.35f;
+    float lsEndcapModuleT = 0.35f;
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
@@ -540,7 +542,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
     }
 
     // The proto layer creator
-    typename ProtoLayerCreator::Config lsplConfig;
+    ProtoLayerCreator::Config lsplConfig;
     lsplConfig.detectorElementFactory = detectorElementFactory;
 
     // configure the central barrel
@@ -625,7 +627,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
         Acts::getDefaultLogger("LStripProtoLayerCreator", layerLLevel));
 
     // configure short strip layer builder
-    typename LayerBuilder::Config lslbConfig;
+    LayerBuilder::Config lslbConfig;
     lslbConfig.layerCreator = layerCreator;
     lslbConfig.layerIdentification = "LStrip";
     lslbConfig.centralLayerMaterialConcentration = {-1, -1};
@@ -665,7 +667,7 @@ std::unique_ptr<const Acts::TrackingGeometry> Generic::buildDetector(
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the build call functions
   for (auto& vb : volumeBuilders) {
-    tgConfig.trackingVolumeBuilders.push_back(
+    tgConfig.trackingVolumeBuilders.emplace_back(
         [=](const auto& context, const auto& inner, const auto&) {
           return vb->trackingVolume(context, inner);
         });

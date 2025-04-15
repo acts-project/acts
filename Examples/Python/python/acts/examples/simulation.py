@@ -156,6 +156,7 @@ def addParticleGun(
                         randomizeCharge=particleConfig.randomizeCharge,
                         charge=particleConfig.charge,
                         mass=particleConfig.mass,
+                        # Merging particle gun vertices does not make sense
                     )
                 ),
             )
@@ -163,6 +164,7 @@ def addParticleGun(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        mergePrimaries=False,
     )
     s.addReader(evGen)
 
@@ -234,6 +236,8 @@ def addPythia8(
     printParticles: bool = False,
     printPythiaEventListing: Optional[Union[None, str]] = None,
     writeHepMC3: Optional[Path] = None,
+    outputEvent: Optional[str] = None,
+    printListing: bool = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -332,6 +336,8 @@ def addPythia8(
         outputParticles="particles_generated",
         outputVertices="vertices_generated",
         randomNumbers=rnd,
+        outputEvent=outputEvent,
+        printListing=printListing,
     )
     s.addReader(evGen)
 
