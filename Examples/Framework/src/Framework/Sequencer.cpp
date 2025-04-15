@@ -390,6 +390,12 @@ int Sequencer::run() {
           std::size_t threadId = threadIds.local();
 
           for (std::size_t n = r.begin(); n != r.end(); ++n) {
+            ACTS_VERBOSE("Thread about to pick next event");
+
+            for (auto& writer : m_writers) {
+              writer->beginEvent();
+            }
+
             std::size_t event = nextEvent++;
 
             ACTS_DEBUG("start processing event " << event << " on thread "
