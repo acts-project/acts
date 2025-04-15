@@ -122,6 +122,7 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (!writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
+  m_writers.push_back(writer);
   addElement(std::move(writer));
 }
 
