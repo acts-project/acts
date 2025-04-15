@@ -60,12 +60,7 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
     /// The value depends on the number of core and therefore the worst-case
     /// distance between the *current* and the next event we can write to write
     /// in order.
-    long maxEventsPending = 128;
-
-    /// When trying to write events in order, how long the writer should try to
-    /// wait to do this before failing. This is a safeguard to avoid permanent
-    /// hangs.
-    long long timeoutSeconds = 2;
+    unsigned long maxEventsPending = 128;
   };
 
   /// Construct the writer.
@@ -75,6 +70,8 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   HepMC3Writer(const Config& config, Acts::Logging::Level level);
 
   ~HepMC3Writer() override;
+
+  ProcessCode beginEvent() override;
 
   /// Writing events to file.
   ///
