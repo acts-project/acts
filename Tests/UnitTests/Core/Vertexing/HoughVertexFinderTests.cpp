@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_small_test) {
   bool vtxFound = false;
   if (vtx.ok()) {
     // check if the found vertex has a compatible position
-    if (std::abs(vtxX - vtx.value().position().x()) < 1e-3 &&
-        std::abs(vtxY - vtx.value().position().y()) < 1e-3 &&
-        std::abs(vtxZ - vtx.value().position().z()) < 1e-3) {
+    if (std::abs(vtxX - vtx.value()[0]) < 1e-3 &&
+        std::abs(vtxY - vtx.value()[1]) < 1e-3 &&
+        std::abs(vtxZ - vtx.value()[2]) < 1e-3) {
       vtxFound = true;
     }
   }
@@ -172,9 +172,9 @@ BOOST_AUTO_TEST_CASE(hough_vertex_finder_full_test) {
 
     if (vtx.ok()) {
       // check if the found vertex has a compatible position
-      if (std::abs(vtxX - vtx.value().position().x()) < 0.2 &&
-          std::abs(vtxY - vtx.value().position().y()) < 0.2 &&
-          std::abs(vtxZ - vtx.value().position().z()) < 0.2) {
+      if (std::abs(vtxX - vtx.value()[0]) < 0.2 &&
+          std::abs(vtxY - vtx.value()[1]) < 0.2 &&
+          std::abs(vtxZ - vtx.value()[2]) < 0.2) {
         ++vtxFound;
       }
     }
