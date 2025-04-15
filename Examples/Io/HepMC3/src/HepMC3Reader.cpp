@@ -227,7 +227,9 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
   if (m_cfg.checkEventNumber &&
       static_cast<std::size_t>(event->event_number()) != ctx.eventNumber) {
     ACTS_ERROR("HepMC3Reader: Event number mismatch. Expected "
-               << ctx.eventNumber << ", but got " << event->event_number());
+               << ctx.eventNumber << ", but got " << event->event_number()
+               << ". You can turn this off in the configuration if your events "
+                  "were not written in order.");
     return ProcessCode::ABORT;
   }
 
