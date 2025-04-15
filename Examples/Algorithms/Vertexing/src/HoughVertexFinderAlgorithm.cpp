@@ -53,13 +53,13 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
   if (vtx.ok()) {
     ACTS_INFO("Found a vertex in the event in " << (t2 - t1).count() / 1e6
                                                 << " ms");
-    ACTS_INFO("Found vertex at x = " << vtx.value().position().x()
-                                     << "mm, y = " << vtx.value().position().y()
-                                     << "mm, z = " << vtx.value().position().z()
+    ACTS_INFO("Found vertex at x = " << vtx.value()[0]
+                                     << "mm, y = " << vtx.value()[1]
+                                     << "mm, z = " << vtx.value()[2]
                                      << "mm");
 
     std::vector<Acts::Vertex> vertexCollection;
-    vertexCollection.emplace_back(vtx.value());
+    vertexCollection.emplace_back(Acts::Vertex({vtx.value()}));
 
     // store found vertices
     m_outputVertices(ctx, std::move(vertexCollection));

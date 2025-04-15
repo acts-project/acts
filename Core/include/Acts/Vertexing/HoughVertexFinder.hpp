@@ -123,7 +123,7 @@ class HoughVertexFinder {
   /// @brief Finds the vertex based on the provided spacepoints
   /// @param spacepoints Vector of the input spacepoints; they do not need to be sorted anyhow
   /// @return Position of the vertex
-  Acts::Result<Acts::Vertex> find(
+  Acts::Result<Acts::Vector3> find(
       const std::vector<spacepoint_t>& spacepoints) const;
 
  private:
@@ -139,8 +139,8 @@ class HoughVertexFinder {
   /// @param maxCotTheta Maximum theta to consider for the spacepoint
   /// @param numCotThetaBins Number of bins along cot(theta) axis
   /// @return Position of the vertex in (X,Y,Z)
-  Acts::Result<Acts::Vertex> findHoughVertex(
-      const std::vector<spacepoint_t>& spacepoints, const Acts::Vertex& vtxOld,
+  Acts::Result<Acts::Vector3> findHoughVertex(
+      const std::vector<spacepoint_t>& spacepoints, const Acts::Vector3& vtxOld,
       float rangeZ, std::uint32_t numZBins, float minCotTheta,
       float maxCotTheta, std::uint32_t numCotThetaBins) const;
 

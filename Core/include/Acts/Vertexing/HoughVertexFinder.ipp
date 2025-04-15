@@ -36,10 +36,10 @@ Acts::HoughVertexFinder<spacepoint_t>::HoughVertexFinder(
 }
 
 template <typename spacepoint_t>
-Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
+Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<spacepoint_t>::find(
     const std::vector<spacepoint_t>& spacepoints) const {
   if (spacepoints.empty()) {
-    return Acts::Result<Acts::Vertex>::failure(std::error_code());
+    return Acts::Result<Acts::Vector3>::failure(std::error_code());
   }
 
   float absEtaRange = m_cfg.maxAbsEta;
@@ -76,7 +76,7 @@ Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
                  std::log(m_cfg.targetSPs / (spacepoints.size() * totalFrac)));
   }
 
-  Acts::Vertex vtx{m_cfg.defVtxPosition};
+  Acts::Vector3 vtx{m_cfg.defVtxPosition};
   for (std::uint32_t iter = 0; iter < m_cfg.rangeIterZ.size(); ++iter) {
     auto vtxNew = findHoughVertex(
         spacepoints, vtx, m_cfg.rangeIterZ.at(iter), m_cfg.nBinsZIterZ.at(iter),
@@ -86,28 +86,28 @@ Acts::Result<Acts::Vertex> Acts::HoughVertexFinder<spacepoint_t>::find(
 
     if (!vtxNew.ok()) {
       // vertex not found
-      return Acts::Result<Acts::Vertex>::failure(std::error_code());
+      return Acts::Result<Acts::Vector3>::failure(std::error_code());
     }
 
     vtx = vtxNew.value();
   }
 
-  return Acts::Result<Acts::Vertex>::success(vtx);
+  return Acts::Result<Acts::Vector3>::success(vtx);
 }
 
 template <typename spacepoint_t>
-Acts::Result<Acts::Vertex>
+Acts::Result<Acts::Vector3>
 Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
-    const std::vector<spacepoint_t>& spacepoints, const Acts::Vertex& vtxOld,
+    const std::vector<spacepoint_t>& spacepoints, const Acts::Vector3& vtxOld,
     float rangeZ, std::uint32_t numZBins, float minCotTheta, float maxCotTheta,
     std::uint32_t numCotThetaBins) const {
   const float zBinSize = 2. * rangeZ / numZBins;
   const float invCotThetaBinSize =
       numCotThetaBins / (maxCotTheta - minCotTheta);
-  const float minZ = vtxOld.position().z() - rangeZ;
-  const float maxZ = vtxOld.position().z() + rangeZ;
-  const float vtxOldX = vtxOld.position().x();
-  const float vtxOldY = vtxOld.position().y();
+  const float minZ = vtxOld[2] - rangeZ;
+  const float maxZ = vtxOld[2] + rangeZ;
+  const float vtxOldX = vtxOld[0];
+  const float vtxOldY = vtxOld[1];
 
   HoughHist houghHist(HoughAxis(minZ, maxZ, numZBins),
                       HoughAxis(minCotTheta, maxCotTheta, numCotThetaBins));
@@ -165,11 +165,11 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
 
   auto vtxNewZ = findHoughPeak(houghZProjection, vtxZPositions);
   if (vtxNewZ.ok()) {
-    Acts::Vertex newVertex(Vector3{vtxOldX, vtxOldY, vtxNewZ.value()});
-    return Acts::Result<Acts::Vertex>::success(newVertex);
+    Acts::Vector3 newVertex{vtxOldX, vtxOldY, vtxNewZ.value()};
+    return Acts::Result<Acts::Vector3>::success(newVertex);
   }
 
-  return Acts::Result<Acts::Vertex>::failure(std::error_code());
+  return Acts::Result<Acts::Vector3>::failure(std::error_code());
 }
 
 template <typename spacepoint_t>
