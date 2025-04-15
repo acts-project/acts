@@ -55,8 +55,7 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
                                                 << " ms");
     ACTS_INFO("Found vertex at x = " << vtx.value()[0]
                                      << "mm, y = " << vtx.value()[1]
-                                     << "mm, z = " << vtx.value()[2]
-                                     << "mm");
+                                     << "mm, z = " << vtx.value()[2] << "mm");
 
     std::vector<Acts::Vertex> vertexCollection;
     vertexCollection.emplace_back(Acts::Vertex({vtx.value()}));
