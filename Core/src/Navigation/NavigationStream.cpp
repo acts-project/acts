@@ -9,6 +9,7 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
@@ -123,44 +124,45 @@ bool NavigationStream::update(const GeometryContext& gctx,
   return false;
 }
 
+void NavigationStream::reset() {
+  m_candidates.clear();
+  m_currentIndex = 0;
+}
+
 void NavigationStream::addSurfaceCandidate(
     const Surface& surface, const BoundaryTolerance& bTolerance) {
-  m_candidates.emplace_back(
-      Candidate{.intersection = ObjectIntersection<Surface>::invalid(&surface),
-                .bTolerance = bTolerance});
+  m_candidates.emplace_back(ObjectIntersection<Surface>::invalid(&surface),
+                            nullptr, nullptr, bTolerance);
 }
 
 void NavigationStream::addSurfaceCandidates(
     std::span<const Surface*> surfaces, const BoundaryTolerance& bTolerance) {
+  m_candidates.reserve(m_candidates.size() + surfaces.size());
   std::ranges::for_each(surfaces, [&](const auto* surface) {
-    m_candidates.emplace_back(
-        Candidate{.intersection = ObjectIntersection<Surface>::invalid(surface),
-                  .bTolerance = bTolerance});
+    m_candidates.emplace_back(ObjectIntersection<Surface>::invalid(surface),
+                              nullptr, nullptr, bTolerance);
   });
 }
 
 void NavigationStream::addPortalCandidate(const Experimental::Portal& portal) {
-  m_candidates.emplace_back(Candidate{
-      .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
-      .gen2Portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+  m_candidates.emplace_back(
+      ObjectIntersection<Surface>::invalid(&portal.surface()), &portal, nullptr,
+      BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidate(const Portal& portal) {
-  m_candidates.emplace_back(Candidate{
-      .intersection = ObjectIntersection<Surface>::invalid(&portal.surface()),
-      .portal = &portal,
-      .bTolerance = BoundaryTolerance::None()});
+  m_candidates.emplace_back(
+      ObjectIntersection<Surface>::invalid(&portal.surface()), nullptr, &portal,
+      BoundaryTolerance::None());
 }
 
 void NavigationStream::addPortalCandidates(
     std::span<const Experimental::Portal*> portals) {
+  m_candidates.reserve(m_candidates.size() + portals.size());
   std::ranges::for_each(portals, [&](const auto& portal) {
-    m_candidates.emplace_back(Candidate{
-        .intersection =
-            ObjectIntersection<Surface>::invalid(&(portal->surface())),
-        .gen2Portal = portal,
-        .bTolerance = BoundaryTolerance::None()});
+    m_candidates.emplace_back(
+        ObjectIntersection<Surface>::invalid(&(portal->surface())), portal,
+        nullptr, BoundaryTolerance::None());
   });
 }
 
