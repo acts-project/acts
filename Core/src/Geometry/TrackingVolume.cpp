@@ -391,12 +391,13 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                    << boundary->surfaceRepresentation().geometryId());
       if (detail::checkPathLength(intersection.pathLength(), nearLimit,
                                   farLimit, logger)) {
-        return BoundaryIntersection(intersection, boundary);
+        return BoundaryIntersection(intersection, boundary, nullptr);
       }
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr);
+    return BoundaryIntersection(SurfaceIntersection::invalid(), nullptr,
+                                nullptr);
   };
 
   /// Helper function to process boundary surfaces
@@ -420,7 +421,7 @@ TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
                                           options.boundaryTolerance);
       // Intersect and continue
       auto intersection = checkIntersection(candidates, boundary.get());
-      if (intersection.first.isValid()) {
+      if (std::get<0>(intersection).isValid()) {
         ACTS_VERBOSE(" - Proceed with surface");
         intersections.push_back(intersection);
       } else {
