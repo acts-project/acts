@@ -75,11 +75,8 @@ void addGenerators(Context& ctx) {
 
     auto config = py::class_<Config>(gen, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT(config, outputParticles, outputVertices, outputEvent,
-                       generators, randomNumbers, printListing,
-                       checkConsistency, mergePrimaries,
-                       primaryVertexSpatialThreshold, vertexSpatialThreshold,
-                       mergeSecondaries);
+    ACTS_PYTHON_STRUCT(config, outputEvent, generators, randomNumbers,
+                       printListing);
   }
 
   py::class_<
