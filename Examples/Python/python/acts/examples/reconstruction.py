@@ -2180,7 +2180,7 @@ def addVertexFitting(
             level=customLogLevel(),
             inputTracks=tracks,
             inputParticles=selectedParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputParticleTrackMatching="particle_track_matching",
             outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )
