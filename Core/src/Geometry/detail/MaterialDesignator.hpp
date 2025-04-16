@@ -19,7 +19,7 @@
 
 namespace Acts::Experimental {
 
-namespace {
+namespace detail {
 
 class CylinderProtoDesignator;
 class CuboidProtoDesignator;
@@ -421,6 +421,6 @@ inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
   throw std::runtime_error(mergingError(*this, other));
 }
 
-}  // namespace
+}  // namespace detail
 
 }  // namespace Acts::Experimental
