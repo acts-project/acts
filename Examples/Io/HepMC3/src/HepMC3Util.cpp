@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/ScopedTimer.hpp"
 
+#include <stdexcept>
+
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
@@ -78,6 +80,66 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Util::mergeEvents(
   }
 
   return event;
+}
+
+std::string_view HepMC3Util::compressionExtension(Compression compression) {
+  switch (compression) {
+    using enum Compression;
+    case none:
+      return "";
+    case zlib:
+      return ".gz";
+    case lzma:
+      return ".xz";
+    case bzip2:
+      return ".bz2";
+    case zstd:
+      return ".zst";
+    default:
+      throw std::invalid_argument{"Unknown compression value"};
+  }
+}
+
+std::span<const HepMC3Util::Compression>
+HepMC3Util::availableCompressionModes() {
+  using enum Compression;
+  static const auto values = []() -> std::vector<HepMC3Util::Compression> {
+    return {
+        none,
+#ifdef HEPMC3_Z_SUPPORT
+        zlib,
+#endif
+#ifdef HEPMC3_LZMA_SUPPORT
+        lzma,
+#endif
+#ifdef HEPMC3_BZ2_SUPPORT
+        bzip2,
+#endif
+#ifdef HEPMC3_ZSTD_SUPPORT
+        zstd,
+#endif
+    };
+  }();
+  return values;
+}
+
+std::ostream& HepMC3Util::operator<<(std::ostream& os,
+                                     HepMC3Util::Compression compression) {
+  switch (compression) {
+    using enum HepMC3Util::Compression;
+    case none:
+      return os << "none";
+    case zlib:
+      return os << "zlib";
+    case lzma:
+      return os << "lzma";
+    case bzip2:
+      return os << "bzip2";
+    case zstd:
+      return os << "zstd";
+    default:
+      throw std::invalid_argument{"Unknown compression value"};
+  }
 }
 
 }  // namespace ActsExamples
