@@ -185,7 +185,7 @@ s = acts.examples.Sequencer(
 if args.edm4hep:
     import acts.examples.edm4hep
 
-    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+    edm4hepReader = acts.examples.edm4hep.EDM4hepSimReader(
         inputPath=str(args.edm4hep),
         inputSimHits=[
             "PixelBarrelReadout",

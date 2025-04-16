@@ -8,19 +8,18 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
 /// Write out the tracks reconstructed using Combinatorial Kalman Filter to
-/// EDM4hep.
+/// EDM4hep objects.
 ///
 /// Inpersistent information:
 /// - trajectory state incomplete
@@ -30,7 +29,7 @@ namespace ActsExamples {
 /// - curvature parameter
 /// - track state local coordinates are written to (D0,Z0)
 /// - covariance incorrect
-class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
+class EDM4hepMultiTrajectoryOutputConverter : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Input trajectory collection
@@ -38,7 +37,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     /// Input hit-particles map collection
     std::string inputMeasurementParticlesMap;
     /// Where to place output file
-    std::string outputPath;
+    std::string outputTracks;
     /// B field in the longitudinal direction
     double Bz{};
     /// Particle hypothesis
@@ -49,29 +48,30 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  explicit EDM4hepMultiTrajectoryWriter(
+  explicit EDM4hepMultiTrajectoryOutputConverter(
       const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
-
-  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
+  /// Readonly access to the collections
+  std::vector<std::string> collections() const final;
+
  protected:
   /// @brief Write method called by the base class
   /// @param [in] context is the algorithm context for consistency
-  /// @param [in] tracks is the track collection
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final;
+  ProcessCode execute(const AlgorithmContext& context) const final;
 
  private:
   Config m_cfg;
 
-  std::mutex m_writeMutex;
-  Acts::PodioUtil::ROOTWriter m_writer;
-
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  CollectionBaseWriteHandle m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

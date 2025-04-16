@@ -8,27 +8,24 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
 
-#include <edm4hep/MCParticleCollection.h>
-#include <edm4hep/SimTrackerHitCollection.h>
-
 namespace ActsExamples {
 
-/// Write out a simhit collection to EDM4hep.
+/// Write out a simhit collection to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - particle ID
 /// - after4 momentum
 /// - hit index
 /// - digitization channel
-class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
+class EDM4hepSimHitOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.
@@ -36,9 +33,8 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
     /// Which simulated (truth) particle collection to use.
     std::string inputParticles;
     /// WWhere to write the output file to.
-    std::string outputPath;
     /// Name of the particle collection in EDM4hep.
-    std::string outputParticles = "MCParticles";
+    std::string outputParticles;
     /// Name of the sim tracker hit collection in EDM4hep
     std::string outputSimTrackerHits = "ActsSimTrackerHits";
   };
@@ -47,29 +43,29 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
-
-  ProcessCode finalize() final;
+  EDM4hepSimHitOutputConverter(const Config& config,
+                               Acts::Logging::Level level);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
- protected:
+ private:
+  /// Access to the collections
+  std::vector<std::string> collections() const override;
+
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& simHits) final;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
- private:
   Config m_cfg;
 
-  Acts::PodioUtil::ROOTWriter m_writer;
-
-  std::mutex m_writeMutex;
-
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  CollectionBaseWriteHandle m_outputParticles{this, "OutputParticles"};
+  CollectionBaseWriteHandle m_outputSimTrackerHits{this,
+                                                   "OutputSimTrackerHits"};
 };
 
 }  // namespace ActsExamples

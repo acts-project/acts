@@ -8,26 +8,23 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/SequenceElement.hpp"
-#include "ActsFatras/EventData/Hit.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
 #include <string>
 
-#include <tbb/enumerable_thread_specific.h>
+namespace podio {
+class Frame;
+}
 
 namespace ActsExamples {
 
-class EDM4hepTrackReader : public IReader {
+/// Read in a track collection as EDM4hep from a @c podio::Frame.
+class EDM4hepTrackInputConverter : public EDM4hepInputConverter {
  public:
   struct Config {
-    /// Input file path
-    std::string inputPath;
+    std::string inputFrame;
     /// Input track collection name in edm4hep
     std::string inputTracks = "ActsTracks";
     /// Output track collection
@@ -40,34 +37,19 @@ class EDM4hepTrackReader : public IReader {
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  explicit EDM4hepTrackReader(const Config& config,
-                              Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit EDM4hepTrackInputConverter(
+      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
-  std::string name() const final;
-
-  /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final;
-
-  /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const final;
 
  private:
-  std::pair<std::size_t, std::size_t> m_eventsRange;
-
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
-
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-
-  Acts::PodioUtil::ROOTReader& reader();
-
-  std::unique_ptr<const Acts::Logger> m_logger;
-
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
