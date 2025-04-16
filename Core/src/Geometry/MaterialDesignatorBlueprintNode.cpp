@@ -145,7 +145,7 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CylinderVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
   impl().m_designator = impl().m_designator->merged(
-      CylinderProtoDesignator(face, loc0, loc1, prefix()));
+      detail::CylinderProtoDesignator(face, loc0, loc1, prefix()));
 
   return *this;
 }
@@ -158,9 +158,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   }
 
   impl().m_designator = impl().m_designator->merged(
-      HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
-                                    CylinderPortalShell>(face,
-                                                         std::move(material)));
+      detail::HomogeneousMaterialDesignator<CylinderVolumeBounds::Face,
+                                            CylinderPortalShell>(
+          face, std::move(material)));
 
   return *this;
 }
@@ -169,7 +169,7 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
     CuboidVolumeBounds::Face face, const DirectedProtoAxis& loc0,
     const DirectedProtoAxis& loc1) {
   impl().m_designator = impl().m_designator->merged(
-      CuboidProtoDesignator(face, loc0, loc1, prefix()));
+      detail::CuboidProtoDesignator(face, loc0, loc1, prefix()));
 
   return *this;
 }
@@ -182,9 +182,9 @@ MaterialDesignatorBlueprintNode& MaterialDesignatorBlueprintNode::configureFace(
   }
 
   impl().m_designator = impl().m_designator->merged(
-      HomogeneousMaterialDesignator<CuboidVolumeBounds::Face,
-                                    CuboidPortalShell>(face,
-                                                       std::move(material)));
+      detail::HomogeneousMaterialDesignator<CuboidVolumeBounds::Face,
+                                            CuboidPortalShell>(
+          face, std::move(material)));
 
   return *this;
 }
