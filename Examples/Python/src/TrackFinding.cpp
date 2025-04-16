@@ -188,8 +188,9 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
       "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
       outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
-      magneticField, bFieldMin, initialSigmas, initialSigmaPtRel,
-      initialVarInflation, noTimeVarInflation, particleHypothesis);
+      magneticField, bFieldMin, initialSigmas, initialSigmaQoverPt,
+      initialSigmaPtRel, initialVarInflation, noTimeVarInflation,
+      particleHypothesis);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsLookupEstimation, mex,
                                 "TrackParamsLookupEstimation", refLayers, bins,
