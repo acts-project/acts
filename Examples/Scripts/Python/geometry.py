@@ -136,7 +136,7 @@ if "__main__" == __name__:
 
     # obj = acts.svg.view.zr(detector=proto, identification="test")
 
-    acts.svg.toFile(objects, "test.svg")
+    acts.svg.toFile(objects, "GenericDetector.svg")
 
     # Uncomment if you want to create the geometry id mapping for DD4hep
     # dd4hepIdGeoIdMap = acts.examples.dd4hep.createDD4hepIdGeoIdMap(trackingGeometry)
