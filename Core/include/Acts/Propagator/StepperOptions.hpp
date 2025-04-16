@@ -52,7 +52,7 @@ struct StepperPlainOptions {
     /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
     bool includeGradient = true;
 
-    /// Cut-off value for the momentum in SI units
+    /// Cut-off value for the momentum
     double momentumCutOff = 0.;
   } dense;
 };
