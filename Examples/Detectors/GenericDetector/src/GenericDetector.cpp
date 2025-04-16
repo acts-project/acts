@@ -558,7 +558,7 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
-                Acts::ExtentEnvelope{{.z = {0_mm, 0_mm}, .r = {5_mm, 5_mm}}});
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
           });
         });
       }
@@ -660,7 +660,7 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
-                Acts::ExtentEnvelope{{.z = {0_mm, 0_mm}, .r = {5_mm, 5_mm}}});
+                Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
           });
         });
       }
