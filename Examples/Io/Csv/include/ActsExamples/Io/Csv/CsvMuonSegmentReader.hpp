@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/DriftCircle.hpp"
+#include "ActsExamples/EventData/MuonSegment.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -23,7 +22,7 @@
 namespace ActsExamples {
 struct AlgorithmContext;
 
-/// Read in a drift circle collection in comma-separated-value format.
+/// Read in a muon segment collection in comma-separated-value format.
 ///
 /// This reads one files per event in the configured input directory. By default
 /// it reads files in the current working directory. Files are assumed to be
@@ -32,8 +31,8 @@ struct AlgorithmContext;
 ///     event000000001-<stem>.csv
 ///     event000000002-<stem>.csv
 ///
-/// and each line in the file corresponds to one simhit.
-class CsvDriftCircleReader final : public IReader {
+/// and each line in the file corresponds to one muon segment.
+class CsvMuonSegmentReader final : public IReader {
  public:
   struct Config {
     /// Where to read input files from.
@@ -41,14 +40,14 @@ class CsvDriftCircleReader final : public IReader {
     /// Input filename stem.
     std::string inputStem;
     /// Output simulated (truth) hits collection.
-    std::string outputDriftCircles;
+    std::string outputSegments;
   };
 
   /// Construct the simhit reader.
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  CsvDriftCircleReader(const Config& config, Acts::Logging::Level level);
+  CsvMuonSegmentReader(const Config& config, Acts::Logging::Level level);
 
   std::string name() const override;
 
@@ -66,8 +65,8 @@ class CsvDriftCircleReader final : public IReader {
   std::pair<std::size_t, std::size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  WriteDataHandle<DriftCircleContainer> m_outputDriftCircles{
-      this, "OutputDriftCircles"};
+  WriteDataHandle<MuonSegmentContainer> m_outputSegments{this,
+                                                         "OutputSegments"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
