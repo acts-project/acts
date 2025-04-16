@@ -367,36 +367,44 @@ ProcessCode VertexNTupleWriter::finalize() {
 
 ProcessCode VertexNTupleWriter::writeT(
     const AlgorithmContext& ctx, const std::vector<Acts::Vertex>& vertices) {
+  // In case we do not have any tracks in the vertex, we create empty
+  // collections
+  const static TrackParticleMatching emptyTrackParticleMatching;
+  const static Acts::ConstVectorTrackContainer emptyConstTrackContainer;
+  const static Acts::ConstVectorMultiTrajectory emptyConstTrackStateContainer;
+  const static ConstTrackContainer emptyTracks(
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          emptyConstTrackContainer),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          emptyConstTrackStateContainer));
+
   // Read truth vertex input collection
   const SimVertexContainer& truthVertices = m_inputTruthVertices(ctx);
   // Read truth particle input collection
   const SimParticleContainer& particles = m_inputParticles(ctx);
   const SimParticleContainer& selectedParticles = m_inputSelectedParticles(ctx);
-  const TrackParticleMatching* trackParticleMatching = nullptr;
-  if (m_inputTrackParticleMatching.isInitialized()) {
-    trackParticleMatching = &m_inputTrackParticleMatching(ctx);
-  }
-
-  const ConstTrackContainer* tracks = nullptr;
+  const TrackParticleMatching& trackParticleMatching =
+      (m_inputTrackParticleMatching.isInitialized()
+           ? m_inputTrackParticleMatching(ctx)
+           : emptyTrackParticleMatching);
+  const ConstTrackContainer& tracks =
+      (m_inputTracks.isInitialized() ? m_inputTracks(ctx) : emptyTracks);
   SimParticleContainer recoParticles;
 
-  if (m_inputTracks.isInitialized()) {
-    tracks = &m_inputTracks(ctx);
-
-    for (ConstTrackProxy track : *tracks) {
-      if (!track.hasReferenceSurface()) {
-        ACTS_DEBUG("No reference surface on this track, index = "
-                   << track.index() << " tip index = " << track.tipIndex());
-        continue;
-      }
-
-      if (const SimParticle* particle =
-              findParticle(particles, *trackParticleMatching, track, logger());
-          particle != nullptr) {
-        recoParticles.insert(*particle);
-      }
+  for (ConstTrackProxy track : tracks) {
+    if (!track.hasReferenceSurface()) {
+      ACTS_DEBUG("No reference surface on this track, index = "
+                 << track.index() << " tip index = " << track.tipIndex());
+      continue;
     }
-  } else {
+
+    if (const SimParticle* particle =
+            findParticle(particles, trackParticleMatching, track, logger());
+        particle != nullptr) {
+      recoParticles.insert(*particle);
+    }
+  }
+  if (tracks.size() == 0) {
     // if not using tracks, then all truth particles are associated with the
     // vertex
     recoParticles = particles;
@@ -428,8 +436,7 @@ ProcessCode VertexNTupleWriter::writeT(
   // Get number of track-associated true primary vertices
   m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
 
-  ACTS_INFO("Number of reconstructed tracks : "
-            << ((tracks != nullptr) ? tracks->size() : 0));
+  ACTS_INFO("Number of reconstructed tracks : " << tracks.size());
   ACTS_INFO("Number of reco track-associated truth particles in event : "
             << recoParticles.size());
   ACTS_INFO("Maximum number of reconstructible primary vertices : "
@@ -470,14 +477,14 @@ ProcessCode VertexNTupleWriter::writeT(
 
         totalTrackWeight += trk.trackWeight;
 
-        std::optional<ConstTrackProxy> trackOpt = findTrack(*tracks, trk);
+        std::optional<ConstTrackProxy> trackOpt = findTrack(tracks, trk);
         if (!trackOpt.has_value()) {
           ACTS_DEBUG("Track has no matching input track.");
           continue;
         }
         const ConstTrackProxy& inputTrk = *trackOpt;
         const SimParticle* particle =
-            findParticle(particles, *trackParticleMatching, inputTrk, logger());
+            findParticle(particles, trackParticleMatching, inputTrk, logger());
         if (particle == nullptr) {
           ACTS_VERBOSE("Track has no matching truth particle.");
         } else {
@@ -726,7 +733,7 @@ ProcessCode VertexNTupleWriter::writeT(
     }
 
     if (m_cfg.writeTrackInfo) {
-      writeTrackInfo(ctx, particles, *tracks, *trackParticleMatching, truthPos,
+      writeTrackInfo(ctx, particles, tracks, trackParticleMatching, truthPos,
                      tracksAtVtx);
     }
   }
