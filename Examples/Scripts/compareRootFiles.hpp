@@ -398,7 +398,7 @@ struct BranchComparisonHarness {
     };
 
     // ...and we're good to go!
-    return std::move(result);
+    return result;
   }
 
   // Because the people who created TTreeReaderValue could not bother to make it
@@ -439,7 +439,7 @@ struct BranchComparisonHarness {
   // of data, which are the only STL collection that we support at the moment.
   static BranchComparisonHarness createVector(TreeMetadata& treeMetadata,
                                               const std::string& branchName,
-                                              const std::string elemType) {
+                                              const std::string& elemType) {
 // We support vectors of different types by switching across type (strings)
 #define CREATE_VECTOR__HANDLE_TYPE(type_name)                       \
   if (elemType == #type_name) {                                     \
@@ -451,20 +451,34 @@ struct BranchComparisonHarness {
     CREATE_VECTOR__HANDLE_TYPE(bool)
 
     // Handle vectors of all standard floating-point types
-    else CREATE_VECTOR__HANDLE_TYPE(float) else CREATE_VECTOR__HANDLE_TYPE(
-        double)
-
+    else CREATE_VECTOR__HANDLE_TYPE(float)       //
+        else CREATE_VECTOR__HANDLE_TYPE(double)  //
 // For integer types, we'll want to handle both signed and unsigned versions
 #define CREATE_VECTOR__HANDLE_INTEGER_TYPE(integer_type_name) \
   CREATE_VECTOR__HANDLE_TYPE(integer_type_name)               \
   else CREATE_VECTOR__HANDLE_TYPE(unsigned integer_type_name)
 
+#define CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(integer_type_name) \
+  CREATE_VECTOR__HANDLE_TYPE(integer_type_name)                    \
+  else CREATE_VECTOR__HANDLE_TYPE(U##integer_type_name)
+
         // Handle vectors of all standard integer types
-        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(char) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(short) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(
-            int) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long) else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long long)
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(char)           //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(short)          //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(int)            //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long)           //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE(long long)      //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Char_t)    //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Short_t)   //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Int_t)     //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Long_t)    //
+        else CREATE_VECTOR__HANDLE_INTEGER_TYPE_ROOT(Long64_t)  //
 
         // Throw an exception if the vector element type is not recognized
-        else throw UnsupportedBranchType();
+        else {
+      std::cerr << "Unsupported vector element type: " << elemType << std::endl;
+      throw UnsupportedBranchType();
+    }
   }
 
   // This helper method provides general string conversion for all supported
