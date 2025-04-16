@@ -174,11 +174,17 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const GeoShape *shape = logVol->getShape();  // get shape
     const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
-    // convert bounding boxes with surfaces inside
+    // convert bounding boxes as detector volumes with surfaces inside
     std::shared_ptr<Experimental::DetectorVolume> box =
         Acts::GeoModel::convertDetectorVolume(gctx, *shape, name, fpvtransform,
                                               sensitives);
-    cache.boundingBoxes.push_back(box);
+    // convert bounding boxes to volumes
+    std::shared_ptr<Acts::Volume> volume = std::make_shared<Acts::Volume>(
+        Acts::GeoModel::convertVolume(fpvtransform, *shape));
+
+    // add the bounding box to the cache
+    cache.boundingBoxes.push_back(std::make_pair(box, volume));
+
   }
   // If fpv has no subs and should not be converted to volume convert to surface
   else if (subvolumes.empty()) {
