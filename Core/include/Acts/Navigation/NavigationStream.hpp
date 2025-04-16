@@ -171,6 +171,8 @@ class NavigationStream {
               const NavigationStream::QueryPoint& queryPoint,
               double onSurfaceTolerance = s_onSurfaceTolerance);
 
+  void reset();
+
  private:
   /// The candidates of this navigation stream
   std::vector<Candidate> m_candidates;
