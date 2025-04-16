@@ -20,6 +20,7 @@
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -28,6 +29,8 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilder.hpp"
@@ -349,6 +352,19 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
     }
     return hm;
   }
+
+  using LayerType = Acts::SurfaceArrayNavigationPolicy::LayerType;
+  std::unique_ptr<Acts::NavigationPolicyFactory> createNavigationPolicy(
+      LayerType layerType,
+      std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
+    using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
+    return Acts::NavigationPolicyFactory::make()
+        .add<Acts::TryAllNavigationPolicy>(
+            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<SrfArrayNavPol>(
+            SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
+        .asUniquePtr();
+  }
 };
 
 std::unique_ptr<const Acts::TrackingGeometry>
@@ -460,7 +476,8 @@ void Gen3GenericDetectorBuilder::buildPixel(
           layer.setProtoLayer(pl);
           layer.setEnvelope(
               Acts::ExtentEnvelope{{.z = {5_mm, 5_mm}, .r = {5_mm, 5_mm}}});
-          // @TODO: Configure navigation policy from bins
+          layer.setNavigationPolicyFactory(
+              createNavigationPolicy(LayerType::Cylinder));
 
           ACTS_VERBOSE("-> Number of surfaces: " << layer.surfaces().size());
         });
@@ -484,7 +501,8 @@ void Gen3GenericDetectorBuilder::buildPixel(
           mat.configureFace(NegativeDisc,
                             asHomogeneous("Pixel", m_pixelEndcapMaterial));
           mat.addLayer(layerName, [&](auto& layer) {
-            // @TODO: Configure navigation policy from bins
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
@@ -508,7 +526,8 @@ void Gen3GenericDetectorBuilder::buildPixel(
           mat.configureFace(PositiveDisc,
                             asHomogeneous("Pixel", m_pixelEndcapMaterial));
           mat.addLayer(layerName, [&](auto& layer) {
-            // @TODO: Configure navigation policy from bins
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Disc));
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
@@ -554,7 +573,8 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
               InnerCylinder,
               asHomogeneous("ShortStrip", m_shortStripCentralMaterial));
           mat.addLayer(layerName, [&](auto& layer) {
-            // @TODO: Configure navigation policy from bins
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Cylinder));
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
@@ -582,7 +602,8 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
                 NegativeDisc,
                 asHomogeneous("ShortStrip", m_shortStripEndcapMaterial));
             mat.addLayer(layerName, [&](auto& layer) {
-              // @TODO: Configure navigation policy from bins
+              layer.setNavigationPolicyFactory(
+                  createNavigationPolicy(LayerType::Disc));
               ACTS_VERBOSE("Adding layer " << layer.name());
               layer.setProtoLayer(pl);
               layer.setEnvelope(
@@ -609,7 +630,8 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
                 PositiveDisc,
                 asHomogeneous("ShortStrip", m_shortStripEndcapMaterial));
             mat.addLayer(layerName, [&](auto& layer) {
-              // @TODO: Configure navigation policy from bins
+              layer.setNavigationPolicyFactory(
+                  createNavigationPolicy(LayerType::Disc));
               ACTS_VERBOSE("Adding layer " << layer.name());
               layer.setProtoLayer(pl);
               layer.setEnvelope(
@@ -656,7 +678,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
               InnerCylinder,
               asHomogeneous("LongStrip", m_longStripCentralMaterial));
           mat.addLayer(layerName, [&](auto& layer) {
-            // @TODO: Configure navigation policy from bins
+            layer.setNavigationPolicyFactory(
+                createNavigationPolicy(LayerType::Cylinder));
             ACTS_VERBOSE("Adding layer " << layer.name());
             layer.setProtoLayer(pl);
             layer.setEnvelope(
@@ -684,7 +707,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
                 NegativeDisc,
                 asHomogeneous("LongStrip", m_longStripEndcapMaterial));
             mat.addLayer(layerName, [&](auto& layer) {
-              // @TODO: Configure navigation policy from bins
+              layer.setNavigationPolicyFactory(
+                  createNavigationPolicy(LayerType::Disc));
               ACTS_VERBOSE("Adding layer " << layer.name());
               layer.setProtoLayer(pl);
               layer.setEnvelope(
@@ -711,7 +735,8 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
                 PositiveDisc,
                 asHomogeneous("LongStrip", m_longStripEndcapMaterial));
             mat.addLayer(layerName, [&](auto& layer) {
-              // @TODO: Configure navigation policy from bins
+              layer.setNavigationPolicyFactory(
+                  createNavigationPolicy(LayerType::Disc));
               ACTS_VERBOSE("Adding layer " << layer.name());
               layer.setProtoLayer(pl);
               layer.setEnvelope(
