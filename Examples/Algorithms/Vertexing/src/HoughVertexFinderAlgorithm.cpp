@@ -44,11 +44,11 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
   houghVtxCfg.maxAbsEta = m_cfg.maxAbsEta;
   houghVtxCfg.minHits = m_cfg.minHits;
   houghVtxCfg.defVtxPosition = m_cfg.defVtxPosition;
-  Acts::HoughVertexFinder<SimSpacePoint> HoughVertexFinder(houghVtxCfg);
+  Acts::HoughVertexFinder<SimSpacePoint> houghVertexFinder(houghVtxCfg);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto vtx = HoughVertexFinder.find(inputSpacepoints);
+  auto vtx = houghVertexFinder.find(inputSpacepoints);
   auto t2 = std::chrono::high_resolution_clock::now();
   if (vtx.ok()) {
     ACTS_INFO("Found a vertex in the event in " << (t2 - t1).count() / 1e6
@@ -58,7 +58,7 @@ ProcessCode HoughVertexFinderAlgorithm::execute(
                                      << "mm, z = " << vtx.value()[2] << "mm");
 
     std::vector<Acts::Vertex> vertexCollection;
-    vertexCollection.emplace_back(Acts::Vertex({vtx.value()}));
+    vertexCollection.emplace_back(vtx.value());
 
     // store found vertices
     m_outputVertices(ctx, std::move(vertexCollection));

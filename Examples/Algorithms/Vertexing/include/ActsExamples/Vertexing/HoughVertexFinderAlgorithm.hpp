@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/HoughVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -31,10 +32,10 @@ class HoughVertexFinderAlgorithm final : public IAlgorithm {
     /// Configuration for the HoughVertexFinder
     /// See HoughVertexFinder.hpp for description
     std::uint32_t targetSPs = 10000;
-    float minAbsEta = 0.3f;
-    float maxAbsEta = 4.0f;
+    double minAbsEta = 0.3;
+    double maxAbsEta = 4.0;
     std::uint32_t minHits = 4;
-    Acts::Vector3 defVtxPosition{0.f, 0.f, 0.f};
+    Acts::Vector3 defVtxPosition{0., 0., 0.};
   };
 
   HoughVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);

@@ -42,13 +42,13 @@ Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<spacepoint_t>::find(
     return Acts::Result<Acts::Vector3>::failure(std::error_code());
   }
 
-  float absEtaRange = m_cfg.maxAbsEta;
-  float totalFrac = 0.;
+  double absEtaRange = m_cfg.maxAbsEta;
+  double totalFrac = 0.;
   for (unsigned int r = 0; r < m_cfg.absEtaRanges.size(); ++r) {
-    float addToTotalFrac = m_cfg.absEtaFractions.at(r);
+    double addToTotalFrac = m_cfg.absEtaFractions.at(r);
     if ((totalFrac + addToTotalFrac) * spacepoints.size() > m_cfg.targetSPs) {
-      float needOnly = (m_cfg.targetSPs - totalFrac * spacepoints.size()) /
-                       (addToTotalFrac * spacepoints.size());
+      double needOnly = (m_cfg.targetSPs - totalFrac * spacepoints.size()) /
+                        (addToTotalFrac * spacepoints.size());
       absEtaRange = (r != 0u ? m_cfg.absEtaRanges.at(r - 1) : 0.) +
                     (m_cfg.absEtaRanges.at(r) -
                      (r != 0u ? m_cfg.absEtaRanges.at(r - 1) : 0.)) *
@@ -66,10 +66,10 @@ Acts::Result<Acts::Vector3> Acts::HoughVertexFinder<spacepoint_t>::find(
     absEtaRange = m_cfg.minAbsEta;
   }
 
-  const float maxCotTheta = std::sinh(absEtaRange);
-  const float minCotTheta = -1. * maxCotTheta;
+  const double maxCotTheta = std::sinh(absEtaRange);
+  const double minCotTheta = -1. * maxCotTheta;
 
-  float binsNumDecrease = 1.;
+  double binsNumDecrease = 1.;
   if (spacepoints.size() * totalFrac < m_cfg.targetSPs) {
     binsNumDecrease =
         std::pow(m_cfg.binsCotThetaDecrease,
@@ -99,22 +99,22 @@ template <typename spacepoint_t>
 Acts::Result<Acts::Vector3>
 Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
     const std::vector<spacepoint_t>& spacepoints, const Acts::Vector3& vtxOld,
-    float rangeZ, std::uint32_t numZBins, float minCotTheta, float maxCotTheta,
-    std::uint32_t numCotThetaBins) const {
-  const float zBinSize = 2. * rangeZ / numZBins;
-  const float invCotThetaBinSize =
+    double rangeZ, std::uint32_t numZBins, double minCotTheta,
+    double maxCotTheta, std::uint32_t numCotThetaBins) const {
+  const double zBinSize = 2. * rangeZ / numZBins;
+  const double invCotThetaBinSize =
       numCotThetaBins / (maxCotTheta - minCotTheta);
-  const float minZ = vtxOld[2] - rangeZ;
-  const float maxZ = vtxOld[2] + rangeZ;
-  const float vtxOldX = vtxOld[0];
-  const float vtxOldY = vtxOld[1];
+  const double minZ = vtxOld[2] - rangeZ;
+  const double maxZ = vtxOld[2] + rangeZ;
+  const double vtxOldX = vtxOld[0];
+  const double vtxOldY = vtxOld[1];
 
   HoughHist houghHist(HoughAxis(minZ, maxZ, numZBins),
                       HoughAxis(minCotTheta, maxCotTheta, numCotThetaBins));
 
   std::vector<std::uint32_t> houghZProjection(numZBins, 0);
 
-  std::vector<float> vtxZPositions;
+  std::vector<double> vtxZPositions;
   for (std::uint32_t zBin = 0; zBin < numZBins; zBin++) {
     vtxZPositions.push_back(
         Acts::HoughTransformUtils::binCenter(minZ, maxZ, numZBins, zBin));
@@ -131,7 +131,7 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
       }
     }
 
-    float sp_invr = 1. / std::hypot((sp.x() - vtxOldX), (sp.y() - vtxOldY));
+    double sp_invr = 1. / std::hypot((sp.x() - vtxOldX), (sp.y() - vtxOldY));
 
     std::uint32_t zFrom = static_cast<std::uint32_t>(
         std::max(((sp.z() - maxCotTheta / sp_invr) - minZ) / zBinSize + 1, 0.));
@@ -139,7 +139,7 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
         ((sp.z() - minCotTheta / sp_invr) - minZ) / zBinSize, 1. * numZBins));
 
     for (std::uint32_t zBin = zFrom; zBin < zTo; zBin++) {
-      float cotTheta = (sp.z() - vtxZPositions[zBin]) * sp_invr;
+      double cotTheta = (sp.z() - vtxZPositions[zBin]) * sp_invr;
 
       std::uint32_t cotThetaBin = static_cast<std::uint32_t>(
           (cotTheta - minCotTheta) * invCotThetaBinSize);
@@ -173,34 +173,34 @@ Acts::HoughVertexFinder<spacepoint_t>::findHoughVertex(
 }
 
 template <typename spacepoint_t>
-Acts::Result<float> Acts::HoughVertexFinder<spacepoint_t>::findHoughPeak(
+Acts::Result<double> Acts::HoughVertexFinder<spacepoint_t>::findHoughPeak(
     const std::vector<std::uint32_t>& houghZProjection,
-    const std::vector<float>& vtxZPositions) const {
+    const std::vector<double>& vtxZPositions) const {
   std::uint32_t numZBins = houghZProjection.size();
 
   auto maxZElement =
       std::max_element(houghZProjection.begin(), houghZProjection.end());
   std::uint32_t maxZBin = std::distance(houghZProjection.begin(), maxZElement);
 
-  float avg =
+  double avg =
       std::accumulate(houghZProjection.begin(), houghZProjection.end(), 0.) /
       houghZProjection.size();
-  float sumEntries = 0;
-  float meanZPeak = 0.;
+  double sumEntries = 0;
+  double meanZPeak = 0.;
 
   for (std::uint32_t zBin =
            std::max<std::uint32_t>(maxZBin - m_cfg.peakWidth, 0);
        zBin <= std::min(numZBins - 1, maxZBin + m_cfg.peakWidth); ++zBin) {
-    float countsInBin = std::max(houghZProjection.at(zBin) - avg, 0.f);
+    double countsInBin = std::max(houghZProjection.at(zBin) - avg, 0.);
     sumEntries += countsInBin;
     meanZPeak += vtxZPositions[zBin] * countsInBin;
   }
 
   if (sumEntries != 0.) {
     meanZPeak /= sumEntries;
-    return Acts::Result<float>::success(meanZPeak);
+    return Acts::Result<double>::success(meanZPeak);
   }
 
   // vertex not found; Hough image empty
-  return Acts::Result<float>::failure(std::error_code());
+  return Acts::Result<double>::failure(std::error_code());
 }
