@@ -31,14 +31,14 @@ from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
     # need to write out some particles first
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     file = tmp_path / "particles.root"
     s.addWriter(
         conf_const(
             RootParticleWriter,
             acts.logging.WARNING,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             filePath=str(file),
         )
     )
@@ -71,7 +71,7 @@ def test_root_particle_reader(tmp_path, conf_const, ptcl_gun):
 @pytest.mark.csv
 def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
     s = Sequencer(numThreads=1, events=10, logLevel=acts.logging.WARNING)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     out = tmp_path / "csv"
 
@@ -81,7 +81,7 @@ def test_csv_particle_reader(tmp_path, conf_const, ptcl_gun):
         conf_const(
             CsvParticleWriter,
             acts.logging.WARNING,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             outputStem="particle",
             outputDir=str(out),
         )
@@ -446,14 +446,14 @@ def test_buffered_reader(tmp_path, conf_const, ptcl_gun):
     eventsToProcess = 10
 
     s = Sequencer(numThreads=1, events=eventsInBuffer, logLevel=acts.logging.WARNING)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     file = tmp_path / "particles.root"
     s.addWriter(
         conf_const(
             RootParticleWriter,
             acts.logging.WARNING,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             filePath=str(file),
         )
     )

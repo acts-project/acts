@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3InputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3OutputConverter.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
@@ -26,16 +27,21 @@ void addHepMC3(Context& ctx) {
 
   auto hepmc3 = mex.def_submodule("_hepmc3");
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3AsciiWriter, hepmc3,
-                             "HepMC3AsciiWriter", outputPath, perEvent,
-                             inputEvent);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::HepMC3Writer, hepmc3, "HepMC3Writer",
+                             outputPath, perEvent, inputEvent);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3AsciiReader, hepmc3,
-                             "HepMC3AsciiReader", inputDir, inputStem,
-                             outputEvents);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::HepMC3Reader, hepmc3, "HepMC3Reader",
+                             inputPath, perEvent, outputEvent, printListing,
+                             numEvents);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::HepMC3OutputConverter, hepmc3,
                                 "HepMC3OutputConverter", inputParticles,
                                 inputVertices, outputEvent);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HepMC3InputConverter, hepmc3, "HepMC3InputConverter",
+      inputEvent, outputParticles, outputVertices, printListing,
+      checkConsistency, mergePrimaries, primaryVertexSpatialThreshold,
+      vertexSpatialThreshold, mergeSecondaries);
 }
 }  // namespace Acts::Python

@@ -3,6 +3,7 @@ add_library(
     SHARED
     src/HepMC3Reader.cpp
     src/HepMC3Writer.cpp
+    src/HepMC3InputConverter.cpp
     src/HepMC3OutputConverter.cpp
     src/HepMC3Util.cpp
 )
