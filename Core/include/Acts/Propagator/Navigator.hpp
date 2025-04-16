@@ -674,6 +674,7 @@ class Navigator {
       std::ranges::sort(state.navSurfaces,
                         SurfaceIntersection::pathLengthOrder);
     } else {
+      // @TODO: What to do with external surfaces?
       // Gen 3 !
       NavigationStream stream;
       AppendOnlyNavigationStream appendOnly{stream};
@@ -685,6 +686,12 @@ class Navigator {
 
       ACTS_VERBOSE(volInfo(state) << "Found " << stream.candidates().size()
                                   << " navigation candidates.");
+
+      // Filter out portals before intersection
+      const auto ret = std::ranges::remove_if(
+          stream.candidates(),
+          [](const auto& candidate) { return candidate.portal != nullptr; });
+      stream.candidates().erase(ret.begin(), ret.end());
 
       stream.initialize(state.options.geoContext, {position, direction},
                         BoundaryTolerance::None(),
@@ -801,6 +808,12 @@ class Navigator {
       args.direction = direction;
       state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                           logger());
+
+      // Filter out non-portals before intersection
+      const auto ret = std::ranges::remove_if(
+          stream.candidates(),
+          [](const auto& candidate) { return candidate.portal == nullptr; });
+      stream.candidates().erase(ret.begin(), ret.end());
 
       ACTS_VERBOSE(volInfo(state) << "Found " << stream.candidates().size()
                                   << " navigation candidates.");
