@@ -194,6 +194,8 @@ class Navigator {
 
     NavigatorStatistics statistics;
 
+    NavigationStream stream;
+
     void resetAfterLayerSwitch() {
       navSurfaces.clear();
       navSurfaceIndex.reset();
@@ -300,6 +302,8 @@ class Navigator {
                                 << printGeometryVersion(m_geometryVersion));
 
     state.reset();
+
+    state.stream.candidates().reserve(50);
 
     state.startSurface = state.options.startSurface;
     state.targetSurface = state.options.targetSurface;
@@ -676,29 +680,30 @@ class Navigator {
     } else {
       // @TODO: What to do with external surfaces?
       // Gen 3 !
-      NavigationStream stream;
-      AppendOnlyNavigationStream appendOnly{stream};
+      state.stream.reset();
+      AppendOnlyNavigationStream appendOnly{state.stream};
       NavigationArguments args;
       args.position = position;
       args.direction = direction;
       state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                           logger());
 
-      ACTS_VERBOSE(volInfo(state) << "Found " << stream.candidates().size()
-                                  << " navigation candidates.");
-
       // Filter out portals before intersection
       const auto ret = std::ranges::remove_if(
-          stream.candidates(),
+          state.stream.candidates(),
           [](const auto& candidate) { return candidate.portal != nullptr; });
-      stream.candidates().erase(ret.begin(), ret.end());
+      state.stream.candidates().erase(ret.begin(), ret.end());
 
-      stream.initialize(state.options.geoContext, {position, direction},
-                        BoundaryTolerance::None(),
-                        state.options.surfaceTolerance);
+      ACTS_VERBOSE(volInfo(state)
+                   << "Found " << state.stream.candidates().size()
+                   << " navigation candidates.");
+
+      state.stream.initialize(state.options.geoContext, {position, direction},
+                              BoundaryTolerance::None(),
+                              state.options.surfaceTolerance);
 
       state.navSurfaces.clear();
-      for (auto& candidate : stream.candidates()) {
+      for (auto& candidate : state.stream.candidates()) {
         if (candidate.portal != nullptr) {
           continue;
         }
@@ -801,8 +806,8 @@ class Navigator {
       });
     } else {
       // Gen 3 !
-      NavigationStream stream;
-      AppendOnlyNavigationStream appendOnly{stream};
+      state.stream.reset();
+      AppendOnlyNavigationStream appendOnly{state.stream};
       NavigationArguments args;
       args.position = position;
       args.direction = direction;
@@ -811,23 +816,20 @@ class Navigator {
 
       // Filter out non-portals before intersection
       const auto ret = std::ranges::remove_if(
-          stream.candidates(),
+          state.stream.candidates(),
           [](const auto& candidate) { return candidate.portal == nullptr; });
-      stream.candidates().erase(ret.begin(), ret.end());
+      state.stream.candidates().erase(ret.begin(), ret.end());
 
-      ACTS_VERBOSE(volInfo(state) << "Found " << stream.candidates().size()
-                                  << " navigation candidates.");
+      ACTS_VERBOSE(volInfo(state)
+                   << "Found " << state.stream.candidates().size()
+                   << " navigation candidates.");
 
-      stream.initialize(state.options.geoContext, {position, direction},
-                        BoundaryTolerance::None(),
-                        state.options.surfaceTolerance);
+      state.stream.initialize(state.options.geoContext, {position, direction},
+                              BoundaryTolerance::None(),
+                              state.options.surfaceTolerance);
 
       state.navBoundaries.clear();
-      for (auto& candidate : stream.candidates()) {
-        if (candidate.portal == nullptr) {
-          continue;
-        }
-
+      for (auto& candidate : state.stream.candidates()) {
         if (!detail::checkPathLength(candidate.intersection.pathLength(),
                                      state.options.nearLimit,
                                      state.options.farLimit, logger())) {
