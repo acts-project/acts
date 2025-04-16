@@ -373,42 +373,58 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     surfaces.push_back(element->surface().getSharedPtr());
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Disc)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {0.1_mm, 0.1_mm},
-            .r = {1_mm, 1_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 346.25353003_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR),
+                      346.25353003_mm, 1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayer) {
@@ -446,43 +462,59 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
     }
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {10_mm, 10_mm},
-            .r = {20_mm, 10_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Material) {
