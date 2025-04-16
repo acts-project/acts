@@ -358,7 +358,12 @@ void addBlueprint(Context& ctx) {
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
           .def_property("resizeStrategies",
                         &CylinderContainerBlueprintNode::resizeStrategies,
-                        &CylinderContainerBlueprintNode::setResizeStrategies)
+                        [](CylinderContainerBlueprintNode& self,
+                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                               strategies) {
+                          self.setResizeStrategies(strategies.first,
+                                                   strategies.second);
+                        })
           .def_property("direction", &CylinderContainerBlueprintNode::direction,
                         &CylinderContainerBlueprintNode::setDirection);
 
