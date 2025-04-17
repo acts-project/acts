@@ -24,18 +24,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
   const Vector3& position = queryPoint.position;
   const Vector3& direction = queryPoint.direction;
 
-  // De-duplicate first (necessary to deal correctly with multiple
-  // intersections) - sort them by surface pointer
-  std::ranges::sort(m_candidates, [](const Candidate& a, const Candidate& b) {
-    return (&a.surface()) < (&b.surface());
-  });
-  // Remove duplicates on basis of the surface pointer
-  m_candidates.erase(std::unique(m_candidates.begin(), m_candidates.end(),
-                                 [](const Candidate& a, const Candidate& b) {
-                                   return (&a.surface()) == (&b.surface());
-                                 }),
-                     m_candidates.end());
-
   // A container collecting additional candidates from multiple
   // valid interseciton
   std::vector<Candidate> additionalCandidates = {};
@@ -46,25 +34,35 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     auto multiIntersection = surface->intersect(gctx, position, direction,
                                                 cTolerance, onSurfaceTolerance);
 
-    // Split them into valid intersections, keep track of potentially
-    // additional candidates
-    bool originalCandidateUpdated = false;
-    for (const auto& rsIntersection : multiIntersection.split()) {
-      // Skip negative solutions, respecting the on surface tolerance
-      if (rsIntersection.pathLength() < -onSurfaceTolerance) {
-        continue;
+    std::size_t size = (multiIntersection[0].isValid() ? 1 : 0) +
+                       (multiIntersection[1].isValid() ? 1 : 0);
+    if (size == 1) {
+      sIntersection = multiIntersection[0];
+    } else if (size == 2) {
+      if (surface->type() == Surface::Plane) {
+        std::cout << "Multiple intersections (" << multiIntersection.size()
+                  << ") on planar surface (WEIRD): " << surface->toStream(gctx)
+                  << std::endl;
+        std::terminate();
       }
-      // Valid solution is either on surface or updates the distance
-      if (rsIntersection.isValid()) {
-        if (!originalCandidateUpdated) {
-          sIntersection = rsIntersection;
-          originalCandidateUpdated = true;
-        } else {
-          additionalCandidates.emplace_back(
-              Candidate{.intersection = rsIntersection,
-                        .gen2Portal = gen2Portal,
-                        .portal = portal,
-                        .bTolerance = bTolerance});
+
+      // Split them into valid intersections, keep track of potentially
+      // additional candidates
+      bool originalCandidateUpdated = false;
+      for (const auto& rsIntersection : multiIntersection.split()) {
+        // Skip negative solutions, respecting the on surface tolerance
+        if (rsIntersection.pathLength() < -onSurfaceTolerance) {
+          continue;
+        }
+        // Valid solution is either on surface or updates the distance
+        if (rsIntersection.isValid()) {
+          if (!originalCandidateUpdated) {
+            sIntersection = rsIntersection;
+            originalCandidateUpdated = true;
+          } else {
+            additionalCandidates.emplace_back(rsIntersection, gen2Portal,
+                                              portal, bTolerance);
+          }
         }
       }
     }
@@ -76,6 +74,14 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
 
   // Sort the candidates by path length
   std::ranges::sort(m_candidates, Candidate::pathLengthOrder);
+
+  // If we have duplicates, we expect them to be close by in path length, so we
+  // don't need to re-sort Remove duplicates on basis of the surface pointer
+  m_candidates.erase(std::unique(m_candidates.begin(), m_candidates.end(),
+                                 [](const Candidate& a, const Candidate& b) {
+                                   return (&a.surface()) == (&b.surface());
+                                 }),
+                     m_candidates.end());
 
   // The we find the first invalid candidate
   auto firstInvalid =
