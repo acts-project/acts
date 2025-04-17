@@ -18,6 +18,8 @@
 #include <span>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 // To be removed when the namespace Experimental is omitted
@@ -59,7 +61,7 @@ class NavigationStream {
     const Acts::Experimental::Portal* gen2Portal = nullptr;
     const Portal* portal = nullptr;
     /// The boundary tolerance
-    BoundaryTolerance bTolerance = BoundaryTolerance::None();
+    // BoundaryTolerance bTolerance = BoundaryTolerance::None();
     /// Convenience access to surface
     const Surface& surface() const { return *intersection.object(); }
     /// Cinvencience access to the path length
@@ -77,6 +79,9 @@ class NavigationStream {
           aCandidate.intersection, bCandidate.intersection);
     }
   };
+
+  static_assert(std::is_trivially_move_constructible_v<Candidate>);
+  static_assert(std::is_trivially_copy_constructible_v<Candidate>);
 
   /// Switch to next next candidate
   ///
@@ -98,10 +103,10 @@ class NavigationStream {
   std::size_t currentIndex() const { return m_currentIndex; }
 
   /// Non-cost access the candidate vector
-  std::vector<Candidate>& candidates() { return m_candidates; }
+  auto& candidates() { return m_candidates; }
 
   /// Const access the candidate vector
-  const std::vector<Candidate>& candidates() const { return m_candidates; }
+  std::span<const Candidate> candidates() const { return m_candidates; }
 
   /// Non-cost access the current candidate
   ///
@@ -175,7 +180,7 @@ class NavigationStream {
 
  private:
   /// The candidates of this navigation stream
-  std::vector<Candidate> m_candidates;
+  boost::container::small_vector<Candidate, 15> m_candidates;
 
   /// The currently active candidate
   std::size_t m_currentIndex = 0u;
