@@ -26,8 +26,8 @@ struct NavigationArguments {
 
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 
-  bool wantsPortals;
-  bool wantsSurfaces;
+  bool wantsPortals = true;
+  bool wantsSurfaces = true;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support
