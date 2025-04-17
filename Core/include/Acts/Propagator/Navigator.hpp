@@ -435,7 +435,11 @@ class Navigator {
         } else {
           // This was the last surface, switch to layers
           ACTS_VERBOSE(volInfo(state) << "Target layers.");
-          state.navigationStage = Stage::layerTarget;
+          if (m_geometryVersion == GeometryVersion::Gen1) {
+            state.navigationStage = Stage::layerTarget;
+          } else {
+            state.navigationStage = Stage::boundaryTarget;
+          }
         }
       }
 
