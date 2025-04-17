@@ -689,14 +689,12 @@ class Navigator {
       NavigationArguments args;
       args.position = position;
       args.direction = direction;
+      args.wantsPortals = false;
+      args.wantsSurfaces = true;
       state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                           logger());
 
       // Filter out portals before intersection
-      const auto ret = std::ranges::remove_if(
-          state.stream.candidates(),
-          [](const auto& candidate) { return candidate.portal != nullptr; });
-      state.stream.candidates().erase(ret.begin(), ret.end());
 
       ACTS_VERBOSE(volInfo(state)
                    << "Found " << state.stream.candidates().size()
@@ -705,20 +703,21 @@ class Navigator {
       state.stream.initialize(state.options.geoContext, {position, direction},
                               BoundaryTolerance::None(),
                               state.options.surfaceTolerance);
+      ACTS_VERBOSE(volInfo(state)
+                   << "Now " << state.stream.candidates().size()
+                   << " navigation candidates after initialization");
 
       state.navSurfaces.clear();
-      for (auto& candidate : state.stream.candidates()) {
-        if (candidate.portal != nullptr) {
-          continue;
-        }
 
-        if (!detail::checkPathLength(candidate.intersection.pathLength(),
-                                     state.options.nearLimit,
-                                     state.options.farLimit, logger())) {
-          continue;
-        }
+      auto it = std::ranges::find_if(
+          state.stream.candidates(), [&](const auto& candidate) {
+            return detail::checkPathLength(candidate.intersection.pathLength(),
+                                           state.options.nearLimit,
+                                           state.options.farLimit, logger());
+          });
 
-        state.navSurfaces.emplace_back(candidate.intersection);
+      for (; it != state.stream.candidates().end(); ++it) {
+        state.navSurfaces.emplace_back(it->intersection);
       }
     }
 
@@ -815,14 +814,10 @@ class Navigator {
       NavigationArguments args;
       args.position = position;
       args.direction = direction;
+      args.wantsPortals = true;
+      args.wantsSurfaces = false;
       state.currentVolume->initializeNavigationCandidates(args, appendOnly,
                                                           logger());
-
-      // Filter out non-portals before intersection
-      const auto ret = std::ranges::remove_if(
-          state.stream.candidates(),
-          [](const auto& candidate) { return candidate.portal == nullptr; });
-      state.stream.candidates().erase(ret.begin(), ret.end());
 
       ACTS_VERBOSE(volInfo(state)
                    << "Found " << state.stream.candidates().size()
