@@ -154,7 +154,7 @@ bool BoundaryTolerance::isTolerated(
   if (const auto* chi2Bound = getVariantPtr<Chi2BoundParams>();
       chi2Bound != nullptr) {
     // Mahalanobis distances mean is 2 in 2-dim. cut is 1-d sigma.
-    double chi2 = distance.transpose() * chi2Bound->weight * distance;
+    double chi2 = distance.transpose() * chi2Bound->weightMatrix() * distance;
     if (chi2Bound->maxChi2 < 0) {
       return chi2 > 2 * std::abs(chi2Bound->maxChi2);
     } else {
@@ -201,7 +201,7 @@ SquareMatrix2 BoundaryTolerance::getMetric(
   if (const auto* chi2Bound =
           getVariantPtr<BoundaryTolerance::Chi2BoundParams>();
       chi2Bound != nullptr) {
-    metric = chi2Bound->weight;
+    metric = chi2Bound->weightMatrix();
   } else if (!isCartesian) {
     const auto& jacobian = *jacobianOpt;
     metric = jacobian.transpose() * jacobian;
