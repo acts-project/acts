@@ -32,8 +32,8 @@ class DetecorElementBase;
 namespace ActsExamples::Generic {
 
 struct ProtoLayerSurfaces {
-  Acts::ProtoLayer protoLayer;
-  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  Acts::MutableProtoLayer protoLayer;
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
   std::size_t bins0;
   std::size_t bins1;
 };
@@ -150,6 +150,10 @@ class ProtoLayerCreator {
   /// @return the protolayers and surfaces on the  positive detector side
   std::vector<ProtoLayerSurfaces> positiveProtoLayers(
       const Acts::GeometryContext& gctx) const;
+
+  /// @brief get the configuration
+  /// @return the configuration
+  const Config& config() const { return m_cfg; }
 
  private:
   /// @brief private helper method to create the proto layers on the

@@ -81,7 +81,7 @@ using LayerMultiIntersection =
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 /// Intersection with a @c BoundarySurface
 using BoundaryIntersection =
-    std::pair<SurfaceIntersection, const BoundarySurface*>;
+    std::tuple<SurfaceIntersection, const BoundarySurface*, const Portal*>;
 /// Multi-intersection with a @c BoundarySurface
 using BoundaryMultiIntersection =
     std::pair<SurfaceMultiIntersection, const BoundarySurface*>;

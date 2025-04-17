@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <memory>
 
@@ -33,9 +32,9 @@ Result<const TrackingVolume*> TrivialPortalLink::resolveVolume(
   static_cast<void>(gctx);
   static_cast<void>(position);
   static_cast<void>(tolerance);
-  throw_assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
-                                      tolerance),
-               "Trivial portal lookup point should be on surface");
+  assert(m_surface->isOnSurface(gctx, position, BoundaryTolerance::None(),
+                                tolerance) &&
+         "Trivial portal lookup point should be on surface");
   return m_volume;
 }
 

@@ -10,11 +10,14 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
+#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
+#include "Acts/Geometry/ProcessorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -222,6 +225,7 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
+  using Acts::Experimental::ProcessorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
 
   auto m = ctx.get("main");
@@ -264,10 +268,12 @@ void addBlueprint(Context& ctx) {
         });
   };
 
-  auto addNodeMethods = [&blueprintNode](const std::string& name,
-                                         auto&& callable, auto&&... args) {
-    blueprintNode.def(name.c_str(), callable, args...)
-        .def(("add" + name).c_str(), callable, args...);
+  auto addNodeMethods = [&blueprintNode](
+                            std::initializer_list<std::string> names,
+                            auto&& callable, auto&&... args) {
+    for (const auto& name : names) {
+      blueprintNode.def(name.c_str(), callable, args...);
+    }
   };
 
   blueprintNode
@@ -334,7 +340,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(staticNode);
 
   addNodeMethods(
-      "StaticVolume",
+      {"StaticVolume", "addStaticVolume"},
       [](BlueprintNode& self, const Transform3& transform,
          const std::shared_ptr<VolumeBounds>& bounds, const std::string& name) {
         auto node = std::make_shared<StaticBlueprintNode>(
@@ -365,7 +371,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(cylNode);
 
   addNodeMethods(
-      "CylinderContainer",
+      {"CylinderContainer", "addCylinderContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -396,7 +402,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(boxNode);
 
   addNodeMethods(
-      "CuboidContainer",
+      {"CuboidContainer", "addCuboidContainer"},
       [](BlueprintNode& self, const std::string& name,
          AxisDirection direction) {
         auto cylinder =
@@ -426,7 +432,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(matNode);
 
   addNodeMethods(
-      "Material",
+      {"Material", "addMaterial"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<MaterialDesignatorBlueprintNode>(name);
         self.addChild(child);
@@ -459,7 +465,7 @@ void addBlueprint(Context& ctx) {
   addContextManagerProtocol(layerNode);
 
   addNodeMethods(
-      "Layer",
+      {"Layer", "addLayer"},
       [](BlueprintNode& self, const std::string& name) {
         auto child = std::make_shared<LayerBlueprintNode>(name);
         self.addChild(child);
@@ -502,9 +508,53 @@ void addBlueprint(Context& ctx) {
     return child;
   };
 
-  blueprintNode.def("GeometryIdentifier", geoIdFactory)
-      .def("withGeometryIdentifier", geoIdFactory);
+  addNodeMethods({"GeometryIdentifier", "withGeometryIdentifier"},
+                 geoIdFactory);
   addContextManagerProtocol(geoIdNode);
+
+  auto processorNode =
+      py::class_<ProcessorBlueprintNode, BlueprintNode,
+                 std::shared_ptr<ProcessorBlueprintNode>>(
+          m, "ProcessorBlueprintNode")
+          .def_property("name", &ProcessorBlueprintNode::name,
+                        &ProcessorBlueprintNode::setName)
+          .def_property(
+              "onBuild", nullptr,
+              [](ProcessorBlueprintNode& self, const py::function& callback) {
+                self.onBuild([callback](Volume& volume) -> Volume& {
+                  callback(volume);
+                  return volume;
+                });
+              })
+          .def_property(
+              "onConnect", nullptr,
+              [](ProcessorBlueprintNode& self, const py::function& callback) {
+                self.onConnect(
+                    [callback](const BlueprintOptions& opts,
+                               const GeometryContext& gctx,
+                               const Logger& logger,
+                               PortalShellBase& shell) -> PortalShellBase& {
+                      callback(&opts, &gctx, &logger, &shell);
+                      return shell;
+                    });
+              })
+          .def_property(
+              "onFinalize", nullptr,
+              [](ProcessorBlueprintNode& self, const py::function& callback) {
+                self.onFinalize([callback](const BlueprintOptions& opts,
+                                           const GeometryContext& gctx,
+                                           TrackingVolume& volume,
+                                           const Logger& logger) {
+                  callback(&opts, &gctx, &volume, &logger);
+                });
+              });
+
+  addContextManagerProtocol(processorNode);
+  addNodeMethods({"Processor", "withProcessor"}, [](BlueprintNode& self) {
+    auto child = std::make_shared<ProcessorBlueprintNode>();
+    self.addChild(child);
+    return child;
+  });
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,
