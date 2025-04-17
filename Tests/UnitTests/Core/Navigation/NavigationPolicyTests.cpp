@@ -8,10 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/CylinderPortalShell.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/NavigationPolicyFactory.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/MultiNavigationPolicy.hpp"
 #include "Acts/Navigation/NavigationDelegate.hpp"
@@ -235,6 +239,70 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
   BOOST_CHECK(std::get<CPolicySpecialized<int>>(policy.policies()).executed);
   BOOST_CHECK_EQUAL(std::get<CPolicySpecialized<int>>(policy.policies()).value,
                     44);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
+  using enum CylinderVolumeBounds::Face;
+
+  Transform3 transform = Transform3::Identity();
+  transform *= AngleAxis3{std::numbers::pi / 2, Vector3::UnitY()};
+  auto cylBounds =
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
+  auto cylVolume = std::make_shared<TrackingVolume>(
+      Transform3::Identity(), cylBounds, "CylinderVolume");
+  SingleCylinderPortalShell shell{*cylVolume};
+  shell.applyToVolume();
+
+  auto getTruth = [&](const Vector3& position, const Vector3& direction) {
+    TryAllNavigationPolicy tryAll(gctx, *cylVolume, *logger);
+    NavigationArguments args{.position = position, .direction = direction};
+    NavigationStream main;
+    AppendOnlyNavigationStream stream{main};
+    tryAll.initializeCandidates(args, stream, *logger);
+    main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
+    std::vector<const Portal*> portals;
+    for (auto& candidate : main.candidates()) {
+      if (!candidate.intersection.isValid()) {
+        continue;
+      }
+      if (!detail::checkPathLength(
+              candidate.intersection.pathLength(), s_onSurfaceTolerance,
+              std::numeric_limits<double>::max(), *logger)) {
+        continue;
+      }
+
+      portals.push_back(candidate.portal);
+    }
+    return portals;
+  };
+
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  auto getSmart = [&](const Vector3& position, const Vector3& direction) {
+    NavigationArguments args{.position = position, .direction = direction};
+    NavigationStream main;
+    AppendOnlyNavigationStream stream{main};
+    policy.initializeCandidates(args, stream, *logger);
+
+    std::vector<const Portal*> portals;
+    // We don't filter here, because we want to test the candidates as they come
+    // out of the policy
+    for (auto& candidate : main.candidates()) {
+      portals.push_back(candidate.portal);
+    }
+    return portals;
+  };
+
+  Vector3 position = Vector3::Zero();
+  Vector3 direction = Vector3::UnitZ();
+
+  auto exp = getTruth(position, direction);
+
+  BOOST_CHECK(exp.size() == 1);
+  BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+
+  auto act = getSmart(position, direction);
+  BOOST_CHECK(act.size() == 1);
+  BOOST_CHECK(act.at(0) == shell.portal(PositiveDisc));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
