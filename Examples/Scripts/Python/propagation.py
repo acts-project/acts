@@ -16,9 +16,16 @@ u = acts.UnitConstants
 
 
 def runPropagation(
-    trackingGeometry, field, outputDir, s=None, decorators=[], sterileLogger=True
+    trackingGeometry,
+    field,
+    outputDir,
+    tracks: int,
+    level: acts.logging.Level,
+    s=None,
+    decorators=[],
+    sterileLogger=True,
 ):
-    s = s or acts.examples.Sequencer(events=100, numThreads=1)
+    s = s or acts.examples.Sequencer(events=1000, numThreads=1)
 
     for d in decorators:
         s.addContextDecorator(d)
@@ -27,7 +34,7 @@ def runPropagation(
 
     addParticleGun(
         s,
-        ParticleConfig(num=1000, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
+        ParticleConfig(num=tracks, pdg=acts.PdgParticle.eMuon, randomizeCharge=True),
         EtaConfig(-4.0, 4.0),
         MomentumConfig(1 * u.GeV, 100 * u.GeV, transverse=True),
         rnd=rnd,
@@ -40,13 +47,15 @@ def runPropagation(
     )
     s.addAlgorithm(trkParamExtractor)
 
-    nav = acts.Navigator(trackingGeometry=trackingGeometry)
+    nav = acts.Navigator(trackingGeometry=trackingGeometry, level=level)
 
     stepper = acts.EigenStepper(field)
     # stepper = acts.AtlasStepper(field)
     # stepper = acts.StraightLineStepper()
 
-    propagator = acts.examples.ConcretePropagator(acts.Propagator(stepper, nav))
+    propagator = acts.examples.ConcretePropagator(
+        acts.Propagator(stepper, nav, loglevel=level)
+    )
 
     propagationAlgorithm = acts.examples.PropagationAlgorithm(
         propagatorImpl=propagator,
@@ -78,12 +87,23 @@ def runPropagation(
 
 
 if "__main__" == __name__:
+    import argparse
+
+    p = argparse.ArgumentParser()
+    p.add_argument("--events", "-n", type=int, default=1000)
+    p.add_argument("--tracks", "-t", type=int, default=1000)
+    p.add_argument("--geo", type=str, default="gen2", choices=["gen1", "gen3"])
+    p.add_argument("--verbose", "-v", action="store_true")
+    args = p.parse_args()
     matDeco = None
     # matDeco = acts.IMaterialDecorator.fromFile("material.json")
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    detector = GenericDetector(materialDecorator=matDeco)
+    detector = GenericDetector(
+        gen3=args.geo == "gen3",
+        materialDecorator=matDeco,
+    )
 
     ## Alternative: Aligned detector in a couple of modes
     # detector = AlignedDetector(
@@ -126,6 +146,12 @@ if "__main__" == __name__:
     # )
 
     os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
+    s = acts.examples.Sequencer(events=args.events, numThreads=1)
+
+    if args.verbose:
+        level = acts.logging.VERBOSE
+    else:
+        level = acts.logging.INFO
 
     runPropagation(
         trackingGeometry,
@@ -133,4 +159,7 @@ if "__main__" == __name__:
         os.getcwd() + "/propagation",
         decorators=contextDecorators,
         sterileLogger=True,
+        tracks=args.tracks,
+        level=level,
+        s=s,
     ).run()
