@@ -25,6 +25,9 @@ struct NavigationArguments {
   Vector3 direction;
 
   BoundaryTolerance tolerance = BoundaryTolerance::None();
+
+  bool wantsPortals;
+  bool wantsSurfaces;
 };
 
 /// Central alias for the navigation delegate. This type is owning to support
