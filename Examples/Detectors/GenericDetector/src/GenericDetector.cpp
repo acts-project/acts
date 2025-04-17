@@ -35,7 +35,6 @@
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 
-#include <format>
 #include <fstream>
 
 #include "./GenericDetectorBuilder.hpp"
@@ -347,8 +346,8 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
     auto hm = std::dynamic_pointer_cast<const Acts::HomogeneousSurfaceMaterial>(
         material);
     if (hm == nullptr) {
-      throw std::runtime_error(
-          std::format("{} material is not homogeneous", debugLabel));
+      throw std::runtime_error(std::string{debugLabel} +
+                               " material is not homogeneous");
     }
     return hm;
   }
@@ -374,7 +373,6 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   using enum Acts::AxisDirection;
   using namespace Acts::UnitLiterals;
   using namespace Acts::Experimental;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisBoundaryType;
   using enum Acts::CylinderVolumeBounds::Face;
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
@@ -459,13 +457,13 @@ void Gen3GenericDetectorBuilder::buildPixel(
     barrel.setAttachmentStrategy(AttachmentStrategy::Gap);
     barrel.setResizeStrategies(ResizeStrategy::Expand, ResizeStrategy::Gap);
 
-    auto protoLayerSurfaces = pplCreator.centralProtoLayers(gctx);
-    ACTS_DEBUG("Adding " << protoLayerSurfaces.size()
+    auto centralProtoLayerSurfaces = pplCreator.centralProtoLayers(gctx);
+    ACTS_DEBUG("Adding " << centralProtoLayerSurfaces.size()
                          << " central proto layers to "
                          << "Pixel_Barrel");
     for (const auto& [idx, temp] :
 
-         Acts::enumerate(protoLayerSurfaces)) {
+         Acts::enumerate(centralProtoLayerSurfaces)) {
       auto& [pl, surfaces, bins0, bins1] = temp;
       std::string layerName = "Pixel_Barrel_L" + std::to_string(idx);
       barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
