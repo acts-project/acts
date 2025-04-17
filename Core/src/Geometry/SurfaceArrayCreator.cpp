@@ -31,7 +31,8 @@ namespace {
 auto makeCylinderCoordinateConverter(const Acts::Transform3& transform) {
   return [transform](const Acts::Vector3& pos) {
     Acts::Vector3 loc = transform * pos;
-    double phi = std::atan2f(loc.x(), loc.y());
+    float phi =
+        std::atan2(static_cast<float>(loc.x()), static_cast<float>(loc.y()));
     return Acts::Vector2(phi, loc.z());
   };
 }
@@ -39,7 +40,8 @@ auto makeCylinderCoordinateConverter(const Acts::Transform3& transform) {
 auto makeDiscCoordinateConverter(const Acts::Transform3& transform) {
   return [transform](const Acts::Vector3& pos) {
     Acts::Vector3 loc = transform * pos;
-    double phi = std::atan2f(loc.x(), loc.y());
+    float phi =
+        std::atan2(static_cast<float>(loc.x()), static_cast<float>(loc.y()));
     return Acts::Vector2(perp(loc), phi);
   };
 }
