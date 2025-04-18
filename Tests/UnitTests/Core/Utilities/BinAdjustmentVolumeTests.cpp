@@ -20,10 +20,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Test {
-
-namespace tt = boost::test_tools;
+namespace Acts::Test {
 
 // Test Cylinder
 BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
@@ -79,5 +76,4 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cuboid) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 42);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

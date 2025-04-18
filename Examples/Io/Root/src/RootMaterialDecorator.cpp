@@ -13,8 +13,8 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
@@ -64,7 +64,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
   // Setup ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
   if (m_inputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
+    throw std::ios_base::failure("Could not open '" + m_cfg.fileName + "'");
   }
 
   // Get the list of keys from the file
@@ -182,7 +182,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < n->GetNbinsX() + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);
@@ -252,20 +252,20 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       TH1F* rho = dynamic_cast<TH1F*>(m_inputFile->Get(rhoName.c_str()));
 
       // Only go on when you have all the material histograms
-      if ((x0 != nullptr) and (l0 != nullptr) and (A != nullptr) and
-          (Z != nullptr) and (rho != nullptr)) {
+      if ((x0 != nullptr) && (l0 != nullptr) && (A != nullptr) &&
+          (Z != nullptr) && (rho != nullptr)) {
         // Get the number of grid points
         int points = x0->GetNbinsX();
         // If the bin information histograms are present the material is
         // either a 2D or a 3D grid
-        if ((n != nullptr) and (v != nullptr) and (o != nullptr) and
-            (min != nullptr) and (max != nullptr)) {
+        if ((n != nullptr) && (v != nullptr) && (o != nullptr) &&
+            (min != nullptr) && (max != nullptr)) {
           // Dimension of the grid
           int dim = n->GetNbinsX();
           // Now reconstruct the bin untilities
           Acts::BinUtility bUtility;
           for (int ib = 1; ib < dim + 1; ++ib) {
-            size_t nbins = size_t(n->GetBinContent(ib));
+            std::size_t nbins = std::size_t(n->GetBinContent(ib));
             Acts::BinningValue val = Acts::BinningValue(v->GetBinContent(ib));
             Acts::BinningOption opt = Acts::BinningOption(o->GetBinContent(ib));
             float rmin = min->GetBinContent(ib);

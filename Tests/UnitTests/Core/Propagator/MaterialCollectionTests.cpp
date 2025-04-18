@@ -44,20 +44,15 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
 // Global definitions
-// The path limit abort
-using path_limit = PathLimitReached;
-
 CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
@@ -96,7 +91,7 @@ bool debugModeBwdStep = false;
 /// @param index is the run index from the test
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge, double time, int index) {
+             int charge, int index) {
   double p = pT / sin(theta);
   double q = -1 + 2 * charge;
 
@@ -116,9 +111,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0.5, 0, 0, 0, 1_e / 10_GeV, 0,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
-  std::cout << cov.determinant() << std::endl;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov, ParticleHypothesis::pion());
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p, cov,
+                                   ParticleHypothesis::pion());
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;
@@ -143,12 +137,12 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // forward material test
   const auto& fwdResult = prop.propagate(start, fwdOptions).value();
   auto& fwdMaterial = fwdResult.template get<MaterialInteractor::result_type>();
-
-  double fwdStepMaterialInX0 = 0.;
-  double fwdStepMaterialInL0 = 0.;
   // check that the collected material is not zero
   BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
+
+  double fwdStepMaterialInX0 = 0.;
+  double fwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : fwdMaterial.materialInteractions) {
     fwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
@@ -195,19 +189,17 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   auto& bwdMaterial =
       bwdResult.template get<typename MaterialInteractor::result_type>();
-
-  double bwdStepMaterialInX0 = 0.;
-  double bwdStepMaterialInL0 = 0.;
-
   // check that the collected material is not zero
   BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
+
+  double bwdStepMaterialInX0 = 0.;
+  double bwdStepMaterialInL0 = 0.;
   // check that the sum of all steps is the total material
   for (auto& mInteraction : bwdMaterial.materialInteractions) {
     bwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
     bwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
-
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdStepMaterialInL0, 1e-3);
 
@@ -370,7 +362,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
   bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
-  // forward-forward step compatibility test
+  // backward-backward step compatibility test
   CHECK_CLOSE_REL(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-3);
 
@@ -394,26 +386,24 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     test_material_collector,
-    bdata::random((bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
-        bdata::random(
-            (bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
-        bdata::random(
-            (bdata::seed = 24,
-             bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
-  runTest(epropagator, pT, phi, theta, charge, time, index);
-  runTest(slpropagator, pT, phi, theta, charge, time, index);
+    pT, phi, theta, charge, index) {
+  runTest(epropagator, pT, phi, theta, charge, index);
+  runTest(slpropagator, pT, phi, theta, charge, index);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

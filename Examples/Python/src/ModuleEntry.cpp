@@ -72,11 +72,9 @@ void addPythia8(Context& ctx);
 void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
-void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
 void addObj(Context& ctx);
 void addOnnx(Context& ctx);
-void addOnnxMlpack(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
 
 }  // namespace Acts::Python
@@ -92,6 +90,17 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   m.attr("__version__") =
       std::tuple{Acts::VersionMajor, Acts::VersionMinor, Acts::VersionPatch};
+
+  {
+    auto mv = m.def_submodule("version");
+
+    mv.attr("major") = Acts::VersionMajor;
+    mv.attr("minor") = Acts::VersionMinor;
+    mv.attr("patch") = Acts::VersionPatch;
+
+    mv.attr("commit_hash") = Acts::CommitHash;
+    mv.attr("commit_hash_short") = Acts::CommitHashShort;
+  }
 
   addUnits(ctx);
   addFramework(ctx);
@@ -123,10 +132,8 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addJson(ctx);
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
-  addEDM4hep(ctx);
   addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);
-  addOnnxMlpack(ctx);
   addOnnxNeuralCalibrator(ctx);
 }

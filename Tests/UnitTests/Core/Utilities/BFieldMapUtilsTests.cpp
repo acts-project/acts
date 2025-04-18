@@ -12,7 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
@@ -46,15 +45,15 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
     bField_rz.push_back(Acts::Vector2(i, i));
   }
 
-  auto localToGlobalBin_rz = [](std::array<size_t, 2> binsRZ,
-                                std::array<size_t, 2> nBinsRZ) {
+  auto localToGlobalBin_rz = [](std::array<std::size_t, 2> binsRZ,
+                                std::array<std::size_t, 2> nBinsRZ) {
     return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
   };
   // create b field map in rz
   auto map_rz =
       Acts::fieldMapRZ(localToGlobalBin_rz, rPos, zPos, bField_rz, 1, 1, false);
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_rz = {rPos.size(), zPos.size()};
+  std::vector<std::size_t> nBins_rz = {rPos.size(), zPos.size()};
   std::vector<double> minima_rz = {0., 0.};
   std::vector<double> maxima_rz = {3., 3.};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
@@ -65,8 +64,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   // always assigned to the left boundary)
   BOOST_CHECK(map_rz.getMax() == maxima_rz);
 
-  auto localToGlobalBin_xyz = [](std::array<size_t, 3> binsXYZ,
-                                 std::array<size_t, 3> nBinsXYZ) {
+  auto localToGlobalBin_xyz = [](std::array<std::size_t, 3> binsXYZ,
+                                 std::array<std::size_t, 3> nBinsXYZ) {
     return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
             binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
   };
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   auto map_xyz = Acts::fieldMapXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
                                    bField_xyz, 1, 1, false);
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
+  std::vector<std::size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
   std::vector<double> minima_xyz = {0., 0., 0.};
   std::vector<double> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(map_xyz.getNBins() == nBins_xyz);
@@ -162,13 +161,14 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   }
   // the field map in rz
   auto map_rz = Acts::fieldMapRZ(
-      [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+      [](std::array<std::size_t, 2> binsRZ,
+         std::array<std::size_t, 2> nBinsRZ) {
         return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
       },
       rPos, zPos, bField_rz, 1, 1, true);
 
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
+  std::vector<std::size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
   std::vector<double> minima_rz = {0., -2.};
   std::vector<double> maxima_rz = {2., 2.};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
@@ -188,15 +188,16 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   }
   // the field map in xyz
   auto map_xyz = Acts::fieldMapXYZ(
-      [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+      [](std::array<std::size_t, 3> binsXYZ,
+         std::array<std::size_t, 3> nBinsXYZ) {
         return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                 binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
       },
       xPos, yPos, zPos, bField_xyz, 1, 1, true);
 
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
-                                   2 * zPos.size() - 1};
+  std::vector<std::size_t> nBins_xyz = {
+      2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {-2., -2., -2.};
   std::vector<double> maxima_xyz = {2., 2., 2.};
   BOOST_CHECK(map_xyz.getNBins() == nBins_xyz);
@@ -246,15 +247,15 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
 /// Unit test for symmetric data
 BOOST_DATA_TEST_CASE(
     bfield_symmetry_random,
-    bdata::random(
-        (bdata::seed = 0,
-         bdata::distribution = std::uniform_real_distribution<>(-10., 10.))) ^
-        bdata::random((bdata::seed = 0,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-10., 10.))) ^
-        bdata::random((bdata::seed = 0,
+                           std::uniform_real_distribution<double>(-10., 10.))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 0,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-20., 20.))) ^
+                           std::uniform_real_distribution<double>(-20., 20.))) ^
         bdata::xrange(10),
     x, y, z, index) {
   (void)index;
@@ -267,13 +268,13 @@ BOOST_DATA_TEST_CASE(
   double maxZ = 30.;
   double maxBr = 10.;
   double maxBz = 20.;
-  size_t nBins = 10;
+  std::size_t nBins = 10;
   double stepR = maxR / nBins;
   double stepZ = maxZ / nBins;
   double bStepR = maxBr / nBins;
   double bStepZ = maxBz / nBins;
 
-  for (size_t i = 0; i < nBins; i++) {
+  for (std::size_t i = 0; i < nBins; i++) {
     rPos.push_back(i * stepR);
     xPos.push_back(i * stepR);
     yPos.push_back(i * stepR);
@@ -281,18 +282,19 @@ BOOST_DATA_TEST_CASE(
   }
   // bfield in rz
   std::vector<Acts::Vector2> bField_rz;
-  for (size_t i = 0; i < nBins * nBins; i++) {
+  for (std::size_t i = 0; i < nBins * nBins; i++) {
     bField_rz.push_back(Acts::Vector2(i * bStepR, i * bStepZ));
   }
   // the map in rz
   auto map_rz = Acts::fieldMapRZ(
-      [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+      [](std::array<std::size_t, 2> binsRZ,
+         std::array<std::size_t, 2> nBinsRZ) {
         return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
       },
       rPos, zPos, bField_rz, 1, 1, true);
 
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
+  std::vector<std::size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
   std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
   std::vector<double> maxima_rz = {(nBins - 1) * stepR, (nBins - 1) * stepZ};
   BOOST_CHECK(map_rz.getNBins() == nBins_rz);
@@ -305,19 +307,20 @@ BOOST_DATA_TEST_CASE(
 
   // bfield in xyz
   std::vector<Acts::Vector3> bField_xyz;
-  for (size_t i = 0; i < nBins * nBins * nBins; i++) {
+  for (std::size_t i = 0; i < nBins * nBins * nBins; i++) {
     bField_xyz.push_back(Acts::Vector3(i * bStepR, i * bStepR, i * bStepZ));
   }
   // the map in xyz
   auto map_xyz = Acts::fieldMapXYZ(
-      [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+      [](std::array<std::size_t, 3> binsXYZ,
+         std::array<std::size_t, 3> nBinsXYZ) {
         return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                 binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
       },
       xPos, yPos, zPos, bField_xyz, 1, 1, true);
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
-                                   2 * zPos.size() - 1};
+  std::vector<std::size_t> nBins_xyz = {
+      2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {
       -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
   std::vector<double> maxima_xyz = {(nBins - 1) * stepR, (nBins - 1) * stepR,

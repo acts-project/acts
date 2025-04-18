@@ -26,7 +26,7 @@ struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
-  size_t nTopSeedConf = 0;
+  std::size_t nTopSeedConf = 0;
   // radius of bottom component of seed that is used to define the number of
   // compatible top required
   float rMaxSeedConf =

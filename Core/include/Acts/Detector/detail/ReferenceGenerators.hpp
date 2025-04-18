@@ -16,9 +16,7 @@
 
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
-namespace detail {
+namespace Acts::Experimental::detail {
 
 /// A struct to access the center position
 ///
@@ -67,7 +65,7 @@ struct BinningValueReferenceGenerator {
 ///
 /// The grid filling then completes the empty bins in between and
 /// expands if necessary.
-template <size_t nSEGS = 1u, bool aBARY = true>
+template <std::size_t nSEGS = 1u, bool aBARY = true>
 struct PolyhedronReferenceGenerator {
   /// Helper to access the Center point of for filling the grid
   ///
@@ -94,6 +92,4 @@ struct PolyhedronReferenceGenerator {
   }
 };
 
-}  // namespace detail
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental::detail

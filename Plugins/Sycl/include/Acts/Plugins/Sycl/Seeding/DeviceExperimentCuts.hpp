@@ -25,9 +25,8 @@ class DeviceExperimentCuts {
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
   float seedWeight(const detail::DeviceSpacePoint& bottom,
-                   const detail::DeviceSpacePoint& middle,
+                   const detail::DeviceSpacePoint& /*middle*/,
                    const detail::DeviceSpacePoint& top) const {
-    (void)middle;
     float weight = 0;
     if (bottom.r > 150.f) {
       weight = 400.f;
@@ -44,10 +43,8 @@ class DeviceExperimentCuts {
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   bool singleSeedCut(float weight, const detail::DeviceSpacePoint& bottom,
-                     const detail::DeviceSpacePoint& middle,
-                     const detail::DeviceSpacePoint& top) const {
-    (void)middle;
-    (void)top;
+                     const detail::DeviceSpacePoint& /*middle*/,
+                     const detail::DeviceSpacePoint& /*top*/) const {
     return !(bottom.r > 150.f && weight < 380.f);
   };
 };

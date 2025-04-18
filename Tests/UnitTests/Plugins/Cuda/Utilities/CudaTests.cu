@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(CUDAOBJ_TEST) {
   cudaProfilerStop();
 
   for (int i = 0; i < nVec; i++) {
-    BOOST_REQUIRE(inMat1_cpu[i] == *outMat1_cpu.get(i));
+    BOOST_REQUIRE_EQUAL(inMat1_cpu[i], *outMat1_cpu.get(i));
   }
-  BOOST_REQUIRE(inMat2_cpu[0] == *outMat2_cpu.get(0));
+  BOOST_REQUIRE_EQUAL(inMat2_cpu[0], *outMat2_cpu.get(0));
 }
 BOOST_AUTO_TEST_SUITE_END()
 

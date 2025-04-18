@@ -21,8 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 class MultiWireStructureBuilder {
  public:
@@ -75,5 +74,4 @@ class MultiWireStructureBuilder {
   std::unique_ptr<const Acts::Logger> mLogger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

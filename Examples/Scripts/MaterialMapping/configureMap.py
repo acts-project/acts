@@ -34,12 +34,10 @@ else:
 
 with open(inFileName, "r+") as json_file:
     with open(confFileName, "r") as config_file:
-
         config = json.load(config_file)
         data = json.load(json_file)
 
         for entry in data["Surfaces"]["entries"]:
-
             if "type" not in entry["value"]["bounds"]:
                 entry["value"]["bounds"]["type"] = ""
 

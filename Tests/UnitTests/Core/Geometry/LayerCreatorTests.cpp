@@ -29,7 +29,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,21 +44,10 @@
 
 #include <boost/format.hpp>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
-
-#define CHECK_ROTATION_ANGLE(t, a, tolerance)               \
-  {                                                         \
-    Vector3 v = (*t) * Vector3(1, 0, 0);                    \
-    CHECK_CLOSE_ABS(VectorHelpers::phi(v), (a), tolerance); \
-  }
 
 using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
@@ -69,7 +57,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
   os << std::fixed << std::setprecision(4);
 
-  size_t nVtx = 0;
+  std::size_t nVtx = 0;
   for (const auto& srfx : surfaces) {
     std::shared_ptr<const PlaneSurface> srf =
         std::dynamic_pointer_cast<const PlaneSurface>(srfx);
@@ -84,7 +72,7 @@ void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
 
     // connect them
     os << "f";
-    for (size_t i = 1; i <= bounds->vertices().size(); ++i) {
+    for (std::size_t i = 1; i <= bounds->vertices().size(); ++i) {
       os << " " << nVtx + i;
     }
     os << "\n";
@@ -116,10 +104,10 @@ struct LayerCreatorFixture {
     return p_LC->checkBinning(std::forward<Args>(args)...);
   }
 
-  bool checkBinContentSize(const SurfaceArray* sArray, size_t n) {
-    size_t nBins = sArray->size();
+  bool checkBinContentSize(const SurfaceArray* sArray, std::size_t n) {
+    std::size_t nBins = sArray->size();
     bool result = true;
-    for (size_t i = 0; i < nBins; ++i) {
+    for (std::size_t i = 0; i < nBins; ++i) {
       if (!sArray->isValidBin(i)) {
         continue;
       }
@@ -132,12 +120,12 @@ struct LayerCreatorFixture {
     return result;
   }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
+  SrfVec fullPhiTestSurfacesEC(std::size_t n = 10, double shift = 0,
                                double zbase = 0, double r = 10) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
       double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
 
       Transform3 trans;
@@ -374,7 +362,7 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
   double envMinR = 1, envMaxR = 1, envZ = 5;
-  size_t nBinsR = 3, nBinsPhi = 30;
+  std::size_t nBinsR = 3, nBinsPhi = 30;
   ProtoLayer pl2(tgContext, surfaces);
   pl2.envelope[binR] = {envMinR, envMaxR};
   pl2.envelope[binZ] = {envZ, envZ};
@@ -470,6 +458,4 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

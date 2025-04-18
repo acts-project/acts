@@ -8,9 +8,11 @@
 
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -48,7 +50,9 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
-std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
+std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
+           std::optional<ActsScalar>>
+SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
     const BoundSquareMatrix& cov) const {
@@ -84,16 +88,26 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
 
   auto gcov = Vector2(var[0], var[1]);
-  return std::make_pair(globalPos, gcov);
+
+  // optionally set time
+  // TODO the current condition of checking the covariance is not optional but
+  // should do for now
+  std::optional<ActsScalar> globalTime = par[eBoundTime];
+  std::optional<ActsScalar> tcov = cov(eBoundTime, eBoundTime);
+  if (tcov.value() <= 0) {
+    globalTime = std::nullopt;
+    tcov = std::nullopt;
+  }
+
+  return std::make_tuple(globalPos, globalTime, gcov, tcov);
 }
 
 Vector2 SpacePointUtility::calcRhoZVars(
     const GeometryContext& gctx, const SourceLink& slinkFront,
     const SourceLink& slinkBack,
     const SourceLinkSurfaceAccessor& surfaceAccessor,
-    const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
-        SourceLink)>& paramCovAccessor,
-    const Vector3& globalPos, const double theta) const {
+    const ParamCovAccessor& paramCovAccessor, const Vector3& globalPos,
+    const double theta) const {
   const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 

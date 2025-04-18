@@ -70,19 +70,16 @@ int main(int argc, char** argv) {
         vm["filtered"].as<bool>(), vm["smoothed"].as<bool>(),
         vm["fit-predicted"].as<bool>(), vm["fit-filtered"].as<bool>(),
         vm["fit-smoothed"].as<bool>(), saveAs)) {
-      case -1: {
+      case -1:
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;
         return -1;
-      } break;
-      case -2: {
+      case -2:
         std::cout << "*** Input tree could not be found, check name."
                   << std::endl;
         return -2;
-      } break;
-      default: {
+      default:
         std::cout << "*** Successful run." << std::endl;
-      };
     }
 
     if (tApp != nullptr) {

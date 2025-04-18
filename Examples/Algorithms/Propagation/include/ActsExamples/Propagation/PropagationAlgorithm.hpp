@@ -88,7 +88,7 @@ class PropagationAlgorithm : public IAlgorithm {
     bool recordMaterialInteractions = true;
 
     /// number of particles
-    size_t ntests = 100;
+    std::size_t ntests = 100;
     /// d0 gaussian sigma
     double d0Sigma = 15 * Acts::UnitConstants::um;
     /// z0 gaussian sigma
@@ -153,7 +153,7 @@ class PropagationAlgorithm : public IAlgorithm {
   WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
       m_outpoutPropagationSteps{this, "OutputPropagationSteps"};
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_recordedMaterial{this, "RecordedMaterial"};
 
   /// Private helper method to create a corrleated covariance matrix

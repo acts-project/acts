@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/BinningData.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
-#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 
 using namespace Acts;
 using namespace ActsFatras;
@@ -23,9 +23,9 @@ DigitizedParameters makeDigitizationParameters(const Vector2 &position,
                                                const BinUtility &binUtility) {
   auto [binX, binY, _] =
       binUtility.binTriple((Vector3() << position, 0).finished());
-  Channelizer::Bin2D bin = {(Channelizer::Bin2D::value_type)binX,
-                            (Channelizer::Bin2D::value_type)binY};
-  Channelizer::Segment2D segment = {position, position};
+  Segmentizer::Bin2D bin = {(Segmentizer::Bin2D::value_type)binX,
+                            (Segmentizer::Bin2D::value_type)binY};
+  Segmentizer::Segment2D segment = {position, position};
   double activation = 1;
   Cluster::Cell cell = {bin, segment, activation};
 

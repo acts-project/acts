@@ -19,6 +19,7 @@
 #include <string>
 
 #include <podio/ROOTFrameReader.h>
+#include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
 
@@ -48,17 +49,21 @@ class EDM4hepTrackReader : public IReader {
   std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final;
+  std::pair<std::size_t, std::size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
 
  private:
+  std::pair<std::size_t, std::size_t> m_eventsRange;
+
   Config m_cfg;
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 
-  podio::ROOTFrameReader m_reader;
+  tbb::enumerable_thread_specific<podio::ROOTFrameReader> m_reader;
+
+  podio::ROOTFrameReader& reader();
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

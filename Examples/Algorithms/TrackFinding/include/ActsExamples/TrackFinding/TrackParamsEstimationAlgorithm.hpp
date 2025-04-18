@@ -71,11 +71,29 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Initial covariance matrix diagonal.
     std::array<double, 6> initialSigmas = {
-        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
-        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
+        1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::mm,
+        1 * Acts::UnitConstants::degree,
+        1 * Acts::UnitConstants::degree,
+        0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
+        1 * Acts::UnitConstants::ns};
+    /// Initial q/p coefficient covariance matrix diagonal.
+    std::array<double, 6> initialSimgaQoverPCoefficients = {
+        0 * Acts::UnitConstants::mm /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::mm /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::degree /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0 * Acts::UnitConstants::degree /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV),
+        0.1,
+        0 * Acts::UnitConstants::ns /
+            (Acts::UnitConstants::e * Acts::UnitConstants::GeV)};
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Inflate time covariance if no time measurement is available.
+    double noTimeVarInflation = 100.;
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
@@ -98,10 +116,6 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-
-  /// The track parameters covariance (assumed to be the same for all estimated
-  /// track parameters for the moment)
-  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
   ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};

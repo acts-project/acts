@@ -99,7 +99,7 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   using Base::Value;
 
   // Construct an invalid barcode with all levels set to zero.
-  Barcode() : Base(Base::Zeros()) {}
+  constexpr Barcode() : Base(Base::Zeros()) {}
   Barcode(const Barcode&) = default;
   Barcode(Barcode&&) = default;
   Barcode& operator=(const Barcode&) = default;
@@ -117,21 +117,44 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   constexpr Value subParticle() const { return level(4); }
 
   /// Set the primary vertex identifier.
-  constexpr Barcode& setVertexPrimary(Value id) { return set(0, id), *this; }
+  constexpr Barcode& setVertexPrimary(Value id) {
+    set(0, id);
+    return *this;
+  }
   /// Set the secondary vertex identifier.
-  constexpr Barcode& setVertexSecondary(Value id) { return set(1, id), *this; }
+  constexpr Barcode& setVertexSecondary(Value id) {
+    set(1, id);
+    return *this;
+  }
   /// Set the parent particle identifier.
-  constexpr Barcode& setParticle(Value id) { return set(2, id), *this; }
+  constexpr Barcode& setParticle(Value id) {
+    set(2, id);
+    return *this;
+  }
   /// Set the particle identifier.
-  constexpr Barcode& setGeneration(Value id) { return set(3, id), *this; }
+  constexpr Barcode& setGeneration(Value id) {
+    set(3, id);
+    return *this;
+  }
   /// Set the process identifier.
-  constexpr Barcode& setSubParticle(Value id) { return set(4, id), *this; }
+  constexpr Barcode& setSubParticle(Value id) {
+    set(4, id);
+    return *this;
+  }
 
   /// Construct a new barcode representing a descendant particle.
   ///
   /// @param sub sub-particle index of the new barcode.
   Barcode makeDescendant(Value sub = 0u) const {
     return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
+  }
+
+  /// Reduce the barcode to the vertex identifier.
+  constexpr Barcode vertexId() const {
+    // The vertex is identified by primary vertex, secondary vertex, and
+    // generation. The other components are set to 0 so two particle originating
+    // from the same vertex will have the same vertex ID.
+    return Barcode(*this).setParticle(0).setSubParticle(0);
   }
 };
 

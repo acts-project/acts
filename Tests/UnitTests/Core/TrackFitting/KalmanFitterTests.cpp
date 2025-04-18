@@ -17,12 +17,12 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -43,6 +43,7 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::Test;
+using namespace Acts::detail::Test;
 using namespace Acts::UnitLiterals;
 
 using StraightPropagator =
@@ -97,9 +98,9 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
-  extensions.surfaceAccessor
-      .connect<&Acts::Test::TestSourceLink::SurfaceAccessor::operator()>(
-          &tester.surfaceAccessor);
+  extensions.surfaceAccessor.connect<
+      &Acts::detail::Test::TestSourceLink::SurfaceAccessor::operator()>(
+      &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());

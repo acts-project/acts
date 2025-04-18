@@ -52,7 +52,7 @@ class CpuScalar {
 
  private:
   var_t* m_hostPtr = nullptr;
-  size_t m_size;
+  std::size_t m_size;
   bool m_pinned;
 };
 

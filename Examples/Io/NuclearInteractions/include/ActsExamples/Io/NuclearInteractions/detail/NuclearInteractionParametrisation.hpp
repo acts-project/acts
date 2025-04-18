@@ -22,9 +22,7 @@
 #include <TH1F.h>
 #include <TVectorFfwd.h>
 
-namespace ActsExamples {
-namespace detail {
-namespace NuclearInteractionParametrisation {
+namespace ActsExamples::detail::NuclearInteractionParametrisation {
 
 /// This struct stores a fraction of an event around a nuclear
 /// interaction.
@@ -192,6 +190,4 @@ TVectorF softProbability(const EventCollection& events);
 /// @return The cumulative distribution for the nuclear interaction
 CumulativeDistribution cumulativeNuclearInteractionProbability(
     const EventCollection& events, unsigned int interactionProbabilityBins);
-}  // namespace NuclearInteractionParametrisation
-}  // namespace detail
-}  // namespace ActsExamples
+}  // namespace ActsExamples::detail::NuclearInteractionParametrisation

@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     simhit.tx = globalPos4[Acts::ePos0] / Acts::UnitConstants::mm;
     simhit.ty = globalPos4[Acts::ePos1] / Acts::UnitConstants::mm;
     simhit.tz = globalPos4[Acts::ePos2] / Acts::UnitConstants::mm;
-    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::ns;
+    simhit.tt = globalPos4[Acts::eTime] / Acts::UnitConstants::mm;
     // particle four-momentum before interaction
     simhit.tpx = momentum4Before[Acts::eMom0] / Acts::UnitConstants::GeV;
     simhit.tpy = momentum4Before[Acts::eMom1] / Acts::UnitConstants::GeV;

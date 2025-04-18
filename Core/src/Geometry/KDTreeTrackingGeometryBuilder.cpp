@@ -8,7 +8,6 @@
 
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 
-#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Extent.hpp"
@@ -19,6 +18,7 @@
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <cstddef>
@@ -87,7 +86,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
   auto rangeZ = ptVolume.extent.range(Acts::binZ);
 
   // Simple gap volume
-  if (not ptVolume.container.has_value()) {
+  if (!ptVolume.container.has_value()) {
     ACTS_VERBOSE(indent << "> empty volume to be built");
     MutableTrackingVolumeVector mtv = {};
     auto tVolume = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
@@ -107,7 +106,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
     }
 
     // This volume is a volume container
-    if (not cts.layerContainer) {
+    if (!cts.layerContainer) {
       ACTS_VERBOSE(indent << "> volume container with "
                           << cts.constituentVolumes.size() << " constituents.");
       for (auto& cVolume : cts.constituentVolumes) {
@@ -143,8 +142,6 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
       return tVolume;
     }
   }
-
-  return nullptr;
 }
 
 /// @return a new tracking volume
@@ -220,8 +217,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
       bType0 = its.surfaceBinning[0u].type;
       bType1 = its.surfaceBinning[1u].type;
       // In case explicit bin numbers are given in addition
-      if (bType0 == Acts::equidistant and bType1 == Acts::equidistant and
-          its.surfaceBinning[0u].bins() > 1u and
+      if (bType0 == Acts::equidistant && bType1 == Acts::equidistant &&
+          its.surfaceBinning[0u].bins() > 1u &&
           its.surfaceBinning[1u].bins() > 1u) {
         bins0 = its.surfaceBinning[0u].bins();
         bins1 = its.surfaceBinning[1u].bins();
@@ -258,7 +255,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
           "disk.");
     }
   }
-  if (tLayer != nullptr and tLayer->representingVolume() != nullptr) {
+  if (tLayer != nullptr && tLayer->representingVolume() != nullptr) {
     ACTS_DEBUG(indent << "> translated into layer bounds: "
                       << tLayer->representingVolume()->volumeBounds());
   } else {

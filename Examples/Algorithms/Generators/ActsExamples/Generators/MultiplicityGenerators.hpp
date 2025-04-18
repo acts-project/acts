@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file
-/// @date 2018-03-13
-/// @author Moritz Kiehn <msmk@cern.ch>
-
 #pragma once
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -21,12 +17,12 @@ namespace ActsExamples {
 
 struct FixedMultiplicityGenerator
     : public EventGenerator::MultiplicityGenerator {
-  size_t n = 1;
+  std::size_t n = 1;
 
-  FixedMultiplicityGenerator(size_t _n) : n{_n} {}
+  FixedMultiplicityGenerator(std::size_t _n) : n{_n} {}
   FixedMultiplicityGenerator() = default;
 
-  size_t operator()(RandomEngine& /* unused */) const override { return n; }
+  std::size_t operator()(RandomEngine& /*rng*/) const override { return n; }
 };
 
 struct PoissonMultiplicityGenerator
@@ -35,8 +31,8 @@ struct PoissonMultiplicityGenerator
   PoissonMultiplicityGenerator(double _mean) : mean{_mean} {}
   PoissonMultiplicityGenerator() = default;
 
-  size_t operator()(RandomEngine& rng) const override {
-    return (0 < mean) ? std::poisson_distribution<size_t>(mean)(rng) : 0;
+  std::size_t operator()(RandomEngine& rng) const override {
+    return (0 < mean) ? std::poisson_distribution<std::size_t>(mean)(rng) : 0;
   }
 };
 

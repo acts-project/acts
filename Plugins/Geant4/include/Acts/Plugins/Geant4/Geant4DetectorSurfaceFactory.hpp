@@ -76,16 +76,14 @@ class Geant4DetectorSurfaceFactory {
   };
 
   /// The Geant4 detector element factory
-  ///
-  /// @param cfg the configuration struct
   Geant4DetectorSurfaceFactory() = default;
 
   /// Construction method of the detector elements
   ///
   /// @param cache [in,out] into which the Elements are filled
   /// @param g4ToGlobal the transformation to global
-  /// @param g4PhyVol the current physical volume
-  /// @param options the factory creation option
+  /// @param g4PhysVol the current physical volume
+  /// @param option the factory creation option
   ///
   void construct(Cache& cache, const G4Transform3D& g4ToGlobal,
                  const G4VPhysicalVolume& g4PhysVol, const Options& option);

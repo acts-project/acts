@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -29,12 +28,7 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -62,7 +56,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
       Surface::makeShared<PlaneSurface>(Transform3::Identity(), rBounds)};
   const double thickness(1.0);
   SurfaceArrayCreator sac;
-  size_t binsX(2), binsY(4);
+  std::size_t binsX(2), binsY(4);
   auto pSurfaceArray = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX,
                                                binsY, BinningValue::binZ);
   auto pPlaneLayerFromSurfaces =
@@ -102,6 +96,4 @@ BOOST_AUTO_TEST_CASE(PlaneLayerProperties) {
 
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Layers
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

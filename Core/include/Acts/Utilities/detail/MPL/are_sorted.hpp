@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-namespace Acts {
-/// @cond detail
-namespace detail {
+namespace Acts::detail {
 /**
  * @brief check whether integral values are sorted
  *
@@ -60,6 +58,4 @@ struct are_sorted<false, false, T, a, b, N...> {
   enum { value = (a >= b && are_sorted<false, false, T, b, N...>::value) };
 };
 /// @endcond
-}  // namespace detail
-/// @endcond
-}  // namespace Acts
+}  // namespace Acts::detail

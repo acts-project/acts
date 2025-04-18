@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <map>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -35,8 +36,7 @@ using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
                std::vector<ActsScalar>, BinningValue>;
 
-namespace detail {
-namespace PortalHelper {
+namespace detail::PortalHelper {
 
 /// @brief Method to attach a single detector volume to a portal
 ///
@@ -44,7 +44,7 @@ namespace PortalHelper {
 /// @param volume is the volume that is attached to the portal
 /// @param direction is the direction to which it is attached
 ///
-void attachDetectorVolumeUpdator(Portal& portal,
+void attachDetectorVolumeUpdater(Portal& portal,
                                  const std::shared_ptr<DetectorVolume>& volume,
                                  const Direction& direction);
 
@@ -59,7 +59,7 @@ void attachDetectorVolumeUpdator(Portal& portal,
 /// @param boundaries are the value boundaries
 /// @param binning is the binning type
 ///
-void attachDetectorVolumesUpdator(
+void attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const Direction& direction, const std::vector<ActsScalar>& boundaries,
@@ -73,7 +73,7 @@ void attachDetectorVolumesUpdator(
 /// @param volumes are the volumes that are pointed to
 /// @param pReplacements are the portal replacements that are newly connected
 ///
-void attachDetectorVolumeUpdators(
+void attachDetectorVolumeUpdaters(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements);
@@ -89,7 +89,24 @@ void attachDetectorVolumeUpdators(
 std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
     Portal& portal) noexcept(false);
 
-}  // namespace PortalHelper
-}  // namespace detail
+/// @brief Method that strips out attached volumes from portals and
+/// provides them back to the caller.
+///
+/// @param pContainers the portal containers to be resolved
+/// @param sides the sides to be handled
+/// @param selectedOnly the selected only volumes, e.g. for complex containers
+/// to chose only outside skins,
+/// @param logLevel the logging level
+///
+std::map<unsigned int,
+         std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
+stripSideVolumes(
+    const std::vector<std::map<unsigned int, std::shared_ptr<Portal>>>&
+        pContainers,
+    const std::vector<unsigned int>& sides,
+    const std::vector<unsigned int>& selectedOnly = {},
+    Acts::Logging::Level logLevel = Acts::Logging::INFO);
+
+}  // namespace detail::PortalHelper
 }  // namespace Experimental
 }  // namespace Acts

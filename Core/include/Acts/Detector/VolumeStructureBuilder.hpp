@@ -19,8 +19,7 @@
 #include <optional>
 #include <string>
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 
 /// This class provides the external detector volume structure, configured
 /// either from:
@@ -77,5 +76,4 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental

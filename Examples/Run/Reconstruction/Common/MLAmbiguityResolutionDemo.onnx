@@ -1,27 +1,0 @@
-tf2onnx1.6.3:÷
-½
-dense_input:0
-@StatefulPartitionedCall/sequential/dense/MatMul/ReadVariableOp:01StatefulPartitionedCall/sequential/dense/MatMul:0/StatefulPartitionedCall/sequential/dense/MatMul"MatMul
-á
-1StatefulPartitionedCall/sequential/dense/MatMul:0
-AStatefulPartitionedCall/sequential/dense/BiasAdd/ReadVariableOp:02StatefulPartitionedCall/sequential/dense/BiasAdd:00StatefulPartitionedCall/sequential/dense/BiasAdd"Add
-š
-2StatefulPartitionedCall/sequential/dense/BiasAdd:0/StatefulPartitionedCall/sequential/dense/Relu:0-StatefulPartitionedCall/sequential/dense/Relu"Relu
-å
-/StatefulPartitionedCall/sequential/dense/Relu:0
-BStatefulPartitionedCall/sequential/dense_1/MatMul/ReadVariableOp:03StatefulPartitionedCall/sequential/dense_1/MatMul:01StatefulPartitionedCall/sequential/dense_1/MatMul"MatMul
-é
-3StatefulPartitionedCall/sequential/dense_1/MatMul:0
-CStatefulPartitionedCall/sequential/dense_1/BiasAdd/ReadVariableOp:04StatefulPartitionedCall/sequential/dense_1/BiasAdd:02StatefulPartitionedCall/sequential/dense_1/BiasAdd"Add
-
-4StatefulPartitionedCall/sequential/dense_1/BiasAdd:0
-Identity:02StatefulPartitionedCall/sequential/dense_1/Sigmoid"Sigmoidtf2onnx*XBBStatefulPartitionedCall/sequential/dense_1/MatMul/ReadVariableOp:0J“¹\¿ßÊ?*R6?*OBCStatefulPartitionedCall/sequential/dense_1/BiasAdd/ReadVariableOp:0JI=À*nB@StatefulPartitionedCall/sequential/dense/MatMul/ReadVariableOp:0J$\½³5`½GM½½Ñ{¿K×‹?cW?Â²Í¿¬Å˜?Ìi?*UBAStatefulPartitionedCall/sequential/dense/BiasAdd/ReadVariableOp:0J8Ü.@¼5¿R7¿Rconverted from ./v2_finalZ%
-dense_input:0
-
-unk__6
-b"
-
-Identity:0
-
-unk__7
-B

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "DD4hep/DetElement.h"
+#include <DD4hep/DetElement.h>
 
 class TGeoMatrix;
 

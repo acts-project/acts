@@ -18,11 +18,9 @@
 
 class G4VPhysicalVolume;
 
-namespace Acts {
-namespace Experimental {
+namespace Acts::Experimental {
 class DetectorVolume;
-}  // namespace Experimental
-}  // namespace Acts
+}  // namespace Acts::Experimental
 
 namespace ActsExamples {
 

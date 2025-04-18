@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdaters.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 
 #include <map>
 #include <memory>
@@ -39,7 +39,7 @@ struct RootDetectorVolumes {
   /// The list of root volumes
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The Root volumes finder
-  DetectorVolumeUpdator volumeFinder;
+  DetectorVolumeUpdater volumeFinder;
 };
 
 /// @brief The currently built detector components
@@ -74,17 +74,17 @@ struct ExternalStructure {
 
 /// @brief Holder struct for the internal structure components of a DetectorVolume
 ///
-/// @note the surface surfacesUpdator needs to handle also portal providing
+/// @note the surface surfacesUpdater needs to handle also portal providing
 /// of contained volumes.
 struct InternalStructure {
-  /// Contained surfaces of this volume, handled by the surfacesUpdator
+  /// Contained surfaces of this volume, handled by the surfacesUpdater
   std::vector<std::shared_ptr<Surface>> surfaces = {};
-  /// Contained volumes of this volume, handled by the volumeUpdator
+  /// Contained volumes of this volume, handled by the volumeUpdater
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces
-  SurfaceCandidatesUpdator surfacesUpdator;
+  SurfaceCandidatesUpdater surfacesUpdater;
   // Navigation delegate for volumes
-  DetectorVolumeUpdator volumeUpdator;
+  DetectorVolumeUpdater volumeUpdater;
 };
 
 }  // namespace Experimental

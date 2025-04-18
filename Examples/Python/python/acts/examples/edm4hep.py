@@ -1,9 +1,6 @@
 from acts._adapter import _patch_config
-from acts import ActsPythonBindings
+from acts import ActsPythonBindingsEDM4hep
 
-if not hasattr(ActsPythonBindings._examples, "_edm4hep"):
-    raise ImportError("ActsPythonBindings._examples._edm4hep not found")
+_patch_config(ActsPythonBindingsEDM4hep)
 
-_patch_config(ActsPythonBindings._examples._edm4hep)
-
-from acts.ActsPythonBindings._examples._edm4hep import *
+from acts.ActsPythonBindingsEDM4hep import *

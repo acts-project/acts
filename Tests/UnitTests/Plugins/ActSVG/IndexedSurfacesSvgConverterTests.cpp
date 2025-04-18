@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -18,7 +17,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <tuple>
 

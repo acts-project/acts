@@ -24,6 +24,24 @@ namespace Acts {
 /// @see Material for a description of the available parameters.
 class MaterialSlab {
  public:
+  /// Combine material properties of two layers by averaging them.
+  ///
+  /// @param layerA Input layer A to average over.
+  /// @param layerB Input layer B to average over.
+  ///
+  /// @return The resulting object has the combined thickness of all layers but just
+  ///         one set of appropriately averaged material constants.
+  static MaterialSlab averageLayers(const MaterialSlab& layerA,
+                                    const MaterialSlab& layerB);
+
+  /// Combine material properties of multiple layers by averaging them.
+  ///
+  /// @param layers Input layers to average over.
+  ///
+  /// @return The resulting object has the combined thickness of all layers but just
+  ///         one set of appropriately averaged material constants.
+  static MaterialSlab averageLayers(const std::vector<MaterialSlab>& layers);
+
   /// Construct vacuum without thickness.
   MaterialSlab() = default;
   /// Construct vacuum with thickness.
@@ -33,13 +51,6 @@ class MaterialSlab {
   /// @param material  is the material description
   /// @param thickness is the thickness of the material
   MaterialSlab(const Material& material, float thickness);
-  /// Construct by averaging the material properties over multiple layers.
-  ///
-  /// @param layers Input layers to average over.
-  ///
-  /// The resulting object has the combined thickness of all layers but just
-  /// one set of appropriately averaged material constants.
-  MaterialSlab(const std::vector<MaterialSlab>& layers);
   ~MaterialSlab() = default;
 
   MaterialSlab(MaterialSlab&&) = default;
@@ -51,9 +62,7 @@ class MaterialSlab {
   void scaleThickness(float scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
-  constexpr operator bool() const {
-    return m_material and (0.0f < m_thickness);
-  }
+  constexpr operator bool() const { return m_material && (0.0f < m_thickness); }
 
   /// Access the (average) material parameters.
   constexpr const Material& material() const { return m_material; }
@@ -73,7 +82,7 @@ class MaterialSlab {
   friend constexpr bool operator==(const MaterialSlab& lhs,
                                    const MaterialSlab& rhs) {
     // t/X0 and t/L0 are dependent variables and need not be checked
-    return (lhs.m_material == rhs.m_material) and
+    return (lhs.m_material == rhs.m_material) &&
            (lhs.m_thickness == rhs.m_thickness);
   }
   friend constexpr bool operator!=(const MaterialSlab& lhs,

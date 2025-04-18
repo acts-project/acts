@@ -26,11 +26,7 @@
 #include <utility>
 #include <vector>
 
-using boost::test_tools::output_test_stream;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 namespace Layers {
 BOOST_AUTO_TEST_SUITE(Layers)
@@ -79,5 +75,4 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Layers
 }  // namespace Test
-
 }  // namespace Acts

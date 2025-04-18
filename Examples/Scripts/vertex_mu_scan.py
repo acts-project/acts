@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 import re
 
 import uproot
@@ -10,7 +10,6 @@ import matplotlib.pyplot
 
 
 def main(files: List[Path], output: str, title: str = ""):
-
     mus = []
 
     for file in files:

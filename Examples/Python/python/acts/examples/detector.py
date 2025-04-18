@@ -44,8 +44,8 @@ class CylindricalDetectorVolume:
         :param name: name of the volume
         :param extent: extent of the volume
         :param provider: surface provider for the volume
-        :param binning: binning of surfces in this volume
-        :param support: support surface description
+        :param binnings: binning of surfces in this volume
+        :param supports: support surface description
         :param loglevel: logging level
         """
         self._name = name

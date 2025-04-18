@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -228,8 +228,8 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   WriteDataHandle<std::vector<Acts::Vector4>> m_outputRecoVtxParameters{
       this, "OutputRecoVertices"};
 
-  WriteDataHandle<Acts::Vertex<Acts::BoundTrackParameters>>
-      m_outputBeamspotConstraint{this, "OutputBeamsspotConstraint"};
+  WriteDataHandle<Acts::Vertex> m_outputBeamspotConstraint{
+      this, "OutputBeamsspotConstraint"};
 };
 
 }  // namespace ActsExamples

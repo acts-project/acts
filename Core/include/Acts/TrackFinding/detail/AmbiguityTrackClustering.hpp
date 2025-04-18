@@ -13,15 +13,15 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// Clusterise tracks based on shared hits
 ///
 /// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to facilitate the ordering.
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
-std::unordered_map<int, std::vector<int>> clusterDuplicateTracks(
-    const std::multimap<int, std::pair<int, std::vector<int>>>& trackMap);
+std::unordered_map<std::size_t, std::vector<std::size_t>>
+clusterDuplicateTracks(
+    const std::multimap<int, std::pair<std::size_t, std::vector<std::size_t>>>&
+        trackMap);
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

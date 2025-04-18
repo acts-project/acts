@@ -94,6 +94,7 @@ Examples/Python/tests/requirements.txt`` from the repository root.  You can
 then simply run ``pytest`` from the repository root.
 
 .. tip::
+   :name: python-virtualenv
 
    It is **strongly recommended** to use a `virtual environment`_ for
    this purpose! For example, run 

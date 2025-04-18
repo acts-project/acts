@@ -10,8 +10,7 @@
 
 #include <string>
 
-namespace ActsFatras {
-namespace detail {
+namespace ActsFatras::detail {
 namespace {
 
 // Define a custom error code category derived from std::error_category
@@ -36,5 +35,4 @@ std::error_code make_error_code(SimulationError e) {
   return {static_cast<int>(e), s_simulatorErrorCategory};
 }
 
-}  // namespace detail
-}  // namespace ActsFatras
+}  // namespace ActsFatras::detail

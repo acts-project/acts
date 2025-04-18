@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file ConstantBField_tests.cpp
-
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -20,11 +18,9 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 // Create a test context
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -36,12 +32,31 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// -# ConstantBField::ConstantBField(Vector3 B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
-BOOST_DATA_TEST_CASE(ConstantBField_components,
-                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
-                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
-                     x, y, z, bx, by, bz, index) {
+BOOST_DATA_TEST_CASE(
+    ConstantBField_components,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-2_T, 2_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_T, 4_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(0_T, 10_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::xrange(10),
+    x, y, z, bx, by, bz, index) {
   (void)index;
   const Vector3 Btrue(bx, by, bz);
   const Vector3 pos(x, y, z);
@@ -63,12 +78,31 @@ BOOST_DATA_TEST_CASE(ConstantBField_components,
 /// -# ConstantBField::setField(const Vector3& B)
 /// -# ConstantBField::getField(const double* xyz, double* B) const
 /// -# ConstantBField::getField(const Vector3& pos) const
-BOOST_DATA_TEST_CASE(ConstantBField_update,
-                     bdata::random(-2_T, 2_T) ^ bdata::random(-1_T, 4_T) ^
-                         bdata::random(0_T, 10_T) ^ bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^
-                         bdata::random(-10_m, 10_m) ^ bdata::xrange(10),
-                     x, y, z, bx, by, bz, index) {
+BOOST_DATA_TEST_CASE(
+    ConstantBField_update,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 1,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-2_T, 2_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 2,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-1_T, 4_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 3,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(0_T, 10_T))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 4,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 5,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 6,
+                       bdata::distribution =
+                           std::uniform_real_distribution<double>(-10_m,
+                                                                  10_m))) ^
+        bdata::xrange(10),
+    x, y, z, bx, by, bz, index) {
   (void)index;
 
   ConstantBField BField{Vector3{0, 0, 0}};
@@ -85,5 +119,4 @@ BOOST_DATA_TEST_CASE(ConstantBField_update,
   BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache).value());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -93,11 +93,11 @@ BOOST_AUTO_TEST_CASE(equidistant_axis) {
   BOOST_CHECK_EQUAL(a.getBinCenter(10), 9.5);
 
   // inside check
-  BOOST_CHECK(not a.isInside(-0.2));
+  BOOST_CHECK(!a.isInside(-0.2));
   BOOST_CHECK(a.isInside(0.));
   BOOST_CHECK(a.isInside(3.));
-  BOOST_CHECK(not a.isInside(10.));
-  BOOST_CHECK(not a.isInside(12.));
+  BOOST_CHECK(!a.isInside(10.));
+  BOOST_CHECK(!a.isInside(12.));
 }
 
 BOOST_AUTO_TEST_CASE(variable_axis) {
@@ -143,11 +143,11 @@ BOOST_AUTO_TEST_CASE(variable_axis) {
   BOOST_CHECK_EQUAL(a.getBinCenter(4), 5.25);
 
   // inside check
-  BOOST_CHECK(not a.isInside(-0.2));
+  BOOST_CHECK(!a.isInside(-0.2));
   BOOST_CHECK(a.isInside(0.));
   BOOST_CHECK(a.isInside(3.));
-  BOOST_CHECK(not a.isInside(6.));
-  BOOST_CHECK(not a.isInside(12.));
+  BOOST_CHECK(!a.isInside(6.));
+  BOOST_CHECK(!a.isInside(12.));
 }
 
 BOOST_AUTO_TEST_CASE(open_axis) {
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(closed_axis) {
 }
 
 BOOST_AUTO_TEST_CASE(neighborhood) {
-  using bins_t = std::vector<size_t>;
+  using bins_t = std::vector<std::size_t>;
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
 
   BOOST_CHECK(a1.neighborHoodIndices(0, 1).collect() == bins_t({0, 1}));

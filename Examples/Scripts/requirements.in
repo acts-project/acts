@@ -3,7 +3,7 @@ hist
 typer
 pandas
 pydantic
-PyYAML
+pyyaml
 matplotlib
 awkward
 mplhep

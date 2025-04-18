@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -41,8 +41,6 @@ struct AlgorithmContext;
 //
 class TruthSeedSelector final : public IAlgorithm {
  public:
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
@@ -69,8 +67,8 @@ class TruthSeedSelector final : public IAlgorithm {
     bool keepNeutral = false;
     /// Requirement on number of recorded hits
     //@TODO: implement detector-specific requirements
-    size_t nHitsMin = 0;
-    size_t nHitsMax = std::numeric_limits<size_t>::max();
+    std::size_t nHitsMin = 0;
+    std::size_t nHitsMax = std::numeric_limits<std::size_t>::max();
   };
 
   TruthSeedSelector(const Config& config, Acts::Logging::Level level);

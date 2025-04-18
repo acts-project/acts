@@ -12,21 +12,17 @@
 
 #include <cstddef>
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
 ActsScalar calculateDeterminant(
-    const double* fullCalibrated, const double* fullCalibratedCovariance,
+    const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
   return visit_measurement(calibratedSize, [&](auto N) {
-    constexpr size_t kMeasurementSize = decltype(N)::value;
-
-    typename Acts::TrackStateTraits<kMeasurementSize, true>::Measurement
-        calibrated{fullCalibrated};
+    constexpr std::size_t kMeasurementSize = decltype(N)::value;
 
     typename Acts::TrackStateTraits<
         kMeasurementSize, true>::MeasurementCovariance calibratedCovariance{
@@ -39,5 +35,4 @@ ActsScalar calculateDeterminant(
         .determinant();
   });
 }
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -15,11 +15,7 @@
 
 using Acts::detail::RealQuadraticEquation;
 
-// namespace bdata = boost::unit_test::data;
-namespace utf = boost::unit_test;
-
 namespace Acts {
-
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
 /// Unit test for creating RealQuadraticEquation object
@@ -65,7 +61,5 @@ BOOST_AUTO_TEST_CASE(RealQuadraticEquationAssignment) {
   //                   realQuadraticEquationObject);
 }
 BOOST_AUTO_TEST_SUITE_END()
-
 }  // namespace Test
-
 }  // namespace Acts

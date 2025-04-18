@@ -14,12 +14,7 @@
 
 #include <limits>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
-
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 // This tests the implementation of the AbortList
 // and the standard aborters
@@ -64,5 +59,4 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   BOOST_CHECK_EQUAL(stepSize_p.value(), 0.05);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -1,7 +1,5 @@
 import json
 
-import json
-
 
 def dumper(obj):
     try:
@@ -251,7 +249,6 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
 
         plt.rcParams.update({"figure.max_open_warning": 0})
         from matplotlib.pyplot import cm
-        from itertools import cycle
         import numpy as np
 
         color = cm.rainbow(np.linspace(0, 1, len(index_to_extends_layers_cylinders)))
@@ -579,7 +576,6 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
     if plot and check_material_layers:
         import matplotlib.pyplot as plt
         from matplotlib.pyplot import cm
-        from itertools import cycle
         import numpy as np
 
         plt.figure(figsize=(20, 10))
@@ -594,7 +590,6 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
         material_boundary_discs = [[] for _ in range(len(index_to_names))]
 
         for entry in data["Surfaces"]["entries"]:
-
             if not entry["value"]["material"]["mapMaterial"]:
                 continue
 

@@ -43,9 +43,9 @@ namespace Acts {
 /// on). Both variants add additional complications. Since the geometry object
 /// is not required anyway (as discussed above), not storing it removes all
 /// these complications altogether.
-template <typename indices_t, size_t kSize>
+template <typename indices_t, std::size_t kSize>
 class Measurement {
-  static constexpr size_t kFullSize = detail::kParametersSize<indices_t>;
+  static constexpr std::size_t kFullSize = detail::kParametersSize<indices_t>;
 
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
 
@@ -98,7 +98,7 @@ class Measurement {
   const SourceLink& sourceLink() const { return m_source; }
 
   /// Number of measured parameters.
-  static constexpr size_t size() { return kSize; }
+  static constexpr std::size_t size() { return kSize; }
 
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const { return m_subspace.contains(i); }
@@ -107,7 +107,7 @@ class Measurement {
   constexpr std::array<indices_t, kSize> indices() const {
     std::array<uint8_t, kSize> subInds = m_subspace.indices();
     std::array<indices_t, kSize> inds{};
-    for (size_t i = 0; i < kSize; i++) {
+    for (std::size_t i = 0; i < kSize; i++) {
       inds[i] = static_cast<indices_t>(subInds[i]);
     }
     return inds;
@@ -211,10 +211,10 @@ namespace detail {
 //     -> VariantMeasurementGenerator<..., 1, 2, 3, 4>
 //     -> VariantMeasurementGenerator<..., 0, 1, 2, 3, 4>
 //
-template <typename indices_t, size_t kN, size_t... kSizes>
+template <typename indices_t, std::size_t kN, std::size_t... kSizes>
 struct VariantMeasurementGenerator
     : VariantMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {};
-template <typename indices_t, size_t... kSizes>
+template <typename indices_t, std::size_t... kSizes>
 struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
   using Type = std::variant<Measurement<indices_t, kSizes>...>;
 };

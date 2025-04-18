@@ -52,24 +52,17 @@ struct AlgorithmContext;
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using Fitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
-  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  using Linearizer = Acts::HelicalTrackLinearizer;
+  using Fitter = Acts::FullBilloirVertexFitter;
+  using Seeder = Acts::TrackDensityVertexFinder;
+  using Finder = Acts::IterativeVertexFinder;
+  using Options = Acts::VertexingOptions;
 
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+  using VertexCollection = std::vector<Acts::Vertex>;
 
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
@@ -93,11 +86,8 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};

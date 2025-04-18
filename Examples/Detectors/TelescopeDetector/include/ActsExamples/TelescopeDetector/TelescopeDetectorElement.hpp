@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
@@ -25,8 +24,7 @@ class DiscBounds;
 class ISurfaceMaterial;
 }  // namespace Acts
 
-namespace ActsExamples {
-namespace Telescope {
+namespace ActsExamples::Telescope {
 
 /// @class TelescopeDetectorElement
 ///
@@ -161,5 +159,4 @@ TelescopeDetectorElement::alignedTransforms() const {
   return m_alignedTransforms;
 }
 
-}  // namespace Telescope
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Telescope

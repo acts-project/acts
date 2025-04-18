@@ -71,7 +71,7 @@ class PrototracksToParameters final : public IAlgorithm {
   /// @param lvl is the logging level
   PrototracksToParameters(Config cfg, Acts::Logging::Level lvl);
 
-  ~PrototracksToParameters();
+  ~PrototracksToParameters() override;
 
   /// Run the algorithm.
   ///

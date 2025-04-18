@@ -14,7 +14,7 @@
 std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   std::vector<Vector2> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
-  for (size_t i = 0; i < vtxs.size(); i++) {
+  for (std::size_t i = 0; i < vtxs.size(); i++) {
     const auto& vtx = vtxs[i];
     if (i > 0) {
       sl << ",";

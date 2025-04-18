@@ -10,13 +10,13 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-namespace Acts {
-namespace detail {
+namespace Acts::detail {
 
 /// This function encapsulates the Kalman update performed on a MultiTrajectory
 /// for a single source link.
@@ -39,18 +39,17 @@ auto kalmanHandleMeasurement(
     const CalibrationContext &calibrationContext, propagator_state_t &state,
     const stepper_t &stepper, const extensions_t &extensions,
     const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
-    const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
+    const std::size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
-  TrackStatePropMask mask = TrackStatePropMask::All;
-  const size_t currentTrackIndex =
-      fittedStates.addTrackState(mask, lastTrackIndex);
-
-  // now get track state proxy back
+  TrackStatePropMask mask =
+      TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
+      TrackStatePropMask::Smoothed | TrackStatePropMask::Jacobian |
+      TrackStatePropMask::Calibrated;
   typename traj_t::TrackStateProxy trackStateProxy =
-      fittedStates.getTrackState(currentTrackIndex);
+      fittedStates.makeTrackState(mask, lastTrackIndex);
 
   // Set the trackStateProxy components with the state from the ongoing
   // propagation
@@ -64,17 +63,14 @@ auto kalmanHandleMeasurement(
                                          << " failed: " << res.error());
       return res.error();
     }
-    auto &[boundParams, jacobian, pathLength] = *res;
+    const auto &[boundParams, jacobian, pathLength] = *res;
 
     // Fill the track state
-    trackStateProxy.predicted() = std::move(boundParams.parameters());
-    if (boundParams.covariance().has_value()) {
-      trackStateProxy.predictedCovariance() =
-          std::move(*boundParams.covariance());
-    }
+    trackStateProxy.predicted() = boundParams.parameters();
+    trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-    trackStateProxy.jacobian() = std::move(jacobian);
-    trackStateProxy.pathLength() = std::move(pathLength);
+    trackStateProxy.jacobian() = jacobian;
+    trackStateProxy.pathLength() = pathLength;
   }
 
   // We have predicted parameters, so calibrate the uncalibrated input
@@ -96,7 +92,7 @@ auto kalmanHandleMeasurement(
     // - tag it as a measurement
     // - update the stepping state.
     // Else, just tag it as an outlier
-    if (not extensions.outlierFinder(trackStateProxy)) {
+    if (!extensions.outlierFinder(trackStateProxy)) {
       // Run Kalman update
       auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
                                           state.options.direction, logger);
@@ -138,20 +134,17 @@ auto kalmanHandleMeasurement(
 template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    traj_t &fittedStates, const size_t lastTrackIndex, bool doCovTransport,
+    traj_t &fittedStates, const std::size_t lastTrackIndex, bool doCovTransport,
     const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
   // Add a <mask> TrackState entry multi trajectory. This allocates storage for
   // all components, which we will set later.
-  TrackStatePropMask mask =
-      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
-  const size_t currentTrackIndex =
-      fittedStates.addTrackState(mask, lastTrackIndex);
-
-  // now get track state proxy back
+  TrackStatePropMask mask = TrackStatePropMask::Predicted |
+                            TrackStatePropMask::Smoothed |
+                            TrackStatePropMask::Jacobian;
   typename traj_t::TrackStateProxy trackStateProxy =
-      fittedStates.getTrackState(currentTrackIndex);
+      fittedStates.makeTrackState(mask, lastTrackIndex);
 
   // Set the trackStateProxy components with the state from the ongoing
   // propagation
@@ -163,17 +156,14 @@ auto kalmanHandleNoMeasurement(
     if (!res.ok()) {
       return res.error();
     }
-    auto &[boundParams, jacobian, pathLength] = *res;
+    const auto &[boundParams, jacobian, pathLength] = *res;
 
     // Fill the track state
-    trackStateProxy.predicted() = std::move(boundParams.parameters());
-    if (boundParams.covariance().has_value()) {
-      trackStateProxy.predictedCovariance() =
-          std::move(*boundParams.covariance());
-    }
+    trackStateProxy.predicted() = boundParams.parameters();
+    trackStateProxy.predictedCovariance() = state.stepping.cov;
 
-    trackStateProxy.jacobian() = std::move(jacobian);
-    trackStateProxy.pathLength() = std::move(pathLength);
+    trackStateProxy.jacobian() = jacobian;
+    trackStateProxy.pathLength() = pathLength;
 
     // Set the filtered parameter index to be the same with predicted
     // parameter
@@ -198,5 +188,4 @@ auto kalmanHandleNoMeasurement(
   return trackStateProxy;
 }
 
-}  // namespace detail
-}  // namespace Acts
+}  // namespace Acts::detail

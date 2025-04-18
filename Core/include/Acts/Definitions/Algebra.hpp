@@ -42,7 +42,6 @@ namespace Acts {
 /// no dynamic-sized symmetric matrix type is defined. Use the
 /// `ActsDynamicMatrix` instead.
 ///
-/// @{
 
 /// Common scalar (floating point type used for the default algebra types.
 ///
@@ -67,15 +66,12 @@ using ActsDynamicVector = Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>;
 using ActsDynamicMatrix =
     Eigen::Matrix<ActsScalar, Eigen::Dynamic, Eigen::Dynamic>;
 
-/// @}
-
 /// @defgroup coordinates-types Fixed-size vector/matrix types for coordinates
 ///
 /// These predefined types should always be used when handling coordinate
 /// vectors in different coordinate systems, i.e. on surfaces (2d), spatial
 /// position (3d), or space-time (4d).
 ///
-/// @{
 
 // coordinate vectors
 using Vector2 = ActsVector<2>;
@@ -103,7 +99,5 @@ using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 // - 3d affine stored as 4x4 matrix
 using Transform2 = Eigen::Transform<ActsScalar, 2, Eigen::AffineCompact>;
 using Transform3 = Eigen::Transform<ActsScalar, 3, Eigen::Affine>;
-
-/// @}
 
 }  // namespace Acts

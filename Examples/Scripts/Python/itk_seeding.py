@@ -11,9 +11,7 @@ from acts.examples import (
     SeedingPerformanceWriter,
 )
 from acts.examples.reconstruction import (
-    addSeeding,
     addStandardSeeding,
-    SeedingAlgorithm,
 )
 
 from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
@@ -23,7 +21,6 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 
 def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
-
     # create temporary file with pixel SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
         temp = open(tmpdirname + "/event000000000-spacepoints_pixel.csv", "w+t")

@@ -24,9 +24,7 @@
 
 #include "TGeoManager.h"
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 /// @brief struct to load the global geometry
 struct RootGeometry {
@@ -109,5 +107,4 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

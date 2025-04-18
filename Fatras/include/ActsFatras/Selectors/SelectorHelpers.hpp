@@ -49,7 +49,7 @@ struct Range {
   template <typename T>
   bool operator()(const T &thing) const {
     const auto val = cast_t()(thing);
-    return ((valMin <= val) and (val < valMax));
+    return ((valMin <= val) && (val < valMax));
   }
 };
 

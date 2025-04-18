@@ -16,9 +16,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <cmath>
 #include <functional>
@@ -26,20 +26,15 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
-
-using RecordedMaterial = std::vector<std::pair<Acts::Material, Acts::Vector3>>;
 using EAxis = Acts::detail::EquidistantAxis;
-using Grid2D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 /// @brief Various test for the Material in the case of a Cuboid volume and 2D
 /// Grid
@@ -416,5 +411,4 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

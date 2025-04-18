@@ -13,9 +13,9 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cstddef>
@@ -29,16 +29,14 @@ namespace Acts {
 class MaterialSlab;
 
 using EAxis = Acts::detail::EquidistantAxis;
-using Grid2D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
-using Grid3D =
-    Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+using Grid2D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+using Grid3D = Acts::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
 using MaterialGrid2D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
+    Acts::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
-using MaterialGridAxisData = std::tuple<double, double, size_t>;
+using MaterialGridAxisData = std::tuple<double, double, std::size_t>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.

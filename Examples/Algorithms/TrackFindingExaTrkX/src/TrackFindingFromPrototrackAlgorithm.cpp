@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
+#include "Acts/EventData/ProxyAccessor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
@@ -93,9 +94,6 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -125,7 +123,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   TrackContainer tracks(trackContainer, trackStateContainer);
 
   tracks.addColumn<unsigned int>("trackGroup");
-  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+  Acts::ProxyAccessor<unsigned int> seedNumber("trackGroup");
 
   std::size_t nSeed = 0;
   std::size_t nFailed = 0;
@@ -162,7 +160,9 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     nTracksPerSeeds.push_back(tracksForSeed.size());
 
     for (auto& track : tracksForSeed) {
-      seedNumber(track) = nSeed;
+      // Set the seed number, this number decrease by 1 since the seed number
+      // has already been updated
+      seedNumber(track) = nSeed - 1;
     }
   }
 

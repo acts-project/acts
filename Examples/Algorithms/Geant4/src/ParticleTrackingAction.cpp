@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,13 +11,11 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cassert>
-#include <cstddef>
 #include <ostream>
 #include <unordered_map>
 #include <utility>
@@ -39,7 +37,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
   // nicer to investigate, if we can handle all particle stop conditions in the
   // SensitiveSteppingAction... This seems to happen O(1) times in a ttbar
   // event, so seems not to be too problematic
-  if (not eventStore().hitBuffer.empty()) {
+  if (!eventStore().hitBuffer.empty()) {
     eventStore().hitBuffer.clear();
     ACTS_WARNING("Hit buffer not empty after track");
   }
@@ -48,7 +46,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
   // There is already a warning printed in the makeParticleId function if this
   // indicates a failure
-  if (not barcode) {
+  if (!barcode) {
     return;
   }
 
@@ -81,10 +79,10 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   const auto barcode = eventStore().trackIdMapping.at(aTrack->GetTrackID());
 
   auto hasHits = eventStore().particleHitCount.find(barcode) !=
-                     eventStore().particleHitCount.end() and
+                     eventStore().particleHitCount.end() &&
                  eventStore().particleHitCount.at(barcode) > 0;
 
-  if (not m_cfg.keepParticlesWithoutHits and not hasHits) {
+  if (!m_cfg.keepParticlesWithoutHits && !hasHits) {
     [[maybe_unused]] auto n = eventStore().particlesInitial.erase(
         ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
@@ -94,7 +92,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   auto particle = convert(*aTrack, barcode);
   auto [it, success] = eventStore().particlesFinal.insert(particle);
 
-  if (not success) {
+  if (!success) {
     eventStore().particleIdCollisionsFinal++;
     ACTS_WARNING("Particle ID collision with "
                  << particle.particleId()
@@ -119,12 +117,27 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
 
+  std::uint32_t numberOfHits = 0;
+  if (auto it = eventStore().particleHitCount.find(particleId);
+      it != eventStore().particleHitCount.end()) {
+    numberOfHits = it->second;
+  }
+
+  ActsFatras::ParticleOutcome particleOutcome =
+      ActsFatras::ParticleOutcome::Alive;
+  if (auto it = eventStore().particleOutcome.find(particleId);
+      it != eventStore().particleOutcome.end()) {
+    particleOutcome = it->second;
+  }
+
   // Now create the Particle
   ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
                                       charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);
   aParticle.setAbsoluteMomentum(p);
+  aParticle.setNumberOfHits(numberOfHits);
+  aParticle.setOutcome(particleOutcome);
   return aParticle;
 }
 

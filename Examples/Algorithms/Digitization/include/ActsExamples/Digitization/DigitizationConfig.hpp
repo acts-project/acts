@@ -70,7 +70,7 @@ struct GeometricConfig {
 
   /// Charge generation (configurable via the chargeSmearer)
   Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
-    if (not chargeSmearer) {
+    if (!chargeSmearer) {
       return path;
     }
     auto res = chargeSmearer(path, rng);
@@ -84,7 +84,8 @@ struct GeometricConfig {
   /// Position and Covariance generation (currently not implemented)
   /// Takes as an argument the clsuter size and an random engine
   /// @return a vector of uncorrelated covariance values
-  std::vector<Acts::ActsScalar> variances(size_t /*size0*/, size_t /*size1*/,
+  std::vector<Acts::ActsScalar> variances(std::size_t /*size0*/,
+                                          std::size_t /*size1*/,
                                           RandomEngine & /*rng*/) const {
     return {};
   };

@@ -37,7 +37,7 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<double, GenericCuboidVolumeBounds::BoundValues::eSize>&
         values) noexcept(false)
     : m_vertices() {
-  for (size_t iv = 0; iv < 8; ++iv) {
+  for (std::size_t iv = 0; iv < 8; ++iv) {
     m_vertices[iv] =
         Vector3(values[iv * 3], values[iv * 3 + 1], values[iv * 3 + 2]);
   }
@@ -46,10 +46,10 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 
 bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
                                              double tol) const {
-  constexpr std::array<size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
+  constexpr std::array<std::size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
   bool ref = std::signbit((gpos - m_vertices[vtxs[0]]).dot(m_normals[0]));
-  for (size_t i = 1; i < 6; i++) {
+  for (std::size_t i = 1; i < 6; i++) {
     double dot = (gpos - m_vertices[vtxs[i]]).dot(m_normals[i]);
     if (std::signbit(dot) != ref) {
       // technically outside, but how far?
@@ -63,14 +63,15 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
   return true;
 }
 
-Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+std::vector<Acts::OrientedSurface>
+Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Transform3& transform) const {
-  OrientedSurfaces oSurfaces;
+  std::vector<OrientedSurface> oSurfaces;
 
   // approximate cog of the volume
   Vector3 cog(0, 0, 0);
 
-  for (size_t i = 0; i < 8; i++) {
+  for (std::size_t i = 0; i < 8; i++) {
     cog += m_vertices[i];
   }
 
@@ -115,7 +116,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface(std::move(srf), dir));
+    oSurfaces.push_back(OrientedSurface{std::move(srf), dir});
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
@@ -131,7 +132,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
 std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
     std::ostream& sl) const {
   sl << "Acts::GenericCuboidVolumeBounds: vertices (x, y, z) =\n";
-  for (size_t i = 0; i < 8; i++) {
+  for (std::size_t i = 0; i < 8; i++) {
     if (i > 0) {
       sl << ",\n";
     }
@@ -145,13 +146,13 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   // the normals point inwards
   Vector3 cog(0, 0, 0);
 
-  for (size_t i = 0; i < 8; i++) {
+  for (std::size_t i = 0; i < 8; i++) {
     cog += m_vertices[i];
   }
 
   cog *= 0.125;  // 1/8.
 
-  size_t idx = 0;
+  std::size_t idx = 0;
 
   auto handle_face = [&](const auto& a, const auto& b, const auto& c,
                          const auto& d) {
@@ -189,8 +190,8 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
 std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
   std::vector<double> rvalues;
   rvalues.reserve(BoundValues::eSize);
-  for (size_t iv = 0; iv < 8; ++iv) {
-    for (size_t ic = 0; ic < 3; ++ic) {
+  for (std::size_t iv = 0; iv < 8; ++iv) {
+    for (std::size_t ic = 0; ic < 3; ++ic) {
       rvalues.push_back(m_vertices[iv][ic]);
     }
   }
@@ -210,7 +211,7 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
   vmin = transform * m_vertices[0];
   vmax = transform * m_vertices[0];
 
-  for (size_t i = 1; i < 8; i++) {
+  for (std::size_t i = 1; i < 8; i++) {
     Vector3 vtx = transform * m_vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);

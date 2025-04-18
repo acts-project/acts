@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -32,6 +33,40 @@
 #include <utility>
 #include <vector>
 
+namespace ActsExamples {
+
+namespace {
+
+Acts::BoundSquareMatrix makeInitialCovariance(
+    const TrackParamsEstimationAlgorithm::Config& config,
+    const Acts::BoundVector& params, const SimSpacePoint& sp) {
+  Acts::BoundSquareMatrix result = Acts::BoundSquareMatrix::Zero();
+
+  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
+    double sigma = config.initialSigmas[i];
+
+    // Add momentum dependent uncertainties
+    sigma +=
+        config.initialSimgaQoverPCoefficients[i] * params[Acts::eBoundQOverP];
+
+    double var = sigma * sigma;
+
+    // Inflate the time uncertainty if no time measurement is available
+    if (i == Acts::eBoundTime && !sp.t().has_value()) {
+      var *= config.noTimeVarInflation;
+    }
+
+    // Inflate the initial covariance
+    var *= config.initialVarInflation[i];
+
+    result(i, i) = var;
+  }
+
+  return result;
+}
+
+}  // namespace
+
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
@@ -43,10 +78,10 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }
-  if (not m_cfg.trackingGeometry) {
+  if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (not m_cfg.magneticField) {
+  if (!m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
   }
 
@@ -56,12 +91,6 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
   m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
   m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
-
-  // Set up the track parameters covariance (the same for all tracks)
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
-                         m_cfg.initialSigmas[i];
-  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
@@ -72,13 +101,13 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
 
-  std::optional<SimSeedContainer> outputSeeds;
+  SimSeedContainer outputSeeds;
   if (m_outputSeeds.isInitialized()) {
-    outputSeeds->reserve(seeds.size());
+    outputSeeds.reserve(seeds.size());
   }
 
   const ProtoTrackContainer* inputTracks = nullptr;
-  std::optional<ProtoTrackContainer> outputTracks;
+  ProtoTrackContainer outputTracks;
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
     const auto& inputTracksRef = m_inputTracks(ctx);
     if (seeds.size() != inputTracksRef.size()) {
@@ -86,8 +115,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       return ProcessCode::ABORT;
     }
     inputTracks = &inputTracksRef;
-    outputTracks.emplace();
-    outputTracks->reserve(seeds.size());
+    outputTracks.reserve(seeds.size());
   }
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
@@ -95,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
 
   // Loop over all found seeds to estimate track parameters
-  for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
+  for (std::size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
@@ -125,20 +153,24 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
         m_cfg.bFieldMin, logger());
-    if (not optParams.has_value()) {
+    if (!optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
       continue;
-    } else {
-      const auto& params = optParams.value();
-      trackParameters.emplace_back(surface->getSharedPtr(), params,
-                                   m_covariance, m_cfg.particleHypothesis);
-      if (outputSeeds) {
-        outputSeeds->push_back(seed);
-      }
-      if (outputTracks && inputTracks != nullptr) {
-        outputTracks->push_back(inputTracks->at(iseed));
-      }
+    }
+
+    const auto& params = optParams.value();
+
+    Acts::BoundSquareMatrix cov =
+        makeInitialCovariance(m_cfg, params, *bottomSP);
+
+    trackParameters.emplace_back(surface->getSharedPtr(), params, cov,
+                                 m_cfg.particleHypothesis);
+    if (m_outputSeeds.isInitialized()) {
+      outputSeeds.push_back(seed);
+    }
+    if (m_outputTracks.isInitialized() && inputTracks != nullptr) {
+      outputTracks.push_back(inputTracks->at(iseed));
     }
   }
 
@@ -146,12 +178,13 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
   if (m_outputSeeds.isInitialized()) {
-    m_outputSeeds(ctx, std::move(*outputSeeds));
+    m_outputSeeds(ctx, std::move(outputSeeds));
   }
 
   if (m_outputTracks.isInitialized()) {
-    m_outputTracks(ctx, std::move(*outputTracks));
+    m_outputTracks(ctx, std::move(outputTracks));
   }
 
   return ProcessCode::SUCCESS;
 }
+}  // namespace ActsExamples

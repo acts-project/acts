@@ -31,8 +31,9 @@ namespace Acts {
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const RadialBounds& rBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -54,7 +55,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binR and bval != binPhi) {
+    } else if (bval != binR && bval != binPhi) {
       throw std::invalid_argument("Disc binning must be: phi, r");
     }
     float min = 0., max = 0.;
@@ -80,8 +81,9 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const CylinderBounds& cBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -104,7 +106,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binRPhi and bval != binPhi and bval != binZ) {
+    } else if (bval != binRPhi && bval != binPhi && bval != binZ) {
       throw std::invalid_argument("Cylinder binning must be: rphi, phi, z");
     }
     float min = 0., max = 0.;
@@ -133,9 +135,9 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const RectangleBounds& pBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const RectangleBounds& pBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -156,7 +158,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX and bval != binY) {
+    } else if (bval != binX && bval != binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
@@ -183,9 +185,9 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const TrapezoidBounds& pBounds,
-                            const Transform3& transform) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const TrapezoidBounds& pBounds,
+                                          const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
 
@@ -206,7 +208,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not equidistant
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbitrary binning can not be adjusted.");
-    } else if (bval != binX and bval != binY) {
+    } else if (bval != binX && bval != binY) {
       throw std::invalid_argument("Rectangle binning must be: x, y. ");
     }
     float min = 0., max = 0.;
@@ -233,8 +235,9 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param gctx Geometry context to get the surfaces transform
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface,
-                            const GeometryContext& gctx) {
+static inline BinUtility adjustBinUtility(const BinUtility& bu,
+                                          const Surface& surface,
+                                          const GeometryContext& gctx) {
   // The surface type is a cylinder
   if (surface.type() == Surface::Cylinder) {
     // Cast to Cylinder bounds and return
@@ -266,8 +269,6 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface,
 
   throw std::invalid_argument(
       "Bin adjustment not implemented for this surface yet!");
-
-  return BinUtility();
 }
 
 }  // namespace Acts

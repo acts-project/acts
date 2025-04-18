@@ -4,7 +4,6 @@ file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../Data" acts_test_data_dir)
 add_library(
   ActsTestsCommonHelpers SHARED
   Acts/Tests/CommonHelpers/DataDirectory.cpp
-  Acts/Tests/CommonHelpers/TestSourceLink.cpp
 )
 target_compile_definitions(
   ActsTestsCommonHelpers

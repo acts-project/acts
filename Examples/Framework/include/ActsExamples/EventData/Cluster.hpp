@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsFatras/Digitization/Channelizer.hpp"
+#include "ActsFatras/Digitization/Segmentizer.hpp"
 
 #include <vector>
 
@@ -16,9 +16,9 @@ namespace ActsExamples {
 
 /// Simple struct holding cluster information.
 struct Cluster {
-  using Cell = ActsFatras::Channelizer::ChannelSegment;
-  size_t sizeLoc0 = 0;
-  size_t sizeLoc1 = 0;
+  using Cell = ActsFatras::Segmentizer::ChannelSegment;
+  std::size_t sizeLoc0 = 0;
+  std::size_t sizeLoc1 = 0;
   std::vector<Cell> channels;
 };
 

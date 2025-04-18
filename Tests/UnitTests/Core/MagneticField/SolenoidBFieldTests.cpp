@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file SolenoidBFieldTests.cpp
-
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -21,12 +19,9 @@
 #include <cstddef>
 #include <fstream>
 
-namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // Create a test context
@@ -48,8 +43,8 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
 
   double tol = 1e-6;
   double tol_B = 1e-6_T;
-  size_t steps = 20;
-  for (size_t i = 0; i < steps; i++) {
+  std::size_t steps = 20;
+  for (std::size_t i = 0; i < steps; i++) {
     double r = 1.5 * cfg.radius / steps * i;
     BOOST_TEST_CONTEXT("r=" << r) {
       Vector3 B1 = bField.getField({r, 0, 0}, cache).value();
@@ -61,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
       CHECK_CLOSE_ABS(B1, B2, tol_B);
 
       // at this point in r, go along the length
-      for (size_t j = 0; j <= steps; j++) {
+      for (std::size_t j = 0; j <= steps; j++) {
         // double z = cfg.L/steps * j - (cfg.L/2.);
         double z = (1.5 * cfg.length / 2.) / steps * j;
         BOOST_TEST_CONTEXT("z=" << z) {
@@ -113,5 +108,4 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // outf.close();
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

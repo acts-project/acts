@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   const auto [i, j] = mat.minDistancePair();
-  BOOST_CHECK(std::min(i, j) == 1);
-  BOOST_CHECK(std::max(i, j) == 2);
+  BOOST_CHECK_EQUAL(std::min(i, j), 1);
+  BOOST_CHECK_EQUAL(std::max(i, j), 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   const auto [full_i, full_j] = mat_full.minDistancePair();
   const auto [small_i, small_j] = mat_small.minDistancePair();
 
-  BOOST_CHECK(std::min(full_i, full_j) == 0);
-  BOOST_CHECK(std::max(full_i, full_j) == 1);
-  BOOST_CHECK(full_i == small_i);
-  BOOST_CHECK(full_j == small_j);
+  BOOST_CHECK_EQUAL(std::min(full_i, full_j), 0);
+  BOOST_CHECK_EQUAL(std::max(full_i, full_j), 1);
+  BOOST_CHECK_EQUAL(full_i, small_i);
+  BOOST_CHECK_EQUAL(full_j, small_j);
 }
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i, j) == 1);
-    BOOST_CHECK(std::max(i, j) == 2);
+    BOOST_CHECK_EQUAL(std::min(i, j), 1);
+    BOOST_CHECK_EQUAL(std::max(i, j), 2);
   }
 
   cmps[3].boundPars = BoundVector::Constant(0.1);
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i, j) == 1);
-    BOOST_CHECK(std::max(i, j) == 3);
+    BOOST_CHECK_EQUAL(std::min(i, j), 1);
+    BOOST_CHECK_EQUAL(std::max(i, j), 3);
   }
 
   cmps[0].boundPars = BoundVector::Constant(1.01);
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i, j) == 0);
-    BOOST_CHECK(std::max(i, j) == 2);
+    BOOST_CHECK_EQUAL(std::min(i, j), 0);
+    BOOST_CHECK_EQUAL(std::max(i, j), 2);
   }
 }
 
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   // Reduce by factor of 2 and check if weights and QoP are correct
   Acts::reduceMixtureWithKLDistance(cmps, 2, *surface);
 
-  BOOST_CHECK(cmps.size() == 2);
+  BOOST_CHECK_EQUAL(cmps.size(), 2);
 
   std::sort(cmps.begin(), cmps.end(), [](const auto &a, const auto &b) {
     return a.boundPars[eBoundQOverP] < b.boundPars[eBoundQOverP];
@@ -159,7 +159,31 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   // Reduce by factor of 2 and check if weights and QoP are correct
   Acts::reduceMixtureWithKLDistance(cmps, 1, *surface);
 
-  BOOST_CHECK(cmps.size() == 1);
+  BOOST_CHECK_EQUAL(cmps.size(), 1);
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
+}
+
+BOOST_AUTO_TEST_CASE(test_weight_cut_reduction) {
+  auto dummy = Acts::Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0},
+                                                       Vector3{1, 0, 0});
+  std::vector<GsfComponent> cmps;
+
+  // weights do not need to be normalized for this test
+  for (auto w : {1.0, 2.0, 3.0, 4.0}) {
+    GsfComponent a;
+    a.boundPars = BoundVector::Zero();
+    a.boundCov = BoundSquareMatrix::Identity();
+    a.weight = w;
+    cmps.push_back(a);
+  }
+
+  Acts::reduceMixtureLargestWeights(cmps, 2, *dummy);
+
+  BOOST_CHECK_EQUAL(cmps.size(), 2);
+  std::sort(cmps.begin(), cmps.end(),
+            [](const auto &a, const auto &b) { return a.weight < b.weight; });
+
+  BOOST_CHECK_EQUAL(cmps[0].weight, 3.0);
+  BOOST_CHECK_EQUAL(cmps[1].weight, 4.0);
 }

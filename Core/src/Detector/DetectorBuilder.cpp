@@ -29,7 +29,7 @@ std::shared_ptr<const Acts::Experimental::Detector>
 Acts::Experimental::DetectorBuilder::construct(
     const GeometryContext& gctx) const {
   // Screen printout of the auxiliary information
-  if (not m_cfg.auxiliary.empty()) {
+  if (!m_cfg.auxiliary.empty()) {
     ACTS_DEBUG(m_cfg.auxiliary);
   }
   ACTS_DEBUG("Building a detector with name " << m_cfg.name);
@@ -40,6 +40,7 @@ Acts::Experimental::DetectorBuilder::construct(
     ACTS_DEBUG("Assigning geometry ids to the detector");
     auto cache = m_cfg.geoIdGenerator->generateCache();
     std::for_each(roots.volumes.begin(), roots.volumes.end(), [&](auto& v) {
+      ACTS_VERBOSE("-> Assigning geometry id to volume " << v->name());
       m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
     });
   }

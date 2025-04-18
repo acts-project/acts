@@ -206,7 +206,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
  private:
   Config m_cfg;
 
-  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+  WriteDataHandle<std::unordered_map<std::size_t, Acts::RecordedMaterialTrack>>
       m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 

@@ -89,8 +89,8 @@ namespace Acts {
 // Ensure bound track parameters definition is valid.
 static_assert(std::is_enum_v<BoundIndices>,
               "'BoundIndices' must be an enum type");
-static_assert(std::is_convertible_v<BoundIndices, size_t>,
-              "'BoundIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<BoundIndices, std::size_t>,
+              "'BoundIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(BoundIndices::eBoundSize == 6u,
               "Bound track parameters must have six components");
@@ -98,8 +98,8 @@ static_assert(BoundIndices::eBoundSize == 6u,
 // Ensure free track parameters definition is valid.
 static_assert(std::is_enum_v<FreeIndices>,
               "'FreeIndices' must be an enum type");
-static_assert(std::is_convertible_v<FreeIndices, size_t>,
-              "'FreeIndices' must be convertible to size_t");
+static_assert(std::is_convertible_v<FreeIndices, std::size_t>,
+              "'FreeIndices' must be convertible to std::size_t");
 // Only the order can be user-defined
 static_assert(FreeIndices::eFreeSize == 8u,
               "Free track parameters must have eight components");

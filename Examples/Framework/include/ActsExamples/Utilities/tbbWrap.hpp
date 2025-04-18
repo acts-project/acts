@@ -23,8 +23,6 @@
 #include <tbb/task_arena.h>
 #endif
 
-namespace ActsExamples {
-
 /// Wrapper for most of the tbb functions that we use in Sequencer.
 ///
 /// It disables the use of tbb if nthreads=1.
@@ -42,10 +40,10 @@ namespace ActsExamples {
 ///   https://stackoverflow.com/questions/59736661/how-to-completely-switch-off-threading-in-tbb-code
 
 #ifdef ACTS_EXAMPLES_NO_TBB
-namespace tbb {
+namespace ActsExamples::tbb {
 namespace task_arena {
 constexpr int automatic = -1;
-}
+}  // namespace task_arena
 
 template <typename Value>
 struct blocked_range {
@@ -57,10 +55,10 @@ struct blocked_range {
   Value my_end;
   Value my_begin;
 };
-}  // namespace tbb
+}  // namespace ActsExamples::tbb
 #endif
 
-namespace tbbWrap {
+namespace ActsExamples::tbbWrap {
 /// enableTBB keeps a record of whether we are multi-threaded (nthreads!=1) or
 /// not. This is set once in task_arena and stored globally.
 /// This means that enableTBB(nthreads) itself is not thread-safe. That should
@@ -173,5 +171,4 @@ class queuing_mutex {
   };
 };
 
-}  // namespace tbbWrap
-}  // namespace ActsExamples
+}  // namespace ActsExamples::tbbWrap

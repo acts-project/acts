@@ -16,8 +16,7 @@ namespace Acts {
 
 class Surface;
 
-namespace Concepts {
-namespace SourceLinkAccessor {
+namespace Concepts::SourceLinkAccessor {
 
 template <typename T>
 using container_t = typename T::Container;
@@ -49,7 +48,7 @@ METHOD_TRAIT(at_t, at);
         static_assert(container_pointer_exists, "Pointer to container not found");
 
         constexpr static bool count_exists = has_method<const S,
-          size_t, count_t, const Surface&>;
+          std::size_t, count_t, const Surface&>;
         static_assert(count_exists, "count method not found");
         constexpr static bool range_exists = has_method<const S,
           std::pair<typename S::Iterator, typename S::Iterator>,
@@ -69,8 +68,7 @@ METHOD_TRAIT(at_t, at);
                                               at_exists>;
       };
 // clang-format on
-}  // namespace SourceLinkAccessor
-}  // namespace Concepts
+}  // namespace Concepts::SourceLinkAccessor
 
 template <typename accessor>
 constexpr bool SourceLinkAccessorConcept =

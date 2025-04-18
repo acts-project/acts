@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
       SurfaceBoundsJsonConverter::toJsonDetray(*rectangeRef);
 
   std::vector<ActsScalar> boundariesRef = {4, 6};
-  BOOST_CHECK(rectangleOutDetray["shape"].get<unsigned int>() == 5u);
+  BOOST_CHECK_EQUAL(rectangleOutDetray["shape"].get<unsigned int>(), 5u);
   BOOST_CHECK(rectangleOutDetray["boundaries"].get<std::vector<ActsScalar>>() ==
               boundariesRef);
 }

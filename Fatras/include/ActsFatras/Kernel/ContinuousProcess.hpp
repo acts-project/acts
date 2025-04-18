@@ -64,7 +64,7 @@ struct ContinuousProcess {
   bool operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                   Particle &particle, std::vector<Particle> &generated) const {
     // not selecting this process is not a break condition
-    if (not selectInputParticle(particle)) {
+    if (!selectInputParticle(particle)) {
       return false;
     }
     // modify particle according to the physics process
@@ -74,7 +74,7 @@ struct ContinuousProcess {
                  std::back_inserter(generated), selectChildParticle);
     // break condition is defined by whether the output particle is still valid
     // or not e.g. because it has fallen below a momentum threshold.
-    return not selectOutputParticle(particle);
+    return !selectOutputParticle(particle);
   }
 };
 

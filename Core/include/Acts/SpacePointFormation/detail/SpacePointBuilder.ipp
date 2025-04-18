@@ -5,14 +5,14 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Definitions/Algebra.hpp"
+
 namespace Acts {
 
 template <typename spacepoint_t>
 SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
-    const SpacePointBuilderConfig& cfg,
-    std::function<spacepoint_t(Acts::Vector3, Acts::Vector2,
-                               boost::container::static_vector<SourceLink, 2>)>
-        func,
+    const SpacePointBuilderConfig& cfg, BuilderFunction func,
     std::unique_ptr<const Logger> logger)
     : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {
   m_spUtility = std::make_shared<SpacePointUtility>(cfg);
@@ -27,15 +27,15 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   const unsigned int num_slinks = sourceLinks.size();
 
   Acts::Vector3 gPos = Acts::Vector3::Zero();
+  std::optional<Acts::ActsScalar> gTime = std::nullopt;
   Acts::Vector2 gCov = Acts::Vector2::Zero();
+  std::optional<Acts::ActsScalar> gCovT = std::nullopt;
 
   if (num_slinks == 1) {  // pixel SP formation
     auto slink = sourceLinks.at(0);
-    auto [param, cov] = opt.paramCovAccessor(sourceLinks.at(0));
-    auto gPosCov = m_spUtility->globalCoords(
+    auto [param, cov] = opt.paramCovAccessor(slink);
+    std::tie(gPos, gTime, gCov, gCovT) = m_spUtility->globalCoords(
         gctx, slink, m_config.slSurfaceAccessor, param, cov);
-    gPos = gPosCov.first;
-    gCov = gPosCov.second;
   } else if (num_slinks == 2) {  // strip SP formation
 
     const auto& ends1 = opt.stripEndsPair.first;
@@ -71,9 +71,9 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
       gPos = ends1.first + resultPerpProj.value() * spParams.firstBtmToTop;
     }
 
-    double theta =
-        acos(spParams.firstBtmToTop.dot(spParams.secondBtmToTop) /
-             (spParams.firstBtmToTop.norm() * spParams.secondBtmToTop.norm()));
+    double theta = std::acos(
+        spParams.firstBtmToTop.dot(spParams.secondBtmToTop) /
+        (spParams.firstBtmToTop.norm() * spParams.secondBtmToTop.norm()));
 
     gCov = m_spUtility->calcRhoZVars(gctx, sourceLinks.at(0), sourceLinks.at(1),
                                      m_config.slSurfaceAccessor,
@@ -85,7 +85,7 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   boost::container::static_vector<SourceLink, 2> slinks(sourceLinks.begin(),
                                                         sourceLinks.end());
 
-  spacePointIt = m_spConstructor(gPos, gCov, std::move(slinks));
+  spacePointIt = m_spConstructor(gPos, gTime, gCov, gCovT, std::move(slinks));
 }
 
 template <typename spacepoint_t>
@@ -108,12 +108,15 @@ void SpacePointBuilder<spacepoint_t>::makeSourceLinkPairs(
       const auto& slinkBack = slinksBack[j];
 
       const auto [paramFront, covFront] = pairOpt.paramCovAccessor(slinkFront);
-      const auto [gposFront, gcovFront] = m_spUtility->globalCoords(
-          gctx, slinkFront, m_config.slSurfaceAccessor, paramFront, covFront);
+      const auto [gposFront, gtimeFront, gcovFront, gcovtFront] =
+          m_spUtility->globalCoords(gctx, slinkFront,
+                                    m_config.slSurfaceAccessor, paramFront,
+                                    covFront);
 
       const auto [paramBack, covBack] = pairOpt.paramCovAccessor(slinkBack);
-      const auto [gposBack, gcovBack] = m_spUtility->globalCoords(
-          gctx, slinkBack, m_config.slSurfaceAccessor, paramBack, covBack);
+      const auto [gposBack, gtimeBack, gcovBack, gcovtBack] =
+          m_spUtility->globalCoords(gctx, slinkBack, m_config.slSurfaceAccessor,
+                                    paramBack, covBack);
 
       auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, pairOpt.vertex, pairOpt.diffDist,

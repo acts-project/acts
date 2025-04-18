@@ -1,0 +1,76 @@
+histograms:
+  "vx|vy|vz":
+    nbins: 100
+    min: -0.1
+    max: 0.1
+
+  vz:
+    nbins: 100
+    min: -200.0
+    max: 200.0
+
+  vt:
+    nbins: 100
+    min: -4.0
+    max: 4.0
+
+  "p|pt":
+    nbins: 100
+    min: 0
+    max: 200.0
+
+  "px|py|pz":
+    nbins: 100
+    min: -200.0
+    max: 200.0
+
+  eta:
+    nbins: 100
+    min: -3.0
+    max: 3.0
+
+  phi:
+    nbins: 100
+    min: -4.0
+    max: 4.0
+
+  q:
+    nbins: 100
+    min: -2.0
+    max: 2.0
+
+  m:
+    nbins: 100
+    min: 0.0
+    max: 0.15
+
+  e_loss:
+    nbins: 20
+    min: 0.0
+    max: 200.0
+
+  total_x0:
+    nbins: 20
+    min: 0.0
+    max: 3.0
+
+  total_l0:
+    nbins: 20
+    min: 0.0
+    max: 3.0
+
+  number_of_hits:
+    nbins: 26
+    min: 0
+    max: 25
+
+exclude:
+  - event_id
+  - particle_id
+  - particle_type
+  - process
+  - vertex_primary
+  - vertex_secondary
+  - particle
+  - generation
+  - sub_particle

@@ -13,7 +13,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdaters.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -58,7 +58,7 @@ std::vector<std::size_t> Acts::Experimental::detail::binSequence(
     // Close case
     std::size_t span = bmax - bmin + 1u + 2 * expand;
     // Safe with respect to the closure point, treat as bound
-    if (2 * span < nBins and (bmax + expand <= nBins) and
+    if (2 * span < nBins && (bmax + expand <= nBins) &&
         (int(bmin) - int(expand) > 0)) {
       return binSequence({bmin, bmax}, expand, nBins,
                          Acts::detail::AxisBoundaryType::Bound);

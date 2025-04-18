@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -141,8 +141,8 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
           << eventStore().particlesFinal.size());
 
   // Print out warnings about possible particle collision if happened
-  if (eventStore().particleIdCollisionsInitial > 0 or
-      eventStore().particleIdCollisionsFinal > 0 or
+  if (eventStore().particleIdCollisionsInitial > 0 ||
+      eventStore().particleIdCollisionsFinal > 0 ||
       eventStore().parentIdNotFound > 0) {
     ACTS_WARNING(
         "Particle ID collisions detected, don't trust the particle "
@@ -222,6 +222,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     }
 
     ParticleKillAction::Config particleKillCfg;
+    particleKillCfg.eventStore = m_eventStore;
     particleKillCfg.volume = cfg.killVolume;
     particleKillCfg.maxTime = cfg.killAfterTime;
     particleKillCfg.secondaries = cfg.killSecondaries;

@@ -134,7 +134,7 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
       double navigationValue =
           0.5 * (boundaries.at(boundaries.size() - 1) + max);
       // create navigation layer only when necessary
-      if (navigationValue != max) {
+      if (navigationValue != max && lastLayer != nullptr) {
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
             createNavigationSurface(gctx, *lastLayer, bValue,

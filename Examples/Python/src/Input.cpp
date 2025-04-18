@@ -8,7 +8,9 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/Io/Csv/CsvDriftCircleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
+#include "ActsExamples/Io/Csv/CsvMuonSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
@@ -18,7 +20,8 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
-#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootTrackSummaryReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexReader.hpp"
 
 #include <memory>
 
@@ -31,24 +34,26 @@ using namespace pybind11::literals;
 using namespace ActsExamples;
 
 namespace Acts::Python {
+
 void addInput(Context& ctx) {
   auto mex = ctx.get("examples");
 
   // ROOT READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootParticleReader, mex,
-                             "RootParticleReader", particleCollection,
-                             vertexPrimaryCollection, vertexSecondaryCollection,
-                             treeName, filePath, orderedEvents);
+                             "RootParticleReader", outputParticles, treeName,
+                             filePath);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootVertexReader, mex,
+                             "RootVertexReader", outputVertices, treeName,
+                             filePath);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootMaterialTrackReader, mex,
-                             "RootMaterialTrackReader", collection, treeName,
-                             fileList, orderedEvents,
-                             readCachedSurfaceInformation);
+                             "RootMaterialTrackReader", outputMaterialTracks,
+                             treeName, fileList, readCachedSurfaceInformation);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootTrajectorySummaryReader, mex,
-                             "RootTrajectorySummaryReader", outputTracks,
-                             outputParticles, treeName, filePath,
-                             orderedEvents);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::RootTrackSummaryReader, mex,
+                             "RootTrackSummaryReader", outputTracks,
+                             outputParticles, treeName, filePath);
 
   // CSV READERS
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvParticleReader, mex,
@@ -68,6 +73,12 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvSimHitReader, mex,
                              "CsvSimHitReader", inputDir, inputStem,
                              outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMuonSimHitReader, mex,
+                             "CsvMuonSimHitReader", inputDir, inputStem,
+                             outputSimHits);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvDriftCircleReader, mex,
+                             "CsvDriftCircleReader", inputDir, inputStem,
+                             outputDriftCircles);
 
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::CsvSpacePointReader, mex, "CsvSpacePointReader", inputDir,
@@ -85,6 +96,7 @@ void addInput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::RootSimHitReader, mex,
                              "RootSimHitReader", treeName, filePath,
-                             simHitCollection);
+                             outputSimHits);
 }
+
 }  // namespace Acts::Python

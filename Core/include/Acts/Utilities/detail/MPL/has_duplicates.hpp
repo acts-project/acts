@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 namespace {
 template <typename... Args>
@@ -32,7 +30,7 @@ struct has_duplicates<first, second, others...> {
   static constexpr bool _second = has_duplicates<second, others...>::value;
 
  public:
-  static constexpr bool value = _first or _second;
+  static constexpr bool value = _first || _second;
 };
 
 template <typename first, typename... others>
@@ -43,6 +41,4 @@ struct has_duplicates<first, first, others...> {
 
 template <typename... Args>
 constexpr bool has_duplicates_v = has_duplicates<Args...>::value;
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

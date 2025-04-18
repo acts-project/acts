@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-from __future__ import print_function
-
 import argparse
 import os
 from glob import glob
-from concurrent.futures import ProcessPoolExecutor
 import re
 from fnmatch import fnmatch
 import sys
@@ -60,7 +57,6 @@ def check_include_guards(file):
 
     if valid_global or len(match_local) > 1:
         for m in match_local:
-
             lineno = text[: m.start()].count("\n") + 1
 
             valid_local = False

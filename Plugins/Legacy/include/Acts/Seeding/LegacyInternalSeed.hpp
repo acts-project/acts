@@ -14,8 +14,7 @@
 #include "Acts/Seeding/LegacySeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
-namespace Acts {
-namespace Legacy {
+namespace Acts::Legacy {
 template <typename SpacePoint>
 class InternalSeed {
   /////////////////////////////////////////////////////////////////////////////////
@@ -170,5 +169,4 @@ inline bool InternalSeed<SpacePoint>::setQuality(float q) {
 
 /// @endcond
 
-}  // namespace Legacy
-}  // namespace Acts
+}  // namespace Acts::Legacy

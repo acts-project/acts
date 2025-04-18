@@ -12,8 +12,10 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Plugins/Json/DetectorVolumeFinderJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetectorVolumeJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
+#include "Acts/Plugins/Json/IndexedSurfacesJsonConverter.hpp"
 #include "Acts/Plugins/Json/PortalJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -69,6 +71,9 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   }
   jData["volumes"] = jVolumes;
 
+  jData["volume_finder"] = DetectorVolumeFinderJsonConverter::toJson(
+      detector.detectorVolumeFinder());
+
   // Write the header
   nlohmann::json jHeader;
   jHeader["detector"] = detector.name();
@@ -90,10 +95,19 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   std::time(&tt);
   auto ti = std::localtime(&tt);
 
-  nlohmann::json jDetector;
-  nlohmann::json jData;
+  nlohmann::json jFile;
 
+  // (1) Detector section
+  nlohmann::json jGeometry;
+  nlohmann::json jGeometryData;
+  nlohmann::json jGeometryHeader;
   std::size_t nSurfaces = 0;
+
+  nlohmann::json jCommonHeader;
+  jCommonHeader["detector"] = detector.name();
+  jCommonHeader["date"] = std::asctime(ti);
+  jCommonHeader["version"] = "detray - 0.44.0";
+  jCommonHeader["tag"] = "geometry";
 
   auto volumes = detector.volumes();
 
@@ -103,37 +117,77 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     auto jVolume = DetectorVolumeJsonConverter::toJsonDetray(
         gctx, *volume, volumes, options.volumeOptions);
     jVolumes.push_back(jVolume);
-    if (jVolume.find("surfaces") != jVolume.end() and
+    if (jVolume.find("surfaces") != jVolume.end() &&
         jVolume["surfaces"].is_array()) {
       nSurfaces += jVolume["surfaces"].size();
     }
   }
-  jData["volumes"] = jVolumes;
+  jGeometryData["volumes"] = jVolumes;
+  jGeometryData["volume_grid"] = DetectorVolumeFinderJsonConverter::toJson(
+      detector.detectorVolumeFinder(), true);
 
-  /// @TODO fix this to actual volume grid
-  nlohmann::json jVolumeGridParent;
-  nlohmann::json jVolumeGrid;
-  nlohmann::json jVolumeGridAxes;
-  jVolumeGrid["axes"] = jVolumeGridAxes;
-  jVolumeGrid["entries"] = std::vector<std::size_t>{};
-  jVolumeGridParent["grid"] = jVolumeGrid;
-  jData["volume_grid"] = jVolumeGridParent;
-
-  // Get the time stamp
-  // Write the header
-  nlohmann::json jHeader;
-  jHeader["detector"] = detector.name();
-  jHeader["date"] = std::asctime(ti);
-  jHeader["volume_count"] = detector.volumes().size();
-
+  // (1) Geometry
   // For detray, the number of surfaces and portals are collected
   // from the translated volumes
-  jHeader["type"] = "detray";
-  jHeader["surface_count"] = nSurfaces;
-  jDetector["header"] = jHeader;
-  jDetector["data"] = jData;
+  jGeometryHeader["type"] = "detray";
+  jGeometryHeader["common"] = jCommonHeader;
+  jGeometryHeader["surface_count"] = nSurfaces;
+  jGeometryHeader["volume_count"] = detector.volumes().size();
+  jGeometry["header"] = jGeometryHeader;
+  jGeometry["data"] = jGeometryData;
+  jFile["geometry"] = jGeometry;
 
-  return jDetector;
+  // (2) surface grid section
+  nlohmann::json jSurfaceGrids;
+  nlohmann::json jSurfaceGridsData;
+  nlohmann::json jSurfaceGridsCollection;
+  nlohmann::json jSurfaceGridsHeader;
+  for (const auto [iv, volume] : enumerate(volumes)) {
+    // And its surface navigation delegates
+    nlohmann::json jSurfacesDelegate = IndexedSurfacesJsonConverter::toJson(
+        volume->surfaceCandidatesUpdater(), true);
+    if (jSurfacesDelegate.is_null()) {
+      continue;
+    }
+    // Patch axes for cylindrical grid surfaces, axes are swapped
+    // at this point
+    auto jAccLink = jSurfacesDelegate["acc_link"];
+    std::size_t accLinkType = jAccLink["type"];
+    if (accLinkType == 4u) {
+      // Radial value to transfer phi to rphi
+      std::vector<ActsScalar> bValues = volume->volumeBounds().values();
+      ActsScalar rRef = 0.5 * (bValues[1] + bValues[0]);
+      // Get the axes
+      auto& jAxes = jSurfacesDelegate["axes"];
+      // r*phi axis is the first one
+      std::vector<ActsScalar> jAxesEdges = jAxes[0u]["edges"];
+      std::for_each(jAxesEdges.begin(), jAxesEdges.end(),
+                    [rRef](ActsScalar& phi) { phi *= rRef; });
+      // Write back the patches axis edges
+      jSurfacesDelegate["axes"][0u]["edges"] = jAxesEdges;
+    }
+    // Colplete the grid json for detray usage
+    jSurfacesDelegate["volume_link"] = iv;
+    // jSurfacesDelegate["acc_link"] =
+    jSurfaceGridsCollection.push_back(jSurfacesDelegate);
+  }
+  jSurfaceGridsData["grids"] = jSurfaceGridsCollection;
+
+  jCommonHeader["tag"] = "surface_grids";
+  jSurfaceGridsHeader["common"] = jCommonHeader;
+  jSurfaceGridsHeader["grid_count"] = jSurfaceGridsCollection.size();
+
+  jSurfaceGrids["header"] = jSurfaceGridsHeader;
+  jSurfaceGrids["data"] = jSurfaceGridsData;
+
+  jFile["surface_grids"] = jSurfaceGrids;
+
+  // (3) material section
+  nlohmann::json jMaterial;
+
+  jFile["material"] = jMaterial;
+
+  return jFile;
 }
 
 std::shared_ptr<Acts::Experimental::Detector>

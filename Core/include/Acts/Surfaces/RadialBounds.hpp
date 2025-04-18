@@ -146,7 +146,7 @@ inline bool RadialBounds::coversFullAzimuth() const {
 }
 
 inline bool RadialBounds::insideRadialBounds(double R, double tolerance) const {
-  return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
+  return (R + tolerance > get(eMinR) && R - tolerance < get(eMaxR));
 }
 
 inline double RadialBounds::binningValueR() const {
@@ -164,10 +164,10 @@ inline std::vector<double> RadialBounds::values() const {
 }
 
 inline void RadialBounds::checkConsistency() noexcept(false) {
-  if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
+  if (get(eMinR) < 0. || get(eMaxR) <= 0. || get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
-  if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) < 0. || get(eHalfPhiSector) > M_PI) {
     throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {

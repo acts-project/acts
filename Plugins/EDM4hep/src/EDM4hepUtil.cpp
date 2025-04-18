@@ -8,15 +8,17 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Propagator/detail/JacobianEngine.hpp"
 
 #include "edm4hep/TrackState.h"
 
-namespace Acts {
-namespace EDM4hepUtil {
-namespace detail {
+namespace Acts::EDM4hepUtil::detail {
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
@@ -36,7 +38,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // =
   //
   // [     2                        ]
-  // [- cot (theta) - 1       0     ]
+  // [- csc (theta)           0     ]
   // [                              ]
   // [-B*q/p*cos(theta)       B     ]
   // [------------------  ----------]
@@ -45,10 +47,9 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
 
   ActsSquareMatrix<6> J;
   J.setIdentity();
-  double cotTheta = std::tan(M_PI_2 + theta);
-  J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
-  J(4, 4) = Bz / std::sin(theta);      // dOmega / d(qop)
   double sinTheta = std::sin(theta);
+  J(3, 3) = -1.0 / (sinTheta * sinTheta);
+  J(4, 4) = Bz / sinTheta;  // dOmega / d(qop)
   J(4, 3) = -Bz * qOverP * std::cos(theta) /
             (sinTheta * sinTheta);  // dOmega / dTheta
   return J;
@@ -92,14 +93,14 @@ ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
 void packCovariance(const ActsSquareMatrix<6>& from, float* to) {
   for (int i = 0; i < from.rows(); i++) {
     for (int j = 0; j <= i; j++) {
-      size_t k = (i + 1) * i / 2 + j;
+      std::size_t k = (i + 1) * i / 2 + j;
       to[k] = from(i, j);
     }
   }
 }
 
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to) {
-  auto k = [](size_t i, size_t j) { return (i + 1) * i / 2 + j; };
+  auto k = [](std::size_t i, std::size_t j) { return (i + 1) * i / 2 + j; };
   for (int i = 0; i < to.rows(); i++) {
     for (int j = 0; j < to.cols(); j++) {
       to(i, j) = from[j <= i ? k(i, j) : k(j, i)];
@@ -115,14 +116,8 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
 
   std::shared_ptr<const Acts::Surface> refSurface =
       params.referenceSurface().getSharedPtr();
-
   Acts::BoundVector targetPars = params.parameters();
-  std::optional<Acts::FreeVector> freePars;
-
-  auto makeFreePars = [&]() {
-    return Acts::detail::transformBoundToFreeParameters(
-        params.referenceSurface(), gctx, params.parameters());
-  };
+  std::optional<Acts::BoundSquareMatrix> targetCov = params.covariance();
 
   // If the reference surface is a perigee surface, we use that. Otherwise
   // we create a new perigee surface at the global position of the track
@@ -133,36 +128,22 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
     // We need to convert to the target parameters
     // Keep the free parameters around we might need them for the covariance
     // conversion
-    freePars = makeFreePars();
-    targetPars = Acts::detail::transformFreeToBoundParameters(freePars.value(),
-                                                              *refSurface, gctx)
-                     .value();
+
+    auto perigeeParams = Acts::detail::boundToBoundConversion(
+                             gctx, params, *refSurface, Vector3{0, 0, Bz})
+                             .value();
+    targetPars = perigeeParams.parameters();
+    targetCov = perigeeParams.covariance();
   }
 
   Parameters result;
   result.surface = refSurface;
 
   // Only run covariance conversion if we have a covariance input
-  if (params.covariance()) {
-    auto boundToFree =
-        refSurface->boundToFreeJacobian(gctx, params.parameters());
-    Acts::FreeMatrix freeCov =
-        boundToFree * params.covariance().value() * boundToFree.transpose();
-
-    // ensure we have free pars
-    if (!freePars.has_value()) {
-      freePars = makeFreePars();
-    }
-
-    Acts::CovarianceCache covCache{freePars.value(), freeCov};
-    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
-        gctx, *refSurface, freePars.value(), covCache);
-    auto targetCov = std::get<Acts::BoundSquareMatrix>(varNewCov);
-
+  if (targetCov) {
     Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
         targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
-    Acts::ActsSquareMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
-    result.covariance = J * cIn * J.transpose();
+    result.covariance = J * targetCov.value() * J.transpose();
   }
 
   result.values[0] = targetPars[Acts::eBoundLoc0];
@@ -201,6 +182,4 @@ BoundTrackParameters convertTrackParametersFromEdm4hep(
   return {params.surface, targetPars, cov, params.particleHypothesis};
 }
 
-}  // namespace detail
-}  // namespace EDM4hepUtil
-}  // namespace Acts
+}  // namespace Acts::EDM4hepUtil::detail

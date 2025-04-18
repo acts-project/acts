@@ -17,9 +17,10 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
+#include <iterator>
 #include <type_traits>
 
-#if defined(ACTS_CONCEPTS_SUPPORTED)
+#if defined(__cpp_concepts)
 #include <concepts>
 
 namespace Acts {
@@ -30,6 +31,15 @@ using Covariance = Eigen::Map<BoundMatrix>;
 
 using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
+
+template <typename R>
+concept RangeLike = requires(R r) {
+  {r.begin()};
+  {r.end()};
+
+  requires std::forward_iterator<decltype(r.begin())>;
+  requires std::forward_iterator<decltype(r.end())>;
+};
 
 }  // namespace detail
 
@@ -63,6 +73,9 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
   { cv.component_impl(key, istate) } -> std::same_as<std::any>;
 
   { cv.hasColumn_impl(key) } -> std::same_as<bool>;
+
+  {cv.dynamicKeys_impl()};
+  requires detail::RangeLike<decltype(cv.dynamicKeys_impl())>;
 };
 
 template <typename T>
@@ -86,7 +99,7 @@ concept ConstMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 template <typename T>
 concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
     requires(T v, HashedString key, TrackIndexType istate,
-             TrackStatePropMask mask, std::string col, size_t dim,
+             TrackStatePropMask mask, std::string col, std::size_t dim,
              SourceLink sl, std::shared_ptr<const Surface> surface) {
   { v.parameters_impl(istate) } -> std::same_as<detail::Parameters>;
 
@@ -125,7 +138,7 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 
   {v.setReferenceSurface_impl(istate, surface)};
 
-  // @TODO: Add copyDynamicFrom + ensureDynamicColumns for MTJ like in TrackContainer
+  {v.copyDynamicFrom_impl(istate, key, std::declval<const std::any&>())};
 };
 
 }  // namespace Acts

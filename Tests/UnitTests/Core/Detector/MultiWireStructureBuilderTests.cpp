@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   }
 
   std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                     0.5 * nSurfacesX * 2 * radius,
                                      0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
@@ -78,10 +79,11 @@ BOOST_AUTO_TEST_CASE(Multi_Wire_Structure_Builder_StrawSurfacesCreation) {
   MultiWireStructureBuilder mlBuilder(mlCfg);
   auto [volumes, portals, roots] = mlBuilder.construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
-  BOOST_CHECK(volumes.front()->surfaces().size() == nSurfacesX * nSurfacesY);
+  BOOST_CHECK_EQUAL(volumes.size(), 1u);
+  BOOST_CHECK_EQUAL(volumes.front()->surfaces().size(),
+                    nSurfacesX * nSurfacesY);
   BOOST_CHECK(volumes.front()->volumes().empty());
-  BOOST_CHECK(volumes.front()->surfaceCandidatesUpdator().connected());
+  BOOST_CHECK(volumes.front()->surfaceCandidatesUpdater().connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

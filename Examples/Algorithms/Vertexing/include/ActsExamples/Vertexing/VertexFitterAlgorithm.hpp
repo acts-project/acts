@@ -24,6 +24,7 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Vertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -45,22 +46,9 @@ struct AlgorithmContext;
 
 class VertexFitterAlgorithm final : public IAlgorithm {
  public:
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using VertexFitterOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
-
-  using VertexCollection =
-      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
-
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
-    std::string inputTrajectories;
     /// Input proto vertex collection
     std::string inputProtoVertices;
     /// Output vertex collection
@@ -73,10 +61,10 @@ class VertexFitterAlgorithm final : public IAlgorithm {
     Acts::Vector4 constraintPos = Acts::Vector4(0, 0, 0, 0);
     /// Vertex constraint covariance matrix
     Acts::SquareMatrix4 constraintCov =
-        Acts::Vector4(3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      3 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
-                      1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
+        Acts::Vector4(1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e2 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
+                      1e8 * Acts::UnitConstants::mm * Acts::UnitConstants::mm)
             .asDiagonal();
   };
 
@@ -94,16 +82,13 @@ class VertexFitterAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
-  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
-      m_inputTrackParameters{this, "InputTrackParameters"};
-
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 
   ReadDataHandle<ProtoVertexContainer> m_inputProtoVertices{
       this, "InputProtoVertices"};
 
-  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<VertexContainer> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples

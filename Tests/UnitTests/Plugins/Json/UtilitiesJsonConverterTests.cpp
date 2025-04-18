@@ -13,7 +13,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Range1D.hpp"
 
 #include <cmath>
 #include <fstream>

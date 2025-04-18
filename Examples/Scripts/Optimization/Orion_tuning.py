@@ -1,42 +1,19 @@
 #!/usr/bin/env python3
-import sys
-
-import sys
 import os
-import yaml
-import pprint
-import time
-import datetime
-import warnings
-
-import logging
-import uproot
-
-import pathlib
 import matplotlib
-
-matplotlib.use("pdf")
-import matplotlib.pyplot as plt
-import random
 import subprocess
-import multiprocessing
-import numpy as np
-import json
-import array
-import sys
-import argparse
-import pandas as pd
-
-from typing import Optional, Union
 from pathlib import Path
 
 from orion.client import build_experiment
+
+from Optuna_tuning import get_tracking_perf, run_ckf
+
+matplotlib.use("pdf")
 
 srcDir = Path(__file__).resolve().parent
 
 
 def run_ckf(params, names, outDir):
-
     if len(params) != len(names):
         raise Exception("Length of Params must equal names")
 
@@ -83,8 +60,8 @@ class Objective:
         maxPtScattering,
         deltaRMin,
         deltaRMax,
+        ckf_perf=True,
     ):
-
         params = [
             maxSeedsPerSpM,
             cotThetaMax,
@@ -106,30 +83,7 @@ class Objective:
             "deltaRMax",
         ]
 
-        outputDir = Path(srcDir / "Output_CKF")
-        outputfile = srcDir / "Output_CKF/performance_ckf.root"
-        outputDir.mkdir(exist_ok=True)
-        run_ckf(params, keys, outputDir)
-        rootFile = uproot.open(outputfile)
-        self.res["eff"].append(rootFile["eff_particles"].member("fElements")[0])
-        self.res["fakerate"].append(rootFile["fakerate_tracks"].member("fElements")[0])
-        self.res["duplicaterate"].append(
-            rootFile["duplicaterate_tracks"].member("fElements")[0]
-        )
-
-        timingfile = srcDir / "Output_CKF/timing.tsv"
-        timing = pd.read_csv(timingfile, sep="\t")
-        time_ckf = float(
-            timing[timing["identifier"].str.match("Algorithm:TrackFindingAlgorithm")][
-                "time_perevent_s"
-            ]
-        )
-        time_seeding = float(
-            timing[timing["identifier"].str.match("Algorithm:SeedingAlgorithm")][
-                "time_perevent_s"
-            ]
-        )
-        self.res["runtime"].append(time_ckf + time_seeding)
+        get_tracking_perf(self, ckf_perf, params, keys)
 
         efficiency = self.res["eff"][-1]
         penalty = (
@@ -144,7 +98,6 @@ class Objective:
 
 
 def main():
-
     k_dup = 5
     k_time = 5
 

@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file InterpolatedMaterialdMapTests.cpp
-
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -15,9 +13,9 @@
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
 #include <cstddef>
@@ -28,13 +26,11 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-
-namespace Test {
+namespace Acts::Test {
 
 constexpr unsigned int dim = 2;
-using grid_t = detail::Grid<Acts::Material::ParametersVector,
-                            detail::EquidistantAxis, detail::EquidistantAxis>;
+using grid_t = Grid<Acts::Material::ParametersVector, detail::EquidistantAxis,
+                    detail::EquidistantAxis>;
 
 ActsVector<dim> trafoGlobalToLocal(const Vector3& global) {
   return {global.x(), global.y()};
@@ -76,7 +72,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
 
-  for (size_t i = 0; i < grid.size(); i++) {
+  for (std::size_t i = 0; i < grid.size(); i++) {
     grid.at(i) = mat;
   }
   MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
@@ -90,7 +86,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   CHECK_CLOSE_REL(matCell.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
   // Test the number of bins getter
-  std::vector<size_t> nBins = matMap.getNBins();
+  std::vector<std::size_t> nBins = matMap.getNBins();
   BOOST_CHECK_EQUAL(nBins[0], 3u);
   BOOST_CHECK_EQUAL(nBins[1], 3u);
 
@@ -120,7 +116,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
     BOOST_CHECK_EQUAL(grid.minPosition()[i], matMapGrid.minPosition()[i]);
     BOOST_CHECK_EQUAL(grid.maxPosition()[i], matMapGrid.maxPosition()[i]);
   }
-  for (size_t i = 0; i < grid.size(); i++) {
+  for (std::size_t i = 0; i < grid.size(); i++) {
     CHECK_CLOSE_REL(grid.at(i), matMapGrid.at(i), 1e-4);
   }
 }
@@ -135,7 +131,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   Acts::Material::ParametersVector mat;
   mat << 1, 2, 3, 4, 5;
 
-  for (size_t i = 0; i < grid.size(); i++) {
+  for (std::size_t i = 0; i < grid.size(); i++) {
     grid.at(i) = mat;
   }
   MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
@@ -168,6 +164,4 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 4., 0.)), false);
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3(0., 0., 4.)), true);
 }
-}  // namespace Test
-
-}  // namespace Acts
+}  // namespace Acts::Test

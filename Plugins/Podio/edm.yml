@@ -1,4 +1,5 @@
 ---
+schema_version: 1
 options:
   getSyntax: True
   exposePODMembers: False
@@ -35,6 +36,7 @@ components:
         - std::array<double, 6> parameters
         - std::array<double, 36> covariance // local covariance
         - uint32_t tipIndex // index of the outermost track state
+        - uint32_t stemIndex // index of the innermost track state
         - unsigned int nMeasurements // number of measurements
         - unsigned int nHoles // number of holes
         - float chi2 // chi squared of the track
@@ -45,6 +47,7 @@ components:
     ActsPodioEdm::TrackStateInfo:
       Members:
         - uint32_t previous
+        - uint32_t next
 
         - uint32_t ipredicted;
         - uint32_t ifiltered;
@@ -58,7 +61,7 @@ components:
         - uint64_t projector
         - bool hasProjector
 
-        - double chi2
+        - float chi2
         - double pathLength
         - uint64_t typeFlags
 
@@ -73,6 +76,12 @@ components:
       Members:
         - std::array<double, 36> values
 
+    ActsPodioEdm::ParticleHypothesis:
+      Members:
+        - uint32_t absPdg
+        - float mass
+        - float absQ
+
 datatypes:
   ActsPodioEdm::Track:
     Description: "Reconstructed track"
@@ -81,6 +90,8 @@ datatypes:
       - ActsPodioEdm::TrackInfo data // local parameters and covariance
 
       - ActsPodioEdm::Surface referenceSurface // reference surface
+
+      - ActsPodioEdm::ParticleHypothesis particleHypothesis // particle hypothesis
 
   ActsPodioEdm::TrackState:
     Description: "Local state on a track"

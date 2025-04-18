@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(NoSelectors) {
   ContinuousProcess<MockMakeChildren, MockEverything, MockEverything> process{};
 
   // process should not abort
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
 }
 
@@ -84,15 +84,15 @@ BOOST_AUTO_TEST_CASE(WithInputSelector) {
 
   // above threshold should not abort
   f.parent.setAbsoluteMomentum(20_GeV);
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
   // on threshold should still not abort
   f.parent.setAbsoluteMomentum(10_GeV);
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
   // below threshold should abort and not run the process at all
   f.parent.setAbsoluteMomentum(2_GeV);
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   // process did not run -> no new children
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
 }
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE(WithOutputSelector) {
 
   // above threshold should not abort
   f.parent.setAbsoluteMomentum(20_GeV);
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
   // on threshold should still not abort
   f.parent.setAbsoluteMomentum(10_GeV);
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
   // below threshold should abort but only after running the process
   f.parent.setAbsoluteMomentum(2_GeV);
@@ -128,19 +128,19 @@ BOOST_AUTO_TEST_CASE(WithChildSelector) {
   // all process should not abort regardless of child selection
   // select no daughters
   process.selectChildParticle.minP = 5_GeV;
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 0u);
   // select highest daughter
   process.selectChildParticle.minP = 3.5_GeV;
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 1u);
   // select all but the lowest daughter
   process.selectChildParticle.minP = 1.5_GeV;
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 4u);
   // select all daughters
   process.selectChildParticle.minP = 0.5_GeV;
-  BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
+  BOOST_CHECK(!process(f.generator, f.slab, f.parent, f.children));
   BOOST_CHECK_EQUAL(f.children.size(), 8u);
 }
 

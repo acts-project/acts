@@ -19,7 +19,6 @@ namespace Acts {
 
 /// @brief Vertex Finder Options
 ///
-template <typename input_track_t>
 struct VertexingOptions {
   /// Default constructor is deleted
   VertexingOptions() = delete;
@@ -31,8 +30,7 @@ struct VertexingOptions {
   /// @param constr Vertex constraint
   /// @param useConstr Boolean indicating whether vertex constraint should be used during the vertex fit
   VertexingOptions(const GeometryContext& gctx,
-                   const MagneticFieldContext& mctx,
-                   const Vertex<input_track_t>& constr,
+                   const MagneticFieldContext& mctx, const Vertex& constr,
                    const bool useConstr = true)
       : geoContext(gctx),
         magFieldContext(mctx),
@@ -51,7 +49,7 @@ struct VertexingOptions {
   VertexingOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx)
       : geoContext(gctx), magFieldContext(mctx) {
-    constraint = Vertex<input_track_t>();
+    constraint = Vertex();
     useConstraintInFit = false;
   }
 
@@ -62,7 +60,7 @@ struct VertexingOptions {
   /// Vertex constraint. Important note: While this variable is not used during
   /// the vertex fit if useConstraintInFit is set to false, it is always used
   /// during vertex finding.
-  Vertex<input_track_t> constraint;
+  Vertex constraint;
   /// Boolean indicating whether we use the constraint information during
   /// the vertex fit. If set to true, the covariance matrix of constraint must
   /// be invertible.

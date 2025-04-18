@@ -15,9 +15,7 @@
 #include <cmath>
 #include <vector>
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 // This object can be iterated to produce up to two sequences of integer
 // indices, corresponding to the half-open integer ranges [begin1, end1[ and
@@ -33,10 +31,11 @@ class NeighborHoodIndices {
  public:
   NeighborHoodIndices() = default;
 
-  NeighborHoodIndices(size_t begin, size_t end)
+  NeighborHoodIndices(std::size_t begin, std::size_t end)
       : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end) {}
 
-  NeighborHoodIndices(size_t begin1, size_t end1, size_t begin2, size_t end2)
+  NeighborHoodIndices(std::size_t begin1, std::size_t end1, std::size_t begin2,
+                      std::size_t end2)
       : m_begin1(begin1), m_end1(end1), m_begin2(begin2), m_end2(end2) {}
 
   class iterator {
@@ -44,15 +43,15 @@ class NeighborHoodIndices {
     iterator() = default;
 
     // Specialized constructor for end() iterator
-    iterator(size_t current) : m_current(current), m_wrapped(true) {}
+    iterator(std::size_t current) : m_current(current), m_wrapped(true) {}
 
-    iterator(size_t begin1, size_t end1, size_t begin2)
+    iterator(std::size_t begin1, std::size_t end1, std::size_t begin2)
         : m_current(begin1),
           m_end1(end1),
           m_begin2(begin2),
           m_wrapped(begin1 == begin2) {}
 
-    size_t operator*() const { return m_current; }
+    std::size_t operator*() const { return m_current; }
 
     iterator& operator++() {
       ++m_current;
@@ -70,7 +69,7 @@ class NeighborHoodIndices {
     bool operator!=(const iterator& it) const { return !(*this == it); }
 
    private:
-    size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
+    std::size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
     bool m_wrapped = false;
   };
 
@@ -79,20 +78,20 @@ class NeighborHoodIndices {
   iterator end() const { return iterator(m_end2); }
 
   // Number of indices that will be produced if this sequence is iterated
-  size_t size() const { return (m_end1 - m_begin1) + (m_end2 - m_begin2); }
+  std::size_t size() const { return (m_end1 - m_begin1) + (m_end2 - m_begin2); }
 
   // Collect the sequence of indices into an std::vector
-  std::vector<size_t> collect() const {
-    std::vector<size_t> result;
+  std::vector<std::size_t> collect() const {
+    std::vector<std::size_t> result;
     result.reserve(this->size());
-    for (size_t idx : *this) {
+    for (std::size_t idx : *this) {
       result.push_back(idx);
     }
     return result;
   }
 
  private:
-  size_t m_begin1 = 0, m_end1 = 0, m_begin2 = 0, m_end2 = 0;
+  std::size_t m_begin1 = 0, m_end1 = 0, m_begin2 = 0, m_end2 = 0;
 };
 
 /// @brief calculate bin indices for an equidistant binning
@@ -110,7 +109,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(ActsScalar xmin, ActsScalar xmax, size_t nBins)
+  Axis(ActsScalar xmin, ActsScalar xmax, std::size_t nBins)
       : m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
@@ -138,7 +137,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @param [in] idx requested bin index
   /// @param [in] sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
-  NeighborHoodIndices neighborHoodIndices(size_t idx, size_t size = 1) const {
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
+                                          std::size_t size = 1) const {
     return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
@@ -154,7 +154,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       as neighbors
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     constexpr int min = 0;
@@ -176,7 +176,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       as neighbors
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     if (idx <= 0 || idx >= (getNBins() + 1)) {
@@ -201,7 +201,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       side of the axis as neighbors. (excludes underflow / overflow)
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     // Handle invalid indices
@@ -229,8 +229,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     //
     const int itmin = idx + sizes.first;
     const int itmax = idx + sizes.second;
-    const size_t itfirst = wrapBin(itmin);
-    const size_t itlast = wrapBin(itmax);
+    const std::size_t itfirst = wrapBin(itmin);
+    const std::size_t itlast = wrapBin(itmax);
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
@@ -246,7 +246,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
   }
 
@@ -258,7 +258,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
   }
 
@@ -270,7 +270,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     const int w = getNBins();
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
@@ -286,7 +286,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  size_t getBin(ActsScalar x) const {
+  std::size_t getBin(ActsScalar x) const {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -294,7 +294,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @brief get bin width
   ///
   /// @return constant width for all bins
-  ActsScalar getBinWidth(size_t /*bin*/ = 0) const { return m_width; }
+  ActsScalar getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
   /// @brief get lower bound of bin
   ///
@@ -306,7 +306,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  ActsScalar getBinLowerBound(size_t bin) const {
+  ActsScalar getBinLowerBound(std::size_t bin) const {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
@@ -320,7 +320,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  ActsScalar getBinUpperBound(size_t bin) const {
+  ActsScalar getBinUpperBound(std::size_t bin) const {
     return getMin() + bin * getBinWidth();
   }
 
@@ -331,7 +331,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinCenter(size_t bin) const {
+  ActsScalar getBinCenter(std::size_t bin) const {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
@@ -348,7 +348,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  size_t getNBins() const override { return m_bins; }
+  std::size_t getNBins() const override { return m_bins; }
 
   /// @brief check whether value is inside axis limits
   ///
@@ -363,7 +363,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @return Vector which contains the bin edges
   std::vector<ActsScalar> getBinEdges() const override {
     std::vector<ActsScalar> binEdges;
-    for (size_t i = 1; i <= m_bins; i++) {
+    for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
     }
     binEdges.push_back(getBinUpperBound(m_bins));
@@ -378,7 +378,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// constant bin width
   ActsScalar m_width;
   /// number of bins (excluding under-/overflow bins)
-  size_t m_bins;
+  std::size_t m_bins;
 };
 
 /// @brief calculate bin indices for a variable binning
@@ -421,7 +421,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @param [in] idx requested bin index
   /// @param [in] size how many neighboring bins
   /// @return Set of neighboring bin indices (global)
-  NeighborHoodIndices neighborHoodIndices(size_t idx, size_t size = 1) const {
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
+                                          std::size_t size = 1) const {
     return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
@@ -437,7 +438,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       as neighbors
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     constexpr int min = 0;
@@ -458,7 +459,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       as neighbors
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     if (idx <= 0 || idx >= (getNBins() + 1)) {
@@ -482,7 +483,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       side of the axis as neighbors. (excludes underflow / overflow)
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-  NeighborHoodIndices neighborHoodIndices(size_t idx,
+  NeighborHoodIndices neighborHoodIndices(std::size_t idx,
                                           std::pair<int, int> sizes = {
                                               -1, 1}) const {
     // Handle invalid indices
@@ -510,8 +511,8 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
     //
     const int itmin = idx + sizes.first;
     const int itmax = idx + sizes.second;
-    const size_t itfirst = wrapBin(itmin);
-    const size_t itlast = wrapBin(itmax);
+    const std::size_t itfirst = wrapBin(itmin);
+    const std::size_t itlast = wrapBin(itmax);
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
@@ -527,7 +528,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     return std::max(std::min(bin, static_cast<int>(getNBins()) + 1), 0);
   }
 
@@ -539,7 +540,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     return std::max(std::min(bin, static_cast<int>(getNBins())), 1);
   }
 
@@ -551,7 +552,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @return valid bin index
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-  size_t wrapBin(int bin) const {
+  std::size_t wrapBin(int bin) const {
     const int w = getNBins();
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
@@ -567,7 +568,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  size_t getBin(ActsScalar x) const {
+  std::size_t getBin(ActsScalar x) const {
     const auto it =
         std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
     return wrapBin(std::distance(std::begin(m_binEdges), it));
@@ -580,7 +581,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinWidth(size_t bin) const {
+  ActsScalar getBinWidth(std::size_t bin) const {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
@@ -594,7 +595,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  ActsScalar getBinLowerBound(size_t bin) const {
+  ActsScalar getBinLowerBound(std::size_t bin) const {
     return m_binEdges.at(bin - 1);
   }
 
@@ -608,7 +609,9 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  ActsScalar getBinUpperBound(size_t bin) const { return m_binEdges.at(bin); }
+  ActsScalar getBinUpperBound(std::size_t bin) const {
+    return m_binEdges.at(bin);
+  }
 
   /// @brief get bin center
   ///
@@ -617,7 +620,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinCenter(size_t bin) const {
+  ActsScalar getBinCenter(std::size_t bin) const {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
@@ -634,7 +637,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @brief get total number of bins
   ///
   /// @return total number of bins (excluding under-/overflow bins)
-  size_t getNBins() const override { return m_binEdges.size() - 1; }
+  std::size_t getNBins() const override { return m_binEdges.size() - 1; }
 
   /// @brief check whether value is inside axis limits
   ///
@@ -655,6 +658,4 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// vector of bin edges (sorted in ascending order)
   std::vector<ActsScalar> m_binEdges;
 };
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail

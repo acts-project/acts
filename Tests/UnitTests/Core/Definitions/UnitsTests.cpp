@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(PhysicalConstants) {
 
   using Acts::PhysicalConstants::c;
   // we really want c to be 1
-  BOOST_CHECK(c == 1.0);
+  BOOST_CHECK_EQUAL(c, 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,7 +18,7 @@ jobs:
         run: apt-get update && apt-get install -y git-lfs llvm-dev libclang-dev clang
 
       - name: Get IWYU source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: include-what-you-use/include-what-you-use
           ref: clang_14
@@ -33,7 +33,7 @@ jobs:
           cmake --build iwyu-build --target install
 
       - name: Get Acts source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: acts
           submodules: true
@@ -55,14 +55,14 @@ jobs:
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
 
       - name: Run IWYU
-        run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 -- --mapping_file=acts/CI/iwyu/mapping.imp | tee iwyu-output.txt
+        run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 -- -Xiwyu --mapping_file=$(pwd)/acts/CI/iwyu/mapping.imp | tee iwyu-output.txt
       - name: Filter IWYU output
         run: python3 acts/CI/iwyu/filter.py acts/CI/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
       - name: Apply IWYU
         run: python3 iwyu-install/bin/fix_includes.py < iwyu-filtered.txt
 
       - name: Upload IWYU output
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: iwyu
           path: |

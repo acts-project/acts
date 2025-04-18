@@ -1,0 +1,110 @@
+histograms:
+  "nRecoVtx|nTrueVtx|nVtx.*":
+    nbins: 251
+    min: 0
+    max: 250
+
+  "nTracks.*":
+    nbins: 301
+    min: 0
+    max: 300
+
+  "truthVertexMatchRatio":
+    nbins: 100
+    min: 0.0
+    max: 1.01
+
+  "resX|resY|resZ|resSeedZ":
+    nbins: 100
+    min: -0.2
+    max: 0.2
+
+  "resT|resSeedT":
+    nbins: 100
+    min: -50
+    max: 50
+
+  "trk_res.*":
+    nbins: 100
+    min: -0.02
+    max: 0.02
+
+  "pull.*":
+    nbins: 100
+    min: -10
+    max: 10
+
+  "trk_pull.*":
+    nbins: 50
+    min: -10
+    max: 10
+
+  "covXX|covXY|covXZ|covXT|covYY|covYZ|covYT|covZZ|covZT":
+    nbins: 100
+    min: -0.0005
+    max: 0.0005
+
+  "covTT":
+    nbins: 100
+    min: 0.0
+    max: 100.0
+
+  "truthX|truthY|recoX|recoY|seedX|seedY":
+    nbins: 100
+    min: -0.1
+    max: 0.1
+
+  "truthZ|recoZ|seedZ":
+    nbins: 100
+    min: -200
+    max: 200
+
+  "truthT|recoT|seedT":
+    nbins: 100
+    min: -2000
+    max: 2000
+
+  "trk_truthPhi|trk_recoPhi|trk_recoPhiFitted":
+    nbins: 100
+    min: -3.2
+    max: 3.2
+
+  "trk_truthTheta|trk_recoTheta|trk_recoThetaFitted":
+    nbins: 100
+    min: -0.1
+    max: 3.1
+
+  "trk_truthQOverP|trk_recoQOverP|trk_recoQOverPFitted":
+    nbins: 100
+    min: -1
+    max: 1
+
+  "trk_momOverlap|trk_momOverlapFitted":
+    nbins: 100
+    min: 0.999
+    max: 1
+  
+  "sumPt2":
+    nbins: 100
+    min: 0
+    max: 400
+
+extra_histograms:
+  - expression: df["nRecoVtx"] / df["nTrueVtx"]
+    name: "recoOverTrue"
+    nbins: 100
+    min: 0.0
+    max: 1.2
+  - expression: df["nRecoVtx"] / df["nVtxDetectorAcceptance"]
+    name: "recoOverAcc"
+    nbins: 100
+    min: 0.0
+    max: 1.2
+  - expression: df["nRecoVtx"] / df["nVtxReconstructable"]
+    name: "recoOverRecble"
+    nbins: 100
+    min: 0.0
+    max: 1.2
+
+exclude:
+  - event_nr

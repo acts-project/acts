@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <string>
@@ -31,6 +32,9 @@ class ParticleKillAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
+    /// event store
+    std::shared_ptr<EventStore> eventStore;
+
     /// particles outside this volume will be terminated
     std::shared_ptr<const Acts::Volume> volume;
     /// particles that exceed this global time limit will be terminated
@@ -54,6 +58,9 @@ class ParticleKillAction : public G4UserSteppingAction {
   void UserSteppingAction(const G4Step* step) override;
 
  private:
+  /// Private access method to the event store
+  EventStore& eventStore() const { return *m_cfg.eventStore; }
+
   const Acts::Logger& logger() const { return *m_logger; }
 
   Config m_cfg;

@@ -84,12 +84,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
 
-  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-      const SimSpacePoint *sp)>
+  std::function<
+      std::tuple<Acts::Vector3, Acts::Vector2, std::optional<Acts::ActsScalar>>(
+          const SimSpacePoint *sp)>
       create_coordinates = [](const SimSpacePoint *sp) {
         Acts::Vector3 position(sp->x(), sp->y(), sp->z());
         Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
-        return std::make_pair(position, variance);
+        return std::make_tuple(position, variance, sp->t());
       };
 
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,

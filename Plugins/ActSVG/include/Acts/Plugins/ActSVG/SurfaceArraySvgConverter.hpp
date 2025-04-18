@@ -26,7 +26,7 @@ namespace Svg {
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoSurfaces = std::vector<ProtoSurface>;
 using ProtoGrid = actsvg::proto::grid;
-using ProtoAssociations = std::vector<std::vector<size_t>>;
+using ProtoAssociations = std::vector<std::vector<std::size_t>>;
 
 namespace SurfaceArrayConverter {
 

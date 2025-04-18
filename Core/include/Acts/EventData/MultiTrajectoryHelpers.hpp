@@ -9,7 +9,7 @@
 #pragma once
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -17,26 +17,24 @@
 #include <functional>
 #include <unordered_map>
 
-namespace Acts {
-
-namespace MultiTrajectoryHelpers {
+namespace Acts::MultiTrajectoryHelpers {
 
 /// @brief Struct for brief trajectory summary info
 ///
 struct TrajectoryState {
-  size_t nStates = 0;
-  size_t nMeasurements = 0;
-  size_t nOutliers = 0;
-  size_t nHoles = 0;
+  std::size_t nStates = 0;
+  std::size_t nMeasurements = 0;
+  std::size_t nOutliers = 0;
+  std::size_t nHoles = 0;
   double chi2Sum = 0;
   std::vector<double> measurementChi2 = {};
   std::vector<double> outlierChi2 = {};
-  size_t NDF = 0;
+  std::size_t NDF = 0;
   std::vector<unsigned int> measurementVolume = {};
   std::vector<unsigned int> measurementLayer = {};
   std::vector<unsigned int> outlierVolume = {};
   std::vector<unsigned int> outlierLayer = {};
-  size_t nSharedHits = 0;
+  std::size_t nSharedHits = 0;
 };
 
 // Container for trajectory summary info at a specific volume
@@ -50,7 +48,8 @@ using VolumeTrajectoryStateContainer =
 ///
 /// @return The trajectory summary info
 template <typename traj_t>
-TrajectoryState trajectoryState(const traj_t& multiTraj, size_t entryIndex) {
+TrajectoryState trajectoryState(const traj_t& multiTraj,
+                                std::size_t entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
@@ -94,7 +93,7 @@ TrajectoryState trajectoryState(const traj_t& multiTraj, size_t entryIndex) {
 /// different volumes)
 template <typename traj_t>
 VolumeTrajectoryStateContainer trajectoryState(
-    const traj_t& multiTraj, size_t entryIndex,
+    const traj_t& multiTraj, std::size_t entryIndex,
     const std::vector<GeometryIdentifier::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
@@ -145,8 +144,8 @@ VolumeTrajectoryStateContainer trajectoryState(
 template <typename track_state_proxy_t>
 FreeVector freeFiltered(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::transformBoundToFreeParameters(
-      trackStateProxy.referenceSurface(), gctx, trackStateProxy.filtered());
+  return transformBoundToFreeParameters(trackStateProxy.referenceSurface(),
+                                        gctx, trackStateProxy.filtered());
 }
 
 /// @brief Transforms the smoothed parameters from a @c TrackStateProxy to free
@@ -160,9 +159,7 @@ FreeVector freeFiltered(const GeometryContext& gctx,
 template <typename track_state_proxy_t>
 FreeVector freeSmoothed(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::transformBoundToFreeParameters(
-      trackStateProxy.referenceSurface(), gctx, trackStateProxy.smoothed());
+  return transformBoundToFreeParameters(trackStateProxy.referenceSurface(),
+                                        gctx, trackStateProxy.smoothed());
 }
-}  // namespace MultiTrajectoryHelpers
-
-}  // namespace Acts
+}  // namespace Acts::MultiTrajectoryHelpers

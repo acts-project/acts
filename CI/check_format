@@ -7,11 +7,10 @@
 
 set -e # abort on error
 
-
 if [ $# -ne 1 ]; then
-    echo "wrong number of arguments"
-    echo ""
-    echo "usage: check_format <DIR>"
+    echo "\033[31mERROR\033[0m"\
+         "wrong number of arguments"
+    echo "\tusage: check_format <DIR>\n"
     exit 1
 fi
 
@@ -33,17 +32,19 @@ if ! [ -z $CI ] || ! [ -z $GITHUB_ACTIONS ]; then
   done
 fi
     
-echo "clang-format done"
+echo "\033[32mINFO\033[0m"\
+     "clang-format done"
     
 set +e
 git diff --exit-code --stat
 result=$?
 
-if [ "$result" -eq "128" ]; then
-    echo "Format was successfully applied"
-    echo "Could not create summary of affected files"
-    echo "Are you in a submodule?"
-
+if [ "$result" -eq "128" ] || [ "$result" -eq "129" ]; then
+    echo "\033[33mWARNING\033[0m"\
+         "Could not create summary of affected files"
+    echo "\tFormat was successfully applied"
+    echo "\tAre you in a submodule?"
+    echo "\tYou could try running check_format with sudo.\n"
 fi
 
 exit $result

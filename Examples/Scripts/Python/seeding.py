@@ -5,8 +5,10 @@ import argparse
 
 import acts
 import acts.examples
+from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
+
 
 # Graciously taken from https://stackoverflow.com/a/60750535/4280680
 class EnumAction(argparse.Action):
@@ -50,7 +52,6 @@ def runSeeding(
     s=None,
     seedingAlgorithm=SeedingAlgorithm.Default,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -122,7 +123,7 @@ def runSeeding(
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(
-            bFieldInZ=1.99724 * u.T,
+            bFieldInZ=2 * u.T,
         ),
         acts.logging.VERBOSE,
         seedingAlgorithm=seedingAlgorithm,
@@ -148,7 +149,7 @@ if "__main__" == __name__:
     )
 
     args = p.parse_args()
-    # detector, trackingGeometry, _ = getOpenDataDetector(    getOpenDataDetectorDirectory() )
+    # detector, trackingGeometry, _ = getOpenDataDetector()
     detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

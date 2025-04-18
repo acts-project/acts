@@ -46,16 +46,14 @@ class GainMatrixUpdater {
   /// Run the Kalman update step for a single trajectory state.
   ///
   /// @tparam kMeasurementSizeMax
-  /// @param[in] gctx The current geometry context object, e.g. alignment
   /// @param[in,out] trackState The track state
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(const GeometryContext& gctx,
+  Result<void> operator()(const GeometryContext& /*gctx*/,
                           typename traj_t::TrackStateProxy trackState,
                           Direction direction = Direction::Forward,
                           const Logger& logger = getDummyLogger()) const {
-    (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
     // there should be a calibrated measurement

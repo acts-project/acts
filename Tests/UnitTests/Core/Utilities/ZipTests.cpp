@@ -21,9 +21,9 @@ const std::string str = "abcd";
 BOOST_AUTO_TEST_CASE(test_access) {
   int i = 0;
   for (const auto &[a, b, c] : Acts::zip(vec, arr, str)) {
-    BOOST_CHECK(a == vec[i]);
-    BOOST_CHECK(b == arr[i]);
-    BOOST_CHECK(c == str[i]);
+    BOOST_CHECK_EQUAL(a, vec[i]);
+    BOOST_CHECK_EQUAL(b, arr[i]);
+    BOOST_CHECK_EQUAL(c, str[i]);
     ++i;
   }
 }
@@ -40,9 +40,9 @@ BOOST_AUTO_TEST_CASE(test_mutation) {
   }
 
   for (int i = 0; i < 4; ++i) {
-    BOOST_CHECK(vec2[i] == 2 * vec[i]);
-    BOOST_CHECK(arr2[i] == 2 * arr[i]);
+    BOOST_CHECK_EQUAL(vec2[i], 2 * vec[i]);
+    BOOST_CHECK_EQUAL(arr2[i], 2 * arr[i]);
   }
 
-  BOOST_CHECK(str2 == "eeee");
+  BOOST_CHECK_EQUAL(str2, "eeee");
 }

@@ -1,19 +1,33 @@
+import os
+import sys
+import math
 from pathlib import Path
-from math import sqrt
-import sys, os
+from typing import Optional
 import acts
 import acts.examples
 
 
+def getOpenDataDetectorDirectory():
+    odd_dir = os.environ.get("ODD_PATH")
+    if odd_dir is None:
+        raise RuntimeError("ODD_PATH environment variable not set")
+    odd_dir = Path(odd_dir)
+    return odd_dir
+
+
 def getOpenDataDetector(
-    odd_dir: Path,
     mdecorator=None,
+    odd_dir: Optional[Path] = None,
     logLevel=acts.logging.INFO,
 ):
-
     import acts.examples.dd4hep
 
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
+
+    if odd_dir is None:
+        odd_dir = getOpenDataDetectorDirectory()
+    if not odd_dir.exists():
+        raise RuntimeError(f"OpenDataDetector not found at {odd_dir}")
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():
@@ -55,7 +69,7 @@ def getOpenDataDetector(
 
     def geoid_hook(geoid, surface):
         if geoid.volume() in volumeRadiusCutsMap:
-            r = sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
+            r = math.sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
 
             geoid.setExtra(1)
             for cut in volumeRadiusCutsMap[geoid.volume()]:

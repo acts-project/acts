@@ -17,6 +17,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/TestSourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -32,9 +33,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
-#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -47,16 +46,13 @@
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace UnitLiterals;
 
 using StraightPropagator = Propagator<StraightLineStepper, Navigator>;
-
-using TestMeasurement = BoundVariantMeasurement;
+using TestSourceLink = detail::Test::TestSourceLink;
 using ConstantFieldStepper = EigenStepper<>;
 using ConstantFieldPropagator = Propagator<ConstantFieldStepper, Navigator>;
 // Construct initial track parameters.
@@ -107,7 +103,6 @@ GeometryContext tgContext = GeometryContext();
 
 const GeometryContext geoCtx;
 const MagneticFieldContext magCtx;
-const CalibrationContext calCtx;
 
 // detector geometry
 CubicTrackingGeometry geometryStore(geoCtx);
@@ -125,21 +120,6 @@ const MeasurementResolutionMap resolutions = {
     {GeometryIdentifier().setVolume(3).setLayer(6), resStrip},
     {GeometryIdentifier().setVolume(3).setLayer(8), resStrip},
 };
-
-// Construct a straight-line propagator.
-static StraightPropagator makeStraightPropagator(
-    std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{std::move(geo)};
-  cfg.resolvePassive = false;
-  cfg.resolveMaterial = true;
-  cfg.resolveSensitive = true;
-  Navigator navigator{cfg};
-  StraightLineStepper stepper;
-  return StraightPropagator(stepper, std::move(navigator));
-}
-
-// simulation propagator
-const auto measPropagator = makeStraightPropagator(geometry);
 
 std::default_random_engine rng(42);
 
@@ -197,10 +177,12 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
   Vector3 vertex = Vector3(-3_m, 0., 0.);
 
-  auto spConstructor = [](const Vector3& pos, const Vector2& cov,
-                          boost::container::static_vector<SourceLink, 2> slinks)
+  auto spConstructor =
+      [](const Vector3& pos, const std::optional<ActsScalar>& t,
+         const Vector2& cov, const std::optional<ActsScalar>& covT,
+         boost::container::static_vector<SourceLink, 2> slinks)
       -> TestSpacePoint {
-    return TestSpacePoint(pos, cov[0], cov[1], std::move(slinks));
+    return TestSpacePoint(pos, t, cov[0], cov[1], covT, std::move(slinks));
   };
 
   auto spBuilderConfig = SpacePointBuilderConfig();
@@ -338,5 +320,4 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
-}  // end of namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

@@ -37,11 +37,9 @@ class SurfaceBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html figures/LineSurface.png
+/// @image html LineSurface.png
 class LineSurface : public Surface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -90,17 +88,8 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  /// The normal vector is undefined if we do not know the momentum.
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position is ignored
-  ///
-  /// @return a zero vector
-  Vector3 normal(const GeometryContext& gctx,
-                 const Vector2& lposition) const final;
-
-  /// Normal vector return without argument
-  using Surface::normal;
+  Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+                 const Vector3& direction) const override;
 
   /// The binning position is the position calculated
   /// for a certain binning type
@@ -132,21 +121,25 @@ class LineSurface : public Surface {
   /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from local to global
-  BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const final;
+  BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  FreeToPathMatrix freeToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+  FreeToPathMatrix freeToPathDerivative(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& direction) const final;
 
   /// Local to global transformation
   ///
@@ -182,7 +175,7 @@ class LineSurface : public Surface {
   /// of @f$ \vec{d} @f$ on @f$ \vec{measX} @f$:<br> @f$ sign = -sign(\vec{d}
   /// \cdot \vec{measX}) @f$
   ///
-  /// @image html figures/SignOfDriftCircleD0.gif
+  /// @image html SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
@@ -252,7 +245,8 @@ class LineSurface : public Surface {
   /// @return is the intersection object
   SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
@@ -275,11 +269,13 @@ class LineSurface : public Surface {
   /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const final;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

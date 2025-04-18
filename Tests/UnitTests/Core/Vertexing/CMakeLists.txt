@@ -1,7 +1,6 @@
 add_unittest(FullBilloirVertexFitter FullBilloirVertexFitterTests.cpp)
 add_unittest(ImpactPointEstimator ImpactPointEstimatorTests.cpp)
 add_unittest(IterativeVertexFinder IterativeVertexFinderTests.cpp)
-add_unittest(KalmanVertexTrackUpdater KalmanVertexTrackUpdaterTests.cpp)
 add_unittest(KalmanVertexUpdater KalmanVertexUpdaterTests.cpp)
 add_unittest(LinearizedTrackFactory LinearizedTrackFactoryTests.cpp)
 add_unittest(AdaptiveMultiVertexFitter AdaptiveMultiVertexFitterTests.cpp)

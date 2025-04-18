@@ -19,7 +19,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -42,7 +41,6 @@
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
-namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -128,12 +126,13 @@ struct PropagatorState {
 // - this tests the collection of surfaces
 BOOST_DATA_TEST_CASE(
     loop_aborter_test,
-    bdata::random(
-        (bdata::seed = 21,
-         bdata::distribution = std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
+                   bdata::distribution =
+                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
   (void)index;
@@ -168,18 +167,20 @@ const int skip = 0;
 // stops where expected
 BOOST_DATA_TEST_CASE(
     propagator_loop_protection_test,
-    bdata::random((bdata::seed = 20,
-                   bdata::distribution =
-                       std::uniform_real_distribution<>(0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::seed = 21,
+    bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       0.5_GeV, 10_GeV))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
                        bdata::distribution =
-                           std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<>(1.0, M_PI - 1.0))) ^
+                           std::uniform_real_distribution<double>(-M_PI,
+                                                                  M_PI))) ^
         bdata::random(
-            (bdata::seed = 23,
-             bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution =
+                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
+                       bdata::distribution =
+                           std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, index) {
   if (index < skip) {

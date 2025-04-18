@@ -189,41 +189,16 @@ class Surface : public virtual GeometryObject,
   /// @return center position by value
   virtual Vector3 center(const GeometryContext& gctx) const;
 
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
-  ///
+  /// Return the surface normal at a given @p position and @p direction.
+  /// This method is fully generic, and valid for all surface types.
+  /// @note For some surface types, the @p direction is ignored, but
+  ///       it is **not safe** to pass in a zero vector!
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local position where the normal vector is
-  /// constructed
-  ///
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector2& lposition) const = 0;
-
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
-  ///
-  /// @param position is the global position where the normal vector is
-  /// constructed
-  /// @param gctx The current geometry context object, e.g. alignment
-
-  ///
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector3& position) const;
-
-  /// Return method for the normal vector of the surface
-  ///
-  /// It will return a normal vector at the center() position
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  //
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx) const {
-    return normal(gctx, center(gctx));
-  }
+  /// @param pos The position at which to calculate the normal
+  /// @param direction The direction at which to calculate the normal
+  /// @return The normal vector at the given position and direction
+  virtual Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+                         const Vector3& direction) const = 0;
 
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
@@ -279,15 +254,16 @@ class Surface : public virtual GeometryObject,
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
                    const Vector3& direction,
-                   const BoundaryCheck& bcheck = true) const;
+                   const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool insideBounds(const Vector2& lposition,
-                            const BoundaryCheck& bcheck = true) const;
+  virtual bool insideBounds(
+      const Vector2& lposition,
+      const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -350,11 +326,13 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param boundParams is the bound parameters vector
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from local to global
-  virtual BoundToFreeMatrix boundToFreeJacobian(
-      const GeometryContext& gctx, const BoundVector& boundParams) const;
+  virtual BoundToFreeMatrix boundToFreeJacobian(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here.
@@ -367,11 +345,13 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Jacobian from global to local
-  virtual FreeToBoundMatrix freeToBoundJacobian(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+  virtual FreeToBoundMatrix freeToBoundJacobian(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -383,17 +363,20 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  virtual FreeToPathMatrix freeToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+  virtual FreeToPathMatrix freeToPathDerivative(const GeometryContext& gctx,
+                                                const Vector3& position,
+                                                const Vector3& direction) const;
 
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
+  /// @param position global 3D position
+  /// @note The @p position is either ignored, or it is coerced to be on the surface,
+  ///       depending on the surface type.
   /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.
@@ -412,7 +395,8 @@ class Surface : public virtual GeometryObject,
   /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
   virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      const Vector3& direction,
+      const BoundaryCheck& bcheck = BoundaryCheck(false),
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -443,7 +427,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return A list of vertices and a face/facett description of it
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                              size_t lseg) const = 0;
+                                              std::size_t lseg) const = 0;
 
   /// The derivative of bound track parameters w.r.t. alignment
   /// parameters of its reference surface (i.e. local frame origin in
@@ -452,15 +436,16 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// change of alignment parameters
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   /// @param pathDerivative is the derivative of free parameters w.r.t. path
   /// length
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
   /// alignment parameters
   AlignmentToBoundMatrix alignmentToBoundDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters,
-      const FreeVector& pathDerivative) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const FreeVector& pathDerivative) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
@@ -472,11 +457,13 @@ class Surface : public virtual GeometryObject,
   /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentToPathMatrix alignmentToPathDerivative(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -518,12 +505,14 @@ class Surface : public virtual GeometryObject,
   /// derivative to get the full alignment to bound derivatives
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
+  /// @param position global 3D position
+  /// @param direction global 3D momentum direction
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame alignment
   /// parameters without path correction
   AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction) const;
 };
 
 /// Print surface information to the provided stream. Internally invokes the

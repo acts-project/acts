@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/// @file Logger_tests.cpp
-
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Logger.hpp"
@@ -20,8 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-namespace Test {
+namespace Acts::Test {
 
 using namespace Acts::Logging;
 
@@ -37,9 +34,6 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-std::string failure_msg(const std::string& expected, const std::string& found) {
-  return std::string("'") + expected + "' != '" + found + "'";
-}
 }  // namespace detail
 /// @endcond
 
@@ -97,7 +91,7 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
 
     // Check output
     std::ifstream infile(output_file, std::ios::in);
-    size_t i = 0;
+    std::size_t i = 0;
     for (std::string line; std::getline(infile, line); ++i) {
       BOOST_CHECK_EQUAL(line, lines.at(i));
     }
@@ -149,5 +143,4 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
 BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   debug_level_test("verbose_log.txt", VERBOSE);
 }
-}  // namespace Test
-}  // namespace Acts
+}  // namespace Acts::Test

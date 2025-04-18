@@ -16,7 +16,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
 
   // protection against default numbers
   // it may cause std::bad_alloc if we don't protect
-  if (n_high == std::numeric_limits<std::size_t>::max() or
+  if (n_high == std::numeric_limits<std::size_t>::max() ||
       n_low == std::numeric_limits<std::size_t>::max()) {
     return;
   }
@@ -150,7 +150,7 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
 
     // if there is no left child, that also means no right child is present.
     // We do nothing
-    if (not exists(left_child, actual_size)) {
+    if (!exists(left_child, actual_size)) {
       break;
     }
 
@@ -219,7 +219,7 @@ CandidatesForMiddleSp<external_space_point_t>::storage() {
   // rely on the fact that m_indices_* are both min heap trees
   // Sorting comes naturally by popping elements one by one and
   // placing this element at the end of the output vector
-  while (m_n_high != 0 or m_n_low != 0) {
+  while (m_n_high != 0 || m_n_low != 0) {
     // no entries in collection high, we attach the entire low collection
     if (m_n_high == 0) {
       std::size_t idx = m_n_low;
@@ -295,7 +295,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::ascendingByQuality(
     const value_type& i1, const value_type& i2) {
-  return not descendingByQuality(i1, i2);
+  return !descendingByQuality(i1, i2);
 }
 
 }  // namespace Acts
