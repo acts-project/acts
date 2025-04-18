@@ -20,6 +20,7 @@
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElementITk.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
+#include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
 #include "Acts/Plugins/GeoModel/IGeoShapeConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -74,6 +75,13 @@ void addGeoModel(Context& ctx) {
 
     // patch the constructor
     patchKwargsConstructor(c);
+  }
+
+  // Volume converters
+  {
+    gm.def("convertVolume", &Acts::GeoModel::convertVolume);
+
+    gm.def("convertDetectorVolume", &Acts::GeoModel::convertDetectorVolume);
   }
 
   // Shape converters

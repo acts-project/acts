@@ -291,7 +291,9 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume")
         .def(py::init<const Transform3&, std::shared_ptr<Acts::VolumeBounds>,
-                      std::string>());
+                      std::string>())
+        .def(py::init<Acts::Volume&, const std::string&>(), py::arg("volume"),
+             py::arg("volumeName") = "undefined");
   }
 
   {

@@ -6,6 +6,7 @@ from acts import (
     CylindricalContainerBuilder,
     DetectorBuilder,
     GeometryIdGenerator,
+   
 )
 from acts import geomodel as gm
 from acts import examples
@@ -158,14 +159,17 @@ def main():
         for gmBox in gmBoxes:
             gmBoxSurfaces.extend(gmBox.surfaces())
         gmSurfaces = [ss[1] for ss in gmFactoryCache.sensitiveSurfaces]
-        unboundSurfaces = [item for item in gmSurfaces if item not in gmBoxSurfaces]
+        unboundSurfaces = [item for item in gmSurfaces]
+        print(len(gmSurfaces), "surfaces in the geometry model")
+        print(len(unboundSurfaces), "unbound surfaces in the geometry model")
+
+        viewConfig = acts.ViewConfig()
 
         acts.examples.writeVolumesSurfacesObj(
-            unboundSurfaces,
+          gmSurfaces,
             gmBoxes,
             gContext,
-            [75, 220, 100],
-            segments,
+            viewConfig,
             args.output + "_vols.obj",
         )
 
