@@ -245,15 +245,16 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
   using enum CylinderVolumeBounds::Face;
 
   Transform3 transform = Transform3::Identity();
-  transform *= AngleAxis3{std::numbers::pi / 2, Vector3::UnitY()};
+  // transform *= AngleAxis3{std::numbers::pi / 2, Vector3::UnitY()};
   auto cylBounds =
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
-  auto cylVolume = std::make_shared<TrackingVolume>(
-      Transform3::Identity(), cylBounds, "CylinderVolume");
+  auto cylVolume =
+      std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
   SingleCylinderPortalShell shell{*cylVolume};
   shell.applyToVolume();
 
-  auto getTruth = [&](const Vector3& position, const Vector3& direction) {
+  auto getTruth = [&](const Vector3& position, const Vector3& direction,
+                      bool posOnly = true) {
     TryAllNavigationPolicy tryAll(gctx, *cylVolume, *logger);
     NavigationArguments args{.position = position, .direction = direction};
     NavigationStream main;
@@ -265,7 +266,9 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
       if (!candidate.intersection.isValid()) {
         continue;
       }
-      if (!detail::checkPathLength(
+
+      if (posOnly &&
+          !detail::checkPathLength(
               candidate.intersection.pathLength(), s_onSurfaceTolerance,
               std::numeric_limits<double>::max(), *logger)) {
         continue;
@@ -273,6 +276,16 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
 
       portals.push_back(candidate.portal);
     }
+
+    auto outerIt = std::ranges::find(portals, shell.portal(OuterCylinder));
+    auto innerIt = std::ranges::find(portals, shell.portal(InnerCylinder));
+
+    if (outerIt != portals.end() && innerIt != portals.end()) {
+      // have both inner and outer cylinder. we only expect the inner one to be
+      // returned
+      portals.erase(outerIt);
+    }
+
     return portals;
   };
 
@@ -292,17 +305,216 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
     return portals;
   };
 
-  Vector3 position = Vector3::Zero();
-  Vector3 direction = Vector3::UnitZ();
+  auto checkEqual = [&](const std::vector<const Portal*>& exp,
+                        const std::vector<const Portal*>& act) {
+    auto which = [&](const Portal* p) -> std::string {
+      if (p == shell.portal(InnerCylinder)) {
+        return "InnerCylinder";
+      }
+      if (p == shell.portal(OuterCylinder)) {
+        return "OuterCylinder";
+      }
+      if (p == shell.portal(PositiveDisc)) {
+        return "PositiveDisc";
+      }
+      if (p == shell.portal(NegativeDisc)) {
+        return "NegativeDisc";
+      }
+      BOOST_FAIL("Unknown portal");
+      return "";  // unreachable
+    };
 
-  auto exp = getTruth(position, direction);
+    std::size_t imin = std::min(exp.size(), act.size());
+    for (std::size_t i = 0; i < imin; ++i) {
+      const auto& p1 = exp.at(i);
+      const auto& p2 = act.at(i);
+      if (p1 != p2) {
+        BOOST_ERROR("Portal mismatch at index " << i << " exp: " << which(p1)
+                                                << " act: " << which(p2));
+      }
+    }
 
-  BOOST_CHECK(exp.size() == 1);
-  BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+    if (exp.size() > imin) {
+      BOOST_ERROR("Expected more portals than actual");
+      for (std::size_t i = imin; i < exp.size(); ++i) {
+        BOOST_ERROR("Expected additional portal " << which(exp.at(i)));
+      }
+    }
 
-  auto act = getSmart(position, direction);
-  BOOST_CHECK(act.size() == 1);
-  BOOST_CHECK(act.at(0) == shell.portal(PositiveDisc));
+    if (act.size() > imin) {
+      BOOST_ERROR("Actual more portals than expected");
+      for (std::size_t i = imin; i < act.size(); ++i) {
+        BOOST_ERROR("Actual additional portal " << which(act.at(i)));
+      }
+    }
+  };
+
+  {
+    Vector3 position = Vector3::UnitX() * 150_mm;
+    Vector3 direction = Vector3::UnitZ();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position = Vector3::UnitX() * 150_mm;
+    Vector3 direction = Vector3{1, 1, 0}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position = Vector3::UnitX() * 150_mm;
+    Vector3 direction = Vector3{-1, 0, 0}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position = Vector3::UnitX() * 150_mm;
+    Vector3 direction = -Vector3::UnitZ();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{50, -200, 0};
+    Vector3 direction = Vector3{0, 1.5, 1}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 2);
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{50, -200, 0};
+    Vector3 direction = Vector3{0, 1.2, 1}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 2);
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+    BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{50, -200, 0};
+    Vector3 direction = Vector3{0, 0.9, 1}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{20, -200, 0};
+    Vector3 direction = Vector3{0.45, 0.9, 1}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{20, -200, 0};
+    Vector3 direction = Vector3{0.45, 0.9, -1}.normalized();
+
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{400 * std::cos(std::numbers::pi / 4),
+                     400 * std::sin(std::numbers::pi / 4), 0};
+    Vector3 direction = Vector3{0.45, -0.9, -0.1}.normalized();
+
+    // We're sitting ON the outer cylinder here and missing the disc and inner
+    // cylinder: need to return the outer cylinder
+    auto exp = getTruth(position, direction, false);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{400 * std::cos(std::numbers::pi / 4),
+                     400 * std::sin(std::numbers::pi / 4), 0};
+    Vector3 direction = Vector3{-0.3, -0.9, -0.1}.normalized();
+
+    // We're sitting ON the outer cylinder here and missing the disc and inner
+    // cylinder: need to return the outer cylinder
+    auto exp = getTruth(position, direction, false);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
+
+  {
+    Vector3 position{100 * std::cos(std::numbers::pi / 4),
+                     100 * std::sin(std::numbers::pi / 4), 0};
+    double dangle = 0.1;
+    Vector3 direction = Vector3{std::cos(dangle), std::sin(dangle), 0.01};
+
+    // We're sitting ON the Inner cylinder here and  pointing outwards
+    auto exp = getTruth(position, direction);
+
+    BOOST_CHECK(exp.size() == 1);
+    BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
+
+    auto act = getSmart(position, direction);
+    checkEqual(exp, act);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
