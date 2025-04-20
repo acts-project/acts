@@ -47,7 +47,11 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
  private:
   Config m_cfg;
   const TrackingVolume* m_volume;
-  Vector3 m_cylinderAxis;
+  Transform3 m_itransform;
+
+  double m_halfLengthZ;
+  double m_rMin2;
+  double m_rMax2;
 
   std::array<const Portal*, 4> m_portals;
 };
