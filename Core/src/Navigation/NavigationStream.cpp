@@ -39,13 +39,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     if (size == 1) {
       sIntersection = multiIntersection[0];
     } else if (size == 2) {
-      if (surface->type() == Surface::Plane) {
-        std::cout << "Multiple intersections (" << multiIntersection.size()
-                  << ") on planar surface (WEIRD): " << surface->toStream(gctx)
-                  << std::endl;
-        std::terminate();
-      }
-
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
