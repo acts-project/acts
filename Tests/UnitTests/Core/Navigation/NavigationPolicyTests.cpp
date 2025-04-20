@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
@@ -241,11 +242,19 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
                     44);
 }
 
-BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
+BOOST_DATA_TEST_CASE(CylinderPolicyTest,
+                     (boost::unit_test::data::xrange(-135, 180, 45) *
+                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
+                                                   Vector3{20_mm, 0_mm, 0_mm},
+                                                   Vector3{0_mm, 20_mm, 0_mm},
+                                                   Vector3{20_mm, 20_mm, 0_mm},
+                                                   Vector3{0_mm, 0_mm, 20_mm})),
+                     angle, offset) {
   using enum CylinderVolumeBounds::Face;
 
   Transform3 transform = Transform3::Identity();
-  // transform *= AngleAxis3{std::numbers::pi / 2, Vector3::UnitY()};
+  transform *= AngleAxis3{angle * 1_degree, Vector3::UnitX()};
+  transform *= Translation3{offset};
   auto cylBounds =
       std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
   auto cylVolume =
@@ -255,12 +264,14 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
 
   auto getTruth = [&](const Vector3& position, const Vector3& direction,
                       bool posOnly = true) {
+    Vector3 gpos = transform * position;
+    Vector3 gdir = transform.linear() * direction;
     TryAllNavigationPolicy tryAll(gctx, *cylVolume, *logger);
-    NavigationArguments args{.position = position, .direction = direction};
+    NavigationArguments args{.position = gpos, .direction = gdir};
     NavigationStream main;
     AppendOnlyNavigationStream stream{main};
     tryAll.initializeCandidates(args, stream, *logger);
-    main.initialize(gctx, {position, direction}, BoundaryTolerance::None());
+    main.initialize(gctx, {gpos, gdir}, BoundaryTolerance::None());
     std::vector<const Portal*> portals;
     for (auto& candidate : main.candidates()) {
       if (!candidate.intersection.isValid()) {
@@ -291,7 +302,9 @@ BOOST_AUTO_TEST_CASE(CylinderPolicyTest) {
 
   CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
   auto getSmart = [&](const Vector3& position, const Vector3& direction) {
-    NavigationArguments args{.position = position, .direction = direction};
+    Vector3 gpos = transform * position;
+    Vector3 gdir = transform.linear() * direction;
+    NavigationArguments args{.position = gpos, .direction = gdir};
     NavigationStream main;
     AppendOnlyNavigationStream stream{main};
     policy.initializeCandidates(args, stream, *logger);
