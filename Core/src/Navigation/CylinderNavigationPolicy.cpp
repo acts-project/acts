@@ -168,14 +168,10 @@ void CylinderNavigationPolicy::initializeCandidates(
   }
 
   double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
-  Vector3 diskPos{0, 0, zDisk};
-  Vector3 diskNormal = Vector3::UnitZ();
-  double denom = dir.dot(diskNormal);
-  if (std::abs(denom) > s_onSurfaceTolerance) {
+  if (std::abs(dir[2]) > s_onSurfaceTolerance) {
     // Not parallel to the disc, see if we're inside the disc
 
-    // @TODO: Simplify this based knowledge of the geometry
-    double t = (diskPos - pos).dot(diskNormal) / denom;
+    double t = (zDisk - pos[2]) / dir[2];
 
     Vector3 ix = pos + t * dir;
     assert(std::abs(ix[0] - zDisk) < s_onSurfaceTolerance);
