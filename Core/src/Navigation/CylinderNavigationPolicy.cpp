@@ -16,11 +16,29 @@
 
 namespace Acts {
 
+namespace {
+std::string_view faceName(CylinderVolumeBounds::Face face) {
+  using enum CylinderVolumeBounds::Face;
+  switch (face) {
+    case PositiveDisc:
+      return "PositiveDisc";
+    case NegativeDisc:
+      return "NegativeDisc";
+    case OuterCylinder:
+      return "OuterCylinder";
+    case InnerCylinder:
+      return "InnerCylinder";
+    default:
+      return "Unknown";
+  }
+}
+}  // namespace
+
 CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const TrackingVolume& volume,
                                                    const Logger& logger,
                                                    const Config& config)
-    : m_cfg(config), m_volume(&volume) {
+    : m_cfg(config), m_volume(&volume), m_portals{} {
   using enum CylinderVolumeBounds::Face;
 
   if (m_volume->volumeBounds().type() != VolumeBounds::eCylinder) {
@@ -35,8 +53,18 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
       dynamic_cast<const CylinderVolumeBounds&>(m_volume->volumeBounds());
 
   double rMin = bounds.get(CylinderVolumeBounds::eMinR);
+  m_rMin2 = rMin * rMin;
   double rMax = bounds.get(CylinderVolumeBounds::eMaxR);
-  double zHalf = bounds.get(CylinderVolumeBounds::eHalfLengthZ);
+  m_rMax2 = rMax * rMax;
+  m_halfLengthZ = bounds.get(CylinderVolumeBounds::eHalfLengthZ);
+
+  if (rMin == 0) {
+    ACTS_ERROR("CylinderNavigationPolicy can only be used with "
+               << "non-zero inner radius");
+    throw std::invalid_argument(
+        "CylinderNavigationPolicy can only be used with "
+        "non-zero inner radius");
+  }
 
   if (m_volume->portals().size() != 4) {
     ACTS_ERROR("CylinderNavigationPolicy can only be used with "
@@ -48,8 +76,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
 
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
                << volume.volumeName());
-  m_cylinderAxis = volume.transform().rotation() * Vector3::UnitZ();
-  ACTS_VERBOSE("Cylinder axis is " << m_cylinderAxis.transpose());
+
+  m_itransform = volume.transform().inverse();
 
   // Since the volume does not store the shell assignment, we have to recover
   // this from the raw portals
@@ -57,9 +85,6 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
     if (const auto* cylBounds =
             dynamic_cast<const CylinderBounds*>(&portal.surface().bounds());
         cylBounds != nullptr) {
-      std::cout << "rMin: " << rMin << " rMax: " << rMax << std::endl;
-      std::cout << "cylBounds->get(CylinderBounds::eR): "
-                << cylBounds->get(CylinderBounds::eR) << std::endl;
       if (std::abs(cylBounds->get(CylinderBounds::eR) - rMin) <
           s_onSurfaceTolerance) {
         m_portals.at(toUnderlying(InnerCylinder)) = &portal;
@@ -80,12 +105,12 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
           m_volume->transform().inverse() * portal.surface().transform(gctx);
       Vector3 localPosition = localTransform.translation();
       double localZ = localPosition.z();
-      if (std::abs(localZ - zHalf) < s_onSurfaceTolerance) {
+      if (std::abs(localZ - m_halfLengthZ) < s_onSurfaceTolerance) {
         m_portals.at(toUnderlying(PositiveDisc)) = &portal;
         continue;
       }
 
-      if (std::abs(localZ + zHalf) < s_onSurfaceTolerance) {
+      if (std::abs(localZ + m_halfLengthZ) < s_onSurfaceTolerance) {
         m_portals.at(toUnderlying(NegativeDisc)) = &portal;
         continue;
       }
@@ -96,29 +121,13 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   for (const auto& [i, portal] : enumerate(m_portals)) {
     auto face = static_cast<CylinderVolumeBounds::Face>(i);
 
-    std::string faceName;
-    switch (face) {
-      case PositiveDisc:
-        faceName = "PositiveDisc";
-        break;
-      case NegativeDisc:
-        faceName = "NegativeDisc";
-        break;
-      case OuterCylinder:
-        faceName = "OuterCylinder";
-        break;
-      case InnerCylinder:
-        faceName = "InnerCylinder";
-        break;
-      default:
-        faceName = "Unknown";
-    }
     if (portal == nullptr) {
-      ACTS_ERROR("Have no portal for " << faceName);
-      throw std::invalid_argument("Have no portal for " + faceName);
+      ACTS_ERROR("Have no portal for " << faceName(face));
+      throw std::invalid_argument("Have no portal for " +
+                                  std::string{faceName(face)});
     }
 
-    ACTS_VERBOSE("  " << faceName << " -> "
+    ACTS_VERBOSE("  " << faceName(face) << " -> "
                       << portal->surface().toStream(gctx));
   }
 }
@@ -126,10 +135,63 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
 void CylinderNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
-  Vector3 pos = args.position - m_volume->center();
-  Vector3 dir = args.direction;
+  using enum CylinderVolumeBounds::Face;
+  ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates: "
+               << "gpos: " << args.position.transpose()
+               << " gdir: " << args.direction.transpose());
 
-  double dot = dir.dot(m_cylinderAxis);
+  const Vector3 pos = m_itransform * args.position;
+  const Vector3 dir = m_itransform.linear() * args.direction;
+
+  ACTS_VERBOSE("-> lpos: " << pos.transpose() << " ldir: " << dir.transpose());
+
+  auto add = [&](auto face) {
+    ACTS_VERBOSE("~~> Adding portal candidate " << faceName(face));
+    stream.addPortalCandidate(*m_portals.at(toUnderlying(face)));
+  };
+
+  double rpos2 = pos[0] * pos[0] + pos[1] * pos[1];
+
+  bool hitInner = false;
+  // Only run inner cylinder check if we're not ON the inner cylinder
+  if (std::abs(rpos2 - m_rMin2) > s_onSurfaceTolerance) {
+    // Calculate if we could hit the inner cylinder
+    Vector2 dir2 = dir.head<2>().normalized();
+    double d = -1 * pos.head<2>().dot(dir2);
+    Vector2 poc = pos.head<2>() + d * dir2;
+    double r2 = poc.dot(poc);
+    hitInner = r2 < m_rMin2;
+    if (hitInner) {
+      // Could hit the inner cylinder
+      add(InnerCylinder);
+    }
+  }
+
+  double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
+  Vector3 diskPos{0, 0, zDisk};
+  Vector3 diskNormal = Vector3::UnitZ();
+  double denom = dir.dot(diskNormal);
+  if (std::abs(denom) > s_onSurfaceTolerance) {
+    // Not parallel to the disc, see if we're inside the disc
+
+    // @TODO: Simplify this based knowledge of the geometry
+    double t = (diskPos - pos).dot(diskNormal) / denom;
+
+    Vector3 ix = pos + t * dir;
+    assert(std::abs(ix[0] - zDisk) < s_onSurfaceTolerance);
+    double r2 = ix[0] * ix[0] + ix[1] * ix[1];
+    if (r2 < m_rMax2 && r2 > m_rMin2) {
+      // Will hit this disk!
+      add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
+      // If we hit the disk inside the radius, we can't hit the outer cylinder!
+      return;
+    }
+  }
+
+  if (!hitInner) {
+    // If we don't hit the inner cylinder, we can hit the outer cylinder
+    add(OuterCylinder);
+  }
 }
 
 void CylinderNavigationPolicy::connect(NavigationDelegate& delegate) const {
