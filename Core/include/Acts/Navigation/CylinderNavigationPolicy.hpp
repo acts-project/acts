@@ -47,7 +47,7 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
  private:
   Config m_cfg;
   const TrackingVolume* m_volume;
-  Transform3 m_itransform;
+  std::optional<Transform3> m_itransform;
 
   double m_halfLengthZ;
   double m_rMin2;
