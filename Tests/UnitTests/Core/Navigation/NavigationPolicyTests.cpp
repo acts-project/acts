@@ -298,7 +298,9 @@ std::vector<const Portal*> getSmart(const Vector3& position,
   NavigationArguments args{.position = gpos, .direction = gdir};
   NavigationStream main;
   AppendOnlyNavigationStream stream{main};
-  policy.initializeCandidates(args, stream, *logger);
+  NavigationDelegate delegate;
+  policy.connect(delegate);
+  delegate(args, stream, *logger);
 
   std::vector<const Portal*> portals;
   // We don't filter here, because we want to test the candidates as they come
