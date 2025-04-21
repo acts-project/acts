@@ -31,7 +31,6 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface* surface = sIntersection.object();
     // Intersect the surface
-    std::cout << "SURFACE: " << surface->toStream(gctx) << std::endl;
     auto multiIntersection = surface->intersect(gctx, position, direction,
                                                 cTolerance, onSurfaceTolerance);
 
