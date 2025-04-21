@@ -267,7 +267,7 @@ std::vector<const Portal*> getTruth(const Vector3& position,
       continue;
     }
 
-    if (posOnly &&
+    if (main.candidates().size() > 1 && posOnly &&
         !detail::checkPathLength(candidate.intersection.pathLength(),
                                  s_onSurfaceTolerance,
                                  std::numeric_limits<double>::max(), logger)) {
@@ -329,27 +329,13 @@ void checkEqual(const std::vector<const Portal*>& exp,
     return "";  // unreachable
   };
 
-  std::size_t imin = std::min(exp.size(), act.size());
-  bool failed = false;
-  for (std::size_t i = 0; i < imin; ++i) {
-    const auto& p1 = exp.at(i);
-    const auto& p2 = act.at(i);
-    if (p1 != p2) {
-      failed = true;
-      BOOST_ERROR("Portal mismatch at index " << i << " exp: " << which(p1)
-                                              << " act: " << which(p2));
-    }
-  }
+  std::set<const Portal*> expSet;
+  std::set<const Portal*> actSet;
 
-  if (exp.size() > imin) {
-    failed = true;
-  }
+  std::ranges::copy(exp, std::inserter(expSet, expSet.begin()));
+  std::ranges::copy(act, std::inserter(actSet, actSet.begin()));
 
-  if (act.size() > imin) {
-    failed = true;
-  }
-
-  if (failed) {
+  if (expSet != actSet) {
     BOOST_ERROR([&]() -> std::string {
       std::vector<std::string> exps;
       for (auto& p : exp) {
@@ -367,14 +353,13 @@ void checkEqual(const std::vector<const Portal*>& exp,
 
 }  // namespace
 
-BOOST_DATA_TEST_CASE(CylinderPolicyTest,
-                     (boost::unit_test::data::xrange(-135, 180, 45) *
-                      boost::unit_test::data::make(Vector3{0_mm, 0_mm, 0_mm},
-                                                   Vector3{20_mm, 0_mm, 0_mm},
-                                                   Vector3{0_mm, 20_mm, 0_mm},
-                                                   Vector3{20_mm, 20_mm, 0_mm},
-                                                   Vector3{0_mm, 0_mm, 20_mm})),
-                     angle, offset) {
+BOOST_DATA_TEST_CASE(
+    CylinderPolicyTest,
+    (bdata::xrange(-135, 180, 45) *
+     bdata::make(Vector3{0_mm, 0_mm, 0_mm}, Vector3{20_mm, 0_mm, 0_mm},
+                 Vector3{0_mm, 20_mm, 0_mm}, Vector3{20_mm, 20_mm, 0_mm},
+                 Vector3{0_mm, 0_mm, 20_mm})),
+    angle, offset) {
   using enum CylinderVolumeBounds::Face;
 
   Transform3 transform = Transform3::Identity();
@@ -577,11 +562,35 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
+
+  {
+    Vector3 position{200 * std::cos(std::numbers::pi / 4),
+                     200 * std::sin(std::numbers::pi / 4), 0};
+    Vector3 target{150 * std::cos(std::numbers::pi * 5 / 4),
+                   150 * std::sin(std::numbers::pi * 5 / 4), 300};
+    Vector3 direction = (target - position).normalized();
+
+    auto exp =
+        getTruth(position, direction, transform, *cylVolume, shell, *logger);
+
+    BOOST_CHECK_EQUAL(exp.size(), 2);
+    BOOST_CHECK_EQUAL(exp.at(0), shell.portal(InnerCylinder));
+    BOOST_CHECK_EQUAL(exp.at(1), shell.portal(PositiveDisc));
+
+    CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+    auto act = getSmart(position, direction, transform, policy);
+    checkEqual(exp, act, shell);
+  }
 }
 
 namespace {
 
 std::mt19937 engine;
+
+unsigned long seed() {
+  static unsigned long s = 42;
+  return s++;
+}
 
 std::uniform_real_distribution<double> rDistOffBoundary{
     100 + 2 * s_onSurfaceTolerance, 400 - 2 * s_onSurfaceTolerance};
@@ -595,18 +604,18 @@ std::uniform_real_distribution<double> thetaDist{0, std::numbers::pi};
 
 BOOST_DATA_TEST_CASE(
     CylinderPolicyTestOffBoundary,
-    bdata::random((bdata::engine = engine,
+    bdata::random((bdata::engine = engine, bdata::seed = seed(),
                    bdata::distribution = rDistOffBoundary)) ^
-        bdata::random((bdata::engine = engine,
+        bdata::random((bdata::engine = engine, bdata::seed = seed(),
                        bdata::distribution = zDistOffBoundary)) ^
-        bdata::random((bdata::engine = engine, bdata::distribution = phiDist)) ^
-        bdata::random((bdata::engine = engine, bdata::distribution = phiDist)) ^
-        bdata::random((bdata::engine = engine,
+        bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                       bdata::distribution = phiDist)) ^
+        bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                       bdata::distribution = phiDist)) ^
+        bdata::random((bdata::engine = engine, bdata::seed = seed(),
                        bdata::distribution = thetaDist)) ^
         bdata::xrange(100),
     r, z, phiPos, phiDir, theta, index) {
-  using enum CylinderVolumeBounds::Face;
-
   static_cast<void>(index);
 
   Transform3 transform = Transform3::Identity();
@@ -620,6 +629,79 @@ BOOST_DATA_TEST_CASE(
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
   Vector3 direction{std::sin(theta) * std::cos(phiDir),
                     std::sin(theta) * std::sin(phiDir), std::cos(theta)};
+
+  BOOST_CHECK(cylBounds->inside(position));
+
+  auto exp =
+      getTruth(position, direction, transform, *cylVolume, shell, *logger);
+
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  auto act = getSmart(position, direction, transform, policy);
+  checkEqual(exp, act, shell);
+}
+
+BOOST_DATA_TEST_CASE(
+    CylinderPolicyTestOnRBoundary,
+    bdata::make(100, 400) *
+        (bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = zDistOffBoundary)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = phiDist)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = phiDist)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = zDistOffBoundary)) ^
+         bdata::xrange(2)),
+    r, z, phiPos, phiTarget, zTarget, index) {
+  static_cast<void>(index);
+
+  Transform3 transform = Transform3::Identity();
+  auto cylBounds =
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
+  auto cylVolume =
+      std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
+  SingleCylinderPortalShell shell{*cylVolume};
+  shell.applyToVolume();
+
+  Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
+  Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
+  Vector3 direction = (target - position).normalized();
+
+  BOOST_CHECK(cylBounds->inside(position));
+
+  auto exp =
+      getTruth(position, direction, transform, *cylVolume, shell, *logger);
+
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  auto act = getSmart(position, direction, transform, policy);
+  checkEqual(exp, act, shell);
+}
+
+BOOST_DATA_TEST_CASE(
+    CylinderPolicyTestOnZBoundary,
+    bdata::make(-300, 300) *
+        (bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = rDistOffBoundary)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = phiDist)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = phiDist)) ^
+         bdata::random((bdata::engine = engine, bdata::seed = seed(),
+                        bdata::distribution = zDistOffBoundary)) ^
+         bdata::xrange(2)),
+    z, r, phiPos, phiTarget, zTarget, index) {
+  static_cast<void>(index);
+  Transform3 transform = Transform3::Identity();
+  auto cylBounds =
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
+  auto cylVolume =
+      std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
+  SingleCylinderPortalShell shell{*cylVolume};
+  shell.applyToVolume();
+
+  Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
+  Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
+  Vector3 direction = (target - position).normalized();
 
   BOOST_CHECK(cylBounds->inside(position));
 
