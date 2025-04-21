@@ -150,45 +150,51 @@ void CylinderNavigationPolicy::initializeCandidates(
     stream.addPortalCandidate(*m_portals.at(toUnderlying(face)));
   };
 
+  bool hitDisk = false;
+  Vector3 diskIntersection;
+  double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
+  if (std::abs(dir[2]) > s_onSurfaceTolerance) {
+    // Not parallel to the disc, see if we're inside the disc radii
+
+    double t = (zDisk - pos[2]) / dir[2];
+
+    diskIntersection = pos + t * dir;
+    double r2 = diskIntersection[0] * diskIntersection[0] +
+                diskIntersection[1] * diskIntersection[1];
+    if (r2 < m_rMax2 && r2 > m_rMin2) {
+      add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
+      hitDisk = true;
+    }
+  }
+
   double rpos2 = pos[0] * pos[0] + pos[1] * pos[1];
 
   bool hitInner = false;
-  // Only run inner cylinder check if we're not ON the inner cylinder
   if (std::abs(rpos2 - m_rMin2) > s_onSurfaceTolerance) {
-    // Calculate if we could hit the inner cylinder
+    // Find point of closest approach to the origin
+
     Vector2 dir2 = dir.head<2>().normalized();
     double d = -1 * pos.head<2>().dot(dir2);
-    if (d > 0) {  // only check distance if the point of closest approach is in
-                  // front of the point
+
+    double diskIntersectionDistanceXy =
+        (diskIntersection.head<2>() - pos.head<2>()).norm();
+    if (d > 0) {  // Point of closest approach is in the direction of the ray
+
+      // Clip to distance of disk intersection
+      d = std::min(d, diskIntersectionDistanceXy);
+
       Vector2 poc = pos.head<2>() + d * dir2;
       double r2 = poc.dot(poc);
       hitInner = r2 < m_rMin2;
       if (hitInner) {
-        // Could hit the inner cylinder
         add(InnerCylinder);
       }
     }
   }
 
-  double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
-  if (std::abs(dir[2]) > s_onSurfaceTolerance) {
-    // Not parallel to the disc, see if we're inside the disc
+  // @TODO: If we hit the inner cylinder on our way to the disk, we can discard the disk as a target
 
-    double t = (zDisk - pos[2]) / dir[2];
-
-    Vector3 ix = pos + t * dir;
-    assert(std::abs(ix[0] - zDisk) < s_onSurfaceTolerance);
-    double r2 = ix[0] * ix[0] + ix[1] * ix[1];
-    if (r2 < m_rMax2 && r2 > m_rMin2) {
-      // Will hit this disk!
-      add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
-      // If we hit the disk inside the radius, we can't hit the outer cylinder!
-      return;
-    }
-  }
-
-  if (!hitInner) {
-    // If we don't hit the inner cylinder, we can hit the outer cylinder
+  if (!hitInner && !hitDisk) {
     add(OuterCylinder);
   }
 }
