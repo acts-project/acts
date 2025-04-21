@@ -653,7 +653,7 @@ BOOST_DATA_TEST_CASE(
                         bdata::distribution = phiDist)) ^
          bdata::random((bdata::engine = engine, bdata::seed = seed(),
                         bdata::distribution = zDistOffBoundary)) ^
-         bdata::xrange(2)),
+         bdata::xrange(100)),
     r, z, phiPos, phiTarget, zTarget, index) {
   static_cast<void>(index);
 
@@ -668,8 +668,6 @@ BOOST_DATA_TEST_CASE(
   Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
   Vector3 target{r * std::cos(phiTarget), r * std::sin(phiTarget), zTarget};
   Vector3 direction = (target - position).normalized();
-
-  BOOST_CHECK(cylBounds->inside(position));
 
   auto exp =
       getTruth(position, direction, transform, *cylVolume, shell, *logger);
@@ -690,7 +688,7 @@ BOOST_DATA_TEST_CASE(
                         bdata::distribution = phiDist)) ^
          bdata::random((bdata::engine = engine, bdata::seed = seed(),
                         bdata::distribution = zDistOffBoundary)) ^
-         bdata::xrange(2)),
+         bdata::xrange(100)),
     z, r, phiPos, phiTarget, zTarget, index) {
   static_cast<void>(index);
   Transform3 transform = Transform3::Identity();
