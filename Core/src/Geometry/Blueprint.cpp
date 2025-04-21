@@ -17,6 +17,7 @@
 #include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/GraphViz.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -254,8 +255,8 @@ std::unique_ptr<TrackingGeometry> Blueprint::construct(
   ACTS_DEBUG(prefix() << "New root volume bounds are: "
                       << world->volumeBounds());
 
-  world->setNavigationPolicy(
-      options.defaultNavigationPolicyFactory->build(gctx, *world, logger));
+  world->setNavigationPolicy(std::make_unique<Acts::TryAllNavigationPolicy>(
+      gctx, *world, logger, Acts::TryAllNavigationPolicy::Config{}));
 
   auto &shell = child.connect(options, gctx, logger);
 
