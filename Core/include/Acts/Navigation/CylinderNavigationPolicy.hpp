@@ -36,30 +36,17 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
   /// @param args are the navigation arguments
   /// @param stream is the navigation stream to update
   /// @param logger is the logger
-  void initializeCandidatesRotate(const NavigationArguments& args,
-                                  AppendOnlyNavigationStream& stream,
-                                  const Logger& logger) const;
-
-  /// Add all candidates to the stream
-  /// @param args are the navigation arguments
-  /// @param stream is the navigation stream to update
-  /// @param logger is the logger
-  void initializeCandidatesShift(const NavigationArguments& args,
-                                 AppendOnlyNavigationStream& stream,
-                                 const Logger& logger) const;
+  void initializeCandidates(const NavigationArguments& args,
+                            AppendOnlyNavigationStream& stream,
+                            const Logger& logger) const;
 
   /// Connect the policy to a navigation delegate
   /// @param delegate is the navigation delegate
   void connect(NavigationDelegate& delegate) const override;
 
  private:
-  void candidateImpl(const Vector3& pos, const Vector3& dir,
-                     AppendOnlyNavigationStream& stream,
-                     const Logger& logger) const;
-
   Config m_cfg;
   const TrackingVolume* m_volume;
-
   Transform3 m_itransform;
 
   double m_halfLengthZ;
@@ -68,5 +55,7 @@ class CylinderNavigationPolicy final : public INavigationPolicy {
 
   std::array<const Portal*, 4> m_portals;
 };
+
+static_assert(NavigationPolicyConcept<CylinderNavigationPolicy>);
 
 }  // namespace Acts

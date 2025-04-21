@@ -8,7 +8,6 @@
 
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -133,11 +132,17 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   }
 }
 
-void CylinderNavigationPolicy::candidateImpl(const Vector3& pos,
-                                             const Vector3& dir,
-                                             AppendOnlyNavigationStream& stream,
-                                             const Logger& logger) const {
+void CylinderNavigationPolicy::initializeCandidates(
+    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
+    const Logger& logger) const {
   using enum CylinderVolumeBounds::Face;
+  ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates: "
+               << "gpos: " << args.position.transpose()
+               << " gdir: " << args.direction.transpose());
+
+  const Vector3 pos = m_itransform * args.position;
+  const Vector3 dir = m_itransform.linear() * args.direction;
+
   ACTS_VERBOSE("-> lpos: " << pos.transpose() << " ldir: " << dir.transpose());
 
   auto add = [&](auto face) {
@@ -194,37 +199,8 @@ void CylinderNavigationPolicy::candidateImpl(const Vector3& pos,
   }
 }
 
-void CylinderNavigationPolicy::initializeCandidatesShift(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
-  const Vector3 pos = args.position - m_volume->transform().translation();
-  const Vector3 dir = args.direction;
-  candidateImpl(pos, dir, stream, logger);
-}
-
-void CylinderNavigationPolicy::initializeCandidatesRotate(
-    const NavigationArguments& args, AppendOnlyNavigationStream& stream,
-    const Logger& logger) const {
-  ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates: "
-               << "gpos: " << args.position.transpose()
-               << " gdir: " << args.direction.transpose());
-
-  const Vector3 pos = m_itransform * args.position;
-  const Vector3 dir = m_itransform.linear() * args.direction;
-  candidateImpl(pos, dir, stream, logger);
-}
-
 void CylinderNavigationPolicy::connect(NavigationDelegate& delegate) const {
-  // If the volume is not rotated, we can skip the rotation step
-  if (m_volume->transform().linear().isApprox((SquareMatrix3::Identity()))) {
-    DelegateChainBuilder{delegate}
-        .add<&CylinderNavigationPolicy::initializeCandidatesShift>(this)
-        .store(delegate);
-  } else {
-    DelegateChainBuilder{delegate}
-        .add<&CylinderNavigationPolicy::initializeCandidatesRotate>(this)
-        .store(delegate);
-  }
+  // @TODO: Implement optimization for shift only transform, where we can skip the rotation
+  connectDefault<CylinderNavigationPolicy>(delegate);
 }
-
 }  // namespace Acts
