@@ -31,14 +31,17 @@ bool NavigationStream::initialize(const GeometryContext& gctx,
     // Get the surface from the object intersection
     const Surface* surface = sIntersection.object();
     // Intersect the surface
+    std::cout << "SURFACE: " << surface->toStream(gctx) << std::endl;
     auto multiIntersection = surface->intersect(gctx, position, direction,
                                                 cTolerance, onSurfaceTolerance);
 
-    std::size_t size = (multiIntersection[0].isValid() ? 1 : 0) +
-                       (multiIntersection[1].isValid() ? 1 : 0);
-    if (size == 1) {
+    bool firstValid = multiIntersection[0].isValid();
+    bool secondValid = multiIntersection[1].isValid();
+    if (firstValid && !secondValid) {
       sIntersection = multiIntersection[0];
-    } else if (size == 2) {
+    } else if (!firstValid && secondValid) {
+      sIntersection = multiIntersection[1];
+    } else {
       // Split them into valid intersections, keep track of potentially
       // additional candidates
       bool originalCandidateUpdated = false;
