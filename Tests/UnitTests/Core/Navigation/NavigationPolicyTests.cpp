@@ -23,8 +23,11 @@
 #include "Acts/Navigation/NavigationStream.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 
+#include <boost/algorithm/string/join.hpp>
+
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+namespace bdata = boost::unit_test::data;
 
 BOOST_AUTO_TEST_SUITE(NavigationPolicyTests)
 
@@ -243,6 +246,7 @@ BOOST_AUTO_TEST_CASE(IsolatedFactory) {
 }
 
 namespace {
+
 std::vector<const Portal*> getTruth(const Vector3& position,
                                     const Vector3& direction,
                                     const Transform3& transform,
@@ -279,8 +283,6 @@ std::vector<const Portal*> getTruth(const Vector3& position,
       portals, shell.portal(CylinderVolumeBounds::Face::InnerCylinder));
 
   if (outerIt != portals.end() && innerIt != portals.end()) {
-    // have both inner and outer cylinder. we only expect the inner one to be
-    // returned
     portals.erase(outerIt);
   }
 
@@ -290,7 +292,6 @@ std::vector<const Portal*> getTruth(const Vector3& position,
 std::vector<const Portal*> getSmart(const Vector3& position,
                                     const Vector3& direction,
                                     const Transform3& transform,
-                                    const TrackingVolume& cylVolume,
                                     CylinderNavigationPolicy& policy) {
   Vector3 gpos = transform * position;
   Vector3 gdir = transform.linear() * direction;
@@ -329,27 +330,38 @@ void checkEqual(const std::vector<const Portal*>& exp,
   };
 
   std::size_t imin = std::min(exp.size(), act.size());
+  bool failed = false;
   for (std::size_t i = 0; i < imin; ++i) {
     const auto& p1 = exp.at(i);
     const auto& p2 = act.at(i);
     if (p1 != p2) {
+      failed = true;
       BOOST_ERROR("Portal mismatch at index " << i << " exp: " << which(p1)
                                               << " act: " << which(p2));
     }
   }
 
   if (exp.size() > imin) {
-    BOOST_ERROR("Expected more portals than actual");
-    for (std::size_t i = imin; i < exp.size(); ++i) {
-      BOOST_ERROR("Expected additional portal " << which(exp.at(i)));
-    }
+    failed = true;
   }
 
   if (act.size() > imin) {
-    BOOST_ERROR("Actual more portals than expected");
-    for (std::size_t i = imin; i < act.size(); ++i) {
-      BOOST_ERROR("Actual additional portal " << which(act.at(i)));
-    }
+    failed = true;
+  }
+
+  if (failed) {
+    BOOST_ERROR([&]() -> std::string {
+      std::vector<std::string> exps;
+      for (auto& p : exp) {
+        exps.push_back(which(p));
+      }
+      std::vector<std::string> acts;
+      for (auto& p : act) {
+        acts.push_back(which(p));
+      }
+      return "[" + boost::algorithm::join(exps, ", ") + "] != [" +
+             boost::algorithm::join(acts, ", ") + "]";
+    }());
   }
 }
 
@@ -386,7 +398,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -401,7 +413,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -416,7 +428,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -431,7 +443,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -447,7 +459,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -463,7 +475,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(1) == shell.portal(PositiveDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -478,7 +490,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(InnerCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -493,7 +505,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(PositiveDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -508,7 +520,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(NegativeDisc));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -526,7 +538,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -544,7 +556,7 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
 
@@ -562,9 +574,61 @@ BOOST_DATA_TEST_CASE(CylinderPolicyTest,
     BOOST_CHECK(exp.at(0) == shell.portal(OuterCylinder));
 
     CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
-    auto act = getSmart(position, direction, transform, *cylVolume, policy);
+    auto act = getSmart(position, direction, transform, policy);
     checkEqual(exp, act, shell);
   }
+}
+
+namespace {
+
+std::mt19937 engine;
+
+std::uniform_real_distribution<double> rDistOffBoundary{
+    100 + 2 * s_onSurfaceTolerance, 400 - 2 * s_onSurfaceTolerance};
+std::uniform_real_distribution<double> zDistOffBoundary{
+    -300_mm + 2 * s_onSurfaceTolerance, 300_mm - 2 * s_onSurfaceTolerance};
+std::uniform_real_distribution<double> phiDist{-std::numbers::pi,
+                                               std::numbers::pi};
+std::uniform_real_distribution<double> thetaDist{0, std::numbers::pi};
+
+}  // namespace
+
+BOOST_DATA_TEST_CASE(
+    CylinderPolicyTestOffBoundary,
+    bdata::random((bdata::engine = engine,
+                   bdata::distribution = rDistOffBoundary)) ^
+        bdata::random((bdata::engine = engine,
+                       bdata::distribution = zDistOffBoundary)) ^
+        bdata::random((bdata::engine = engine, bdata::distribution = phiDist)) ^
+        bdata::random((bdata::engine = engine, bdata::distribution = phiDist)) ^
+        bdata::random((bdata::engine = engine,
+                       bdata::distribution = thetaDist)) ^
+        bdata::xrange(100),
+    r, z, phiPos, phiDir, theta, index) {
+  using enum CylinderVolumeBounds::Face;
+
+  static_cast<void>(index);
+
+  Transform3 transform = Transform3::Identity();
+  auto cylBounds =
+      std::make_shared<CylinderVolumeBounds>(100_mm, 400_mm, 300_mm);
+  auto cylVolume =
+      std::make_shared<TrackingVolume>(transform, cylBounds, "CylinderVolume");
+  SingleCylinderPortalShell shell{*cylVolume};
+  shell.applyToVolume();
+
+  Vector3 position{r * std::cos(phiPos), r * std::sin(phiPos), z};
+  Vector3 direction{std::sin(theta) * std::cos(phiDir),
+                    std::sin(theta) * std::sin(phiDir), std::cos(theta)};
+
+  BOOST_CHECK(cylBounds->inside(position));
+
+  auto exp =
+      getTruth(position, direction, transform, *cylVolume, shell, *logger);
+
+  CylinderNavigationPolicy policy(gctx, *cylVolume, *logger, {});
+  auto act = getSmart(position, direction, transform, policy);
+  checkEqual(exp, act, shell);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -158,12 +158,15 @@ void CylinderNavigationPolicy::initializeCandidates(
     // Calculate if we could hit the inner cylinder
     Vector2 dir2 = dir.head<2>().normalized();
     double d = -1 * pos.head<2>().dot(dir2);
-    Vector2 poc = pos.head<2>() + d * dir2;
-    double r2 = poc.dot(poc);
-    hitInner = r2 < m_rMin2;
-    if (hitInner) {
-      // Could hit the inner cylinder
-      add(InnerCylinder);
+    if (d > 0) {  // only check distance if the point of closest approach is in
+                  // front of the point
+      Vector2 poc = pos.head<2>() + d * dir2;
+      double r2 = poc.dot(poc);
+      hitInner = r2 < m_rMin2;
+      if (hitInner) {
+        // Could hit the inner cylinder
+        add(InnerCylinder);
+      }
     }
   }
 
@@ -191,6 +194,7 @@ void CylinderNavigationPolicy::initializeCandidates(
 }
 
 void CylinderNavigationPolicy::connect(NavigationDelegate& delegate) const {
+  // @TODO: Implement optimization for shift only transform, where we can skip the rotation
   connectDefault<CylinderNavigationPolicy>(delegate);
 }
 }  // namespace Acts
