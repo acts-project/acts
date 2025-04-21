@@ -40,6 +40,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
                                                    const Logger& logger,
                                                    const Config& config)
     : m_cfg(config), m_volume(&volume), m_portals{} {
+  ACTS_VERBOSE("CylinderNavigationPolicy constructor for volume "
+               << volume.volumeName());
   using enum CylinderVolumeBounds::Face;
 
   if (m_volume->volumeBounds().type() != VolumeBounds::eCylinder) {
@@ -61,7 +63,8 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
 
   if (rMin == 0) {
     ACTS_ERROR("CylinderNavigationPolicy can only be used with "
-               << "non-zero inner radius");
+               << "non-zero inner radius, which " << m_volume->volumeName()
+               << " has");
     throw std::invalid_argument(
         "CylinderNavigationPolicy can only be used with "
         "non-zero inner radius");
@@ -139,8 +142,14 @@ void CylinderNavigationPolicy::initializeCandidates(
     const NavigationArguments& args, AppendOnlyNavigationStream& stream,
     const Logger& logger) const {
   using enum CylinderVolumeBounds::Face;
-  ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates: "
-               << "gpos: " << args.position.transpose()
+
+  if (!args.wantsPortals) {
+    return;
+  }
+
+  ACTS_VERBOSE("CylinderNavigationPolicy::initializeCandidates for volume "
+               << m_volume->volumeName()
+               << " with gpos: " << args.position.transpose()
                << " gdir: " << args.direction.transpose());
 
   Vector3 pos;
@@ -164,6 +173,8 @@ void CylinderNavigationPolicy::initializeCandidates(
   Vector3 diskIntersection;
   double zDisk = (dir[2] > 0) ? m_halfLengthZ : -m_halfLengthZ;
   if (std::abs(dir[2]) > s_onSurfaceTolerance) {
+    ACTS_VERBOSE(
+        "-> Not parallel to the disc, see if we're inside the disc radii");
     // Not parallel to the disc, see if we're inside the disc radii
 
     double t = (zDisk - pos[2]) / dir[2];
@@ -175,9 +186,12 @@ void CylinderNavigationPolicy::initializeCandidates(
       add(dir[2] > 0 ? PositiveDisc : NegativeDisc);
       hitDisk = true;
     }
+  } else {
+    ACTS_VERBOSE("-> Parallel to the disc, see if we're inside the disc radii");
   }
 
   double rpos2 = pos[0] * pos[0] + pos[1] * pos[1];
+  ACTS_VERBOSE("-> rpos: " << std::sqrt(rpos2));
 
   bool hitInner = false;
   if (std::abs(rpos2 - m_rMin2) > s_onSurfaceTolerance) {
@@ -185,6 +199,7 @@ void CylinderNavigationPolicy::initializeCandidates(
 
     Vector2 dir2 = dir.head<2>().normalized();
     double d = -1 * pos.head<2>().dot(dir2);
+    ACTS_VERBOSE("-> d: " << d);
 
     if (d > 0) {  // Point of closest approach is in the direction of the ray
 
