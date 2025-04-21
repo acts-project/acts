@@ -8,6 +8,7 @@
 
 #include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -77,7 +78,9 @@ CylinderNavigationPolicy::CylinderNavigationPolicy(const GeometryContext& gctx,
   ACTS_VERBOSE("CylinderNavigationPolicy created for volume "
                << volume.volumeName());
 
-  m_itransform = volume.transform().inverse();
+  if (!volume.transform().linear().isApprox(SquareMatrix3::Identity())) {
+    m_itransform = volume.transform().inverse();
+  }
 
   // Since the volume does not store the shell assignment, we have to recover
   // this from the raw portals
@@ -140,8 +143,15 @@ void CylinderNavigationPolicy::initializeCandidates(
                << "gpos: " << args.position.transpose()
                << " gdir: " << args.direction.transpose());
 
-  const Vector3 pos = m_itransform * args.position;
-  const Vector3 dir = m_itransform.linear() * args.direction;
+  Vector3 pos;
+  Vector3 dir;
+  if (m_itransform.has_value()) {
+    pos = *m_itransform * args.position;
+    dir = m_itransform->linear() * args.direction;
+  } else {
+    pos = args.position - m_volume->transform().translation();
+    dir = args.direction;
+  }
 
   ACTS_VERBOSE("-> lpos: " << pos.transpose() << " ldir: " << dir.transpose());
 
@@ -176,12 +186,14 @@ void CylinderNavigationPolicy::initializeCandidates(
     Vector2 dir2 = dir.head<2>().normalized();
     double d = -1 * pos.head<2>().dot(dir2);
 
-    double diskIntersectionDistanceXy =
-        (diskIntersection.head<2>() - pos.head<2>()).norm();
     if (d > 0) {  // Point of closest approach is in the direction of the ray
 
-      // Clip to distance of disk intersection
-      d = std::min(d, diskIntersectionDistanceXy);
+      if (hitDisk) {
+        // Clip to distance of disk intersection
+        double diskIntersectionDistanceXy =
+            (diskIntersection.head<2>() - pos.head<2>()).norm();
+        d = std::min(d, diskIntersectionDistanceXy);
+      }
 
       Vector2 poc = pos.head<2>() + d * dir2;
       double r2 = poc.dot(poc);
@@ -200,7 +212,6 @@ void CylinderNavigationPolicy::initializeCandidates(
 }
 
 void CylinderNavigationPolicy::connect(NavigationDelegate& delegate) const {
-  // @TODO: Implement optimization for shift only transform, where we can skip the rotation
   connectDefault<CylinderNavigationPolicy>(delegate);
 }
 }  // namespace Acts
