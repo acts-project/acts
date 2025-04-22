@@ -4,6 +4,8 @@ add_library(
     src/BuildGenericDetector.cpp
     src/GenericDetector.cpp
     src/GenericDetectorElement.cpp
+    src/LayerBuilder.cpp
+    src/ProtoLayerCreator.cpp
 )
 
 acts_compile_headers(ActsExamplesDetectorGeneric GLOB "include/**/*.hpp")
