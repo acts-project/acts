@@ -25,8 +25,8 @@ __global__ void findNumInOutEdge(std::size_t nEdges, const float *scores,
     return;
   }
 
-  int srcNode = srcNodes[i];
-  int dstNode = dstNodes[i];
+  auto srcNode = srcNodes[i];
+  auto dstNode = dstNodes[i];
 
   atomicAdd(&numInEdges[dstNode], 1);
   atomicAdd(&numOutEdges[srcNode], 1);
