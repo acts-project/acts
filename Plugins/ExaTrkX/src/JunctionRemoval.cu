@@ -216,10 +216,9 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
 
   // Compactify the edges based on the edge mask
   int nEdgesToRemove =
-      thrust::reduce(thrust::device.on(stream), edgesToRemoveMask,
-                     edgesToRemoveMask + nEdges, 0, thrust::plus<int>());
+      thrust::count(thrust::device.on(stream), edgesToRemoveMask,
+                    edgesToRemoveMask + nEdges, true);
   int nEdgesAfter = nEdges - nEdgesToRemove;
-
   // Allocate memory for the new srcNodes and dstNodes arrays
   std::int64_t *newSrcNodes{};
   ACTS_CUDA_CHECK(cudaMallocAsync(
