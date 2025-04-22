@@ -9,6 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.cuh"
 #include "Acts/Utilities/Zip.hpp"
 

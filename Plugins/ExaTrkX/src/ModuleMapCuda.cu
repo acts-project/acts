@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/ModuleMapUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 

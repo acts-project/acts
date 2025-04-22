@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 
 #include <cstdint>
 
