@@ -493,7 +493,7 @@ void Gen3GenericDetectorBuilder::buildPixel(
       for (const auto& [idx, temp] :
 
            Acts::enumerate(protoLayerSurfaces)) {
-        auto& [pl, surfaces, bins0, bins1] = temp;
+        auto& pl = temp.protoLayer;
         std::string layerName = "Pixel_nEC_L" + std::to_string(idx);
         endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
           mat.configureFace(NegativeDisc,
@@ -518,7 +518,7 @@ void Gen3GenericDetectorBuilder::buildPixel(
                            << " positive proto layers to "
                            << "Pixel_pEC");
       for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-        auto& [pl, surfaces, bins0, bins1] = temp;
+        auto& pl = temp.protoLayer;
         std::string layerName = "Pixel_pEC_L" + std::to_string(idx);
         endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
           mat.configureFace(PositiveDisc,
@@ -564,7 +564,7 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
                            << " central proto layers to "
                            << "ShortStrip");
       for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-        auto& [pl, surfaces, bins0, bins1] = temp;
+        auto& pl = temp.protoLayer;
         std::string layerName = "ShortStrip_Barrel_L" + std::to_string(idx);
         barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
           mat.configureFace(
@@ -593,7 +593,7 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
                              << " negative proto layers to "
                              << "ShortStrip_nEC");
         for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-          auto& [pl, surfaces, bins0, bins1] = temp;
+          auto& pl = temp.protoLayer;
           std::string layerName = "ShortStrip_nEC_L" + std::to_string(idx);
           endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
             mat.configureFace(
@@ -621,7 +621,7 @@ void Gen3GenericDetectorBuilder::buildShortStrip(
                              << " positive proto layers to "
                              << "ShortStrip_pEC");
         for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-          auto& [pl, surfaces, bins0, bins1] = temp;
+          auto& pl = temp.protoLayer;
           std::string layerName = "ShortStrip_pEC_L" + std::to_string(idx);
           endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
             mat.configureFace(
@@ -669,7 +669,7 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
                            << " central proto layers to "
                            << "LongStrip_Barrel");
       for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-        auto& [pl, surfaces, bins0, bins1] = temp;
+        auto& pl = temp.protoLayer;
         std::string layerName = "LongStrip_Barrel_L" + std::to_string(idx);
         barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
           mat.configureFace(
@@ -698,7 +698,7 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
                              << " negative proto layers to "
                              << "LongStrip_nEC");
         for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-          auto& [pl, surfaces, bins0, bins1] = temp;
+          auto& pl = temp.protoLayer;
           std::string layerName = "LongStrip_nEC_L" + std::to_string(idx);
           endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
             mat.configureFace(
@@ -726,7 +726,7 @@ void Gen3GenericDetectorBuilder::buildLongStrip(
                              << " positive proto layers to "
                              << "LongStrip_pEC");
         for (const auto& [idx, temp] : Acts::enumerate(protoLayerSurfaces)) {
-          auto& [pl, surfaces, bins0, bins1] = temp;
+          auto& pl = temp.protoLayer;
           std::string layerName = "LongStrip_pEC_L" + std::to_string(idx);
           endcap.addMaterial(layerName + "_Mat", [&](auto& mat) {
             mat.configureFace(
