@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp>
-#include <Acts/Plugins/ExaTrkX/detail/JunctionRemoval.cuh>
+#include <Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp>
 
 #include <algorithm>
 #include <numeric>
@@ -48,7 +48,7 @@ void testJunctionRemoval(const Vi &srcNodes, const Vi &dstNodes,
                                   nEdges * sizeof(float),
                                   cudaMemcpyHostToDevice, stream));
 
-  auto [cudaSrcNodesOut, nEdgesOut] = Acts::detail::junctionRemoval(
+  auto [cudaSrcNodesOut, nEdgesOut] = Acts::detail::junctionRemovalCuda(
       nEdges, nNodes, cudaScores, cudaSrcNodes, cudaDstNodes, stream);
   auto cudaDstNodesOut = cudaSrcNodesOut + nEdgesOut;
 

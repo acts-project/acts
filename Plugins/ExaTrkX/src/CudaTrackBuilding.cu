@@ -10,7 +10,7 @@
 #include "Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <c10/cuda/CUDAGuard.h>
@@ -54,7 +54,7 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
 
     ACTS_DEBUG("Do junction removal...");
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto [cudaSrcPtrJr, numEdgesOut] = detail::junctionRemoval(
+    auto [cudaSrcPtrJr, numEdgesOut] = detail::junctionRemovalCuda(
         numEdges, numSpacepoints, cudaScorePtr, cudaSrcPtr, cudaTgtPtr, stream);
     auto t1 = std::chrono::high_resolution_clock::now();
     cudaSrcPtr = cudaSrcPtrJr;

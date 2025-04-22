@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
-#include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
@@ -120,7 +120,7 @@ struct LogicalNotPredicate {
   bool __device__ operator()(bool b) { return !b; }
 };
 
-std::pair<std::int64_t *, std::size_t> junctionRemoval(
+std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
     std::size_t nEdges, std::size_t nNodes, const float *scores,
     const std::int64_t *srcNodes, const std::int64_t *dstNodes,
     cudaStream_t stream) {

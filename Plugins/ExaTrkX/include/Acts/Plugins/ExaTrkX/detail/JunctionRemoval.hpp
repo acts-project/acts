@@ -11,9 +11,11 @@
 #include <cstdint>
 #include <utility>
 
+#include <cuda_runtime_api.h>
+
 namespace Acts::detail {
 
-std::pair<std::int64_t *, std::size_t> junctionRemoval(
+std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
     std::size_t nEdges, std::size_t nNodes, const float *scores,
     const std::int64_t *srcNodes, const std::int64_t *dstNodes,
     cudaStream_t stream);
