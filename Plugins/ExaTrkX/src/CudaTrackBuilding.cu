@@ -59,17 +59,19 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
     auto t1 = std::chrono::high_resolution_clock::now();
     cudaSrcPtr = cudaSrcPtrJr;
     cudaTgtPtr = cudaSrcPtrJr + numEdgesOut;
-    numEdges = numEdgesOut;
 
-    if (numEdges == 0) {
+    if (numEdgesOut == 0) {
       ACTS_WARNING(
           "No edges remained after junction removal, this should not happen!");
+      ACTS_CUDA_CHECK(cudaFreeAsync(cudaSrcPtrJr, stream));
+      ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
       return {};
     }
 
     ACTS_DEBUG("Removed " << numEdges - numEdgesOut
                           << " edges in junction removal");
     ACTS_DEBUG("Junction removal took " << ms(t0, t1) << " ms");
+    numEdges = numEdgesOut;
   }
 
   int* cudaLabels{};
