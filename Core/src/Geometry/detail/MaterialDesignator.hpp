@@ -17,9 +17,7 @@
 
 #include <boost/core/demangle.hpp>
 
-namespace Acts::Experimental {
-
-namespace detail {
+namespace Acts::Experimental::detail {
 
 class CylinderProtoDesignator;
 class CuboidProtoDesignator;
@@ -421,6 +419,4 @@ inline std::unique_ptr<DesignatorBase> DesignatorBase::merged(
   throw std::runtime_error(mergingError(*this, other));
 }
 
-}  // namespace detail
-
-}  // namespace Acts::Experimental
+}  // namespace Acts::Experimental::detail
