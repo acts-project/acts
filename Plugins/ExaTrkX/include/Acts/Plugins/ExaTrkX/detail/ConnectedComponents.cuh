@@ -18,13 +18,6 @@
 
 namespace Acts::detail {
 
-template <typename T>
-__device__ void swap(T &a, T &b) {
-  T tmp = a;
-  a = b;
-  b = tmp;
-}
-
 /// Implementation of the FastSV algorithm as shown in
 /// https://arxiv.org/abs/1910.05971
 
@@ -125,15 +118,14 @@ __global__ void hookEdges(std::size_t numEdges, const TEdge *sourceEdges,
                           const TEdge *targetEdges, const TLabel *labels,
                           TLabel *labelsNext, int *globalChanged) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
-  if (i >= numEdges) {
-    return;
-  }
 
   bool changed = false;
-  hookEdgesImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
+  if (i < numEdges) {
+    hookEdgesImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
+  }
 
   if (__syncthreads_or(changed) && threadIdx.x == 0) {
-    atomicOr(globalChanged, true);
+    *globalChanged = true;
   }
 }
 
@@ -143,15 +135,14 @@ __global__ void shortcut(std::size_t numNodes, const TEdge *sourceEdges,
                          const TEdge *targetEdges, const TLabel *labels,
                          TLabel *labelsNext, int *globalChanged) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
-  if (i >= numNodes) {
-    return;
-  }
 
   bool changed = false;
-  shortcutImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
+  if (i < numNodes) {
+    shortcutImpl(i, sourceEdges, targetEdges, labels, labelsNext, changed);
+  }
 
   if (__syncthreads_or(changed) && threadIdx.x == 0) {
-    atomicOr(globalChanged, true);
+    *globalChanged = true;
   }
 }
 
