@@ -8,32 +8,40 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
+#include "ActsExamples/Utilities/Paths.hpp"
+
+#include <filesystem>
+
 #include <HepMC3/WriterAscii.h>
 
 namespace ActsExamples {
 
-HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
-                                     Acts::Logging::Level level)
-    : WriterT(config.inputEvent, "HepMC3AsciiWriter", level), m_cfg(config) {
+HepMC3Writer::HepMC3Writer(const Config& config, Acts::Logging::Level level)
+    : WriterT(config.inputEvent, "HepMC3Writer", level), m_cfg(config) {
   if (m_cfg.outputPath.empty()) {
     throw std::invalid_argument("Missing output file path");
   }
 
-  if (auto absolute = std::filesystem::absolute(m_cfg.outputPath);
-      !std::filesystem::exists(absolute.parent_path())) {
-    throw std::invalid_argument("Output directory does not exist: " +
-                                absolute.parent_path().string());
-  }
-
   if (!m_cfg.perEvent) {
+    auto absolute = std::filesystem::absolute(m_cfg.outputPath);
+    if (std::filesystem::exists(absolute) &&
+        std::filesystem::is_directory(absolute)) {
+      throw std::invalid_argument("Output path is a directory: " +
+                                  absolute.string());
+    }
+
+    if (!std::filesystem::exists(absolute.parent_path())) {
+      throw std::invalid_argument("Directory to write into does not exist: " +
+                                  absolute.parent_path().string());
+    }
     // Create a single file writer
     m_writer = std::make_unique<HepMC3::WriterAscii>(m_cfg.outputPath);
   }
 }
 
-HepMC3AsciiWriter::~HepMC3AsciiWriter() = default;
+HepMC3Writer::~HepMC3Writer() = default;
 
-ProcessCode HepMC3AsciiWriter::writeT(
+ProcessCode HepMC3Writer::writeT(
     const AlgorithmContext& ctx,
     const std::shared_ptr<HepMC3::GenEvent>& event) {
   ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
@@ -48,11 +56,10 @@ ProcessCode HepMC3AsciiWriter::writeT(
   };
 
   if (m_cfg.perEvent) {
-    auto stem = m_cfg.outputPath.stem();
-    auto ext = m_cfg.outputPath.extension();
     std::filesystem::path perEventFile =
-        m_cfg.outputPath.parent_path() /
-        (stem.string() + "_" + std::to_string(ctx.eventNumber) + ext.string());
+        perEventFilepath(m_cfg.outputPath.parent_path(),
+                         m_cfg.outputPath.filename().string(), ctx.eventNumber);
+
     ACTS_VERBOSE("Writing per-event file " << perEventFile);
     HepMC3::WriterAscii writer(perEventFile);
     auto result = write(writer);
@@ -66,8 +73,8 @@ ProcessCode HepMC3AsciiWriter::writeT(
   }
 }
 
-ProcessCode HepMC3AsciiWriter::finalize() {
-  ACTS_VERBOSE("Finalizing HepMC3AsciiWriter");
+ProcessCode HepMC3Writer::finalize() {
+  ACTS_VERBOSE("Finalizing HepMC3Writer");
   if (m_writer) {
     m_writer->close();
   }
