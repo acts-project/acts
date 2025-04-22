@@ -51,6 +51,7 @@ class HepMC3InputConverter : public IAlgorithm {
     /// If true, check the consistency of the generated event.
     bool checkConsistency = false;
   };
+
   HepMC3InputConverter(const Config& config, Acts::Logging::Level level);
 
   const Config& config() const { return m_cfg; }
