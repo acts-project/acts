@@ -29,6 +29,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Navigation/CylinderNavigationPolicy.hpp"
 #include "Acts/Navigation/SurfaceArrayNavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
 #include "Acts/Utilities/AxisDefinitions.hpp"
@@ -358,8 +359,10 @@ class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
       std::pair<std::size_t, std::size_t> bins = {0, 0}) const {
     using SrfArrayNavPol = Acts::SurfaceArrayNavigationPolicy;
     return Acts::NavigationPolicyFactory::make()
-        .add<Acts::TryAllNavigationPolicy>(
-            Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        // .add<Acts::TryAllNavigationPolicy>(
+        //     Acts::TryAllNavigationPolicy::Config{.sensitives = false})
+        .add<Acts::CylinderNavigationPolicy>(
+            Acts::CylinderNavigationPolicy::Config{})
         .add<SrfArrayNavPol>(
             SrfArrayNavPol::Config{.layerType = layerType, .bins = bins})
         .asUniquePtr();
@@ -393,7 +396,12 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
     detector.addMaterial("BeampipeMaterial", [&](auto& bpMat) {
       bpMat.configureFace(OuterCylinder,
                           asHomogeneous("Beam pipe", m_beamPipeMaterial));
-      bpMat.addStaticVolume(std::move(beampipe));
+      auto& bp = bpMat.addStaticVolume(std::move(beampipe));
+      bp.setNavigationPolicyFactory(
+          Acts::NavigationPolicyFactory::make()
+              .add<Acts::TryAllNavigationPolicy>(
+                  Acts::TryAllNavigationPolicy::Config{})
+              .asUniquePtr());
     });
 
     buildPixel(detector, gctx);
@@ -410,6 +418,11 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   }
 
   BlueprintOptions options;
+  options.defaultNavigationPolicyFactory =
+      Acts::NavigationPolicyFactory::make()
+          .add<Acts::CylinderNavigationPolicy>(
+              Acts::CylinderNavigationPolicy::Config{})
+          .asUniquePtr();
   auto trackingGeometry =
       root.construct(options, gctx, *logger().clone("Blprnt"));
   return trackingGeometry;
