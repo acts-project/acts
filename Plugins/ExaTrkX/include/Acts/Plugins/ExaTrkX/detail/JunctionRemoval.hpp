@@ -9,16 +9,15 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
+
+#include <cuda_runtime_api.h>
 
 namespace Acts::detail {
 
-template <typename T>
-__global__ void iota(std::size_t size, T *array) {
-  std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= size) {
-    return;
-  }
-  array[i] = i;
-}
+std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
+    std::size_t nEdges, std::size_t nNodes, const float *scores,
+    const std::int64_t *srcNodes, const std::int64_t *dstNodes,
+    cudaStream_t stream);
 
-}  // namespace Acts::detail
+}
