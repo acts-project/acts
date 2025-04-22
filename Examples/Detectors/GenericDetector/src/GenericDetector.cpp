@@ -358,7 +358,6 @@ Gen3GenericDetectorBuilder::buildTrackingGeometry(
   using enum Acts::AxisDirection;
   using namespace Acts::UnitLiterals;
   using namespace Acts::Experimental;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisBoundaryType;
   using enum Acts::CylinderVolumeBounds::Face;
   ACTS_INFO("GenericDetector construction in  Gen3 mode");
