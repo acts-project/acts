@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Util.hpp"
 
 #include <filesystem>
 #include <mutex>
@@ -46,6 +46,9 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
 
     /// The input collection
     std::string inputEvent;
+
+    /// The compression mode to use for the output file
+    HepMC3Util::Compression compression = HepMC3Util::Compression::none;
   };
 
   /// Construct the writer.
@@ -71,6 +74,9 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   const Config& config() const { return m_cfg; }
 
  private:
+  std::unique_ptr<HepMC3::Writer> createWriter(
+      const std::filesystem::path& target);
+
   /// The configuration of this writer
   Config m_cfg;
 
