@@ -53,13 +53,7 @@ from helpers import dd4hepEnabled
 )
 @pytest.mark.slow
 def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
-    level = acts.logging.VERBOSE
-    detector = detectorFactory(
-        logLevel=level,
-        surfaceLogLevel=level,
-        layerLogLevel=level,
-        volumeLogLevel=level,
-    )
+    detector = detectorFactory()
     trackingGeometry = detector.trackingGeometry()
     decorators = detector.contextDecorators()
 
@@ -78,7 +72,7 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         trackingGeometry=trackingGeometry,
         decorators=decorators,
         events=events,
-        outputDir=str(tmp_path),
+        outputDir=tmp_path,
     )
 
     runGeometry(outputJson=True, **kwargs)
