@@ -450,7 +450,7 @@ void Gen3GenericDetectorBuilder::buildPixel(
     for (const auto& [idx, temp] :
 
          Acts::enumerate(protoLayerSurfaces)) {
-      auto& [pl, surfaces, bins0, bins1] = temp;
+      auto& pl = temp.protoLayer;
       std::string layerName = "Pixel_Barrel_L" + std::to_string(idx);
       barrel.addMaterial(layerName + "_Mat", [&](auto& mat) {
         mat.configureFace(OuterCylinder,
