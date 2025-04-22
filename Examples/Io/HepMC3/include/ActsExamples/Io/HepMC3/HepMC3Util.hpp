@@ -11,6 +11,7 @@
 #include <memory>
 #include <ostream>
 #include <span>
+
 namespace HepMC3 {
 class GenEvent;
 }
