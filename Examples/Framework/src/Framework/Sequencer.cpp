@@ -364,15 +364,26 @@ int Sequencer::run() {
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
+
+  std::atomic<std::size_t> nextThreadId = 0;
+  tbb::enumerable_thread_specific<std::size_t> threadIds{
+      [&nextThreadId]() { return nextThreadId++; }};
+
+  std::atomic<std::size_t> nextEvent = eventsRange.first;
+
   m_taskArena.execute([&] {
     tbbWrap::parallel_for(
         tbb::blocked_range<std::size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<std::size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
+          std::size_t threadId = threadIds.local();
 
-          for (std::size_t event = r.begin(); event != r.end(); ++event) {
-            ACTS_DEBUG("start processing event " << event);
+          for (std::size_t n = r.begin(); n != r.end(); ++n) {
+            std::size_t event = nextEvent++;
+
+            ACTS_DEBUG("start processing event " << event << " on thread "
+                                                 << threadId);
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(
