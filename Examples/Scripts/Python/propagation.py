@@ -92,17 +92,23 @@ if "__main__" == __name__:
     p = argparse.ArgumentParser()
     p.add_argument("--events", "-n", type=int, default=1000)
     p.add_argument("--tracks", "-t", type=int, default=1000)
-    p.add_argument("--geo", type=str, default="gen2", choices=["gen1", "gen3"])
+    p.add_argument("--geo", type=str, default="gen1", choices=["gen1", "gen3"])
     p.add_argument("--verbose", "-v", action="store_true")
     args = p.parse_args()
     matDeco = None
     # matDeco = acts.IMaterialDecorator.fromFile("material.json")
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
+    if args.verbose:
+        level = acts.logging.VERBOSE
+    else:
+        level = acts.logging.INFO
+
     ## Generic detector: Default
     detector = GenericDetector(
         gen3=args.geo == "gen3",
         materialDecorator=matDeco,
+        logLevel=level,
     )
 
     ## Alternative: Aligned detector in a couple of modes
@@ -147,11 +153,6 @@ if "__main__" == __name__:
 
     os.makedirs(os.getcwd() + "/propagation", exist_ok=True)
     s = acts.examples.Sequencer(events=args.events, numThreads=1)
-
-    if args.verbose:
-        level = acts.logging.VERBOSE
-    else:
-        level = acts.logging.INFO
 
     runPropagation(
         trackingGeometry,
