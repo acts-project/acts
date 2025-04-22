@@ -56,10 +56,8 @@ struct Pythia8RandomEngineWrapper : public Pythia8::RndmEngine {
 };
 
 struct Pythia8GeneratorImpl {
-#if defined(_HAS_HEPMC3)
   std::unique_ptr<HepMC3::Writer> m_hepMC3Writer;
   std::unique_ptr<HepMC3::Pythia8ToHepMC3> m_hepMC3Converter;
-#endif
   std::shared_ptr<Pythia8RandomEngineWrapper> m_pythia8RndmEngine;
 };
 
