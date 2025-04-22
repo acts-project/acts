@@ -40,6 +40,11 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   auto cudaSrcPtr = edgeTensor.data_ptr<std::int64_t>();
   auto cudaTgtPtr = edgeTensor.data_ptr<std::int64_t>() + numEdges;
 
+  auto ms = [](auto t0, auto t1) {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0)
+        .count();
+  };
+
   int* cudaLabels;
   ACTS_CUDA_CHECK(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
