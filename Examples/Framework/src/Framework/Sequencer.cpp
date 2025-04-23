@@ -122,6 +122,7 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (!writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
+  m_writers.push_back(writer);
   addElement(std::move(writer));
 }
 
@@ -361,6 +362,13 @@ int Sequencer::run() {
     }
   }
 
+  // Inform readers that we're going to start from a specific event number
+  for (const auto& reader : m_readers) {
+    if (reader->skip(eventsRange.first) != ProcessCode::SUCCESS) {
+      throw std::runtime_error("Failed to process event data");
+    }
+  }
+
   // execute the parallel event loop
   std::atomic<std::size_t> nProcessedEvents = 0;
   std::size_t nTotalEvents = eventsRange.second - eventsRange.first;
@@ -380,6 +388,14 @@ int Sequencer::run() {
           std::size_t threadId = threadIds.local();
 
           for (std::size_t n = r.begin(); n != r.end(); ++n) {
+            ACTS_VERBOSE("Thread about to pick next event");
+
+            for (auto& writer : m_writers) {
+              if (writer->beginEvent() != ProcessCode::SUCCESS) {
+                throw std::runtime_error("Failed to process event data");
+              }
+            }
+
             std::size_t event = nextEvent++;
 
             ACTS_DEBUG("start processing event " << event << " on thread "
