@@ -363,11 +363,9 @@ int Sequencer::run() {
   }
 
   // Inform readers that we're going to start from a specific event number
-  if (eventsRange.first > 0) {
-    for (const auto& reader : m_readers) {
-      if (reader->skip(eventsRange.first) != ProcessCode::SUCCESS) {
-        throw std::runtime_error("Failed to process event data");
-      }
+  for (const auto& reader : m_readers) {
+    if (reader->skip(eventsRange.first) != ProcessCode::SUCCESS) {
+      throw std::runtime_error("Failed to process event data");
     }
   }
 
