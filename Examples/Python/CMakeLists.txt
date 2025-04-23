@@ -191,13 +191,9 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
     list(APPEND py_files examples/geant4/__init__.py)
 endif()
 
-if(ACTS_BUILD_EXAMPLES_HEPMC3)
-    target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoHepMC3)
-    target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
-    list(APPEND py_files examples/hepmc3.py)
-else()
-    target_sources(ActsPythonBindings PRIVATE src/HepMC3Stub.cpp)
-endif()
+target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoHepMC3)
+target_sources(ActsPythonBindings PRIVATE src/HepMC3.cpp)
+list(APPEND py_files examples/hepmc3.py)
 
 if(ACTS_BUILD_EXAMPLES_EXATRKX)
     target_link_libraries(
