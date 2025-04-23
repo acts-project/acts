@@ -587,7 +587,7 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param [in] lvl   debug level of debug message
   /// @param [in] input text of debug message
   void flush(const Level& lvl, const std::string& input) final {
-    /// Mutex to serialize access to std::cout
+    // Mutex to serialize access to std::cout
     static std::mutex s_stdoutMutex;
     std::unique_lock lock{s_stdoutMutex,
                           std::defer_lock};  // prep empty, we might not need it
