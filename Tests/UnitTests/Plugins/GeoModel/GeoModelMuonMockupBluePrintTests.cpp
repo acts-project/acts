@@ -15,6 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorObjectFactory.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelReader.hpp"
@@ -51,9 +52,9 @@ namespace Acts::Test {
      +-------------+           +--------------+   +--------------+
         |                         |                  |
         v                         v                  v
-     +-----------+             +-----------+       +-----------+
-     | Chamber1,2 |            | Chamber1,2 |      | Chamber1,2 |
-     +-----------+             +-----------+       +-----------+
+     +--------------+             +-------------+       +-------------+
+     | Chamber1,2.. |            | Chamber1,2.. |      | Chamber1,2.. |
+     +--------------+             +-------------+       +-------------+
         |                         |                  |
         v                         v                  v
      +-----------------+     +-----------------+   +-----------------+
@@ -62,17 +63,18 @@ namespace Acts::Test {
 */
 
 constexpr std::size_t nSectors = 8;
+const GeometryContext gctx;
 
 using SensitiveSurfaces = std::vector<GeoModelSensitiveSurface>;
 using BoundingBoxesVols = std::vector<
     std::pair<Acts::GeoModelDetectorObjectFactory::GeoModelBoundingBox,
               Acts::GeoModelDetectorObjectFactory::GeoModelVolumeBox>>;
 
-// function that builds the chamber tracking volumes
+// function that builds the BluePrint Nodes for the barrel - cylinders
 std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
     const BoundingBoxesVols& boundingBoxes,
     const SensitiveSurfaces& sensitiveSurfaces, const std::string& name,
-    const Logger& logger) {
+    const GeometryContext& context, const Logger& logger) {
   // the vector with the chamber nodes and the volumes
   std::vector<std::shared_ptr<StaticBlueprintNode>> volChamberNodes;
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
@@ -80,86 +82,135 @@ std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
   for (std::size_t sector = 0; sector < nSectors; sector++) {
     ACTS_DEBUG("Barrel name: " << name << " sector: " << sector);
     // Find the bounding box for the given chamber name and sector
-    auto it_first =
-        std::ranges::find_if(boundingBoxes, [&name, &sector](const auto& pair) {
-          return pair.first->name().find(name) != std::string::npos &&
-                 pair.first->name().find("_1_" + std::to_string(sector + 1)) !=
-                     std::string::npos;
-        });
+    auto it_first = std::ranges::find_if(boundingBoxes, [&name, &sector](
+                                                            const auto& pair) {
+      return pair.first->name().find(name) != std::string::npos &&
+             pair.first->name().find("MDT03_1_" + std::to_string(sector + 1)) !=
+                 std::string::npos;
+    });
+    for (const auto& box : boundingBoxes) {
+      std::cout << "Box name: " << box.first->name() << std::endl;
+    }
 
     // Check if the bounding box was found
     BOOST_CHECK(it_first != boundingBoxes.end());
 
-    auto it_second = std::find_if(
-        it_first, boundingBoxes.end(), [&name, &sector](const auto& pair) {
-          return pair.first->name().find(name) != std::string::npos &&
-                 pair.first->name().find("_1_" + std::to_string(sector + 1)) !=
-                     std::string::npos;
-        });
+    auto it_second = std::ranges::find_if(boundingBoxes, [&name, &sector](
+                                                             const auto& pair) {
+      return pair.first->name().find(name) != std::string::npos &&
+             pair.first->name().find("MDT04_1_" + std::to_string(sector + 1)) !=
+                 std::string::npos;
+    });
     // Check if the second bounding box was found
     BOOST_CHECK(it_second != boundingBoxes.end());
+    // print the names of the bounding boxes
 
+    // Construct the chamber from the multilayer volumes
     auto vol1 = it_first->second;
     auto vol2 = it_second->second;
-    Vector3 center = (vol1->center() + vol2->center()) / 2;
-    Acts::Transform3 volTrf = vol1->transform().rotation() *
-                              Acts::Transform3(Acts::Translation3(center));
+    // print the center of the volumes
+
+    double r1 = std::hypot(vol1->center().x(), vol1->center().y());
+    double r2 = std::hypot(vol2->center().x(), vol2->center().y());
+    double rmax = std::max(r1, r2);
+    double rmin = std::min(r1, r2);
+
     auto volumeBounds = vol1->volumeBounds().values();
-    double ymin = std::min(vol1->center().y(), vol2->center().y());
-    double ymax = std::max(vol1->center().y(), vol2->center().y());
 
-    double yup = ymax + volumeBounds[1];
-    double ylow = ymin - volumeBounds[1];
+    // calculate the transform and the bounds of the wrapping chamber for the
+    // two multilayers
+    double rOuter = rmax + volumeBounds[1];
+    double rInner = rmin - volumeBounds[1];
+    double rCenter = (rOuter + rInner) / 2;
+    double centerZ = vol1->center().z();
+    double phiAngle = std::atan2(vol1->center().y(), vol1->center().x());
+    double centerX = rCenter * std::cos(phiAngle);
+    double centerY = rCenter * std::sin(phiAngle);
+    Acts::Vector3 center(centerX, centerY, centerZ);
+    Acts::Transform3 volTrf = Acts::Transform3(Acts::Translation3(center));
+    volTrf.linear() = vol1->transform().rotation();
 
-    std::shared_ptr<Acts::CuboidVolumeBounds> chamberBounds =
-        std::make_shared<Acts::CuboidVolumeBounds>(
-            volumeBounds[0], (yup - ylow), volumeBounds[2]);
+    // Now also add the RPC plane surfaces to the chamber volume
+    std::vector<std::shared_ptr<Acts::Surface>> rpcSurfaces;
+    for (const auto& surface : sensitiveSurfaces) {
+      auto sname = std::get<0>(surface)->databaseEntryName();
+
+      // Skip MDT surfaces and surfaces not in the current sector
+      if (sname.find("MDT") != std::string::npos ||
+          sname.find("RPC11_1_" + std::to_string(sector + 1)) ==
+              std::string::npos ||
+          sname.find(name) == std::string::npos) {
+        continue;
+      }
+      rpcSurfaces.push_back(std::get<1>(surface));
+    }
+    // sort the rpc surfaces by their radial distance
+    std::sort(rpcSurfaces.begin(), rpcSurfaces.end(),
+              [context](const auto& a, const auto& b) {
+                return std::hypot(a->center(gctx).x(), a->center(gctx).y()) <
+                       std::hypot(b->center(gctx).x(), b->center(gctx).y());
+              });
+
+    double minRpc = std::hypot(rpcSurfaces.front()->center(gctx).x(),
+                               rpcSurfaces.front()->center(gctx).y());
+    double maxRpc = std::hypot(rpcSurfaces.back()->center(gctx).x(),
+                               rpcSurfaces.back()->center(gctx).y());
+
+    std::shared_ptr<Acts::TrapezoidVolumeBounds> chamberBounds =
+        std::make_shared<Acts::TrapezoidVolumeBounds>(
+            0.5 * (maxRpc - minRpc), 0.5 * (maxRpc - minRpc), volumeBounds[2],
+            volumeBounds[3]);
 
     std::unique_ptr<Acts::TrackingVolume> chamberVolume =
         std::make_unique<Acts::TrackingVolume>(
             volTrf, chamberBounds,
             "Chamber_" + name + "_" + std::to_string(sector + 1));
 
-    // add the multilayer volumes
-    chamberVolume->addVolume(std::make_unique<TrackingVolume>(
-        *vol1, "Chamber_" + name + "_" + std::to_string(sector + 1) + "_MDT1"));
-    chamberVolume->addVolume(std::make_unique<TrackingVolume>(
-        *vol2, "Chamber_" + name + "_" + std::to_string(sector + 1) + "_MDT2"));
+    // add the multilayer volumes as tracking volumes
+    // fill the multilayer volumes with the tubes of the mdts
+    std::unique_ptr<Acts::TrackingVolume> trVol1 =
+        std::make_unique<Acts::TrackingVolume>(
+            vol1->transform(), vol1->volumeBoundsPtr(),
+            "MultiLayer_" + name + "_" + std::to_string(sector + 1) + "_MDT1");
+    std::unique_ptr<Acts::TrackingVolume> trVol2 =
+        std::make_unique<Acts::TrackingVolume>(
+            vol2->transform(), vol2->volumeBoundsPtr(),
+            "MultiLayer_" + name + "_" + std::to_string(sector + 1) + "_MDT2");
 
-    // Now also add the RPC plane surfaces to the chamber volume
-    for (const auto& surface : sensitiveSurfaces) {
-      auto sname = std::get<0>(surface)->databaseEntryName();
+    for (const auto& surf : it_first->first->surfacePtrs()) {
+      std::cout << "Adding MDT surface: " << surf->name() << std::endl;
+      trVol1->addSurface(surf);
+    }
+    for (const auto& surf : it_second->first->surfacePtrs()) {
+      std::cout << "Adding MDT surface: " << surf->name() << std::endl;
+      trVol2->addSurface(surf);
+    }
 
-      // Skip MDT surfaces and surfaces not in the current sector
-      if (sname.find("MDT") != std::string::npos ||
-          sname.find("_1_" + std::to_string(sector + 1)) == std::string::npos) {
-        continue;
-      }
+    chamberVolume->addVolume(std::move(trVol1));
+    chamberVolume->addVolume(std::move(trVol2));
 
-      chamberVolume->addSurface(std::get<1>(surface));
+    for (const auto& surface : rpcSurfaces) {
+      std::cout << "Adding RPC surface: " << surface->name() << std::endl;
+      chamberVolume->addSurface(surface);
     }
 
     volChambers.push_back(std::move(chamberVolume));
   }
 
   // create the cylinder bounds for the barrel cylinder node
-  auto maxYChamberIt =
-      std::max_element(volChambers.begin(), volChambers.end(),
-                       [](const std::unique_ptr<Acts::TrackingVolume>& a,
-                          const std::unique_ptr<Acts::TrackingVolume>& b) {
-                         return a->transform().translation().y() <
-                                b->transform().translation().y();
-                       });
 
-  double rmin = (*maxYChamberIt)->transform().translation().y() -
-                (*maxYChamberIt)->volumeBounds().values()[1];
-  double rmax = (*maxYChamberIt)->transform().translation().y() +
-                (*maxYChamberIt)->volumeBounds().values()[1];
+  double rmincyl = std::hypot(volChambers.front()->center().x(),
+                              volChambers.front()->center().y()) -
+                   volChambers.front()->volumeBounds().values()[1];
+  double rmaxcyl =
+      std::hypot(rmincyl + 2 * volChambers.front()->volumeBounds().values()[0],
+                 volChambers.front()->volumeBounds().values()[3]);
+
   // Create the barrel node with the attached cylinder volume
   auto barrelNode = std::make_shared<StaticBlueprintNode>(
       std::make_unique<Acts::TrackingVolume>(
           Transform3::Identity(),
-          std::make_shared<CylinderVolumeBounds>(rmin, rmax, 4_m),
+          std::make_shared<CylinderVolumeBounds>(rmincyl, rmaxcyl, 4_m),
           name + "_Barrel"));
 
   // create the bluprint nodes for the chambers and add them as children to the
@@ -198,17 +249,17 @@ BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
 
   Acts::GeoModelDetectorObjectFactory factory(cfg);
   Acts::GeoModelDetectorObjectFactory::Cache cache;
-  factory.construct(cache, context, gmTree, options);
+  factory.construct(cache, gctx, gmTree, options);
   std::cout << "box size=" << cache.boundingBoxes.size() << std::endl;
 
   auto innerBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BIL",
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BIL", gctx,
                       *logger->clone(std::nullopt, Logging::DEBUG));
   auto middleBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BML",
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BML", gctx,
                       *logger->clone(std::nullopt, Logging::DEBUG));
   auto outerBarrel =
-      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BOL",
+      buildBarrelNode(cache.boundingBoxes, cache.sensitiveSurfaces, "BOL", gctx,
                       *logger->clone(std::nullopt, Logging::DEBUG));
 
   // Check the number of children in each barrel
@@ -230,7 +281,44 @@ BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
   cyl.addChild(std::move(middleBarrel));
   cyl.addChild(std::move(outerBarrel));
 
-  auto trackingGeometry = root.construct({}, context, *logger);
+  BOOST_CHECK(cyl.children().size() == 3);
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+
+  std::size_t nVolumes = 0;
+  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
+    std::string name = volume->volumeName();
+    if (name.find("Chamber") != std::string::npos) {
+      nVolumes++;
+    }
+  });
+
+  std::size_t nMultiLayers = 0;
+  trackingGeometry->visitVolumes([&](const TrackingVolume* volume) {
+    std::string name = volume->volumeName();
+    if (name.find("MultiLayer") != std::string::npos) {
+      nMultiLayers++;
+    }
+  });
+
+  // we expect to have 24 volumes in the geometry (3 for every sector) and 48
+  // multilayers
+  BOOST_CHECK_EQUAL(nVolumes, 24u);
+  BOOST_CHECK_EQUAL(nMultiLayers, 48u);
+
+  BOOST_REQUIRE(trackingGeometry);
+  BOOST_CHECK(trackingGeometry->geometryVersion() ==
+              TrackingGeometry::GeometryVersion::Gen3);
+  // we expect 5 volumes registered in the tracking geometry highest volume in
+  // the hierarchy
+  // 3 barrel real volumes and 2 gaps from the cylinder container stack strategy
+  BOOST_CHECK_EQUAL(trackingGeometry->highestTrackingVolume()->volumes().size(),
+                    5u);
+
+  // visualize the tracking geometry with obj to see that is built correctly
+  Acts::ObjVisualization3D obj;
+  trackingGeometry->visualize(obj, gctx);
+  obj.write("MuonMockupGeometry.obj");
 }
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Acts::Test
