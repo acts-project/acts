@@ -91,13 +91,20 @@ std::shared_ptr<HepMC3::GenEvent> HepMC3Reader::makeEvent() {
 }
 
 ProcessCode HepMC3Reader::skip(std::size_t events) {
+  if (events == 0) {
+    return ProcessCode::SUCCESS;
+  }
+
   if (m_cfg.perEvent) {
     // nothing to do as we lookup the target file by filename
     return ProcessCode::SUCCESS;
   }
 
   ACTS_DEBUG("Skipping " << events << " events");
-  m_reader->skip(events);
+  if (!m_reader->skip(events)) {
+    ACTS_ERROR("Error skipping events " << events << " " << m_cfg.inputPath);
+    return ProcessCode::ABORT;
+  }
   m_nextEvent = events;
 
   return ProcessCode::SUCCESS;
