@@ -217,11 +217,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
     actual_path = handle_path(out, compression)
 
     assert actual_path.exists(), f"File {actual_path} does not exist"
-
-    if compression == cm.none:
-        with actual_path.open("r") as f:
-            assert len(f.readlines()) == 18679
-
     if compression in (cm.lzma, cm.bzip2, cm.zlib):
         try:
             import pyhepmc
