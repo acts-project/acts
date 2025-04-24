@@ -121,12 +121,10 @@ ProcessCode HepMC3Reader::read(const AlgorithmContext& ctx) {
 
   if (m_cfg.perEvent) {
     if (readPerEvent(ctx, event) != SUCCESS) {
-      ACTS_ERROR("Error reading per-event file " << m_cfg.inputPath);
       return ABORT;
     }
   } else {
     if (readSingleFile(ctx, event) != SUCCESS) {
-      ACTS_ERROR("Error reading per-event file " << m_cfg.inputPath);
       return ABORT;
     }
   }
