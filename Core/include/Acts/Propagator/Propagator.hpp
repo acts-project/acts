@@ -102,17 +102,8 @@ class Propagator final
                 "Stepper bound track parameters do not fulfill bound "
                 "parameters concept.");
 
-  /// Re-define curvilinear track parameters dependent on the stepper
-  using StepperCurvilinearTrackParameters =
-      detail::stepper_curvilinear_parameters_type_t<stepper_t>;
-  static_assert(BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
-
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
-  using CurvilinearState =
-      std::tuple<StepperCurvilinearTrackParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -236,17 +227,17 @@ class Propagator final
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
-  /// @param [in] createCurvilinear Produce curvilinear parameters at the end of the propagation
+  /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
+  Result<actor_list_t_result_t<StepperBoundTrackParameters,
                                typename propagator_options_t::actor_list_type>>
   propagate(const parameters_t& start, const propagator_options_t& options,
-            bool createCurvilinear = true) const;
+            bool createFinalParameters = true) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -346,8 +337,8 @@ class Propagator final
   /// This function creates the propagator result object from the propagator
   /// state object. The `result` is passed to pipe a potential error from the
   /// propagation call. The `options` are used to determine the type of the
-  /// result object. The `createCurvilinear` flag is used to determine if the
-  /// result should contain curvilinear track parameters.
+  /// result object. The `createFinalParameters` flag is used to determine if
+  /// the result should contain final track parameters.
   ///
   /// @tparam propagator_state_t Type of the propagator state object
   /// @tparam propagator_options_t Type of the propagator options
@@ -355,14 +346,15 @@ class Propagator final
   /// @param [in] state Propagator state object
   /// @param [in] result Result of the propagation
   /// @param [in] options Propagation options
-  /// @param [in] createCurvilinear Produce curvilinear parameters at the end of the propagation
+  /// @param [in] createFinalParameters Whether to produce parameters at the end of the propagation
   ///
   /// @return Propagation result
   template <typename propagator_state_t, typename propagator_options_t>
-  Result<actor_list_t_result_t<StepperCurvilinearTrackParameters,
+  Result<actor_list_t_result_t<StepperBoundTrackParameters,
                                typename propagator_options_t::actor_list_type>>
   makeResult(propagator_state_t state, Result<void> result,
-             const propagator_options_t& options, bool createCurvilinear) const;
+             const propagator_options_t& options,
+             bool createFinalParameters) const;
 
   /// @brief Builds the propagator result object
   ///
