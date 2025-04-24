@@ -17,8 +17,8 @@
 
 namespace Acts::Experimental {
 
-class LayerBlueprintNodeImpl {
- public:
+namespace detail {
+struct LayerBlueprintNodeImpl {
   using LayerType = LayerBlueprintNode::LayerType;
 
   std::string m_name;
@@ -34,21 +34,22 @@ class LayerBlueprintNodeImpl {
   LayerType m_layerType = LayerType::Cylinder;
   std::array<bool, 3> m_useCenterOfGravity = {true, true, true};
 };
+}  // namespace detail
 
-LayerBlueprintNode::LayerBlueprintNode(const std::string& name)
+LayerBlueprintNode::LayerBlueprintNode(std::string_view name)
     : StaticBlueprintNode(nullptr) {
-  m_impl = std::make_unique<LayerBlueprintNodeImpl>();
+  m_impl = std::make_unique<detail::LayerBlueprintNodeImpl>();
   m_impl->m_name = name;
 }
 
 LayerBlueprintNode::~LayerBlueprintNode() = default;
 
-LayerBlueprintNodeImpl& LayerBlueprintNode::impl() {
+detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() {
   assert(m_impl != nullptr);
   return *m_impl;
 }
 
-const LayerBlueprintNodeImpl& LayerBlueprintNode::impl() const {
+const detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() const {
   assert(m_impl != nullptr);
   return *m_impl;
 }

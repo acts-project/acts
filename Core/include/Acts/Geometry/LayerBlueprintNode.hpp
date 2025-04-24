@@ -16,7 +16,9 @@
 
 namespace Acts::Experimental {
 
-class LayerBlueprintNodeImpl;
+namespace detail {
+struct LayerBlueprintNodeImpl;
+}
 
 /// The layer node is essentially an auto-sizing wrapper around a set of
 /// surfaces.
@@ -31,7 +33,7 @@ class LayerBlueprintNodeImpl;
 /// Acts::Experimental::LayerBlueprintNode::setTransform. See @ref Acts::ProtoLayer for
 /// details on the auto-sizing from surfaces.
 ///
-class LayerBlueprintNode : public StaticBlueprintNode {
+class LayerBlueprintNode final : public StaticBlueprintNode {
  public:
   /// Enum that lists out the supported layer types.
   enum class LayerType {
@@ -48,7 +50,7 @@ class LayerBlueprintNode : public StaticBlueprintNode {
 
   /// Constructor for a layer node.
   /// @param name The name of the layer
-  explicit LayerBlueprintNode(const std::string& name);
+  explicit LayerBlueprintNode(std::string_view name);
 
   ~LayerBlueprintNode() override;
 
@@ -157,10 +159,10 @@ class LayerBlueprintNode : public StaticBlueprintNode {
   /// @param logger The logger to use
   void buildVolume(const Extent& extent, const Logger& logger);
 
-  LayerBlueprintNodeImpl& impl();
-  const LayerBlueprintNodeImpl& impl() const;
+  detail::LayerBlueprintNodeImpl& impl();
+  const detail::LayerBlueprintNodeImpl& impl() const;
 
-  std::unique_ptr<LayerBlueprintNodeImpl> m_impl;
+  std::unique_ptr<detail::LayerBlueprintNodeImpl> m_impl;
 };
 
 }  // namespace Acts::Experimental
