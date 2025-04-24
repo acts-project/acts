@@ -97,6 +97,18 @@ class HepMC3Reader final : public IReader {
 
   static std::shared_ptr<HepMC3::GenEvent> makeEvent();
 
+  ProcessCode readPerEvent(const ActsExamples::AlgorithmContext& ctx,
+                           std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readSingleFile(const ActsExamples::AlgorithmContext& ctx,
+                             std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readCached(const ActsExamples::AlgorithmContext& ctx,
+                         std::shared_ptr<HepMC3::GenEvent>& event);
+
+  ProcessCode readBuffer(const ActsExamples::AlgorithmContext& ctx,
+                         std::shared_ptr<HepMC3::GenEvent>& event);
+
   /// The configuration of this writer
   Config m_cfg;
   /// Number of events
