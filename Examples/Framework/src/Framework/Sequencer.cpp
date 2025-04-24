@@ -390,7 +390,7 @@ int Sequencer::run() {
           for (std::size_t n = r.begin(); n != r.end(); ++n) {
             ACTS_VERBOSE("Thread about to pick next event");
 
-            for (auto& writer : m_writers) {
+            for (const auto& writer : m_writers) {
               if (writer->beginEvent() != ProcessCode::SUCCESS) {
                 throw std::runtime_error("Failed to process event data");
               }
