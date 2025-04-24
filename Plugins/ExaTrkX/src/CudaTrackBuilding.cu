@@ -9,6 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <c10/cuda/CUDAGuard.h>
@@ -39,12 +40,21 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   auto cudaSrcPtr = edgeTensor.data_ptr<std::int64_t>();
   auto cudaTgtPtr = edgeTensor.data_ptr<std::int64_t>() + numEdges;
 
+  auto ms = [](auto t0, auto t1) {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0)
+        .count();
+  };
+
   int* cudaLabels;
   ACTS_CUDA_CHECK(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
 
+  auto t0 = std::chrono::high_resolution_clock::now();
   std::size_t numberLabels = detail::connectedComponentsCuda(
-      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream);
+      numEdges, cudaSrcPtr, cudaTgtPtr, numSpacepoints, cudaLabels, stream,
+      m_cfg.useOneBlockImplementation);
+  auto t1 = std::chrono::high_resolution_clock::now();
+  ACTS_DEBUG("Connected components took " << ms(t0, t1) << " ms");
 
   // TODO not sure why there is an issue that is not detected in the unit tests
   numberLabels += 1;
