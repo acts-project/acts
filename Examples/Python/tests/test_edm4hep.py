@@ -132,7 +132,7 @@ def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
     from acts.examples.podio import PodioWriter
 
     s = Sequencer(numThreads=1, events=10)
-    evGen = ptcl_gun(s)
+    _, h3conv = ptcl_gun(s)
 
     out = tmp_path / "particles_edm4hep.root"
 
@@ -140,7 +140,7 @@ def test_edm4hep_particle_writer(tmp_path, ptcl_gun):
 
     converter = EDM4hepParticleOutputConverter(
         acts.logging.INFO,
-        inputParticles=evGen.config.outputParticles,
+        inputParticles=h3conv.config.outputParticles,
         outputParticles="MCParticles",
     )
     s.addAlgorithm(converter)
