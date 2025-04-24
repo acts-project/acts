@@ -114,6 +114,10 @@ struct GsfOptions {
 
   double reverseFilteringCovarianceScaling = 1.0;
 
+  /// Whether to use the external-surfaces mechanism of the navigator which
+  /// switches off the boundary-check for measurement surfaces.
+  bool useExternalSurfaces = true;
+
   std::string_view finalMultiComponentStateColumn = "";
 
   ComponentMergeMethod componentMergeMethod = ComponentMergeMethod::eMaxWeight;
