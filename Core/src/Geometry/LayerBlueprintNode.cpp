@@ -17,32 +17,76 @@
 
 namespace Acts::Experimental {
 
+namespace detail {
+struct LayerBlueprintNodeImpl {
+  using LayerType = LayerBlueprintNode::LayerType;
+
+  std::string m_name;
+
+  std::vector<std::shared_ptr<Surface>> m_surfaces{};
+
+  /// If a proto layer is already given externally, this node will not perform
+  /// sizing from surfaces
+  std::optional<MutableProtoLayer> m_protoLayer;
+
+  Transform3 m_transform = Transform3::Identity();
+  ExtentEnvelope m_envelope = ExtentEnvelope::Zero();
+  LayerType m_layerType = LayerType::Cylinder;
+  std::array<bool, 3> m_useCenterOfGravity = {true, true, true};
+};
+}  // namespace detail
+
+LayerBlueprintNode::LayerBlueprintNode(std::string_view name)
+    : StaticBlueprintNode(nullptr) {
+  m_impl = std::make_unique<detail::LayerBlueprintNodeImpl>();
+  m_impl->m_name = name;
+}
+
+LayerBlueprintNode::~LayerBlueprintNode() = default;
+
+detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() {
+  assert(m_impl != nullptr);
+  return *m_impl;
+}
+
+const detail::LayerBlueprintNodeImpl& LayerBlueprintNode::impl() const {
+  assert(m_impl != nullptr);
+  return *m_impl;
+}
+
 Volume& LayerBlueprintNode::build(const BlueprintOptions& options,
                                   const GeometryContext& gctx,
                                   const Logger& logger) {
-  if (m_surfaces.empty()) {
+  if (impl().m_surfaces.empty()) {
     ACTS_ERROR("LayerBlueprintNode: no surfaces provided");
     throw std::invalid_argument("LayerBlueprintNode: no surfaces provided");
   }
 
   ACTS_DEBUG(prefix() << "Building Layer " << name() << " from "
-                      << m_surfaces.size() << " surfaces");
-  ACTS_VERBOSE(prefix() << " -> layer type: " << m_layerType);
-  ACTS_VERBOSE(prefix() << " -> transform:\n" << m_transform.matrix());
+                      << impl().m_surfaces.size() << " surfaces");
+  ACTS_VERBOSE(prefix() << " -> layer type: " << impl().m_layerType);
+  ACTS_VERBOSE(prefix() << " -> transform:\n" << impl().m_transform.matrix());
 
   Extent extent;
 
-  ProtoLayer protoLayer{gctx, m_surfaces, m_transform.inverse()};
-  ACTS_VERBOSE(prefix() << "Built proto layer: " << protoLayer);
+  if (!impl().m_protoLayer.has_value()) {
+    impl().m_protoLayer.emplace(gctx, impl().m_surfaces,
+                                impl().m_transform.inverse());
+    ACTS_VERBOSE(prefix() << "Built proto layer: "
+                          << impl().m_protoLayer.value());
+  } else {
+    ACTS_VERBOSE(prefix() << "Using provided proto layer");
+  }
 
-  extent.addConstrain(protoLayer.extent, m_envelope);
+  auto& protoLayer = impl().m_protoLayer.value();
+  extent.addConstrain(protoLayer.extent, impl().m_envelope);
 
   ACTS_VERBOSE(prefix() << " -> layer extent: " << extent);
 
   buildVolume(extent, logger);
   assert(m_volume != nullptr && "Volume not built from proto layer");
 
-  for (auto& surface : m_surfaces) {
+  for (auto& surface : impl().m_surfaces) {
     m_volume->addSurface(surface);
   }
 
@@ -56,7 +100,7 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
   using enum LayerType;
 
   std::shared_ptr<VolumeBounds> bounds;
-  switch (m_layerType) {
+  switch (impl().m_layerType) {
     case Cylinder:
     case Disc: {
       double minR = extent.min(AxisR);
@@ -78,15 +122,15 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
 
   ACTS_VERBOSE(prefix() << " -> bounds: " << *bounds);
 
-  Transform3 transform = m_transform;
+  Transform3 transform = impl().m_transform;
   Vector3 translation = Vector3::Zero();
-  if (m_useCenterOfGravity.at(toUnderlying(AxisX))) {
+  if (impl().m_useCenterOfGravity.at(toUnderlying(AxisX))) {
     translation.x() = extent.medium(AxisX);
   }
-  if (m_useCenterOfGravity.at(toUnderlying(AxisY))) {
+  if (impl().m_useCenterOfGravity.at(toUnderlying(AxisY))) {
     translation.y() = extent.medium(AxisY);
   }
-  if (m_useCenterOfGravity.at(toUnderlying(AxisZ))) {
+  if (impl().m_useCenterOfGravity.at(toUnderlying(AxisZ))) {
     translation.z() = extent.medium(AxisZ);
   }
 
@@ -94,65 +138,82 @@ void LayerBlueprintNode::buildVolume(const Extent& extent,
 
   ACTS_VERBOSE(prefix() << " -> adjusted transform:\n" << transform.matrix());
 
-  m_volume =
-      std::make_unique<TrackingVolume>(transform, std::move(bounds), m_name);
+  m_volume = std::make_unique<TrackingVolume>(transform, std::move(bounds),
+                                              impl().m_name);
 }
 
 const std::string& LayerBlueprintNode::name() const {
-  return m_name;
+  return impl().m_name;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setSurfaces(
     std::vector<std::shared_ptr<Surface>> surfaces) {
-  m_surfaces = std::move(surfaces);
+  impl().m_surfaces = std::move(surfaces);
+  impl().m_protoLayer.reset();
   return *this;
 }
 
 const std::vector<std::shared_ptr<Surface>>& LayerBlueprintNode::surfaces()
     const {
-  return m_surfaces;
+  return impl().m_surfaces;
+}
+
+LayerBlueprintNode& LayerBlueprintNode::setProtoLayer(
+    std::optional<MutableProtoLayer> protoLayer) {
+  impl().m_protoLayer = std::move(protoLayer);
+  impl().m_surfaces.clear();
+  // also take ownership of the surfaces now
+  for (auto& surface : impl().m_protoLayer.value().surfaces()) {
+    impl().m_surfaces.push_back(surface->getSharedPtr());
+  }
+  return *this;
+}
+
+const MutableProtoLayer* LayerBlueprintNode::protoLayer() const {
+  return impl().m_protoLayer.has_value() ? &impl().m_protoLayer.value()
+                                         : nullptr;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setTransform(
     const Transform3& transform) {
-  m_transform = transform;
+  impl().m_transform = transform;
   return *this;
 }
 
 const Transform3& LayerBlueprintNode::transform() const {
-  return m_transform;
+  return impl().m_transform;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setEnvelope(
     const ExtentEnvelope& envelope) {
-  m_envelope = envelope;
+  impl().m_envelope = envelope;
   return *this;
 }
 
 const ExtentEnvelope& LayerBlueprintNode::envelope() const {
-  return m_envelope;
+  return impl().m_envelope;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setLayerType(LayerType layerType) {
-  m_layerType = layerType;
+  impl().m_layerType = layerType;
   return *this;
 }
 
 const LayerBlueprintNode::LayerType& LayerBlueprintNode::layerType() const {
-  return m_layerType;
+  return impl().m_layerType;
 }
 
 LayerBlueprintNode& LayerBlueprintNode::setUseCenterOfGravity(bool x, bool y,
                                                               bool z) {
-  m_useCenterOfGravity = {x, y, z};
+  impl().m_useCenterOfGravity = {x, y, z};
   return *this;
 }
 
 void LayerBlueprintNode::addToGraphviz(std::ostream& os) const {
   std::stringstream ss;
-  ss << "<b>" << name() << "</b>";
-  ss << "<br/>";
-  ss << m_layerType;
+  ss << "<br/><b>" + name() + "</b>";
+  ss << "<br/>Layer";
+  ss << "<br/><i>" << impl().m_layerType << "</i>";
 
   GraphViz::Node node{
       .id = name(), .label = ss.str(), .shape = GraphViz::Shape::Diamond};
