@@ -180,13 +180,13 @@ ProcessCode HepMC3Writer::writeT(
 
     while (!m_eventQueue.empty() &&
            m_eventQueue.front().first == static_cast<long long>(m_nextEvent)) {
-      auto next = std::move(m_eventQueue.front());
-      ACTS_VERBOSE("Writing event number: " << next.first);
+      auto [nextEventNumber, nextEvent] = std::move(m_eventQueue.front());
+      ACTS_VERBOSE("Writing event number: " << nextEventNumber);
       m_eventQueue.erase(m_eventQueue.begin());
 
-      m_writer->write_event(*next.second);
+      m_writer->write_event(*nextEvent);
       if (m_writer->failed()) {
-        ACTS_ERROR("Failed to write event number: " << next.first);
+        ACTS_ERROR("Failed to write event number: " << nextEventNumber);
         return ProcessCode::ABORT;
       }
       m_nextEvent++;
@@ -213,7 +213,7 @@ ProcessCode HepMC3Writer::writeT(
                    << " is before event number: " << it->first);
     }
 
-    m_eventQueue.insert(it, {ctx.eventNumber, event});
+    m_eventQueue.emplace(it, ctx.eventNumber, event);
     printQueue();
     m_maxEventQueueSize = std::max(m_maxEventQueueSize, m_eventQueue.size());
   }
