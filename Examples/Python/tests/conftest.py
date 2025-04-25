@@ -152,7 +152,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             terminalreporter.line(f"{e.key}: {e.act_hash}")
 
     if not helpers.doHashChecks:
-        terminalreporter.section("Root file has checks", sep="-", blue=True, bold=True)
+        terminalreporter.section("Root file hash checks", sep="-", blue=True, bold=True)
         terminalreporter.line(
             "NOTE: Root file hash checks were skipped, enable with ROOT_HASH_CHECKS=on"
         )
