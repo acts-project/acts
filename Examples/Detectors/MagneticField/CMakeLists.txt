@@ -11,9 +11,7 @@ target_include_directories(
 )
 target_link_libraries(
     ActsExamplesMagneticField
-    # the ROOT libraries should be private, but if we do that then the linker
-    # fails with some missing ROOT symbols.
-    PUBLIC ActsCore ActsExamplesFramework ROOT::Core ROOT::Tree
+    PUBLIC ActsCore ActsExamplesFramework
     PRIVATE std::filesystem
 )
 

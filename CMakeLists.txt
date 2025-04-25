@@ -166,14 +166,7 @@ set_option_if(
 )
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
-  ACTS_BUILD_PLUGIN_DD4HEP OR
-  ACTS_BUILD_EXAMPLES
-)
-set_option_if(
-  ACTS_BUILD_PLUGIN_IDENTIFICATION
-  ACTS_BUILD_PLUGIN_TGEO OR
-  ACTS_BUILD_PLUGIN_PODIO OR
-  ACTS_BUILD_EXAMPLES
+  ACTS_BUILD_PLUGIN_DD4HEP
 )
 set_option_if(
   ACTS_BUILD_PLUGIN_JSON
@@ -508,6 +501,21 @@ if(ACTS_BUILD_EXAMPLES)
 
     find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 
+    # for simplicity always request all potentially required components.
+    find_package(
+        ROOT
+        ${_acts_root_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
+    )
+    check_root_compatibility()
+    if(NOT ACTS_BUILD_EXAMPLES_ROOT)
+        message(
+            WARNING
+            "Some ROOT-based components will not be built, but ROOT is still required since the code is not yet fully refactored"
+        )
+    endif()
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
         add_library(HepMC3::HepMC3 SHARED IMPORTED)
@@ -520,17 +528,7 @@ if(ACTS_BUILD_EXAMPLES)
             INTERFACE "${HEPMC3_INCLUDE_DIR}"
         )
     endif()
-    if(ACTS_BUILD_EXAMPLES_ROOT)
-        # for simplicity always request all potentially required components.
-        find_package(
-            ROOT
-            ${_acts_root_version}
-            REQUIRED
-            CONFIG
-            COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
-        )
-        check_root_compatibility()
-    endif()
+
     if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
         find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
         if(ACTS_USE_SYSTEM_PYBIND11)
