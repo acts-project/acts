@@ -8,27 +8,25 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
-#include <mutex>
 #include <string>
 
 namespace ActsExamples {
 
-/// Write particles to EDM4hep
+/// Write particles to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
+class EDM4hepParticleOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Input particles collection to write.
     std::string inputParticles;
-    /// Where to place the output file.
-    std::string outputPath;
     /// Name of the particle collection in EDM4hep.
     std::string outputParticles = "MCParticles";
   };
@@ -37,27 +35,21 @@ class EDM4hepParticleWriter final : public WriterT<SimParticleContainer> {
   ///
   /// @params cfg is the configuration object
   /// @params lvl is the logging level
-  EDM4hepParticleWriter(const Config& cfg, Acts::Logging::Level lvl);
-
-  ProcessCode finalize() final;
+  EDM4hepParticleOutputConverter(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
- protected:
-  /// Type-specific write implementation.
-  ///
-  /// @param[in] ctx is the algorithm context
-  /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final;
+  std::vector<std::string> collections() const override;
 
  private:
+  ProcessCode execute(const ActsExamples::AlgorithmContext& ctx) const override;
+
   Config m_cfg;
 
-  std::mutex m_writeMutex;
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 
-  Acts::PodioUtil::ROOTWriter m_writer;
+  CollectionBaseWriteHandle m_outputParticles{this, "OutputParticles"};
 };
 
 }  // namespace ActsExamples

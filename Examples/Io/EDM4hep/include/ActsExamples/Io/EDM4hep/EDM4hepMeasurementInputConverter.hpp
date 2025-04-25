@@ -5,24 +5,24 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
-#include <memory>
 #include <string>
 
-#include <tbb/enumerable_thread_specific.h>
+namespace podio {
+class Frame;
+}
 
 namespace ActsExamples {
 
-/// Read in a measurement cluster collection from EDM4hep.
+/// Read in a measurement cluster collection as EDM4hep from a @c podio::Frame.
 ///
 /// Inpersistent information:
 /// - hit index
@@ -32,11 +32,11 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-class EDM4hepMeasurementReader final : public IReader {
+class EDM4hepMeasurementInputConverter final : public EDM4hepInputConverter {
  public:
   struct Config {
-    /// Where to read the input file from.
-    std::string inputPath;
+    /// Where to read the input frame from.
+    std::string inputFrame;
     /// Output measurement collection.
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
@@ -49,27 +49,20 @@ class EDM4hepMeasurementReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepMeasurementReader(const Config& config, Acts::Logging::Level level);
-
-  std::string name() const final;
-
-  /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final;
+  EDM4hepMeasurementInputConverter(const Config& config,
+                                   Acts::Logging::Level level);
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  std::pair<std::size_t, std::size_t> m_eventsRange;
-  std::unique_ptr<const Acts::Logger> m_logger;
 
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-
-  Acts::PodioUtil::ROOTReader& reader();
+  ReadDataHandle<podio::Frame> m_inputFrame{this, "InputFrame"};
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};
