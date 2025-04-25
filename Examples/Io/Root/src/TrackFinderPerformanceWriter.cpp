@@ -106,6 +106,8 @@ ProcessCode TrackFinderPerformanceWriter::finalize() {
   float duplicationRate_particle =
       static_cast<float>(m_nTotalDuplicateParticles) / m_nTotalParticles;
 
+  ACTS_INFO("Write finding performance for entry '" << m_cfg.inputTracks
+                                                    << "'");
   ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
   ACTS_DEBUG("nTotalMatchedTracks         = " << m_nTotalMatchedTracks);
   ACTS_DEBUG("nTotalDuplicateTracks       = " << m_nTotalDuplicateTracks);
