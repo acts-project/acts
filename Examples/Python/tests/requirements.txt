@@ -36,8 +36,14 @@ pytest==8.3.5
     # via
     #   -r Examples/Python/tests/requirements.in
     #   pytest-check
+    #   pytest-repeat
+    #   pytest-timeout
     #   pytest-xdist
 pytest-check==2.5.3
+    # via -r Examples/Python/tests/requirements.in
+pytest-repeat==0.9.4
+    # via -r Examples/Python/tests/requirements.in
+pytest-timeout==2.3.1
     # via -r Examples/Python/tests/requirements.in
 pytest-xdist==3.6.1
     # via -r Examples/Python/tests/requirements.in
