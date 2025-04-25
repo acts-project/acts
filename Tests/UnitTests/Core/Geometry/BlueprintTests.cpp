@@ -20,7 +20,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/ProcessorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
@@ -1095,121 +1094,6 @@ BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {
     BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
                       1e-6);
   }
-}
-
-BOOST_AUTO_TEST_SUITE_END();
-
-BOOST_AUTO_TEST_SUITE(ProcessorBlueprintNodeTest);
-
-BOOST_AUTO_TEST_CASE(BasicFunctionality) {
-  Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
-  Blueprint root{cfg};
-
-  double hlZ = 30_mm;
-  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
-  auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
-                                              "child");
-
-  bool buildCalled = false;
-  bool connectCalled = false;
-  bool finalizeCalled = false;
-
-  root.withProcessor([&](auto& processor) {
-    processor.setName("Processor")
-        .onBuild([&](Volume& vol) -> Volume& {
-          buildCalled = true;
-          return vol;
-        })
-        .onConnect([&](const BlueprintOptions& /*opts*/,
-                       const GeometryContext& /*gctx*/,
-                       const Logger& /*logger*/,
-                       PortalShellBase& shell) -> PortalShellBase& {
-          connectCalled = true;
-          return shell;
-        })
-        .onFinalize([&](const BlueprintOptions& /*opts*/,
-                        const GeometryContext& /*gctx*/,
-                        TrackingVolume& /*parent*/,
-                        const Logger& /*logger*/) { finalizeCalled = true; });
-    // Add a static node as child
-    processor.addChild(std::make_shared<StaticBlueprintNode>(std::move(cyl)));
-  });
-
-  auto trackingGeometry = root.construct({}, gctx, *logger);
-
-  BOOST_CHECK(buildCalled);
-  BOOST_CHECK(connectCalled);
-  BOOST_CHECK(finalizeCalled);
-
-  auto lookup = nameLookup(*trackingGeometry);
-  BOOST_CHECK_NO_THROW(lookup("child"));
-}
-
-BOOST_AUTO_TEST_CASE(ErrorHandling) {
-  Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
-  Blueprint root{cfg};
-
-  auto& processor = root.withProcessor();
-  processor.setName("Processor");
-
-  // Test error when no child is added
-  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::runtime_error);
-
-  // Test error when multiple children are added
-  double hlZ = 30_mm;
-  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
-  auto cyl1 = std::make_unique<TrackingVolume>(Transform3::Identity(),
-                                               cylBounds, "child1");
-  auto cyl2 = std::make_unique<TrackingVolume>(Transform3::Identity(),
-                                               cylBounds, "child2");
-
-  processor.addChild(std::make_shared<StaticBlueprintNode>(std::move(cyl1)));
-  processor.addChild(std::make_shared<StaticBlueprintNode>(std::move(cyl2)));
-
-  BOOST_CHECK_THROW(root.construct({}, gctx, *logger), std::runtime_error);
-}
-
-BOOST_AUTO_TEST_CASE(VolumeModification) {
-  Blueprint::Config cfg;
-  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
-  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
-  Blueprint root{cfg};
-
-  double hlZ = 30_mm;
-  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
-  auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
-                                              "child");
-
-  auto processor = std::make_shared<Experimental::ProcessorBlueprintNode>();
-  processor->setName("Processor").onBuild([](Volume& vol) -> Volume& {
-    auto& tVol = dynamic_cast<TrackingVolume&>(vol);
-    tVol.setVolumeName("modified_child");
-    return vol;
-  });
-
-  // Add a static node as child
-  processor->addChild(std::make_shared<StaticBlueprintNode>(std::move(cyl)));
-
-  root.addChild(processor);
-
-  auto trackingGeometry = root.construct({}, gctx, *logger);
-
-  auto lookup = nameLookup(*trackingGeometry);
-  BOOST_CHECK_THROW(lookup("child"), std::runtime_error);
-  BOOST_CHECK_NO_THROW(lookup("modified_child"));
-}
-
-BOOST_AUTO_TEST_CASE(StreamOperator) {
-  auto processor = std::make_shared<Experimental::ProcessorBlueprintNode>();
-  processor->setName("TestProcessor");
-
-  std::stringstream ss;
-  ss << *processor;
-  BOOST_CHECK_EQUAL(ss.str(), "ProcessorBlueprintNode(TestProcessor)");
 }
 
 BOOST_AUTO_TEST_SUITE_END();

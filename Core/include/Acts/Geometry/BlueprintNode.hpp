@@ -36,7 +36,7 @@ class MaterialDesignatorBlueprintNode;
 class StaticBlueprintNode;
 class LayerBlueprintNode;
 class GeometryIdentifierBlueprintNode;
-class ProcessorBlueprintNode;
+
 class CylinderContainerBlueprintNode;
 class CuboidContainerBlueprintNode;
 
@@ -237,12 +237,6 @@ class BlueprintNode {
   GeometryIdentifierBlueprintNode& withGeometryIdentifier(
       const std::function<void(
           GeometryIdentifierBlueprintNode& geometryIdentifier)>& callback = {});
-
-  /// Convenience method for creating a @ref Acts::Experimental::ProcessorBlueprintNode.
-  /// @param callback An optional callback that receives the node as an argument
-  ProcessorBlueprintNode& withProcessor(
-      const std::function<void(ProcessorBlueprintNode& processor)>& callback =
-          {});
 
   /// @}
 
