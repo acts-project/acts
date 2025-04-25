@@ -109,12 +109,6 @@ source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
 
 After sourcing the setup script, you can build ACTS as described above.
-Recall that you can set the necessary dependency variables for your current
-LCG with the pattern:
-
-```console
-export DD4hep_DIR=/cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>
-```
 
 ### In a container
 
