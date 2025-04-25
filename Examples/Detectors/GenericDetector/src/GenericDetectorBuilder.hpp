@@ -46,8 +46,8 @@ class GenericDetectorBuilder {
 
   struct Config {
     ProtoLayerCreator::DetectorElementFactory detectorElementFactory;
-    Acts::Logging::Level layerLogLevel;
-    bool protoMaterial;
+    Acts::Logging::Level layerLogLevel = Acts::Logging::INFO;
+    bool protoMaterial = false;
     std::size_t buildLevel = 3;
   };
 
