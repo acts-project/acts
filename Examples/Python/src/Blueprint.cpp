@@ -10,14 +10,11 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BlueprintNode.hpp"
-#include "Acts/Geometry/BlueprintOptions.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
 #include "Acts/Geometry/CylinderVolumeStack.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/PortalShell.hpp"
-#include "Acts/Geometry/ProcessorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Geometry/VolumeResizeStrategy.hpp"
@@ -225,7 +222,6 @@ void addBlueprint(Context& ctx) {
   using Acts::Experimental::GeometryIdentifierBlueprintNode;
   using Acts::Experimental::LayerBlueprintNode;
   using Acts::Experimental::MaterialDesignatorBlueprintNode;
-  using Acts::Experimental::ProcessorBlueprintNode;
   using Acts::Experimental::StaticBlueprintNode;
 
   auto m = ctx.get("main");
@@ -516,50 +512,6 @@ void addBlueprint(Context& ctx) {
   addNodeMethods({"GeometryIdentifier", "withGeometryIdentifier"},
                  geoIdFactory);
   addContextManagerProtocol(geoIdNode);
-
-  auto processorNode =
-      py::class_<ProcessorBlueprintNode, BlueprintNode,
-                 std::shared_ptr<ProcessorBlueprintNode>>(
-          m, "ProcessorBlueprintNode")
-          .def_property("name", &ProcessorBlueprintNode::name,
-                        &ProcessorBlueprintNode::setName)
-          .def_property(
-              "onBuild", nullptr,
-              [](ProcessorBlueprintNode& self, const py::function& callback) {
-                self.onBuild([callback](Volume& volume) -> Volume& {
-                  callback(volume);
-                  return volume;
-                });
-              })
-          .def_property(
-              "onConnect", nullptr,
-              [](ProcessorBlueprintNode& self, const py::function& callback) {
-                self.onConnect(
-                    [callback](const BlueprintOptions& opts,
-                               const GeometryContext& gctx,
-                               const Logger& logger,
-                               PortalShellBase& shell) -> PortalShellBase& {
-                      callback(&opts, &gctx, &logger, &shell);
-                      return shell;
-                    });
-              })
-          .def_property(
-              "onFinalize", nullptr,
-              [](ProcessorBlueprintNode& self, const py::function& callback) {
-                self.onFinalize([callback](const BlueprintOptions& opts,
-                                           const GeometryContext& gctx,
-                                           TrackingVolume& volume,
-                                           const Logger& logger) {
-                  callback(&opts, &gctx, &volume, &logger);
-                });
-              });
-
-  addContextManagerProtocol(processorNode);
-  addNodeMethods({"Processor", "withProcessor"}, [](BlueprintNode& self) {
-    auto child = std::make_shared<ProcessorBlueprintNode>();
-    self.addChild(child);
-    return child;
-  });
 
   // TEMPORARY
   m.def("pseudoNavigation", &pseudoNavigation, "trackingGeometry"_a, "gctx"_a,

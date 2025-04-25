@@ -10,10 +10,11 @@
 
 #include "Acts/Geometry/Blueprint.hpp"
 #include "Acts/Geometry/ContainerBlueprintNode.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifierBlueprintNode.hpp"
 #include "Acts/Geometry/LayerBlueprintNode.hpp"
 #include "Acts/Geometry/MaterialDesignatorBlueprintNode.hpp"
-#include "Acts/Geometry/ProcessorBlueprintNode.hpp"
 #include "Acts/Geometry/StaticBlueprintNode.hpp"
 #include "Acts/Navigation/INavigationPolicy.hpp"
 #include "Acts/Navigation/TryAllNavigationPolicy.hpp"
@@ -171,16 +172,6 @@ GeometryIdentifierBlueprintNode& BlueprintNode::withGeometryIdentifier(
     callback(*geometryIdentifier);
   }
   return *geometryIdentifier;
-}
-
-ProcessorBlueprintNode& BlueprintNode::withProcessor(
-    const std::function<void(ProcessorBlueprintNode& processor)>& callback) {
-  auto processor = std::make_shared<ProcessorBlueprintNode>();
-  addChild(processor);
-  if (callback) {
-    callback(*processor);
-  }
-  return *processor;
 }
 
 void BlueprintNode::clearChildren() {
