@@ -4,6 +4,8 @@ import tempfile
 import sys
 import os
 import time
+import functools
+import warnings
 
 import pytest
 
@@ -19,7 +21,27 @@ from helpers import (
     hepmc3Enabled,
     geant4Enabled,
     AssertCollectionExistsAlg,
+    isCI,
 )
+
+
+def with_pyhepmc(fn):
+    """
+    Some tests use pyhepmc to inspect the written output files.
+    Locally, if pyhepmc is not present, we ignore these checks with a warning.
+    In CI mode, they become a failure
+    """
+
+    try:
+        import pyhepmc
+
+        fn(pyhepmc)
+    except ImportError:
+        if isCI:
+            raise
+        else:
+            warnings.warn("pyhepmc not available, skipping checks")
+            pass
 
 
 pytestmark = [
@@ -146,9 +168,9 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
 
         # pyhepmc does not support zstd
         if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
-            try:
-                import pyhepmc
 
+            @with_pyhepmc
+            def check(pyhepmc):
                 nevts = 0
                 event_numbers = []
                 with pyhepmc.open(actual_path) as f:
@@ -160,9 +182,6 @@ def test_hepmc3_writer(tmp_path, rng, per_event, compression):
                 assert event_numbers == list(
                     range(s.config.events)
                 ), "Events are out of order"
-
-            except ImportError:
-                pass
 
 
 class StallAlgorithm(acts.examples.IAlgorithm):
@@ -242,6 +261,8 @@ def common_writer(tmp_path, common_evgen, rng):
     [1, 5, 15, 50],
     ids=lambda v: f"buf{v}",
 )
+@pytest.mark.repeat(5)
+@pytest.mark.timeout(5, method="thread")
 def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
     """
     This test simulates that one event takes significantly longer than the
@@ -252,7 +273,7 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
         HepMC3Writer,
     )
 
-    s = Sequencer(numThreads=10, events=150)
+    s = Sequencer(numThreads=10, events=150, logLevel=acts.logging.VERBOSE)
 
     evGen = common_evgen(s)
 
@@ -273,9 +294,8 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
 
     s.run()
 
-    try:
-        import pyhepmc
-
+    @with_pyhepmc
+    def check(pyhepmc):
         nevts = 0
         event_numbers = []
         with pyhepmc.open(out) as f:
@@ -284,9 +304,6 @@ def test_hepmc3_writer_stall(common_evgen, tmp_path, bufsize):
                 event_numbers.append(evt.event_number)
         assert nevts == s.config.events
         assert event_numbers == list(range(s.config.events)), "Events are out of order"
-
-    except ImportError:
-        pass
 
 
 def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
@@ -319,9 +336,8 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
 
     s.run()
 
-    try:
-        import pyhepmc
-
+    @with_pyhepmc
+    def check(pyhepmc):
         nevts = 0
         event_numbers = []
         with pyhepmc.open(out) as f:
@@ -333,9 +349,6 @@ def test_hepmc3_writer_not_in_order(common_evgen, tmp_path):
         assert set(event_numbers) == set(
             range(s.config.events)
         ), "Event numbers are different"
-
-    except ImportError:
-        pass
 
 
 @compression_modes
@@ -395,9 +408,9 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
     assert actual_path.exists(), f"File {actual_path} does not exist"
 
     if compression in (cm.none, cm.lzma, cm.bzip2, cm.zlib):
-        try:
-            import pyhepmc
 
+        @with_pyhepmc
+        def check(pyhepmc):
             nevts = 0
             with pyhepmc.open(actual_path) as f:
                 for evt in f:
@@ -405,9 +418,6 @@ def test_hepmc3_writer_pythia8(tmp_path, rng, compression):
                         assert len(evt.particles) == 7433
                     nevts += 1
             assert nevts == s.config.events
-
-        except ImportError:
-            pass
 
 
 @compression_modes
