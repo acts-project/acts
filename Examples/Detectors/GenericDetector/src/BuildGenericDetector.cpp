@@ -297,17 +297,15 @@ Gen1GenericDetectorBuilder::buildTrackingGeometry(
 
 class Gen3GenericDetectorBuilder : public GenericDetectorBuilder {
  public:
-  Gen3GenericDetectorBuilder(const Config& cfg,
-                             std::unique_ptr<const Acts::Logger> logger =
-                                 Acts::getDefaultLogger("Gen3GenDetBldr",
-                                                        Acts::Logging::INFO))
-      : GenericDetectorBuilder(cfg), m_logger(std::move(logger)) {}
+  using GenericDetectorBuilder::GenericDetectorBuilder;
+  // explicit Gen3GenericDetectorBuilder(
+  //     const Config& cfg,
+  //     std::unique_ptr<const Acts::Logger> logger =
+  //         Acts::getDefaultLogger("Gen3GenDetBldr", Acts::Logging::INFO))
+  //     : GenericDetectorBuilder(cfg), m_logger(std::move(logger)) {}
 
   std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
       const Acts::GeometryContext& gctx);
-
-  std::unique_ptr<const Acts::Logger> m_logger;
-  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 std::unique_ptr<const Acts::TrackingGeometry>
