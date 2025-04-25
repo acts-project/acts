@@ -162,9 +162,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                              : false;
                 });
             if (found == track.trackStatesReversed().cend()) {
-              ACTS_VERBOSE(" - " << geoId);
+              ACTS_VERBOSE(" -  " << geoId);
             } else {
-              ACTS_VERBOSE(" + " << geoId);
+              char tag = (*found).typeFlags().test(
+                             Acts::TrackStateFlag::MeasurementFlag)
+                             ? 'm'
+                             : 'o';
+              ACTS_VERBOSE(" +" << tag << " " << geoId);
             }
           }
         }
