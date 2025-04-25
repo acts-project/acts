@@ -82,4 +82,5 @@ class PodioReader : public IReader {
   /// @return The logger instance.
   const Acts::Logger& logger() const { return *m_logger; }
 };
+
 }  // namespace ActsExamples
