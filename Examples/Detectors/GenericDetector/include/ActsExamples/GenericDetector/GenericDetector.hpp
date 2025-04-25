@@ -35,7 +35,6 @@ class GenericDetector : public Detector {
     Acts::Logging::Level volumeLogLevel = Acts::Logging::INFO;
     bool buildProto = false;
     std::shared_ptr<const Acts::IMaterialDecorator> materialDecorator;
-    bool gen3 = false;
     std::optional<std::filesystem::path> graphvizFile;
   };
 
