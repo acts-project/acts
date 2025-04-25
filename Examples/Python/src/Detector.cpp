@@ -69,7 +69,7 @@ void addDetector(Context& ctx) {
 
     auto c = py::class_<GenericDetector::Config>(d, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT(c, buildLevel, logLevel, surfaceLogLevel, layerLogLevel,
-                       volumeLogLevel, buildProto, materialDecorator,
+                       volumeLogLevel, buildProto, materialDecorator, gen3,
                        graphvizFile);
   }
 
