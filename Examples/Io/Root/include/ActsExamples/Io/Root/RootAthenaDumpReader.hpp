@@ -280,6 +280,9 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<float>> *SPstripCenterDistance{};
   std::vector<std::vector<float>> *SPtopStripCenterPosition{};
 
+  // Those fields are not used currently
+  // Keep the code though, since it is annoying to write
+  /*
   // Tracks
   Int_t nTRK = 0;
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
@@ -310,5 +313,6 @@ class RootAthenaDumpReader : public IReader {
   std::vector<std::vector<int>> *DTTstTruth_subDetType{};
   std::vector<std::vector<int>> *DTTstTrack_subDetType{};
   std::vector<std::vector<int>> *DTTstCommon_subDetType{};
+  */
 };
 }  // namespace ActsExamples

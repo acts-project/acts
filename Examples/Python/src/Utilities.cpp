@@ -9,8 +9,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 #include "ActsExamples/Utilities/MeasurementMapSelector.hpp"
-#include "ActsExamples/Utilities/ProtoTracksToTracks.hpp"
 #include "ActsExamples/Utilities/PrototracksToSeeds.hpp"
+#include "ActsExamples/Utilities/PrototracksToTracks.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToParameters.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
@@ -56,7 +56,7 @@ void addUtilities(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::PrototracksToTracks, mex, "PrototracksToTracks",
-      inputMeasurements, inputProtoTracks, outputTracks, inputParameters);
+      inputMeasurements, inputProtoTracks, inputTrackParameters, outputTracks);
 }
 
 }  // namespace Acts::Python

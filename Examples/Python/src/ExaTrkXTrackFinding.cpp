@@ -13,7 +13,6 @@
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
-#include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifierAOT.hpp"
@@ -72,7 +71,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(keepAll);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -93,14 +92,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(deviceID);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, embeddingDim, rVal,
+                       knnVal, deviceID);
   }
   {
     using Alg = Acts::TorchEdgeClassifier;
@@ -117,15 +110,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_MEMBER(nChunks);
-    ACTS_PYTHON_MEMBER(undirected);
-    ACTS_PYTHON_MEMBER(deviceID);
-    ACTS_PYTHON_MEMBER(useEdgeFeatures);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, nChunks, undirected,
+                       deviceID, useEdgeFeatures);
   }
 #ifdef ACTS_EXATRKX_WITH_TORCH_AOT
   {
@@ -171,12 +157,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_MEMBER(numExecutionContexts);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut,
+                       numExecutionContexts);
   }
 #endif
   {
@@ -192,7 +174,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         "config"_a, "level"_a);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(doJunctionRemoval);
     ACTS_PYTHON_MEMBER(doWalkthrough);
     ACTS_PYTHON_MEMBER(walkthroughLowCut);
@@ -213,7 +195,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                         "config"_a, "level"_a);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(useOneBlockImplementation);
     ACTS_PYTHON_MEMBER(doJunctionRemoval);
     ACTS_PYTHON_STRUCT_END();
@@ -285,10 +267,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, modelPath, cut);
   }
 #endif
 
@@ -333,7 +312,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_STRUCT_BEGIN(c);
     ACTS_PYTHON_MEMBER(moduleMapPath);
     ACTS_PYTHON_MEMBER(rScale);
     ACTS_PYTHON_MEMBER(phiScale);

@@ -251,9 +251,7 @@ void addBlueprint(Context& ctx) {
 
   {
     auto c = py::class_<Blueprint::Config>(rootNode, "Config").def(py::init());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Blueprint::Config);
-    ACTS_PYTHON_MEMBER(envelope);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, envelope);
   }
 
   auto addContextManagerProtocol = []<typename class_>(class_& cls) {
@@ -358,9 +356,14 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CylinderContainerBlueprintNode::attachmentStrategy,
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CylinderContainerBlueprintNode::resizeStrategy,
-                        &CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CylinderContainerBlueprintNode::resizeStrategies,
+                        [](CylinderContainerBlueprintNode& self,
+                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                               strategies) {
+                          self.setResizeStrategies(strategies.first,
+                                                   strategies.second);
+                        })
           .def_property("direction", &CylinderContainerBlueprintNode::direction,
                         &CylinderContainerBlueprintNode::setDirection);
 
@@ -389,9 +392,9 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CuboidContainerBlueprintNode::attachmentStrategy,
                         &CuboidContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CuboidContainerBlueprintNode::resizeStrategy,
-                        &CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CuboidContainerBlueprintNode::resizeStrategies,
+                        &CuboidContainerBlueprintNode::setResizeStrategies)
           .def_property("direction", &CuboidContainerBlueprintNode::direction,
                         &CuboidContainerBlueprintNode::setDirection);
 
@@ -414,12 +417,14 @@ void addBlueprint(Context& ctx) {
                      .def(py::init<const std::string&>(), "name"_a)
                      .def("configureFace",
                           py::overload_cast<CylinderVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a)
                      .def("configureFace",
                           py::overload_cast<CuboidVolumeBounds::Face,
-                                            const ProtoAxis&, const ProtoAxis&>(
+                                            const DirectedProtoAxis&,
+                                            const DirectedProtoAxis&>(
                               &MaterialDesignatorBlueprintNode::configureFace),
                           "face"_a, "loc0"_a, "loc1"_a);
 

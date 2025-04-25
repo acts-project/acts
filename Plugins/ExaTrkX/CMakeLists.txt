@@ -65,10 +65,11 @@ if(ACTS_EXATRKX_ENABLE_MODULEMAP)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_sources(
+    target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
+    target_compile_definitions(
         ActsPluginExaTrkX
-        PRIVATE src/OnnxEdgeClassifier.cpp
-        #src/OnnxMetricLearning.cpp
+        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
     )
     target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
 endif()
@@ -131,13 +132,26 @@ target_link_libraries(
         torch # TODO try to make this private again (torch::Device is leaking)
 )
 
-if(ACTS_EXATRKX_ENABLE_ONNX)
+if(ACTS_EXATRKX_ENABLE_CUDA)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE frnn)
+    target_compile_features(ActsPluginExaTrkX PUBLIC cuda_std_20)
+    set_target_properties(
+        ActsPluginExaTrkX
+        PROPERTIES CUDA_STANDARD_REQUIRED ON CUDA_SEPARABLE_COMPILATION ON
+    )
+    target_compile_options(
+        ActsPluginExaTrkX
+        PRIVATE
+            $<$<COMPILE_LANGUAGE:CUDA>:-g
+            --generate-line-info
+            --extended-lambda>
+    )
     target_compile_definitions(
         ActsPluginExaTrkX
-        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
+        PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM
     )
-
-    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
+else()
+    target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)

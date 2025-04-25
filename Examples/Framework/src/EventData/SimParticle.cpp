@@ -11,8 +11,7 @@
 std::ostream& ActsExamples::operator<<(std::ostream& os,
                                        const SimParticle& particle) {
   // compact format w/ only identity information but no kinematics
-  os << "id=" << particle.particleId().value() << "(" << particle.particleId()
-     << ")";
+  os << "id=" << "(" << particle.particleId() << ")";
   os << "|pdg=" << particle.pdg();
   os << "|q=" << particle.charge();
   os << "|m=" << particle.mass();

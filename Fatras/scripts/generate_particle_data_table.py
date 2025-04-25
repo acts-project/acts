@@ -19,21 +19,6 @@ from pathlib import Path
 from particle import Particle
 
 
-def main(output_file, format: bool):
-    """
-    Generate the code and write it to the given output file.
-    """
-    # extract relevant entries into a single table
-    table = []
-    for p in Particle.all():
-        table.append((int(p.pdgid), int(p.three_charge), p.mass, p.name))
-    # use the extracted table to generate the code
-    code = generate_code(table)
-    if format:
-        code = clang_format(code)
-    output_file.write(code)
-
-
 CODE_HEADER = """\
 // This file is part of the ACTS project.
 //
@@ -44,56 +29,82 @@ CODE_HEADER = """\
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // The entries within this file have been automatically created using the
-// particle data files from the 2019 edition of the Review of Particle Physics
+// particle data files from Review of Particle Physics
 // by the Berkeley Particle Data Group.
 
 #pragma once
 
 #include <cstdint>
-#include <array>
+#include <map>
 #include <limits>
-
-// Rows within the particle data table are sorted by their signed PDG particle
-// number and are then stored column-wise. Since the PDG particle number column
-// is sorted it can be used to quickly search for the index of a particle
-// within all column arrays.
 
 """
 
 
-def generate_code(table):
+def convert_mass_to_GeV(mass_MeV):
+    """
+    Convert the mass from MeV to GeV.
+    """
+    # return mass_MeV
+    return mass_MeV / 1000.0
+
+
+def convert_charge_to_e(charge):
+    """
+    Convert the charge from three-charge to electron charge.
+    """
+    return charge / 3.0
+
+
+def identity(v):
+    """
+    Return the value unchanged.
+    """
+    return v
+
+
+def generate_code():
     """
     Generate
     """
     # ensure the rows are sorted by the signed pdg number (first column)
-    table = sorted(table, key=lambda _: _[0])
-    num_rows = len(table)
     # name, c++ type, and output format for each column
     columns = [
-        ("PdgNumber", "std::int32_t", "{}"),
-        ("ThreeCharge", "std::int16_t", "{}"),
-        ("MassMeV", "float", "{}f"),
-        ("Name", " const  char* const", '"{}"'),
+        ("three_charge", "Charge", "float", "{}", convert_charge_to_e),
+        ("mass", "Mass", "float", "{}f", convert_mass_to_GeV),
+        ("name", "Name", " const  char* const", '"{}"', identity),
     ]
+    lines = []
     lines = [
         CODE_HEADER,
-        f"static constexpr uint32_t kParticlesCount = {num_rows}u;",
+        f"static constexpr uint32_t kParticlesCount = {len(Particle.all())}u;",
     ]
     # build a separate array for each column
-    for i, (variable_name, type_name, value_format) in enumerate(columns):
+    for variable_name, target_name, type_name, value_format, transform in columns:
+
+        cpp_name = f"kParticlesMap{target_name}"
+
         lines.append(
-            f"static const std::array<{type_name}, kParticlesCount> kParticles{variable_name} = {{"
+            f"static const std::map<std::int32_t, {type_name}> {cpp_name} = {{"
         )
 
-        for row in table:
-            if i < 3:
-                lines.append(f"// {row[-1]}")
-            if row[i] is None and type_name == "float":
-                lines.append("  std::numeric_limits<float>::quiet_NaN(),")
+        for p in Particle.all():
+            value = getattr(p, variable_name)
+
+            if variable_name != "Name":
+                lines.append(f"// {p.name}")
+
+            if value is None and type_name == "float":
+                lines.append(
+                    f"{{ {int(p.pdgid)} , std::numeric_limits<float>::quiet_NaN() }},"
+                )
             else:
-                lines.append("  " + value_format.format(row[i]) + ",")
+                lines.append(
+                    f"{{ {int(p.pdgid)}, {value_format.format(transform(value))} }},"
+                )
 
         lines.append("};")
+
     # ensure we end with a newline
     lines.append("")
     return "\n".join(lines)
@@ -121,7 +132,7 @@ def clang_format(content):
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Generate the particle data table.")
-    p.add_argument("output", type=Path, default=None, help="Output file.")
+    p.add_argument("output", type=Path, nargs="?", default=None, help="Output file.")
     p.add_argument(
         "--format", action="store_true", help="Run clang-format on the output."
     )
@@ -133,4 +144,7 @@ if __name__ == "__main__":
         # will overwrite existing file
         output_file = io.open(args.output, mode="wt", encoding="utf-8")
 
-    main(output_file, args.format)
+    code = generate_code()
+    if args.format:
+        code = clang_format(code)
+    output_file.write(code)

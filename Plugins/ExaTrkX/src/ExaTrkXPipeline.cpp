@@ -101,7 +101,7 @@ std::vector<std::vector<int>> ExaTrkXPipeline::run(
 
     return res;
   } catch (Acts::NoEdgesError &) {
-    ACTS_DEBUG("No egdges left in GNN pipeline, return 0 track candidates");
+    ACTS_DEBUG("No edges left in GNN pipeline, return 0 track candidates");
     if (timing != nullptr) {
       while (timing->classifierTimes.size() < m_edgeClassifiers.size()) {
         timing->classifierTimes.push_back({});

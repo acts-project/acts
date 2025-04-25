@@ -95,10 +95,20 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
 
   Ort::AllocatorWithDefaultOptions allocator;
 
+  if (m_model->GetInputCount() < 2 || m_model->GetInputCount() > 3) {
+    throw std::invalid_argument("ONNX edge classifier needs 2 or 3 inputs!");
+  }
+
   for (std::size_t i = 0; i < m_model->GetInputCount(); ++i) {
     m_inputNames.emplace_back(
         m_model->GetInputNameAllocated(i, allocator).get());
   }
+
+  if (m_model->GetOutputCount() != 1) {
+    throw std::invalid_argument(
+        "ONNX edge classifier needs exactly one output!");
+  }
+
   m_outputName =
       std::string(m_model->GetOutputNameAllocated(0, allocator).get());
 }
@@ -136,7 +146,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   if (m_inputNames.size() == 3 && inEdgeFeatures.has_value()) {
     edgeFeatures =
         std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
-    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{edgeIndex});
+    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
     inputTensors.push_back(torchToOnnx(memoryInfo, *edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
   }
@@ -146,6 +156,11 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   auto scores = torch::empty(
       edgeIndex.size(1),
       torch::TensorOptions().device(execContext.device).dtype(torch::kFloat32));
+  if (m_model->GetOutputTypeInfo(0)
+          .GetTensorTypeAndShapeInfo()
+          .GetDimensionsCount() == 2) {
+    scores = scores.reshape({scores.numel(), 1});
+  }
 
   std::vector<Ort::Value> outputTensors;
   outputTensors.push_back(torchToOnnx(memoryInfo, scores));
@@ -156,6 +171,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   m_model->Run(options, inputNames.data(), inputTensors.data(),
                inputTensors.size(), outputNames.data(), outputTensors.data(),
                outputNames.size());
+  scores = scores.squeeze();
 
   ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
                << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
