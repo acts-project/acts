@@ -36,12 +36,12 @@ class GenericDetectorBuilder {
 
   static constexpr double kPstRadius = 200 * Acts::UnitConstants::mm;
   static constexpr double kPstHalfLengthZ = 2800 * Acts::UnitConstants::mm;
-  // @FIXME: This should be accounted for in the material properties
-  static constexpr double kPstThickness = 1.8 * Acts::UnitConstants::mm;
 
   static constexpr double kBeamPipeRadius = 19 * Acts::UnitConstants::mm;
   static constexpr double kBeamPipeHalfLengthZ = 3 * Acts::UnitConstants::m;
-  // @FIXME: This should be accounted for in the material properties
+
+  // Unused in Gen3
+  static constexpr double kPstThickness = 1.8 * Acts::UnitConstants::mm;
   static constexpr double kBeamPipeThickness = 0.8 * Acts::UnitConstants::mm;
 
   struct Config {

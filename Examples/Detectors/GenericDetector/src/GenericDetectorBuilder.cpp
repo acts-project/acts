@@ -44,7 +44,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   // loop over the bins
   for (std::size_t zBin = 0; zBin < static_cast<std::size_t>(nZbins); ++zBin) {
     // prepare z and r
-    double moduleZ = zStart + zBin * zStep;
+    double moduleZ = zStart + static_cast<double>(zBin) * zStep;
     double moduleR =
         (zBin % 2) != 0u ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
     for (std::size_t phiBin = 0; phiBin < static_cast<std::size_t>(nPhiBins);
@@ -91,7 +91,7 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
       }
     }
     // the module phi
-    double phi = minPhi + iphi * phiStep;
+    double phi = minPhi + static_cast<double>(iphi) * phiStep;
     // main z position depending on phi bin
     double rz = (iphi % 2) != 0u ? z - 0.5 * phiStagger : z + 0.5 * phiStagger;
     rPositions.push_back(
@@ -129,7 +129,8 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
       totalLength += 2 * mhlength;
     }
     // now calculate the overlap (equal pay)
-    double rOverlap = (totalLength - deltaR) / (moduleHalfLength.size() - 1);
+    double rOverlap = (totalLength - deltaR) /
+                      static_cast<double>(moduleHalfLength.size() - 1);
     // and now fill the radii and gaps
     double lastR = innerRadius;
     double lastHl = 0.;
@@ -148,9 +149,9 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
   for (std::size_t ir = 0; ir < radii.size(); ++ir) {
     // generate the z value
     // convention inner ring is closer to origin : makes sense
-    double rz = radii.size() == 1 ? z
-                                  : ((ir % 2) != 0u ? z + 0.5 * ringStagger
-                                                    : z - 0.5 * ringStagger);
+    double stagger =
+        (ir % 2) != 0u ? z + 0.5 * ringStagger : z - 0.5 * ringStagger;
+    double rz = radii.size() == 1 ? z : stagger;
     // fill the ring positions
     double psStagger = phiSubStagger.empty() ? 0. : phiSubStagger[ir];
     mPositions.push_back(modulePositionsRing(rz, radii[ir], phiStagger[ir],
@@ -192,7 +193,7 @@ GenericDetectorBuilder::GenericDetectorBuilder(
       static_cast<float>(352.8_mm), static_cast<float>(407_mm), 9.012f, 4.0,
       static_cast<float>(1.848_g / 1_cm3));
   m_beamPipeMaterial = std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-      Acts::MaterialSlab(beryllium, 0.8_mm));
+      Acts::MaterialSlab(beryllium, static_cast<float>(0.8_mm)));
   if (m_cfg.protoMaterial) {
     m_beamPipeMaterial = pCylinderMaterial;
   }
