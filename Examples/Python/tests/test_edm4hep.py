@@ -46,8 +46,8 @@ def assert_podio(
     if collections is not None:
         for frame in reader.get(category):
             assert (
-                set(frame.collections) == collections
-            ), f"Expected collections {collections} in {target_file} ({category}) but got {frame.collections}"
+                set(frame.getAvailableCollections()) == collections
+            ), f"Expected collections {collections} in {target_file} ({category}) but got {frame.getAvailableCollections()}"
             break
 
 
