@@ -97,8 +97,8 @@ std::unique_ptr<HepMC3::Writer> HepMC3Writer::createWriter(
 
 HepMC3Writer::~HepMC3Writer() = default;
 
-ProcessCode HepMC3Writer::beginEvent() {
-  ACTS_VERBOSE("Begin event " << m_nextEvent);
+ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
+  ACTS_VERBOSE("Begin event, next_event=" << m_nextEvent);
   if (!m_cfg.writeEventsInOrder) {
     // Nothing to do if we don't write in order
     return ProcessCode::SUCCESS;
