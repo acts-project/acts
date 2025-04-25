@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepMeasurementOutputConverter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/EDM4hep/TrackerHitCompatibility.hpp"
@@ -23,28 +23,20 @@
 
 namespace ActsExamples {
 
-EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
-    const EDM4hepMeasurementWriter::Config& config, Acts::Logging::Level level)
-    : WriterT(config.inputMeasurements, "EDM4hepMeasurementWriter", level),
-      m_cfg(config),
-      m_writer(config.outputPath) {
-  ACTS_VERBOSE("Created output file " << config.outputPath);
-
-  // Input container for measurements is already checked by base constructor
+EDM4hepMeasurementOutputConverter::EDM4hepMeasurementOutputConverter(
+    const EDM4hepMeasurementOutputConverter::Config& config,
+    Acts::Logging::Level level)
+    : EDM4hepOutputConverter("EDM4hepMeasurementOutputConverter", level),
+      m_cfg(config) {
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
+  m_outputTrackerHitsPlane.initialize(m_cfg.outputTrackerHitsPlane);
+  m_outputTrackerHitsRaw.initialize(m_cfg.outputTrackerHitsRaw);
 }
 
-ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
-  m_writer.finish();
-
-  return ProcessCode::SUCCESS;
-}
-
-ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
-    const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
+ActsExamples::ProcessCode EDM4hepMeasurementOutputConverter::execute(
+    const AlgorithmContext& ctx) const {
   ClusterContainer clusters;
-
-  podio::Frame frame;
 
   edm4hep::TrackerHitPlaneCollection hitsPlane;
   edm4hep::TrackerHit3DCollection hits;
@@ -53,6 +45,8 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
     clusters = m_inputClusters(ctx);
   }
+
+  const auto measurements = m_inputMeasurements(ctx);
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
@@ -68,13 +62,15 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
-  frame.put(std::move(hitsPlane), "ActsTrackerHitsPlane");
-  frame.put(std::move(hits), "ActsTrackerHitsRaw");
-
-  std::lock_guard guard(m_writeMutex);
-  m_writer.writeFrame(frame, "events");
+  m_outputTrackerHitsPlane(ctx, std::move(hitsPlane));
+  m_outputTrackerHitsRaw(ctx, std::move(hits));
 
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+std::vector<std::string> EDM4hepMeasurementOutputConverter::collections()
+    const {
+  return {m_cfg.outputTrackerHitsPlane, m_cfg.outputTrackerHitsRaw};
 }
 
 }  // namespace ActsExamples
