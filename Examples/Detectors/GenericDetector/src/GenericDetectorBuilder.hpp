@@ -40,9 +40,6 @@ class GenericDetectorBuilder {
 
   explicit GenericDetectorBuilder(const Config& cfg);
 
-  virtual std::unique_ptr<const Acts::TrackingGeometry> buildTrackingGeometry(
-      const Acts::GeometryContext& gctx) = 0;
-
  protected:
   ProtoLayerCreator createPixelProtoLayerCreator();
   ProtoLayerCreator createShortStripProtoLayerCreator();
