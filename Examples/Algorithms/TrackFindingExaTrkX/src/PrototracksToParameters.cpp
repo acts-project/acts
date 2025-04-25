@@ -9,7 +9,6 @@
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 
 #include "Acts/Seeding/BinnedGroup.hpp"
-#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -44,11 +43,8 @@ PrototracksToParameters::PrototracksToParameters(Config cfg,
     throw std::invalid_argument("No magnetic field given");
   }
 
-  // Set up the track parameters covariance (the same for all tracks)
-  for (std::size_t i = Acts::eBoundLoc0; i < Acts::eBoundSize; ++i) {
-    m_covariance(i, i) = m_cfg.initialVarInflation[i] * m_cfg.initialSigmas[i] *
-                         m_cfg.initialSigmas[i];
-  }
+  const auto &is = m_cfg.initialSigmas;
+  m_covConfig.initialSigmas = {is[0], is[1], is[2], is[3], is[4], is[5]};
 }
 
 PrototracksToParameters::~PrototracksToParameters() {}
@@ -225,9 +221,11 @@ ProcessCode PrototracksToParameters::execute(
       continue;
     }
 
+    auto covariance =
+        Acts::estimateTrackParamCovariance(m_covConfig, *parsResult, false);
     auto params =
         Acts::BoundTrackParameters(surface.getSharedPtr(), *parsResult,
-                                   m_covariance, m_cfg.particleHypothesis);
+                                   covariance, m_cfg.particleHypothesis);
 
     if (params.absoluteMomentum() > 1.e5) {
       ACTS_WARNING("Momentum estimate is " << params.absoluteMomentum());
@@ -237,7 +235,7 @@ ProcessCode PrototracksToParameters::execute(
     }
 
     seededTracks.push_back(track);
-    seeds.emplace_back(std::move(seed));
+    seeds.emplace_back(seed);
     parameters.push_back(params);
   }
 

@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -60,8 +61,6 @@ class PrototracksToParameters final : public IAlgorithm {
         1 * Acts::UnitConstants::mm,       1 * Acts::UnitConstants::mm,
         1.0 * Acts::UnitConstants::degree, 1.0 * Acts::UnitConstants::degree,
         0.1 / Acts::UnitConstants::GeV,    1 * Acts::UnitConstants::ns};
-    /// Inflate initial covariance.
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
@@ -92,7 +91,7 @@ class PrototracksToParameters final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
+  Acts::EstimateTrackParamCovarianceConfig m_covConfig;
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
