@@ -104,11 +104,13 @@ ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
     return ProcessCode::SUCCESS;
   }
 
-  ACTS_DEBUG("thread=" << std::this_thread::get_id() << ", event_nr="
-                       << m_nextEvent << " waiting for semaphore");
-  m_queueSemaphore.acquire();
-  ACTS_DEBUG("thread=" << std::this_thread::get_id()
-                       << ", event_nr=" << m_nextEvent << " have semaphore");
+  ACTS_DEBUG("thread=" << threadId << ", next_event=" << m_nextEvent
+                       << " waiting for semaphore");
+  m_waiting++;
+  m_queueSemaphore.try_acquire_for(std::chrono::seconds(10));
+  m_waiting--;
+  ACTS_DEBUG("thread=" << threadId << ", next_event=" << m_nextEvent
+                       << " have semaphore");
 
   return ProcessCode::SUCCESS;
 }
@@ -116,8 +118,8 @@ ProcessCode HepMC3Writer::beginEvent(std::size_t threadId) {
 ProcessCode HepMC3Writer::writeT(
     const AlgorithmContext& ctx,
     const std::shared_ptr<HepMC3::GenEvent>& event) {
-  ACTS_VERBOSE("Writing " << event->particles().size() << " particles to "
-                          << m_cfg.outputPath);
+  ACTS_VERBOSE("Write: event_nr=" << ctx.eventNumber
+                                  << ", thread=" << ctx.threadId);
 
   if (m_cfg.perEvent) {
     std::filesystem::path perEventFile =
@@ -193,8 +195,11 @@ ProcessCode HepMC3Writer::writeT(
       nWritten++;
     }
 
-    ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent);
+    ACTS_VERBOSE("Wrote " << nWritten << " events, next_event=" << m_nextEvent
+                          << ", thread=" << ctx.threadId);
     m_queueSemaphore.release(nWritten);
+    ACTS_VERBOSE("thread=" << ctx.threadId << ", released n=" << nWritten
+                           << ", waiting=" << m_waiting);
 
   } else {
     ACTS_DEBUG("event_nr=" << ctx.eventNumber

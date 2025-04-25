@@ -104,6 +104,7 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
   std::size_t m_maxEventQueueSize = 0;
 
   std::counting_semaphore<> m_queueSemaphore;
+  std::atomic<unsigned int> m_waiting = 0;
 
   std::unique_ptr<HepMC3::Writer> m_writer;
 };
