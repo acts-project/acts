@@ -10,17 +10,18 @@
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 
+#include <thrust/count.h>
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 #include <thrust/transform_scan.h>
 
 namespace Acts::detail {
 
-__global__ void findNumInOutEdge(std::size_t nEdges, const float *scores,
+__global__ void findNumInOutEdge(std::size_t nEdges,
                                  const std::int64_t *srcNodes,
                                  const std::int64_t *dstNodes, int *numInEdges,
                                  int *numOutEdges) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nEdges) {
     return;
   }
@@ -34,7 +35,7 @@ __global__ void findNumInOutEdge(std::size_t nEdges, const float *scores,
 
 __global__ void keepOnlyJunctions(std::size_t nNodes, int *numInEdges,
                                   int *numOutEdges) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nNodes) {
     return;
   }
@@ -52,7 +53,7 @@ __global__ void fillJunctionEdges(std::size_t nEdges,
                                   const std::int64_t *edgeNodes,
                                   const int *numEdgesPrefixSum,
                                   int *junctionEdges, int *junctionEdgeOffset) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nEdges) {
     return;
   }
@@ -61,19 +62,12 @@ __global__ void fillJunctionEdges(std::size_t nEdges,
   int base = numEdgesPrefixSum[node];
   int numEdgesNode = numEdgesPrefixSum[node + 1] - base;
 
-  if (numEdgesNode == 1) {
-    printf("[t%d, b%d] WARNING: node %d is not a junction\n", threadIdx.x,
-           blockIdx.x, node);
-    return;
-  }
+  // Zero is allowed, because we set 1 to 0 before
+  assert(numEdgesNode == 1 && "node is not a junction");
 
   if (numEdgesNode != 0) {
     int offset = atomicAdd(&junctionEdgeOffset[node], 1);
-    if (offset >= numEdgesNode) {
-      printf("[t%d, b%d] WARNING: inconsistent edge count for node %d\n",
-             threadIdx.x, blockIdx.x, node);
-      return;
-    }
+    assert(offset < numEdgesNode && "inconsistent offset with number of edges");
     junctionEdges[base + offset] = i;
   }
 }
@@ -82,7 +76,7 @@ __global__ void fillEdgeMask(std::size_t nNodes, const float *scores,
                              const int *numEdgesPrefixSum,
                              const int *junctionEdges,
                              bool *edgesToRemoveMask) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nNodes) {
     return;
   }
@@ -112,10 +106,6 @@ __global__ void fillEdgeMask(std::size_t nNodes, const float *scores,
   }
 }
 
-struct CastBoolToIntNot {
-  int __device__ operator()(bool b) { return static_cast<int>(!b); }
-};
-
 struct LogicalNotPredicate {
   bool __device__ operator()(bool b) { return !b; }
 };
@@ -141,7 +131,7 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
   const dim3 blockSize = 512;
   const dim3 gridSizeEdges = (nEdges + blockSize.x - 1) / blockSize.x;
   findNumInOutEdge<<<gridSizeEdges, blockSize, 0, stream>>>(
-      nEdges, scores, srcNodes, dstNodes, numInEdges, numOutEdges);
+      nEdges, srcNodes, dstNodes, numInEdges, numOutEdges);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
   // Launch the kernel to keep only junctions

@@ -198,7 +198,7 @@ test_exatrkx_unittests:
       CI/dependencies/setup.sh -c g++ -e .env
       source .env
     - cd ..
-    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda)"
+    - ctest --test-dir build -R "(ExaTrkX|ConnectedComponentsCuda|JunctionRemoval)"
 
   after_script:
    - !reference [.spack_cleanup, after_script]
