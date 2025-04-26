@@ -40,4 +40,3 @@ add_unittest(CuboidPortalShell CuboidPortalShellTests.cpp)
 add_unittest(Blueprint BlueprintTests.cpp)
 add_unittest(BlueprintApi BlueprintApiTests.cpp)
 add_unittest(TrapezoidPortalShell TrapezoidPortalShellTests.cpp)
-
