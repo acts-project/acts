@@ -39,7 +39,7 @@ namespace Acts::Test {
 //  in the ATLAS experiment. The geometry is read from a SQLite database
 //  and the blueprint is built using the StaticBlueprintNode class.
 //  The test checks the number of children in each barrel cylinder and uses
-//  static blueprint ndoes
+//  static blueprint nodes
 // The following diagram shows the hierarchy of the geometry:
 /*
                      +------+

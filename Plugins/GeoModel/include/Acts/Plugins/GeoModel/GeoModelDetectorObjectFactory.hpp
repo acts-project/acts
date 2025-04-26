@@ -58,7 +58,7 @@ class GeoModelDetectorObjectFactory {
     // for gen1/3 and gen2 geometry constructions
     std::vector<GeoModelBoundingBox> boundingBoxes;
 
-    // The created representation of bounding boxes  and the corrseponding Full
+    // The created representation of bounding boxes  and the corresponding Full
     // Physical Volumes
     std::vector<GeoModelVolumeFPVs> volumeBoxFPVs;
   };
