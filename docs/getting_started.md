@@ -99,23 +99,16 @@ make the dependencies available.
 
 If you have access to a machine running [CVMFS](https://cernvm.cern.ch/fs/),
 e.g. CERNs lxplus login machines, the dependencies can be easily satisfied
-via a LCG releases available through CVMFS. A setup script is provided to activate a compatible releases that can be used as follows:
+via an LCG releases available through CVMFS. Source the cvmfs setup script
+provided by the machine. It is suggested to select a recent `<lcg_release>`
+and `<lcg_platform>` combination. (Have a look at the CI jobs to get an
+overview on what we are currently testing):
 
 ```console
-cd <source>
-source CI/setup_cvmfs_lcg.sh
+source /cvmfs/sft.cern.ch/lcg/views/<lcg_release>/<lcg_platform>/setup.sh
 ```
 
-After sourcing the setup script, you can build ACTS as described above. The
-following commands will build ACTS in the `<source>/build` directory with the
-Fatras component.
-
-```console
-cd <source>
-source CI/setup_cvmfs_lcg.sh
-cmake -B build -S . -DACTS_BUILD_FATRAS=on
-cmake --build build
-```
+After sourcing the setup script, you can build ACTS as described above.
 
 ### In a container
 
