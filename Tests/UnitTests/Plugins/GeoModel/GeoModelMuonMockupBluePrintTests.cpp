@@ -27,7 +27,7 @@
 
 #include <fstream>
 
-#include <GeoModelHelpers/printVolume.h>
+
 using namespace Acts;
 using namespace Acts::GeoModelReader;
 using namespace Acts::Experimental;
