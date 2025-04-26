@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelDetectorElement.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelToDetectorVolume.hpp"
 #include "Acts/Plugins/GeoModel/GeoModelTree.hpp"
@@ -25,8 +26,9 @@ class Surface;
 namespace Acts {
 class GeoModelDetectorObjectFactory {
  public:
-  using GeoModelBoundingBox = std::shared_ptr<Experimental::DetectorVolume>;
-  using GeoModelVolumeBox = std::shared_ptr<Acts::Volume>;
+  using GeoModelBoundingBox =
+      std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>>;
+  using GeoModelVolumeFPVs = std::pair<GeoModelBoundingBox, PVConstLink>;
 
   struct Options {
     std::vector<std::string> queries = {};
@@ -50,10 +52,15 @@ class GeoModelDetectorObjectFactory {
   struct Cache {
     // The created detector elements and their surfaces
     std::vector<GeoModelSensitiveSurface> sensitiveSurfaces;
-    // The created representation of a pair of bounding boxes as DetectorVolumes
-    // for Gen2 and Volumes for Gen1/Gen3
-    std::vector<std::pair<GeoModelBoundingBox, GeoModelVolumeBox>>
-        boundingBoxes;
+
+    // The created representation of bounding boxes as a pair of the Volume and
+    // DetectorVolume
+    // for gen1/3 and gen2 geometry constructions
+    std::vector<GeoModelBoundingBox> boundingBoxes;
+
+    // The created representation of bounding boxes  and the corrseponding Full
+    // Physical Volumes
+    std::vector<GeoModelVolumeFPVs> volumeBoxFPVs;
   };
 
   explicit GeoModelDetectorObjectFactory(

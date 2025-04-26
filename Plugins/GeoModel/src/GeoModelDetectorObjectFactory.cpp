@@ -174,16 +174,27 @@ void Acts::GeoModelDetectorObjectFactory::convertFpv(
     const GeoShape *shape = logVol->getShape();  // get shape
     const Acts::Transform3 &fpvtransform = fpv->getAbsoluteTransform(nullptr);
 
-    // convert bounding boxes as detector volumes with surfaces inside
-    std::shared_ptr<Experimental::DetectorVolume> box =
-        Acts::GeoModel::convertDetectorVolume(gctx, *shape, name, fpvtransform,
-                                              sensitives);
-    // convert bounding boxes to volumes
-    std::shared_ptr<Acts::Volume> volume = std::make_shared<Acts::Volume>(
-        Acts::GeoModel::convertVolume(fpvtransform, *shape));
+    // type conversion from GeoModelSensitiveSurface to Surface
+    std::vector<std::shared_ptr<Surface>> sensSurfaces(sensitives.size());
+    std::transform(sensitives.begin(), sensitives.end(), sensSurfaces.begin(),
+                   [](const std::tuple<std::shared_ptr<GeoModelDetectorElement>,
+                                       std::shared_ptr<Surface>> &t) {
+                     return std::get<1>(t);
+                   });
 
-    // add the bounding box to the cache
-    cache.boundingBoxes.push_back(std::make_pair(box, volume));
+    // convert bounding boxes as volumes/detector volumes
+
+    // to be used for gen1/3 and gen2 geometry constructions
+    std::pair<Volume, std::shared_ptr<Experimental::DetectorVolume>> volume =
+        Acts::GeoModel::convertVolumeDetectorVolume(gctx, *shape, name,
+                                                    fpvtransform, sensSurfaces);
+
+    // add the bounding box to the cache as pairs of tracking volumes and
+    // detector volumes
+    cache.boundingBoxes.push_back(volume);
+    cache.volumeBoxFPVs.push_back(
+        std::make_pair(cache.boundingBoxes.back(),
+                       fpv));  // add the volume and the fpv to the cache
 
   }
   // If fpv has no subs and should not be converted to volume convert to surface

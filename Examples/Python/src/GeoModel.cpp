@@ -81,7 +81,8 @@ void addGeoModel(Context& ctx) {
   {
     gm.def("convertVolume", &Acts::GeoModel::convertVolume);
 
-    gm.def("convertDetectorVolume", &Acts::GeoModel::convertDetectorVolume);
+    gm.def("convertDetectorVolume",
+           &Acts::GeoModel::convertVolumeDetectorVolume);
   }
 
   // Shape converters
