@@ -27,7 +27,6 @@
 
 #include <fstream>
 
-
 using namespace Acts;
 using namespace Acts::GeoModelReader;
 using namespace Acts::Experimental;
@@ -90,9 +89,6 @@ std::shared_ptr<StaticBlueprintNode> buildBarrelNode(
                  pair.first.second->name().ends_with(
                      std::to_string(sector + 1) + "_1");
         });
-    for (const auto& box : boundingBoxes) {
-      std::cout << "Box name: " << box.first.second->name() << std::endl;
-    }
 
     // Check if the bounding box was found
     BOOST_CHECK(it_first != boundingBoxes.end());
@@ -216,13 +212,13 @@ BOOST_AUTO_TEST_CASE(MockupMuonGen3Geometry) {
   std::cout << "box size=" << cache.boundingBoxes.size() << std::endl;
 
   auto innerBarrel =
-      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BIL", gctx,
+      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BIL",
                       *logger->clone(std::nullopt, Logging::DEBUG));
   auto middleBarrel =
-      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BML", gctx,
+      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BML",
                       *logger->clone(std::nullopt, Logging::DEBUG));
   auto outerBarrel =
-      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BOL", gctx,
+      buildBarrelNode(cache.volumeBoxFPVs, cache.sensitiveSurfaces, "BOL",
                       *logger->clone(std::nullopt, Logging::DEBUG));
 
   // Check the number of children in each barrel
