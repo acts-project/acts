@@ -71,7 +71,7 @@ class HepMC3Writer final : public WriterT<std::shared_ptr<HepMC3::GenEvent>> {
 
   ~HepMC3Writer() override;
 
-  ProcessCode beginEvent() override;
+  ProcessCode beginEvent(std::size_t threadId) override;
 
   /// Writing events to file.
   ///
