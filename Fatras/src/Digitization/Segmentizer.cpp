@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "ActsFatras/Digitization/Segmentation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -41,41 +42,21 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   Bin2D bend = {0, 0};
 
   if (surface.type() == Acts::Surface::SurfaceType::Plane) {
-    // Get the segmentation and convert it to lines & arcs
-    bstart = {static_cast<unsigned int>(segmentation.bin(start, 0)),
-              static_cast<unsigned int>(segmentation.bin(start, 1))};
-    bend = {static_cast<unsigned int>(segmentation.bin(end, 0)),
-            static_cast<unsigned int>(segmentation.bin(end, 1))};
-    // Fast single channel exit
-    if (bstart == bend) {
-      return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
-    }
-    // The lines channel segment lines along x
-    if (bstart[0] != bend[0]) {
-      double k = segment2d.y() / segment2d.x();
-      double d = start.y() - k * start.x();
+    CartesianSegmentation cSegmentation(
+        Acts::ProtoAxis(
+            Acts::AxisBoundaryType::Bound, segmentation.binningData()[0].min,
+            segmentation.binningData()[0].max, segmentation.bins(0)),
+        Acts::ProtoAxis(
+            Acts::AxisBoundaryType::Bound, segmentation.binningData()[1].min,
+            segmentation.binningData()[1].max, segmentation.bins(1)));
 
-      const auto& xboundaries = segmentation.binningData()[0].boundaries();
-      std::vector<double> xbbounds = {
-          xboundaries.begin() + std::min(bstart[0], bend[0]) + 1,
-          xboundaries.begin() + std::max(bstart[0], bend[0]) + 1};
-      for (const auto x : xbbounds) {
-        cSteps.push_back(ChannelStep{
-            {(bstart[0] < bend[0] ? 1 : -1), 0}, {x, k * x + d}, start});
-      }
-    }
-    // The lines channel segment lines along y
-    if (bstart[1] != bend[1]) {
-      double k = segment2d.x() / segment2d.y();
-      double d = start.x() - k * start.y();
-      const auto& yboundaries = segmentation.binningData()[1].boundaries();
-      std::vector<double> ybbounds = {
-          yboundaries.begin() + std::min(bstart[1], bend[1]) + 1,
-          yboundaries.begin() + std::max(bstart[1], bend[1]) + 1};
-      for (const auto y : ybbounds) {
-        cSteps.push_back(ChannelStep{
-            {0, (bstart[1] < bend[1] ? 1 : -1)}, {k * y + d, y}, start});
-      }
+    cSteps = cSegmentation.channelSteps(start, end);
+
+    if (cSteps.empty()) {
+      auto sbin = cSegmentation.bin(start);
+      bstart = {static_cast<unsigned int>(sbin[0]),
+                static_cast<unsigned int>(sbin[1])};
+      return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
     }
 
   } else if (surface.type() == Acts::Surface::SurfaceType::Disc) {
@@ -147,7 +128,7 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
   cSegments.reserve(cSteps.size());
 
   Bin2D currentBin = {bstart[0], bstart[1]};
-  BinDelta2D lastDelta = {0, 0};
+  std::array<int, 2u> lastDelta = {0, 0};
   Acts::Vector2 lastIntersect = start;
   double lastPath = 0.;
   for (auto& cStep : cSteps) {
