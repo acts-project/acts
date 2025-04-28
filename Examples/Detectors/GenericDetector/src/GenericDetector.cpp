@@ -358,9 +358,6 @@ void GenericDetector::buildTrackingGeometry(
     throw std::runtime_error("Tracking geometry already built");
   }
 
-  std::cout << "m_nominalGeometryContext type: "
-            << m_nominalGeometryContext.type().name() << std::endl;
-
   Generic::GenericDetectorBuilder::Config cfg;
   cfg.detectorElementFactory = detectorElementFactory;
   cfg.protoMaterial = m_cfg.buildProto;
