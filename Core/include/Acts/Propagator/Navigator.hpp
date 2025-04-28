@@ -375,14 +375,14 @@ class Navigator {
   /// @return The next target surface
   NavigationTarget nextTarget(State& state, const Vector3& position,
                               const Vector3& direction) const {
+    // Reset the current surface
+    state.currentSurface = nullptr;
+
     if (inactive(state)) {
       return NavigationTarget::None();
     }
 
     ACTS_VERBOSE(volInfo(state) << "Entering Navigator::nextTarget.");
-
-    // Reset the current surface
-    state.currentSurface = nullptr;
 
     auto tryGetNextTarget = [&]() -> NavigationTarget {
       // Try targeting the surfaces - then layers - then boundaries

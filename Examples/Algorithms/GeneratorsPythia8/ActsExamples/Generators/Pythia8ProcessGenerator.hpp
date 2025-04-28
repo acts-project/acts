@@ -66,8 +66,7 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
   Pythia8Generator& operator=(const Pythia8Generator&) = delete;
   Pythia8Generator& operator=(Pythia8Generator&& other) = delete;
 
-  std::pair<SimVertexContainer, SimParticleContainer> operator()(
-      RandomEngine& rng) override;
+  std::shared_ptr<HepMC3::GenEvent> operator()(RandomEngine& rng) override;
 
  private:
   /// Private access to the logging instance

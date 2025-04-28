@@ -356,9 +356,14 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CylinderContainerBlueprintNode::attachmentStrategy,
                         &CylinderContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CylinderContainerBlueprintNode::resizeStrategy,
-                        &CylinderContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CylinderContainerBlueprintNode::resizeStrategies,
+                        [](CylinderContainerBlueprintNode& self,
+                           std::pair<VolumeResizeStrategy, VolumeResizeStrategy>
+                               strategies) {
+                          self.setResizeStrategies(strategies.first,
+                                                   strategies.second);
+                        })
           .def_property("direction", &CylinderContainerBlueprintNode::direction,
                         &CylinderContainerBlueprintNode::setDirection);
 
@@ -387,9 +392,9 @@ void addBlueprint(Context& ctx) {
           .def_property("attachmentStrategy",
                         &CuboidContainerBlueprintNode::attachmentStrategy,
                         &CuboidContainerBlueprintNode::setAttachmentStrategy)
-          .def_property("resizeStrategy",
-                        &CuboidContainerBlueprintNode::resizeStrategy,
-                        &CuboidContainerBlueprintNode::setResizeStrategy)
+          .def_property("resizeStrategies",
+                        &CuboidContainerBlueprintNode::resizeStrategies,
+                        &CuboidContainerBlueprintNode::setResizeStrategies)
           .def_property("direction", &CuboidContainerBlueprintNode::direction,
                         &CuboidContainerBlueprintNode::setDirection);
 
