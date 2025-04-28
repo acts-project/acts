@@ -598,7 +598,6 @@ add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
 # python bindings
 add_subdirectory_if(Python ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
 
-
 # automated tests and benchmarks
 if(ACTS_BUILD_BENCHMARKS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_UNITTESTS)
     enable_testing() # must be set in the main CMakeLists.txt
