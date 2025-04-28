@@ -9,19 +9,23 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepInputConverter.hpp"
 
 #include <memory>
 #include <string>
 
-#include <DD4hep/DetElement.h>
-#include <edm4hep/MCParticleCollection.h>
-#include <tbb/enumerable_thread_specific.h>
+namespace edm4hep {
+class MCParticle;
+}
+
+namespace podio {
+class Frame;
+}
 
 namespace ActsExamples {
 
@@ -32,11 +36,11 @@ class DD4hepDetector;
 /// Inpersistent information:
 /// - particle ID
 /// - process
-class EDM4hepReader final : public IReader {
+class EDM4hepSimInputConverter final : public EDM4hepInputConverter {
  public:
   struct Config {
     /// Where to read input file from.
-    std::string inputPath;
+    std::string inputFrame = "events";
     /// Name of the particle collection in EDM4hep.
     std::string inputParticles = "MCParticles";
     /// Names of the sim hit collections
@@ -47,6 +51,8 @@ class EDM4hepReader final : public IReader {
     std::string outputParticlesSimulation;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
+    /// Output simulated vertices collection.
+    std::string outputSimVertices;
 
     /// Directory into which to write graphviz files for particles
     /// Empty string means no output
@@ -68,18 +74,14 @@ class EDM4hepReader final : public IReader {
   ///
   /// @param config is the configuration object
   /// @param level is the logging level
-  EDM4hepReader(const Config& config, Acts::Logging::Level level);
-
-  std::string name() const final;
-
-  /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final;
-
-  /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
+  EDM4hepSimInputConverter(const Config& config, Acts::Logging::Level level);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
+
+ private:
+  ProcessCode convert(const AlgorithmContext& ctx,
+                      const podio::Frame& frame) const override;
 
   void processChildren(const edm4hep::MCParticle& particle, SimBarcode parentId,
                        std::vector<SimParticle>& particles,
@@ -88,21 +90,11 @@ class EDM4hepReader final : public IReader {
                        std::size_t& nSecondaryVertices,
                        std::size_t& maxGen) const;
 
-  static void setSubParticleIds(std::vector<SimParticle>::iterator begin,
-                                std::vector<SimParticle>::iterator end);
-
- private:
-  const Acts::Logger& logger() const { return *m_logger; }
+  static void setSubParticleIds(std::span<SimParticle> particles);
 
   Config m_cfg;
-  std::pair<std::size_t, std::size_t> m_eventsRange;
-  std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<unsigned int, const Acts::Surface*> m_surfaceMap;
-
-  tbb::enumerable_thread_specific<Acts::PodioUtil::ROOTReader> m_reader;
-
-  Acts::PodioUtil::ROOTReader& reader();
 
   WriteDataHandle<SimParticleContainer> m_outputParticlesGenerator{
       this, "OutputParticlesGenerator"};
@@ -110,6 +102,9 @@ class EDM4hepReader final : public IReader {
       this, "OutputParticlesSimulation"};
 
   WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+
+  WriteDataHandle<SimVertexContainer> m_outputSimVertices{this,
+                                                          "OutputSimVertices"};
 
   void graphviz(std::ostream& os, const std::vector<SimParticle>& particles,
                 const ParentRelationship& parents) const;
