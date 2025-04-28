@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include "Acts/Plugins/Podio/PodioUtil.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepOutputConverter.hpp"
+#include "ActsExamples/Io/Podio/CollectionBaseWriteHandle.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
-/// Write out a measurement cluster collection to EDM4hep.
+/// Write out a measurement cluster collection to EDM4hep objects
 ///
 /// Inpersistent information:
 /// - hit index
@@ -28,44 +28,47 @@ namespace ActsExamples {
 /// Known issues:
 /// - cluster channels are written to inappropriate fields
 /// - local 2D coordinates and time are written to position
-class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
+class EDM4hepMeasurementOutputConverter final : public EDM4hepOutputConverter {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters;
-    /// Where to the write the file to.
-    std::string outputPath;
+    /// Name of the output tracker hit plane collection.
+    std::string outputTrackerHitsPlane = "ActsTrackerHitsPlane";
+    /// Name of the output tracker hit raw collection.
+    std::string outputTrackerHitsRaw = "ActsTrackerHitsRaw";
   };
 
   /// Constructor with
   /// @param config configuration struct
   /// @param level logging level
-  EDM4hepMeasurementWriter(const Config& config, Acts::Logging::Level level);
-
-  ProcessCode finalize() final;
+  EDM4hepMeasurementOutputConverter(const Config& config,
+                                    Acts::Logging::Level level);
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
- protected:
-  /// This implementation holds the actual writing method
-  /// and is called by the WriterT<>::write interface
-  ///
-  /// @param ctx The Algorithm context with per event information
-  /// @param measurements is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final;
+  std::vector<std::string> collections() const override;
 
  private:
+  /// This implementation converts the measurements to EDM4hep.
+  ///
+  /// @param ctx The Algorithm context with per event information
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
   Config m_cfg;
 
-  Acts::PodioUtil::ROOTWriter m_writer;
-
-  std::mutex m_writeMutex;
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
+
+  CollectionBaseWriteHandle m_outputTrackerHitsPlane{this,
+                                                     "OutputTrackerHitsPlane"};
+  CollectionBaseWriteHandle m_outputTrackerHitsRaw{this,
+                                                   "OutputTrackerHitsRaw"};
 };
 
 }  // namespace ActsExamples
