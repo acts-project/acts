@@ -22,8 +22,8 @@ std::array<std::size_t, 2> ActsFatras::CartesianSegmentation::bin(
 
 Acts::Vector2 ActsFatras::CartesianSegmentation::position(
     const std::array<std::size_t, 2>& bin) const {
-  return {m_xAxis.getAxis().getBinCenter(bin[0]),
-          m_yAxis.getAxis().getBinCenter(bin[1])};
+  return {m_xAxis.getAxis().getBinCenter(bin[0] + 1u),
+          m_yAxis.getAxis().getBinCenter(bin[1] + 1u)};
 }
 
 std::vector<ActsFatras::ChannelStep>
