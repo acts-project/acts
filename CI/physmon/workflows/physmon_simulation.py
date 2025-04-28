@@ -120,7 +120,7 @@ with tempfile.TemporaryDirectory() as temp:
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
         events=3,
-        numThreads=-1,
+        numThreads=1,  # Pythia8 does not give identical results otherwise
         logLevel=acts.logging.INFO,
     )
 
