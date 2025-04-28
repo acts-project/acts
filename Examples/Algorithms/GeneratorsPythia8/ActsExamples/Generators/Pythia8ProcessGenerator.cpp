@@ -107,13 +107,13 @@ Pythia8Generator::~Pythia8Generator() {
     m_impl->m_hepMC3Writer->close();
   }
 
-  ACTS_INFO("Pythia8Generator produced "
-            << m_impl->m_pythia8RndmEngine->statistics.numUniformRandomNumbers
-            << " uniform random numbers");
-  ACTS_INFO("                 first = "
-            << m_impl->m_pythia8RndmEngine->statistics.first);
-  ACTS_INFO("                  last = "
-            << m_impl->m_pythia8RndmEngine->statistics.last);
+  ACTS_DEBUG("Pythia8Generator produced "
+             << m_impl->m_pythia8RndmEngine->statistics.numUniformRandomNumbers
+             << " uniform random numbers");
+  ACTS_DEBUG("                 first = "
+             << m_impl->m_pythia8RndmEngine->statistics.first);
+  ACTS_DEBUG("                  last = "
+             << m_impl->m_pythia8RndmEngine->statistics.last);
 }
 
 std::shared_ptr<HepMC3::GenEvent> Pythia8Generator::operator()(
