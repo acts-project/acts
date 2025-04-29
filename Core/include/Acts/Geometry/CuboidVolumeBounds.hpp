@@ -9,12 +9,15 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
@@ -56,6 +59,18 @@ class CuboidVolumeBounds : public VolumeBounds {
     eSize
   };
 
+  /// Enum describing the possible faces of a cuboid volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    NegativeZFace = BoundarySurfaceFace::negativeFaceXY,
+    PositiveZFace = BoundarySurfaceFace::positiveFaceXY,
+    NegativeXFace = BoundarySurfaceFace::negativeFaceYZ,
+    PositiveXFace = BoundarySurfaceFace::positiveFaceYZ,
+    NegativeYFace = BoundarySurfaceFace::negativeFaceZX,
+    PositiveYFace = BoundarySurfaceFace::positiveFaceZX
+  };
+
   CuboidVolumeBounds() = delete;
 
   /// Constructor - the box boundaries
@@ -63,13 +78,15 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// @param halex is the half length of the cube in x
   /// @param haley is the half length of the cube in y
   /// @param halez is the half length of the cube in z
-  CuboidVolumeBounds(ActsScalar halex, ActsScalar haley,
-                     ActsScalar halez) noexcept(false);
+  CuboidVolumeBounds(double halex, double haley, double halez) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values iw the bound values
-  CuboidVolumeBounds(const std::array<ActsScalar, eSize>& values);
+  explicit CuboidVolumeBounds(const std::array<double, eSize>& values);
+
+  CuboidVolumeBounds(
+      std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
   /// Copy Constructor
   ///
@@ -88,14 +105,14 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<ActsScalar> values() const final;
+  std::vector<double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3& pos, ActsScalar tol = 0.) const override;
+  bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -119,34 +136,50 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
+  /// Get the canonical binning direction, i.e. the binning directions
   /// for that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binX, Acts::BinningValue::binY,
-            Acts::BinningValue::binZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisX, AxisY, AxisZ};
   };
 
-  /// Binning borders in ActsScalar
+  /// Binning borders in double
   ///
-  /// @param bValue is the binning schema used
+  /// @param aDir is the axis direction for which the
+  /// reference border is requested
   ///
   /// @return float offset to be used for the binning
-  ActsScalar binningBorder(BinningValue bValue) const final;
+  double referenceBorder(AxisDirection aDir) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value
   /// @param bValue the bound value identifier
   /// @param value the value to be set
-  void set(BoundValues bValue, ActsScalar value);
+  void set(BoundValues bValue, double value);
 
   /// Set a range of bound values
   /// @param keyValues the initializer list of key value pairs
-  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
+  void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
+
+  /// Convert axis direction to a corresponding bound value
+  /// in local coordinate convention
+  /// @param direction the axis direction to convert
+  static BoundValues boundsFromAxisDirection(AxisDirection direction);
+
+  /// Convert axis direction to a set of corresponding cuboid faces
+  /// in local coordinate convention
+  /// @param direction the axis direction to convert
+  /// @return A tuple of cuboid faces with the following ordering convention:
+  /// (1) negative face orthogonal to the axis direction
+  /// (2) positive face orthogonal to the axis direction
+  /// (3) list of side faces parallel to the axis direction
+  static std::tuple<Face, Face, std::array<Face, 4>> facesFromAxisDirection(
+      AxisDirection direction);
 
   /// Output Method for std::ostream
   ///
@@ -155,7 +188,7 @@ class CuboidVolumeBounds : public VolumeBounds {
 
  private:
   /// The bound values ordered in a fixed size array
-  std::array<ActsScalar, eSize> m_values;
+  std::array<double, eSize> m_values;
 
   std::shared_ptr<const RectangleBounds> m_xyBounds{nullptr};
   std::shared_ptr<const RectangleBounds> m_yzBounds{nullptr};
@@ -168,4 +201,7 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// will throw a logic_exception if consistency is not given
   void checkConsistency() noexcept(false);
 };
+
+std::ostream& operator<<(std::ostream& os, CuboidVolumeBounds::Face face);
+
 }  // namespace Acts

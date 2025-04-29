@@ -23,6 +23,12 @@ add_library(
     src/RootVertexReader.cpp
     src/RootVertexWriter.cpp
     src/RootAthenaDumpReader.cpp
+    src/RootNuclearInteractionParametersWriter.cpp
+    src/detail/NuclearInteractionParametrisation.cpp
+    src/TrackFinderPerformanceWriter.cpp
+    src/TrackFinderNTupleWriter.cpp
+    src/TrackFitterPerformanceWriter.cpp
+    src/VertexNTupleWriter.cpp
 )
 target_include_directories(
     ActsExamplesIoRoot

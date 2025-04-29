@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <span>
@@ -28,16 +29,22 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
                              const BoundaryTolerance& tolerance,
                              const Vector2& point,
                              const std::optional<SquareMatrix2>& jacobianOpt) {
+  using enum BoundaryTolerance::ToleranceMode;
+
   if (tolerance.isInfinite()) {
     return true;
   }
 
-  if (detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight)) {
-    return true;
+  BoundaryTolerance::ToleranceMode mode = tolerance.toleranceMode();
+  bool insideRectangle =
+      detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight);
+
+  if (mode == None) {
+    return insideRectangle;
   }
 
-  if (!tolerance.hasTolerance()) {
-    return false;
+  if (mode == Extend && insideRectangle) {
+    return true;
   }
 
   Vector2 closestPoint;
@@ -63,7 +70,11 @@ inline bool insideAlignedBox(const Vector2& lowerLeft,
 
   Vector2 distance = closestPoint - point;
 
-  return tolerance.isTolerated(distance, jacobianOpt);
+  if (mode == Extend) {
+    return tolerance.isTolerated(distance, jacobianOpt);
+  } else {
+    return tolerance.isTolerated(distance, jacobianOpt) && insideRectangle;
+  }
 }
 
 /// Check if a point is inside a polygon.
@@ -78,23 +89,27 @@ inline bool insidePolygon(std::span<const Vector2> vertices,
                           const BoundaryTolerance& tolerance,
                           const Vector2& point,
                           const std::optional<SquareMatrix2>& jacobianOpt) {
+  using enum BoundaryTolerance::ToleranceMode;
   if (tolerance.isInfinite()) {
     // The null boundary check always succeeds
     return true;
   }
 
-  if (detail::VerticesHelper::isInsidePolygon(point, vertices)) {
-    // If the point falls inside the polygon, the check always succeeds
-    return true;
-  }
+  BoundaryTolerance::ToleranceMode mode = tolerance.toleranceMode();
+  bool insidePolygon = detail::VerticesHelper::isInsidePolygon(point, vertices);
 
-  if (!tolerance.hasTolerance()) {
+  if (mode == None) {
+    // If the point falls inside the polygon, the check always succeeds
     // Outside of the polygon, since we've eliminated the case of an absence of
     // check above, we know we'll always fail if the tolerance is zero.
     //
     // This allows us to avoid the expensive computeClosestPointOnPolygon
     // computation in this simple case.
-    return false;
+    return insidePolygon;
+  }
+
+  if (mode == Extend && insidePolygon) {
+    return true;
   }
 
   // TODO: When tolerance is not 0, we could also avoid this computation in
@@ -111,7 +126,12 @@ inline bool insidePolygon(std::span<const Vector2> vertices,
 
   Vector2 distance = closestPoint - point;
 
-  return tolerance.isTolerated(distance, jacobianOpt);
+  if (mode == Extend) {
+    return tolerance.isTolerated(distance, jacobianOpt);
+  } else {
+    // @TODO: Check sign
+    return tolerance.isTolerated(-distance, jacobianOpt) && insidePolygon;
+  }
 }
 
 }  // namespace Acts::detail

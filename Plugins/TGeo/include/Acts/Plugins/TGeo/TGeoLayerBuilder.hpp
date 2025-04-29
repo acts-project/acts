@@ -58,9 +58,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
-    using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
+    using RangeConfig = std::pair<AxisDirection, std::pair<double, double>>;
 
-    using SplitConfig = std::pair<BinningValue, double>;
+    using SplitConfig = std::pair<AxisDirection, double>;
 
     /// Identify the search volume by name
     std::string volumeName = "";
@@ -133,9 +133,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// Constructor
   /// @param config is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config& config,
-                   std::unique_ptr<const Logger> logger =
-                       getDefaultLogger("TGeoLayerBuilder", Logging::INFO));
+  explicit TGeoLayerBuilder(const Config& config,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("TGeoLayerBuilder",
+                                                 Logging::INFO));
 
   /// Destructor
   ~TGeoLayerBuilder() override;

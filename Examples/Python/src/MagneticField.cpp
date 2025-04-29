@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/MultiRangeBField.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -25,7 +26,6 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 
 #include <pybind11/pybind11.h>
@@ -85,6 +85,11 @@ void addMagneticField(Context& ctx) {
   py::class_<Acts::NullBField, Acts::MagneticFieldProvider,
              std::shared_ptr<Acts::NullBField>>(m, "NullBField")
       .def(py::init<>());
+
+  py::class_<Acts::MultiRangeBField, Acts::MagneticFieldProvider,
+             std::shared_ptr<Acts::MultiRangeBField>>(m, "MultiRangeBField")
+      .def(py::init<
+           std::vector<std::pair<Acts::RangeXD<3, double>, Acts::Vector3>>>());
 
   {
     using Config = Acts::SolenoidBField::Config;

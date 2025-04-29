@@ -4,7 +4,6 @@ add_library(
     src/JsonGeometryList.cpp
     src/JsonMaterialWriter.cpp
     src/JsonSurfacesWriter.cpp
-    src/JsonSurfacesReader.cpp
     src/JsonDigitizationConfig.cpp
 )
 target_include_directories(
@@ -19,6 +18,9 @@ target_link_libraries(
         ActsExamplesDigitization
         ActsExamplesFramework
         ActsExamplesMaterialMapping
+        ActsExamplesTrackFinding
 )
+
+acts_compile_headers(ActsExamplesIoJson GLOB "include/**/*.hpp")
 
 install(TARGETS ActsExamplesIoJson LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

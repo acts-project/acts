@@ -12,6 +12,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
@@ -34,7 +35,7 @@ class MultiLayerNavigation : public IInternalNavigation {
   path_generator pgenerator;
 
   /// These are the cast parameters - copied from constructor
-  std::array<BinningValue, grid_type::DIM> casts{};
+  std::array<AxisDirection, grid_type::DIM> casts{};
 
   /// An inverse transform to be applied to the position
   Transform3 transform = Transform3::Identity();
@@ -44,7 +45,7 @@ class MultiLayerNavigation : public IInternalNavigation {
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerNavigation(grid_type igrid,
-                       const std::array<BinningValue, grid_type::DIM>& icasts,
+                       const std::array<AxisDirection, grid_type::DIM>& icasts,
                        const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
@@ -92,9 +93,9 @@ class MultiLayerNavigation : public IInternalNavigation {
   /// Cast into a lookup position
   ///
   /// @param position is the position of the update call
-  std::array<ActsScalar, grid_type::DIM> castPosition(
+  std::array<double, grid_type::DIM> castPosition(
       const Vector3& position) const {
-    std::array<ActsScalar, grid_type::DIM> casted{};
+    std::array<double, grid_type::DIM> casted{};
     fillCasts(position, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
@@ -133,7 +134,7 @@ class MultiLayerNavigation : public IInternalNavigation {
 /// in the grid
 struct PathGridSurfacesGenerator {
   std::vector<Vector3> operator()(Vector3 startPosition,
-                                  const Vector3& direction, ActsScalar stepSize,
+                                  const Vector3& direction, double stepSize,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);

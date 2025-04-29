@@ -8,18 +8,15 @@
 
 #pragma once
 
-#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
-#include <iostream>
 #include <utility>
 
+#include <boost/bimap.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 
@@ -106,11 +103,11 @@ template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
     const GeometryIdMultiset<T>& container,
     Acts::GeometryIdentifier::Value volume) {
-  auto cmp = Acts::GeometryIdentifier().setVolume(volume);
+  auto cmp = Acts::GeometryIdentifier().withVolume(volume);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
   // WARNING overflows to volume==0 if the input volume is the last one
-  cmp = Acts::GeometryIdentifier().setVolume(volume + 1u);
+  cmp = Acts::GeometryIdentifier().withVolume(volume + 1u);
   // optimize search by using the lower bound as start point. also handles
   // volume overflows since the geo id would be located before the start of
   // the upper edge search window.
@@ -132,11 +129,11 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
     const GeometryIdMultiset<T>& container,
     Acts::GeometryIdentifier::Value volume,
     Acts::GeometryIdentifier::Value layer) {
-  auto cmp = Acts::GeometryIdentifier().setVolume(volume).setLayer(layer);
+  auto cmp = Acts::GeometryIdentifier().withVolume(volume).withLayer(layer);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
   // WARNING resets to layer==0 if the input layer is the last one
-  cmp = Acts::GeometryIdentifier().setVolume(volume).setLayer(layer + 1u);
+  cmp = Acts::GeometryIdentifier().withVolume(volume).withLayer(layer + 1u);
   // optimize search by using the lower bound as start point. also handles
   // volume overflows since the geo id would be located before the start of
   // the upper edge search window.
@@ -165,11 +162,11 @@ template <typename T>
 inline auto selectModule(const GeometryIdMultiset<T>& container,
                          Acts::GeometryIdentifier::Value volume,
                          Acts::GeometryIdentifier::Value layer,
-                         Acts::GeometryIdentifier::Value module) {
-  return selectModule(
-      container,
-      Acts::GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
-          module));
+                         Acts::GeometryIdentifier::Value sensitive) {
+  return selectModule(container, Acts::GeometryIdentifier()
+                                     .withVolume(volume)
+                                     .withLayer(layer)
+                                     .withSensitive(sensitive));
 }
 
 /// Select all elements for the lowest non-zero identifier component.
@@ -179,9 +176,9 @@ inline auto selectModule(const GeometryIdMultiset<T>& container,
 /// applies to the lower components and not to intermediate zeros.
 ///
 /// Examples:
-/// - volume=2,layer=0,module=3 -> select all elements in the module
-/// - volume=1,layer=2,module=0 -> select all elements in the layer
-/// - volume=3,layer=0,module=0 -> select all elements in the volume
+/// - volume=2,layer=0,sensitive=3 -> select all elements in the sensitive
+/// - volume=1,layer=2,sensitive=0 -> select all elements in the layer
+/// - volume=3,layer=0,sensitive=0 -> select all elements in the volume
 ///
 /// @note An identifier with all components set to zero selects the whole input
 ///   container.
@@ -228,5 +225,10 @@ struct GeometryIdMultisetAccessor {
   // pointer to the container
   const Container* container = nullptr;
 };
+
+/// A map that allows mapping back and forth between ACTS and Athena Geometry
+/// Ids
+using GeometryIdMapActsAthena =
+    boost::bimap<std::uint64_t, Acts::GeometryIdentifier>;
 
 }  // namespace ActsExamples

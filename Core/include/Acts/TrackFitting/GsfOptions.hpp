@@ -29,7 +29,7 @@ enum class ComponentMergeMethod { eMean, eMaxWeight };
 ///
 /// Encapsulates a component of a Gaussian mixture as used by the GSF
 struct GsfComponent {
-  ActsScalar weight = 0;
+  double weight = 0;
   BoundVector boundPars = BoundVector::Zero();
   BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
 };
@@ -111,6 +111,10 @@ struct GsfOptions {
   bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;
+
+  /// Whether to use the external-surfaces mechanism of the navigator which
+  /// switches off the boundary-check for measurement surfaces.
+  bool useExternalSurfaces = true;
 
   std::string_view finalMultiComponentStateColumn = "";
 

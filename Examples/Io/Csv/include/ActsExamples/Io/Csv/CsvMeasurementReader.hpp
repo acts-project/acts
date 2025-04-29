@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -32,7 +31,6 @@ class Surface;
 }
 
 namespace ActsExamples {
-class IndexSourceLink;
 struct AlgorithmContext;
 
 /// Read in a measurement cluster collection in comma-separated-value format.
@@ -60,8 +58,6 @@ class CsvMeasurementReader final : public IReader {
     std::string outputMeasurements;
     /// Output measurement to sim hit collection.
     std::string outputMeasurementSimHitsMap;
-    /// Output source links collection.
-    std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
 
@@ -101,9 +97,6 @@ class CsvMeasurementReader final : public IReader {
 
   WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
       this, "OutputMeasurementSimHitsMap"};
-
-  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
-      this, "OutputSourceLinks"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 

@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
@@ -20,7 +20,7 @@ namespace Acts {
 /// Base class to provide GeometryIdentifier interface:
 /// - simple set and get
 ///
-/// It also provides the binningPosition method for
+/// It also provides the referencePosition method for
 /// Geometry geometrical object to be binned in BinnedArrays
 ///
 class GeometryObject {
@@ -34,7 +34,7 @@ class GeometryObject {
   /// Constructor from a value
   ///
   /// @param geometryId the geometry identifier of the object
-  GeometryObject(const GeometryIdentifier& geometryId)
+  explicit GeometryObject(const GeometryIdentifier& geometryId)
       : m_geometryId(geometryId) {}
 
   /// Assignment operator
@@ -48,25 +48,25 @@ class GeometryObject {
   }
 
   /// @return the geometry id by reference
-  const GeometryIdentifier& geometryId() const;
+  GeometryIdentifier geometryId() const;
 
   /// Force a binning position method
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the value in which you want to bin
+  /// @param aDir is the value for which the reference position is requesed
   ///
   /// @return vector 3D used for the binning schema
-  virtual Vector3 binningPosition(const GeometryContext& gctx,
-                                  BinningValue bValue) const = 0;
+  virtual Vector3 referencePosition(const GeometryContext& gctx,
+                                    AxisDirection aDir) const = 0;
 
   /// Implement the binningValue
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
+  /// @param aDir is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
-  virtual double binningPositionValue(const GeometryContext& gctx,
-                                      BinningValue bValue) const;
+  virtual double referencePositionValue(const GeometryContext& gctx,
+                                        AxisDirection aDir) const;
 
   /// Set the value
   ///
@@ -77,7 +77,7 @@ class GeometryObject {
   GeometryIdentifier m_geometryId;
 };
 
-inline const GeometryIdentifier& GeometryObject::geometryId() const {
+inline GeometryIdentifier GeometryObject::geometryId() const {
   return m_geometryId;
 }
 
@@ -86,9 +86,9 @@ inline void GeometryObject::assignGeometryId(
   m_geometryId = geometryId;
 }
 
-inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
-                                                   BinningValue bValue) const {
-  return VectorHelpers::cast(binningPosition(gctx, bValue), bValue);
+inline double GeometryObject::referencePositionValue(
+    const GeometryContext& gctx, AxisDirection aDir) const {
+  return VectorHelpers::cast(referencePosition(gctx, aDir), aDir);
 }
 
 }  // namespace Acts

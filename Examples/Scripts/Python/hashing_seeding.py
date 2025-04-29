@@ -7,14 +7,15 @@ import acts
 import acts.examples
 from acts.examples.simulation import (
     addPythia8,
-    addFatras,
     ParticleSelectorConfig,
+    addGenParticleSelection,
+    addFatras,
     addDigitization,
+    addDigiParticleSelection,
 )
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     addCKFTracks,
     TrackSelectorConfig,
     SeedingAlgorithm,
@@ -126,9 +127,8 @@ class Config:
             oddSeedingSel = geoDir / "config/odd-seeding-config.json"
             oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-            detector, trackingGeometry, decorators = getOpenDataDetector(
-                odd_dir=geoDir, mdecorator=oddMaterialDeco
-            )
+            detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+            trackingGeometry = detector.trackingGeometry()
 
             digiConfig = oddDigiConfig
 
@@ -137,7 +137,8 @@ class Config:
         elif self.detector == DetectorName.generic:
             print("Create detector and tracking geometry")
 
-            detector, trackingGeometry, a = acts.examples.GenericDetector.create()
+            detector = acts.examples.GenericDetector()
+            trackingGeometry = detector.trackingGeometry()
             digiConfig = (
                 actsExamplesDir
                 / "Algorithms/Digitization/share/default-smearing-config-generic.json"
@@ -205,13 +206,18 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addGenParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
+        ),
+    )
+
     addFatras(
         s,
         trackingGeometry,
         field,
-        preSelectParticles=ParticleSelectorConfig(
-            eta=(-eta, eta), pt=(150 * u.MeV, None), removeNeutral=True
-        ),
         enableInteractions=True,
         # outputDirRoot=outputDir,  # RootParticle ERROR when setting the outputDirRoot
         outputDirCsv=outputDir if saveFiles else None,
@@ -228,12 +234,22 @@ def runHashingSeeding(
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(1.0 * u.GeV, None),
+            eta=(-eta, eta),
+            measurements=(9, None),
+            removeNeutral=True,
+        ),
+    )
+
     import numpy as np
 
     cotThetaMax = 1 / (np.tan(2 * np.arctan(np.exp(-eta))))  # =1/tan(2×atan(e^(-eta)))
     seedFinderConfigArg = SeedFinderConfigArg(
         r=(None, 200 * u.mm),  # rMin=default, 33mm
-        deltaR=(1 * u.mm, 60 * u.mm),
+        deltaR=(1 * u.mm, 300 * u.mm),
         collisionRegion=(-250 * u.mm, 250 * u.mm),
         z=(-2000 * u.mm, 2000 * u.mm),
         maxSeedsPerSpM=maxSeedsPerSpM,
@@ -272,7 +288,6 @@ def runHashingSeeding(
         seedFinderOptionsArg,
         hashingTrainingConfigArg,
         hashingAlgorithmConfigArg,
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-eta, eta), nHits=(9, None)),
         seedingAlgorithm=seedingAlgorithm,
         geoSelectionConfigFile=geoSelectionConfigFile,
         initialSigmas=initialSigmas,
@@ -336,10 +351,6 @@ if __name__ == "__main__":
         annoySeed=annoySeed,
         zBins=zBins,
         phiBins=phiBins,
-    )
-
-    truthSeedRanges = TruthSeedRanges(
-        pt=(1.0 * u.GeV, None), eta=(-eta, eta), nHits=(9, None)
     )
 
     doHashing = config.doHashing

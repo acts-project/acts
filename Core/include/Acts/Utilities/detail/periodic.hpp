@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <numbers>
 
 namespace Acts::detail {
 
@@ -49,13 +50,13 @@ inline T difference_periodic(T lhs, T rhs, T range) {
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
 inline T radian_pos(T x) {
-  return wrap_periodic<T>(x, T{0}, T{2 * M_PI});
+  return wrap_periodic<T>(x, T{0}, T{2 * std::numbers::pi});
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 template <typename T>
 inline T radian_sym(T x) {
-  return wrap_periodic<T>(x, T{-M_PI}, T{2 * M_PI});
+  return wrap_periodic<T>(x, -std::numbers::pi_v<T>, T{2 * std::numbers::pi});
 }
 
 /// Ensure both phi and theta direction angles are within the allowed range.
@@ -81,11 +82,11 @@ inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
   // moving it first to the periodic range simplifies further steps as the
   // possible range of theta becomes fixed.
   theta = radian_pos(theta);
-  if (M_PI < theta) {
+  if (std::numbers::pi_v<T> < theta) {
     // theta is in the second half of the great circle and outside its nominal
     // range. need to change both phi and theta to be within range.
-    phi += M_PI;
-    theta = 2 * M_PI - theta;
+    phi += std::numbers::pi_v<T>;
+    theta = T{2 * std::numbers::pi} - theta;
   }
   return {radian_sym(phi), theta};
 }

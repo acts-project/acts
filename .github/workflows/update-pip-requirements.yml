@@ -1,0 +1,76 @@
+name: Update Pip Requirements
+
+on:
+  workflow_dispatch: # Allow running on-demand
+  schedule:
+    # Runs every Sunday at 1:23 UTC
+    - cron: '23 1 * * 0'
+
+jobs:
+  update-pip-requirements:
+    # This action checks all monitored (specified in `folder_list` below) requirements.in
+    # files and generates a new requirements.txt file with pip-compile. If any
+    # requirements changed, a PR is created with the changes.
+    runs-on: ubuntu-latest
+    env:
+      # This branch will receive updates each time the workflow runs
+      # It doesn't matter if it's deleted when merged, it'll be re-created
+      BRANCH_NAME: auto-dependency-upgrades
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install pip-tools
+        run: pip install pip-tools
+
+      - name: Compile all requirements.txt
+        run: |
+          # Update this list after adding/removing requirements-files
+          folder_list=(
+            CI/clang_tidy
+            CI/fpe_masks
+            docs
+            Examples/Python/tests
+            Examples/Scripts
+          )
+          for folder in "${folder_list[@]}"; do
+            pip-compile "${folder}/requirements.in" > "${folder}/requirements.txt"
+          done
+
+      - name: Detect changes
+        id: changes
+        run:
+          # This output boolean tells us if the dependencies have actually changed
+          echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit & push changes
+        # Only push if changes exist
+        if: steps.changes.outputs.count > 0
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Weekly Update: Regenerate requirements.txt"
+          git push -f origin ${{ github.ref_name }}:$BRANCH_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Open pull request if needed
+        if: steps.changes.outputs.count > 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Only open a PR if the branch is not attached to an existing one
+        run: |
+          PR=$(gh pr list --head $BRANCH_NAME --json number -q '.[0].number')
+          if [ -z $PR ]; then
+            gh pr create \
+            --head $BRANCH_NAME \
+            --title "chore: automated python requirements upgrades" \
+            --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          else
+            echo "Pull request already exists, won't create a new one."
+          fi

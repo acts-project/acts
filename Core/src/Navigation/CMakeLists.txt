@@ -1,1 +1,7 @@
-target_sources(ActsCore PRIVATE NavigationStream.cpp)
+target_sources(
+    ActsCore
+    PRIVATE
+        NavigationStream.cpp
+        TryAllNavigationPolicy.cpp
+        SurfaceArrayNavigationPolicy.cpp
+)

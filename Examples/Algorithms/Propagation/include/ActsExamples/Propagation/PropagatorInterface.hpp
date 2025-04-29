@@ -50,7 +50,7 @@ class PropagatorInterface {
 template <typename propagator_t>
 class ConcretePropagator : public PropagatorInterface {
  public:
-  ConcretePropagator(propagator_t propagator)
+  explicit ConcretePropagator(propagator_t propagator)
       : m_propagator{std::move(propagator)} {}
 
   Acts::Result<PropagationOutput> execute(
@@ -90,7 +90,12 @@ class ConcretePropagator : public PropagatorInterface {
     // Set a maximum step size
     options.stepping.maxStepSize = cfg.maxStepSize;
 
-    auto state = m_propagator.makeState(startParameters, options);
+    auto state = m_propagator.makeState(options);
+
+    auto resultInit = m_propagator.initialize(state, startParameters);
+    if (!resultInit.ok()) {
+      return resultInit.error();
+    }
 
     // Propagate using the propagator
     auto resultTmp = m_propagator.propagate(state);
@@ -116,6 +121,8 @@ class ConcretePropagator : public PropagatorInterface {
     auto& steppingResults =
         resultValue.template get<SteppingLogger::result_type>();
     summary.steps = std::move(steppingResults.steps);
+
+    summary.statistics = resultValue.statistics;
 
     // Also set the material recording result - if configured
     if (cfg.recordMaterialInteractions) {

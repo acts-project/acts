@@ -19,6 +19,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <numbers>
 #include <random>
 #include <vector>
 
@@ -38,7 +39,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::mt19937 rng(42);
   std::uniform_real_distribution<float> dir(0, 1);
   std::uniform_real_distribution<float> loc(-10, 10);
-  std::uniform_real_distribution<float> ang(M_PI / 10., M_PI / 4.);
+  std::uniform_real_distribution<float> ang(std::numbers::pi / 10.,
+                                            std::numbers::pi / 4.);
 
   Box testBox{nullptr, {0, 0, 0}, Box::Size{{1, 2, 3}}};
 
@@ -351,7 +353,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
         return result;
       };
 
-  std::vector<Frustum3> frustums{n, Frustum3{{0, 0, 0}, {1, 0, 0}, M_PI / 2.}};
+  std::vector<Frustum3> frustums{
+      n, Frustum3{{0, 0, 0}, {1, 0, 0}, std::numbers::pi / 2.}};
   std::generate(frustums.begin(), frustums.end(), [&]() {
     const Vector3F d{dir(rng), dir(rng), dir(rng)};
     const Vector3F l{loc(rng), loc(rng), loc(rng)};
@@ -392,12 +395,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::size_t iters_per_run = 1000;
 
   std::vector<std::pair<std::string, Frustum3>> testFrusts = {
-      {"away", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI / 4.}},
-      {"towards", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI / 4.}},
-      {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, M_PI / 4.}},
-      {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, M_PI / 4.}},
-      {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, M_PI / 4.}},
-      {"down", Frustum3{{0, 0, -10}, {-1, 0, 0}, M_PI / 4.}},
+      {"away", Frustum3{{0, 0, -10}, {0, 0, -1}, std::numbers::pi / 4.}},
+      {"towards", Frustum3{{0, 0, -10}, {0, 0, 1}, std::numbers::pi / 4.}},
+      {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, std::numbers::pi / 4.}},
+      {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, std::numbers::pi / 4.}},
+      {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, std::numbers::pi / 4.}},
+      {"down", Frustum3{{0, 0, -10}, {-1, 0, 0}, std::numbers::pi / 4.}},
   };
 
   std::cout << "Run benchmarks: " << std::endl;

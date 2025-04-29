@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 #include <random>
 
 #include "Dataset.hpp"
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
   double rmsTheta3D = rms(theta3Ds, 0);
 
   CHECK_CLOSE_REL(rmsThetaYZ, theta0, 0.02);
-  CHECK_CLOSE_REL(rmsTheta3D, M_SQRT2 * theta0, 0.02);
+  CHECK_CLOSE_REL(rmsTheta3D, std::numbers::sqrt2 * theta0, 0.02);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

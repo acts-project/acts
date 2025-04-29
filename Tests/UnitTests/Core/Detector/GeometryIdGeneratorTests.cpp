@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
       portalGenerator, tContext, "Gap0Volume", Transform3::Identity(),
       std::move(gap0VoumeBounds), {}, {}, tryNoVolumes(), tryAllPortals());
 
-  std::vector<ActsScalar> layer0Radii = {100, 102, 104, 106, 108, 110};
+  std::vector<double> layer0Radii = {100, 102, 104, 106, 108, 110};
   auto layer0VolumeBounds =
       std::make_unique<CylinderVolumeBounds>(80, 130, 200);
   std::vector<std::shared_ptr<Surface>> layer0Surfaces = {};
@@ -95,8 +95,8 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         DetectorVolume& dVolume) const final {
     auto vgid = dVolume.geometryId();
-    vgid.setVolume(vgid.volume() + 1);
-    dVolume.assignGeometryId(vgid);
+    dVolume.assignGeometryId(
+        dVolume.geometryId().withVolume(vgid.volume() + 1));
   }
 
   /// @brief Method for assigning a geometry id to a portal
@@ -106,8 +106,7 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& /*cache*/,
                         Portal& portal) const final {
     auto pgid = portal.surface().geometryId();
-    pgid.setBoundary(pgid.boundary() + 1);
-    portal.surface().assignGeometryId(pgid);
+    portal.surface().assignGeometryId(pgid.withBoundary(pgid.boundary() + 1));
   }
 
   /// @brief Method for assigning a geometry id to a surface
@@ -118,9 +117,9 @@ struct GeoIdIncrementer : public IGeometryIdGenerator {
                         Surface& surface) const final {
     auto sgid = surface.geometryId();
     if (sgid.sensitive() != 0u) {
-      sgid.setSensitive(sgid.sensitive() + 1);
+      sgid = sgid.withSensitive(sgid.sensitive() + 1);
     } else {
-      sgid.setPassive(sgid.passive() + 1);
+      sgid = sgid.withPassive(sgid.passive() + 1);
     }
     surface.assignGeometryId(sgid);
   }

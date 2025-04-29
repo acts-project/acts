@@ -109,7 +109,8 @@ std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
 }
 
 void Geant4Manager::registerPhysicsListFactory(
-    std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactory) {
+    std::string name,
+    std::shared_ptr<Geant4::PhysicsListFactory> physicsListFactory) {
   if (m_physicsListFactories.contains(name)) {
     throw std::invalid_argument("name already mapped");
   }
@@ -126,22 +127,23 @@ std::unique_ptr<G4VUserPhysicsList> Geant4Manager::createPhysicsList(
   return it->second->factorize();
 }
 
-const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>&
+const std::unordered_map<std::string,
+                         std::shared_ptr<Geant4::PhysicsListFactory>>&
 Geant4Manager::getPhysicsListFactories() const {
   return m_physicsListFactories;
 }
 
 Geant4Manager::Geant4Manager() {
   registerPhysicsListFactory(
-      "FTFP_BERT", std::make_shared<PhysicsListFactoryFunction>(
+      "FTFP_BERT", std::make_shared<Geant4::PhysicsListFactoryFunction>(
                        []() { return std::make_unique<FTFP_BERT>(); }));
   registerPhysicsListFactory(
-      "FTFP_BERT_ATL", std::make_shared<PhysicsListFactoryFunction>(
+      "FTFP_BERT_ATL", std::make_shared<Geant4::PhysicsListFactoryFunction>(
                            []() { return std::make_unique<FTFP_BERT_ATL>(); }));
-  registerPhysicsListFactory("MaterialPhysicsList",
-                             std::make_shared<PhysicsListFactoryFunction>([]() {
-                               return std::make_unique<MaterialPhysicsList>();
-                             }));
+  registerPhysicsListFactory(
+      "MaterialPhysicsList",
+      std::make_shared<Geant4::PhysicsListFactoryFunction>(
+          []() { return std::make_unique<Geant4::MaterialPhysicsList>(); }));
 }
 
 Geant4Manager::~Geant4Manager() = default;

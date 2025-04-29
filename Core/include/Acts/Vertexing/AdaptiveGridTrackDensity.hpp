@@ -7,6 +7,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -86,7 +87,8 @@ class AdaptiveGridTrackDensity {
     double maxRelativeDensityDev = 0.01;
   };
 
-  AdaptiveGridTrackDensity(const Config& cfg);
+  /// Constructor
+  explicit AdaptiveGridTrackDensity(const Config& cfg);
 
   /// @brief Returns the z and t coordinate of maximum (surrounding)
   /// track density

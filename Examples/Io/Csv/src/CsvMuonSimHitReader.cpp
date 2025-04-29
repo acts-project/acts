@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/MuonSimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -61,18 +62,16 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
 
   SimHitContainer::sequence_type unordered;
   while (reader.read(data)) {
-    ActsFatras::Hit::Vector4 pos{
-        data.LocalPositionExtrx * Acts::UnitConstants::mm,
-        data.LocalPositionExtry * Acts::UnitConstants::mm,
-        data.LocalPositionExtrz * Acts::UnitConstants::mm, 0};
-    ActsFatras::Hit::Vector4 mom{
-        data.LocalDirectionx * Acts::UnitConstants::GeV,
-        data.LocalDirectiony * Acts::UnitConstants::GeV,
-        data.LocalDirectionz * Acts::UnitConstants::GeV,
-        std::sqrt(data.LocalDirectionx * data.LocalDirectionx +
-                  data.LocalDirectiony * data.LocalDirectiony +
-                  data.LocalDirectionz * data.LocalDirectionz) *
-            Acts::UnitConstants::GeV};
+    Acts::Vector4 pos{data.LocalPositionExtrx * Acts::UnitConstants::mm,
+                      data.LocalPositionExtry * Acts::UnitConstants::mm,
+                      data.LocalPositionExtrz * Acts::UnitConstants::mm, 0};
+    Acts::Vector4 mom{data.LocalDirectionx * Acts::UnitConstants::GeV,
+                      data.LocalDirectiony * Acts::UnitConstants::GeV,
+                      data.LocalDirectionz * Acts::UnitConstants::GeV,
+                      std::sqrt(data.LocalDirectionx * data.LocalDirectionx +
+                                data.LocalDirectiony * data.LocalDirectiony +
+                                data.LocalDirectionz * data.LocalDirectionz) *
+                          Acts::UnitConstants::GeV};
     MuonMdtIdentifierFields f;
     f.multilayer = 0;
     f.tube = 0;
@@ -81,7 +80,10 @@ ActsExamples::ProcessCode ActsExamples::CsvMuonSimHitReader::read(
     f.stationPhi = data.StationPhi;
     f.stationName = data.StationName;
 
-    unordered.push_back(SimHit(compressId(f), data.pdgId, pos, mom, mom, -1));
+    unordered.push_back(
+        SimHit(Acts::GeometryIdentifier(compressId(f)),
+               SimBarcode{static_cast<SimBarcode::Value>(data.pdgId)}, pos, mom,
+               mom, -1));
   }
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());

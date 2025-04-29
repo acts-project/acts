@@ -12,9 +12,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 
-#include <concepts>
 #include <optional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -23,7 +21,6 @@ class Surface;
 namespace Concepts {
 template <typename Parameters>
 concept BasicTrackParameters = requires {
-  typename Parameters::Scalar;
   typename Parameters::ParametersVector;
   typename Parameters::CovarianceMatrix;
 
@@ -68,4 +65,12 @@ concept BoundTrackParametersConcept =
         { p.position(c) } -> std::same_as<Vector3>;
       };
     };
+
+namespace Concepts {
+template <typename Parameters>
+concept BoundConvertibleTrackParameters = requires(const Parameters &p) {
+  { p.toBound() } -> BoundTrackParametersConcept;
+};
+}  // namespace Concepts
+
 }  // namespace Acts

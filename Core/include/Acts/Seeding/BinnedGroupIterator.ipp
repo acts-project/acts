@@ -64,7 +64,7 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overread"
 #endif
-  return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
+  return {std::move(bottoms), global_index, std::move(tops)};
 #if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -85,7 +85,8 @@ void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
     passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
   }
   // loop and only stop when we find a non-empty bin which is not masked
-  while ((dimCollection == 0ul || !passesMask) && ++m_gridItr != m_gridItrEnd) {
+  while ((dimCollection == 0ul || !passesMask) &&
+         (++m_gridItr != m_gridItrEnd)) {
     dimCollection = (*m_gridItr).size();
     if (dimCollection == 0ul) {
       continue;

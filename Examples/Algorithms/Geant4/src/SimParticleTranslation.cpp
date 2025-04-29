@@ -10,16 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <ostream>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -32,19 +28,17 @@
 #include <G4PrimaryVertex.hh>
 #include <G4UnitsTable.hh>
 
-namespace ActsExamples {
-class WhiteBoard;
-}  // namespace ActsExamples
+namespace ActsExamples::Geant4 {
 
-ActsExamples::SimParticleTranslation::SimParticleTranslation(
+SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4VUserPrimaryGeneratorAction(),
       m_cfg(cfg),
       m_logger(std::move(logger)) {}
 
-ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
+SimParticleTranslation::~SimParticleTranslation() = default;
 
-void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
+void SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   anEvent->SetEventID(m_eventNr++);
   unsigned int eventID = anEvent->GetEventID();
 
@@ -162,3 +156,5 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
                            << lastVertex->transpose());
   }
 }
+
+}  // namespace ActsExamples::Geant4

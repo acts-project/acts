@@ -13,7 +13,9 @@
 
 #include <utility>
 
-ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
+namespace ActsExamples {
+
+GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier,
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
@@ -29,7 +31,7 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
-ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
+GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier,
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
@@ -44,3 +46,26 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
+
+const Acts::Transform3& GenericDetectorElement::transform(
+    const Acts::GeometryContext& /*gctx*/) const {
+  return *m_elementTransform;
+}
+
+const Acts::Surface& GenericDetectorElement::surface() const {
+  return *m_elementSurface;
+}
+
+Acts::Surface& GenericDetectorElement::surface() {
+  return *m_elementSurface;
+}
+
+double GenericDetectorElement::thickness() const {
+  return m_elementThickness;
+}
+
+GenericDetectorElement::Identifier GenericDetectorElement::identifier() const {
+  return m_elementIdentifier;
+}
+
+}  // namespace ActsExamples

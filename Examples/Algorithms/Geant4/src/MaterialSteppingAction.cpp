@@ -24,14 +24,15 @@
 #include <G4RunManager.hh>
 #include <G4Step.hh>
 
-ActsExamples::MaterialSteppingAction::MaterialSteppingAction(
+namespace ActsExamples::Geant4 {
+
+MaterialSteppingAction::MaterialSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
+MaterialSteppingAction::~MaterialSteppingAction() = default;
 
-void ActsExamples::MaterialSteppingAction::UserSteppingAction(
-    const G4Step* step) {
+void MaterialSteppingAction::UserSteppingAction(const G4Step* step) {
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
   if (material == nullptr) {
@@ -111,3 +112,5 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
         mInteraction);
   }
 }
+
+}  // namespace ActsExamples::Geant4

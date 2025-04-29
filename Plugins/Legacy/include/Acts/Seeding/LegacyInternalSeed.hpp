@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Seeding/LegacySeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 

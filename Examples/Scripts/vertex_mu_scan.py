@@ -39,7 +39,7 @@ def main(files: List[Path], output: str, title: str = ""):
             if time_file.exists():
                 time = numpy.append(time, float(time_file.read_text()))
             else:
-                fime.append(float("nan"))
+                time.append(float("nan"))
 
             rf = uproot.open(f"{file}:vertexing")
 

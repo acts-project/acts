@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <numbers>
 #include <stdexcept>
 
 namespace {
@@ -52,13 +53,13 @@ Acts::DetrayMaterialConverter::convertMaterialSlab(
 
 detray::io::detector_homogeneous_material_payload
 Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
-    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   detray::io::detector_homogeneous_material_payload materialPayload;
 
   for (const auto volume : detector.volumes()) {
-    auto volumeIndex = geoIdCache.volumeLinks.find(volume->geometryId());
-    if (volumeIndex != geoIdCache.volumeLinks.end()) {
+    auto volumeIndex = cCache.volumeLinks.find(volume->geometryId());
+    if (volumeIndex != cCache.volumeLinks.end()) {
       // The volume material payload & its link
       detray::io::material_volume_payload volumePayload;
       detray::io::single_link_payload volumeLink;
@@ -80,18 +81,24 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
           auto materialSlab = homogeneousMaterial->materialSlab();
           detray::io::material_slab_payload slabPayload =
               convertMaterialSlab(materialSlab);
-          // Find the surfaces and assign
-          auto surfaceIndices =
-              geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
-          // Loop over the equal range and fill one grid each, this is needed
-          // as the initial portal could be split into multiple surfaces
-          for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
-               ++itr) {
-            // Make an identified link copy for every matching surface
-            detray::io::single_link_payload surfaceLink;
-            surfaceLink.link = itr->second;
-            slabPayload.surface = surfaceLink;
-            volumePayload.mat_slabs.push_back(slabPayload);
+          // Find the surfaces to assign
+          auto vIndex = cCache.volumeIndex(volume);
+          auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
+          if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {
+            // Find the surface link
+            auto surfaceIndices =
+                localSurfaceLinks->second.equal_range(surface->geometryId());
+            // Loop over the equal range and fill one grid each, this is needed
+            // as the initial portal could be split into multiple surfaces
+            for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
+                 ++itr) {
+              // Make an identified link copy for every matching surface
+              slabPayload.surface.link = itr->second;
+              volumePayload.mat_slabs.push_back(slabPayload);
+            }
+          } else {
+            ACTS_WARNING(
+                "DetrayMaterialConverter: no local surface links found");
           }
         }
       }
@@ -101,7 +108,6 @@ Acts::DetrayMaterialConverter::convertHomogeneousSurfaceMaterial(
                                                       << " not found in cache");
     }
   }
-
   return materialPayload;
 }
 
@@ -136,25 +142,27 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
     BinUtility bUtility = binnedMaterial->binUtility();
     // Turn the bin value into a 2D grid
     if (bUtility.dimensions() == 1u) {
-      if (bUtility.binningData()[0u].binvalue == BinningValue::binX) {
+      if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisX) {
         // Turn to X-Y
         bUtility += BinUtility(1u, std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::max(),
-                               BinningOption::closed, BinningValue::binY);
-      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binY) {
+                               BinningOption::closed, AxisDirection::AxisY);
+      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisY) {
         // Turn to X-Y
         BinUtility nbUtility(1u, std::numeric_limits<float>::lowest(),
                              std::numeric_limits<float>::max(),
-                             BinningOption::closed, BinningValue::binX);
+                             BinningOption::closed, AxisDirection::AxisX);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
-      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binR) {
+      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisR) {
         // Turn to R-Phi
-        bUtility += BinUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
-      } else if (bUtility.binningData()[0u].binvalue == BinningValue::binZ) {
+        bUtility += BinUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                               AxisDirection::AxisPhi);
+      } else if (bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ) {
         // Turn to Phi-Z - swap needed
-        BinUtility nbUtility(1u, -M_PI, M_PI, closed, BinningValue::binPhi);
+        BinUtility nbUtility(1u, -std::numbers::pi, std::numbers::pi, closed,
+                             AxisDirection::AxisPhi);
         nbUtility += bUtility;
         bUtility = std::move(nbUtility);
         swapped = true;
@@ -162,24 +170,25 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
         std::invalid_argument("Unsupported binning for Detray");
       }
     } else if (bUtility.dimensions() == 2u &&
-               bUtility.binningData()[0u].binvalue == BinningValue::binZ &&
-               bUtility.binningData()[1u].binvalue == BinningValue::binPhi) {
+               bUtility.binningData()[0u].binvalue == AxisDirection::AxisZ &&
+               bUtility.binningData()[1u].binvalue == AxisDirection::AxisPhi) {
       BinUtility nbUtility(bUtility.binningData()[1u]);
-      nbUtility += bUtility.binningData()[0u];
+      nbUtility += BinUtility{bUtility.binningData()[0u]};
       bUtility = std::move(nbUtility);
       swapped = true;
     }
 
-    BinningValue bVal0 = bUtility.binningData()[0u].binvalue;
-    BinningValue bVal1 = bUtility.binningData()[1u].binvalue;
+    AxisDirection bVal0 = bUtility.binningData()[0u].binvalue;
+    AxisDirection bVal1 = bUtility.binningData()[1u].binvalue;
 
     // Translate into grid index type
     detray::io::material_id gridIndexType = detray::io::material_id::unknown;
-    if (bVal0 == BinningValue::binR && bVal1 == BinningValue::binPhi) {
+    if (bVal0 == AxisDirection::AxisR && bVal1 == AxisDirection::AxisPhi) {
       gridIndexType = detray::io::material_id::ring2_map;
-    } else if (bVal0 == BinningValue::binPhi && bVal1 == BinningValue::binZ) {
+    } else if (bVal0 == AxisDirection::AxisPhi &&
+               bVal1 == AxisDirection::AxisZ) {
       gridIndexType = detray::io::material_id::concentric_cylinder2_map;
-    } else if (bVal0 == BinningValue::binX && bVal1 == BinningValue::binY) {
+    } else if (bVal0 == AxisDirection::AxisX && bVal1 == AxisDirection::AxisY) {
       gridIndexType = detray::io::material_id::rectangle2_map;
     } else {
       std::runtime_error(
@@ -232,7 +241,7 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
 detray::io::detector_grids_payload<detray::io::material_slab_payload,
                                    detray::io::material_id>
 Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
-    const DetrayConversionUtils::GeometryIdCache& geoIdCache,
+    const DetrayConversionUtils::Cache& cCache,
     const Experimental::Detector& detector, const Logger& logger) {
   // The material grid payload
   detray::io::detector_grids_payload<detray::io::material_slab_payload,
@@ -248,39 +257,49 @@ Acts::DetrayMaterialConverter::convertGridSurfaceMaterial(
     // Per volume surface selector
     MaterialSurfaceSelector selector;
     volume->visitSurfaces(selector);
-    ACTS_DEBUG("DetrayMaterialConverter: found "
-               << selector.surfaces.size()
-               << " surfaces/portals with material in volume "
-               << volume->name());
+    ACTS_VERBOSE("DetrayMaterialConverter: found "
+                 << selector.surfaces.size()
+                 << " surfaces/portals with material in volume "
+                 << volume->name());
     // Find the voluem index first
-    auto volumeIndex = geoIdCache.volumeLinks.find(volume->geometryId());
-    if (volumeIndex != geoIdCache.volumeLinks.end()) {
+    auto volumeIndex = cCache.volumeLinks.find(volume->geometryId());
+    if (volumeIndex != cCache.volumeLinks.end()) {
       std::vector<DetrayMaterialGrid> volumeMaterialGrids = {};
       // Now convert the surfaces
       for (const auto& surface : selector.surfaces) {
-        // Find the surface index
-        auto surfaceIndices =
-            geoIdCache.localSurfaceLinks.equal_range(surface->geometryId());
-        DetrayMaterialGrid materialGrid =
-            convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
-        // Ignore if an empty payload is returned
-        if (materialGrid.axes.empty() && materialGrid.bins.empty()) {
-          continue;
-        }
-        // Loop over the equal range and fill one grid each, this is needed
-        // as the initial portal could be split into multiple surfaces
-        for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
-             ++itr) {
-          // Fill the surface index
-          materialGrid.owner_link =
-              detray::io::single_link_payload{itr->second};
-          // Fill the grid
-          volumeMaterialGrids.push_back(materialGrid);
+        // Find the surfaces to assign
+        auto vIndex = cCache.volumeIndex(volume);
+        auto localSurfaceLinks = cCache.localSurfaceLinks.find(vIndex);
+        if (localSurfaceLinks != cCache.localSurfaceLinks.end()) {
+          // Find the surface link
+          auto surfaceIndices =
+              localSurfaceLinks->second.equal_range(surface->geometryId());
+
+          ACTS_VERBOSE(
+              "DetrayMaterialConverter: assigning to "
+              << std::distance(surfaceIndices.first, surfaceIndices.second)
+              << " surfaces with material in volume " << volume->name());
+          DetrayMaterialGrid materialGrid =
+              convertGridSurfaceMaterial(*surface->surfaceMaterial(), logger);
+          // Ignore if an empty payload is returned
+          if (materialGrid.axes.empty() || materialGrid.bins.empty()) {
+            continue;
+          }
+
+          // Loop over the equal range and fill one grid each, this is needed
+          // as the initial portal could be split into multiple surfaces
+          for (auto itr = surfaceIndices.first; itr != surfaceIndices.second;
+               ++itr) {
+            // Fill the surface index
+            materialGrid.owner_link =
+                detray::io::single_link_payload{itr->second};
+            // Fill the grid
+            volumeMaterialGrids.push_back(materialGrid);
+          }
         }
       }
       // Register the grids of this volume
       materialGrids.grids.insert({volumeIndex->second, volumeMaterialGrids});
-
     } else {
       ACTS_WARNING(
           "DetrayMaterialConverter: volume not found in cache, should not "

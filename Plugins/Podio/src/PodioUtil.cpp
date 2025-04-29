@@ -261,7 +261,7 @@ void recoverDynamicColumns(
                                "' is not of allowed type"};
     }
 
-    HashedString hashedKey = hashString(dynName);
+    HashedString hashedKey = hashStringDynamic(dynName);
     dynamic.insert({hashedKey, std::move(up)});
   }
 }

@@ -88,10 +88,10 @@ inline static bool isEqual(const BinUtility& ba, const BinUtility& bb,
 ///
 /// @return bool for euqal
 inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
-                           Acts::ActsScalar tolerance = 0.) {
+                           double tolerance = 0.) {
   bool equalConstrains = true;
   bool equalRange = true;
-  for (auto& bVal : allBinningValues()) {
+  for (auto& bVal : allAxisDirections()) {
     equalConstrains =
         equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);

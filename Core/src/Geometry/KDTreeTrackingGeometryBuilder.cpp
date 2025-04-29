@@ -45,15 +45,15 @@ std::unique_ptr<const Acts::TrackingGeometry>
 Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
     const GeometryContext& gctx) const {
   using MeasuredSurface =
-      std::pair<std::array<ActsScalar, 2u>, std::shared_ptr<Surface>>;
+      std::pair<std::array<double, 2u>, std::shared_ptr<Surface>>;
   // Prepare all the surfaces
   std::vector<MeasuredSurface> surfacesMeasured;
   surfacesMeasured.reserve(m_cfg.surfaces.size());
   for (auto& s : m_cfg.surfaces) {
     auto ext = s->polyhedronRepresentation(gctx, 1u).extent();
     surfacesMeasured.push_back(MeasuredSurface{
-        std::array<ActsScalar, 2u>{ext.medium(BinningValue::binZ),
-                                   ext.medium(BinningValue::binR)},
+        std::array<double, 2u>{ext.medium(AxisDirection::AxisZ),
+                               ext.medium(AxisDirection::AxisR)},
         s});
   }
 
@@ -84,8 +84,8 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
   std::vector<std::shared_ptr<const TrackingVolume>> translatedVolumes = {};
 
   // Volume extent
-  auto rangeR = ptVolume.extent.range(Acts::BinningValue::binR);
-  auto rangeZ = ptVolume.extent.range(Acts::BinningValue::binZ);
+  auto rangeR = ptVolume.extent.range(Acts::AxisDirection::AxisR);
+  auto rangeZ = ptVolume.extent.range(Acts::AxisDirection::AxisZ);
 
   // Simple gap volume
   if (!ptVolume.container.has_value()) {
@@ -157,9 +157,9 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
   auto& its = plVolume.internal.value();
 
   // Try to pull from the kd tree
-  RangeXD<2u, ActsScalar> zrRange;
-  zrRange[0u] = plVolume.extent.range(Acts::BinningValue::binZ);
-  zrRange[1u] = plVolume.extent.range(Acts::BinningValue::binR);
+  RangeXD<2u, double> zrRange;
+  zrRange[0u] = plVolume.extent.range(Acts::AxisDirection::AxisZ);
+  zrRange[1u] = plVolume.extent.range(Acts::AxisDirection::AxisR);
 
   auto layerSurfaces = kdt.rangeSearchWithKey(zrRange);
   ACTS_VERBOSE(indent + ">> looking z/r range = " << zrRange.toString());

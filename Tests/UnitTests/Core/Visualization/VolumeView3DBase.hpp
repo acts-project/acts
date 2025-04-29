@@ -18,6 +18,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <fstream>
+#include <numbers>
 #include <sstream>
 #include <string>
 
@@ -37,7 +38,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 
-  double halfPhiSector = M_PI / 4.;
+  const double halfPhiSector = std::numbers::pi / 4.;
 
   ViewConfig vConfig = s_viewVolume;
   vConfig.triangulate = triangulate;
@@ -55,8 +56,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   //----------------------------------------------------
   // Cone volume section
   // Single solid Cone
-  auto solidCone =
-      std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 5., 5., 0., M_PI);
+  auto solidCone = std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 5., 5., 0.,
+                                                      std::numbers::pi);
   auto cone = std::make_shared<Volume>(identity, solidCone);
   GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
@@ -65,8 +66,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   helper.clear();
 
   // Single solid Cone - with cut off
-  auto cutOffCone =
-      std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 8., 5., 0., M_PI);
+  auto cutOffCone = std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 8., 5., 0.,
+                                                       std::numbers::pi);
   cone = std::make_shared<Volume>(identity, cutOffCone);
   GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
@@ -75,8 +76,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   helper.clear();
 
   // Cone - Cone inlay
-  auto cutOffHollowCone =
-      std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5, 0., M_PI);
+  auto cutOffHollowCone = std::make_shared<ConeVolumeBounds>(
+      0.35, 7., 0.45, 8., 5, 0., std::numbers::pi);
   cone = std::make_shared<Volume>(identity, cutOffHollowCone);
   GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
@@ -95,8 +96,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   helper.clear();
 
   // Single Hollow Cone - cylindrical inlay
-  auto cutOffHollowCylCone =
-      std::make_shared<ConeVolumeBounds>(1., 0.45, 8., 5., 0., M_PI);
+  auto cutOffHollowCylCone = std::make_shared<ConeVolumeBounds>(
+      1., 0.45, 8., 5., 0., std::numbers::pi);
   cone = std::make_shared<Volume>(identity, cutOffHollowCylCone);
   GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
@@ -105,8 +106,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   helper.clear();
 
   // Single Hollow Cylinder - Cone inlay
-  auto cutOffHollowConeCyl =
-      std::make_shared<ConeVolumeBounds>(12., 0.35, 7., 5., 0., M_PI);
+  auto cutOffHollowConeCyl = std::make_shared<ConeVolumeBounds>(
+      12., 0.35, 7., 5., 0., std::numbers::pi);
   cone = std::make_shared<Volume>(identity, cutOffHollowConeCyl);
   GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);

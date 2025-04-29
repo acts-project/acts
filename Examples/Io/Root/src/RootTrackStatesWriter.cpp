@@ -12,28 +12,23 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/TrackHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cmath>
-#include <cstddef>
 #include <ios>
 #include <limits>
-#include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -43,8 +38,6 @@
 #include <TTree.h>
 
 namespace ActsExamples {
-
-class IndexSourceLink;
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -459,8 +452,8 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         m_t_eT.push_back(static_cast<float>(truthParams[Acts::eBoundTime]));
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas = state.effectiveProjector().transpose() *
-                                 state.effectiveCalibrated();
+        Acts::BoundVector meas = state.projectorSubspaceHelper().expandVector(
+            state.effectiveCalibrated());
         // extract local and global position
         Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
         Acts::Vector3 global =
@@ -478,31 +471,17 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
       auto getTrackParams = [&](unsigned int ipar)
           -> std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>> {
         if (ipar == ePredicted && state.hasPredicted()) {
-          return std::make_pair(state.predicted(), state.predictedCovariance());
+          return std::pair(state.predicted(), state.predictedCovariance());
         }
         if (ipar == eFiltered && state.hasFiltered()) {
-          return std::make_pair(state.filtered(), state.filteredCovariance());
+          return std::pair(state.filtered(), state.filteredCovariance());
         }
         if (ipar == eSmoothed && state.hasSmoothed()) {
-          return std::make_pair(state.smoothed(), state.smoothedCovariance());
+          return std::pair(state.smoothed(), state.smoothedCovariance());
         }
         if (ipar == eUnbiased && state.hasSmoothed() && state.hasProjector() &&
             state.hasCalibrated()) {
-          // calculate the unbiased track parameters (i.e. fitted track
-          // parameters with this measurement removed) using Eq.(12a)-Eq.(12c)
-          // of NIMA 262, 444 (1987)
-          auto m = state.effectiveCalibrated();
-          auto H = state.effectiveProjector();
-          auto V = state.effectiveCalibratedCovariance();
-          auto K =
-              (state.smoothedCovariance() * H.transpose() *
-               (H * state.smoothedCovariance() * H.transpose() - V).inverse())
-                  .eval();
-          auto unbiasedParamsVec =
-              state.smoothed() + K * (m - H * state.smoothed());
-          auto unbiasedParamsCov =
-              state.smoothedCovariance() - K * H * state.smoothedCovariance();
-          return std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
+          return Acts::calculateUnbiasedParametersCovariance(state);
         }
         return std::nullopt;
       };
@@ -620,7 +599,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
         residuals = parameters - truthParams;
         residuals[Acts::eBoundPhi] = Acts::detail::difference_periodic(
             parameters[Acts::eBoundPhi], truthParams[Acts::eBoundPhi],
-            2 * M_PI);
+            2 * std::numbers::pi);
         m_res_eLOC0[ipar].push_back(
             static_cast<float>(residuals[Acts::eBoundLoc0]));
         m_res_eLOC1[ipar].push_back(
@@ -654,7 +633,9 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
 
         if (ipar == ePredicted) {
           // local hit residual info
-          auto H = state.effectiveProjector();
+          auto H =
+              state.projectorSubspaceHelper().fullProjector().topLeftCorner(
+                  state.calibratedSize(), Acts::eBoundSize);
           auto V = state.effectiveCalibratedCovariance();
           auto resCov = V + H * covariance * H.transpose();
           Acts::ActsDynamicVector res =

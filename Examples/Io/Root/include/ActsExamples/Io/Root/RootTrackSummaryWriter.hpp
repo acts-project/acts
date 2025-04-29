@@ -49,9 +49,9 @@ class RootTrackSummaryWriter final : public WriterT<ConstTrackContainer> {
   struct Config {
     /// Input (fitted) tracks collection
     std::string inputTracks;
-    /// Input particles collection.
+    /// Input particles collection (optional).
     std::string inputParticles;
-    /// Input track-particle matching.
+    /// Input track-particle matching (optional).
     std::string inputTrackParticleMatching;
     /// Output filename.
     std::string filePath = "tracksummary.root";

@@ -20,9 +20,9 @@ with tempfile.TemporaryDirectory() as temp:
 
     tp = Path(temp)
     runTruthTrackingGsf(
-        setup.trackingGeometry,
-        setup.field,
-        setup.digiConfig,
+        trackingGeometry=setup.trackingGeometry,
+        field=setup.field,
+        digiConfigFile=setup.digiConfig,
         outputDir=tp,
         s=s,
     )

@@ -10,7 +10,7 @@ target_include_directories(
 target_link_libraries(
     ActsExamplesGeneratorsPythia8
     PUBLIC ActsCore ActsExamplesFramework ActsExamplesGenerators
-    PRIVATE Pythia8
+    PRIVATE Pythia8::Pythia8
 )
 
 install(

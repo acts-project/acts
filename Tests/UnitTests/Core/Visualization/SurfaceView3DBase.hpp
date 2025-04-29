@@ -29,6 +29,7 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <fstream>
+#include <numbers>
 #include <sstream>
 #include <string>
 
@@ -47,8 +48,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto identity = Transform3::Identity();
   std::stringstream cStream;
 
-  double halfPhiSector = M_PI / 4.;
-  double centralPhi = M_PI / 2.;
+  const double halfPhiSector = std::numbers::pi / 4.;
+  const double centralPhi = std::numbers::pi / 2.;
 
   ViewConfig sConfig = s_viewSensitive;
   sConfig.triangulate = triangulate;

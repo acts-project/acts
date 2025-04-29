@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -102,7 +103,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   std::vector<Acts::SourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > -1 && m_cfg.pickTrack != static_cast<int>(itrack)) {
+    if (m_cfg.pickTrack > -1 &&
+        static_cast<std::size_t>(m_cfg.pickTrack) != itrack) {
       continue;
     }
 
@@ -117,22 +119,25 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       continue;
     }
 
-    ACTS_VERBOSE("Initial parameters: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << " -> " << initialParams.direction().transpose());
+    ACTS_VERBOSE("Initial 4 position: "
+                 << initialParams.fourPosition(ctx.geoContext).transpose());
+    ACTS_VERBOSE(
+        "Initial direction: " << initialParams.direction().transpose());
+    ACTS_VERBOSE("Initial momentum: " << initialParams.absoluteMomentum());
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
-    for (auto hitIndex : protoTrack) {
+    for (auto measIndex : protoTrack) {
       ConstVariableBoundMeasurementProxy measurement =
-          measurements.getMeasurement(hitIndex);
-      trackSourceLinks.push_back(measurement.sourceLink());
+          measurements.getMeasurement(measIndex);
+      IndexSourceLink sourceLink(measurement.geometryId(), measIndex);
+      trackSourceLinks.push_back(Acts::SourceLink(sourceLink));
     }
 
-    ACTS_DEBUG("Invoke direct fitter for track " << itrack);
+    ACTS_VERBOSE("Invoke fitter for track " << itrack);
     auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,
                                calibrator, tracks);
 
@@ -142,8 +147,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       if (track.hasReferenceSurface()) {
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
+        ACTS_VERBOSE("Measurements: (prototrack->track): "
+                     << protoTrack.size() << " -> " << track.nMeasurements());
       } else {
-        ACTS_DEBUG("No fitted parameters for track " << itrack);
+        ACTS_VERBOSE("No fitted parameters for track " << itrack);
       }
     } else {
       ACTS_WARNING("Fit failed for track "

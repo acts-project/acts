@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Seeding/LegacyInternalSeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
@@ -318,7 +319,7 @@ inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
 
   if (m_checketa) {
     // filter SP outside of eta-range
-    float z = (fabs(r[2]) + m_zmax);
+    float z = std::abs(r[2]) + m_zmax;
     float x = r[0] * m_dzdrmin;
     float y = r[1] * m_dzdrmin;
     if ((z * z) < (x * x + y * y)) {

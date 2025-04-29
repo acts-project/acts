@@ -70,7 +70,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::SeedFinderOrthogonal<proxy_type> m_finder;
+  std::unique_ptr<Acts::SeedFinderOrthogonal<proxy_type>> m_finder{nullptr};
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};

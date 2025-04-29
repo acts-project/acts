@@ -46,13 +46,13 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
     const G4VPhysicalVolume* g4World = nullptr;
 
     /// Convert the length scale
-    ActsScalar scaleConversion = 1.;
+    double scaleConversion = 1.;
 
     /// Convert the material
     bool convertMaterial = true;
 
     /// Converted material thickness (< 0 indicates keeping original thickness)
-    ActsScalar convertedMaterialThickness = -1;
+    double convertedMaterialThickness = -1;
 
     /// Transformation to apply to the
     /// G4World volume
@@ -66,10 +66,10 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   /// Optional configuration for the KDTree
   struct kdtOptions {
     /// A set of ranges to separate the surfaces
-    Acts::RangeXD<kDim, Acts::ActsScalar> range;
+    Acts::RangeXD<kDim, double> range;
 
     /// A set of binning values to perform the separation
-    std::array<Acts::BinningValue, kDim> binningValues;
+    std::array<Acts::AxisDirection, kDim> binningValues;
 
     /// The maximum number of surfaces per leaf
     std::size_t leafSize = bSize;
@@ -88,8 +88,8 @@ class Geant4SurfaceProvider : public Acts::Experimental::ISurfacesProvider {
   /// Constructor
   /// @param config The configuration struct
   /// @param options The optional configuration for KDTree
-  Geant4SurfaceProvider(const Config& config,
-                        const kdtOptions& options = kdtOptions()) {
+  explicit Geant4SurfaceProvider(const Config& config,
+                                 const kdtOptions& options = kdtOptions()) {
     if (config.g4World == nullptr) {
       throw std::invalid_argument(
           "Geant4SurfaceProvider: No World volume provided");

@@ -7,10 +7,11 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <vector>
 
 #include <Eigen/Dense>
-#include <onnxruntime_cxx_api.h>
+#include <onnxruntime/onnxruntime_cxx_api.h>
 
 namespace Acts {
 

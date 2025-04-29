@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
+#include <numbers>
 
 namespace Acts {
 // forward declaration to avoid cyclic dependence
@@ -28,8 +29,8 @@ struct SeedFinderOrthogonalConfig {
   /// Seeding parameters for geometry settings and detector ROI
 
   // Limiting location of all measurements
-  float phiMin = -M_PI;
-  float phiMax = M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
+  float phiMax = std::numbers::pi_v<float>;
   /// limiting location of measurements
   float zMin = -2800 * Acts::UnitConstants::mm;
   float zMax = 2800 * Acts::UnitConstants::mm;

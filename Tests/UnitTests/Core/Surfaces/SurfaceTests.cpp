@@ -82,52 +82,60 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
   SurfaceStub surface(detElement);
+
   // associatedDetectorElement
   BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
-  // test  associatelayer, associatedLayer
+
+  // test associatelayer, associatedLayer
   surface.associateLayer(*pLayer);
   BOOST_CHECK_EQUAL(surface.associatedLayer(), pLayer.get());
+
   // associated Material is not set to the surface
   // it is set to the detector element surface though
   BOOST_CHECK_NE(surface.surfaceMaterial(), pMaterial.get());
+
   // center()
   CHECK_CLOSE_OR_SMALL(reference, surface.center(tgContext), 1e-6, 1e-9);
+
   // insideBounds
-  Vector2 localPosition{0.1, 3.0};
+  Vector2 localPosition{0.1, 3.};
   BOOST_CHECK(surface.insideBounds(localPosition));
   Vector2 outside{20., 20.};
   BOOST_CHECK(surface.insideBounds(
       outside));  // should return false, but doesn't because SurfaceStub has
                   // "no bounds" hard-coded
   Vector3 mom{100., 200., 300.};
+
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
                                   BoundaryTolerance::Infinite()));
   BOOST_CHECK(surface.isOnSurface(
       tgContext, reference, mom,
       BoundaryTolerance::None()));  // need to improve bounds()
+
   // referenceFrame()
   RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
   auto referenceFrame =
-      surface.referenceFrame(tgContext, Vector3{1, 2, 3}.normalized(),
-                             mom);  // need more complex case to test
+      surface.referenceFrame(tgContext, Vector3{1, 2, 3}.normalized(), mom);
   BOOST_CHECK_EQUAL(referenceFrame, unitary);
+
   // normal()
   auto normal = surface.normal(tgContext, Vector3{1, 2, 3}.normalized(),
-                               Vector3::UnitZ());  // needs more
-                                                   // complex test
+                               Vector3::UnitZ());
   Vector3 zero{0., 0., 0.};
   BOOST_CHECK_EQUAL(zero, normal);
+
   // pathCorrection is pure virtual
+
   // surfaceMaterial()
   auto pNewMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   surface.assignSurfaceMaterial(pNewMaterial);
-  BOOST_CHECK_EQUAL(surface.surfaceMaterial(),
-                    pNewMaterial.get());  // passes ??
-  //
+  BOOST_CHECK_EQUAL(surface.surfaceMaterial(), pNewMaterial.get());
+
   CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
+
   // type() is pure virtual
 }
 
@@ -140,6 +148,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Translation3 translation2{1., 1., 2.};
   auto pTransform1 = Transform3(translation1);
   auto pTransform2 = Transform3(translation2);
+
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
@@ -149,27 +158,20 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
   DetectorElementStub detElement2{pTransform1, pPlanarBound, 0.3, pMaterial};
   DetectorElementStub detElement3{pTransform2, pPlanarBound, 0.3, pMaterial};
-  //
+
   SurfaceStub surface1(detElement1);
   SurfaceStub surface2(detElement1);  // 1 and 2 are the same
   SurfaceStub surface3(detElement2);  // 3 differs in thickness
   SurfaceStub surface4(detElement3);  // 4 has a different transform and id
   SurfaceStub surface5(detElement1);
   surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface material
-  //
+
   BOOST_CHECK(surface1 == surface2);
-  //
-  // remove test for the moment,
-  // surfaces do not have a concept of thickness (only detector elements have)
-  // only thickness is different here
-  //
-  // BOOST_CHECK_NE(surface1, surface3);  // will fail
-  //
+  BOOST_CHECK(surface1 != surface3);
   BOOST_CHECK(surface1 != surface4);
-  //
   BOOST_CHECK(surface1 != surface5);
-  //
   BOOST_CHECK(surface1 != *planeSurface);
+
   // Test the getSharedPtr
   const auto surfacePtr = Surface::makeShared<const SurfaceStub>(detElement1);
   const auto sharedSurfacePtr = surfacePtr->getSharedPtr();

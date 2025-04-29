@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(string_hashes) {
   BOOST_CHECK_EQUAL("abc"_hash, 440920331);
 
   std::string s = "abc";
-  BOOST_CHECK_EQUAL(hashString(s), 440920331);
+  BOOST_CHECK_EQUAL(hashStringDynamic(s), 440920331);
   constexpr std::string_view sv{"abc"};
   BOOST_CHECK_EQUAL(hashString(sv), 440920331);
   static_assert(hashString(sv) == 440920331, "Invalid");

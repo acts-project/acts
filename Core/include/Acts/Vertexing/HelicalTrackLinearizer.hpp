@@ -53,16 +53,17 @@ class HelicalTrackLinearizer {
 
     /// Tolerance determining how close we need to get to the Perigee surface to
     /// reach it during propagation
-    ActsScalar targetTolerance = 1e-12;
+    double targetTolerance = 1e-12;
   };
 
   /// @brief Constructor
   ///
   /// @param config Configuration object
   /// @param _logger a logger instance
-  HelicalTrackLinearizer(const Config& config,
-                         std::unique_ptr<const Logger> _logger =
-                             getDefaultLogger("HelTrkLinProp", Logging::INFO))
+  explicit HelicalTrackLinearizer(
+      const Config& config,
+      std::unique_ptr<const Logger> _logger = getDefaultLogger("HelTrkLinProp",
+                                                               Logging::INFO))
       : m_cfg(config), m_logger{std::move(_logger)} {
     if (!m_cfg.propagator) {
       throw std::invalid_argument("HelicalTrackLinearizer: propagator is null");

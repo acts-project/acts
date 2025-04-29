@@ -47,7 +47,7 @@ class ScalingCalibrator : public MeasurementCalibrator {
     }
   };
 
-  ScalingCalibrator(const std::filesystem::path& path);
+  explicit ScalingCalibrator(const std::filesystem::path& path);
 
   void calibrate(
       const MeasurementContainer& measurements,

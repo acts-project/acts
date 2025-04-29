@@ -30,7 +30,7 @@ pos4[eTime] = 12.3;
 BoundVector pars;
 pars[eBoundLoc0] = 1.2;
 ...
-pars[eBoundPhi] = M_PI;
+pars[eBoundPhi] = std::numbers::pi;
 ...
 ```
 

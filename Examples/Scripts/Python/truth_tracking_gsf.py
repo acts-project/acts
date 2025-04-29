@@ -26,11 +26,12 @@ def runTruthTrackingGsf(
         MomentumConfig,
         addFatras,
         addDigitization,
+        ParticleSelectorConfig,
+        addDigiParticleSelection,
     )
     from acts.examples.reconstruction import (
         addSeeding,
         SeedingAlgorithm,
-        TruthSeedRanges,
         addTruthTrackingGsf,
     )
 
@@ -67,7 +68,7 @@ def runTruthTrackingGsf(
             acts.examples.RootParticleReader(
                 level=acts.logging.INFO,
                 filePath=str(inputParticlePath.resolve()),
-                outputParticles="particles_input",
+                outputParticles="particles_generated",
             )
         )
 
@@ -87,17 +88,24 @@ def runTruthTrackingGsf(
         rnd=rnd,
     )
 
+    addDigiParticleSelection(
+        s,
+        ParticleSelectorConfig(
+            pt=(0.9 * u.GeV, None),
+            measurements=(7, None),
+            removeNeutral=True,
+            removeSecondaries=True,
+        ),
+    )
+
     addSeeding(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
-        inputParticles="particles_input",
+        inputParticles="particles_generated",
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
         particleHypothesis=acts.ParticleHypothesis.electron,
-        truthSeedRanges=TruthSeedRanges(
-            nHits=(7, None),
-        ),
     )
 
     addTruthTrackingGsf(
@@ -122,7 +130,7 @@ def runTruthTrackingGsf(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -134,7 +142,7 @@ def runTruthTrackingGsf(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "tracksummary_gsf.root"),
             writeGsfSpecific=True,
@@ -145,7 +153,7 @@ def runTruthTrackingGsf(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
             inputTracks="tracks",
-            inputParticles="truth_seeds_selected",
+            inputParticles="particles_selected",
             inputTrackParticleMatching="track_particle_matching",
             filePath=str(outputDir / "performance_gsf.root"),
         )
@@ -160,13 +168,15 @@ if "__main__" == __name__:
     # ODD
     from acts.examples.odd import getOpenDataDetector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
     digiConfigFile = (
         srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
     )
 
     ## GenericDetector
-    # detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
+    # detector = acts.examples.GenericDetector()
+    # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
     #     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"

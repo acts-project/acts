@@ -26,6 +26,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <optional>
 #include <vector>
 
@@ -81,9 +82,9 @@ struct EventDataView3D {
     // Now generate the ellipse points
     std::vector<Vector3> ellipse;
     ellipse.reserve(lseg);
-    double thetaStep = 2 * M_PI / lseg;
+    double thetaStep = 2 * std::numbers::pi / lseg;
     for (std::size_t it = 0; it < lseg; ++it) {
-      double phi = -M_PI + it * thetaStep;
+      double phi = -std::numbers::pi + it * thetaStep;
       double cphi = std::cos(phi);
       double sphi = std::sin(phi);
       double x = lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);

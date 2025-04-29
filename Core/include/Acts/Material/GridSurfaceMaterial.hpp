@@ -11,10 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AnyGridView.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAccessHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <ostream>
 #include <stdexcept>
@@ -22,9 +23,18 @@
 
 namespace Acts {
 
+/// @brief Base class for material accessors, this is needed
+/// for the I/O of the different grid material types, in the actual
+/// implementation the material accessor is a template parameter.
+struct IGridMaterialAccessor {
+  virtual ~IGridMaterialAccessor() = default;
+};
+
 /// @brief  This is an accessor for cases where the material is directly stored
 /// in the grid, it simply forwards the grid entry in const and non-const way.
-struct GridMaterialAccessor {
+struct GridMaterialAccessor : public IGridMaterialAccessor {
+  /// @brief  Broadcast the type of the material slab
+  using grid_value_type = MaterialSlab;
   /// @brief  Direct const access to the material slap sorted in the grid
   /// @tparam grid_type the type of the grid, also defines the point type
   /// @param grid the grid
@@ -44,17 +54,24 @@ struct GridMaterialAccessor {
   ///
   /// @note this is not particularly fast
   template <typename grid_type>
-  void scale(grid_type& grid, ActsScalar scale) {
+  void scale(grid_type& grid, double scale) {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
-      grid.at(ib).scaleThickness(scale);
+      grid.at(ib).scaleThickness(static_cast<float>(scale));
     }
   }
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a vector
 /// and then indexed by the grid
-struct IndexedMaterialAccessor {
+struct IndexedMaterialAccessor : public IGridMaterialAccessor {
+  /// Broadcast the grid_value_type
+  using grid_value_type = std::size_t;
+
+  /// @brief The internal storage of the material
+  explicit IndexedMaterialAccessor(std::vector<MaterialSlab>&& mmaterial)
+      : IGridMaterialAccessor(), material(std::move(mmaterial)) {}
+
   /// @brief The internal storage of the material
   std::vector<MaterialSlab> material;
   /// @brief  Direct const access to the material slap sorted in the grid
@@ -74,16 +91,25 @@ struct IndexedMaterialAccessor {
   ///
   /// @param scale the amount of the scaling
   template <typename grid_type>
-  void scale(grid_type& /*grid*/, ActsScalar scale) {
+  void scale(grid_type& /*grid*/, double scale) {
     for (auto& m : material) {
-      m.scaleThickness(scale);
+      m.scaleThickness(static_cast<float>(scale));
     }
   }
 };
 
 /// @brief  This is an accessor for cases where the material is filled in a global
 /// material vector that is accessed from the different material grids.
-struct GloballyIndexedMaterialAccessor {
+struct GloballyIndexedMaterialAccessor : public IGridMaterialAccessor {
+  explicit GloballyIndexedMaterialAccessor(
+      std::shared_ptr<std::vector<MaterialSlab>> gMaterial, bool shared = false)
+      : IGridMaterialAccessor(),
+        globalMaterial(std::move(gMaterial)),
+        sharedEntries(shared) {}
+
+  /// Broadcast the grid_value_type
+  using grid_value_type = std::size_t;
+
   /// @brief The internal storage of the material
   std::shared_ptr<std::vector<MaterialSlab>> globalMaterial = nullptr;
 
@@ -118,7 +144,7 @@ struct GloballyIndexedMaterialAccessor {
   /// outcome is unpredictable.
   ///
   template <typename grid_type>
-  void scale(grid_type& grid, ActsScalar scale) {
+  void scale(grid_type& grid, double scale) {
     if (sharedEntries) {
       throw std::invalid_argument(
           "GloballyIndexedMaterialAccessor: shared entry scaling is not "
@@ -127,9 +153,33 @@ struct GloballyIndexedMaterialAccessor {
     // Loop through the grid bins, get the indices and scale the material
     for (std::size_t ib = 0; ib < grid.size(); ++ib) {
       auto index = grid.at(ib);
-      (*globalMaterial)[index].scaleThickness(scale);
+      (*globalMaterial)[index].scaleThickness(static_cast<float>(scale));
     }
   }
+};
+
+/// Intermediate interface to the grid surface material given access to the grid
+/// and the material accessor.
+template <typename grid_value_t>
+class IGridSurfaceMaterial : public ISurfaceMaterial {
+ public:
+  /// @brief Accessor to the grid interface
+  virtual const IGrid& grid() const = 0;
+
+  /// @brief Accessor to the material accessor
+  virtual const IGridMaterialAccessor& materialAccessor() const = 0;
+
+  /// @brief Accessor to the bound to grid local delegate
+  virtual const GridAccess::IBoundToGridLocal& boundToGridLocal() const = 0;
+
+  /// @brief Accessor to the global to grid local delegate
+  virtual const GridAccess::IGlobalToGridLocal& globalToGridLocal() const = 0;
+
+  /// Return the type erased grid view
+  virtual AnyGridView<grid_value_t> gridView() = 0;
+
+  /// Return the type erased (const) grid view
+  virtual AnyGridConstView<grid_value_t> gridConstView() const = 0;
 };
 
 /// @brief GridSurfaceMaterialT
@@ -142,8 +192,10 @@ struct GloballyIndexedMaterialAccessor {
 ///
 /// It is templated on the material type and a slab accessor type in order
 /// to allow it to be used in the material recording as well.
-template <typename grid_t, typename material_accessor_t = GridMaterialAccessor>
-class GridSurfaceMaterialT : public ISurfaceMaterial {
+template <typename grid_t, typename material_accessor_t>
+class GridSurfaceMaterialT
+    : public IGridSurfaceMaterial<
+          typename material_accessor_t::grid_value_type> {
  public:
   // Definition of bound (on surface) to grid local representation delegate
   using BoundToGridLocalDelegate =
@@ -197,9 +249,9 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
 
   /// Scale operator
   ///
-  /// @param scale is the scale factor applied
-  ISurfaceMaterial& operator*=(ActsScalar scale) final {
-    m_materialAccessor.scale(m_grid, scale);
+  /// @param factor is the scale factor applied
+  ISurfaceMaterial& scale(double factor) final {
+    m_materialAccessor.scale(m_grid, factor);
     return (*this);
   }
 
@@ -210,20 +262,42 @@ class GridSurfaceMaterialT : public ISurfaceMaterial {
   }
 
   /// @brief Accessor to the grid
-  const grid_type& grid() const { return m_grid; }
+  const grid_type& grid() const final { return m_grid; }
+
+  // Return a type-erased indexed grid view
+  AnyGridView<typename material_accessor_t::grid_value_type> gridView() final {
+    return AnyGridView<typename material_accessor_t::grid_value_type>(m_grid);
+  }
+
+  // Return a type-erased indexed const grid view
+  AnyGridConstView<typename material_accessor_t::grid_value_type>
+  gridConstView() const final {
+    return AnyGridConstView<typename material_accessor_t::grid_value_type>(
+        m_grid);
+  }
 
   /// @brief Accessor to the material accessor
-  const material_accessor_type& materialAccessor() const {
+  const material_accessor_type& materialAccessor() const final {
     return m_materialAccessor;
   }
 
   /// @brief Accessor to the bound to grid local delegate
-  const BoundToGridLocalDelegate& boundToGridLocal() const {
+  const GridAccess::IBoundToGridLocal& boundToGridLocal() const final {
+    return *(m_boundToGridLocal.instance());
+  }
+
+  /// @brief Accessor to the bound to grid local delegate
+  const BoundToGridLocalDelegate& boundToGridLocalDelegate() const {
     return m_boundToGridLocal;
   }
 
   /// @brief Accessor to the global to grid local delegate
-  const GlobalToGridLocalDelegate& globalToGridLocal() const {
+  const GridAccess::IGlobalToGridLocal& globalToGridLocal() const final {
+    return *(m_globalToGridLocal.instance());
+  }
+
+  /// @brief Accessor to the global to grid local delegate
+  const GlobalToGridLocalDelegate& globalToGridLocalDelegate() const {
     return m_globalToGridLocal;
   }
 
@@ -253,6 +327,7 @@ using GloballyIndexedSurfaceMaterial =
 
 // Grid Surface material
 template <typename grid_type>
-using GridSurfaceMaterial = GridSurfaceMaterialT<grid_type>;
+using GridSurfaceMaterial =
+    GridSurfaceMaterialT<grid_type, GridMaterialAccessor>;
 
 }  // namespace Acts

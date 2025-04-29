@@ -20,7 +20,7 @@
 
 class G4Event;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class SimParticleTranslation
 ///
@@ -52,10 +52,10 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  SimParticleTranslation(const Config& cfg,
-                         std::unique_ptr<const Acts::Logger> logger =
-                             Acts::getDefaultLogger("SimParticleTranslation",
-                                                    Acts::Logging::INFO));
+  explicit SimParticleTranslation(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "SimParticleTranslation", Acts::Logging::INFO));
 
   ~SimParticleTranslation() override;
 
@@ -81,4 +81,4 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

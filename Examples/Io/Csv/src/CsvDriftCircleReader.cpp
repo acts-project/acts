@@ -61,10 +61,9 @@ ActsExamples::ProcessCode ActsExamples::CsvDriftCircleReader::read(
   MuonDriftCircleData data;
 
   while (reader.read(data)) {
-    ActsFatras::Hit::Vector3 tube_pos{
-        data.tubePositionx * Acts::UnitConstants::mm,
-        data.tubePositiony * Acts::UnitConstants::mm,
-        data.tubePositionz * Acts::UnitConstants::mm};
+    Acts::Vector3 tube_pos{data.tubePositionx * Acts::UnitConstants::mm,
+                           data.tubePositiony * Acts::UnitConstants::mm,
+                           data.tubePositionz * Acts::UnitConstants::mm};
 
     DriftCircles.push_back(DriftCircle(std::move(tube_pos), data.driftRadius,
                                        0.0f, data.stationName, data.stationEta,

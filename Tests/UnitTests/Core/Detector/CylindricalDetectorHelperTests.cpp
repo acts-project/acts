@@ -30,6 +30,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -110,10 +111,10 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("Connect: R", logLevel));
   ACTS_INFO("*** Test: connect DetectorVolumes in R, create proto container");
   // Test with different opening angles
-  std::vector<ActsScalar> testOpenings = {M_PI, 0.5 * M_PI};
+  std::vector<double> testOpenings = {std::numbers::pi, std::numbers::pi / 2.};
 
-  std::vector<ActsScalar> radii = {0., 10., 100., 200.};
-  ActsScalar halfZ = 100.;
+  std::vector<double> radii = {0., 10., 100., 200.};
+  double halfZ = 100.;
 
   // This should work for full cylinder and sector openings
   for (auto [io, opening] : enumerate(testOpenings)) {
@@ -169,7 +170,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
     const auto& zBoundaries = boundaries[1u];
 
     // Check the radii
-    std::vector<ActsScalar> zvalues = {-halfZ, halfZ};
+    std::vector<double> zvalues = {-halfZ, halfZ};
     BOOST_CHECK(radii == rBoundaries);
     BOOST_CHECK(zvalues == zBoundaries);
   }
@@ -223,8 +224,8 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
 
   // @TODO: test with different transforms, this should work in, not used yet
   std::vector<Transform3> transforms = {Transform3::Identity()};
-  std::vector<std::array<ActsScalar, 2>> radii = {{0., 100.}, {20., 120.}};
-  std::vector<ActsScalar> zValues = {-100., -20, 10., 100., 200.};
+  std::vector<std::array<double, 2>> radii = {{0., 100.}, {20., 120.}};
+  std::vector<double> zValues = {-100., -20, 10., 100., 200.};
 
   for (auto [it, t] : enumerate(transforms)) {
     ACTS_INFO("    -> test series with transform id " << it);
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
           auto cBounds = std::make_unique<CylinderVolumeBounds>(
               r[0], r[1], 0.5 * (z - zValues[i - 1u]));
           // z center
-          ActsScalar zCenter = 0.5 * (z + zValues[i - 1u]);
+          double zCenter = 0.5 * (z + zValues[i - 1u]);
           Transform3 ti = Transform3::Identity();
           ti.pretranslate(t.translation() +
                           zCenter * t.rotation().matrix().col(2));
@@ -345,7 +346,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
 
   std::vector<Transform3> transforms = {Transform3::Identity()};
   unsigned int phiSectors = 5;
-  ActsScalar phiHalfSector = M_PI / phiSectors;
+  double phiHalfSector = std::numbers::pi / phiSectors;
 
   for (auto [it, t] : enumerate(transforms)) {
     ACTS_INFO("    -> test series with transform id " << it);
@@ -354,7 +355,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
     for (unsigned int i = 0; i < phiSectors; ++i) {
       auto cBounds = std::make_unique<CylinderVolumeBounds>(
           10., 100., 100., phiHalfSector,
-          -M_PI + (2u * i + 1u) * phiHalfSector);
+          -std::numbers::pi + (2u * i + 1u) * phiHalfSector);
 
       // create the volume
       phiVolumes.push_back(DetectorVolumeFactory::construct(
@@ -405,11 +406,11 @@ BOOST_AUTO_TEST_CASE(WrapVolumeinRZ) {
   std::vector<Transform3> transforms = {Transform3::Identity()};
 
   // Test with different inner radii
-  std::vector<std::array<ActsScalar, 3u>> radii = {{0., 100., 500.},
-                                                   {20., 120., 500.}};
+  std::vector<std::array<double, 3u>> radii = {{0., 100., 500.},
+                                               {20., 120., 500.}};
 
-  ActsScalar innerHalfZ = 150.;
-  ActsScalar outerHalfZ = 175.;
+  double innerHalfZ = 150.;
+  double outerHalfZ = 175.;
 
   // Set up all the different tests
   for (auto [it, tf] : enumerate(transforms)) {
@@ -453,15 +454,15 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
 
   auto transform = Transform3::Identity();
 
-  std::vector<ActsScalar> innerMostRadii = {0., 2.};
+  std::vector<double> innerMostRadii = {0., 2.};
 
   for (auto [ir, imr] : enumerate(innerMostRadii)) {
     ACTS_INFO("    -> test series innermost radius setup "
               << innerMostRadii[ir]);
 
     // A container in R
-    std::vector<ActsScalar> radii = {25., 100., 200.};
-    ActsScalar halfZ = 200;
+    std::vector<double> radii = {25., 100., 200.};
+    double halfZ = 200;
 
     // An innermost Pipe
     auto bBounds =
@@ -492,14 +493,14 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
 
     auto protoContainerInR = connectInR(tContext, rVolumes, {}, logLevel);
 
-    std::vector<ActsScalar> zValues = {-200., -120, 10., 100., 200.};
+    std::vector<double> zValues = {-200., -120, 10., 100., 200.};
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
     for (auto [i, z] : enumerate(zValues)) {
       if (i > 0) {
         auto cBounds = std::make_unique<CylinderVolumeBounds>(
             200., 300., 0.5 * (z - zValues[i - 1u]));
         // z center
-        ActsScalar zCenter = 0.5 * (z + zValues[i - 1u]);
+        double zCenter = 0.5 * (z + zValues[i - 1u]);
         Transform3 ti = transform;
         ti.pretranslate(transform.translation() +
                         zCenter * transform.rotation().matrix().col(2));
@@ -583,13 +584,13 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
   ACTS_INFO("*** Test: create a container in Z-R by wrapping.");
 
   // Test with different inner radii
-  std::vector<std::array<ActsScalar, 3u>> radii = {{0., 100., 500.},
-                                                   {20., 120., 500.}};
+  std::vector<std::array<double, 3u>> radii = {{0., 100., 500.},
+                                               {20., 120., 500.}};
 
-  ActsScalar innerHalfZ = 150.;
-  ActsScalar innerBarrelHalfZ = 75.;
-  ActsScalar innerEndcapHalfZ = 0.5 * (innerHalfZ - innerBarrelHalfZ);
-  ActsScalar outerHalfZ = 175.;
+  double innerHalfZ = 150.;
+  double innerBarrelHalfZ = 75.;
+  double innerEndcapHalfZ = 0.5 * (innerHalfZ - innerBarrelHalfZ);
+  double outerHalfZ = 175.;
 
   Transform3 tf = Transform3::Identity();
 
@@ -689,10 +690,10 @@ BOOST_AUTO_TEST_CASE(RZPhiBoundaries) {
       rzphiBoundaries(tContext, volumes, 0., Acts::Logging::VERBOSE);
   BOOST_CHECK_EQUAL(boundaries.size(), 3u);
   // Check the r boundaries
-  std::vector<ActsScalar> rBoundaries = {0., 20., 40., 60., 120.};
+  std::vector<double> rBoundaries = {0., 20., 40., 60., 120.};
   BOOST_CHECK(boundaries[0u] == rBoundaries);
   // Check the z boundaries
-  std::vector<ActsScalar> zBoundaries = {-100., -90., 90., 100.};
+  std::vector<double> zBoundaries = {-100., -90., 90., 100.};
   BOOST_CHECK(boundaries[1u] == zBoundaries);
   BOOST_CHECK_EQUAL(boundaries[2u].size(), 2u);
 }

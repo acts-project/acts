@@ -53,7 +53,7 @@ inline ActsMatrix<2, 3> freeToSphericalDirectionJacobian(
     const Vector3& direction) {
   auto [cosPhi, sinPhi, cosTheta, sinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
-  ActsScalar invSinTheta = 1. / sinTheta;
+  double invSinTheta = 1. / sinTheta;
 
   // clang-format off
   ActsMatrix<2, 3> jacobian;

@@ -21,7 +21,6 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
@@ -31,9 +30,7 @@
 #include <array>
 #include <cmath>
 #include <list>
-#include <map>
 #include <regex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -429,7 +426,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     plbConfig.layerIdentification = subDetector.name();
     plbConfig.centralLayerRadii = std::vector<double>(1, 0.5 * (rMax + rMin));
     plbConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
-    plbConfig.centralLayerThickness = std::vector<double>(1, fabs(rMax - rMin));
+    plbConfig.centralLayerThickness =
+        std::vector<double>(1, std::abs(rMax - rMin));
     plbConfig.centralLayerMaterial = {plMaterial};
     auto pcLayerBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         plbConfig, logger.clone(std::string("D2A_PL:") + subDetector.name()));

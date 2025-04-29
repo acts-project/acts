@@ -88,10 +88,9 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
 
   // create the function parametrising the drift radius uncertainty
   auto houghWidth_fromDC = [](double, const DriftCircle& DC) {
-    return std::min(DC.rDriftError() * 3.,
-                    1.0);  // scale reported errors up to at least 1mm or 3
-                           // times the reported error as drift circle calib not
-                           // fully reliable at this stage
+    // scale reported errors up to at least 1mm or 3 times the reported error as
+    // drift circle calib not fully reliable at this stage
+    return std::min(DC.rDriftError() * 3., 1.0);
   };
 
   // store the true parameters
@@ -100,12 +99,12 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
   // instantiate the hough plane
   Acts::HoughTransformUtils::HoughPlane<Acts::GeometryIdentifier::Value>
       houghPlane(planeCfg);
-  // also insantiate the peak finder
+  // also instantiate the peak finder
   Acts::HoughTransformUtils::PeakFinders::IslandsAroundMax<
       Acts::GeometryIdentifier::Value>
       peakFinder(peakFinderCfg);
 
-  // loop pver true hirs
+  // loop over true hits
   for (auto& SH : gotSH) {
     // read the identifier
     MuonMdtIdentifierFields detailedInfo =
@@ -113,10 +112,9 @@ ActsExamples::ProcessCode ActsExamples::MuonHoughSeeder::execute(
     // store the true parameters
     truePatterns.emplace_back(SH.direction().y() / SH.direction().z(),
                               SH.fourPosition().y());
-    // std::cout<<"station name=" <<
-    // static_cast<int>(SH.stationName)<<std::endl;
-    std::cout << "direction = " << SH.direction().y() << std::endl;
-    std::cout << "fourposition y = " << SH.fourPosition().y() << std::endl;
+    // ACTS_VERBOSE("station name=" << static_cast<int>(SH.stationName));
+    ACTS_VERBOSE("direction = " << SH.direction().y());
+    ACTS_VERBOSE("fourposition y = " << SH.fourPosition().y());
     std::cin.ignore();
     // reset the hough plane
     houghPlane.reset();

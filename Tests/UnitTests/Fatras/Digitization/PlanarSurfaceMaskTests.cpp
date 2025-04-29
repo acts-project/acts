@@ -28,6 +28,7 @@
 #include <cmath>
 #include <fstream>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -81,8 +82,8 @@ BOOST_AUTO_TEST_CASE(PlaneMaskRectangleBounds) {
 }
 
 BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
-  auto discRadial =
-      std::make_shared<Acts::RadialBounds>(2., 7.5, M_PI_4, M_PI_2);
+  auto discRadial = std::make_shared<Acts::RadialBounds>(
+      2., 7.5, std::numbers::pi / 4., std::numbers::pi / 2.);
   auto discSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
       Acts::Transform3::Identity(), discRadial);
 
@@ -117,13 +118,14 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
   /// Case four: outside phi min
   segment = {Acts::Vector2(2.8, 2.5), Acts::Vector2(0., 3.5)};
   clipped = psm.apply(*discSurface, segment).value();
-  CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[0]), M_PI_4,
+  CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[0]), std::numbers::pi / 4.,
                   Acts::s_epsilon);
 
   /// Case five: outside phi max
   segment = {Acts::Vector2(0., 3.5), Acts::Vector2(-8., 5.)};
   clipped = psm.apply(*discSurface, segment).value();
-  CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[1]), M_PI_2 + M_PI_4,
+  CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[1]),
+                  std::numbers::pi / 2. + std::numbers::pi / 4.,
                   Acts::s_epsilon);
 }
 

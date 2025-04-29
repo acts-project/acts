@@ -24,12 +24,12 @@ BOOST_AUTO_TEST_CASE(jacobian_test) {
   CurvilinearSurface surface = CurvilinearSurface(direction);
   FreeToBoundMatrix f2cJacobian = surface.freeToBoundJacobian();
 
-  ActsScalar phi = VectorHelpers::phi(direction);
-  ActsScalar theta = VectorHelpers::theta(direction);
-  ActsScalar sinPhi = std::sin(phi);
-  ActsScalar cosPhi = std::cos(phi);
-  ActsScalar sinTheta = std::sin(theta);
-  ActsScalar cosTheta = std::cos(theta);
+  double phi = VectorHelpers::phi(direction);
+  double theta = VectorHelpers::theta(direction);
+  double sinPhi = std::sin(phi);
+  double cosPhi = std::cos(phi);
+  double sinTheta = std::sin(theta);
+  double cosTheta = std::cos(theta);
 
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos0), -sinPhi, 1e-5);
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), cosPhi, 1e-5);

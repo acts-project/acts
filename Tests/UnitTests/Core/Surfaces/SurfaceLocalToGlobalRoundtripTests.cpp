@@ -30,11 +30,7 @@
 
 #include <cmath>
 #include <limits>
-#include <memory>
-#include <ostream>
-#include <type_traits>
-#include <utility>
-#include <vector>
+#include <numbers>
 
 namespace {
 
@@ -75,14 +71,17 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
 // test datasets
 
 // local positions
-const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.25);
-const auto posPositiveNonzero = bdata::xrange(0.25, 1.0, 0.25);
-const auto posPositive = bdata::make(0.0) + posPositiveNonzero;
-const auto posSymmetric = bdata::xrange(-1.0, 1.0, 0.25);
+const auto posAngle = bdata::xrange(-std::numbers::pi, std::numbers::pi, 0.25);
+const auto posPositiveNonzero = bdata::xrange(0.25, 1., 0.25);
+const auto posPositive = bdata::make(0.) + posPositiveNonzero;
+const auto posSymmetric = bdata::xrange(-1., 1., 0.25);
 // direction angles
-const auto phis = bdata::xrange(-M_PI, M_PI, M_PI_4);
-const auto thetasNoForwardBackward = bdata::xrange(M_PI_4, M_PI, M_PI_4);
-const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
+const auto phis =
+    bdata::xrange(-std::numbers::pi, std::numbers::pi, std::numbers::pi / 4.);
+const auto thetasNoForwardBackward = bdata::xrange(
+    std::numbers::pi / 4., std::numbers::pi, std::numbers::pi / 4.);
+const auto thetas =
+    bdata::make({0., std::numbers::pi}) + thetasNoForwardBackward;
 
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
@@ -93,7 +92,7 @@ const auto cones = bdata::make({
 });
 const auto cylinders = bdata::make({
     Surface::makeShared<CylinderSurface>(Transform3::Identity(),
-                                         10.0 /* radius */, 100 /* half z */),
+                                         10. /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
     Surface::makeShared<DiscSurface>(Transform3::Identity(), 0 /* radius min */,
@@ -108,8 +107,8 @@ const auto planes = bdata::make({
     CurvilinearSurface(Vector3(3, -4, 5), Vector3::UnitZ()).planeSurface(),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(Transform3::Identity(), 2.0 /* radius */,
-                                      200.0 /* half z */),
+    Surface::makeShared<StrawSurface>(Transform3::Identity(), 2. /* radius */,
+                                      200. /* half z */),
 });
 
 }  // namespace
@@ -123,7 +122,7 @@ BOOST_DATA_TEST_CASE(ConeSurface,
   // local parameter r*phi has limits that depend on the z position
   const auto r = lz * surface->bounds().tanAlpha();
   // local coordinates are singular at z = 0 -> normalize local phi
-  runTest(*surface, (0 < lz) ? (r * lphi) : 0.0, lz, phi, theta);
+  runTest(*surface, (0 < lz) ? (r * lphi) : 0., lz, phi, theta);
 }
 
 BOOST_DATA_TEST_CASE(CylinderSurface,
@@ -135,7 +134,7 @@ BOOST_DATA_TEST_CASE(CylinderSurface,
 BOOST_DATA_TEST_CASE(DiscSurface, discs* posPositive* posAngle* phis* thetas,
                      surface, lr, lphi, phi, theta) {
   // local coordinates are singular at r = 0 -> normalize local phi
-  runTest(*surface, lr, (0 < lr) ? lphi : 0.0, phi, theta);
+  runTest(*surface, lr, (0 < lr) ? lphi : 0., phi, theta);
 }
 
 BOOST_DATA_TEST_CASE(

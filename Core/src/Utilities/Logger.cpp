@@ -100,9 +100,24 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   }
 };
 
+class DummyPrintPolicy final : public OutputPrintPolicy {
+ public:
+  void flush(const Level& /*lvl*/, const std::string& /*input*/) override {}
+
+  const std::string& name() const override {
+    const static std::string s_name = "Dummy";
+    return s_name;
+  }
+
+  std::unique_ptr<OutputPrintPolicy> clone(
+      const std::string& /*name*/) const override {
+    return std::make_unique<DummyPrintPolicy>();
+  }
+};
+
 std::unique_ptr<const Logger> makeDummyLogger() {
   using namespace Logging;
-  auto output = std::make_unique<DefaultPrintPolicy>(&std::cout);
+  auto output = std::make_unique<DummyPrintPolicy>();
   auto print = std::make_unique<NeverFilterPolicy>();
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }

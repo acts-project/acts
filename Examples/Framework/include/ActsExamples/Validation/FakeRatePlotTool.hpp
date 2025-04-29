@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstddef>
 #include <map>
@@ -86,7 +86,7 @@ class FakeRatePlotTool {
   /// @param nTruthMatchedTracks the number of truth-Matched tracks
   /// @param nFakeTracks the number of fake tracks
   void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const ActsFatras::Particle& truthParticle,
+            const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
 
   /// @brief write the fake rate plots to file

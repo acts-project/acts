@@ -34,9 +34,10 @@ BOOST_AUTO_TEST_SUITE(PortalJsonConverter)
 BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   std::ofstream out;
 
-  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                                          Acts::Vector3(0., 1., 0.))
-                     .planeSurface();
+  std::shared_ptr<Acts::PlaneSurface> surface =
+      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                               Acts::Vector3(0., 1., 0.))
+          .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
@@ -68,18 +69,19 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   auto forwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                                          Acts::Vector3(0., 1., 0.))
-                     .planeSurface();
+  std::shared_ptr<Acts::PlaneSurface> surface =
+      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                               Acts::Vector3(0., 1., 0.))
+          .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
   BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
   Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, forwardVolume, Acts::Direction::Forward);
+      *portal, forwardVolume, Acts::Direction::Forward());
   Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, backwardVolume, Acts::Direction::Backward);
+      *portal, backwardVolume, Acts::Direction::Backward());
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
       forwardVolume.get(), backwardVolume.get()};
@@ -115,9 +117,10 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
 
   auto backwardVolume = std::make_shared<Acts::Experimental::DetectorVolume>();
 
-  auto surface = Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
-                                          Acts::Vector3(0., 1., 0.))
-                     .planeSurface();
+  std::shared_ptr<Acts::PlaneSurface> surface =
+      Acts::CurvilinearSurface(Acts::Vector3(0., 0., 0.),
+                               Acts::Vector3(0., 1., 0.))
+          .planeSurface();
 
   auto portal =
       std::make_shared<Acts::Experimental::Portal>(std::move(surface));
@@ -125,11 +128,12 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
 
   // Attaching the portals
   Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
-      *portal, backwardVolume, Acts::Direction::Backward);
+      *portal, backwardVolume, Acts::Direction::Backward());
 
   Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
       tContext, *portal, {forwardVolumeA, forwardVolumeB, forwardVolumeC},
-      Acts::Direction::Forward, {-100, 10, 20, 200}, Acts::BinningValue::binX);
+      Acts::Direction::Forward(), {-100, 10, 20, 200},
+      Acts::AxisDirection::AxisX);
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
       forwardVolumeA.get(), forwardVolumeB.get(), forwardVolumeC.get(),

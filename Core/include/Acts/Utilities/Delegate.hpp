@@ -50,7 +50,6 @@ class Delegate<R(Args...), H, O> {
   /// Alias of the return type
   using return_type = R;
   using holder_type = H;
-  /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const holder_type *, Args...);
   using function_ptr_type = return_type (*)(Args...);
   using signature_type = R(Args...);
@@ -81,12 +80,14 @@ class Delegate<R(Args...), H, O> {
   Delegate(const Delegate &) noexcept = default;
   Delegate &operator=(const Delegate &) noexcept = default;
 
+  /// @cond
   /// Constructor with an explicit runtime callable
   /// @param callable The runtime value of the callable
   /// @note The function signature requires the first argument of the callable is `const void*`.
   ///       i.e. if the signature of the delegate is `void(int)`, the
   ///       callable's signature has to be `void(const void*, int)`.
   explicit Delegate(function_type callable) { connect(callable); }
+  /// @endcond
 
   /// Constructor with a possibly stateful function object.
   /// @tparam Callable Type of the callable
@@ -129,6 +130,7 @@ class Delegate<R(Args...), H, O> {
     requires(isNoFunPtr<Callable>::value)
   = delete;
 
+  /// @cond
   /// Assignment operator with an explicit runtime callable
   /// @param callable The runtime value of the callable
   /// @note The function signature requires the first argument of the callable is `const void*`.
@@ -147,6 +149,7 @@ class Delegate<R(Args...), H, O> {
   {
     connect(callable);
   }
+  /// @endcond
 
   /// Assignment operator from rvalue reference is deleted, should catch
   /// assignment from temporary objects and thus invalid pointers
@@ -155,6 +158,7 @@ class Delegate<R(Args...), H, O> {
     requires(isNoFunPtr<Callable>::value)
   = delete;
 
+  /// @cond
   /// Connect a free function pointer.
   /// @note The function pointer must be ``constexpr`` for @c Delegate to accept it
   /// @tparam Callable The compile-time free function pointer
@@ -175,6 +179,7 @@ class Delegate<R(Args...), H, O> {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
   }
+  /// @endcond
 
   /// Assignment operator with possibly stateful function object.
   /// @tparam Callable Type of the callable
@@ -195,6 +200,7 @@ class Delegate<R(Args...), H, O> {
     requires(isNoFunPtr<Callable>::value)
   = delete;
 
+  /// @cond
   /// Connect anything that is assignable to the function pointer
   /// @param callable The runtime value of the callable
   /// @note The function signature requires the first argument of the callable is `const void*`.
@@ -206,6 +212,7 @@ class Delegate<R(Args...), H, O> {
     }
     m_function = callable;
   }
+  /// @endcond
 
   template <typename Type>
   void connect(function_type callable, const Type *instance)
@@ -341,8 +348,15 @@ class OwningDelegate<R(Args...), H>
     : public Delegate<R(Args...), H, DelegateType::Owning> {
  public:
   OwningDelegate() = default;
-  OwningDelegate(Delegate<R(Args...), H, DelegateType::Owning> &&delegate)
+  explicit OwningDelegate(
+      Delegate<R(Args...), H, DelegateType::Owning> &&delegate)
       : Delegate<R(Args...), H, DelegateType::Owning>(std::move(delegate)) {}
+
+  OwningDelegate &operator=(
+      Delegate<R(Args...), H, DelegateType::Owning> &&delegate) {
+    *this = OwningDelegate{std::move(delegate)};
+    return *this;
+  }
 };
 
 }  // namespace Acts

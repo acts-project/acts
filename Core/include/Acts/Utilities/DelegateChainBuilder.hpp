@@ -38,7 +38,7 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
   DelegateChainBuilder() = default;
 
   template <typename D>
-  DelegateChainBuilder(const D& /*unused*/) {}
+  explicit DelegateChainBuilder(const D& /*unused*/) {}
 
   template <auto Callable, typename payload_type>
   constexpr auto add(payload_type payload)
@@ -87,7 +87,7 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
   }
 
  private:
-  DelegateChainBuilder(std::tuple<payload_types...> payloads)
+  explicit DelegateChainBuilder(std::tuple<payload_types...> payloads)
       : m_payloads(payloads) {}
 
   struct DispatchBlock {
@@ -102,7 +102,7 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
 
     template <std::size_t I = 0, typename result_ptr>
     static constexpr auto invoke(result_ptr result, const tuple_type* payloads,
-                                 callable_args... args) {
+                                 callable_args&&... args) {
       const auto& callable = findCallable<I, 0, callables...>();
 
       if constexpr (!std::is_same_v<std::tuple_element_t<I, tuple_type>,
@@ -130,11 +130,12 @@ class DelegateChainBuilder<R(callable_args...), TypeList<payload_types...>,
       }
     }
 
-    DispatchBlock(tuple_type payloads) : m_payloads(std::move(payloads)) {}
+    explicit DispatchBlock(tuple_type payloads)
+        : m_payloads(std::move(payloads)) {}
 
     tuple_type m_payloads{};
 
-    auto dispatch(callable_args... args) const {
+    auto dispatch(callable_args&&... args) const {
       if constexpr (std::is_same_v<R, void>) {
         invoke(nullptr, &m_payloads, std::forward<callable_args>(args)...);
       } else {

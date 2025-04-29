@@ -8,13 +8,11 @@
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <cassert>
-#include <variant>
 
 namespace Acts {
 class VectorMultiTrajectory;
@@ -38,13 +36,12 @@ void ActsExamples::PassThroughCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = fixedMeasurement.parameters();
-    trackState.calibratedCovariance<kMeasurementSize>() =
-        fixedMeasurement.covariance();
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.allocateCalibrated(fixedMeasurement.parameters().eval(),
+                                  fixedMeasurement.covariance().eval());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
 

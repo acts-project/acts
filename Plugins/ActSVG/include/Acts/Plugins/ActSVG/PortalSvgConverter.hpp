@@ -41,7 +41,7 @@ struct Options {
   /// The conversion options for the surface part
   SurfaceConverter::Options surfaceOptions;
   /// Link length
-  ActsScalar linkLength = 10.;
+  double linkLength = 10.;
   /// Link index map
   std::map<const Experimental::DetectorVolume*, unsigned int> volumeIndices;
 };

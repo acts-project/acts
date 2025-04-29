@@ -41,7 +41,6 @@ using SingleParameterSmearFunction =
 /// vector and associated covariance matrix.
 template <typename generator_t, std::size_t kSize>
 struct BoundParametersSmearer {
-  using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
@@ -87,7 +86,7 @@ struct BoundParametersSmearer {
 
     ParametersVector par = ParametersVector::Zero();
     CovarianceMatrix cov = CovarianceMatrix::Zero();
-    for (int i = 0; i < static_cast<int>(kSize); ++i) {
+    for (std::size_t i = 0; i < kSize; ++i) {
       auto res = smearFunctions[i](boundParams[indices[i]], rng);
       if (!res.ok()) {
         return Result::failure(res.error());
@@ -116,7 +115,6 @@ struct BoundParametersSmearer {
 ///   individually is not recommended
 template <typename generator_t, std::size_t kSize>
 struct FreeParametersSmearer {
-  using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
   using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;

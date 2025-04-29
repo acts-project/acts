@@ -8,21 +8,22 @@ import math
 import acts
 import acts.examples
 from acts.examples.simulation import (
-    addParticleGun,
     MomentumConfig,
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
+    addParticleGun,
     addPythia8,
+    addGenParticleSelection,
     addFatras,
     addGeant4,
-    ParticleSelectorConfig,
+    addSimParticleSelection,
     addDigitization,
-    addParticleSelection,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     CkfConfig,
     addCKFTracks,
     TrackSelectorConfig,
@@ -136,6 +137,12 @@ parser.add_argument(
     default=True,
     action=argparse.BooleanOptionalAction,
 )
+parser.add_argument(
+    "--output-obj",
+    help="Switch obj output on/off",
+    default=True,
+    action=argparse.BooleanOptionalAction,
+)
 
 args = parser.parse_args()
 
@@ -162,9 +169,9 @@ oddDigiConfig = (
 oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(
-    odd_dir=geoDir, mdecorator=oddMaterialDeco
-)
+detector = getOpenDataDetector(odd_dir=geoDir, mdecorator=oddMaterialDeco)
+trackingGeometry = detector.trackingGeometry()
+decorators = detector.contextDecorators()
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -178,7 +185,7 @@ s = acts.examples.Sequencer(
 if args.edm4hep:
     import acts.examples.edm4hep
 
-    edm4hepReader = acts.examples.edm4hep.EDM4hepReader(
+    edm4hepReader = acts.examples.edm4hep.EDM4hepSimReader(
         inputPath=str(args.edm4hep),
         inputSimHits=[
             "PixelBarrelReadout",
@@ -188,9 +195,8 @@ if args.edm4hep:
             "LongStripBarrelReadout",
             "LongStripEndcapReadout",
         ],
-        outputParticlesGenerator="particles_input",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
+        outputParticlesGenerator="particles_generated",
+        outputParticlesSimulation="particles_simulated",
         outputSimHits="simhits",
         graphvizOutput="graphviz",
         dd4hepDetector=detector,
@@ -199,19 +205,18 @@ if args.edm4hep:
         level=acts.logging.INFO,
     )
     s.addReader(edm4hepReader)
+
     s.addWhiteboardAlias("particles", edm4hepReader.config.outputParticlesGenerator)
 
-    addParticleSelection(
+    addSimParticleSelection(
         s,
-        config=ParticleSelectorConfig(
+        ParticleSelectorConfig(
             rho=(0.0, 24 * u.mm),
             absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
-        inputParticles="particles",
-        outputParticles="particles_selected",
     )
 else:
     if not args.ttbar:
@@ -252,6 +257,16 @@ else:
             outputDirCsv=outputDir if args.output_csv else None,
         )
 
+        addGenParticleSelection(
+            s,
+            ParticleSelectorConfig(
+                rho=(0.0, 24 * u.mm),
+                absZ=(0.0, 1.0 * u.m),
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+            ),
+        )
+
     if args.geant4:
         if s.config.numThreads != 1:
             raise ValueError("Geant 4 simulation does not support multi-threading")
@@ -264,15 +279,9 @@ else:
             detector,
             trackingGeometry,
             field,
-            preSelectParticles=ParticleSelectorConfig(
-                rho=(0.0, 24 * u.mm),
-                absZ=(0.0, 1.0 * u.m),
-                eta=(-3.0, 3.0),
-                pt=(150 * u.MeV, None),
-                removeNeutral=True,
-            ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
             killVolume=trackingGeometry.highestTrackingVolume,
             killAfterTime=25 * u.ns,
@@ -282,20 +291,10 @@ else:
             s,
             trackingGeometry,
             field,
-            preSelectParticles=(
-                ParticleSelectorConfig(
-                    rho=(0.0, 24 * u.mm),
-                    absZ=(0.0, 1.0 * u.m),
-                    eta=(-3.0, 3.0),
-                    pt=(150 * u.MeV, None),
-                    removeNeutral=True,
-                )
-                if args.ttbar
-                else ParticleSelectorConfig()
-            ),
             enableInteractions=True,
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,
+            outputDirObj=outputDir if args.output_obj else None,
             rnd=rnd,
         )
 
@@ -309,16 +308,21 @@ addDigitization(
     rnd=rnd,
 )
 
+addDigiParticleSelection(
+    s,
+    ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        eta=(-3.0, 3.0),
+        measurements=(9, None),
+        removeNeutral=True,
+    ),
+)
+
 if args.reco:
     addSeeding(
         s,
         trackingGeometry,
         field,
-        (
-            TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-            if args.ttbar
-            else TruthSeedRanges()
-        ),
         initialSigmas=[
             1 * u.mm,
             1 * u.mm,
@@ -410,14 +414,9 @@ if args.reco:
                 minScore=0,
                 minScoreSharedTracks=1,
                 maxShared=2,
+                minUnshared=3,
                 maxSharedTracksPerMeasurement=2,
-                pTMax=1400,
-                pTMin=0.5,
-                phiMax=math.pi,
-                phiMin=-math.pi,
-                etaMax=4,
-                etaMin=-4,
-                useAmbiguityFunction=False,
+                useAmbiguityScoring=False,
             ),
             outputDirRoot=outputDir if args.output_root else None,
             outputDirCsv=outputDir if args.output_csv else None,

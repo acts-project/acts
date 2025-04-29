@@ -12,7 +12,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/GridAccessHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <map>
@@ -26,7 +25,7 @@ namespace Acts {
 class Surface;
 }
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 struct SensitiveCandidatesBase {
   /// Get the sensitive surfaces for a given position
@@ -104,10 +103,10 @@ class SensitiveSurfaceMapper {
   ///
   /// @param cfg the configuration struct
   /// @param logger the logging instance
-  SensitiveSurfaceMapper(const Config& cfg,
-                         std::unique_ptr<const Acts::Logger> logger =
-                             Acts::getDefaultLogger("SensitiveSurfaceMapper",
-                                                    Acts::Logging::INFO));
+  explicit SensitiveSurfaceMapper(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "SensitiveSurfaceMapper", Acts::Logging::INFO));
   ~SensitiveSurfaceMapper() = default;
 
   /// Recursive mapping function that walks through the Geant4
@@ -148,4 +147,4 @@ class SensitiveSurfaceMapper {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

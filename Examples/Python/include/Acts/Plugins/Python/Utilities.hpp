@@ -67,11 +67,11 @@ void patchKwargsConstructor(T& c) {
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
 
-#define ACTS_PYTHON_STRUCT_BEGIN(obj, cls)          \
-  {                                                 \
-    [[maybe_unused]] auto& _binding_instance = obj; \
-    using _struct_type = cls;                       \
-    do {                                            \
+#define ACTS_PYTHON_STRUCT_BEGIN(object)               \
+  {                                                    \
+    [[maybe_unused]] auto& _binding_instance = object; \
+    using _struct_type = decltype(object)::type;       \
+    do {                                               \
     } while (0)
 
 #define ACTS_PYTHON_STRUCT_END() \
@@ -81,6 +81,16 @@ void patchKwargsConstructor(T& c) {
 
 /// This macro is needed to use the BOOST_PP_SEQ_FOR_EACH loop macro
 #define ACTS_PYTHON_MEMBER_LOOP(r, data, elem) ACTS_PYTHON_MEMBER(elem);
+
+/// Macro that accepts a variadic set of member names that are to be registered
+/// into an object as read-write fields
+#define ACTS_PYTHON_STRUCT(object, ...)                          \
+  do {                                                           \
+    ACTS_PYTHON_STRUCT_BEGIN(object);                            \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,            \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)) \
+    ACTS_PYTHON_STRUCT_END();                                    \
+  } while (0)
 
 /// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
@@ -96,10 +106,7 @@ void patchKwargsConstructor(T& c) {
             .def_property_readonly("config", &Alg::config);                   \
                                                                               \
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                      \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                         \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))              \
-    ACTS_PYTHON_STRUCT_END();                                                 \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                       \
   } while (0)
 
 /// Similar as above for writers
@@ -120,12 +127,8 @@ void patchKwargsConstructor(T& c) {
     if constexpr (has_write_method) {                                       \
       w.def("write", &Writer::write);                                       \
     }                                                                       \
-                                                                            \
     auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
-    ACTS_PYTHON_STRUCT_END();                                               \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)
 
 /// Similar as above for readers
@@ -141,8 +144,5 @@ void patchKwargsConstructor(T& c) {
             .def_property_readonly("config", &Reader::config);              \
                                                                             \
     auto c = py::class_<Config>(r, "Config").def(py::init<>());             \
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
-    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
-                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
-    ACTS_PYTHON_STRUCT_END();                                               \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
   } while (0)

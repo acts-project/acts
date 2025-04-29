@@ -23,11 +23,13 @@
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
 
-ActsExamples::ParticleKillAction::ParticleKillAction(
+namespace ActsExamples::Geant4 {
+
+ParticleKillAction::ParticleKillAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
+void ParticleKillAction::UserSteppingAction(const G4Step* step) {
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
@@ -72,3 +74,5 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
     }
   }
 }
+
+}  // namespace ActsExamples::Geant4

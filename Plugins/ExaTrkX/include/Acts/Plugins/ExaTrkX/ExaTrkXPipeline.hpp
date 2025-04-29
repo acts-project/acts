@@ -46,6 +46,7 @@ class ExaTrkXPipeline {
       std::unique_ptr<const Acts::Logger> logger);
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
+                                    const std::vector<std::uint64_t> &moduleIds,
                                     std::vector<int> &spacepointIDs,
                                     const ExaTrkXHook &hook = {},
                                     ExaTrkXTiming *timing = nullptr) const;

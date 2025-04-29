@@ -22,7 +22,8 @@ sets up the particle propagation and runs a few events.
    import acts
    import acts.examples
 
-   detector, trackingGeometry, contextDecorators  = acts.examples.GenericDetector.create()
+   detector = acts.examples.GenericDetector()
+   trackingGeometry = detector.trackingGeometry()
    s = acts.examples.Sequencer(events=10)
 
    rnd = acts.examples.RandomNumbers(seed=42)

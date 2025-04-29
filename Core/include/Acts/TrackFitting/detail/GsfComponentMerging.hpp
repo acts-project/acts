@@ -15,6 +15,7 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <optional>
 #include <tuple>
 
@@ -90,10 +91,10 @@ auto gaussianMixtureCov(const components_t components,
 
     // Apply corrections for cyclic coordinates
     auto handleCyclicCov = [&l = pars_l, &m = mean, &diff = diff](auto desc) {
-      diff[desc.idx] =
-          difference_periodic(l[desc.idx] / desc.constant,
-                              m[desc.idx] / desc.constant, 2 * M_PI) *
-          desc.constant;
+      diff[desc.idx] = difference_periodic(l[desc.idx] / desc.constant,
+                                           m[desc.idx] / desc.constant,
+                                           2 * std::numbers::pi) *
+                       desc.constant;
     };
 
     std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
@@ -174,10 +175,10 @@ auto gaussianMixtureMeanCov(const components_t components,
                              &weight = weight_l, &mean = mean](auto desc) {
       const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
 
-      if (delta > M_PI) {
-        mean[desc.idx] += (2 * M_PI) * weight * desc.constant;
-      } else if (delta < -M_PI) {
-        mean[desc.idx] -= (2 * M_PI) * weight * desc.constant;
+      if (delta > std::numbers::pi) {
+        mean[desc.idx] += 2. * std::numbers::pi * weight * desc.constant;
+      } else if (delta < -std::numbers::pi) {
+        mean[desc.idx] -= 2. * std::numbers::pi * weight * desc.constant;
       }
     };
 
@@ -187,9 +188,9 @@ auto gaussianMixtureMeanCov(const components_t components,
   mean /= sumOfWeights;
 
   auto wrap = [&](auto desc) {
-    mean[desc.idx] =
-        wrap_periodic(mean[desc.idx] / desc.constant, -M_PI, 2 * M_PI) *
-        desc.constant;
+    mean[desc.idx] = wrap_periodic(mean[desc.idx] / desc.constant,
+                                   -std::numbers::pi, 2 * std::numbers::pi) *
+                     desc.constant;
   };
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);

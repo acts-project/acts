@@ -13,6 +13,7 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <mutex>
@@ -37,8 +38,17 @@ struct SeedFilterState {
 template <typename external_spacepoint_t>
 class SeedFilter final {
  public:
-  SeedFilter(SeedFilterConfig config,
-             IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  explicit SeedFilter(
+      const SeedFilterConfig& config,
+      IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  explicit SeedFilter(
+      const SeedFilterConfig& config,
+      std::unique_ptr<const Acts::Logger> logger,
+      IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
+  SeedFilter(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter& operator=(const SeedFilter<external_spacepoint_t>&) = delete;
+  SeedFilter(SeedFilter<external_spacepoint_t>&&) noexcept = default;
+  SeedFilter& operator=(SeedFilter<external_spacepoint_t>&&) noexcept = default;
 
   SeedFilter() = delete;
   ~SeedFilter() = default;
@@ -95,7 +105,11 @@ class SeedFilter final {
   }
 
  private:
+  const Logger& logger() const { return *m_logger; }
+
   const SeedFilterConfig m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger =
+      Acts::getDefaultLogger("Filter", Logging::Level::INFO);
   const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
 };
 }  // namespace Acts

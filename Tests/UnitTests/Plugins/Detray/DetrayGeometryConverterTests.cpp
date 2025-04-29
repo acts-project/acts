@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include <detray/io/frontend/payloads.hpp>
@@ -41,37 +42,34 @@ BOOST_AUTO_TEST_SUITE(DetrayConversion)
 BOOST_AUTO_TEST_CASE(DetrayTransformConversion) {
   auto transform = Transform3::Identity();
   transform.pretranslate(Vector3(1., 2., 3.));
-  transform.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3::UnitZ()));
+  transform.rotate(Eigen::AngleAxisd(std::numbers::pi / 2., Vector3::UnitZ()));
 
   detray::io::transform_payload payload =
       DetrayGeometryConverter::convertTransform(transform);
   // Transform is correctly translated
-  CHECK_CLOSE_ABS(payload.tr[0u], 1.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
-  CHECK_CLOSE_ABS(payload.tr[1u], 2.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
-  CHECK_CLOSE_ABS(payload.tr[2u], 3.,
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[0u], 1., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[1u], 2., std::numeric_limits<double>::epsilon());
+  CHECK_CLOSE_ABS(payload.tr[2u], 3., std::numeric_limits<double>::epsilon());
   // Rotation is correctly translated
   RotationMatrix3 rotation = transform.rotation().transpose();
   CHECK_CLOSE_ABS(payload.rot[0u], rotation(0, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[1u], rotation(0, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[2u], rotation(0, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[3u], rotation(1, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[4u], rotation(1, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[5u], rotation(1, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[6u], rotation(2, 0),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[7u], rotation(2, 1),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
   CHECK_CLOSE_ABS(payload.rot[8u], rotation(2, 2),
-                  std::numeric_limits<Acts::ActsScalar>::epsilon());
+                  std::numeric_limits<double>::epsilon());
 }
 
 BOOST_AUTO_TEST_CASE(DetrayMaskConversion) {
@@ -85,7 +83,7 @@ BOOST_AUTO_TEST_CASE(DetraySurfaceConversion) {
   auto cylinderSurface = Acts::Surface::makeShared<CylinderSurface>(
       Transform3::Identity(), std::make_shared<CylinderBounds>(20., 100.));
 
-  auto sgID = Acts::GeometryIdentifier().setSensitive(1);
+  auto sgID = Acts::GeometryIdentifier().withSensitive(1);
   cylinderSurface->assignGeometryId(sgID);
 
   detray::io::surface_payload payload = DetrayGeometryConverter::convertSurface(
@@ -107,10 +105,11 @@ BOOST_AUTO_TEST_CASE(DetrayVolumeConversion) {
   auto [volumes, portals, rootVolumes] = beampipe->construct(tContext);
   auto volume = volumes.front();
 
-  DetrayConversionUtils::GeometryIdCache geoIdCache;
+  std::vector<const Experimental::DetectorVolume*> dVolumes = {volume.get()};
+  DetrayConversionUtils::Cache cCache(dVolumes);
 
   detray::io::volume_payload payload = DetrayGeometryConverter::convertVolume(
-      geoIdCache, tContext, *volume, {volume.get()}, *logger);
+      cCache, tContext, *volume, *logger);
 
   // Check the volume payload
   BOOST_CHECK(payload.name == "BeamPipe");
@@ -134,10 +133,10 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
   auto detector = buildCylindricalDetector(tContext);
 
   // Convert the detector
-  DetrayConversionUtils::GeometryIdCache geoIdCache;
+  DetrayConversionUtils::Cache cCache(detector->volumes());
 
   detray::io::detector_payload payload =
-      DetrayGeometryConverter::convertDetector(geoIdCache, tContext, *detector,
+      DetrayGeometryConverter::convertDetector(cCache, tContext, *detector,
                                                *logger);
 
   // Test the payload - we have six volumes

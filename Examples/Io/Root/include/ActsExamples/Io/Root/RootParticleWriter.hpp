@@ -37,9 +37,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   struct Config {
     /// Input particle collection to write.
     std::string inputParticles;
-    /// Optional. If given, the the energy loss and traversed material is
-    /// computed and written.
-    std::string inputFinalParticles;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.
@@ -73,9 +70,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
 
  private:
   Config m_cfg;
-
-  ReadDataHandle<SimParticleContainer> m_inputFinalParticles{
-      this, "InputFinalParticles"};
 
   std::mutex m_writeMutex;
 
@@ -119,7 +113,6 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   std::vector<std::uint32_t> m_generation;
   std::vector<std::uint32_t> m_subParticle;
 
-  // Optional information depending on input collections.
   /// Total energy loss in GeV.
   std::vector<float> m_eLoss;
   /// Accumulated material

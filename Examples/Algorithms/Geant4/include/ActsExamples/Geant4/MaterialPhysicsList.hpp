@@ -12,11 +12,10 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include <G4VUserPhysicsList.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// @class MaterialPhysicsList
 ///
@@ -29,9 +28,9 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   ///
   /// @param cfg the configuration struct for this Stepping action
   /// @param logger is an Acts::Logger for unique logging
-  MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
-                          Acts::getDefaultLogger("MaterialPhysicsList",
-                                                 Acts::Logging::INFO));
+  explicit MaterialPhysicsList(std::unique_ptr<const Acts::Logger> logger =
+                                   Acts::getDefaultLogger("MaterialPhysicsList",
+                                                          Acts::Logging::INFO));
   ~MaterialPhysicsList() override = default;
 
   /// @brief Interface particle construction method
@@ -57,4 +56,4 @@ class MaterialPhysicsList final : public G4VUserPhysicsList {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

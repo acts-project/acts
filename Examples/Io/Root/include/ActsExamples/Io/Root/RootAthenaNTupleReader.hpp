@@ -178,6 +178,8 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   /// @param config The Configuration struct
   RootAthenaNTupleReader(const Config &config, Acts::Logging::Level level);
 
+  ~RootAthenaNTupleReader() override;
+
   /// Framework name() method
   std::string name() const final { return "RootAthenaNTupleReader"; }
 
@@ -214,7 +216,7 @@ class RootAthenaNTupleReader : public ActsExamples::IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain *m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// The handle to branches in current event
   BranchPointerWrapper m_branches;

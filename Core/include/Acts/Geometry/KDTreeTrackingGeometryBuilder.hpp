@@ -58,13 +58,13 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   };
 
   using SurfaceKDT =
-      KDTree<2u, std::shared_ptr<Surface>, ActsScalar, std::array, 100>;
+      KDTree<2u, std::shared_ptr<Surface>, double, std::array, 100>;
 
   /// Constructor
   ///
   /// @param [in] cfg is the configuration struct for this builder
   /// @param [in] logger logging instance
-  KDTreeTrackingGeometryBuilder(
+  explicit KDTreeTrackingGeometryBuilder(
       const Config& cfg,
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("KDTreeTrackingGeometryBuilder", Logging::INFO));

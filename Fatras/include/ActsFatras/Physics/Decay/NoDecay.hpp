@@ -21,9 +21,9 @@ struct NoDecay {
   ///
   /// @returns Always returns infinity as limit.
   template <typename generator_t>
-  constexpr Particle::Scalar generateProperTimeLimit(
+  constexpr double generateProperTimeLimit(
       generator_t& /* rng */, const Particle& /* particle */) const {
-    return std::numeric_limits<Particle::Scalar>::infinity();
+    return std::numeric_limits<double>::infinity();
   }
   /// Decay the particle without generating any descendant particles.
   template <typename generator_t>

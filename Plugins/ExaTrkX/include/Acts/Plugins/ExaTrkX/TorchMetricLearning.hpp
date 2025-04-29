@@ -27,20 +27,24 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
  public:
   struct Config {
     std::string modelPath;
-    int numFeatures = 3;
+    std::vector<int> selectedFeatures = {};
     int embeddingDim = 8;
     float rVal = 1.6;
     int knnVal = 500;
     bool shuffleDirections = false;
     int deviceID = 0;  // default is the first GPU if available
+
+    // For edge features
+    float phiScale = 3.141592654;
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(
+  std::tuple<std::any, std::any, std::any> operator()(
       std::vector<float> &inputValues, std::size_t numNodes,
-      torch::Device device = torch::Device(torch::kCPU)) override;
+      const std::vector<std::uint64_t> &moduleIds,
+      const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
   torch::Device device() const override { return m_device; };

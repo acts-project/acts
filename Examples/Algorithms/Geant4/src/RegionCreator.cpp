@@ -8,22 +8,20 @@
 
 #include "ActsExamples/Geant4/RegionCreator.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <G4LogicalVolume.hh>
 #include <G4LogicalVolumeStore.hh>
 #include <G4ProductionCuts.hh>
 #include <G4Region.hh>
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
-RegionCreator::RegionCreator(const Config& cfg, std::string name,
-                             Acts::Logging::Level level)
-    : m_name(std::move(name)),
-      m_cfg(cfg),
-      m_logger(Acts::getDefaultLogger(m_name, level)) {}
+RegionCreator::RegionCreator(const Config& cfg) : m_cfg(cfg) {}
 
-void RegionCreator::Construct() {
+G4Region* RegionCreator::buildRegion(const Acts::Logger& logger) const {
   // create a new G4Region
-  G4Region* region = new G4Region(m_name);
+  G4Region* region = new G4Region(m_cfg.name);
 
   // loop over volumes and find the ones in the list
   std::size_t nVolumes{0};
@@ -43,12 +41,13 @@ void RegionCreator::Construct() {
     if (nVolumesCurrent == 0) {
       ACTS_WARNING("No volumes matching \""
                    << volumeName << "\" found in G4 LogicalVolumeStore. "
-                   << m_name << " G4PhysicsRegion may not behave as intended.");
+                   << m_cfg.name
+                   << " G4PhysicsRegion may not behave as intended.");
     }
     nVolumes += nVolumesCurrent;
   }
 
-  ACTS_INFO("Created region " << m_name);
+  ACTS_INFO("Created region " << m_cfg.name);
   ACTS_INFO("A total of " << nVolumes << " volumes were assigned");
 
   // create a G4ProductionCuts object and set appropriate values
@@ -66,6 +65,8 @@ void RegionCreator::Construct() {
 
   // assign cuts to the region
   region->SetProductionCuts(cuts);
+
+  return region;
 }
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

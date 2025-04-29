@@ -18,8 +18,10 @@
 
 #include <detray/navigation/navigator.hpp>
 #include <detray/propagator/actor_chain.hpp>
+#include <detray/propagator/propagation_config.hpp>
 #include <detray/propagator/propagator.hpp>
 #include <detray/test/utils/inspectors.hpp>
+#include <detray/test/validation/material_validation_utils.hpp>
 
 namespace ActsExamples {
 
@@ -52,10 +54,10 @@ class DetrayPropagator : public PropagatorInterface {
   ///
   /// @param cfg configuration struct
   /// @param logger The logger instance
-  DetrayPropagator(const Config& cfg,
-                   std::unique_ptr<const Acts::Logger> logger =
-                       Acts::getDefaultLogger("DetrayPropagator",
-                                              Acts::Logging::INFO))
+  explicit DetrayPropagator(const Config& cfg,
+                            std::unique_ptr<const Acts::Logger> logger =
+                                Acts::getDefaultLogger("DetrayPropagator",
+                                                       Acts::Logging::INFO))
       : PropagatorInterface(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
   ///@brief  Execute a propagation for charged particle parameters
@@ -101,17 +103,29 @@ class DetrayPropagator : public PropagatorInterface {
                             detray::navigation::default_cache_size,
                             DetrayInspector>;
 
+      using MaterialTracer =
+          detray::material_validator::material_tracer<double, vecmem::vector>;
+
       // Propagator with empty actor chain (for the moment)
       using Propagator =
-          detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
+          detray::propagator<stepper_t, DetrayNavigator,
+                             detray::actor_chain<MaterialTracer>>;
 
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
+      using DetrayContext = typename Propagator::state::context_type;
+      DetrayContext dCtx{};
+      using DetrayConfig = detray::propagation::config;
+      DetrayConfig dCfg{};
+      // Add common configuration here
+      typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
+                                             dCtx);
+      Propagator propagator(dCfg);
 
-      Propagator propagator;
+      MaterialTracer::state materialTracerState{
+          *m_cfg.detrayStore->memoryResource};
+      auto actorStates = detray::tie(materialTracerState);
 
       // Run the actual propagation
-      propagator.propagate(propagation);
+      propagator.propagate(propagation, actorStates);
 
       // Retrieve navigation information
       auto& inspector = propagation._navigation.inspector();
@@ -129,10 +143,17 @@ class DetrayPropagator : public PropagatorInterface {
         Acts::detail::Step step;
         step.position = Acts::Vector3(dposition[0], dposition[1], dposition[2]);
         step.geoID = geoID;
-        step.navDir = object.intersection.direction ? Acts::Direction::Forward
-                                                    : Acts::Direction::Backward;
+        step.navDir = object.intersection.direction
+                          ? Acts::Direction::Forward()
+                          : Acts::Direction::Backward();
         summary.steps.emplace_back(step);
       }
+
+      // Retrieve the material information
+      const auto& detrayMaterial = materialTracerState.get_material_record();
+      recordedMaterial.materialInX0 = detrayMaterial.sX0;
+      recordedMaterial.materialInL0 = detrayMaterial.sL0;
+
     } else {
       // Navigation with inspection
       using DetrayNavigator =
@@ -143,10 +164,15 @@ class DetrayPropagator : public PropagatorInterface {
       using Propagator =
           detray::propagator<stepper_t, DetrayNavigator, detray::actor_chain<>>;
 
-      typename Propagator::state propagation(track,
-                                             m_cfg.detrayStore->detector);
+      using DetrayContext = typename Propagator::state::context_type;
+      DetrayContext dCtx{};
+      using DetrayConfig = detray::propagation::config;
+      DetrayConfig dCfg{};
+      // Add common configuration here
+      typename Propagator::state propagation(track, m_cfg.detrayStore->detector,
+                                             dCtx);
+      Propagator propagator(dCfg);
 
-      Propagator propagator;
       // Run the actual propagation
       propagator.propagate(propagation);
     }

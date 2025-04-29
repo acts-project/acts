@@ -27,9 +27,9 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   const unsigned int num_slinks = sourceLinks.size();
 
   Acts::Vector3 gPos = Acts::Vector3::Zero();
-  std::optional<Acts::ActsScalar> gTime = std::nullopt;
+  std::optional<double> gTime = std::nullopt;
   Acts::Vector2 gCov = Acts::Vector2::Zero();
-  std::optional<Acts::ActsScalar> gCovT = std::nullopt;
+  std::optional<double> gCovT = std::nullopt;
 
   if (num_slinks == 1) {  // pixel SP formation
     auto slink = sourceLinks.at(0);

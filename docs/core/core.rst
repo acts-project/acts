@@ -7,7 +7,6 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
 .. toctree::
    :maxdepth: 1
 
-   definitions/algebra
    definitions/units
    eventdata/index
 

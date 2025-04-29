@@ -51,11 +51,11 @@ Acts::GeometryContext tContext;
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(DetectorConstruction) {
-  Acts::ActsScalar r0 = 0.;
-  Acts::ActsScalar r1 = 10.;
-  Acts::ActsScalar r2 = 100.;
-  Acts::ActsScalar r3 = 200.;
-  Acts::ActsScalar zHalfL = 200.;
+  double r0 = 0.;
+  double r1 = 10.;
+  double r2 = 100.;
+  double r3 = 200.;
+  double zHalfL = 200.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
   std::vector<std::unique_ptr<Acts::Test::DetectorElementStub>> detStore;
-  std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
+  std::vector<double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
         Acts::Transform3::Identity(),
         std::make_shared<Acts::CylinderBounds>(r, 190.), 0.1);
     auto surface = detElement->surface().getSharedPtr();
-    surface->assignGeometryId(Acts::GeometryIdentifier{}.setSensitive(ir + 1));
+    surface->assignGeometryId(Acts::GeometryIdentifier{}.withSensitive(ir + 1));
     surfaces.push_back(std::move(surface));
     detStore.push_back(std::move(detElement));
   }
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstructionWithHierarchyMap) {
   const auto& sensitiveHierarchyMap = det->sensitiveHierarchyMap();
 
   const Acts::Surface* surface0 =
-      det->findSurface(Acts::GeometryIdentifier{}.setSensitive(1));
+      det->findSurface(Acts::GeometryIdentifier{}.withSensitive(1));
 
   BOOST_CHECK_EQUAL(sensitiveHierarchyMap.size(), 6u);
   BOOST_CHECK_NE(surface0, nullptr);

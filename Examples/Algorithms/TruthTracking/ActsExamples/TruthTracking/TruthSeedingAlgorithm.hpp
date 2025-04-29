@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -23,16 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
-
-namespace Acts {
-class TrackingGeometry;
-}
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Construct track seeds from particles.
 class TruthSeedingAlgorithm final : public IAlgorithm {
@@ -40,8 +30,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   struct Config {
     /// The input truth particles that should be used for truth seeding.
     std::string inputParticles;
-    /// The input hit-particles map collection.
-    std::string inputMeasurementParticlesMap;
+    /// The input particle-measurements map collection.
+    std::string inputParticleMeasurementsMap;
     /// Input space point collections.
     ///
     /// We allow multiple space point collections to allow different parts of
@@ -80,8 +70,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
-      this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<InverseMultimap<SimBarcode>> m_inputParticleMeasurementsMap{
+      this, "InputParticleMeasurementsMap"};
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 

@@ -212,6 +212,7 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
     case PM::Calibrated:
       m_measOffset[istate] = kInvalid;
       m_measCovOffset[istate] = kInvalid;
+      m_index[istate].measdim = kInvalid;
       break;
     default:
       throw std::domain_error{"Unable to unset this component"};

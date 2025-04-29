@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"

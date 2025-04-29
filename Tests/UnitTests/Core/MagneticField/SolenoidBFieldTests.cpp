@@ -16,7 +16,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
-#include <fstream>
 
 using namespace Acts::UnitLiterals;
 

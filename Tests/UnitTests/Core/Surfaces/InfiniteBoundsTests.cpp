@@ -29,19 +29,19 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction) {
 /// Unit tests for InfiniteBounds properties
 BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
   InfiniteBounds infiniteBoundsObject;
-  /// test for type()
+  /// Test for type()
   BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::eBoundless);
 
-  /// test for inside()
+  /// Test for inside()
   const Vector2 anyVector{0., 1.};
   const BoundaryTolerance anyTolerance = BoundaryTolerance::None();
   BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyTolerance));
 
-  /// test for dump
-  boost::test_tools::output_test_stream dumpOuput;
-  infiniteBoundsObject.toStream(dumpOuput);
+  /// Test for dump
+  boost::test_tools::output_test_stream dumpOutput;
+  infiniteBoundsObject.toStream(dumpOutput);
   BOOST_CHECK(
-      dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
+      dumpOutput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

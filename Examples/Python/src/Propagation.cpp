@@ -19,7 +19,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
-#include "ActsExamples/Propagation/SimHitToSummaryConversion.hpp"
 
 #include <algorithm>
 #include <array>
@@ -82,12 +81,8 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(resolveMaterial);
-    ACTS_PYTHON_MEMBER(resolvePassive);
-    ACTS_PYTHON_MEMBER(resolveSensitive);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
+                       trackingGeometry);
   }
 
   {
@@ -105,12 +100,8 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(resolveMaterial);
-    ACTS_PYTHON_MEMBER(resolvePassive);
-    ACTS_PYTHON_MEMBER(resolveSensitive);
-    ACTS_PYTHON_MEMBER(detector);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
+                       detector);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
@@ -119,11 +110,6 @@ void addPropagation(Context& ctx) {
       multipleScattering, recordMaterialInteractions, ptLoopers, maxStepSize,
       covarianceTransport, inputTrackParameters, outputSummaryCollection,
       outputMaterialCollection);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SimHitToSummaryConversion, mex,
-                                "SimHitToSummaryConversion", inputSimHits,
-                                inputParticles, outputSummaryCollection,
-                                surfaceByIdentifier);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(

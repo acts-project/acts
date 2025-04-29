@@ -9,14 +9,16 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <initializer_list>
 #include <iosfwd>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <vector>
 
@@ -80,6 +82,18 @@ class CylinderVolumeBounds : public VolumeBounds {
     eSize
   };
 
+  /// Enum describing the possible faces of a cylinder volume
+  /// @note These values are synchronized with the BoundarySurfaceFace enum.
+  ///       Once Gen1 is removed, this can be changed.
+  enum class Face : unsigned int {
+    PositiveDisc = BoundarySurfaceFace::positiveFaceXY,
+    NegativeDisc = BoundarySurfaceFace::negativeFaceXY,
+    OuterCylinder = BoundarySurfaceFace::tubeOuterCover,
+    InnerCylinder = BoundarySurfaceFace::tubeInnerCover,
+    NegativePhiPlane = BoundarySurfaceFace::tubeSectorNegativePhi,
+    PositivePhiPlane = BoundarySurfaceFace::tubeSectorPositivePhi
+  };
+
   CylinderVolumeBounds() = delete;
 
   /// Constructor
@@ -91,31 +105,31 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param avgphi The average phi value
   /// @param bevelMinZ The bevel angle, in radians, for the negative side
   /// @param bevelMaxZ The bevel angle, in radians, for the positive side
-  CylinderVolumeBounds(ActsScalar rmin, ActsScalar rmax, ActsScalar halfz,
-                       ActsScalar halfphi = M_PI, ActsScalar avgphi = 0.,
-                       ActsScalar bevelMinZ = 0., ActsScalar bevelMaxZ = 0.);
+  CylinderVolumeBounds(double rmin, double rmax, double halfz,
+                       double halfphi = std::numbers::pi, double avgphi = 0.,
+                       double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor - from a fixed size array
   ///
   /// @param values The bound values
-  CylinderVolumeBounds(const std::array<ActsScalar, eSize>& values);
+  explicit CylinderVolumeBounds(const std::array<double, eSize>& values);
 
   /// Constructor - extruded from cylinder bounds and thickness
   ///
   /// @param cBounds the cylinder bounds
   /// @param thickness of the extrusion
-  CylinderVolumeBounds(const CylinderBounds& cBounds, ActsScalar thickness);
+  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
 
   /// Constructor - extruded from radial bounds and thickness
   ///
   /// @param rBounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& rBounds, ActsScalar thickness);
+  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
 
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
-  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
+  CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   ~CylinderVolumeBounds() override = default;
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
@@ -127,14 +141,14 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<ActsScalar> values() const final;
+  std::vector<double> values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool inside(const Vector3& pos, ActsScalar tol = 0.) const override;
+  bool inside(const Vector3& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -158,24 +172,24 @@ class CylinderVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
-  /// Get the canonical binning values, i.e. the binning values
-  /// for that fully describe the shape's extent
+  /// Get the canonical binning directions, i.e. the axis directions
+  /// that fully describe the shape's extent
   ///
   /// @return vector of canonical binning values
-  std::vector<Acts::BinningValue> canonicalBinning() const override {
-    return {Acts::BinningValue::binR, Acts::BinningValue::binPhi,
-            Acts::BinningValue::binZ};
+  std::vector<AxisDirection> canonicalAxes() const override {
+    using enum AxisDirection;
+    return {AxisR, AxisPhi, AxisZ};
   };
 
   /// Binning offset - overloaded for some R-binning types
   ///
-  /// @param bValue is the type used for the binning
-  Vector3 binningOffset(BinningValue bValue) const override;
+  /// @param aDir is the axis direction used for the binning
+  Vector3 referenceOffset(AxisDirection aDir) const override;
 
-  /// Binning borders in ActsScalar
+  /// Binning borders in double
   ///
-  /// @param bValue is the type used for the binning
-  ActsScalar binningBorder(BinningValue bValue) const override;
+  /// @param aDir is the axis direction used for the binning
+  double referenceBorder(AxisDirection aDir) const override;
 
   /// Output Method for std::ostream
   /// @param os is the output stream
@@ -183,20 +197,20 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  ActsScalar get(BoundValues bValue) const { return m_values[bValue]; }
+  double get(BoundValues bValue) const { return m_values[bValue]; }
 
   /// Set a bound value
   /// @param bValue the bound value identifier
   /// @param value the value to be set
-  void set(BoundValues bValue, ActsScalar value);
+  void set(BoundValues bValue, double value);
 
   /// Set a range of bound values
   /// @param keyValues the initializer list of key value pairs
-  void set(std::initializer_list<std::pair<BoundValues, ActsScalar>> keyValues);
+  void set(std::initializer_list<std::pair<BoundValues, double>> keyValues);
 
  private:
-  /// The internal version of the bounds can be float/ActsScalar
-  std::array<ActsScalar, eSize> m_values{};
+  /// The internal version of the bounds can be float/double
+  std::array<double, eSize> m_values{};
 
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};

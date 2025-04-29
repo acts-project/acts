@@ -2,7 +2,6 @@ add_library(
     ActsExamplesTrackFitting
     SHARED
     src/RefittingCalibrator.cpp
-    src/SurfaceSortingAlgorithm.cpp
     src/TrackFittingAlgorithm.cpp
     src/KalmanFitterFunction.cpp
     src/RefittingAlgorithm.cpp
@@ -17,6 +16,8 @@ target_link_libraries(
     ActsExamplesTrackFitting
     PUBLIC ActsCore ActsExamplesFramework ActsExamplesMagneticField
 )
+
+acts_compile_headers(ActsExamplesTrackFitting GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesTrackFitting

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <algorithm>
@@ -43,7 +43,8 @@ class NeighborHoodIndices {
     iterator() = default;
 
     // Specialized constructor for end() iterator
-    iterator(std::size_t current) : m_current(current), m_wrapped(true) {}
+    explicit iterator(std::size_t current)
+        : m_current(current), m_wrapped(true) {}
 
     iterator(std::size_t begin1, std::size_t end1, std::size_t begin2)
         : m_current(begin1),
@@ -97,7 +98,7 @@ class NeighborHoodIndices {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given equidistant binning.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Equidistant, bdt> final : public IAxis {
+class Axis<AxisType::Equidistant, bdt> : public IAxis {
  public:
   static constexpr AxisType type = AxisType::Equidistant;
 
@@ -109,7 +110,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(ActsScalar xmin, ActsScalar xmax, std::size_t nBins)
+  Axis(double xmin, double xmax, std::size_t nBins)
       : m_min(xmin),
         m_max(xmax),
         m_width((xmax - xmin) / nBins),
@@ -124,7 +125,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// Divide the range \f$[\text{xmin},\text{xmax})\f$ into \f$\text{nBins}\f$
   /// equidistant bins.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, ActsScalar xmin, ActsScalar xmax,
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, double xmin, double xmax,
        std::size_t nBins)
       : Axis(xmin, xmax, nBins) {
     static_cast<void>(typeTag);
@@ -306,7 +307,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(ActsScalar x) const {
+  std::size_t getBin(double x) const {
     return wrapBin(
         static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
@@ -314,7 +315,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @brief get bin width
   ///
   /// @return constant width for all bins
-  ActsScalar getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
+  double getBinWidth(std::size_t /*bin*/ = 0) const { return m_width; }
 
   /// @brief get lower bound of bin
   ///
@@ -326,7 +327,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  ActsScalar getBinLowerBound(std::size_t bin) const {
+  double getBinLowerBound(std::size_t bin) const {
     return getMin() + (bin - 1) * getBinWidth();
   }
 
@@ -340,7 +341,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  ActsScalar getBinUpperBound(std::size_t bin) const {
+  double getBinUpperBound(std::size_t bin) const {
     return getMin() + bin * getBinWidth();
   }
 
@@ -351,19 +352,19 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const {
     return getMin() + (bin - 0.5) * getBinWidth();
   }
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  ActsScalar getMax() const override { return m_max; }
+  double getMax() const override { return m_max; }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  ActsScalar getMin() const override { return m_min; }
+  double getMin() const override { return m_min; }
 
   /// @brief get total number of bins
   ///
@@ -377,12 +378,12 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   ///
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(ActsScalar x) const { return (m_min <= x) && (x < m_max); }
+  bool isInside(double x) const { return (m_min <= x) && (x < m_max); }
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<ActsScalar> getBinEdges() const override {
-    std::vector<ActsScalar> binEdges;
+  std::vector<double> getBinEdges() const override {
+    std::vector<double> binEdges;
     for (std::size_t i = 1; i <= m_bins; i++) {
       binEdges.push_back(getBinLowerBound(i));
     }
@@ -403,11 +404,11 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 
  private:
   /// minimum of binning range
-  ActsScalar m_min{};
+  double m_min{};
   /// maximum of binning range
-  ActsScalar m_max{};
+  double m_max{};
   /// constant bin width
-  ActsScalar m_width{};
+  double m_width{};
   /// number of bins (excluding under-/overflow bins)
   std::size_t m_bins{};
 };
@@ -417,7 +418,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
 /// This class provides some basic functionality for calculating bin indices
 /// for a given binning with variable bin sizes.
 template <AxisBoundaryType bdt>
-class Axis<AxisType::Variable, bdt> final : public IAxis {
+class Axis<AxisType::Variable, bdt> : public IAxis {
  public:
   static constexpr AxisType type = AxisType::Variable;
 
@@ -428,7 +429,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  explicit Axis(std::vector<ActsScalar> binEdges)
+  explicit Axis(std::vector<double> binEdges)
       : m_binEdges(std::move(binEdges)) {}
 
   /// @param [in] typeTag boundary type tag
@@ -439,7 +440,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// Create a binning structure with @c nBins variable-sized bins from the
   /// given bin boundaries. @c nBins is given by the number of bin edges
   /// reduced by one.
-  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<ActsScalar> binEdges)
+  Axis(AxisBoundaryTypeTag<bdt> typeTag, std::vector<double> binEdges)
       : Axis(std::move(binEdges)) {
     static_cast<void>(typeTag);
   }
@@ -618,7 +619,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///       bin with lower bound @c l and upper bound @c u.
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
-  std::size_t getBin(ActsScalar x) const {
+  std::size_t getBin(double x) const {
     const auto it =
         std::upper_bound(std::begin(m_binEdges), std::end(m_binEdges), x);
     return wrapBin(std::distance(std::begin(m_binEdges), it));
@@ -631,7 +632,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinWidth(std::size_t bin) const {
+  double getBinWidth(std::size_t bin) const {
     return m_binEdges.at(bin) - m_binEdges.at(bin - 1);
   }
 
@@ -645,7 +646,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have a closed lower bound, i.e. the lower boundary
   ///       belongs to the bin with the given bin index.
-  ActsScalar getBinLowerBound(std::size_t bin) const {
+  double getBinLowerBound(std::size_t bin) const {
     return m_binEdges.at(bin - 1);
   }
 
@@ -659,9 +660,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @note Bin intervals have an open upper bound, i.e. the upper boundary
   ///       does @b not belong to the bin with the given bin index.
-  ActsScalar getBinUpperBound(std::size_t bin) const {
-    return m_binEdges.at(bin);
-  }
+  double getBinUpperBound(std::size_t bin) const { return m_binEdges.at(bin); }
 
   /// @brief get bin center
   ///
@@ -670,19 +669,19 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @pre @c bin must be a valid bin index (excluding under-/overflow bins),
   ///      i.e. \f$1 \le \text{bin} \le \text{nBins}\f$
-  ActsScalar getBinCenter(std::size_t bin) const {
+  double getBinCenter(std::size_t bin) const {
     return 0.5 * (getBinLowerBound(bin) + getBinUpperBound(bin));
   }
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  ActsScalar getMax() const override { return m_binEdges.back(); }
+  double getMax() const override { return m_binEdges.back(); }
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  ActsScalar getMin() const override { return m_binEdges.front(); }
+  double getMin() const override { return m_binEdges.front(); }
 
   /// @brief get total number of bins
   ///
@@ -696,13 +695,13 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   ///
   /// @post If @c true is returned, the bin containing the given value is a
   ///       valid bin, i.e. it is neither the underflow nor the overflow bin.
-  bool isInside(ActsScalar x) const {
+  bool isInside(double x) const {
     return (m_binEdges.front() <= x) && (x < m_binEdges.back());
   }
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  std::vector<ActsScalar> getBinEdges() const override { return m_binEdges; }
+  std::vector<double> getBinEdges() const override { return m_binEdges; }
 
   friend std::ostream& operator<<(std::ostream& os, const Axis& axis) {
     os << "Axis<Variable, " << bdt << ">(";
@@ -719,6 +718,6 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
 
  private:
   /// vector of bin edges (sorted in ascending order)
-  std::vector<ActsScalar> m_binEdges;
+  std::vector<double> m_binEdges;
 };
 }  // namespace Acts

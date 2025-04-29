@@ -12,13 +12,20 @@
 
 #include <ostream>
 
-Acts::HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(
-    const Material& material)
+namespace Acts {
+
+HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(const Material& material)
     : m_material(material) {}
 
-std::ostream& Acts::HomogeneousVolumeMaterial::toStream(
-    std::ostream& sl) const {
-  sl << "Acts::HomogeneousVolumeMaterial : " << std::endl;
+const Material HomogeneousVolumeMaterial::material(
+    const Vector3& /*position*/) const {
+  return m_material;
+}
+
+std::ostream& HomogeneousVolumeMaterial::toStream(std::ostream& sl) const {
+  sl << "HomogeneousVolumeMaterial : " << std::endl;
   sl << "   - material : " << m_material << std::endl;
   return sl;
 }
+
+}  // namespace Acts

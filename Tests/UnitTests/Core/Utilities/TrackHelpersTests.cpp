@@ -8,14 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStateType.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
-
-#include <memory>
-#include <span>
 
 namespace Acts::Test {
 
@@ -33,6 +32,33 @@ auto createTestTrack(TrackContainer& tc, const FlagsPerState& flagsPerState) {
   }
 
   return t;
+}
+
+template <typename TrackContainer>
+auto createTestTrackState(TrackContainer& tc) {
+  auto t = tc.makeTrack();
+
+  auto ts = t.appendTrackState();
+
+  ts.allocateCalibrated(Vector2::Zero(), SquareMatrix2::Identity());
+  ts.setProjectorSubspaceIndices(std::array{eBoundLoc0, eBoundLoc1});
+
+  ts.predicted() = BoundVector::Zero();
+  ts.predicted()[eBoundLoc0] = 1.;
+  ts.predicted()[eBoundLoc1] = 1.;
+  ts.predictedCovariance() = BoundMatrix::Identity() * 1.;
+
+  ts.filtered() = BoundVector::Zero();
+  ts.filtered()[eBoundLoc0] = 0.5;
+  ts.filtered()[eBoundLoc1] = 0.5;
+  ts.filteredCovariance() = BoundMatrix::Identity() * 0.5;
+
+  ts.smoothed() = BoundVector::Zero();
+  ts.smoothed()[eBoundLoc0] = 0.1;
+  ts.smoothed()[eBoundLoc1] = 0.1;
+  ts.smoothedCovariance() = BoundMatrix::Identity() * 0.1;
+
+  return ts;
 }
 
 }  // namespace
@@ -63,6 +89,7 @@ BOOST_AUTO_TEST_CASE(CalculateQuantities) {
 BOOST_AUTO_TEST_CASE(TrimTrack) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = createTestTrack(tc, std::vector<std::vector<TrackStateFlag>>{
+                                   {},
                                    {HoleFlag},
                                    {MeasurementFlag},
                                    {OutlierFlag},
@@ -72,38 +99,85 @@ BOOST_AUTO_TEST_CASE(TrimTrack) {
                                    {HoleFlag},
                                    {MeasurementFlag},
                                    {OutlierFlag},
+                                   {},
                                });
 
   calculateTrackQuantities(t);
 
+  BOOST_CHECK_EQUAL(t.nTrackStates(), 11);
   BOOST_CHECK_EQUAL(t.nHoles(), 3);
   BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
   BOOST_CHECK_EQUAL(t.nOutliers(), 3);
   BOOST_CHECK_EQUAL(t.nSharedHits(), 1);
 
-  trimTrackFront(t, true, true, true);
+  trimTrackFront(t, true, true, true, true);
   calculateTrackQuantities(t);
 
+  BOOST_CHECK_EQUAL(t.nTrackStates(), 9);
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
   BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
   BOOST_CHECK_EQUAL(t.nOutliers(), 3);
   BOOST_CHECK_EQUAL(t.nSharedHits(), 1);
 
-  trimTrackBack(t, true, true, true);
+  trimTrackBack(t, true, true, true, true);
   calculateTrackQuantities(t);
 
+  BOOST_CHECK_EQUAL(t.nTrackStates(), 7);
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
   BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
   BOOST_CHECK_EQUAL(t.nOutliers(), 2);
   BOOST_CHECK_EQUAL(t.nSharedHits(), 1);
 
-  trimTrack(t, true, true, true);
+  trimTrack(t, true, true, true, true);
   calculateTrackQuantities(t);
 
+  BOOST_CHECK_EQUAL(t.nTrackStates(), 7);
   BOOST_CHECK_EQUAL(t.nHoles(), 2);
   BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
   BOOST_CHECK_EQUAL(t.nOutliers(), 2);
   BOOST_CHECK_EQUAL(t.nSharedHits(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(CalculatePredictedChi2) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto ts = createTestTrackState(tc);
+
+  // reference found by running the code
+  BOOST_CHECK_CLOSE(calculatePredictedChi2(ts), 1., 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(CalculateFilteredChi2) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto ts = createTestTrackState(tc);
+
+  // reference found by running the code
+  BOOST_CHECK_CLOSE(calculateFilteredChi2(ts), 1. / 3., 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(CalculateSmoothedChi2) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto ts = createTestTrackState(tc);
+
+  // reference found by running the code
+  BOOST_CHECK_CLOSE(calculateSmoothedChi2(ts), 1. / 55., 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(CalculateUnbiasedParametersCovariance) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto ts = createTestTrackState(tc);
+
+  auto [params, cov] = calculateUnbiasedParametersCovariance(ts);
+
+  // reference found by running the code
+  BoundVector refParams = BoundVector::Zero();
+  refParams[eBoundLoc0] = 1. / 9.;
+  refParams[eBoundLoc1] = 1. / 9.;
+  BoundMatrix refCov = BoundMatrix::Identity() * 0.1;
+  refCov(eBoundLoc0, eBoundLoc0) = 1. / 9.;
+  refCov(eBoundLoc1, eBoundLoc1) = 1. / 9.;
+
+  CHECK_CLOSE_ABS(params, refParams, 1e-6);
+  CHECK_CLOSE_ABS(cov, refCov, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

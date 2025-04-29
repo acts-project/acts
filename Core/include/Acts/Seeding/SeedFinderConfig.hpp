@@ -15,6 +15,7 @@
 
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -33,8 +34,8 @@ struct SeedFinderConfig {
   /// Geometry Settings + Detector ROI
   /// (r, z, phi) range for limiting location of all measurements and grid
   /// creation
-  float phiMin = -M_PI;
-  float phiMax = M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
+  float phiMax = std::numbers::pi_v<float>;
   float zMin = -2800 * Acts::UnitConstants::mm;
   float zMax = 2800 * Acts::UnitConstants::mm;
   float rMax = 600 * Acts::UnitConstants::mm;

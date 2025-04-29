@@ -8,12 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -21,14 +18,10 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 
-#include <algorithm>
 #include <array>
-#include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace Acts {
 class TrackingGeometry;

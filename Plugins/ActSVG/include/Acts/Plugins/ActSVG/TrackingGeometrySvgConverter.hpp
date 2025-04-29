@@ -69,8 +69,8 @@ struct Options {
 
   TrackingGeometryConverter::Options trackingGeometryOptions;
 
-  std::array<std::array<Acts::ActsScalar, 2>, 2> rzAxes;
-  std::vector<ActsScalar> rzEtaLines;
+  std::array<std::array<double, 2>, 2> rzAxes;
+  std::vector<double> rzEtaLines;
 };
 
 /// Convert into xy and zr projections only
@@ -86,6 +86,11 @@ std::array<actsvg::svg::object, 2> convert(
     const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
     const Options& cOptions);
 }  // namespace TrackingGeometryProjections
+
+std::vector<actsvg::svg::object> drawTrackingGeometry(
+    const GeometryContext& gctx, const TrackingGeometry& tGeometry,
+    std::variant<actsvg::views::x_y, actsvg::views::z_r> view,
+    bool drawSurfaces = true, bool highlightMaterial = false);
 
 }  // namespace Svg
 

@@ -11,11 +11,11 @@
 // TODO: update to C++17 style
 // Consider to moving to detail subdirectory
 #include <fstream>
-#include <iostream>
 #include <map>
+#include <memory>
 #include <vector>
 
-namespace Acts {
+namespace Acts::Experimental {
 
 struct GbtsConnection {
  public:
@@ -28,26 +28,20 @@ struct GbtsConnection {
 class GbtsConnector {
  public:
   struct LayerGroup {
-    LayerGroup(unsigned int l1Key,
-               const std::vector<const Acts::GbtsConnection *> &v)
+    LayerGroup(unsigned int l1Key, const std::vector<const GbtsConnection *> &v)
         : m_dst(l1Key), m_sources(v) {}
 
     unsigned int m_dst;  // the target layer of the group
-    std::vector<const Acts::GbtsConnection *>
+    std::vector<const GbtsConnection *>
         m_sources;  // the source layers of the group
   };
 
-  GbtsConnector(std::ifstream &inFile);
-
-  ~GbtsConnector();
+  explicit GbtsConnector(std::ifstream &inFile);
 
   float m_etaBin{};
 
   std::map<int, std::vector<struct LayerGroup>> m_layerGroups;
-  std::map<int, std::vector<Acts::GbtsConnection *>> m_connMap;
-  // TODO: change to std::map<int, std::vector<Acts::GbtsConnection> >
-  // m_connMap; or   std::map<int,
-  // std::vector<std::unique_ptr<Acts::GbtsConnection>> > m_connMap;
+  std::map<int, std::vector<std::unique_ptr<GbtsConnection>>> m_connMap;
 };
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

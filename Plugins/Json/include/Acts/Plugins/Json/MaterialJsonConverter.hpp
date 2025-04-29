@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
@@ -21,6 +20,7 @@
 // can not match our naming guidelines.
 namespace Acts {
 
+class Surface;
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class BinUtility;

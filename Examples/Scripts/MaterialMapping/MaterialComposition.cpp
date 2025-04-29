@@ -24,7 +24,7 @@
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-#if ((BOOST_VERSION / 100) % 1000) <= 71
+#if BOOST_VERSION < 107200
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
 

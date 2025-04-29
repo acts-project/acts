@@ -2,6 +2,7 @@ add_library(
     ActsExamplesIoObj
     SHARED
     src/ObjTrackingGeometryWriter.cpp
+    src/ObjSimHitWriter.cpp
     src/ObjPropagationStepsWriter.cpp
 )
 
@@ -13,5 +14,7 @@ target_link_libraries(
     ActsExamplesIoObj
     PUBLIC ActsCore ActsExamplesFramework Threads::Threads
 )
+
+acts_compile_headers(ActsExamplesIoObj GLOB "include/**/*.hpp")
 
 install(TARGETS ActsExamplesIoObj LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -15,8 +15,9 @@ namespace Acts {
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
 SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config)
-    : m_config(config) {
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_config(config), m_logger(std::move(logger)) {
   if (!config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
@@ -36,7 +37,9 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename grid_t, typename platform_t>
-template <typename container_t, typename sp_range_t>
+template <typename container_t, Acts::GridBinCollection sp_range_t>
+  requires Acts::CollectionStoresSeedsTo<container_t, external_spacepoint_t,
+                                         3ul>
 void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     const grid_t& grid, container_t& outputCollection,
@@ -104,40 +107,26 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
     return;
   }
 
+  // we compute this here since all middle space point candidates belong to the
+  // same z-bin
+  auto [minRadiusRangeForMiddle, maxRadiusRangeForMiddle] =
+      retrieveRadiusRangeForMiddle(*middleSPs.front(), rMiddleSPRange);
+  ACTS_VERBOSE("Current global bin: " << middleSPsIdx << ", z value of "
+                                      << middleSPs.front()->z());
+  ACTS_VERBOSE("Validity range (radius) for the middle space point is ["
+               << minRadiusRangeForMiddle << ", " << maxRadiusRangeForMiddle
+               << "]");
+
   for (const external_spacepoint_t* spM : middleSPs) {
     const float rM = spM->radius();
 
     // check if spM is outside our radial region of interest
-    if (m_config.useVariableMiddleSPRange) {
-      if (rM < rMiddleSPRange.min()) {
-        continue;
-      }
-      if (rM > rMiddleSPRange.max()) {
-        // break because SPs are sorted in r
-        break;
-      }
-    } else if (!m_config.rRangeMiddleSP.empty()) {
-      /// get zBin position of the middle SP
-      auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
-                                   m_config.zBinEdges.end(), spM->z());
-      int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
-      /// protects against zM at the limit of zBinEdges
-      zBin == 0 ? zBin : --zBin;
-      if (rM < m_config.rRangeMiddleSP[zBin][0]) {
-        continue;
-      }
-      if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-        // break because SPs are sorted in r
-        break;
-      }
-    } else {
-      if (rM < m_config.rMinMiddle) {
-        continue;
-      }
-      if (rM > m_config.rMaxMiddle) {
-        // break because SPs are sorted in r
-        break;
-      }
+    if (rM < minRadiusRangeForMiddle) {
+      continue;
+    }
+    if (rM > maxRadiusRangeForMiddle) {
+      // break because SPs are sorted in r
+      break;
     }
 
     const float zM = spM->z();
@@ -154,6 +143,7 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
+      ACTS_VERBOSE("No compatible Tops, moving to next middle candidate");
       continue;
     }
 
@@ -175,6 +165,10 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
       seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
       // continue if number of top SPs is smaller than minimum
       if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+        ACTS_VERBOSE(
+            "Number of top SPs is "
+            << state.compatTopSP.size()
+            << " and is smaller than minimum, moving to next middle candidate");
         continue;
       }
     }
@@ -188,9 +182,14 @@ void SeedFinder<external_spacepoint_t, grid_t, platform_t>::createSeedsForGroup(
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
+      ACTS_VERBOSE("No compatible Bottoms, moving to next middle candidate");
       continue;
     }
 
+    ACTS_VERBOSE("Candidates: " << state.compatBottomSP.size()
+                                << " bottoms and " << state.compatTopSP.size()
+                                << " tops for middle candidate indexed "
+                                << spM->index());
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
       filterCandidates<Acts::DetectorMeasurementInfo::eDetailed>(
@@ -386,8 +385,15 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // interactionPointCut == true we apply this cut first cuts before
-      // coordinate transformation to avoid unnecessary calculations
+      // We check the interaction point by evaluating the minimal distance
+      // between the origin and the straight line connecting the two points in
+      // the doublets. Using a geometric similarity, the Im is given by
+      // yNewFrame * rM / deltaR <= m_config.impactMax
+      // However, we make here an approximation of the impact parameter
+      // which is valid under the assumption yNewFrame / xNewFrame is small
+      // The correct computation would be:
+      // yNewFrame * yNewFrame * rM * rM <= m_config.impactMax *
+      // m_config.impactMax * deltaR2
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
         // check if duplet cotTheta is within the region of interest
         // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
@@ -825,6 +831,26 @@ SeedFinder<external_spacepoint_t, grid_t, platform_t>::filterCandidates(
         state.topSpVec, state.curvatures, state.impactParameters,
         seedFilterState, state.candidates_collector);
   }  // loop on bottoms
+}
+
+template <typename external_spacepoint_t, typename grid_t, typename platform_t>
+std::pair<float, float> SeedFinder<external_spacepoint_t, grid_t, platform_t>::
+    retrieveRadiusRangeForMiddle(
+        const external_spacepoint_t& spM,
+        const Acts::Range1D<float>& rMiddleSPRange) const {
+  if (m_config.useVariableMiddleSPRange) {
+    return {rMiddleSPRange.min(), rMiddleSPRange.max()};
+  }
+  if (!m_config.rRangeMiddleSP.empty()) {
+    /// get zBin position of the middle SP
+    auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
+                                 m_config.zBinEdges.end(), spM.z());
+    int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
+    /// protects against zM at the limit of zBinEdges
+    zBin == 0 ? zBin : --zBin;
+    return {m_config.rRangeMiddleSP[zBin][0], m_config.rRangeMiddleSP[zBin][1]};
+  }
+  return {m_config.rMinMiddle, m_config.rMaxMiddle};
 }
 
 }  // namespace Acts

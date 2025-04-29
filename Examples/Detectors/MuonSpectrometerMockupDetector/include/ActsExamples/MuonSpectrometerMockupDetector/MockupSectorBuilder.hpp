@@ -55,7 +55,7 @@ class MockupSectorBuilder {
 
   /// Constructor
   ///@param config The configuration struct
-  MockupSectorBuilder(const Config& config);
+  explicit MockupSectorBuilder(const Config& config);
 
   /// Destructor
   ~MockupSectorBuilder() = default;

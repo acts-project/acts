@@ -92,7 +92,7 @@ std::ostream& operator<<(std::ostream& os, const Style& style);
 
 struct Node {
   std::string id;
-  std::string label;
+  std::string label = "";
   Shape shape = Shape::Ellipse;
   std::vector<Style> style = {Style::Solid};
 };

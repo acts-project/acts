@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
@@ -17,7 +16,7 @@
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Plugins/Json/IndexedGridJsonHelper.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"

@@ -12,21 +12,20 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Utilities/Result.hpp"
 
-#include <ostream>
-#include <system_error>
 #include <utility>
 
 #include <G4SystemOfUnits.hh>
 #include <G4UnitsTable.hh>
 
-ActsExamples::MagneticFieldWrapper::MagneticFieldWrapper(
+namespace ActsExamples::Geant4 {
+
+MagneticFieldWrapper::MagneticFieldWrapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4MagneticField(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-void ActsExamples::MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
-                                                       G4double* Bfield) const {
+void MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
+                                         G4double* Bfield) const {
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertField = CLHEP::tesla / Acts::UnitConstants::T;
 
@@ -47,3 +46,5 @@ void ActsExamples::MagneticFieldWrapper::GetFieldValue(const G4double Point[4],
   Bfield[1] = convertField * field[1];
   Bfield[2] = convertField * field[2];
 }
+
+}  // namespace ActsExamples::Geant4

@@ -11,8 +11,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
 
 #include <map>
 #include <memory>
@@ -100,7 +100,7 @@ class ResPlotTool {
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
   void fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
-            const ActsFatras::Particle& truthParticle,
+            const SimParticleState& truthParticle,
             const Acts::BoundTrackParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details

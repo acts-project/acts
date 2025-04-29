@@ -19,7 +19,7 @@
 #include "Acts/Navigation/InternalNavigation.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
@@ -36,11 +36,11 @@ Acts::GeometryContext tContext;
 
 Acts::Experimental::NavigationState nState;
 
-Acts::ActsScalar r0 = 0.;
-Acts::ActsScalar r1 = 10.;
-Acts::ActsScalar r2 = 100.;
-Acts::ActsScalar r3 = 200.;
-Acts::ActsScalar zHalfL = 200.;
+double r0 = 0.;
+double r1 = 10.;
+double r2 = 100.;
+double r3 = 200.;
+double zHalfL = 200.;
 
 Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -122,16 +122,16 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
       Acts::Axis<Acts::AxisType::Variable, Acts::AxisBoundaryType::Bound>;
   using Grid = Acts::Grid<SingleIndex, Axis>;
 
-  std::vector<Acts::ActsScalar> b = {r0, r1, r2, r3};
+  std::vector<double> b = {r0, r1, r2, r3};
   Axis a(b);
   Grid g(std::make_tuple(a));
 
-  g.atPosition(std::array<Acts::ActsScalar, 1u>{5.}) = 0u;
-  g.atPosition(std::array<Acts::ActsScalar, 1u>{50.}) = 1u;
-  g.atPosition(std::array<Acts::ActsScalar, 1u>{150.}) = 2u;
+  g.atPosition(std::array<double, 1u>{5.}) = 0u;
+  g.atPosition(std::array<double, 1u>{50.}) = 1u;
+  g.atPosition(std::array<double, 1u>{150.}) = 2u;
 
   Acts::Experimental::IndexedDetectorVolumesImpl<decltype(g)> idv(
-      std::move(g), {Acts::BinningValue::binR});
+      std::move(g), {Acts::AxisDirection::AxisR});
 
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);

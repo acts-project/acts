@@ -37,7 +37,7 @@ Vector3 Vertex::position() const {
   return VectorHelpers::position(m_position);
 }
 
-ActsScalar Vertex::time() const {
+double Vertex::time() const {
   return m_position[eTime];
 }
 
@@ -74,7 +74,7 @@ const std::vector<TrackAtVertex>& Vertex::tracks() const {
 }
 
 std::pair<double, double> Vertex::fitQuality() const {
-  return std::pair<double, double>(m_chiSquared, m_numberDoF);
+  return {m_chiSquared, m_numberDoF};
 }
 
 void Vertex::setPosition(const Vector3& position) {
@@ -85,7 +85,7 @@ void Vertex::setFullPosition(const Vector4& fullPosition) {
   m_position = fullPosition;
 }
 
-void Vertex::setTime(ActsScalar time) {
+void Vertex::setTime(double time) {
   m_position[eTime] = time;
 }
 

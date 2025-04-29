@@ -9,10 +9,13 @@
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <algorithm>
 
 #include <torch/torch.h>
+
+using namespace torch::indexing;
 
 namespace {
 
@@ -22,6 +25,7 @@ auto cantorize(std::vector<std::int64_t> edgeIndex,
   // operations to compute efficiency and purity
   std::vector<Acts::detail::CantorEdge<std::int64_t>> cantorEdgeIndex;
   cantorEdgeIndex.reserve(edgeIndex.size() / 2);
+
   for (auto it = edgeIndex.begin(); it != edgeIndex.end(); it += 2) {
     cantorEdgeIndex.emplace_back(*it, *std::next(it));
   }
@@ -52,9 +56,27 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any& edges,
                                                   const std::any&) const {
+  auto edgeIndexTensor =
+      std::any_cast<torch::Tensor>(edges).to(torch::kCPU).contiguous();
+  ACTS_VERBOSE("edge index tensor: " << detail::TensorDetails{edgeIndexTensor});
+
+  const auto numEdges = edgeIndexTensor.size(1);
+  if (numEdges == 0) {
+    ACTS_WARNING("no edges, cannot compute metrics");
+    return;
+  }
+  ACTS_VERBOSE("Edge index slice:\n"
+               << edgeIndexTensor.index(
+                      {Slice(0, 2), Slice(0, std::min(numEdges, 10l))}));
+
   // We need to transpose the edges here for the right memory layout
-  const auto edgeIndex = Acts::detail::tensor2DToVector<std::int64_t>(
-      std::any_cast<torch::Tensor>(edges).t());
+  const auto edgeIndex =
+      Acts::detail::tensor2DToVector<std::int64_t>(edgeIndexTensor.t().clone());
+
+  ACTS_VERBOSE("Edge vector:\n"
+               << (detail::RangePrinter{
+                      edgeIndex.begin(),
+                      edgeIndex.begin() + std::min(numEdges, 10l)}));
 
   auto predGraphCantor = cantorize(edgeIndex, logger());
 

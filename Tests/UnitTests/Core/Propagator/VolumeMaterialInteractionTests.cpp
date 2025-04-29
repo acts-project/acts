@@ -44,7 +44,7 @@ struct NaivgatorState {
 /// @brief Simplified propagator state
 struct State {
   struct {
-    Direction direction = Direction::Forward;
+    Direction direction = Direction::Forward();
   } options;
 
   StepperState stepping;
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a propagator state
   State state;
   state.stepping.particleHypothesis =
-      ParticleHypothesis(static_cast<PdgParticle>(11), 10., 9.);
+      ParticleHypothesis(static_cast<PdgParticle>(11), 10., AnyCharge{9.});
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.t = 7.;
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.q = 9.;
   state.stepping.absCharge = std::abs(state.stepping.q);
   state.stepping.covTransport = true;
-  state.options.direction = Direction::Backward;
+  state.options.direction = Direction::Backward();
   state.navigation.currentVolume = volume.get();
 
   Stepper stepper;

@@ -46,7 +46,7 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
   /// Constructor with arguments
   /// @param ns the provided list of names
   /// @param e whether to select them exact or not
-  NameSelector(const std::vector<std::string>& ns, bool e = false)
+  explicit NameSelector(const std::vector<std::string>& ns, bool e = false)
       : names(ns), exact(e) {}
 
   /// Secect function for the volume
@@ -70,7 +70,7 @@ struct PositionSelector : public IGeant4PhysicalVolumeSelector {
 
   /// Constructor with arguments
   /// @param ranges the provided map of axes of ranges
-  PositionSelector(
+  explicit PositionSelector(
       const std::map<unsigned int, std::tuple<double, double>>& ranges)
       : m_ranges(ranges) {}
 

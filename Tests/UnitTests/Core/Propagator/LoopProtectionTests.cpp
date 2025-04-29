@@ -12,8 +12,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -27,15 +25,12 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <limits>
 #include <memory>
-#include <optional>
+#include <numbers>
 #include <random>
 #include <string>
-#include <tuple>
 #include <utility>
 
 namespace bdata = boost::unit_test::data;
@@ -94,7 +89,7 @@ struct Options {
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
   double loopFraction = 0.5;
-  Direction direction = Direction::Forward;
+  Direction direction = Direction::Forward();
 
   bool debug = false;
   std::string debugString;
@@ -122,12 +117,12 @@ struct PropagatorState {
 BOOST_DATA_TEST_CASE(
     loop_aborter_test,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution =
-                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       -std::numbers::pi, std::numbers::pi))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 22,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::xrange(1),
     phi, deltaPhi, index) {
   (void)index;
@@ -165,14 +160,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 21,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
@@ -194,8 +189,9 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4(0, 0, 0, 42), phi, theta, q / p, std::nullopt,
+      ParticleHypothesis::pion());
 
   using PropagatorOptions = EigenPropagator::Options<ActorList<>>;
   PropagatorOptions options(tgContext, mfContext);

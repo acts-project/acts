@@ -8,31 +8,33 @@
 
 #pragma once
 
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <exception>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts::detail::GeoModelBinningHelper {
 
-/// @brief Helper to transform binning string to BinningValue enum
+/// @brief Helper to transform binning string to AxisDirection enum
 ///
 /// @param binning the binning string
-inline BinningValue toBinningValue(const std::string& binning) {
+inline AxisDirection toAxisDirection(const std::string& binning) {
+  using enum AxisDirection;
   if (binning == "x") {
-    return BinningValue::binX;
+    return AxisX;
   } else if (binning == "y") {
-    return BinningValue::binY;
+    return AxisY;
   } else if (binning == "z") {
-    return BinningValue::binZ;
+    return AxisZ;
   } else if (binning == "r") {
-    return BinningValue::binR;
+    return AxisR;
   } else if (binning == "phi") {
-    return BinningValue::binPhi;
+    return AxisPhi;
   }
   throw std::invalid_argument("GeoModelBinningHelper: Unknown binning value '" +
                               binning + "'");
@@ -43,8 +45,8 @@ inline BinningValue toBinningValue(const std::string& binning) {
 /// @param binning the binning string
 /// @param extent the extent of the binning
 ///
-/// @return a ProtoBinning object
-Acts::Experimental::ProtoBinning toProtoBinning(
+/// @return a DirectedProtoAxis object and the bin expansion
+std::tuple<Acts::DirectedProtoAxis, std::size_t> toProtoAxis(
     const std::string& binning,
     const std::optional<Extent>& extent = std::nullopt);
 

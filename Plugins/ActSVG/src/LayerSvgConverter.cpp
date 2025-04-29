@@ -81,16 +81,16 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     zr_layer._id = cOptions.name + "_zr_view";
     unsigned int m = 0;
     // Potential labels
-    Acts::ActsScalar avgRadius = 0.;
+    double avgRadius = 0.;
 
     for (const auto& sf : layer.surfaceArray()->surfaces()) {
       // Surface center
       const Acts::Vector3 rCenter =
-          sf->binningPosition(gctx, Acts::BinningValue::binR);
+          sf->referencePosition(gctx, Acts::AxisDirection::AxisR);
       const Acts::Vector3 sfCenter = sf->center(gctx);
-      Acts::ActsScalar radius = Acts::VectorHelpers::perp(rCenter);
-      Acts::ActsScalar phi = Acts::VectorHelpers::phi(rCenter);
-      Acts::ActsScalar z = sfCenter.z();
+      double radius = Acts::VectorHelpers::perp(rCenter);
+      double phi = Acts::VectorHelpers::phi(rCenter);
+      double z = sfCenter.z();
       // Get the average radius
       avgRadius += radius;
       // Raw display surfaces for projects
@@ -112,8 +112,8 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
 
     // Add a measure iuf requested
     if (cOptions.labelProjection) {
-      ActsScalar xEnd = avgRadius * std::cos(cOptions.labelGauge);
-      ActsScalar yEnd = avgRadius * std::sin(cOptions.labelGauge);
+      double xEnd = avgRadius * std::cos(cOptions.labelGauge);
+      double yEnd = avgRadius * std::sin(cOptions.labelGauge);
       xy_layer.add_object(measure(0., 0., xEnd, yEnd, "r", avgRadius, "mm"));
     }
   }

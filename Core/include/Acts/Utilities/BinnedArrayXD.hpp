@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -40,7 +41,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// Constructor for single object
   ///
   /// @tparam object is the single object
-  BinnedArrayXD(T object)
+  explicit BinnedArrayXD(T object)
       : BinnedArray<T>(),
         m_objectGrid(
             1, std::vector<std::vector<T>>(1, std::vector<T>(1, nullptr))),

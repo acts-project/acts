@@ -9,11 +9,13 @@
 /// This file implements the tools for a hough transform.
 
 #pragma once
+
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <algorithm>
 #include <array>
 #include <map>
 #include <optional>
@@ -162,7 +164,7 @@ class HoughPlane {
 
   /// @brief instantiate the (empty) hough plane
   /// @param cfg: configuration
-  HoughPlane(const HoughPlaneConfig& cfg);
+  explicit HoughPlane(const HoughPlaneConfig& cfg);
 
   /// fill and reset methods to modify the grid content
 
@@ -327,7 +329,7 @@ class LayerGuidedCombinatoric {
   };
   /// @brief constructor
   /// @param cfg: Configuration object
-  LayerGuidedCombinatoric(const LayerGuidedCombinatoricConfig& cfg);
+  explicit LayerGuidedCombinatoric(const LayerGuidedCombinatoricConfig& cfg);
 
   /// @brief main peak finder method.
   /// @param plane: Filled hough plane to search
@@ -376,7 +378,7 @@ class IslandsAroundMax {
   };
   /// @brief constructor.
   /// @param cfg: configuration object
-  IslandsAroundMax(const IslandsAroundMaxConfig& cfg);
+  explicit IslandsAroundMax(const IslandsAroundMaxConfig& cfg);
 
   /// @brief main peak finder method.
   /// @param plane: The filled hough plane to search

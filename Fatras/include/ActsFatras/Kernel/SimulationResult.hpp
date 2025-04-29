@@ -38,11 +38,10 @@ struct SimulationResult {
   // Whether the particle is still alive and the simulation should continue
   bool isAlive = true;
   // Proper time limit before decay.
-  Particle::Scalar properTimeLimit =
-      std::numeric_limits<Particle::Scalar>::quiet_NaN();
+  double properTimeLimit = std::numeric_limits<double>::quiet_NaN();
   // Accumulated radiation/interaction length limit before next interaction.
-  Particle::Scalar x0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
-  Particle::Scalar l0Limit = std::numeric_limits<Particle::Scalar>::quiet_NaN();
+  double x0Limit = std::numeric_limits<double>::quiet_NaN();
+  double l0Limit = std::numeric_limits<double>::quiet_NaN();
   // Process selection for the next interaction.
   std::size_t x0Process = std::numeric_limits<std::size_t>::max();
   std::size_t l0Process = std::numeric_limits<std::size_t>::max();

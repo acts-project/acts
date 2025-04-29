@@ -1,7 +1,5 @@
 set(SOURCES
-    src/AmbiguityResolutionML.cpp
     src/AmbiguityResolutionMLAlgorithm.cpp
-    src/AmbiguityResolutionMLDBScanAlgorithm.cpp
     src/SeedFilterMLAlgorithm.cpp
 )
 
@@ -16,6 +14,8 @@ target_link_libraries(
     ActsExamplesTrackFindingML
     PUBLIC ActsCore ActsPluginOnnx ActsExamplesFramework
 )
+
+acts_compile_headers(ActsExamplesTrackFindingML GLOB "include/**/*.hpp")
 
 install(
     TARGETS ActsExamplesTrackFindingML

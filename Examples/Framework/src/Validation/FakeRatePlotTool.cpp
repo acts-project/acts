@@ -8,9 +8,8 @@
 
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <TEfficiency.h>
 #include <TH2.h>
@@ -109,7 +108,7 @@ void ActsExamples::FakeRatePlotTool::fill(
 
 void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
-    const ActsFatras::Particle& truthParticle, std::size_t nTruthMatchedTracks,
+    const SimParticleState& truthParticle, std::size_t nTruthMatchedTracks,
     std::size_t nFakeTracks) const {
   const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();

@@ -18,8 +18,10 @@ class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
-class PhysicsListFactory;
 class Geant4Manager;
+namespace Geant4 {
+class PhysicsListFactory;
+}
 
 /// Manages the life time of G4RunManager and G4VUserPhysicsList.
 ///
@@ -75,12 +77,14 @@ class Geant4Manager {
   /// Registers a named physics list factory to the manager for easy
   /// instantiation when needed.
   void registerPhysicsListFactory(
-      std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactory);
+      std::string name,
+      std::shared_ptr<Geant4::PhysicsListFactory> physicsListFactory);
   std::unique_ptr<G4VUserPhysicsList> createPhysicsList(
       const std::string &name) const;
 
   /// Get the current list of physics list factories.
-  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>> &
+  const std::unordered_map<std::string,
+                           std::shared_ptr<Geant4::PhysicsListFactory>> &
   getPhysicsListFactories() const;
 
  private:
@@ -89,7 +93,7 @@ class Geant4Manager {
 
   bool m_created = false;
   std::weak_ptr<Geant4Handle> m_handle;
-  std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
+  std::unordered_map<std::string, std::shared_ptr<Geant4::PhysicsListFactory>>
       m_physicsListFactories;
 };
 

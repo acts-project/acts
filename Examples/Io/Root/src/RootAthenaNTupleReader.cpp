@@ -43,7 +43,7 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   m_outputRecoVtxParameters.initialize(m_cfg.outputRecoVtxParameters);
   m_outputBeamspotConstraint.initialize(m_cfg.outputBeamspotConstraint);
 
-  m_inputChain = new TChain(m_cfg.inputTreeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.inputTreeName.c_str());
 
   // unused event identifier
   std::int32_t eventNumber = 0;
@@ -115,6 +115,8 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
+
+ActsExamples::RootAthenaNTupleReader::~RootAthenaNTupleReader() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     const ActsExamples::AlgorithmContext& context) {

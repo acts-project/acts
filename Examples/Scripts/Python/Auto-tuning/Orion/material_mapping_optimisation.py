@@ -167,7 +167,8 @@ def runMaterialMappingVariance(
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(inputPath, "geometry-map.json"))
     )
-    detectorTemp, trackingGeometryTemp, decoratorsTemp = getOpenDataDetector(matDeco)
+    detectorTemp = getOpenDataDetector(matDeco)
+    trackingGeometryTemp = detectorTemp.trackingGeometry()
     matMapDeco = acts.MappingMaterialDecorator(
         tGeometry=trackingGeometryTemp, level=acts.logging.ERROR
     )
@@ -175,7 +176,9 @@ def runMaterialMappingVariance(
     matMapDeco.setBinningMap(binMap)
 
     # Decorate the detector with the MappingMaterialDecorator
-    detector, trackingGeometry, decorators = getOpenDataDetector(matMapDeco)
+    detector = getOpenDataDetector(matMapDeco)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     # Sequence for the mapping, only use one thread when mapping material
     sMap = acts.examples.Sequencer(
@@ -207,7 +210,9 @@ def runMaterialMappingVariance(
     # Use the material map from the previous mapping as an input
     cborMap = os.path.join(pathExp, (mapName + ".cbor"))
     matDecoVar = acts.IMaterialDecorator.fromFile(cborMap)
-    detectorVar, trackingGeometryVar, decoratorsVar = getOpenDataDetector(matDecoVar)
+    detectorVar = getOpenDataDetector(matDecoVar)
+    trackingGeometryVar = detectorVar.trackingGeometry()
+    decoratorsVar = detectorVar.contextDecorators()
     s = acts.examples.Sequencer(events=events, numThreads=1, logLevel=acts.logging.INFO)
     for decorator in decoratorsVar:
         s.addContextDecorator(decorator)
@@ -463,7 +468,9 @@ if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile(
         str(os.path.join(args.inputPath, "geometry-map.json"))
     )
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector = getOpenDataDetector(matDeco)
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     # Use the MappingMaterialDecorator to create a binning map that can be optimised
     matMapDeco = acts.MappingMaterialDecorator(

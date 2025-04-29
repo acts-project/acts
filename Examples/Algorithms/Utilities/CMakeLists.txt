@@ -7,7 +7,6 @@ add_library(
     src/TrackSelectorAlgorithm.cpp
     src/TracksToTrajectories.cpp
     src/PrototracksToTracks.cpp
-    src/HitSelector.cpp
     src/TracksToParameters.cpp
 )
 target_include_directories(

@@ -84,7 +84,8 @@ class IntersectSurfacesFinder : public IAssignmentFinder {
 /// @brief Interface for the material mapping, this is the accumulation step
 class MaterialBlender : public ISurfaceMaterialAccumulater {
  public:
-  MaterialBlender(const std::vector<std::shared_ptr<Surface>>& surfaces = {})
+  explicit MaterialBlender(
+      const std::vector<std::shared_ptr<Surface>>& surfaces = {})
       : m_surfaces(surfaces) {}
 
   /// The state of the material accumulater, this is used
@@ -173,7 +174,7 @@ BOOST_AUTO_TEST_CASE(MaterialMapperFlowTest) {
                                            100.0)};
 
   for (auto [is, surface] : enumerate(surfaces)) {
-    surface->assignGeometryId(GeometryIdentifier().setSensitive(is + 1));
+    surface->assignGeometryId(GeometryIdentifier().withSensitive(is + 1));
   }
 
   // The assigner

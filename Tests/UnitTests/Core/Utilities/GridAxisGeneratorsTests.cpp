@@ -10,11 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Axis.hpp"
-#include "Acts/Utilities/AxisFwd.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/GridAxisGenerators.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <tuple>
 #include <utility>
 
@@ -44,11 +45,11 @@ BOOST_AUTO_TEST_CASE(Eq1D) {
   BOOST_CHECK(axisC.getBoundaryType() == AxisBoundaryType::Closed);
 
   // Test that we can make a grid out of this
-  EqBound::grid_type<bool> eqbGrid(std::move(axisTupleB));
+  EqBound::grid_type<std::byte> eqbGrid(std::move(axisTupleB));
 }
 
 BOOST_AUTO_TEST_CASE(EqEq2D) {
-  EqOpenEqClosed eoec{{0, 10}, 10u, {-M_PI, M_PI}, 16u};
+  EqOpenEqClosed eoec{{0, 10}, 10u, {-std::numbers::pi, std::numbers::pi}, 16u};
   auto axisTuple = eoec();
   BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(EqEq2D) {
   BOOST_CHECK(axisEq.getBoundaryType() == AxisBoundaryType::Closed);
   BOOST_CHECK(axisEq.isEquidistant());
   // Test that we can make a grid out of this
-  EqOpenEqClosed::grid_type<bool> eoecGrid(std::move(axisTuple));
+  EqOpenEqClosed::grid_type<std::byte> eoecGrid(std::move(axisTuple));
 }
 
 BOOST_AUTO_TEST_CASE(EqVar2D) {
@@ -72,11 +73,12 @@ BOOST_AUTO_TEST_CASE(EqVar2D) {
   BOOST_CHECK(axisEq.getBoundaryType() == AxisBoundaryType::Open);
   BOOST_CHECK(axisEq.isVariable());
   // Test that we can make a grid out of this
-  EqBoundVarOpen::grid_type<bool> ebvoGrid(std::move(axisTuple));
+  EqBoundVarOpen::grid_type<std::byte> ebvoGrid(std::move(axisTuple));
 }
 
 BOOST_AUTO_TEST_CASE(VarEq2D) {
-  VarBoundEqClosed vbec{{10., 20, 30, 40}, {-M_PI, M_PI}, 12u};
+  VarBoundEqClosed vbec{
+      {10., 20, 30, 40}, {-std::numbers::pi, std::numbers::pi}, 12u};
   auto axisTuple = vbec();
   BOOST_CHECK_EQUAL(std::tuple_size<decltype(axisTuple)>{}, 2u);
   auto axisVar = std::get<0u>(axisTuple);
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(VarEq2D) {
   BOOST_CHECK(axisEq.getBoundaryType() == AxisBoundaryType::Closed);
   BOOST_CHECK(axisEq.isEquidistant());
   // Test that we can make a grid out of this
-  VarBoundEqClosed::grid_type<bool> vbecGrid(std::move(axisTuple));
+  VarBoundEqClosed::grid_type<std::byte> vbecGrid(std::move(axisTuple));
 }
 
 BOOST_AUTO_TEST_CASE(VarVar2D) {
@@ -100,7 +102,7 @@ BOOST_AUTO_TEST_CASE(VarVar2D) {
   BOOST_CHECK(axisEq.getBoundaryType() == AxisBoundaryType::Bound);
   BOOST_CHECK(axisEq.isVariable());
   // Test that we can make a grid out of this
-  VarBoundVarBound::grid_type<bool> vbvbGrid(std::move(axisTuple));
+  VarBoundVarBound::grid_type<std::byte> vbvbGrid(std::move(axisTuple));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

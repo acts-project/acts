@@ -76,7 +76,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -86,6 +85,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -168,8 +168,6 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputSeeds;
     /// Output hough track collection.
     std::string outputProtoTracks;
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
@@ -197,10 +195,10 @@ class HoughTransformSeeder final : public IAlgorithm {
 
     unsigned nLayers = 10;  // total number of layers
 
-    float xMin = 0;            // minphi
-    float xMax = 2 * 3.14159;  // maxphi
-    float yMin = -1.0;         // min q/pt, -1/1 GeV
-    float yMax = 1.0;          // max q/pt, +1/1 GeV
+    float xMin = 0.;                    // minphi
+    float xMax = 2 * std::numbers::pi;  // maxphi
+    float yMin = -1.;                   // min q/pt, -1/1 GeV
+    float yMax = 1.;                    // max q/pt, +1/1 GeV
 
     /// Size of the houghHists. One obvious concern with this being too big is
     /// that it will take up more memory But the bins of the houghHist are
@@ -280,9 +278,6 @@ class HoughTransformSeeder final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience

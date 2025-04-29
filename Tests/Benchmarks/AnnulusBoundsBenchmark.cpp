@@ -52,14 +52,14 @@ int main(int /*argc*/, char** /*argv[]*/) {
   auto random_point = [&]() -> Vector2 { return {xDist(rng), yDist(rng)}; };
 
   // for covariance based check, set up one;
-  ActsMatrix<2, 2> cov;
+  SquareMatrix2 cov;
   cov << 1.0, 0, 0, 0.05;
 
   BoundaryTolerance bcAbs = BoundaryTolerance::None();
-  BoundaryTolerance bcTol0 = BoundaryTolerance::AbsoluteBound{1.0, 0};
-  BoundaryTolerance bcTol1 = BoundaryTolerance::AbsoluteBound{0, 0.2};
-  BoundaryTolerance bcTol01 = BoundaryTolerance::AbsoluteBound{1.0, 0.2};
-  BoundaryTolerance bcCov = BoundaryTolerance::Chi2Bound{cov, 1};
+  BoundaryTolerance bcTol0 = BoundaryTolerance::AbsoluteBound(1.0, 0.0);
+  BoundaryTolerance bcTol1 = BoundaryTolerance::AbsoluteBound(0.0, 0.2);
+  BoundaryTolerance bcTol01 = BoundaryTolerance::AbsoluteBound(1.0, 0.2);
+  BoundaryTolerance bcCov = BoundaryTolerance::Chi2Bound(cov, 1.0);
 
   // visualization to make sense of things
   for (std::size_t i = 0; i < 10000; i++) {

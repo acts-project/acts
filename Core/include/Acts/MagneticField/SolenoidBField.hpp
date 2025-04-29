@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <cstddef>
-#include <functional>
 
 namespace Acts {
 
@@ -71,7 +70,7 @@ class SolenoidBField final : public MagneticFieldProvider {
  public:
   struct Cache {
     /// @brief Constructor with magnetic field context
-    Cache(const MagneticFieldContext& /*mctx*/) {}
+    explicit Cache(const MagneticFieldContext& /*mctx*/) {}
   };
 
   /// Config struct for the SolenoidBfield.
@@ -91,7 +90,7 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @brief the constructor with a shared pointer
   /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
-  SolenoidBField(Config config);
+  explicit SolenoidBField(Config config);
 
   /// @brief Retrieve magnetic field value in local (r,z) coordinates
   ///
@@ -110,14 +109,6 @@ class SolenoidBField final : public MagneticFieldProvider {
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
   Result<Vector3> getField(const Vector3& position,
                            MagneticFieldProvider::Cache& cache) const override;
-
-  /// @copydoc MagneticFieldProvider::getFieldGradient(const Vector3&,ActsMatrix<3,3>&,MagneticFieldProvider::Cache&) const
-  ///
-  /// @note currently the derivative is not calculated
-  /// @todo return derivative
-  Result<Vector3> getFieldGradient(
-      const Vector3& position, ActsMatrix<3, 3>& derivative,
-      MagneticFieldProvider::Cache& cache) const override;
 
  private:
   Config m_cfg;

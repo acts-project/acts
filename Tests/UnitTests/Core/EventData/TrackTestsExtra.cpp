@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.covariance() = cov;
   BOOST_CHECK_EQUAL(t.covariance(), cov);
 
-  auto surface =
+  std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0})
           .planeSurface();
 
@@ -457,9 +457,7 @@ BOOST_AUTO_TEST_CASE(CopyTrackProxyCalibrated) {
   auto track1 = tc.makeTrack();
   auto ts = track1.appendTrackState(TrackStatePropMask::Calibrated);
   ts.allocateCalibrated(kMeasurementSize);
-  ts.calibrated<kMeasurementSize>() = Vector3::Ones();
-  ts.calibratedCovariance<kMeasurementSize>() = SquareMatrix3::Identity();
-  ts.setSubspaceIndices(BoundSubspaceIndices{});
+  ts.setProjectorSubspaceIndices(BoundSubspaceIndices{});
 
   auto tsCopy = track1.appendTrackState(TrackStatePropMask::Calibrated);
   tsCopy.copyFrom(ts, TrackStatePropMask::Calibrated, false);

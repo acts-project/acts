@@ -21,6 +21,7 @@
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <random>
 
 namespace bdata = boost::unit_test::data;
@@ -88,8 +89,8 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
 BOOST_DATA_TEST_CASE(
     benchmark_surface_intersections,
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution =
-                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       -std::numbers::pi, std::numbers::pi))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<double>(-0.3, 0.3))) ^
@@ -116,7 +117,8 @@ BOOST_DATA_TEST_CASE(
   }
   if (testStraw) {
     std::cout << "- Straw: "
-              << intersectionTest<StrawSurface>(*aStraw, phi, theta + M_PI)
+              << intersectionTest<StrawSurface>(*aStraw, phi,
+                                                theta + std::numbers::pi)
               << std::endl;
   }
 }

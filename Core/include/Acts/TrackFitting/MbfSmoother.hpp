@@ -87,9 +87,6 @@ class MbfSmoother {
   /// Internal track state representation for the smoother.
   /// @note This allows us to move parts of the implementation into the .cpp
   struct InternalTrackState final {
-    using Projector =
-        typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                                  false>::Projector;
     using Jacobian =
         typename TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                                   false>::Covariance;
@@ -105,14 +102,14 @@ class MbfSmoother {
       // This is used to build a covariance matrix view in the .cpp file
       const double* calibrated{nullptr};
       const double* calibratedCovariance{nullptr};
-      Projector projector;
+      BoundSubspaceIndices projector;
 
       template <typename TrackStateProxy>
       explicit Measurement(TrackStateProxy ts)
           : calibratedSize(ts.calibratedSize()),
             calibrated(ts.effectiveCalibrated().data()),
             calibratedCovariance(ts.effectiveCalibratedCovariance().data()),
-            projector(ts.projector()) {}
+            projector(ts.projectorSubspaceIndices()) {}
     };
 
     Jacobian jacobian;

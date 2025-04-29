@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(GeoBoxToSensitiveConversion) {
       gmCache.boundingBoxes[0];
   const auto* bounds =
       dynamic_cast<const Acts::CuboidVolumeBounds*>(&volumeBox->volumeBounds());
-  std::vector<Acts::ActsScalar> convHls = bounds->values();
-  for (long unsigned int i = 0; i < hls.size(); i++) {
+  std::vector<double> convHls = bounds->values();
+  for (std::size_t i = 0; i < hls.size(); i++) {
     BOOST_CHECK(hls[i] == convHls[i]);
   }
 }

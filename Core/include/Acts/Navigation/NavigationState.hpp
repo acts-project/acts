@@ -10,9 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <any>
@@ -59,15 +57,6 @@ struct NavigationState {
   /// The current direction
   Vector3 direction = Vector3(0., 0., 0.);
 
-  /// The current absolute momentum
-  ActsScalar absMomentum = 0.;
-
-  /// The current absolute charge
-  ActsScalar absCharge = 0.;
-
-  /// The current magnetic field
-  Vector3 magneticField = Vector3(0., 0., 0.);
-
   /// The current detector in processing
   const Detector* currentDetector = nullptr;
 
@@ -82,13 +71,16 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  std::size_t surfaceCandidateIndex = 0;
+
+  // starting index of the surface candidate - to catch correctly the first
+  // surface
+  int surfaceCandidateIndex = -1;
 
   /// Boundary directives for surfaces
   BoundaryTolerance surfaceBoundaryTolerance = BoundaryTolerance::None();
 
   /// An overstep tolerance
-  ActsScalar overstepTolerance = -100 * UnitConstants::um;
+  double overstepTolerance = -100 * UnitConstants::um;
 
   /// Auxiliary attached information
   std::any auxiliary;

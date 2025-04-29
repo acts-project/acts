@@ -19,6 +19,8 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
+#include <numbers>
+
 namespace ActsExamples {
 
 /// @class MaterialValidation
@@ -35,10 +37,10 @@ class MaterialValidation : public IAlgorithm {
     Acts::Vector3 startPosition = Acts::Vector3(0., 0., 0.);
 
     /// Start direction for the scan: phi
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> phiRange = {-M_PI, M_PI};
+    std::pair<double, double> phiRange = {-std::numbers::pi, std::numbers::pi};
 
     /// Start direction for the scan: eta
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> etaRange = {-4., 4.};
+    std::pair<double, double> etaRange = {-4., 4.};
 
     /// Random number service
     std::shared_ptr<RandomNumbers> randomNumberSvc = nullptr;
@@ -54,8 +56,8 @@ class MaterialValidation : public IAlgorithm {
   ///
   /// @param cfg The configuration struct carrying the used tools
   /// @param level The output logging level
-  MaterialValidation(const Config& cfg,
-                     Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit MaterialValidation(const Config& cfg,
+                              Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Destructor
   /// - it also writes out the file

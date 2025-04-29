@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -24,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 class TFile;
 class TTree;
@@ -34,7 +30,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootMeasurementWriter
 ///
@@ -64,8 +59,6 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// file access mode
     std::string fileMode = "RECREATE";
 
-    /// The indices for this digitization configurations
-    Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>> boundIndices;
     /// Map of the geometry identifier to the surface
     std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
         surfaceByIdentifier;

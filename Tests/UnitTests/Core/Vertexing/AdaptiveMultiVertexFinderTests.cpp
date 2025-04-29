@@ -45,6 +45,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -85,7 +86,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&InputTrack::extractParameters>();
   auto seedFinder = std::make_shared<TrackDensityVertexFinder>(
-      TrackDensityVertexFinder::Config{densityCfg});
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)});
 
   AdaptiveMultiVertexFinder::Config finderConfig(std::move(fitter), seedFinder,
                                                  ipEstimator, bField);
@@ -243,7 +245,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   ImpactPointEstimator::Config ipEstimatorCfg(bField, propagator);
   ImpactPointEstimator ipEstimator(ipEstimatorCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -270,7 +273,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect(extractParameters);
   auto seedFinder = std::make_shared<TrackDensityVertexFinder>(
-      TrackDensityVertexFinder::Config{densityCfg});
+      TrackDensityVertexFinder::Config{Acts::GaussianTrackDensity(densityCfg)});
 
   AdaptiveMultiVertexFinder::Config finderConfig(
       std::move(fitter), std::move(seedFinder), ipEstimator, bField);
@@ -386,7 +389,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
@@ -411,7 +415,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Fitter fitter(fitterCfg);
 
   using SeedFinder = GridDensityVertexFinder;
-  SeedFinder::Config seedFinderCfg{{{250, 4000, 55}}};
+  GaussianGridTrackDensity::Config gDensityConfig(250, 4000, 55);
+  GaussianGridTrackDensity gDensity(gDensityConfig);
+  SeedFinder::Config seedFinderCfg(gDensity);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
   seedFinderCfg.extractParameters.connect<&InputTrack::extractParameters>();
 
@@ -535,7 +541,8 @@ BOOST_AUTO_TEST_CASE(
   ImpactPointEstimator::Config ipEstCfg(bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
 
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
+  std::vector<double> temperatures{
+      8., 4., 2., std::numbers::sqrt2, std::sqrt(3. / 2.), 1.};
   AnnealingUtility::Config annealingConfig;
   annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);

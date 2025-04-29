@@ -6,14 +6,15 @@ from acts.examples.simulation import (
     EtaConfig,
     ParticleConfig,
     addPythia8,
-    addFatras,
     ParticleSelectorConfig,
+    addGenParticleSelection,
+    addFatras,
     addDigitization,
+    addDigiParticleSelection,
 )
 from acts.examples.reconstruction import (
     addSeeding,
     SeedingAlgorithm,
-    TruthSeedRanges,
     addCKFTracks,
     TrackSelectorConfig,
 )
@@ -24,7 +25,8 @@ geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
-detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+detector = acts.examples.itk.buildITkGeometry(geo_dir)
+trackingGeometry = detector.trackingGeometry()
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -51,22 +53,21 @@ else:
         outputDirRoot=outputDir,
     )
 
-addFatras(
-    s,
-    trackingGeometry,
-    field,
-    rnd=rnd,
-    preSelectParticles=(
+    addGenParticleSelection(
+        s,
         ParticleSelectorConfig(
             rho=(0.0 * u.mm, 28.0 * u.mm),
             absZ=(0.0 * u.mm, 1.0 * u.m),
             eta=(-4.0, 4.0),
             pt=(150 * u.MeV, None),
-            removeNeutral=True,
-        )
-        if ttbar_pu200
-        else ParticleSelectorConfig()
-    ),
+        ),
+    )
+
+addFatras(
+    s,
+    trackingGeometry,
+    field,
+    rnd=rnd,
     outputDirRoot=outputDir,
 )
 
@@ -80,22 +81,27 @@ addDigitization(
     rnd=rnd,
 )
 
+addDigiParticleSelection(
+    s,
+    ParticleSelectorConfig(
+        pt=(1.0 * u.GeV, None),
+        eta=(-4.0, 4.0),
+        measurements=(9, None),
+        removeNeutral=True,
+    ),
+)
+
 addSeeding(
     s,
     trackingGeometry,
     field,
-    (
-        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
-        if ttbar_pu200
-        else TruthSeedRanges()
-    ),
     seedingAlgorithm=SeedingAlgorithm.Gbts,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
-    layerMappingConfigFile=geo_dir / "itk-hgtd/ACTS_FTF_mapinput.csv",
-    connector_inputConfigFile=geo_dir / "itk-hgtd/binTables_ITK_RUN4.txt",
+    layerMappingConfigFile=geo_dir / "itk-hgtd/GbtsMapping.csv",
+    ConnectorInputConfigFile=geo_dir / "itk-hgtd/GbtsBinTable.txt",
     outputDirRoot=outputDir,
 )
 
