@@ -21,9 +21,25 @@ namespace Acts {
 /// Error that is thrown if no edges are found
 struct NoEdgesError : std::exception {};
 
+/// A simple device description struct
+struct Device {
+  enum class Type { eCPU, eCUDA };
+  Type type = Type::eCPU;
+  std::size_t index = 0;
+};
+
+inline std::ostream &operator<<(std::ostream &os, Device device) {
+  if (device.type == Device::Type::eCPU) {
+    os << "CPU";
+  } else {
+    os << "CUDA(" << device.index << ")";
+  }
+  return os;
+}
+
 /// Capture the context of the execution
 struct ExecutionContext {
-  torch::Device device{torch::kCPU};
+  Acts::Device device{Acts::Device::Type::eCPU};
   std::optional<c10::cuda::CUDAStream> stream;
 };
 
@@ -48,8 +64,6 @@ class GraphConstructionBase {
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) = 0;
 
-  virtual torch::Device device() const = 0;
-
   virtual ~GraphConstructionBase() = default;
 };
 
@@ -66,8 +80,6 @@ class EdgeClassificationBase {
   virtual std::tuple<std::any, std::any, std::any, std::any> operator()(
       std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
       const ExecutionContext &execContext = {}) = 0;
-
-  virtual torch::Device device() const = 0;
 
   virtual ~EdgeClassificationBase() = default;
 };
@@ -87,8 +99,6 @@ class TrackBuildingBase {
       std::any nodeFeatures, std::any edgeIndex, std::any edgeScores,
       std::vector<int> &spacepointIDs,
       const ExecutionContext &execContext = {}) = 0;
-
-  virtual torch::Device device() const = 0;
 
   virtual ~TrackBuildingBase() = default;
 };

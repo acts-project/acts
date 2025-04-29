@@ -21,9 +21,9 @@ ExaTrkXPipeline::ExaTrkXPipeline(
     std::shared_ptr<TrackBuildingBase> trackBuilder,
     std::unique_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)),
-      m_graphConstructor(graphConstructor),
-      m_edgeClassifiers(edgeClassifiers),
-      m_trackBuilder(trackBuilder) {
+      m_graphConstructor(std::move(graphConstructor)),
+      m_edgeClassifiers(std::move(edgeClassifiers)),
+      m_trackBuilder(std::move(trackBuilder)) {
   if (!m_graphConstructor) {
     throw std::invalid_argument("Missing graph construction module");
   }
@@ -38,13 +38,13 @@ ExaTrkXPipeline::ExaTrkXPipeline(
 
 std::vector<std::vector<int>> ExaTrkXPipeline::run(
     std::vector<float> &features, const std::vector<std::uint64_t> &moduleIds,
-    std::vector<int> &spacepointIDs, const ExaTrkXHook &hook,
-    ExaTrkXTiming *timing) const {
+    std::vector<int> &spacepointIDs, Acts::Device device,
+    const ExaTrkXHook &hook, ExaTrkXTiming *timing) const {
   ExecutionContext ctx;
-  ctx.device = m_graphConstructor->device();
+  ctx.device = device;
 #ifndef ACTS_EXATRKX_CPUONLY
-  if (ctx.device.type() == torch::kCUDA) {
-    ctx.stream = c10::cuda::getStreamFromPool(ctx.device.index());
+  if (ctx.device.type == Acts::Device::Type::eCUDA) {
+    ctx.stream = c10::cuda::getStreamFromPool(true, ctx.device.index);
   }
 #endif
 

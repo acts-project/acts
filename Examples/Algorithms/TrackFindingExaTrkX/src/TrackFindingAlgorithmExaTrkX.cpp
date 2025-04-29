@@ -203,8 +203,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Run the pipeline
   ACTS_NVTX_STOP(data_preparation);
   Acts::ExaTrkXTiming timing;
+#ifdef ACTS_EXATRKX_CPUONLY
+  Acts::Device device = {Acts::Device::Type::eCPU, 0};
+#else
+  Acts::Device device = {Acts::Device::Type::eCUDA, 0};
+#endif
   auto trackCandidates =
-      m_pipeline.run(features, moduleIds, idxs, hook, &timing);
+      m_pipeline.run(features, moduleIds, idxs, device, hook, &timing);
   ACTS_NVTX_START(post_processing);
 
   auto t2 = Clock::now();
