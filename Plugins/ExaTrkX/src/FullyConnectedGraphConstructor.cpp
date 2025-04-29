@@ -19,9 +19,18 @@
 
 namespace Acts {
 
-std::tuple<std::any, std::any, std::any> FullyConnectedGraphConstructor::operator()(std::vector<float> &inputValues, std::size_t numNodes,
-      const std::vector<std::uint64_t> &/*moduleIds*/,
-      const ExecutionContext &execContext) {
+std::tuple<std::any, std::any, std::any>
+FullyConnectedGraphConstructor::operator()(
+    std::vector<float> &inputValues, std::size_t numNodes,
+    const std::vector<std::uint64_t> & /*moduleIds*/,
+    const ExecutionContext &execContext) {
+  if (inputValues.empty()) {
+    throw NoEdgesError{};
+  }
+
+  // Not sure why I must reset this here...
+  auto lastCudaError = cudaGetLastError();
+  ACTS_DEBUG("Retrieved last CUDA error: " << lastCudaError);
   c10::InferenceMode guard(true);
 
   // add a protection to avoid calling for kCPU
@@ -42,46 +51,46 @@ std::tuple<std::any, std::any, std::any> FullyConnectedGraphConstructor::operato
 
   torch::NoGradGuard noGradGuard;
 
-
   auto numAllFeatures = inputValues.size() / numNodes;
 
   // throw if the graph is too large
   std::size_t numEdges = numNodes * (numNodes - 1) / 2;
   if (numEdges > m_cfg.maxGraphSize) {
-    ACTS_WARNING("Fully connected graph is larger than configured max edges: " << numEdges
-                  << " > " << m_cfg.maxGraphSize);
+    ACTS_WARNING("Fully connected graph is larger than configured max edges: "
+                 << numEdges << " > " << m_cfg.maxGraphSize);
     throw NoEdgesError();
   }
 
   // Build fully connected edges
-  std::vector<int64_t> edgeListVector;
+  std::vector<std::int64_t> edgeListVector;
   edgeListVector.reserve(numEdges * 2);
   std::size_t skipped = 0;
-  for(auto i = 0ul; i < numNodes; ++i) {
-    for(auto j = i + 1; j < numNodes; ++j) {
+  for (auto i = 0ul; i < numNodes; ++i) {
+    for (auto j = i + 1; j < numNodes; ++j) {
       auto ri = inputValues.at(i * numAllFeatures + m_cfg.rOffset);
       auto rj = inputValues.at(j * numAllFeatures + m_cfg.rOffset);
-      if( std::abs(ri - rj) * m_cfg.rScale > m_cfg.maxDeltaR ) {
+      if (std::abs(ri - rj) * m_cfg.rScale > m_cfg.maxDeltaR) {
         skipped++;
         continue;
       }
 
-      if( ri < rj) {
+      if (ri < rj) {
         edgeListVector.push_back(i);
         edgeListVector.push_back(j);
       } else {
         edgeListVector.push_back(j);
         edgeListVector.push_back(i);
       }
-    } 
+    }
   }
 
   numEdges = edgeListVector.size() / 2;
   ACTS_DEBUG("Built " << numEdges << " edges, skipped " << skipped);
 
-  auto edgeList = detail::vectorToTensor2D(edgeListVector, 2).transpose(0, 1).contiguous();
+  auto edgeList =
+      detail::vectorToTensor2D(edgeListVector, 2).transpose(0, 1).contiguous();
   assert(edgeList.size(0) == 2);
-  assert(edgeList.size(1) == static_cast<int64_t>(numEdges));
+  assert(edgeList.size(1) == static_cast<std::int64_t>(numEdges));
 
   // TODO I think this is already somewhere in the codebase
   const float pi = std::numbers::pi_v<float>;
@@ -118,11 +127,11 @@ std::tuple<std::any, std::any, std::any> FullyConnectedGraphConstructor::operato
     float phislope = 0.0;
     float rphislope = 0.0;
 
-  if (deltaR != 0.0) {
-    phislope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
-    float avgR = 0.5f * (dstFeatures[0] + srcFeatures[0]);
-    rphislope = avgR * phislope;
-  }
+    if (deltaR != 0.0) {
+      phislope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
+      float avgR = 0.5f * (dstFeatures[0] + srcFeatures[0]);
+      rphislope = avgR * phislope;
+    }
 
     for (auto f : {deltaR, deltaPhi, deltaZ, deltaEta, phislope, rphislope}) {
       edgeFeatureVector.push_back(f);
@@ -131,12 +140,12 @@ std::tuple<std::any, std::any, std::any> FullyConnectedGraphConstructor::operato
 
   auto edgeFeatures =
       detail::vectorToTensor2D(edgeFeatureVector, numEdgeFeatures);
-  assert(edgeFeatures.size(0) == static_cast<int64_t>(numEdges));
+  assert(edgeFeatures.size(0) == static_cast<std::int64_t>(numEdges));
   assert(edgeFeatures.size(1) == numEdgeFeatures);
 
   auto inputTensor = detail::vectorToTensor2D(inputValues, numAllFeatures);
-  assert(inputTensor.size(0) == static_cast<int64_t>(numNodes));
-  assert(inputTensor.size(1) == static_cast<int64_t>(numAllFeatures));
+  assert(inputTensor.size(0) == static_cast<std::int64_t>(numNodes));
+  assert(inputTensor.size(1) == static_cast<std::int64_t>(numAllFeatures));
 
   ACTS_DEBUG("Move data to " << execContext.device);
 
@@ -144,17 +153,11 @@ std::tuple<std::any, std::any, std::any> FullyConnectedGraphConstructor::operato
   auto edgeListCuda = edgeList.to(execContext.device);
   auto edgeFeaturesCuda = edgeFeatures.to(execContext.device);
 
-  ACTS_DEBUG("inputTensor: " << inputTensor);
-  ACTS_DEBUG("edgeList: " << edgeList);
-  ACTS_DEBUG("edgeFeatures: " << edgeFeatures);
+  ACTS_VERBOSE("inputTensor: " << inputTensorCuda);
+  ACTS_VERBOSE("edgeList: " << edgeListCuda);
+  ACTS_VERBOSE("edgeFeatures: " << edgeFeaturesCuda);
 
-  //std::cout << "clone edgeList" << std::endl; auto edgeList2 = edgeList.clone();
-  //std::cout << "clone edgeFeatures" << std::endl;
-  //auto edgeFeatures2 = edgeFeatures.clone();
-  //std::cout << "clone input" << std::endl;
-  //auto inputTensor2 = inputTensor.clone();
   return {inputTensorCuda, edgeListCuda, edgeFeaturesCuda};
 }
 
-
-}
+}  // namespace Acts

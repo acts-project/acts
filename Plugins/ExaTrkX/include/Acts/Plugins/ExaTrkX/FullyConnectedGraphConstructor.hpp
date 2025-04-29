@@ -24,7 +24,7 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
 
     // Only connect edges up to this delta R
     float maxDeltaR = std::numeric_limits<float>::infinity();
-    
+
     // Offset of the r feature in the input features
     std::size_t rOffset = 0;
 
@@ -35,7 +35,8 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
     float etaScale = 1.0;
   };
 
-  FullyConnectedGraphConstructor(const Config& cfg, std::unique_ptr<const Acts::Logger> _logger)
+  FullyConnectedGraphConstructor(const Config &cfg,
+                                 std::unique_ptr<const Acts::Logger> _logger)
       : m_cfg(cfg), m_logger(std::move(_logger)) {}
 
   std::tuple<std::any, std::any, std::any> operator()(
@@ -43,7 +44,11 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
       const std::vector<std::uint64_t> &moduleIds,
       const ExecutionContext &execContext = {}) override;
 
-  torch::Device device() const override { return torch::Device(torch::kCUDA, 0); }
+  torch::Device device() const override {
+    return torch::Device(torch::kCUDA, 0);
+  }
+
+  const Config &config() const { return m_cfg; }
 
  private:
   Config m_cfg;
@@ -52,4 +57,4 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
   const auto &logger() const { return *m_logger; }
 };
 
-}
+}  // namespace Acts
