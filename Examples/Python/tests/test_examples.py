@@ -183,7 +183,10 @@ def test_geant4(tmp_path, assert_root_hash):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
+        if e.stderr is not None:
+            print(e.stderr.decode("utf-8"))
         raise
 
     assert_csv_output(csv, "particles_simulated")
