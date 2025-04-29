@@ -1,0 +1,216 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+// @file HoughTransformSeeder.hpp
+// @author Tomasz Bold
+// @brief Implements track-seeding using adaptive Hough transform.
+//
+
+#pragma once
+
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Grid.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <numbers>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+    namespace ActsExamples {
+  struct AlgorithmContext;
+}  // namespace ActsExamples
+
+using ResultDouble = Acts::Result<double>;
+using ResultBool = Acts::Result<bool>;
+using ResultUnsigned = Acts::Result<unsigned>;
+
+using FieldCorrector = Acts::Delegate<ResultDouble(
+    unsigned, double, double)>;  // (unsigned region, double y, double r)
+using LayerIDFinder = Acts::Delegate<ResultUnsigned(
+    double)>;  // (double r) this function will map the r of a measurement to a
+               // layer.
+using SliceTester = Acts::Delegate<ResultBool(
+    double, unsigned, int)>;  // (double z,unsigned layer, int slice) returns
+                              // true if measurement in slice
+
+namespace Acts {
+class TrackingGeometry;
+}
+
+namespace ActsExamples {
+// Helper class describing one section of the accumulator space
+class AccumulatorSection {
+ public:
+  AccumulatorSection() = default;
+  
+  AccumulatorSection(double xw, double yw, double xBegin, double yBegin,
+                     int div=0, const std::vector<unsigned>& indices={});
+
+  inline unsigned count() const { return m_indices.size(); }
+  inline const std::vector<unsigned>& indices() const { return m_indices; }
+  inline std::vector<unsigned>& indices() { return m_indices; }
+
+
+  // create section that is bottom part this this one
+  // +------+
+  // |      |
+  // +------+
+  // |     <|-- this part
+  // +------+
+  AccumulatorSection bottom(float yFraction = 0.5) const;
+  // see @bottom
+  AccumulatorSection top(float yFraction = 0.5) const;
+  // @see @bottom
+  AccumulatorSection left(float xFraction = 0.5) const;
+  // @see @bottom
+  AccumulatorSection right(float xFraction = 0.5) const;
+
+  // create section that is bottom left corner of this this one
+  // by default the section is divided into 4 quadrants,
+  // if parameters are provided the quadrants size can be adjusted
+  // +---+---+
+  // |   |   |
+  // +---+---+
+  // |   |  <|-- this part
+  // +---+---+
+  AccumulatorSection bottomRight(float xFraction = 0.5,
+    float yFraction = 0.5) const;
+  AccumulatorSection bottomLeft(float xFraction = 0.5,
+                                float yFraction = 0.5) const;
+
+  AccumulatorSection topLeft(float xFraction = 0.5,
+                             float yFraction = 0.5) const;
+  AccumulatorSection topRight(float xFraction = 0.5,
+                              float yFraction = 0.5) const;
+
+  // returns true if the line defined by given parameters passes the section
+  // a and b are line parameters y = ax + b
+  inline bool isLineInside(float a, float b) const {
+    const float yB = fma(a, m_xBegin, b);
+    const float yE = fma(a, (m_xBegin + m_xSize), b);
+    return yB < m_yBegin + m_ySize && yE > m_yBegin;
+  }
+
+  // counter clock wise distance from upper left corner
+  // a and b are line parameters y = ax + b
+  float distCC(float a, float b) const;
+  // anti-counter clock wise distance from upper left corner
+  float distACC(float a, float b) const;  
+
+  // sizes
+  double xSize() const { return m_xSize; }
+  double ySize() const { return m_ySize; }
+ private:
+  double m_xSize;
+  double m_ySize;
+  double m_xBegin;
+  double m_yBegin;
+  uint32_t m_divisionLevel =
+      0;  // number of times the starting section was already divided
+  std::vector<unsigned>
+      m_indices;  // indices of measurements contributing to this section
+};
+
+// Construct track seeds from space points.
+class AdaptiveHoughTransformSeeder final : public IAlgorithm {
+ public:
+  struct Config {
+    /// Input space point collections.
+    ///
+    /// We allow multiple space point collections to allow different parts of
+    /// the detector to use different algorithms for space point construction,
+    /// e.g. single-hit space points for pixel-like detectors or double-hit
+    /// space points for strip-like detectors.
+    /// Note that we don't *need* spacepoints (measurements can be used instead)
+    std::vector<std::string> inputSpacePoints;
+    /// Output track seed collection.
+    std::string outputSeeds;
+    /// Output hough track collection.
+    std::string outputProtoTracks;
+    /// Tracking geometry required to access global-to-local transforms.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+
+    float qOverPtMin = 1.0;   // min q/pt, -1/1 GeV
+
+    float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the algorithm should not
+                                // go beyond (in GeV)
+    float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm should
+                              // not go beyond
+
+    unsigned threshold = 7;
+
+    double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
+                         // this with fieldCorrection function
+                         // This 3e-4 comes from the 2T field when converted to
+                         // units of GeV / (c*mm*e)
+
+    // it's up to the user to connect these to the functions they want to use
+    FieldCorrector fieldCorrector;
+    LayerIDFinder layerIDFinder;
+    SliceTester sliceTester;
+  };
+
+  // information that is needed for each measurement
+  struct PreprocessedMeasurement {
+    double r;
+    double phi;
+  };
+
+  /// Construct the seeding algorithm.
+  ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
+  AdaptiveHoughTransformSeeder(Config cfg, Acts::Logging::Level lvl);
+
+  /// Run the seeding algorithm.
+  ///
+  /// @param txt is the algorithm context with event information
+  /// @return a process code indication success or failure
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Const access to the config
+  const Config& config() const { return m_cfg; }
+
+ private:
+  Config m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  // process sections on the stack buy popping from it 
+  // and qualifying them for further division, discarding them or moving to solutions vector
+  void processStackHead(std::stack<AccumulatorSection>& sections, std::vector<AccumulatorSection>& solutions) const;
+
+  void updateSection(AccumulatorSection& section, const std::vector<PreprocessedMeasurement>& input) const;
+
+  //  // functions to clean up the code and convert SPs and measurements to the
+  //  // HoughMeasurement format
+  //  void addMeasurements(const AlgorithmContext& ctx) const;
+  //  void addSpacePoints(const AlgorithmContext& ctx) const;
+};
+
+}  // namespace ActsExamples
