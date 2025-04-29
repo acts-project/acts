@@ -6,6 +6,7 @@ add_library(
     src/BoostWalkthrough.cpp
     src/DummyEdgeClassifier.cpp
     src/GNNTrackFitterCPU.cpp
+    src/FullyConnectedGraphConstructor.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_CUDA)

@@ -51,19 +51,16 @@ struct TorchTypeMap<double> {
 
 /// Converts vector to 2D tensor
 /// Make sure your vector has a even number of elements!
-/// @Note Input must be mutable, due to torch API.
-/// @Note Tensor does not take ownership! `.clone()` afterwards to get
-/// ownership of the data
 template <typename T>
-at::Tensor vectorToTensor2D(std::vector<T> &vec, std::size_t cols) {
+at::Tensor vectorToTensor2D(const std::vector<T> &vec, std::size_t cols) {
   assert(vec.size() % cols == 0);
 
   auto opts =
       at::TensorOptions().dtype(TorchTypeMap<T>::type).device(torch::kCPU);
+  auto tensor = torch::empty({static_cast<long>(vec.size() / cols), static_cast<long>(cols)}, opts);
 
-  return torch::from_blob(
-      vec.data(),
-      {static_cast<long>(vec.size() / cols), static_cast<long>(cols)}, opts);
+  std::copy(vec.begin(), vec.end(), tensor.template data_ptr<T>());
+  return tensor;      
 }
 
 /// Converts 2D tensor to vector
