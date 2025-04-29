@@ -36,55 +36,61 @@ class EffPlotTool {
         {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
         {"Z0", PlotHelpers::Binning("z_0 [mm]", 50, -200, 200)},
         {"DeltaR", PlotHelpers::Binning("#Delta R", 100, 0, 0.3)}};
+    { "prodR", PlotHelpers::Binning("prod_R [mm]", 100, 0, 900) }
   };
+};
 
-  /// @brief Nested Cache struct
-  struct EffPlotCache {
-    TEfficiency* trackEff_vs_pT{nullptr};   ///< Tracking efficiency vs pT
-    TEfficiency* trackEff_vs_eta{nullptr};  ///< Tracking efficiency vs eta
-    TEfficiency* trackEff_vs_phi{nullptr};  ///< Tracking efficiency vs phi
-    TEfficiency* trackEff_vs_z0{nullptr};   ///< Tracking efficiency vs z0
-    TEfficiency* trackEff_vs_DeltaR{
-        nullptr};  ///< Tracking efficiency vs distance to the closest truth
-                   ///< particle
-  };
+/// @brief Nested Cache struct
+struct EffPlotCache {
+  TEfficiency* trackEff_vs_pT{nullptr};   ///< Tracking efficiency vs pT
+  TEfficiency* trackEff_vs_eta{nullptr};  ///< Tracking efficiency vs eta
+  TEfficiency* trackEff_vs_phi{nullptr};  ///< Tracking efficiency vs phi
+  TEfficiency* trackEff_vs_z0{nullptr};   ///< Tracking efficiency vs z0
+  TEfficiency* trackEff_vs_DeltaR{
+      nullptr};  ///< Tracking efficiency vs distance to the closest truth
+                 ///< particle
+  TEfficiency* trackEff_vs_prodR{
+      nullptr};  ///< Tracking efficiency vs production radius
+};
 
-  /// Constructor
-  ///
-  /// @param cfg Configuration struct
-  /// @param lvl Message level declaration
-  EffPlotTool(const Config& cfg, Acts::Logging::Level lvl);
+/// Constructor
+///
+/// @param cfg Configuration struct
+/// @param lvl Message level declaration
+EffPlotTool(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// @brief book the efficiency plots
-  ///
-  /// @param effPlotCache the cache for efficiency plots
-  void book(EffPlotCache& effPlotCache) const;
+/// @brief book the efficiency plots
+///
+/// @param effPlotCache the cache for efficiency plots
+void book(EffPlotCache& effPlotCache) const;
 
-  /// @brief fill efficiency plots
-  ///
-  /// @param effPlotCache cache object for efficiency plots
-  /// @param truthParticle the truth Particle
-  /// @param deltaR the distance to the closest truth particle
-  /// @param status the reconstruction status
-  void fill(EffPlotCache& effPlotCache, const SimParticleState& truthParticle,
-            double deltaR, bool status) const;
+/// @brief fill efficiency plots
+///
+/// @param effPlotCache cache object for efficiency plots
+/// @param truthParticle the truth Particle
+/// @param deltaR the distance to the closest truth particle
+/// @param status the reconstruction status
+void fill(EffPlotCache& effPlotCache, const SimParticleState& truthParticle,
+          double deltaR, bool status) const;
 
-  /// @brief write the efficiency plots to file
-  ///
-  /// @param effPlotCache cache object for efficiency plots
-  void write(const EffPlotCache& effPlotCache) const;
+/// @brief write the efficiency plots to file
+///
+/// @param effPlotCache cache object for efficiency plots
+void write(const EffPlotCache& effPlotCache) const;
 
-  /// @brief delete the efficiency plots
-  ///
-  /// @param effPlotCache cache object for efficiency plots
-  void clear(EffPlotCache& effPlotCache) const;
+/// @brief delete the efficiency plots
+///
+/// @param effPlotCache cache object for efficiency plots
+void clear(EffPlotCache& effPlotCache) const;
 
- private:
-  Config m_cfg;                                  ///< The Config class
-  std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
+private:
+Config m_cfg;                                  ///< The Config class
+std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
-  /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+/// The logger
+const Acts::Logger& logger() const {
+  return *m_logger;
+}
 };
 
 }  // namespace ActsExamples
