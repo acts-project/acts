@@ -4,10 +4,10 @@ variables:
   CCACHE_KEY_SUFFIX: r2
   CTEST_OUTPUT_ON_FAILURE: 1
 
-  SPACK_VERSION: develop-2025-03-30
+  SPACK_VERSION: develop-2025-04-20
   LOCKFILE_CACHE_DIR: ${CI_PROJECT_DIR}/spack_lockfile_cache
 
-  DEPENDENCY_TAG: v8_b2
+  DEPENDENCY_TAG: v9.0.0
 
 .ccache_base:
   cache:
@@ -229,8 +229,8 @@ test_exatrkx_python:
     - which python3
     - python3 --version
     - python3 -c "import acts"
-    - pytest -rFsv -k torch --collect-only
-    - pytest -rFsv -k gpu # For now only test torch GPU pipeline
+    - pytest -rfExw -k torch -v --collect-only
+    - pytest -rFExw -k gpu -v # For now only test torch GPU pipeline
 
   after_script:
    - !reference [.spack_cleanup, after_script]
@@ -355,7 +355,7 @@ linux_test_examples:
     - source build/this_acts_withdeps.sh
     - cd src
     - python3 -m pip install -r Examples/Python/tests/requirements.txt
-    - pytest -rFsv -k "not exatrkx" -v -s
+    - pytest -rfExw -k "not exatrkx" -v
 
   after_script:
    - !reference [.spack_cleanup, after_script]

@@ -469,6 +469,17 @@ void addExperimentalGeometry(Context& ctx) {
              "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<Acts::AxisBoundaryType, std::size_t>(), "bType"_a,
              "nbins"_a);
+
+    py::class_<DirectedProtoAxis>(m, "DirectedProtoAxis")
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
+                      const std::vector<double>&>(),
+             "bValue"_a, "bType"_a, "e"_a)
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, double,
+                      double, std::size_t>(),
+             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
+                      std::size_t>(),
+             "bValue"_a, "bType"_a, "nbins"_a);
   }
 
   {
