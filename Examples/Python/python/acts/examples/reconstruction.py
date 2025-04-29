@@ -2252,29 +2252,30 @@ def addVertexFitting(
     return s
 
 
-def addSingleSeedVertexFinding(
+def addHoughVertexFinding(
     s,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     inputSpacePoints: Optional[str] = "spacepoints",
-    outputVertices: Optional[str] = "fittedSeedVertices",
+    outputVertices: Optional[str] = "fittedHoughVertices",
 ) -> None:
     from acts.examples import (
-        SingleSeedVertexFinderAlgorithm,
+        HoughVertexFinderAlgorithm,
         VertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+    findHoughVertex = HoughVertexFinderAlgorithm(
         level=customLogLevel(),
         inputSpacepoints=inputSpacePoints,
         outputVertices=outputVertices,
     )
-    s.addAlgorithm(findSingleSeedVertex)
+    s.addAlgorithm(findHoughVertex)
 
     inputParticles = "particles"
     selectedParticles = "particles_selected"
+    inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -2284,11 +2285,15 @@ def addSingleSeedVertexFinding(
         s.addWriter(
             VertexNTupleWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles=inputParticles,
-                inputSelectedTruthParticles=selectedParticles,
+                inputParticles=inputParticles,
+                inputSelectedParticles=selectedParticles,
+                inputTracks="",
+                inputTrackParticleMatching="",
+                writeTrackInfo=False,
+                inputTruthVertices=inputTruthVertices,
                 inputVertices=outputVertices,
-                treeName="seedvertexing",
-                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
+                treeName="houghvertexing",
+                filePath=str(outputDirRoot / "performance_houghvertexing.root"),
             )
         )
 
