@@ -36,7 +36,7 @@ class EffPlotTool {
         {"Pt", PlotHelpers::Binning("pT [GeV/c]", 40, 0, 100)},
         {"Z0", PlotHelpers::Binning("z_0 [mm]", 50, -200, 200)},
         {"DeltaR", PlotHelpers::Binning("#Delta R", 100, 0, 0.3)}};
-    { "prodR", PlotHelpers::Binning("prod_R [mm]", 100, 0, 900) }
+    { "prodR", PlotHelpers::Binning("prod_R [mm]", 100, 0, 200) }
   };
 };
 
