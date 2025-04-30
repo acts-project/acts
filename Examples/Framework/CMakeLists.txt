@@ -51,10 +51,10 @@ target_compile_definitions(
 # newer DD4hep version require TBB and search internally for TBB in
 # config-only mode. to avoid mismatches we explicitly search using
 # config-only mode first to be sure that we find the same version.
-find_package(TBB ${_acts_tbb_version} CONFIG)
+find_package(TBB ${_acts_tbb_minimal_version} CONFIG)
 if(NOT TBB_FOUND)
     # no version check possible when using the find module
-    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
+    find_package(TBB ${_acts_tbb_minimal_version} MODULE REQUIRED)
 endif()
 target_link_libraries(ActsExamplesFramework PUBLIC TBB::tbb)
 

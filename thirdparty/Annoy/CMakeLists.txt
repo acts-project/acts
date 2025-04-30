@@ -15,7 +15,7 @@ include(FetchContent)
 message(STATUS "Building Annoy as part of the ACTS project")
 
 # Version of the Annoy library to fetch.
-set(ANNOY_VERSION "v${_acts_annoy_version}")
+set(ANNOY_VERSION "v${_acts_annoy_minimal_version}")
 
 # Declare the fetching of the Annoy library.
 FetchContent_Declare(

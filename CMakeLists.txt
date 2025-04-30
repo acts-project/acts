@@ -254,31 +254,49 @@ if(ACTS_FORCE_ASSERTIONS)
     )
 endif()
 
-# minimal dependency versions. they are defined here in a single place so
+# minimal (and shipped) dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.50)
-set(_acts_boost_version 1.71.0)
-set(_acts_dd4hep_version 1.21)
-set(_acts_geant4_version 11.1.3)
-set(_acts_edm4hep_version 0.7)
-set(_acts_eigen3_version 3.4.0)
-set(_acts_podio_version 1.0.1) # will try this first
+#
+# minimal versions are the ones required in case the build is configured to use system
+# libraries (ACTS_USE_SYSTEM_LIBS=ON or ACTS_USE_SYSTEM_<LIB>=ON).
+set(_acts_actsvg_minimal_version 0.4.50)
+set(_acts_boost_minimal_version 1.71.0)
+set(_acts_dd4hep_minimal_version 1.21)
+set(_acts_geant4_minimal_version 11.1.3)
+set(_acts_edm4hep_minimal_version 0.7)
+set(_acts_eigen3_minimal_version 3.4.0)
+set(_acts_podio_minimal_version 1.0.1) # will try this first
 set(_acts_podio_fallback_version 0.16) # if not found, will try this one
-set(_acts_doxygen_version 1.9.4)
-set(_acts_hepmc3_version 3.2.1)
-set(_acts_nlohmanjson_version 3.12.0)
-set(_acts_onnxruntime_version 1.12.0)
-set(_acts_root_version 6.20)
-set(_acts_tbb_version 2020.1)
-set(_acts_pythia8_version 8.309)
-set(_acts_pybind11_version 2.13.1)
-set(_acts_detray_version 0.89.0)
-set(_acts_traccc_version 0.20.0)
-set(_acts_covfie_version 0.12.1)
-set(_acts_vecmem_version 1.14.0)
-set(_acts_algebraplugins_version 0.26.2)
-set(_acts_annoy_version 1.17.3)
+set(_acts_doxygen_minimal_version 1.9.4)
+set(_acts_hepmc3_minimal_version 3.2.1)
+set(_acts_nlohmanjson_minimal_version 3.10.5)
+set(_acts_onnxruntime_minimal_version 1.12.0)
+set(_acts_root_minimal_version 6.20)
+set(_acts_tbb_minimal_version 2020.1)
+set(_acts_pythia8_minimal_version 8.309)
+set(_acts_pybind11_minimal_version 2.13.1)
+set(_acts_detray_minimal_version 0.89.0)
+set(_acts_traccc_minimal_version 0.20.0)
+set(_acts_covfie_minimal_version 0.12.1)
+set(_acts_vecmem_minimal_version 1.14.0)
+set(_acts_algebraplugins_minimal_version 0.26.2)
+set(_acts_annoy_minimal_version 1.17.3)
+#
+# shipped versions are the ones that are downloaded and used in case the build is configured
+# to NOT use system libraries.
+set(_acts_actsvg_shipped_version ${_acts_actsvg_minimal_version})
+set(_acts_algebraplugins_shipped_version
+    ${_acts_algebraplugins_minimal_version}
+)
+set(_acts_annoy_shipped_version ${_acts_annoy_minimal_version})
+set(_acts_covfie_shipped_version ${_acts_covfie_minimal_version})
+set(_acts_detray_shipped_version ${_acts_detray_minimal_version})
+set(_acts_eigen3_shipped_version ${_acts_eigen3_minimal_version})
+set(_acts_nlohmanjson_shipped_version 3.12.0)
+set(_acts_pybind11_shipped_version ${_acts_pybind11_minimal_version})
+set(_acts_traccc_shipped_version ${_acts_traccc_minimal_version})
+set(_acts_vecmem_shipped_version ${_acts_vecmem_minimal_version})
 
 # recommended dependency version. if there is an opportunity to reach
 # this version we will try so.
@@ -302,12 +320,12 @@ if(ACTS_SETUP_BOOST)
     )
         find_package(
             Boost
-            ${_acts_boost_version}
+            ${_acts_boost_minimal_version}
             REQUIRED
             COMPONENTS program_options unit_test_framework
         )
     else()
-        find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+        find_package(Boost ${_acts_boost_minimal_version} REQUIRED COMPONENTS)
     endif()
 
     if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
@@ -331,7 +349,7 @@ endif()
 
 if(ACTS_SETUP_EIGEN3)
     if(ACTS_USE_SYSTEM_EIGEN3)
-        find_package(Eigen3 ${_acts_eigen3_version} REQUIRED CONFIG)
+        find_package(Eigen3 ${_acts_eigen3_minimal_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/eigen3)
     endif()
@@ -366,7 +384,7 @@ endmacro()
 # when a particular package is actually needed.
 if(ACTS_BUILD_PLUGIN_ACTSVG)
     if(ACTS_USE_SYSTEM_ACTSVG)
-        find_package(actsvg ${_acts_actsvg_version} REQUIRED CONFIG)
+        find_package(actsvg ${_acts_actsvg_minimal_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/actsvg)
     endif()
@@ -379,7 +397,7 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
     find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
     find_package(
         DD4hep
-        ${_acts_dd4hep_version}
+        ${_acts_dd4hep_minimal_version}
         REQUIRED
         CONFIG
         COMPONENTS DDCore DDDetectors
@@ -387,7 +405,12 @@ if(ACTS_BUILD_PLUGIN_DD4HEP)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
     if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
-        find_package(nlohmann_json ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+        find_package(
+            nlohmann_json
+            ${_acts_nlohmanjson_minimal_version}
+            REQUIRED
+            CONFIG
+        )
     else()
         add_subdirectory(thirdparty/nlohmann_json)
     endif()
@@ -415,7 +438,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
     find_package(
         ROOT
-        ${_acts_root_version}
+        ${_acts_root_minimal_version}
         REQUIRED
         CONFIG
         COMPONENTS Geom Graf
@@ -425,7 +448,7 @@ endif()
 if(ACTS_BUILD_ANALYSIS_APPS)
     find_package(
         ROOT
-        ${_acts_root_version}
+        ${_acts_root_minimal_version}
         REQUIRED
         CONFIG
         COMPONENTS Geom Graf
@@ -447,10 +470,15 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
-    find_package(onnxruntime ${_acts_onnxruntime_version} CONFIG REQUIRED)
+    find_package(
+        onnxruntime
+        ${_acts_onnxruntime_minimal_version}
+        CONFIG
+        REQUIRED
+    )
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
-    find_package(podio ${_acts_podio_version} CONFIG)
+    find_package(podio ${_acts_podio_minimal_version} CONFIG)
     if(NOT podio_FOUND)
         message(
             STATUS
@@ -458,30 +486,46 @@ if(ACTS_BUILD_PLUGIN_EDM4HEP OR ACTS_BUILD_PLUGIN_PODIO)
         )
         find_package(podio ${_acts_podio_fallback_version} CONFIG REQUIRED)
     endif()
-    find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core)
+    find_package(
+        ROOT
+        ${_acts_root_minimal_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS Core
+    )
 endif()
 if(ACTS_BUILD_PLUGIN_EDM4HEP)
-    find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
+    find_package(EDM4HEP ${_acts_edm4hep_minimal_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_PLUGIN_GEANT4)
-    find_package(Geant4 ${_acts_geant4_version} REQUIRED CONFIG COMPONENTS gdml)
+    find_package(
+        Geant4
+        ${_acts_geant4_minimal_version}
+        REQUIRED
+        CONFIG
+        COMPONENTS gdml
+    )
 endif()
 
 if(ACTS_BUILD_PLUGIN_TRACCC)
     if(ACTS_USE_SYSTEM_ALGEBRAPLUGINS)
-        find_package(algebra-plugins ${_acts_algebraplugins_version} REQUIRED)
+        find_package(
+            algebra-plugins
+            ${_acts_algebraplugins_minimal_version}
+            REQUIRED
+        )
     else()
         add_subdirectory(thirdparty/algebra-plugins)
     endif()
 
     if(ACTS_USE_SYSTEM_DETRAY)
-        find_package(detray ${_acts_detray_version} REQUIRED CONFIG)
+        find_package(detray ${_acts_detray_minimal_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/detray)
     endif()
 
     if(ACTS_USE_SYSTEM_VECMEM)
-        find_package(vecmem ${_acts_vecmem_version} REQUIRED)
+        find_package(vecmem ${_acts_vecmem_minimal_version} REQUIRED)
     else()
         add_subdirectory(thirdparty/vecmem)
         # Make the "VecMem language code" available for the whole project.
@@ -489,7 +533,7 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     endif()
 
     if(ACTS_USE_SYSTEM_COVFIE)
-        find_package(covfie ${_acts_covfie_version} REQUIRED CONFIG)
+        find_package(covfie ${_acts_covfie_minimal_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/covfie)
     endif()
@@ -497,7 +541,7 @@ if(ACTS_BUILD_PLUGIN_TRACCC)
     # traccc also depends on vecmem and covfie, but those plugins should always
     # be enabled if traccc is.
     if(ACTS_USE_SYSTEM_TRACCC)
-        find_package(traccc ${_acts_traccc_version} REQUIRED CONFIG)
+        find_package(traccc ${_acts_traccc_minimal_version} REQUIRED CONFIG)
     else()
         add_subdirectory(thirdparty/traccc)
     endif()
@@ -511,7 +555,7 @@ if(ACTS_BUILD_EXAMPLES)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
+    find_package(HepMC3 ${_acts_hepmc3_minimal_version} REQUIRED CONFIG)
 
     # HepMC3 only introduced a proper HepMC3::HepMC3 target in 3.2.6
     if(${HEPMC3_VERSION} VERSION_LESS 3.2.6)
@@ -529,7 +573,7 @@ if(ACTS_BUILD_EXAMPLES)
         # for simplicity always request all potentially required components.
         find_package(
             ROOT
-            ${_acts_root_version}
+            ${_acts_root_minimal_version}
             REQUIRED
             CONFIG
             COMPONENTS Core Geom Graf GenVector Hist Tree TreePlayer
@@ -547,7 +591,7 @@ if(ACTS_BUILD_EXAMPLES)
     if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
         find_package(
             DD4hep
-            ${_acts_dd4hep_version}
+            ${_acts_dd4hep_minimal_version}
             REQUIRED
             CONFIG
             COMPONENTS DDCore DDG4 DDDetectors
@@ -555,19 +599,19 @@ if(ACTS_BUILD_EXAMPLES)
     elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
         find_package(
             DD4hep
-            ${_acts_dd4hep_version}
+            ${_acts_dd4hep_minimal_version}
             REQUIRED
             CONFIG
             COMPONENTS DDCore DDDetectors
         )
     endif()
     if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-        find_package(Pythia8 ${_acts_pythia8_version} REQUIRED)
+        find_package(Pythia8 ${_acts_pythia8_minimal_version} REQUIRED)
     endif()
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
-    find_package(Doxygen ${_acts_doxygen_version} REQUIRED)
+    find_package(Doxygen ${_acts_doxygen_minimal_version} REQUIRED)
     find_package(Sphinx REQUIRED)
 endif()
 

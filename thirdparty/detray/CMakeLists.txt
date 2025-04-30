@@ -14,7 +14,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Detray as part of the Acts project")
 
-set(DETRAY_VERSION "v${_acts_detray_version}")
+set(DETRAY_VERSION "v${_acts_detray_minimal_version}")
 
 # Declare where to get Detray from.
 FetchContent_Declare(Detray SYSTEM ${ACTS_DETRAY_SOURCE})
