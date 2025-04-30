@@ -292,8 +292,8 @@ class Axis<AxisType::Equidistant, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const std::size_t w = getNBins();
-    return 1u + (w + ((bin - 1) % w)) % w;
+    const int w = static_cast<int>(getNBins());
+    return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }
 
@@ -604,7 +604,7 @@ class Axis<AxisType::Variable, bdt> : public IAxis {
   std::size_t wrapBin(int bin) const
     requires(bdt == AxisBoundaryType::Closed)
   {
-    const std::size_t w = getNBins();
+    const int w = static_cast<int>(getNBins());
     return 1 + (w + ((bin - 1) % w)) % w;
     // return int(bin<1)*w - int(bin>w)*w + bin;
   }

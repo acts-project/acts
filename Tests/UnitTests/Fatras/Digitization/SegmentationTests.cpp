@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(CartesianSegmentationTests) {
   auto pos = segmentation.position(bin);
   CHECK_CLOSE_ABS(pos.x(), 0.5, 1e-5);
   CHECK_CLOSE_ABS(pos.y(), 0.5, 1e-5);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
