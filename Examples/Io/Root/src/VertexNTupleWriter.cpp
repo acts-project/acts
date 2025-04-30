@@ -436,11 +436,11 @@ ProcessCode VertexNTupleWriter::writeT(
   // Get number of track-associated true primary vertices
   m_nVtxReconstructable = getNumberOfReconstructableVertices(recoParticles);
 
-  ACTS_INFO("Number of reconstructed tracks : " << tracks.size());
-  ACTS_INFO("Number of reco track-associated truth particles in event : "
-            << recoParticles.size());
-  ACTS_INFO("Maximum number of reconstructible primary vertices : "
-            << m_nVtxReconstructable);
+  ACTS_DEBUG("Number of reconstructed tracks : " << tracks.size());
+  ACTS_DEBUG("Number of reco track-associated truth particles in event : "
+             << recoParticles.size());
+  ACTS_DEBUG("Maximum number of reconstructible primary vertices : "
+             << m_nVtxReconstructable);
 
   struct ToTruthMatching {
     std::optional<SimVertexBarcode> vertexId;
