@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-// @file HoughTransformSeeder.hpp
+// @file AdaptiveHoughTransformSeeder.hpp
 // @author Tomasz Bold
-// @brief Implements track-seeding using adaptive Hough transform.
+// @brief Implements track-seeding using Adaptive Hough Transform.
 //
 
 #pragma once
@@ -21,6 +21,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -34,8 +35,8 @@
 #include <utility>
 #include <vector>
 
-    namespace ActsExamples {
-  struct AlgorithmContext;
+namespace ActsExamples {
+struct AlgorithmContext;
 }  // namespace ActsExamples
 
 using ResultDouble = Acts::Result<double>;
@@ -60,14 +61,13 @@ namespace ActsExamples {
 class AccumulatorSection {
  public:
   AccumulatorSection() = default;
-  
+
   AccumulatorSection(double xw, double yw, double xBegin, double yBegin,
-                     int div=0, const std::vector<unsigned>& indices={});
+                     int div = 0, const std::vector<unsigned>& indices = {});
 
   inline unsigned count() const { return m_indices.size(); }
   inline const std::vector<unsigned>& indices() const { return m_indices; }
   inline std::vector<unsigned>& indices() { return m_indices; }
-
 
   // create section that is bottom part this this one
   // +------+
@@ -92,7 +92,7 @@ class AccumulatorSection {
   // |   |  <|-- this part
   // +---+---+
   AccumulatorSection bottomRight(float xFraction = 0.5,
-    float yFraction = 0.5) const;
+                                 float yFraction = 0.5) const;
   AccumulatorSection bottomLeft(float xFraction = 0.5,
                                 float yFraction = 0.5) const;
 
@@ -113,11 +113,14 @@ class AccumulatorSection {
   // a and b are line parameters y = ax + b
   float distCC(float a, float b) const;
   // anti-counter clock wise distance from upper left corner
-  float distACC(float a, float b) const;  
+  float distACC(float a, float b) const;
 
   // sizes
   double xSize() const { return m_xSize; }
   double ySize() const { return m_ySize; }
+  double xBegin() const { return m_xBegin; }
+  double yBegin() const { return m_yBegin; }
+
  private:
   double m_xSize;
   double m_ySize;
@@ -148,14 +151,14 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    float qOverPtMin = 1.0;   // min q/pt, -1/1 GeV
+    float qOverPtMin = 1.0;  // min q/pt, -1/1 GeV
 
-    float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the algorithm should not
-                                // go beyond (in GeV)
-    float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm should
-                              // not go beyond
+    float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the
+                                     // algorithm should not go beyond (in GeV)
+    float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm
+                                 // should not go beyond
 
-    unsigned threshold = 7;
+    unsigned threshold = 6;
 
     double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
                          // this with fieldCorrection function
@@ -170,7 +173,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   // information that is needed for each measurement
   struct PreprocessedMeasurement {
-    double r;
+    double invr;
     double phi;
   };
 
@@ -196,16 +199,22 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  // process sections on the stack buy popping from it 
-  // and qualifying them for further division, discarding them or moving to solutions vector
-  void processStackHead(std::stack<AccumulatorSection>& sections, std::vector<AccumulatorSection>& solutions) const;
+  // process sections on the stack buy popping from it
+  // and qualifying them for further division, discarding them or moving to
+  // solutions vector
+  void processStackHead(std::stack<AccumulatorSection>& sections,
+                        std::vector<AccumulatorSection>& solutions) const;
 
-  void updateSection(AccumulatorSection& section, const std::vector<PreprocessedMeasurement>& input) const;
+  void updateSection(AccumulatorSection& section,
+                     const std::vector<PreprocessedMeasurement>& input) const;
 
   //  // functions to clean up the code and convert SPs and measurements to the
   //  // HoughMeasurement format

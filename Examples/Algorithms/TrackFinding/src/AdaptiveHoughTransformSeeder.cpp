@@ -37,12 +37,13 @@
 namespace ActsExamples {
 // Helper class describing one section of the accumulator space
 AccumulatorSection::AccumulatorSection(double xw, double yw, double xBegin,
-                                       double yBegin, int div, const std::vector<unsigned>& indices)
+                                       double yBegin, int div,
+                                       const std::vector<unsigned>& indices)
     : m_xSize(xw),
       m_ySize(yw),
       m_xBegin(xBegin),
       m_yBegin(yBegin),
-      m_divisionLevel(div), 
+      m_divisionLevel(div),
       m_indices(indices) {}
 
 AccumulatorSection AccumulatorSection::bottomLeft(float xFraction,
@@ -58,12 +59,13 @@ AccumulatorSection AccumulatorSection::topLeft(float xFraction,
 }
 AccumulatorSection AccumulatorSection::topRight(float xFraction,
                                                 float yFraction) const {
-  return AccumulatorSection(
-      m_xSize * xFraction, m_ySize * yFraction, m_xBegin + m_xSize - m_xSize * xFraction,
-      m_yBegin + m_ySize - m_ySize * yFraction, m_divisionLevel + 1, m_indices);
+  return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction,
+                            m_xBegin + m_xSize - m_xSize * xFraction,
+                            m_yBegin + m_ySize - m_ySize * yFraction,
+                            m_divisionLevel + 1, m_indices);
 }
-AccumulatorSection AccumulatorSection::bottomRight(
-    float xFraction, float yFraction) const {
+AccumulatorSection AccumulatorSection::bottomRight(float xFraction,
+                                                   float yFraction) const {
   return AccumulatorSection(m_xSize * xFraction, m_ySize * yFraction,
                             m_xBegin + m_xSize - m_xSize * xFraction, m_yBegin,
                             m_divisionLevel + 1, m_indices);
@@ -89,7 +91,7 @@ float AccumulatorSection::distCC(float a, float b) const {
 float AccumulatorSection::distACC(float a, float b) const {
   const float y = fma(a, m_xBegin, b);
   return y <= m_yBegin ? (m_ySize + (m_yBegin - b) / a - m_xBegin)
-                     : (m_yBegin + m_ySize - y);
+                       : (m_yBegin + m_ySize - y);
 }
 
 AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
@@ -105,6 +107,7 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
             "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
     handle->initialize(spName);
   }
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
 ProcessCode AdaptiveHoughTransformSeeder::execute(
@@ -117,31 +120,49 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = Acts::fastHypot(sp.x(), sp.y());
-      double z = sp.z();
+      measurements.emplace_back(1.0/sp.r(), std::atan2(sp.y(), sp.x()));
     }
   }
-
+  ACTS_DEBUG("Collected " << measurements.size() << " space points");
   // prepare initial stack
   // will become more complicated with slicing
   std::stack<AccumulatorSection> sectionsStack({AccumulatorSection(
-    2.*M_PI, 2.0*config().qOverPtMin, -M_PI, -config().qOverPtMin)});
-
+      2. * M_PI, 2.0 * config().qOverPtMin, -M_PI, -config().qOverPtMin)});
 
   // all the measurements should be considered at start
   // therfore indices of all of them are stored
+  // additional loop over regions will wrap this
   sectionsStack.top().indices().resize(measurements.size());
   std::iota(std::begin(sectionsStack.top().indices()),
             std::end(sectionsStack.top().indices()), 0);
 
-
-
   std::vector<AccumulatorSection> solutions;
   while (not sectionsStack.empty()) {
+    ACTS_DEBUG("Processing AccumulatorSection "
+               << sectionsStack.top().xBegin() << " "
+               << sectionsStack.top().xSize() << " "
+               << sectionsStack.top().yBegin() << " "
+               << sectionsStack.top().ySize()
+               << " nlines: " << sectionsStack.top().count());
     updateSection(sectionsStack.top(), measurements);
+    ACTS_DEBUG("nlines after update " << sectionsStack.top().count());
     processStackHead(sectionsStack, solutions);
   }
   // post solutions
+  ProtoTrackContainer protoTracks;
+
+  for (const AccumulatorSection& s : solutions) {
+    ACTS_DEBUG("Solution x: " << s.xBegin() << " " << s.xSize()
+                              << " y: " << s.yBegin() << " " << s.ySize()
+                              << " nlines: " << s.count());
+    // ProtoTrack protoTrack;
+    // for (unsigned index: s.indices()) {
+    // }
+    // protoTracks.pushBack(protoTrack);
+  }
+  // m_outputProtoTracks(ctx, protoTracks);
+  SimSeedContainer SeedContainerForStorage;
+  m_outputSeeds(ctx, std::move(SeedContainerForStorage));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
@@ -193,7 +214,7 @@ void AdaptiveHoughTransformSeeder::updateSection(
   std::vector<unsigned> selectedIndices;
   for (unsigned index : section.indices()) {
     const PreprocessedMeasurement& m = input[index];
-    if (section.isLineInside(m.r, m.phi)) {
+    if (section.isLineInside(m.invr * config().kA, -m.invr * m.phi * config().kA)) {
       selectedIndices.push_back(index);
     }
   }
