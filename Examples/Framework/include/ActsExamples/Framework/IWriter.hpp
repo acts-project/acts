@@ -32,7 +32,11 @@ class IWriter : public SequenceElement {
 
   /// Informs the writer that the sequencer will start processing the next
   /// event.
-  virtual ProcessCode beginEvent() { return ProcessCode::SUCCESS; }
+  /// @param threadId The thread ID
+  virtual ProcessCode beginEvent(std::size_t threadId) {
+    static_cast<void>(threadId);
+    return ProcessCode::SUCCESS;
+  }
 
   /// Fulfill the algorithm interface
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
