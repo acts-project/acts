@@ -13,6 +13,7 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
 #include <array>
@@ -83,6 +84,7 @@ struct BoundParametersSmearer {
     }
 
     const auto& boundParams = *boundParamsRes;
+    Acts::BoundVector smearedBoundParams = boundParams;
 
     ParametersVector par = ParametersVector::Zero();
     CovarianceMatrix cov = CovarianceMatrix::Zero();
@@ -96,7 +98,12 @@ struct BoundParametersSmearer {
       if (forcePositive[i]) {
         par[i] = std::abs(value);
       }
+      smearedBoundParams[indices[i]] = par[i];
       cov(i, i) = stddev * stddev;
+    }
+
+    if (!surface.insideBounds(smearedBoundParams.head<2>())) {
+      return Result::failure(DigitizationError::OutsideBoundsError);
     }
 
     return Result::success(std::make_pair(par, cov));
