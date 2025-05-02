@@ -31,8 +31,8 @@ class DigitizationErrorCategory : public std::error_category {
         return "Surface undefined for this operation.";
       case DigitizationError::MaskingError:
         return "Surface mask could not be applied.";
-      case DigitizationError::OutsideBoundsError:
-        return "Smeared parameters outside surface bounds.";
+      case DigitizationError::MaximumRetriesExceeded:
+        return "Maximum number of retries exceeded.";
       default:
         return "unknown";
     }

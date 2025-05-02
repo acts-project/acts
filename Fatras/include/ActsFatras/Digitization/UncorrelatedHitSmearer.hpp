@@ -50,6 +50,7 @@ struct BoundParametersSmearer {
   std::array<Acts::BoundIndices, kSize> indices{};
   std::array<SingleParameterSmearFunction<generator_t>, kSize> smearFunctions{};
   std::array<bool, kSize> forcePositive = {};
+  std::size_t maxRetries = 0;
 
   static constexpr std::size_t size() { return kSize; }
 
@@ -86,27 +87,31 @@ struct BoundParametersSmearer {
     const auto& boundParams = *boundParamsRes;
     Acts::BoundVector smearedBoundParams = boundParams;
 
-    ParametersVector par = ParametersVector::Zero();
-    CovarianceMatrix cov = CovarianceMatrix::Zero();
-    for (std::size_t i = 0; i < kSize; ++i) {
-      auto res = smearFunctions[i](boundParams[indices[i]], rng);
-      if (!res.ok()) {
-        return Result::failure(res.error());
+    for (std::size_t k = 0; k < maxRetries + 1; ++k) {
+      ParametersVector par = ParametersVector::Zero();
+      CovarianceMatrix cov = CovarianceMatrix::Zero();
+      for (std::size_t i = 0; i < kSize; ++i) {
+        auto res = smearFunctions[i](boundParams[indices[i]], rng);
+        if (!res.ok()) {
+          return Result::failure(res.error());
+        }
+        auto [value, stddev] = res.value();
+        par[i] = value;
+        if (forcePositive[i]) {
+          par[i] = std::abs(value);
+        }
+        smearedBoundParams[indices[i]] = par[i];
+        cov(i, i) = stddev * stddev;
       }
-      auto [value, stddev] = res.value();
-      par[i] = value;
-      if (forcePositive[i]) {
-        par[i] = std::abs(value);
+
+      if (!surface.insideBounds(smearedBoundParams.head<2>())) {
+        continue;
       }
-      smearedBoundParams[indices[i]] = par[i];
-      cov(i, i) = stddev * stddev;
+
+      return Result::success(std::make_pair(par, cov));
     }
 
-    if (!surface.insideBounds(smearedBoundParams.head<2>())) {
-      return Result::failure(DigitizationError::OutsideBoundsError);
-    }
-
-    return Result::success(std::make_pair(par, cov));
+    return Result::failure(DigitizationError::MaximumRetriesExceeded);
   }
 };
 

@@ -19,7 +19,7 @@ enum class DigitizationError {
   SmearingError,
   UndefinedSurface,
   MaskingError,
-  OutsideBoundsError,
+  MaximumRetriesExceeded,
 };
 
 std::error_code make_error_code(DigitizationError e);
