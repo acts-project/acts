@@ -120,7 +120,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      measurements.emplace_back(1.0/sp.r(), std::atan2(sp.y(), sp.x()));
+      measurements.emplace_back(1.0 / sp.r(), std::atan2(sp.y(), sp.x()));
     }
   }
   ACTS_DEBUG("Collected " << measurements.size() << " space points");
@@ -144,13 +144,11 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                << sectionsStack.top().yBegin() << " "
                << sectionsStack.top().ySize()
                << " nlines: " << sectionsStack.top().count());
-    updateSection(sectionsStack.top(), measurements);
-    ACTS_DEBUG("nlines after update " << sectionsStack.top().count());
-    processStackHead(sectionsStack, solutions);
+    processStackHead(sectionsStack, solutions, measurements);
   }
   // post solutions
   ProtoTrackContainer protoTracks;
-
+  ACTS_DEBUG("Number of solutions " << solutions.size());
   for (const AccumulatorSection& s : solutions) {
     ACTS_DEBUG("Solution x: " << s.xBegin() << " " << s.xSize()
                               << " y: " << s.yBegin() << " " << s.ySize()
@@ -169,42 +167,56 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 
 void AdaptiveHoughTransformSeeder::processStackHead(
     std::stack<AccumulatorSection>& sections,
-    std::vector<AccumulatorSection>& solutions) const {
+    std::vector<AccumulatorSection>& solutions,
+    const std::vector<PreprocessedMeasurement>& measurements) const {
   const AccumulatorSection& section = sections.top();
 
-  // check if it is a bad one (most likely)
+  // check if it is an ~empty section
   if (section.count() < config().threshold) {
+    ACTS_DEBUG("Failed threshold check");
     sections.pop();
+    return;
+  }
+  // check if intersections requirement fails
+  if (config().requireItersections &&
+      !passIntersectionsCheck(sections.top(), measurements)) {
+    ACTS_DEBUG("Failed intersection check");
+    sections.pop();
+    return;
+  }
+  // maybe we have found solution
+  if (section.xSize() <= config().phiMinBinSize &&
+      section.ySize() <= config().qOverPtMinBinSize) {
+    ACTS_DEBUG("Success");
+
+    solutions.push_back(section);
+    sections.pop();
+    return;
+  }
+
+  // time to split
+  std::vector<AccumulatorSection> divisions;
+  if (section.xSize() > config().phiMinBinSize &&
+      section.ySize() > config().qOverPtMinBinSize) {
+    // need 4 subdivisions
+    divisions.push_back(section.topLeft());
+    divisions.push_back(section.topRight());
+    divisions.push_back(section.bottomLeft());
+    divisions.push_back(section.bottomRight());
+  } else if (section.xSize() <= config().phiMinBinSize &&
+             section.ySize() > config().qOverPtMinBinSize) {
+    // only split in q over pT
+    divisions.push_back(section.top());
+    divisions.push_back(section.bottom());
   } else {
-    // we have found solution
-    if (section.xSize() <= config().phiMinBinSize &&
-        section.ySize() <= config().qOverPtMinBinSize) {
-      solutions.push_back(section);
-      sections.pop();
-    } else {
-      // time to split
-      std::vector<AccumulatorSection> divisions;
-      if (section.xSize() > config().phiMinBinSize &&
-          section.ySize() > config().qOverPtMinBinSize) {
-        // need 4 subdivisions
-        divisions.push_back(section.topLeft());
-        divisions.push_back(section.topRight());
-        divisions.push_back(section.bottomLeft());
-        divisions.push_back(section.bottomRight());
-      } else if (section.xSize() <= config().phiMinBinSize &&
-                 section.ySize() > config().qOverPtMinBinSize) {
-        // only split in q over pT
-        divisions.push_back(section.top());
-        divisions.push_back(section.bottom());
-      } else {
-        divisions.push_back(section.left());
-        divisions.push_back(section.right());
-      }
-      sections.pop();
-      for (const AccumulatorSection& s : divisions) {
-        sections.push(std::move(s));
-      }
-    }
+    divisions.push_back(section.left());
+    divisions.push_back(section.right());
+  }
+  ACTS_DEBUG("This section is split into " << divisions.size());
+  sections.pop();
+  for (AccumulatorSection& s : divisions) {
+    updateSection(s, measurements);
+    sections.push(std::move(s));
   }
 }
 
@@ -214,11 +226,44 @@ void AdaptiveHoughTransformSeeder::updateSection(
   std::vector<unsigned> selectedIndices;
   for (unsigned index : section.indices()) {
     const PreprocessedMeasurement& m = input[index];
-    if (section.isLineInside(m.invr * config().kA, -m.invr * m.phi * config().kA)) {
+    if (section.isLineInside(m.invr * config().kA,
+                             -m.invr * m.phi * config().kA)) {
       selectedIndices.push_back(index);
     }
   }
   section.indices() = std::move(selectedIndices);
+}
+
+bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
+    const AccumulatorSection& section,
+    const std::vector<PreprocessedMeasurement>& measurements) const {
+  unsigned inside = 0;
+  for (size_t first = 0; first < section.count(); ++first) {
+    for (size_t second = first + 1; second < section.count(); ++second) {
+      const double a1 = measurements[first].invr * config().kA;
+      const double a2 = measurements[second].invr * config().kA;
+      const double b1 =
+          -measurements[first].invr * measurements[first].phi * config().kA;
+      const double b2 =
+          -measurements[second].invr * measurements[second].phi * config().kA;
+
+      const double bdif = b2 - b1;
+      const double adif = a1 - a2;
+      // TODO revisit to eliminate any division
+      const double x = bdif / adif;
+      if (section.xBegin() <= x && x <= section.xBegin() + section.xSize()) {
+        const double y = std::fma(a1, bdif / adif, b1);
+        if (section.yBegin() <= y && y <= section.yBegin() + section.ySize()) {
+          inside++;
+        }
+      }
+      if (inside >= config().intersectionsThreshold) {
+        return true;
+      }
+    }
+  }
+  ACTS_DEBUG("Number of crossings inside of section " << inside);
+  return inside >= config().intersectionsThreshold;
 }
 
 }  // namespace ActsExamples

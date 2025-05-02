@@ -104,8 +104,8 @@ class AccumulatorSection {
   // returns true if the line defined by given parameters passes the section
   // a and b are line parameters y = ax + b
   inline bool isLineInside(float a, float b) const {
-    const float yB = fma(a, m_xBegin, b);
-    const float yE = fma(a, (m_xBegin + m_xSize), b);
+    const float yB = std::fma(a, m_xBegin, b);
+    const float yE = std::fma(a, (m_xBegin + m_xSize), b);
     return yB < m_yBegin + m_ySize && yE > m_yBegin;
   }
 
@@ -158,7 +158,18 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm
                                  // should not go beyond
 
-    unsigned threshold = 6;
+    unsigned threshold =
+        5;  // number of lines passing section for it to be still considered
+
+    bool useOrdering = true;  // require that lines passing section pass left
+                              // side in a different order than the right side
+
+    bool requireItersections =
+        true;  // require that lines passing section need to cross inside
+               // the count is required to be at lease threshold*(threshold-1):
+    unsigned intersectionsThreshold =
+        threshold*(threshold-1)/2;  // the number of lines in section should be at most this to enable
+             // intersection test
 
     double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
                          // this with fieldCorrection function
@@ -210,16 +221,27 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   // process sections on the stack buy popping from it
   // and qualifying them for further division, discarding them or moving to
   // solutions vector
-  void processStackHead(std::stack<AccumulatorSection>& sections,
-                        std::vector<AccumulatorSection>& solutions) const;
+  void processStackHead(
+      std::stack<AccumulatorSection>& sections,
+      std::vector<AccumulatorSection>& solutions,
+      const std::vector<PreprocessedMeasurement>& measurements) const;
 
+  // assign measurements to the section
+  // the sections needs to have already indices of measurements to consider
+  // from previous iteration
   void updateSection(AccumulatorSection& section,
                      const std::vector<PreprocessedMeasurement>& input) const;
 
-  //  // functions to clean up the code and convert SPs and measurements to the
-  //  // HoughMeasurement format
-  //  void addMeasurements(const AlgorithmContext& ctx) const;
-  //  void addSpacePoints(const AlgorithmContext& ctx) const;
+  // check if reordering at the edges of te section is as expected for
+  // crossing lines
+  // modifies the section leaving only indices of measurements that do so
+  void requireOrdering(AccumulatorSection& ) const {};
+
+  // check if lines intersect in the section
+  // modifies the section leaving only indices of measurements that do so
+  bool passIntersectionsCheck(
+      const AccumulatorSection& section,
+      const std::vector<PreprocessedMeasurement>& measurements) const;
 };
 
 }  // namespace ActsExamples
