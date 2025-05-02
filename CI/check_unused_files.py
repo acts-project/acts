@@ -54,6 +54,7 @@ def main():
         "default-input-config-generic.json",
         "geoSelection-openDataDetector.json",
         "alignment-geo-contextualDetector.json",
+        "odd-digi-smearing-config-notime.json",
         # TODO Mention these files somewhere?
         "generate_particle_data_table.py",
         "lazy_autodoc.py",
