@@ -32,6 +32,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -381,6 +382,8 @@ void addGeometry(Context& ctx) {
         .value("Gap", VolumeResizeStrategy::Gap)
         .value("Expand", VolumeResizeStrategy::Expand);
   }
+
+  py::class_<PortalShellBase>(m, "PortalShellBase");
 
   addBlueprint(ctx);
 }

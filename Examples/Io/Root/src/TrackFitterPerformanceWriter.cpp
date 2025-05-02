@@ -141,7 +141,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Find the truth particle via the barcode
     auto ip = particles.find(majorityParticleId);
     if (ip == particles.end()) {
-      ACTS_WARNING("Majority particle not found in the particles collection.");
+      ACTS_DEBUG("Majority particle not found in the particles collection.");
       continue;
     }
 
