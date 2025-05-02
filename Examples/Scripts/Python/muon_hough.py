@@ -4,7 +4,7 @@ import argparse
 
 import acts
 
-from acts.examples import CsvMuonSimHitReader, CsvDriftCircleReader, MuonHoughSeeder
+from acts.examples import CsvMuonSpacePointReader, CsvMuonSegmentReader, MuonHoughSeeder
 
 # from acts.examples.reconstruction import (
 #     addSeeding,
@@ -24,26 +24,31 @@ def runHoughFromCsv(inDir):
     s = acts.examples.Sequencer(events=8, numThreads=1, logLevel=acts.logging.VERBOSE)
 
     # Read input space points from input csv files
-    evReader = CsvMuonSimHitReader(
-        inputStem="MuonSimHit",
+    evReader = CsvMuonSpacePointReader(
+        inputStem="SpacePoints",
         inputDir=os.path.dirname(inDir),
-        outputSimHits="MuonSimHits",
+        outputSpacePoints="MuonSpacePoints",
         level=acts.logging.VERBOSE,
     )
-    dcReader = CsvDriftCircleReader(
-        inputStem="MuonDriftCircle",
+
+    truthReader = CsvMuonSegmentReader(
+        inputStem="MuonTruthSegment",
         inputDir=os.path.dirname(inDir),
-        outputDriftCircles="MuonDriftCircles",
+        outputSegments="MuonTruthSegments",
         level=acts.logging.VERBOSE,
     )
+
     # add csv reader
     s.addReader(evReader)
-    s.addReader(dcReader)
+    s.addReader(truthReader)
+    ### Add the hough seeder algorithm
     seeder = MuonHoughSeeder(
-        inSimHits=evReader.config.outputSimHits,
-        inDriftCircles=dcReader.config.outputDriftCircles,
+        inSpacePoints=evReader.config.outputSpacePoints,
+        inTruthSegments=truthReader.config.outputSegments,
+        outHoughMax="MuonHoughSeeds",
         level=acts.logging.VERBOSE,
     )
+
     s.addAlgorithm(seeder)
     s.run()
 
