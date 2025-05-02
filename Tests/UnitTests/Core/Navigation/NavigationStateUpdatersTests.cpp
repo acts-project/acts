@@ -127,6 +127,12 @@ class TestAxis : public IAxis {
 
   double getMax() const final { return 1.; }
 
+  std::size_t getBin(double x) const final { return x < 0. ? 1 : 2; }
+
+  double getBinCenter(std::size_t bin) const final {
+    return bin > 0 ? 0.5 : -0.5;
+  }
+
   std::size_t getNBins() const final { return 1; };
 
   void toStream(std::ostream& os) const final { os << "TextAxis"; }

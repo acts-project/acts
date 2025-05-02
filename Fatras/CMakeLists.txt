@@ -1,10 +1,12 @@
 add_library(
     ActsFatras
     SHARED
-    src/Digitization/Segmentizer.cpp
+    src/Digitization/Channelizer.cpp
     src/Digitization/DigitizationError.cpp
     src/Digitization/PlanarSurfaceMask.cpp
     src/Digitization/PlanarSurfaceDrift.cpp
+    src/Digitization/Segmentation.cpp
+    src/Digitization/Segmentizer.cpp
     src/EventData/Particle.cpp
     src/EventData/ParticleOutcome.cpp
     src/EventData/ProcessType.cpp

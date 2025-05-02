@@ -19,6 +19,7 @@ enum class DigitizationError {
   SmearingError,
   UndefinedSurface,
   MaskingError,
+  DriftError,
 };
 
 std::error_code make_error_code(DigitizationError e);
