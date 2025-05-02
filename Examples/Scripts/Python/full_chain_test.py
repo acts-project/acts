@@ -283,7 +283,7 @@ def full_chain(args):
         else outputDir if args.output_csv == 2 else None
     )
 
-    acts_dir = pathlib.Path(__file__).parent.parent.parent
+    acts_dir = pathlib.Path(__file__).parent.parent.parent.parent
 
     # fmt: off
     if args.generic_detector:

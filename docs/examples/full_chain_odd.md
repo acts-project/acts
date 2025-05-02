@@ -7,7 +7,7 @@ Our full chain ODD example is written in Python and can be found [here](https://
 The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our preferred material map and provide it to the detector construction `getOpenDataDetector`.
 
 ```python
-actsDir = "."
+actsDir = pathlib.Path(__file__).parent.parent.parent.parent
 oddDir = getOpenDataDetectorDirectory()
 
 oddMaterialMap = oddDir / "data/odd-material-maps.root"
