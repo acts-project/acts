@@ -25,6 +25,7 @@ add_library(
     src/Validation/FakeRatePlotTool.cpp
     src/Validation/ResPlotTool.cpp
     src/Validation/TrackClassification.cpp
+    src/Validation/TrackQualityPlotTool.cpp
     src/Validation/TrackSummaryPlotTool.cpp
 )
 
