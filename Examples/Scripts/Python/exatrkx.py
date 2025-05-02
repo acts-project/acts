@@ -63,16 +63,10 @@ if "__main__" == __name__:
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    geometrySelection = (
-        srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
-    )
+    geometrySelection = srcdir / "Examples/Configs/geoSelection-genericDetector.json"
     assert geometrySelection.exists()
 
-    digiConfigFile = (
-        srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/default-smearing-config-generic.json"
     assert digiConfigFile.exists()
 
     if backend == ExaTrkXBackend.Torch:

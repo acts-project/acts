@@ -85,7 +85,7 @@ if "__main__" == __name__:
 
     digiConfigFile = (
         Path(__file__).resolve().parent.parent.parent.parent
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        / "Examples/Configs/default-smearing-config-generic.json"
     )
     assert digiConfigFile.exists()
 

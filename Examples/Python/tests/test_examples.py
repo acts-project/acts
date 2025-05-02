@@ -463,7 +463,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        / "Examples/Configs/geoSelection-genericDetector.json",
         outputDirRoot=str(tmp_path),
     )
 
@@ -914,10 +914,8 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-DIGI_SHARE_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "Examples/Algorithms/Digitization/share"
-)
+ACTS_DIR = Path(__file__).parent.parent.parent.parent
+DIGI_SHARE_DIR = ACTS_DIR / "Examples/Algorithms/Digitization/share"
 
 
 @pytest.mark.parametrize(
@@ -961,21 +959,13 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
         DIGI_SHARE_DIR / "default-smearing-config-generic.json",
         DIGI_SHARE_DIR / "default-geometric-config-generic.json",
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-smearing-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-geometric-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
@@ -1053,7 +1043,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
     input = (
         Path(__file__).parent
-        / "../../../Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        / "../../../Examples/Configs/default-smearing-config-generic.json"
     )
     assert input.exists(), input.resolve()
 

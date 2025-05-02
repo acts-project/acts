@@ -268,12 +268,10 @@ def detector_config(request):
             trackingGeometry,
             decorators,
             geometrySelection=(
-                srcdir
-                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+                srcdir / "Examples/Configs/geoSelection-genericDetector.json"
             ),
             digiConfigFile=(
-                srcdir
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                srcdir / "Examples/Configs/default-smearing-config-generic.json"
             ),
             name=request.param,
         )
@@ -292,13 +290,8 @@ def detector_config(request):
             detector,
             trackingGeometry,
             decorators,
-            digiConfigFile=(
-                srcdir
-                / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-            ),
-            geometrySelection=(
-                srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
-            ),
+            digiConfigFile=(srcdir / "Examples/Configs/odd-digi-smearing-config.json"),
+            geometrySelection=(srcdir / "Examples/Configs/odd-seeding-config.json"),
             name=request.param,
         )
     else:
@@ -372,7 +365,7 @@ def fatras(ptcl_gun, trk_geo, rng):
             digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
-                    / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                    / "Examples/Configs/default-smearing-config-generic.json"
                 )
             ),
             surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),

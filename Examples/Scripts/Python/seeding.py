@@ -94,8 +94,7 @@ def runSeeding(
         s,
         trackingGeometry,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        digiConfigFile=srcdir / "Examples/Configs/default-smearing-config-generic.json",
         rnd=rnd,
     )
 
@@ -136,7 +135,7 @@ def runSeeding(
         acts.logging.VERBOSE,
         seedingAlgorithm=seedingAlgorithm,
         geoSelectionConfigFile=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        / "Examples/Configs/geoSelection-genericDetector.json",
         outputDirRoot=outputDir,
     )
     return s

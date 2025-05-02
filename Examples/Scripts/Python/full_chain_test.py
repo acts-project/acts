@@ -283,6 +283,8 @@ def full_chain(args):
         else outputDir if args.output_csv == 2 else None
     )
 
+    acts_dir = pathlib.Path(__file__).parent.parent.parent
+
     # fmt: off
     if args.generic_detector:
         etaRange = (-2.0, 2.0)
@@ -292,8 +294,8 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Generic Detector from {geo_dir}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-        seedingConfigFile = geo_dir / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            args.digi_config = geo_dir / "Examples/Configs/default-smearing-config-generic.json"
+        seedingConfigFile = geo_dir / "Examples/Configs/geoSelection-genericDetector.json"
         args.bf_constant = True
         detector = acts.examples.GenericDetector()
         trackingGeometry = detector.trackingGeometry()
@@ -308,8 +310,8 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Open Data Detector from {geo_dir.resolve()}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "config/odd-digi-smearing-config.json"
-        seedingConfigFile = geo_dir / "config/odd-seeding-config.json"
+            args.digi_config = acts_dir / "Examples/Configs/odd-digi-smearing-config.json"
+        seedingConfigFile = acts_dir / "Examples/Configs/odd-seeding-config.json"
         if args.material_config is None:
             args.material_config = geo_dir / "data/odd-material-maps.root"
         args.bf_constant = True
