@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Grid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -161,20 +162,21 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     unsigned threshold =
         5;  // number of lines passing section for it to be still considered
 
-    bool useOrdering = true;  // require that lines passing section pass left
-                              // side in a different order than the right side
+    bool deduplicate = true;  // when adding solutions try avoiding duplicates
 
     bool requireItersections =
         true;  // require that lines passing section need to cross inside
                // the count is required to be at lease threshold*(threshold-1):
     unsigned intersectionsThreshold =
-        threshold*(threshold-1)/2;  // the number of lines in section should be at most this to enable
-             // intersection test
+        threshold * (threshold - 1) /
+        2;  // the number of lines in section should be at most this to enable
+            // intersection test
 
-    double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
-                         // this with fieldCorrection function
-                         // This 3e-4 comes from the 2T field when converted to
-                         // units of GeV / (c*mm*e)
+    double inverseA =
+        1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
+                       // this with fieldCorrection function
+                       // This 3e-4 comes from the 2T field when converted to
+                       // units of GeV / (c*mm*e)
 
     // it's up to the user to connect these to the functions they want to use
     FieldCorrector fieldCorrector;
@@ -186,7 +188,8 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   struct PreprocessedMeasurement {
     double invr;
     double phi;
-  };
+    Acts::SourceLink link;
+};
 
   /// Construct the seeding algorithm.
   ///
@@ -218,30 +221,40 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};
-  // process sections on the stack buy popping from it
-  // and qualifying them for further division, discarding them or moving to
-  // solutions vector
+  /// @brief process sections on the stack
+  /// and qualifying them for further division, discarding them or moving to
+  /// solutions vector
+  /// @arg sections is the stack of sectoins to consider
+  /// @arg solutions is the output set of sections
+  /// @arg measurements are input measurements
   void processStackHead(
       std::stack<AccumulatorSection>& sections,
       std::vector<AccumulatorSection>& solutions,
       const std::vector<PreprocessedMeasurement>& measurements) const;
 
-  // assign measurements to the section
-  // the sections needs to have already indices of measurements to consider
-  // from previous iteration
+  /// @brief assign measurements to the section
+  /// @warning the sections needs to have already indices of measurements to consider
+  /// @warning from previous iteration
+  /// @arg sections section to be processed
+  /// @arg vector of measurements - indices in the section need to point to this vector
   void updateSection(AccumulatorSection& section,
                      const std::vector<PreprocessedMeasurement>& input) const;
 
-  // check if reordering at the edges of te section is as expected for
-  // crossing lines
-  // modifies the section leaving only indices of measurements that do so
-  void requireOrdering(AccumulatorSection& ) const {};
-
-  // check if lines intersect in the section
-  // modifies the section leaving only indices of measurements that do so
+  /// @brief check if lines intersect in the section
+  /// modifies the section leaving only indices of measurements that do so
+  /// @arg section - the section to check, 
+  /// @arg measurements - the measurements that are pointed to by indices in section
   bool passIntersectionsCheck(
       const AccumulatorSection& section,
       const std::vector<PreprocessedMeasurement>& measurements) const;
+
+  
+  /// @brief  add solution to the solutions vector
+  /// depending on options it may eliminate trivial duplicates
+  /// @arg s - the solution to be potentially added
+  /// @arg solutions - the output solutions set
+  void addSolution(const AccumulatorSection&& s,
+                   std::vector<AccumulatorSection>& output) const;
 };
 
 }  // namespace ActsExamples

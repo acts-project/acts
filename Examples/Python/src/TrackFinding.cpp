@@ -184,8 +184,8 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
         ActsExamples::AdaptiveHoughTransformSeeder, mex, "AdaptiveHoughTransformSeeder",
-        inputSpacePoints, outputProtoTracks, trackingGeometry,
-        qOverPtMin, qOverPtMinBinSize, phiMinBinSize, threshold, kA);
+        inputSpacePoints, outputSeeds, outputProtoTracks, trackingGeometry,
+        qOverPtMin, qOverPtMinBinSize, phiMinBinSize, threshold, deduplicate, requireItersections, inverseA);
   
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
                                 "MuonHoughSeeder", inSimHits, inDriftCircles);

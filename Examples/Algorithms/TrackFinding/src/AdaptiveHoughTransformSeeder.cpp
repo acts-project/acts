@@ -107,23 +107,27 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
             "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
     handle->initialize(spName);
   }
-  m_outputSeeds.initialize(m_cfg.outputSeeds);
+  if (config().outputSeeds.empty()) {
+    throw std::invalid_argument(
+        "AdaptiveHoughTransformSeeder: Output seeds collection name empty");
+  }
+  m_outputSeeds.initialize(config().outputSeeds);
 }
 
 ProcessCode AdaptiveHoughTransformSeeder::execute(
     const AlgorithmContext& ctx) const {
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
-
   for (const auto& isp : m_inputSpacePoints) {
     const auto& spContainer = (*isp)(ctx);
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
-    for (auto& sp : spContainer) {
-      measurements.emplace_back(1.0 / sp.r(), std::atan2(sp.y(), sp.x()));
+    for (const SimSpacePoint& sp : spContainer) {
+      measurements.emplace_back(1.0 / sp.r(), std::atan2(sp.y(), sp.x()), Acts::SourceLink(static_cast<const SimSpacePoint*>(&sp)));
     }
   }
   ACTS_DEBUG("Collected " << measurements.size() << " space points");
+
   // prepare initial stack
   // will become more complicated with slicing
   std::stack<AccumulatorSection> sectionsStack({AccumulatorSection(
@@ -138,29 +142,40 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 
   std::vector<AccumulatorSection> solutions;
   while (not sectionsStack.empty()) {
-    ACTS_DEBUG("Processing AccumulatorSection "
-               << sectionsStack.top().xBegin() << " "
-               << sectionsStack.top().xSize() << " "
-               << sectionsStack.top().yBegin() << " "
-               << sectionsStack.top().ySize()
-               << " nlines: " << sectionsStack.top().count());
+    ACTS_VERBOSE("Processing AccumulatorSection "
+                 << sectionsStack.top().xBegin() << " "
+                 << sectionsStack.top().xSize() << " "
+                 << sectionsStack.top().yBegin() << " "
+                 << sectionsStack.top().ySize()
+                 << " nlines: " << sectionsStack.top().count());
     processStackHead(sectionsStack, solutions, measurements);
   }
+
   // post solutions
+  SimSeedContainer seeds;
+  seeds.reserve(solutions.size());
+
   ProtoTrackContainer protoTracks;
+  protoTracks.reserve(solutions.size());
   ACTS_DEBUG("Number of solutions " << solutions.size());
   for (const AccumulatorSection& s : solutions) {
     ACTS_DEBUG("Solution x: " << s.xBegin() << " " << s.xSize()
                               << " y: " << s.yBegin() << " " << s.ySize()
                               << " nlines: " << s.count());
-    // ProtoTrack protoTrack;
-    // for (unsigned index: s.indices()) {
-    // }
-    // protoTracks.pushBack(protoTrack);
+    const SimSpacePoint * sp0 = measurements[s.indices()[0]].link.get<const SimSpacePoint*>();
+    const SimSpacePoint * sp1 = measurements[s.indices()[1]].link.get<const SimSpacePoint*>();
+    const SimSpacePoint * sp2 = measurements[s.indices()[2]].link.get<const SimSpacePoint*>();
+    seeds.emplace_back(*sp0, *sp1, *sp2);
+    float cotThetaEstimate = (sp2->z() - sp0->z())/(sp2->r() - sp0->r());
+    float z = sp1->z() - sp1->r() * cotThetaEstimate;
+    seeds.back().setVertexZ(z);
+    // for the time the quality is fixed
+    // in the future we can use section count for instance
+    seeds.back().setQuality(1.0);
+
   }
-  // m_outputProtoTracks(ctx, protoTracks);
-  SimSeedContainer SeedContainerForStorage;
-  m_outputSeeds(ctx, std::move(SeedContainerForStorage));
+
+  m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
@@ -180,16 +195,14 @@ void AdaptiveHoughTransformSeeder::processStackHead(
   // check if intersections requirement fails
   if (config().requireItersections &&
       !passIntersectionsCheck(sections.top(), measurements)) {
-    ACTS_DEBUG("Failed intersection check");
+    ACTS_VERBOSE("Failed intersection check");
     sections.pop();
     return;
   }
   // maybe we have found solution
   if (section.xSize() <= config().phiMinBinSize &&
       section.ySize() <= config().qOverPtMinBinSize) {
-    ACTS_DEBUG("Success");
-
-    solutions.push_back(section);
+    addSolution(std::move(section), solutions);
     sections.pop();
     return;
   }
@@ -212,7 +225,7 @@ void AdaptiveHoughTransformSeeder::processStackHead(
     divisions.push_back(section.left());
     divisions.push_back(section.right());
   }
-  ACTS_DEBUG("This section is split into " << divisions.size());
+  ACTS_VERBOSE("This section is split into " << divisions.size());
   sections.pop();
   for (AccumulatorSection& s : divisions) {
     updateSection(s, measurements);
@@ -226,8 +239,8 @@ void AdaptiveHoughTransformSeeder::updateSection(
   std::vector<unsigned> selectedIndices;
   for (unsigned index : section.indices()) {
     const PreprocessedMeasurement& m = input[index];
-    if (section.isLineInside(m.invr * config().kA,
-                             -m.invr * m.phi * config().kA)) {
+    if (section.isLineInside(m.invr * config().inverseA,
+                             -m.invr * m.phi * config().inverseA)) {
       selectedIndices.push_back(index);
     }
   }
@@ -240,18 +253,17 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
   unsigned inside = 0;
   for (size_t first = 0; first < section.count(); ++first) {
     for (size_t second = first + 1; second < section.count(); ++second) {
-      const double a1 = measurements[first].invr * config().kA;
-      const double a2 = measurements[second].invr * config().kA;
-      const double b1 =
-          -measurements[first].invr * measurements[first].phi * config().kA;
-      const double b2 =
-          -measurements[second].invr * measurements[second].phi * config().kA;
+      const double a1 = measurements[first].invr * config().inverseA;
+      const double a2 = measurements[second].invr * config().inverseA;
+      const double b1 = -measurements[first].invr * measurements[first].phi *
+                        config().inverseA;
+      const double b2 = -measurements[second].invr * measurements[second].phi *
+                        config().inverseA;
 
       const double bdif = b2 - b1;
       const double adif = a1 - a2;
-      // TODO revisit to eliminate any division
-      const double x = bdif / adif;
-      if (section.xBegin() <= x && x <= section.xBegin() + section.xSize()) {
+      const double solX = bdif / adif;
+      if (section.xBegin() <= solX && solX <= section.xBegin() + section.xSize()) {
         const double y = std::fma(a1, bdif / adif, b1);
         if (section.yBegin() <= y && y <= section.yBegin() + section.ySize()) {
           inside++;
@@ -262,8 +274,22 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
       }
     }
   }
-  ACTS_DEBUG("Number of crossings inside of section " << inside);
+  ACTS_VERBOSE("Number of crossings inside of section " << inside);
   return inside >= config().intersectionsThreshold;
 }
 
+void AdaptiveHoughTransformSeeder::addSolution(
+    const AccumulatorSection&& s,
+    std::vector<AccumulatorSection>& output) const {
+  if (config().deduplicate) {
+    size_t i = std::max(0, static_cast<int>(std::size(output) - 4));
+    for (; i < std::size(output); ++i) {
+      if (output[i].indices() == s.indices()) {
+        ACTS_VERBOSE("There is a nearby duplicate solution. Skipping this one.");
+        return;
+      }
+    }
+  }
+  output.push_back(s);
+}
 }  // namespace ActsExamples
