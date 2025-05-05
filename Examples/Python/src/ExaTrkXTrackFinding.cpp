@@ -10,6 +10,7 @@
 #include "Acts/Plugins/ExaTrkX/CudaTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/DummyEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/FullyConnectedGraphConstructor.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCpp.hpp"
 #include "Acts/Plugins/ExaTrkX/ModuleMapCuda.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
@@ -31,6 +32,24 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#define ACTS_PYTHON_DECLARE_GNN_STAGE(algorithm, base, mod, ...)            \
+  do {                                                                      \
+    using namespace Acts;                                                   \
+                                                                            \
+    using Alg = algorithm;                                                  \
+    using Config = Alg::Config;                                             \
+    auto alg = py::class_<Alg, base, std::shared_ptr<Alg>>(mod, #algorithm) \
+                   .def(py::init([](const Config &c, Logging::Level lvl) {  \
+                          return std::make_shared<Alg>(                     \
+                              c, getDefaultLogger(#algorithm, lvl));        \
+                        }),                                                 \
+                        py::arg("config"), py::arg("level"))                \
+                   .def_property_readonly("config", &Alg::config);          \
+                                                                            \
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
+    ACTS_PYTHON_STRUCT(c, __VA_ARGS__);                                     \
+  } while (0)
 
 namespace py = pybind11;
 
@@ -56,272 +75,48 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
   }
 
-  {
-    using Alg = Acts::DummyEdgeClassifier;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_GNN_STAGE(DummyEdgeClassifier, EdgeClassificationBase,
+                                mex, keepAll);
 
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "DummyEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("DummyEdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c);
-    ACTS_PYTHON_MEMBER(keepAll);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_GNN_STAGE(BoostTrackBuilding, TrackBuildingBase, mex,
+                                doJunctionRemoval, doWalkthrough,
+                                walkthroughLowCut, walkthroughHighCut);
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
-  {
-    using Alg = Acts::TorchMetricLearning;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_GNN_STAGE(
+      FullyConnectedGraphConstructor, GraphConstructionBase, mex, maxGraphSize,
+      maxOutEdges, maxDeltaR, maxDeltaZ, rScale, phiScale, zScale, etaScale,
+      rOffset, phiOffset, zOffset, etaOffset);
 
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "TorchMetricLearning")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("MetricLearning", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TorchMetricLearning, GraphConstructionBase, mex,
+                                modelPath, selectedFeatures, embeddingDim, rVal,
+                                knnVal, deviceID);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, embeddingDim, rVal,
-                       knnVal, deviceID);
-  }
-  {
-    using Alg = Acts::TorchEdgeClassifier;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "TorchEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut, nChunks, undirected,
-                       deviceID, useEdgeFeatures);
-  }
-#ifdef ACTS_EXATRKX_WITH_TORCH_AOT
-  {
-    using Alg = Acts::TorchEdgeClassifierAOT;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "TorchEdgeClassifierAOT")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(selectedFeatures);
-    ACTS_PYTHON_MEMBER(cut);
-    ACTS_PYTHON_MEMBER(nChunks);
-    ACTS_PYTHON_MEMBER(undirected);
-    ACTS_PYTHON_MEMBER(deviceID);
-    ACTS_PYTHON_MEMBER(useEdgeFeatures);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TorchEdgeClassifier, EdgeClassificationBase,
+                                mex, modelPath, selectedFeatures, cut, nChunks,
+                                undirected, deviceID, useEdgeFeatures);
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_TENSORRT
-  {
-    using Alg = Acts::TensorRTEdgeClassifier;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "TensorRTEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, selectedFeatures, cut,
-                       numExecutionContexts);
-  }
+  ACTS_PYTHON_DECLARE_GNN_STAGE(TensorRTEdgeClassifier, EdgeClassificationBase,
+                                mex, modelPath, selectedFeatures, cut,
+                                numExecutionContexts);
 #endif
-  {
-    using Alg = Acts::BoostTrackBuilding;
-    using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "BoostTrackBuilding")
-                   .def(py::init([](const Config &c, Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              c, getDefaultLogger("TrackBuilding", lvl));
-                        }),
-                        "config"_a, "level"_a);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c);
-    ACTS_PYTHON_MEMBER(doJunctionRemoval);
-    ACTS_PYTHON_MEMBER(doWalkthrough);
-    ACTS_PYTHON_MEMBER(walkthroughLowCut);
-    ACTS_PYTHON_MEMBER(walkthroughHighCut);
-    ACTS_PYTHON_STRUCT_END();
-  }
 #ifdef ACTS_EXATRKX_WITH_CUDA
-  {
-    using Alg = Acts::CudaTrackBuilding;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "CudaTrackBuilding")
-                   .def(py::init([](const Config &c, Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              c, getDefaultLogger("TrackBuilding", lvl));
-                        }),
-                        "config"_a, "level"_a);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c);
-    ACTS_PYTHON_MEMBER(useOneBlockImplementation);
-    ACTS_PYTHON_MEMBER(doJunctionRemoval);
-    ACTS_PYTHON_STRUCT_END();
-  }
-#endif
-  /*
-  {
-    using Alg = Acts::SeedingTrackBuilder;
-    using Config = typename Alg::Config;
-
-    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "SeedingTrackBuilder")
-                   .def(py::init([](const Config &c, Logging::Level lvl) {
-                          return std::make_shared<Alg>(
-                              c, getDefaultLogger("TrackBuilding", lvl));
-                        }),
-                        py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(rColumn);
-    ACTS_PYTHON_MEMBER(zColumn);
-    ACTS_PYTHON_MEMBER(baseScoreCut);
-    ACTS_PYTHON_MEMBER(scoreCutRegions);
-    ACTS_PYTHON_MEMBER(minSeedSize);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  */
+  ACTS_PYTHON_DECLARE_GNN_STAGE(CudaTrackBuilding, TrackBuildingBase, mex,
+                                useOneBlockImplementation, doJunctionRemoval);
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
-#if 0
-{
-    using Alg = Acts::OnnxMetricLearning;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "OnnxMetricLearning")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("MetricLearning", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_STRUCT_END();
-  }
-#endif
-  {
-    using Alg = Acts::OnnxEdgeClassifier;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
-            mex, "OnnxEdgeClassifier")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("EdgeClassifier", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT(c, modelPath, cut);
-  }
+  ACTS_PYTHON_DECLARE_GNN_STAGE(OnnxEdgeClassifier, EdgeClassificationBase, mex,
+                                modelPath, cut);
 #endif
 
 #ifdef ACTS_EXATRKX_WITH_MODULEMAP
-  /*{
-    using Alg = Acts::ModuleMapCpp;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "ModuleMapCpp")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("ModuleMap", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(moduleMapPath);
-    ACTS_PYTHON_MEMBER(rScale);
-    ACTS_PYTHON_MEMBER(phiScale);
-    ACTS_PYTHON_MEMBER(zScale);
-    ACTS_PYTHON_MEMBER(useGpu);
-    ACTS_PYTHON_MEMBER(gpuDevice);
-    ACTS_PYTHON_MEMBER(gpuBlocks);
-    ACTS_PYTHON_STRUCT_END();
-  }*/
-  {
-    using Alg = Acts::ModuleMapCuda;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
-            mex, "ModuleMapCuda")
-            .def(py::init([](const Config &c, Logging::Level lvl) {
-                   return std::make_shared<Alg>(
-                       c, getDefaultLogger("ModuleMap", lvl));
-                 }),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c);
-    ACTS_PYTHON_MEMBER(moduleMapPath);
-    ACTS_PYTHON_MEMBER(rScale);
-    ACTS_PYTHON_MEMBER(phiScale);
-    ACTS_PYTHON_MEMBER(zScale);
-    ACTS_PYTHON_MEMBER(gpuDevice);
-    ACTS_PYTHON_MEMBER(gpuBlocks);
-    ACTS_PYTHON_MEMBER(moreParallel);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_GNN_STAGE(ModuleMapCuda, GraphConstructionBase, mex,
+                                moduleMapPath, rScale, phiScale, zScale,
+                                gpuDevice, gpuBlocks, moreParallel);
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
