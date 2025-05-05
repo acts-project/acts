@@ -59,6 +59,10 @@ class SpacePointMaker final : public IAlgorithm {
     /// with all components set to zero selects all available measurements. The
     /// selection must not have duplicates.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
+
+    std::vector<Acts::GeometryIdentifier> stripGeometrySelection;
+    std::vector<std::size_t> stripLocalDims;
+    std::vector<double> stripHalfLengths;
   };
 
   /// Construct the space point maker.
@@ -78,6 +82,9 @@ class SpacePointMaker final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  std::unordered_map<Acts::GeometryIdentifier, Acts::GeometryIdentifier>
+      m_stripPartner;
 
   std::optional<IndexSourceLink::SurfaceAccessor> m_slSurfaceAccessor;
 
