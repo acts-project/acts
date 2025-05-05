@@ -35,6 +35,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <stack>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -127,7 +128,7 @@ class AccumulatorSection {
   double m_ySize;
   double m_xBegin;
   double m_yBegin;
-  uint32_t m_divisionLevel =
+  unsigned m_divisionLevel =
       0;  // number of times the starting section was already divided
   std::vector<unsigned>
       m_indices;  // indices of measurements contributing to this section
@@ -164,7 +165,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
     bool deduplicate = true;  // when adding solutions try avoiding duplicates
 
-    bool requireItersections =
+    bool requireIntersections =
         true;  // require that lines passing section need to cross inside
                // the count is required to be at lease threshold*(threshold-1):
     unsigned intersectionsThreshold =
@@ -253,7 +254,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// depending on options it may eliminate trivial duplicates
   /// @arg s - the solution to be potentially added
   /// @arg solutions - the output solutions set
-  void addSolution(const AccumulatorSection&& s,
+  void addSolution(AccumulatorSection&& s,
                    std::vector<AccumulatorSection>& output) const;
 };
 

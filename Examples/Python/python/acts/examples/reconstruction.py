@@ -285,7 +285,7 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
-    adaptiveHoughTransformConfig: acts.examples.AdaptiveHoughTransformSeeder.Config = acts.examples.AdaptiveHoughTransformSeeder.Config(),
+    adaptiveHoughTransformConfig: Optional[acts.examples.AdaptiveHoughTransformSeeder.Config] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -420,8 +420,11 @@ def addSeeding(
             seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Hough Transform seeding")
+            adaptiveHoughTransformConfig = (
+               adaptiveHoughTransformConfig
+               or acts.examples.AdaptiveHoughTransformSeeder.Config()
+            )
             adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
-            # adaptiveHoughTransformConfig.inputMeasurements = "measurements"
             adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
@@ -1113,7 +1116,7 @@ def addHoughTransformSeeding(
 
 def addAdaptiveHoughTransformSeeding(
     sequence: acts.examples.Sequencer,
-    config: acts.examples.HoughTransformSeeder.Config,
+    config: acts.examples.AdaptiveHoughTransformSeeder.Config,
     logLevel: acts.logging.Level = None,
 ):
     """
