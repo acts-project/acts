@@ -181,7 +181,7 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
@@ -239,7 +239,7 @@ def test_edm4hep_tracks_writer(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
@@ -510,7 +510,7 @@ def test_edm4hep_tracks_reader(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
