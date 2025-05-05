@@ -32,7 +32,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
       ACTS_DEBUG("Build layer " << icl << " with target radius = " << layerR);
 
       // prepare the Surface vector
-      std::vector<std::shared_ptr<const Acts::Surface>> sVector;
+      std::vector<std::shared_ptr<Acts::Surface>> sVector;
       // assign the current envelope
       double layerEnvelopeCoverZ =
           !m_cfg.centralLayerEnvelopes.empty()
@@ -144,7 +144,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::centralProtoLayers(
       zBins *= m_cfg.centralLayerBinMultipliers.second;
       // create the surface array - it will also fill the accessible binmember
       // cache if available
-      Acts::ProtoLayer pl(gctx, sVector);
+      Acts::MutableProtoLayer pl(gctx, sVector);
       pl.envelope[Acts::AxisDirection::AxisR] = {m_cfg.approachSurfaceEnvelope,
                                                  m_cfg.approachSurfaceEnvelope};
       pl.envelope[Acts::AxisDirection::AxisZ] = {layerEnvelopeCoverZ,
@@ -199,7 +199,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
       // define the layer envelope
       double layerEnvelopeR = m_cfg.posnegLayerEnvelopeR.at(ipnl);
       // prepare for the r binning
-      std::vector<std::shared_ptr<const Acts::Surface>> esVector;
+      std::vector<std::shared_ptr<Acts::Surface>> esVector;
       // now fill the vectors
       std::size_t ipnR = 0;
       for (auto& discModulePositions : m_cfg.posnegModulePositions.at(ipnl)) {
@@ -306,7 +306,7 @@ std::vector<ProtoLayerSurfaces> ProtoLayerCreator::createProtoLayers(
         layerBinsPhi *= m_cfg.posnegLayerBinMultipliers.second;
       }
       // create the layers with the surface arrays
-      Acts::ProtoLayer ple(gctx, esVector);
+      Acts::MutableProtoLayer ple(gctx, esVector);
       ple.envelope[Acts::AxisDirection::AxisR] = {layerEnvelopeR,
                                                   layerEnvelopeR};
       ple.envelope[Acts::AxisDirection::AxisZ] = {

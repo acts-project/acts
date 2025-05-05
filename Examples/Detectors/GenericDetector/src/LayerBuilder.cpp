@@ -8,7 +8,21 @@
 
 #include "ActsExamples/GenericDetector/LayerBuilder.hpp"
 
+#include <span>
+
 namespace ActsExamples::Generic {
+
+namespace {
+std::vector<std::shared_ptr<const Acts::Surface>> makeConstSurfaces(
+    std::span<const std::shared_ptr<Acts::Surface>> surfaces) {
+  std::vector<std::shared_ptr<const Acts::Surface>> constSurfaces;
+  constSurfaces.reserve(surfaces.size());
+  for (const auto& surface : surfaces) {
+    constSurfaces.push_back(surface);
+  }
+  return constSurfaces;
+}
+}  // namespace
 
 const Acts::LayerVector LayerBuilder::centralLayers(
     const Acts::GeometryContext& gctx) const {
@@ -19,8 +33,10 @@ const Acts::LayerVector LayerBuilder::centralLayers(
   std::size_t icl = 0;
   for (auto& cpl : m_cfg.centralProtoLayers) {
     // create the layer actually
+    Acts::ProtoLayer constProtoLayer{cpl.protoLayer};
     Acts::MutableLayerPtr cLayer = m_cfg.layerCreator->cylinderLayer(
-        gctx, cpl.surfaces, cpl.bins0, cpl.bins1, cpl.protoLayer);
+        gctx, makeConstSurfaces(cpl.surfaces), cpl.bins0, cpl.bins1,
+        constProtoLayer);
 
     // the layer is built let's see if it needs material
     if (!m_cfg.centralLayerMaterial.empty()) {
@@ -86,8 +102,10 @@ const Acts::LayerVector LayerBuilder::constructEndcapLayers(
   // loop over the proto layers and create the actual layers
   for (auto& ple : protoLayers) {
     /// the layer is created
-    Acts::MutableLayerPtr eLayer = m_cfg.layerCreator->discLayer(
-        gctx, ple.surfaces, ple.bins0, ple.bins1, ple.protoLayer);
+    Acts::ProtoLayer constProtoLayer{ple.protoLayer};
+    Acts::MutableLayerPtr eLayer =
+        m_cfg.layerCreator->discLayer(gctx, makeConstSurfaces(ple.surfaces),
+                                      ple.bins0, ple.bins1, constProtoLayer);
 
     // the layer is built let's see if it needs material
     if (!m_cfg.posnegLayerMaterial.empty()) {
