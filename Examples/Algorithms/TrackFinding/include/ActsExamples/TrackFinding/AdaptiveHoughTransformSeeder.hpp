@@ -39,20 +39,7 @@
 
 namespace ActsExamples {
 struct AlgorithmContext;
-} // namespace ActsExamples
-
-using ResultDouble = Acts::Result<double>;
-using ResultBool = Acts::Result<bool>;
-using ResultUnsigned = Acts::Result<unsigned>;
-
-using FieldCorrector = Acts::Delegate<ResultDouble(
-    unsigned, double, double)>; // (unsigned region, double y, double r)
-using LayerIDFinder = Acts::Delegate<ResultUnsigned(
-    double)>; // (double r) this function will map the r of a measurement to a
-              // layer.
-using SliceTester = Acts::Delegate<ResultBool(
-    double, unsigned, int)>; // (double z,unsigned layer, int slice) returns
-                             // true if measurement in slice
+}
 
 namespace Acts {
 class TrackingGeometry;
@@ -61,7 +48,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 // Helper class describing one section of the accumulator space
 class AccumulatorSection {
-public:
+ public:
   AccumulatorSection() = default;
 
   AccumulatorSection(double xw, double yw, double xBegin, double yBegin,
@@ -123,20 +110,20 @@ public:
   double xBegin() const { return m_xBegin; }
   double yBegin() const { return m_yBegin; }
 
-private:
+ private:
   double m_xSize;
   double m_ySize;
   double m_xBegin;
   double m_yBegin;
   unsigned m_divisionLevel =
-      0; // number of times the starting section was already divided
+      0;  // number of times the starting section was already divided
   std::vector<unsigned>
-      m_indices; // indices of measurements contributing to this section
+      m_indices;  // indices of measurements contributing to this section
 };
 
 // Construct track seeds from space points.
 class AdaptiveHoughTransformSeeder final : public IAlgorithm {
-public:
+ public:
   struct Config {
     /// Input space point collections.
     ///
@@ -153,36 +140,31 @@ public:
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
-    float qOverPtMin = 1.0; // min q/pt, -1/1 GeV
+    float qOverPtMin = 1.0;  // min q/pt, -1/1 GeV
 
-    float qOverPtMinBinSize = 0.01; // minimal size of pT bin that the
-                                    // algorithm should not go beyond (in GeV)
-    float phiMinBinSize = 0.01; // minimal size of phi bin that the algorithm
-                                // should not go beyond
+    float qOverPtMinBinSize = 0.01;  // minimal size of pT bin that the
+                                     // algorithm should not go beyond (in GeV)
+    float phiMinBinSize = 0.01;  // minimal size of phi bin that the algorithm
+                                 // should not go beyond
 
     unsigned threshold =
-        8; // number of lines passing section for it to be still considered
+        8;  // number of lines passing section for it to be still considered
 
-    bool deduplicate = true; // when adding solutions try avoiding duplicates
+    bool deduplicate = true;  // when adding solutions try avoiding duplicates
 
     bool requireIntersections =
-        true; // require that lines passing section need to cross inside
-              // the count is required to be at lease threshold*(threshold-1):
+        true;  // require that lines passing section need to cross inside
+               // the count is required to be at lease threshold*(threshold-1):
     unsigned intersectionsThreshold =
         threshold * (threshold - 1) /
-        2; // the number of lines in section should be at most this to enable
-           // intersection test
+        2;  // the number of lines in section should be at most this to enable
+            // intersection test
 
     double inverseA =
-        1.0 / 3.0e-4; // Assume B = 2T constant. Can apply corrections to
-                      // this with fieldCorrection function
-                      // This 3e-4 comes from the 2T field when converted to
-                      // units of GeV / (c*mm*e)
-
-    // it's up to the user to connect these to the functions they want to use
-    FieldCorrector fieldCorrector;
-    LayerIDFinder layerIDFinder;
-    SliceTester sliceTester;
+        1.0 / 3.0e-4;  // Assume B = 2T constant. Can apply corrections to
+                       // this with fieldCorrection function
+                       // This 3e-4 comes from the 2T field when converted to
+                       // units of GeV / (c*mm*e)
   };
 
   // information that is needed for each measurement
@@ -214,7 +196,7 @@ public:
   /// Const access to the config
   const Config &config() const { return m_cfg; }
 
-private:
+ private:
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger &logger() const { return *m_logger; }
@@ -267,4 +249,4 @@ private:
                    std::vector<AccumulatorSection> &output) const;
 };
 
-} // namespace ActsExamples
+}  // namespace ActsExamples

@@ -39,8 +39,12 @@ namespace ActsExamples {
 AccumulatorSection::AccumulatorSection(double xw, double yw, double xBegin,
                                        double yBegin, int div,
                                        const std::vector<unsigned> &indices)
-    : m_xSize(xw), m_ySize(yw), m_xBegin(xBegin), m_yBegin(yBegin),
-      m_divisionLevel(div), m_indices(indices) {}
+    : m_xSize(xw),
+      m_ySize(yw),
+      m_xBegin(xBegin),
+      m_yBegin(yBegin),
+      m_divisionLevel(div),
+      m_indices(indices) {}
 
 AccumulatorSection AccumulatorSection::bottomLeft(float xFraction,
                                                   float yFraction) const {
@@ -110,8 +114,8 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
   m_outputSeeds.initialize(config().outputSeeds);
 }
 
-ProcessCode
-AdaptiveHoughTransformSeeder::execute(const AlgorithmContext &ctx) const {
+ProcessCode AdaptiveHoughTransformSeeder::execute(
+  const AlgorithmContext &ctx) const {
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
   for (const auto &isp : m_inputSpacePoints) {
@@ -264,7 +268,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
                         config().inverseA;
 
       const double adif = a1 - a2;
-      if (std::abs(adif) < 1e-5) { // Parallel lines, need to skip
+      if (std::abs(adif) < 1e-5) {  // Parallel lines, need to skip
         continue;
       }
       const double bdif = b2 - b1;
@@ -299,4 +303,4 @@ void AdaptiveHoughTransformSeeder::addSolution(
   }
   output.push_back(std::move(s));
 }
-} // namespace ActsExamples
+}  // namespace ActsExamples
