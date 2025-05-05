@@ -210,7 +210,7 @@ def test_root_tracksummary_writer(tmp_path, fatras, conf_const):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
@@ -415,7 +415,7 @@ def test_csv_multitrajectory_writer(tmp_path):
         digiConfigFile=Path(
             str(
                 Path(__file__).parent.parent.parent.parent
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+                / "Examples/Configs/generic-digi-smearing-config.json"
             )
         ),
         outputDir=tmp_path,
