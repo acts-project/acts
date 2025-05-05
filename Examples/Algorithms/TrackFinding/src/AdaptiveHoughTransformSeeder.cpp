@@ -115,7 +115,7 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
 }
 
 ProcessCode AdaptiveHoughTransformSeeder::execute(
-  const AlgorithmContext &ctx) const {
+    const AlgorithmContext &ctx) const {
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
   for (const auto &isp : m_inputSpacePoints) {
