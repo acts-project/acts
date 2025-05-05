@@ -58,6 +58,7 @@ def main():
         "generate_particle_data_table.py",
         "lazy_autodoc.py",
         "codegen/src/codegen/sympy_common.py",
+        "CompressedIO.h",
     )
 
     suffix_header = (
