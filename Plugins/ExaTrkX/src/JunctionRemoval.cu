@@ -33,22 +33,6 @@ __global__ void findNumInOutEdge(std::size_t nEdges,
   atomicAdd(&numOutEdges[srcNode], 1);
 }
 
-__global__ void keepOnlyJunctions(std::size_t nNodes, int *numInEdges,
-                                  int *numOutEdges) {
-  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nNodes) {
-    return;
-  }
-
-  // Set the number of in and out edges to 0 for non-junction cases
-  if (numInEdges[i] <= 1) {
-    numInEdges[i] = 0;
-  }
-  if (numOutEdges[i] <= 1) {
-    numOutEdges[i] = 0;
-  }
-}
-
 __global__ void fillJunctionEdges(std::size_t nEdges,
                                   const std::int64_t *edgeNodes,
                                   const int *numEdgesPrefixSum,
@@ -110,6 +94,24 @@ struct LogicalNotPredicate {
   bool __device__ operator()(bool b) { return !b; }
 };
 
+// When we perform the prefix sum over the number of outgoing/incoming edges,
+// we only want to count edges that are part of a junction. The requirement for
+// this is that there are >= 2 outgoing/incoming edges.
+// Therefore, we design the accumulation operator in a way, that it returns zero
+// for non-junction cases
+// This allows to skip a preprocessing step to set the edge count for
+// non-junction nodes explicitly to zero Also, it should work for the prefix sum
+// values, since those will only ever be 0 or >= 2 due to the above requirements
+// A informal proof of associativity is given in
+// https://github.com/acts-project/acts/pull/4223
+struct AccumulateJunctionEdges {
+  int __device__ operator()(int a, int b) const {
+    a = a < 2 ? 0 : a;
+    b = b < 2 ? 0 : b;
+    return a + b;
+  }
+};
+
 std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
     std::size_t nEdges, std::size_t nNodes, const float *scores,
     const std::int64_t *srcNodes, const std::int64_t *dstNodes,
@@ -134,17 +136,14 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
       nEdges, srcNodes, dstNodes, numInEdges, numOutEdges);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
-  // Launch the kernel to keep only junctions
-  const dim3 gridSizeNodes = (nNodes + blockSize.x - 1) / blockSize.x;
-  keepOnlyJunctions<<<gridSizeNodes, blockSize, 0, stream>>>(nNodes, numInEdges,
-                                                             numOutEdges);
-  ACTS_CUDA_CHECK(cudaGetLastError());
-
-  // Perform prefix sum on the number of in and out edges
+  // Perform prefix sum on the number of in and out edges with a special
+  // reduction that does not include edges from non-junction nodes
   thrust::exclusive_scan(thrust::device.on(stream), numInEdges,
-                         numInEdges + nNodes + 1, numInEdges);
+                         numInEdges + nNodes + 1, numInEdges, 0,
+                         AccumulateJunctionEdges{});
   thrust::exclusive_scan(thrust::device.on(stream), numOutEdges,
-                         numOutEdges + nNodes + 1, numOutEdges);
+                         numOutEdges + nNodes + 1, numOutEdges, 0,
+                         AccumulateJunctionEdges{});
 
   // Find the total number of in and out edges involved in junctions
   int numJunctionInEdges{}, numJunctionOutEdges{};
@@ -189,6 +188,7 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
       cudaMemsetAsync(edgesToRemoveMask, 0, nEdges * sizeof(bool), stream));
 
   // Fill the edge mask with the edges to be removed
+  const dim3 gridSizeNodes = (nNodes + blockSize.x - 1) / blockSize.x;
   fillEdgeMask<<<gridSizeNodes, blockSize, 0, stream>>>(
       nNodes, scores, numInEdges, junctionInEdges, edgesToRemoveMask);
   ACTS_CUDA_CHECK(cudaGetLastError());
