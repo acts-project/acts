@@ -123,9 +123,9 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (const SimSpacePoint& sp : spContainer) {
-      measurements.emplace_back(
-          1.0 / sp.r(), std::atan2(sp.y(), sp.x()),
-          Acts::SourceLink(static_cast<const SimSpacePoint*>(&sp)));
+      measurements.push_back(
+          PreprocessedMeasurement(1.0 / sp.r(), std::atan2(sp.y(), sp.x()),
+            Acts::SourceLink(static_cast<const SimSpacePoint*>(&sp))));
     }
   }
   ACTS_DEBUG("Collected " << measurements.size() << " space points");
