@@ -975,7 +975,7 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples import readDigiConfigFromJson
 
-    acts.examples.readDigiConfigFromJson(str(digi_config_file))
+    readDigiConfigFromJson(str(digi_config_file))
 
 
 @pytest.mark.parametrize(
