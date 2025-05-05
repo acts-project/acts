@@ -191,7 +191,7 @@ if "__main__" == __name__:
     # trackingGeometry = detector.trackingGeometry()
     # digiConfigFile = (
     #     srcdir
-    #     / "Examples/Configs/default-smearing-config-generic.json"
+    #     / "Examples/Configs/generic-digi-smearing-config.json"
     # )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))

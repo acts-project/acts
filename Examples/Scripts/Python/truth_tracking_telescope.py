@@ -24,7 +24,6 @@ if "__main__" == __name__:
     runTruthTrackingKalman(
         trackingGeometry,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Configs/default-smearing-config-telescope.json",
+        digiConfigFile=srcdir / "Examples/Configs/telescope-digi-smearing-config.json",
         outputDir=Path.cwd(),
     ).run()

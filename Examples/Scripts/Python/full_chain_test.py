@@ -294,8 +294,8 @@ def full_chain(args):
         if args.loglevel <= 2:
             logger.info(f"Load Generic Detector from {geo_dir}")
         if args.digi_config is None:
-            args.digi_config = geo_dir / "Examples/Configs/default-smearing-config-generic.json"
-        seedingConfigFile = geo_dir / "Examples/Configs/geoSelection-genericDetector.json"
+            args.digi_config = geo_dir / "Examples/Configs/generic-digi-smearing-config.json"
+        seedingConfigFile = geo_dir / "Examples/Configs/generic-seeding-config.json"
         args.bf_constant = True
         detector = acts.examples.GenericDetector()
         trackingGeometry = detector.trackingGeometry()

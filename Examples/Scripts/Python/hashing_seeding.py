@@ -139,11 +139,9 @@ class Config:
 
             detector = acts.examples.GenericDetector()
             trackingGeometry = detector.trackingGeometry()
-            digiConfig = (
-                actsExamplesDir / "Configs/default-smearing-config-generic.json"
-            )
+            digiConfig = actsExamplesDir / "Configs/generic-digi-smearing-config.json"
             geoSelectionConfigFile = (
-                actsExamplesDir / "Configs/geoSelection-genericDetector.json"
+                actsExamplesDir / "Configs/generic-seeding-config.json"
             )
         else:
             exit("Detector not supported")

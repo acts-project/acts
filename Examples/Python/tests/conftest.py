@@ -267,11 +267,9 @@ def detector_config(request):
             detector,
             trackingGeometry,
             decorators,
-            geometrySelection=(
-                srcdir / "Examples/Configs/geoSelection-genericDetector.json"
-            ),
+            geometrySelection=(srcdir / "Examples/Configs/generic-seeding-config.json"),
             digiConfigFile=(
-                srcdir / "Examples/Configs/default-smearing-config-generic.json"
+                srcdir / "Examples/Configs/generic-digi-smearing-config.json"
             ),
             name=request.param,
         )
@@ -365,7 +363,7 @@ def fatras(ptcl_gun, trk_geo, rng):
             digitizationConfigs=acts.examples.readDigiConfigFromJson(
                 str(
                     Path(__file__).parent.parent.parent.parent
-                    / "Examples/Configs/default-smearing-config-generic.json"
+                    / "Examples/Configs/generic-digi-smearing-config.json"
                 )
             ),
             surfaceByIdentifier=trk_geo.geoIdSurfaceMap(),

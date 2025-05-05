@@ -436,7 +436,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        digiConfigFile=srcdir / "Examples/Configs/default-smearing-config-generic.json",
+        digiConfigFile=srcdir / "Examples/Configs/generic-digi-smearing-config.json",
         rnd=rnd,
     )
 
@@ -461,8 +461,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         field,
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
-        geoSelectionConfigFile=srcdir
-        / "Examples/Configs/geoSelection-genericDetector.json",
+        geoSelectionConfigFile=srcdir / "Examples/Configs/generic-seeding-config.json",
         outputDirRoot=str(tmp_path),
     )
 
@@ -920,8 +919,8 @@ CONFIG_DIR = ACTS_DIR / "Examples/Configs"
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        CONFIG_DIR / "default-smearing-config-generic.json",
-        CONFIG_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -955,8 +954,8 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        CONFIG_DIR / "default-smearing-config-generic.json",
-        CONFIG_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
         pytest.param(
             (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config.json"),
             marks=[
@@ -981,8 +980,8 @@ def test_digitization_example_input_parsing(digi_config_file):
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        CONFIG_DIR / "default-smearing-config-generic.json",
-        CONFIG_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1042,7 +1041,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
     input = (
         Path(__file__).parent
-        / "../../../Examples/Configs/default-smearing-config-generic.json"
+        / "../../../Examples/Configs/generic-digi-smearing-config.json"
     )
     assert input.exists(), input.resolve()
 
