@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(test_junction_leftover_edge) {
   Vi srcNodes = {0, 1, 3, j};
   Vi dstNodes = {1, j, j, 4};
   Vf scores = {0.9f, 0.1f, 0.9f, 0.9f};
-  Vi expectedSrcNodes = {0, 3, j};
-  Vi expectedDstNodes = {1, j, 4};
+  Vi expectedSrcNodes = {0, j, 3};
+  Vi expectedDstNodes = {1, 4, j};
   testJunctionRemoval(srcNodes, dstNodes, scores, expectedSrcNodes,
                       expectedDstNodes);
 }

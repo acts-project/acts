@@ -47,7 +47,7 @@ __global__ void fillJunctionEdges(std::size_t nEdges,
   int numEdgesNode = numEdgesPrefixSum[node + 1] - base;
 
   // Zero is allowed, because we set 1 to 0 before
-  assert(numEdgesNode == 1 && "node is not a junction");
+  assert(numEdgesNode != 1 && "node is not a junction");
 
   if (numEdgesNode != 0) {
     int offset = atomicAdd(&junctionEdgeOffset[node], 1);
