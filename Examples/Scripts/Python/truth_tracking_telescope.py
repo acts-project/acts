@@ -25,6 +25,6 @@ if "__main__" == __name__:
         trackingGeometry,
         field,
         digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-telescope.json",
+        / "Examples/Configs/default-smearing-config-telescope.json",
         outputDir=Path.cwd(),
     ).run()

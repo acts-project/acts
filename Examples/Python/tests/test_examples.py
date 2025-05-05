@@ -436,8 +436,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        digiConfigFile=srcdir / "Examples/Configs/default-smearing-config-generic.json",
         rnd=rnd,
     )
 
@@ -915,14 +914,14 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
 
 
 ACTS_DIR = Path(__file__).parent.parent.parent.parent
-DIGI_SHARE_DIR = ACTS_DIR / "Examples/Algorithms/Digitization/share"
+CONFIG_DIR = ACTS_DIR / "Examples/Configs"
 
 
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "default-smearing-config-generic.json",
+        CONFIG_DIR / "default-geometric-config-generic.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -956,8 +955,8 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "default-smearing-config-generic.json",
+        CONFIG_DIR / "default-geometric-config-generic.json",
         pytest.param(
             (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config.json"),
             marks=[
@@ -982,8 +981,8 @@ def test_digitization_example_input_parsing(digi_config_file):
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "default-smearing-config-generic.json",
+        CONFIG_DIR / "default-geometric-config-generic.json",
     ],
     ids=["smeared", "geometric"],
 )
