@@ -189,7 +189,8 @@ void addTrackFinding(Context& ctx) {
       phiMinBinSize, threshold, deduplicate, requireIntersections, inverseA);
   
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
