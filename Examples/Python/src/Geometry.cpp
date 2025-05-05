@@ -32,6 +32,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
+#include "Acts/Geometry/PortalShell.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryVisitor.hpp"
@@ -382,6 +383,8 @@ void addGeometry(Context& ctx) {
         .value("Expand", VolumeResizeStrategy::Expand);
   }
 
+  py::class_<PortalShellBase>(m, "PortalShellBase");
+
   addBlueprint(ctx);
 }
 
@@ -469,6 +472,17 @@ void addExperimentalGeometry(Context& ctx) {
              "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
         .def(py::init<Acts::AxisBoundaryType, std::size_t>(), "bType"_a,
              "nbins"_a);
+
+    py::class_<DirectedProtoAxis>(m, "DirectedProtoAxis")
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
+                      const std::vector<double>&>(),
+             "bValue"_a, "bType"_a, "e"_a)
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType, double,
+                      double, std::size_t>(),
+             "bValue"_a, "bType"_a, "minE"_a, "maxE"_a, "nbins"_a)
+        .def(py::init<Acts::AxisDirection, Acts::AxisBoundaryType,
+                      std::size_t>(),
+             "bValue"_a, "bType"_a, "nbins"_a);
   }
 
   {

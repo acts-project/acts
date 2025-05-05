@@ -24,6 +24,9 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/VolumeAttachmentStrategy.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
@@ -373,42 +376,58 @@ BOOST_AUTO_TEST_CASE(DiscLayer) {
     surfaces.push_back(element->surface().getSharedPtr());
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Disc)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {0.1_mm, 0.1_mm},
-            .r = {1_mm, 1_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Disc)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {0.1_mm, 0.1_mm},
+                .r = {1_mm, 1_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 346.25353003_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 258.9999999_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR),
+                      346.25353003_mm, 1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 3.85_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayer) {
@@ -446,43 +465,59 @@ BOOST_AUTO_TEST_CASE(CylinderLayer) {
     }
   }
 
-  Blueprint root{{.envelope = ExtentEnvelope{{
-                      .z = {2_mm, 2_mm},
-                      .r = {3_mm, 5_mm},
-                  }}}};
+  std::function<void(LayerBlueprintNode&)> withSurfaces =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        layer.setSurfaces(surfaces)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }})
+            .setTransform(base);
+      };
 
-  root.addLayer("Layer0", [&](auto& layer) {
-    layer.setSurfaces(surfaces)
-        .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
-        .setEnvelope(ExtentEnvelope{{
-            .z = {10_mm, 10_mm},
-            .r = {20_mm, 10_mm},
-        }})
-        .setTransform(base);
-  });
+  std::function<void(LayerBlueprintNode&)> withProtoLayer =
+      [&surfaces, &base](LayerBlueprintNode& layer) {
+        MutableProtoLayer protoLayer{gctx, surfaces, base.inverse()};
+        layer.setProtoLayer(protoLayer)
+            .setLayerType(LayerBlueprintNode::LayerType::Cylinder)
+            .setEnvelope(ExtentEnvelope{{
+                .z = {10_mm, 10_mm},
+                .r = {20_mm, 10_mm},
+            }});
+      };
 
-  auto trackingGeometry = root.construct({}, gctx, *logger);
+  for (const auto& func : {withSurfaces, withProtoLayer}) {
+    Blueprint root{{.envelope = ExtentEnvelope{{
+                        .z = {2_mm, 2_mm},
+                        .r = {3_mm, 5_mm},
+                    }}}};
 
-  std::size_t nSurfaces = 0;
+    root.addLayer("Layer0", [&](auto& layer) { func(layer); });
 
-  trackingGeometry->visitSurfaces([&](const Surface* surface) {
-    if (surface->associatedDetectorElement() != nullptr) {
-      nSurfaces++;
-    }
-  });
+    auto trackingGeometry = root.construct({}, gctx, *logger);
 
-  BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
-  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
-  auto lookup = nameLookup(*trackingGeometry);
-  auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
-      lookup("Layer0").volumeBounds());
-  BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
-                    1e-6);
-  BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
-                    1e-6);
+    std::size_t nSurfaces = 0;
+
+    trackingGeometry->visitSurfaces([&](const Surface* surface) {
+      if (surface->associatedDetectorElement() != nullptr) {
+        nSurfaces++;
+      }
+    });
+
+    BOOST_CHECK_EQUAL(nSurfaces, surfaces.size());
+    BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+    auto lookup = nameLookup(*trackingGeometry);
+    auto layerCyl = dynamic_cast<const CylinderVolumeBounds&>(
+        lookup("Layer0").volumeBounds());
+    BOOST_CHECK_EQUAL(lookup("Layer0").portals().size(), 4);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMinR), 275.6897761_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eMaxR), 319.4633358_mm,
+                      1e-6);
+    BOOST_CHECK_CLOSE(layerCyl.get(CylinderVolumeBounds::eHalfLengthZ), 1070_mm,
+                      1e-6);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Material) {
@@ -634,7 +669,7 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
             mat.configureFace(CuboidVolumeBounds::Face::NegativeXFace,
                               {AxisX, Bound, 5}, {AxisY, Bound, 10});
           }),
-      std::invalid_argument);
+      std::runtime_error);
 
   // Configure for cuboid first, then try to add cylinder - should throw
   BOOST_CHECK_THROW(
@@ -646,7 +681,7 @@ BOOST_AUTO_TEST_CASE(MaterialMixedVolumeTypes) {
             mat.configureFace(CylinderVolumeBounds::Face::NegativeDisc,
                               {AxisR, Bound, 5}, {AxisPhi, Bound, 10});
           }),
-      std::invalid_argument);
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(MaterialCuboid) {
@@ -736,6 +771,200 @@ BOOST_AUTO_TEST_CASE(MaterialCuboid) {
         break;
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(HomogeneousMaterialCylinder) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  double hlZ = 30_mm;
+  auto cylBounds = std::make_shared<CylinderVolumeBounds>(10_mm, 20_mm, hlZ);
+  auto cyl = std::make_unique<TrackingVolume>(Transform3::Identity(), cylBounds,
+                                              "child");
+
+  using enum CylinderVolumeBounds::Face;
+
+  // Create some homogeneous materials with different properties
+  auto testMaterial = Acts::Material::fromMolarDensity(
+      9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
+
+  auto negDiscMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.1_mm));
+  auto posDiscMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.2_mm));
+  auto outerCylMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.3_mm));
+
+  root.addMaterial("Material", [&](auto& mat) {
+    mat.configureFace(NegativeDisc, negDiscMat);
+    mat.configureFace(PositiveDisc, posDiscMat);
+    mat.configureFace(OuterCylinder, outerCylMat);
+
+    mat.addStaticVolume(std::move(cyl));
+  });
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+
+  BOOST_CHECK_EQUAL(countVolumes(*trackingGeometry), 2);
+  auto lookup = nameLookup(*trackingGeometry);
+  auto& child = lookup("child");
+
+  // Check negative disc material
+  const auto* negDisc = child.portals()
+                            .at(static_cast<std::size_t>(NegativeDisc))
+                            .surface()
+                            .surfaceMaterial();
+  BOOST_REQUIRE_NE(negDisc, nullptr);
+  BOOST_CHECK_EQUAL(negDisc, negDiscMat.get());
+
+  // Check positive disc material
+  const auto* posDisc = child.portals()
+                            .at(static_cast<std::size_t>(PositiveDisc))
+                            .surface()
+                            .surfaceMaterial();
+  BOOST_REQUIRE_NE(posDisc, nullptr);
+  BOOST_CHECK_EQUAL(posDisc, posDiscMat.get());
+
+  // Check outer cylinder material
+  const auto* outerCyl = child.portals()
+                             .at(static_cast<std::size_t>(OuterCylinder))
+                             .surface()
+                             .surfaceMaterial();
+  BOOST_REQUIRE_NE(outerCyl, nullptr);
+  BOOST_CHECK_EQUAL(outerCyl, outerCylMat.get());
+
+  // Check that other faces have no material
+  for (std::size_t i = 0; i < child.portals().size(); i++) {
+    if (i != static_cast<std::size_t>(NegativeDisc) &&
+        i != static_cast<std::size_t>(PositiveDisc) &&
+        i != static_cast<std::size_t>(OuterCylinder)) {
+      BOOST_CHECK_EQUAL(child.portals().at(i).surface().surfaceMaterial(),
+                        nullptr);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HomogeneousMaterialCuboid) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  using enum CuboidVolumeBounds::Face;
+
+  double hlX = 30_mm;
+  double hlY = 40_mm;
+  double hlZ = 50_mm;
+  auto cuboidBounds = std::make_shared<CuboidVolumeBounds>(hlX, hlY, hlZ);
+  auto cuboid = std::make_unique<TrackingVolume>(Transform3::Identity(),
+                                                 cuboidBounds, "child");
+
+  // Create different homogeneous materials for each face
+  auto testMaterial = Acts::Material::fromMolarDensity(
+      9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
+
+  auto negXMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.1_mm));
+  auto posXMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.2_mm));
+  auto negYMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.3_mm));
+  auto posYMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.4_mm));
+  auto negZMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.5_mm));
+  auto posZMat = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.6_mm));
+
+  root.addMaterial("Material", [&](auto& mat) {
+    mat.configureFace(NegativeXFace, negXMat);
+    mat.configureFace(PositiveXFace, posXMat);
+    mat.configureFace(NegativeYFace, negYMat);
+    mat.configureFace(PositiveYFace, posYMat);
+    mat.configureFace(NegativeZFace, negZMat);
+    mat.configureFace(PositiveZFace, posZMat);
+
+    mat.addStaticVolume(std::move(cuboid));
+  });
+
+  auto trackingGeometry = root.construct({}, gctx, *logger);
+
+  BOOST_REQUIRE(trackingGeometry);
+
+  auto lookup = nameLookup(*trackingGeometry);
+  auto& child = lookup("child");
+
+  // Check that material is attached to all faces with correct properties
+  for (std::size_t i = 0; i < child.portals().size(); i++) {
+    const auto* material = child.portals().at(i).surface().surfaceMaterial();
+    BOOST_REQUIRE_NE(material, nullptr);
+
+    const auto* homMaterial =
+        dynamic_cast<const HomogeneousSurfaceMaterial*>(material);
+    BOOST_REQUIRE_NE(homMaterial, nullptr);
+
+    // Check thickness based on face
+    CuboidVolumeBounds::Face face = static_cast<CuboidVolumeBounds::Face>(i);
+    switch (face) {
+      case NegativeXFace:
+        BOOST_CHECK_EQUAL(homMaterial, negXMat.get());
+        break;
+      case PositiveXFace:
+        BOOST_CHECK_EQUAL(homMaterial, posXMat.get());
+        break;
+      case NegativeYFace:
+        BOOST_CHECK_EQUAL(homMaterial, negYMat.get());
+        break;
+      case PositiveYFace:
+        BOOST_CHECK_EQUAL(homMaterial, posYMat.get());
+        break;
+      case NegativeZFace:
+        BOOST_CHECK_EQUAL(homMaterial, negZMat.get());
+        break;
+      case PositiveZFace:
+        BOOST_CHECK_EQUAL(homMaterial, posZMat.get());
+        break;
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(HomogeneousMaterialMixedVolumeTypes) {
+  Blueprint::Config cfg;
+  cfg.envelope[AxisDirection::AxisZ] = {20_mm, 20_mm};
+  cfg.envelope[AxisDirection::AxisR] = {1_mm, 2_mm};
+  Blueprint root{cfg};
+
+  auto testMaterial = Acts::Material::fromMolarDensity(
+      9.370_cm, 46.52_cm, 28.0855, 14, (2.329 / 28.0855) * 1_mol / 1_cm3);
+
+  auto material = std::make_shared<HomogeneousSurfaceMaterial>(
+      MaterialSlab(testMaterial, 0.1_mm));
+
+  // Configure for cylinder first, then try to add cuboid - should throw
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CylinderVolumeBounds::Face::NegativeDisc,
+                             material);
+                         mat.configureFace(
+                             CuboidVolumeBounds::Face::NegativeXFace, material);
+                       }),
+      std::runtime_error);
+
+  // Configure for cuboid first, then try to add cylinder - should throw
+  BOOST_CHECK_THROW(
+      root.addMaterial("Material",
+                       [&](auto& mat) {
+                         mat.configureFace(
+                             CuboidVolumeBounds::Face::NegativeXFace, material);
+                         mat.configureFace(
+                             CylinderVolumeBounds::Face::NegativeDisc,
+                             material);
+                       }),
+      std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(LayerCenterOfGravity) {

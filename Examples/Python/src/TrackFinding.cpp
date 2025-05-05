@@ -110,11 +110,11 @@ void addTrackFinding(Context& ctx) {
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT(
         c, minPt, cotThetaMax, deltaRMinBottomSP, deltaRMaxBottomSP,
-        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaPhiMax, deltaZMax,
-        sigmaScattering, maxPtScattering, maxSeedsPerSpM, collisionRegionMin,
-        collisionRegionMax, phiMin, phiMax, zMin, zMax, rMax, rMin,
-        radLengthPerSeed, deltaZMax, interactionPointCut, deltaPhiMax, highland,
-        maxScatteringAngle2, useVariableMiddleSPRange, deltaRMiddleMinSPRange,
+        deltaRMinTopSP, deltaRMaxTopSP, impactMax, deltaZMax, sigmaScattering,
+        maxPtScattering, maxSeedsPerSpM, collisionRegionMin, collisionRegionMax,
+        phiMin, phiMax, zMin, zMax, rMax, rMin, radLengthPerSeed,
+        interactionPointCut, deltaPhiMax, highland, maxScatteringAngle2,
+        useVariableMiddleSPRange, deltaRMiddleMinSPRange,
         deltaRMiddleMaxSPRange, rRangeMiddleSP, rMinMiddle, rMaxMiddle,
         seedConfirmation, centralSeedConfirmationRange,
         forwardSeedConfirmationRange);
@@ -182,7 +182,8 @@ void addTrackFinding(Context& ctx) {
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
-                                "MuonHoughSeeder", inSimHits, inDriftCircles);
+                                "MuonHoughSeeder", inTruthSegments,
+                                inSpacePoints, outHoughMax);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
