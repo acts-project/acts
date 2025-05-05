@@ -27,6 +27,26 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
+namespace {
+auto makeCylinderCoordinateConverter(const Acts::Transform3& transform) {
+  return [transform](const Acts::Vector3& pos) {
+    Acts::Vector3 loc = transform * pos;
+    float phi =
+        std::atan2(static_cast<float>(loc.x()), static_cast<float>(loc.y()));
+    return Acts::Vector2(phi, loc.z());
+  };
+}
+
+auto makeDiscCoordinateConverter(const Acts::Transform3& transform) {
+  return [transform](const Acts::Vector3& pos) {
+    Acts::Vector3 loc = transform * pos;
+    float phi =
+        std::atan2(static_cast<float>(loc.x()), static_cast<float>(loc.y()));
+    return Acts::Vector2(perp(loc), phi);
+  };
+}
+}  // namespace
+
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const GeometryContext& gctx,
@@ -54,10 +74,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   Transform3 itransform = ftransform.inverse();
   // Transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(phi(loc), loc.z());
-  };
+  auto globalToLocal = makeCylinderCoordinateConverter(ftransform);
   auto localToGlobal = [itransform, R](const Vector2& loc) {
     return itransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
@@ -110,10 +127,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   }
 
   Transform3 itransform = ftransform.inverse();
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(phi(loc), loc.z());
-  };
+  auto globalToLocal = makeCylinderCoordinateConverter(ftransform);
   auto localToGlobal = [itransform, R](const Vector2& loc) {
     return itransform *
            Vector3(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
@@ -166,10 +180,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3 itransform = transform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(perp(loc), phi(loc));
-  };
+  auto globalToLocal = makeDiscCoordinateConverter(ftransform);
   auto localToGlobal = [itransform, Z](const Vector2& loc) {
     return itransform *
            Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
@@ -273,10 +284,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   Transform3 itransform = ftransform.inverse();
   // transform lambda captures the transform matrix
-  auto globalToLocal = [ftransform](const Vector3& pos) {
-    Vector3 loc = ftransform * pos;
-    return Vector2(perp(loc), phi(loc));
-  };
+  auto globalToLocal = makeDiscCoordinateConverter(ftransform);
   auto localToGlobal = [itransform, Z](const Vector2& loc) {
     return itransform *
            Vector3(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
