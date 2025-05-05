@@ -286,7 +286,8 @@ def addSeeding(
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     adaptiveHoughTransformConfig: Optional[
-        acts.examples.AdaptiveHoughTransformSeeder.Config] = None,
+        acts.examples.AdaptiveHoughTransformSeeder.Config
+    ] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -429,7 +430,9 @@ def addSeeding(
             adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
-            seeds = addAdaptiveHoughTransformSeeding(s, adaptiveHoughTransformConfig, logLevel=logLevel)
+            seeds = addAdaptiveHoughTransformSeeding(
+                s, adaptiveHoughTransformConfig, logLevel=logLevel
+            )
         elif seedingAlgorithm == SeedingAlgorithm.Gbts:
             logger.info("Using Gbts seeding")
             # output of algs changed, only one output now

@@ -38,13 +38,9 @@ namespace ActsExamples {
 // Helper class describing one section of the accumulator space
 AccumulatorSection::AccumulatorSection(double xw, double yw, double xBegin,
                                        double yBegin, int div,
-                                       const std::vector<unsigned>& indices)
-    : m_xSize(xw),
-      m_ySize(yw),
-      m_xBegin(xBegin),
-      m_yBegin(yBegin),
-      m_divisionLevel(div),
-      m_indices(indices) {}
+                                       const std::vector<unsigned> &indices)
+    : m_xSize(xw), m_ySize(yw), m_xBegin(xBegin), m_yBegin(yBegin),
+      m_divisionLevel(div), m_indices(indices) {}
 
 AccumulatorSection AccumulatorSection::bottomLeft(float xFraction,
                                                   float yFraction) const {
@@ -100,8 +96,8 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
     : ActsExamples::IAlgorithm("AdaptiveHoughTransformSeeder", lvl),
       m_cfg(std::move(cfg)),
       m_logger(Acts::getDefaultLogger("AdaptiveHoughTransformSeeder", lvl)) {
-  for (const auto& spName : config().inputSpacePoints) {
-    auto& handle = m_inputSpacePoints.emplace_back(
+  for (const auto &spName : config().inputSpacePoints) {
+    auto &handle = m_inputSpacePoints.emplace_back(
         std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
             this,
             "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
@@ -114,18 +110,18 @@ AdaptiveHoughTransformSeeder::AdaptiveHoughTransformSeeder(
   m_outputSeeds.initialize(config().outputSeeds);
 }
 
-ProcessCode AdaptiveHoughTransformSeeder::execute(
-    const AlgorithmContext& ctx) const {
+ProcessCode
+AdaptiveHoughTransformSeeder::execute(const AlgorithmContext &ctx) const {
   // get inputs
   std::vector<PreprocessedMeasurement> measurements;
-  for (const auto& isp : m_inputSpacePoints) {
-    const auto& spContainer = (*isp)(ctx);
+  for (const auto &isp : m_inputSpacePoints) {
+    const auto &spContainer = (*isp)(ctx);
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
-    for (const SimSpacePoint& sp : spContainer) {
-      measurements.push_back(
-          PreprocessedMeasurement(1.0 / sp.r(), std::atan2(sp.y(), sp.x()),
-            Acts::SourceLink(static_cast<const SimSpacePoint*>(&sp))));
+    for (const SimSpacePoint &sp : spContainer) {
+      measurements.push_back(PreprocessedMeasurement(
+          1.0 / sp.r(), std::atan2(sp.y(), sp.x()),
+          Acts::SourceLink(static_cast<const SimSpacePoint *>(&sp))));
     }
   }
   ACTS_DEBUG("Collected " << measurements.size() << " space points");
@@ -161,16 +157,16 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
   ProtoTrackContainer protoTracks;
   protoTracks.reserve(solutions.size());
   ACTS_DEBUG("Number of solutions " << solutions.size());
-  for (const AccumulatorSection& s : solutions) {
+  for (const AccumulatorSection &s : solutions) {
     ACTS_DEBUG("Solution x: " << s.xBegin() << " " << s.xSize()
                               << " y: " << s.yBegin() << " " << s.ySize()
                               << " nlines: " << s.count());
-    const SimSpacePoint* sp0 =
-        measurements[s.indices()[0]].link.get<const SimSpacePoint*>();
-    const SimSpacePoint* sp1 =
-        measurements[s.indices()[1]].link.get<const SimSpacePoint*>();
-    const SimSpacePoint* sp2 =
-        measurements[s.indices()[2]].link.get<const SimSpacePoint*>();
+    const SimSpacePoint *sp0 =
+        measurements[s.indices()[0]].link.get<const SimSpacePoint *>();
+    const SimSpacePoint *sp1 =
+        measurements[s.indices()[1]].link.get<const SimSpacePoint *>();
+    const SimSpacePoint *sp2 =
+        measurements[s.indices()[2]].link.get<const SimSpacePoint *>();
     seeds.emplace_back(*sp0, *sp1, *sp2);
     float cotThetaEstimate = (sp2->z() - sp0->z()) / (sp2->r() - sp0->r());
     float z = sp1->z() - sp1->r() * cotThetaEstimate;
@@ -186,10 +182,10 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
 }
 
 void AdaptiveHoughTransformSeeder::processStackHead(
-    std::stack<AccumulatorSection>& sections,
-    std::vector<AccumulatorSection>& solutions,
-    const std::vector<PreprocessedMeasurement>& measurements) const {
-  AccumulatorSection& section = sections.top();
+    std::stack<AccumulatorSection> &sections,
+    std::vector<AccumulatorSection> &solutions,
+    const std::vector<PreprocessedMeasurement> &measurements) const {
+  AccumulatorSection &section = sections.top();
 
   // check if it is an ~empty section
   if (section.count() < config().threshold) {
@@ -232,18 +228,18 @@ void AdaptiveHoughTransformSeeder::processStackHead(
   }
   ACTS_VERBOSE("This section is split into " << divisions.size());
   sections.pop();
-  for (AccumulatorSection& s : divisions) {
+  for (AccumulatorSection &s : divisions) {
     updateSection(s, measurements);
     sections.push(std::move(s));
   }
 }
 
 void AdaptiveHoughTransformSeeder::updateSection(
-    AccumulatorSection& section,
-    const std::vector<PreprocessedMeasurement>& input) const {
+    AccumulatorSection &section,
+    const std::vector<PreprocessedMeasurement> &input) const {
   std::vector<unsigned> selectedIndices;
   for (unsigned index : section.indices()) {
-    const PreprocessedMeasurement& m = input[index];
+    const PreprocessedMeasurement &m = input[index];
     if (section.isLineInside(m.invr * config().inverseA,
                              -m.invr * m.phi * config().inverseA)) {
       selectedIndices.push_back(index);
@@ -253,8 +249,8 @@ void AdaptiveHoughTransformSeeder::updateSection(
 }
 
 bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
-    const AccumulatorSection& section,
-    const std::vector<PreprocessedMeasurement>& measurements) const {
+    const AccumulatorSection &section,
+    const std::vector<PreprocessedMeasurement> &measurements) const {
   unsigned inside = 0;
   for (std::size_t idx1 = 0; idx1 < section.count(); ++idx1) {
     const auto first = section.indices()[idx1];
@@ -268,7 +264,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
                         config().inverseA;
 
       const double adif = a1 - a2;
-      if (std::abs(adif) < 1e-5) {  // Parallel lines, need to skip
+      if (std::abs(adif) < 1e-5) { // Parallel lines, need to skip
         continue;
       }
       const double bdif = b2 - b1;
@@ -290,7 +286,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
 }
 
 void AdaptiveHoughTransformSeeder::addSolution(
-    AccumulatorSection&& s, std::vector<AccumulatorSection>& output) const {
+    AccumulatorSection &&s, std::vector<AccumulatorSection> &output) const {
   if (config().deduplicate) {
     std::size_t i = output.size() > 4 ? output.size() - 4 : 0;
     for (; i < std::size(output); ++i) {
@@ -303,4 +299,4 @@ void AdaptiveHoughTransformSeeder::addSolution(
   }
   output.push_back(std::move(s));
 }
-}  // namespace ActsExamples
+} // namespace ActsExamples

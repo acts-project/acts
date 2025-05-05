@@ -187,7 +187,7 @@ void addTrackFinding(Context& ctx) {
       "AdaptiveHoughTransformSeeder", inputSpacePoints, outputSeeds,
       outputProtoTracks, trackingGeometry, qOverPtMin, qOverPtMinBinSize,
       phiMinBinSize, threshold, deduplicate, requireIntersections, inverseA);
-  
+
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
                                 "MuonHoughSeeder", inTruthSegments,
                                 inSpacePoints, outHoughMax);
