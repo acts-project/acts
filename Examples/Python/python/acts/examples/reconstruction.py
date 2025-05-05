@@ -2179,8 +2179,7 @@ def addVertexFitting(
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
             inputTracks=tracks,
-            inputParticles=selectedParticles,
-            inputParticleTrackMatching="particle_track_matching",
+            inputTrackParticleMatching="track_particle_matching",
             outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )

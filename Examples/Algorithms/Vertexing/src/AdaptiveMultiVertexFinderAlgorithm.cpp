@@ -9,7 +9,6 @@
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
@@ -23,13 +22,10 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -37,7 +33,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
-#include <unordered_map>
 #include <utility>
 
 #include "TruthVertexSeeder.hpp"

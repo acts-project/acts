@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -27,10 +26,8 @@ class TruthVertexFinder final : public IAlgorithm {
   struct Config {
     /// The input tracks that should be used to create proto vertices.
     std::string inputTracks;
-    /// The input truth particles that should be used to create proto vertices.
-    std::string inputParticles;
     /// Input track-particle matching.
-    std::string inputParticleTrackMatching;
+    std::string inputTrackParticleMatching;
     /// The output proto vertices collection.
     std::string outputProtoVertices;
     /// Exclude secondary particles not originating from the primary vertex.
@@ -50,9 +47,8 @@ class TruthVertexFinder final : public IAlgorithm {
   Config m_cfg;
 
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
-  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
-  ReadDataHandle<ParticleTrackMatching> m_inputParticleTrackMatching{
-      this, "InputParticleTrackMatching"};
+  ReadDataHandle<TrackParticleMatching> m_inputTrackParticleMatching{
+      this, "InputTrackParticleMatching"};
   WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
       this, "OutputProtoVertices"};
 };

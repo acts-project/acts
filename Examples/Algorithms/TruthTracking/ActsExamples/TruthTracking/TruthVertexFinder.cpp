@@ -10,7 +10,9 @@
 
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/TruthMatching.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -49,40 +51,60 @@ TruthVertexFinder::TruthVertexFinder(const Config& config,
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing input tracks collection");
   }
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input truth particles collection");
-  }
-  if (m_cfg.inputParticleTrackMatching.empty()) {
-    throw std::invalid_argument("Missing input particle-track matching");
+  if (m_cfg.inputTrackParticleMatching.empty()) {
+    throw std::invalid_argument("Missing input track-particle matching");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
 
-  m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputTracks.initialize(m_cfg.inputTracks);
-  m_inputParticleTrackMatching.initialize(m_cfg.inputParticleTrackMatching);
+  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   // prepare input and output collections
   const auto& tracks = m_inputTracks(ctx);
-  const auto& particles = m_inputParticles(ctx);
-  const auto& particleTrackMatching = m_inputParticleTrackMatching(ctx);
+  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
 
-  ACTS_VERBOSE("Have " << particles.size() << " particles");
-  ACTS_VERBOSE("Have " << tracks.size() << " tracks");
+  ACTS_DEBUG("Have " << tracks.size() << " tracks");
 
-  std::unordered_map<SimBarcode, std::vector<TrackIndex>> protoVertexTrackMap;
+  // first step is to sort the tracks into potential proto vertices using the
+  // track-particle matching information.
+  // at this stage we use the full vertex ID, including the secondary vertex ID.
 
-  for (const auto& [particle, trackMatch] : particleTrackMatching) {
-    auto vtxId = SimBarcode(particle).setParticle(0).setSubParticle(0);
+  std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
+      protoVertexTrackMap;
 
-    if (trackMatch.track) {
-      protoVertexTrackMap[vtxId].push_back(trackMatch.track.value());
+  for (const auto& track : tracks) {
+    auto trackMatchIt = trackParticleMatching.find(track.index());
+    if (trackMatchIt == trackParticleMatching.end()) {
+      continue;
     }
+    const auto& trackMatch = trackMatchIt->second;
+
+    // get the particle associated to the track
+    auto particleOpt = trackMatchIt->second.particle;
+    if (!particleOpt) {
+      continue;
+    }
+    auto barcode = *particleOpt;
+
+    // Skip fake and duplicate tracks
+    if (trackMatch.classification != TrackMatchClassification::Matched) {
+      continue;
+    }
+
+    // derive the vertex ID from the barcode
+    SimVertexBarcode vertexId = SimVertexBarcode(barcode);
+
+    // add the track to the proto vertex map
+    protoVertexTrackMap[vertexId].push_back(track.index());
   }
+
+  // in the second step we separate secondary vertices based on the
+  // configuration.
 
   ProtoVertexContainer protoVertices;
 
@@ -115,10 +137,10 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
     } else {
       // secondary particles are included in the primary vertex
 
-      std::unordered_map<SimBarcode, std::vector<TrackIndex>>
+      std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
           protoVertexTrackMap2;
       for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-        auto vtxId2 = SimBarcode(vtxId).setVertexSecondary(0);
+        auto vtxId2 = SimVertexBarcode(vtxId).setVertexSecondary(0);
         protoVertexTrackMap2[vtxId2].insert(protoVertexTrackMap2[vtxId].end(),
                                             vtxTracks.begin(), vtxTracks.end());
       }
@@ -129,8 +151,8 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ACTS_VERBOSE("Write " << protoVertices.size() << " proto vertex to "
-                        << m_cfg.outputProtoVertices);
+  ACTS_DEBUG("Write " << protoVertices.size() << " proto vertex to "
+                      << m_cfg.outputProtoVertices);
 
   m_outputProtoVertices(ctx, std::move(protoVertices));
 
