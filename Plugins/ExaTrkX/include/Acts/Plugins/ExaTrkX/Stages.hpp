@@ -26,6 +26,9 @@ struct Device {
   enum class Type { eCPU, eCUDA };
   Type type = Type::eCPU;
   std::size_t index = 0;
+
+  static Device Cpu() { return {Type::eCPU, 0}; }
+  static Device Cuda(std::size_t index = 0) { return {Type::eCUDA, index}; }
 };
 
 inline std::ostream &operator<<(std::ostream &os, Device device) {

@@ -46,10 +46,7 @@ namespace Acts {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
                                        std::unique_ptr<const Logger> _logger)
-    : m_logger(std::move(_logger)),
-      m_cfg(cfg),
-      m_device(torch::cuda::is_available() ? torch::Device(torch::kCUDA)
-                                           : torch::Device(torch::kCPU)) {
+    : m_logger(std::move(_logger)), m_cfg(cfg) {
   ACTS_INFO("OnnxEdgeClassifier with ORT API version " << ORT_API_VERSION);
 
   OrtLoggingLevel onnxLevel = ORT_LOGGING_LEVEL_WARNING;
@@ -83,7 +80,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
   sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-  if (m_device.is_cuda()) {
+  if (torch::cuda::is_available()) {
     ACTS_INFO("Try to add ONNX execution provider for CUDA");
     OrtCUDAProviderOptions cuda_options;
     cuda_options.device_id = 0;
@@ -119,24 +116,28 @@ std::tuple<std::any, std::any, std::any, std::any>
 OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
                                std::any inEdgeFeatures,
                                const ExecutionContext &execContext) {
-  const char *deviceStr = execContext.device.is_cuda() ? "Cuda" : "Cpu";
+  const char *deviceStr = "Cpu";
+  torch::Device torchDevice(torch::kCPU);
+  if (execContext.device.type == Acts::Device::Type::eCUDA) {
+    deviceStr = "Cuda";
+    torchDevice = torch::Device(torch::kCUDA, execContext.device.index);
+  }
+
   ACTS_DEBUG("Create ORT memory info (" << deviceStr << ")");
   Ort::MemoryInfo memoryInfo(deviceStr, OrtArenaAllocator,
-                             execContext.device.index(), OrtMemTypeDefault);
+                             execContext.device.index, OrtMemTypeDefault);
 
   bc::static_vector<Ort::Value, 3> inputTensors;
   bc::static_vector<const char *, 3> inputNames;
 
   // Node tensor
-  auto nodeTensor =
-      std::any_cast<torch::Tensor>(inputNodes).to(execContext.device);
+  auto nodeTensor = std::any_cast<torch::Tensor>(inputNodes).to(torchDevice);
   ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
   inputTensors.push_back(torchToOnnx(memoryInfo, nodeTensor));
   inputNames.push_back(m_inputNames.at(0).c_str());
 
   // Edge tensor
-  auto edgeIndex =
-      std::any_cast<torch::Tensor>(inputEdges).to(execContext.device);
+  auto edgeIndex = std::any_cast<torch::Tensor>(inputEdges).to(torchDevice);
   ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
   inputTensors.push_back(torchToOnnx(memoryInfo, edgeIndex));
   inputNames.push_back(m_inputNames.at(1).c_str());
@@ -144,8 +145,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   // Edge feature tensor
   std::optional<torch::Tensor> edgeFeatures;
   if (m_inputNames.size() == 3 && inEdgeFeatures.has_value()) {
-    edgeFeatures =
-        std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
+    edgeFeatures = std::any_cast<torch::Tensor>(inEdgeFeatures).to(torchDevice);
     ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
     inputTensors.push_back(torchToOnnx(memoryInfo, *edgeFeatures));
     inputNames.push_back(m_inputNames.at(2).c_str());
