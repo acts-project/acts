@@ -18,14 +18,12 @@ BOOST_AUTO_TEST_SUITE(ProtoAxis)
 
 BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
   // Bound, equidistant axis
-  Acts::ProtoAxis epab(AxisX, Bound, 0.0, 1.0, 10);
+  Acts::ProtoAxis epab(Bound, 0.0, 1.0, 10);
 
   // Direct access
-  BOOST_CHECK_EQUAL(epab.getAxisDirection(), AxisX);
   BOOST_CHECK(!epab.isAutorange());
 
   // Access via IAxis
@@ -46,21 +44,18 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
 
   CHECK_CLOSE_ABS(epab.getAxis().getMax(), 1.0, 1e-15);
 
-  std::string rString =
-      "ProtoAxis: 10 bins in AxisX, equidistant within [0, 1]";
+  std::string rString = "ProtoAxis: 10 bins, equidistant within [0, 1]";
   std::string oString = epab.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
   // Test copy constructor
   Acts::ProtoAxis epabCopy(epab);
-  BOOST_CHECK_EQUAL(epabCopy.getAxisDirection(), epab.getAxisDirection());
   BOOST_CHECK_EQUAL(epabCopy.isAutorange(), epab.isAutorange());
   BOOST_CHECK(epabCopy.getAxis() == epab.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis epabAssign(AxisX, Bound, 0.0, 50.0, 20);
+  Acts::ProtoAxis epabAssign(Bound, 0.0, 50.0, 20);
   epabAssign = epab;
-  BOOST_CHECK_EQUAL(epabAssign.getAxisDirection(), epab.getAxisDirection());
   BOOST_CHECK_EQUAL(epabAssign.isAutorange(), epab.isAutorange());
   BOOST_CHECK(epabAssign.getAxis() == epab.getAxis());
 
@@ -74,7 +69,7 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
   BOOST_CHECK(axis1D != nullptr);
 
   // Open, equidistant axis
-  Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
+  Acts::ProtoAxis epao(Open, 0., 2.0, 10.);
   BOOST_CHECK_EQUAL(epao.getAxis().getBoundaryType(), Open);
 
   // Create a 2D grid from a two proto axes
@@ -91,37 +86,22 @@ BOOST_AUTO_TEST_CASE(EquidistantProtoAxis) {
           grid2Daxes[1]);
   BOOST_CHECK(axis2D2 != nullptr);
 
-  // Invalid grid construction with two proto axis in the same direction
-  BOOST_CHECK_THROW(Acts::makeGrid<double>(epab, epab), std::invalid_argument);
-
   // Invalid constructor, min > max
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 1.0, 0.0, 10),
+  BOOST_CHECK_THROW(Acts::ProtoAxis(Bound, 1.0, 0.0, 10),
                     std::invalid_argument);
 
   // Invalid constructor, nbins < 1
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, 0.0, 1.0, 0),
-                    std::invalid_argument);
-
-  // Invalid constructor, closed with something else than phi or rphi
-  std::vector<Acts::AxisDirection> invalidDirections = {
-      AxisX, AxisY, AxisZ, AxisR, AxisEta, AxisTheta, AxisMag};
-  for (const auto& adir : invalidDirections) {
-    BOOST_CHECK_THROW(Acts::ProtoAxis(adir, Closed, 0.0, 1.0, 10),
-                      std::invalid_argument);
-  }
+  BOOST_CHECK_THROW(Acts::ProtoAxis(Bound, 0.0, 1.0, 0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
   // Bound, equidistant axis, autorange
-  Acts::ProtoAxis epa(AxisX, Bound, 10);
+  Acts::ProtoAxis epa(Bound, 10);
 
   // Direct access
-  BOOST_CHECK_EQUAL(epa.getAxisDirection(), AxisX);
-
   BOOST_CHECK(epa.isAutorange());
 
   // Access via IAxis
@@ -136,20 +116,18 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK_EQUAL(epa.getAxis().getNBins(), 10);
 
   std::string rString =
-      "ProtoAxis: 10 bins in AxisX, equidistant within automatic range";
+      "ProtoAxis: 10 bins, equidistant within automatic range";
   std::string oString = epa.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
   // Test copy constructor
   Acts::ProtoAxis epaCopy(epa);
-  BOOST_CHECK_EQUAL(epaCopy.getAxisDirection(), epa.getAxisDirection());
   BOOST_CHECK_EQUAL(epaCopy.isAutorange(), epa.isAutorange());
   BOOST_CHECK(epaCopy.getAxis() == epa.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis epaAssign(AxisX, Bound, 0.0, 50.0, 20);
+  Acts::ProtoAxis epaAssign(Bound, 0.0, 50.0, 20);
   epaAssign = epa;
-  BOOST_CHECK_EQUAL(epaAssign.getAxisDirection(), epa.getAxisDirection());
   BOOST_CHECK_EQUAL(epaAssign.isAutorange(), epa.isAutorange());
   BOOST_CHECK(epaAssign.getAxis() == epa.getAxis());
 
@@ -157,7 +135,7 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epa), std::invalid_argument);
 
   // Invalid 2D grid construction with autorange axis
-  Acts::ProtoAxis epao(AxisY, Open, 0., 2.0, 10.);
+  Acts::ProtoAxis epao(Open, 0., 2.0, 10.);
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epao, epa), std::invalid_argument);
   BOOST_CHECK_THROW(Acts::makeGrid<double>(epa, epao), std::invalid_argument);
 
@@ -171,24 +149,18 @@ BOOST_AUTO_TEST_CASE(AutorangeProtoAxis) {
   // 2D Grid consstruction works now
   BOOST_CHECK_NO_THROW(Acts::makeGrid<double>(epa, epao));
 
-  // Invalid constructor, closed with something else than phi or rphi
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Closed, 10), std::invalid_argument);
-
   // Invalid setRange, min > max
   BOOST_CHECK_THROW(epa.setRange(20.0, 0.0), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   using enum Acts::AxisBoundaryType;
-  using enum Acts::AxisDirection;
   using enum Acts::AxisType;
 
-  // Bound, equidistant axis
-  Acts::ProtoAxis vpab(AxisX, Bound, {0.0, 1.0, 10});
+  // Bound, variable axis
+  Acts::ProtoAxis vpab(Bound, {0.0, 1.0, 10});
 
   // Direct access
-  BOOST_CHECK_EQUAL(vpab.getAxisDirection(), AxisX);
-
   BOOST_CHECK(!vpab.isAutorange());
 
   // Access via IAxis
@@ -209,20 +181,18 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
 
   CHECK_CLOSE_ABS(vpab.getAxis().getMax(), 10.0, 1e-15);
 
-  std::string rString = "ProtoAxis: 2 bins in AxisX, variable within [0, 10]";
+  std::string rString = "ProtoAxis: 2 bins, variable within [0, 10]";
   std::string oString = vpab.toString();
   BOOST_CHECK_EQUAL(rString, oString);
 
   // Test copy constructor
   Acts::ProtoAxis vpabCopy(vpab);
-  BOOST_CHECK_EQUAL(vpabCopy.getAxisDirection(), vpab.getAxisDirection());
   BOOST_CHECK_EQUAL(vpabCopy.isAutorange(), vpab.isAutorange());
   BOOST_CHECK(vpabCopy.getAxis() == vpab.getAxis());
 
   // Test Assignment operator
-  Acts::ProtoAxis vpabAssign(AxisX, Bound, 0.0, 50.0, 20);
+  Acts::ProtoAxis vpabAssign(Bound, 0.0, 50.0, 20);
   vpabAssign = vpab;
-  BOOST_CHECK_EQUAL(vpabAssign.getAxisDirection(), vpab.getAxisDirection());
   BOOST_CHECK_EQUAL(vpabAssign.isAutorange(), vpab.isAutorange());
   BOOST_CHECK(vpabAssign.getAxis() == vpab.getAxis());
 
@@ -234,20 +204,45 @@ BOOST_AUTO_TEST_CASE(VariableProtoAxis) {
   CHECK_CLOSE_ABS(vpab.getAxis().getMax(), 9.5, 1e-15);
 
   // Invalid constructor, min > max
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, std::vector<double>{2.}),
+  BOOST_CHECK_THROW(Acts::ProtoAxis(Bound, std::vector<double>{2.}),
                     std::invalid_argument);
 
   // Invalid constructor, nbins < 1
-  BOOST_CHECK_THROW(Acts::ProtoAxis(AxisZ, Bound, {3., 2., 1}),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::ProtoAxis(Bound, {3., 2., 1}), std::invalid_argument);
+}
 
-  // Invalid constructor, closed with something else than phi or rphi
-  std::vector<Acts::AxisDirection> invalidDirections = {
-      AxisX, AxisY, AxisZ, AxisR, AxisEta, AxisTheta, AxisMag};
-  for (const auto& adir : invalidDirections) {
-    BOOST_CHECK_THROW(Acts::ProtoAxis(adir, Closed, {0., 1., 2., 3.}),
-                      std::invalid_argument);
-  }
+BOOST_AUTO_TEST_CASE(DirectedProtoAxisOfAllSorts) {
+  using enum Acts::AxisBoundaryType;
+  using enum Acts::AxisDirection;
+  using enum Acts::AxisType;
+
+  // Bound, variable axis - directed at x
+  Acts::DirectedProtoAxis vpab(AxisX, Bound, {0.0, 1.0, 10});
+  BOOST_CHECK(vpab.getAxisDirection() == AxisX);
+  std::string rvString =
+      "DirectedProtoAxis: 2 bins in AxisX, variable within [0, 10]";
+  std::string ovString = vpab.toString();
+  BOOST_CHECK_EQUAL(rvString, ovString);
+
+  // Bound, equidistant axis, autorange - directed at y
+  Acts::DirectedProtoAxis epa(AxisY, Bound, 10);
+  BOOST_CHECK(epa.getAxisDirection() == AxisY);
+  BOOST_CHECK(epa.getAxis().isEquidistant());
+  BOOST_CHECK(epa.isAutorange());
+  std::string reString =
+      "DirectedProtoAxis: 10 bins in AxisY, equidistant within automatic range";
+  std::string oeString = epa.toString();
+  BOOST_CHECK_EQUAL(reString, oeString);
+
+  // Bound, equidistant axis - directed at z
+  Acts::DirectedProtoAxis epab(AxisZ, Bound, 0.0, 1.0, 10);
+  BOOST_CHECK(epab.getAxisDirection() == AxisZ);
+  BOOST_CHECK(epab.getAxis().isEquidistant());
+  BOOST_CHECK(!epab.isAutorange());
+  std::string rString =
+      "DirectedProtoAxis: 10 bins in AxisZ, equidistant within [0, 1]";
+  std::string oString = epab.toString();
+  BOOST_CHECK_EQUAL(rString, oString);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

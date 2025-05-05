@@ -152,7 +152,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             terminalreporter.line(f"{e.key}: {e.act_hash}")
 
     if not helpers.doHashChecks:
-        terminalreporter.section("Root file has checks", sep="-", blue=True, bold=True)
+        terminalreporter.section("Root file hash checks", sep="-", blue=True, bold=True)
         terminalreporter.line(
             "NOTE: Root file hash checks were skipped, enable with ROOT_HASH_CHECKS=on"
         )
@@ -325,14 +325,21 @@ def ptcl_gun(rng):
                     ),
                 )
             ],
-            outputParticles="particles_generated",
-            outputVertices="vertices_input",
+            outputEvent="particle_gun_event",
             randomNumbers=rng,
         )
 
         s.addReader(evGen)
 
-        return evGen
+        hepmc3Converter = acts.examples.hepmc3.HepMC3InputConverter(
+            level=acts.logging.INFO,
+            inputEvent=evGen.config.outputEvent,
+            outputParticles="particles_generated",
+            outputVertices="vertices_input",
+        )
+        s.addAlgorithm(hepmc3Converter)
+
+        return evGen, hepmc3Converter
 
     return _factory
 
@@ -340,12 +347,12 @@ def ptcl_gun(rng):
 @pytest.fixture
 def fatras(ptcl_gun, trk_geo, rng):
     def _factory(s):
-        evGen = ptcl_gun(s)
+        evGen, h3conv = ptcl_gun(s)
 
         field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
         simAlg = acts.examples.FatrasSimulation(
             level=acts.logging.INFO,
-            inputParticles=evGen.config.outputParticles,
+            inputParticles=h3conv.config.outputParticles,
             outputParticles="particles_simulated",
             outputSimHits="simhits",
             randomNumbers=rng,

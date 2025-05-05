@@ -64,8 +64,8 @@ RootAthenaDumpReader::RootAthenaDumpReader(
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
-  if (m_cfg.inputfile.empty()) {
-    throw std::invalid_argument("Missing input filename");
+  if (m_cfg.inputfiles.empty()) {
+    throw std::invalid_argument("Empty input file list");
   }
   if (m_cfg.treename.empty()) {
     throw std::invalid_argument("Missing tree name");
@@ -77,10 +77,13 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_outputStripSpacePoints.initialize(m_cfg.outputStripSpacePoints);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
   if (!m_cfg.onlySpacepoints) {
-    m_outputClusters.initialize(m_cfg.outputClusters);
-    m_outputParticles.initialize(m_cfg.outputParticles);
-    m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
     m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+    m_outputClusters.initialize(m_cfg.outputClusters);
+    if (!m_cfg.noTruth) {
+      m_outputParticles.initialize(m_cfg.outputParticles);
+      m_outputMeasParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
+      m_outputParticleMeasMap.initialize(m_cfg.outputParticleMeasurementsMap);
+    }
   }
 
   if (m_inputchain->GetBranch("SPtopStripDirection") == nullptr) {
@@ -89,39 +92,12 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   }
 
   // Set the branches
-
-  // Set object pointer
-  CLhardware = nullptr;
-  CLparticleLink_eventIndex = nullptr;
-  CLparticleLink_barcode = nullptr;
-  CLbarcodesLinked = nullptr;
-  CLparticle_charge = nullptr;
-  CLphis = nullptr;
-  CLetas = nullptr;
-  CLtots = nullptr;
-  CLlocal_cov = nullptr;
-  Part_vParentID = nullptr;
-  Part_vParentBarcode = nullptr;
-  SPtopStripDirection = nullptr;
-  SPbottomStripDirection = nullptr;
-  SPstripCenterDistance = nullptr;
-  SPtopStripCenterPosition = nullptr;
-  TRKproperties = nullptr;
-  TRKpattern = nullptr;
-  TRKmeasurementsOnTrack_pixcl_sctcl_index = nullptr;
-  TRKoutliersOnTrack_pixcl_sctcl_index = nullptr;
-  TRKperigee_position = nullptr;
-  TRKperigee_momentum = nullptr;
-  DTTtrajectory_eventindex = nullptr;
-  DTTtrajectory_barcode = nullptr;
-  DTTstTruth_subDetType = nullptr;
-  DTTstTrack_subDetType = nullptr;
-  DTTstCommon_subDetType = nullptr;
-
   m_inputchain->SetBranchAddress("run_number", &run_number);
   m_inputchain->SetBranchAddress("event_number", &event_number);
   m_inputchain->SetBranchAddress("nSE", &nSE);
   m_inputchain->SetBranchAddress("SEID", SEID);
+
+  // Cluster features
   m_inputchain->SetBranchAddress("nCL", &nCL);
   m_inputchain->SetBranchAddress("CLindex", CLindex);
   m_inputchain->SetBranchAddress("CLhardware", &CLhardware);
@@ -134,12 +110,6 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLphi_module", CLphi_module);
   m_inputchain->SetBranchAddress("CLside", CLside);
   m_inputchain->SetBranchAddress("CLmoduleID", CLmoduleID);
-  m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
-                                 &CLparticleLink_eventIndex);
-  m_inputchain->SetBranchAddress("CLparticleLink_barcode",
-                                 &CLparticleLink_barcode);
-  m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
-  m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
   m_inputchain->SetBranchAddress("CLphis", &CLphis);
   m_inputchain->SetBranchAddress("CLetas", &CLetas);
   m_inputchain->SetBranchAddress("CLtots", &CLtots);
@@ -161,28 +131,42 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("CLnorm_y", CLnorm_y);
   m_inputchain->SetBranchAddress("CLnorm_z", CLnorm_z);
   m_inputchain->SetBranchAddress("CLlocal_cov", &CLlocal_cov);
-  m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
-  m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
-  m_inputchain->SetBranchAddress("Part_barcode", Part_barcode);
-  m_inputchain->SetBranchAddress("Part_px", Part_px);
-  m_inputchain->SetBranchAddress("Part_py", Part_py);
-  m_inputchain->SetBranchAddress("Part_pz", Part_pz);
-  m_inputchain->SetBranchAddress("Part_pt", Part_pt);
-  m_inputchain->SetBranchAddress("Part_eta", Part_eta);
-  m_inputchain->SetBranchAddress("Part_vx", Part_vx);
-  m_inputchain->SetBranchAddress("Part_vy", Part_vy);
-  m_inputchain->SetBranchAddress("Part_vz", Part_vz);
-  m_inputchain->SetBranchAddress("Part_radius", Part_radius);
-  m_inputchain->SetBranchAddress("Part_status", Part_status);
-  m_inputchain->SetBranchAddress("Part_charge", Part_charge);
-  m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id);
-  m_inputchain->SetBranchAddress("Part_passed", Part_passed);
-  m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin);
-  m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
-  m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
-  m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
-  m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
-  m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+  if (!m_cfg.noTruth) {
+    m_inputchain->SetBranchAddress("CLparticleLink_eventIndex",
+                                   &CLparticleLink_eventIndex);
+    m_inputchain->SetBranchAddress("CLparticleLink_barcode",
+                                   &CLparticleLink_barcode);
+    m_inputchain->SetBranchAddress("CLbarcodesLinked", &CLbarcodesLinked);
+    m_inputchain->SetBranchAddress("CLparticle_charge", &CLparticle_charge);
+  }
+
+  // Particle features
+  if (!m_cfg.noTruth) {
+    m_inputchain->SetBranchAddress("nPartEVT", &nPartEVT);
+    m_inputchain->SetBranchAddress("Part_event_number", Part_event_number);
+    m_inputchain->SetBranchAddress("Part_barcode", Part_barcode);
+    m_inputchain->SetBranchAddress("Part_px", Part_px);
+    m_inputchain->SetBranchAddress("Part_py", Part_py);
+    m_inputchain->SetBranchAddress("Part_pz", Part_pz);
+    m_inputchain->SetBranchAddress("Part_pt", Part_pt);
+    m_inputchain->SetBranchAddress("Part_eta", Part_eta);
+    m_inputchain->SetBranchAddress("Part_vx", Part_vx);
+    m_inputchain->SetBranchAddress("Part_vy", Part_vy);
+    m_inputchain->SetBranchAddress("Part_vz", Part_vz);
+    m_inputchain->SetBranchAddress("Part_radius", Part_radius);
+    m_inputchain->SetBranchAddress("Part_status", Part_status);
+    m_inputchain->SetBranchAddress("Part_charge", Part_charge);
+    m_inputchain->SetBranchAddress("Part_pdg_id", Part_pdg_id);
+    m_inputchain->SetBranchAddress("Part_passed", Part_passed);
+    m_inputchain->SetBranchAddress("Part_vProdNin", Part_vProdNin);
+    m_inputchain->SetBranchAddress("Part_vProdNout", Part_vProdNout);
+    m_inputchain->SetBranchAddress("Part_vProdStatus", Part_vProdStatus);
+    m_inputchain->SetBranchAddress("Part_vProdBarcode", Part_vProdBarcode);
+    m_inputchain->SetBranchAddress("Part_vParentID", &Part_vParentID);
+    m_inputchain->SetBranchAddress("Part_vParentBarcode", &Part_vParentBarcode);
+  }
+
+  // Spacepoint features
   m_inputchain->SetBranchAddress("nSP", &nSP);
   m_inputchain->SetBranchAddress("SPindex", SPindex);
   m_inputchain->SetBranchAddress("SPx", SPx);
@@ -191,19 +175,24 @@ RootAthenaDumpReader::RootAthenaDumpReader(
   m_inputchain->SetBranchAddress("SPCL1_index", SPCL1_index);
   m_inputchain->SetBranchAddress("SPCL2_index", SPCL2_index);
   m_inputchain->SetBranchAddress("SPisOverlap", SPisOverlap);
-  m_inputchain->SetBranchAddress("SPradius", SPradius);
-  m_inputchain->SetBranchAddress("SPcovr", SPcovr);
-  m_inputchain->SetBranchAddress("SPcovz", SPcovz);
-  m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
-  m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
-  m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
-  m_inputchain->SetBranchAddress("SPbottomStripDirection",
-                                 &SPbottomStripDirection);
-  m_inputchain->SetBranchAddress("SPstripCenterDistance",
-                                 &SPstripCenterDistance);
-  m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
-                                 &SPtopStripCenterPosition);
+  if (m_haveStripFeatures) {
+    m_inputchain->SetBranchAddress("SPradius", SPradius);
+    m_inputchain->SetBranchAddress("SPcovr", SPcovr);
+    m_inputchain->SetBranchAddress("SPcovz", SPcovz);
+    m_inputchain->SetBranchAddress("SPhl_topstrip", SPhl_topstrip);
+    m_inputchain->SetBranchAddress("SPhl_botstrip", SPhl_botstrip);
+    m_inputchain->SetBranchAddress("SPtopStripDirection", &SPtopStripDirection);
+    m_inputchain->SetBranchAddress("SPbottomStripDirection",
+                                   &SPbottomStripDirection);
+    m_inputchain->SetBranchAddress("SPstripCenterDistance",
+                                   &SPstripCenterDistance);
+    m_inputchain->SetBranchAddress("SPtopStripCenterPosition",
+                                   &SPtopStripCenterPosition);
+  }
 
+  // These quantities are not used currently and thus commented out
+  // I would like to keep the code, since it is always a pain to write it
+  /*
   m_inputchain->SetBranchAddress("nTRK", &nTRK);
   m_inputchain->SetBranchAddress("TRKindex", TRKindex);
   m_inputchain->SetBranchAddress("TRKtrack_fitter", TRKtrack_fitter);
@@ -239,9 +228,12 @@ RootAthenaDumpReader::RootAthenaDumpReader(
                                  &DTTstTrack_subDetType);
   m_inputchain->SetBranchAddress("DTTstCommon_subDetType",
                                  &DTTstCommon_subDetType);
+  */
 
-  m_inputchain->Add(m_cfg.inputfile.c_str());
-  ACTS_DEBUG("Adding file " << m_cfg.inputfile << " to tree" << m_cfg.treename);
+  for (const auto& file : m_cfg.inputfiles) {
+    ACTS_DEBUG("Adding file '" << file << "' to tree " << m_cfg.treename);
+    m_inputchain->Add(file.c_str());
+  }
 
   m_events = m_inputchain->GetEntries();
 
@@ -292,7 +284,7 @@ std::tuple<ClusterContainer, MeasurementContainer,
            std::unordered_map<int, std::size_t>>
 RootAthenaDumpReader::readMeasurements(
     SimParticleContainer& particles, const Acts::GeometryContext& gctx) const {
-  ClusterContainer clusters(nCL);
+  ClusterContainer clusters;
   clusters.reserve(nCL);
 
   MeasurementContainer measurements;
@@ -305,6 +297,7 @@ RootAthenaDumpReader::readMeasurements(
 
   // We cannot use im for the index since we might skip measurements
   std::unordered_map<int, std::size_t> imIdxMap;
+  imIdxMap.reserve(nCL);
 
   for (int im = 0; im < nCL; im++) {
     if (!(CLhardware->at(im) == "PIXEL" || CLhardware->at(im) == "STRIP")) {
@@ -317,8 +310,6 @@ RootAthenaDumpReader::readMeasurements(
 
     // Make cluster
     // TODO refactor Cluster class so it is not so tedious
-    Cluster cluster;
-
     const auto& etas = CLetas->at(im);
     const auto& phis = CLetas->at(im);
     const auto& tots = CLtots->at(im);
@@ -328,30 +319,40 @@ RootAthenaDumpReader::readMeasurements(
     const auto [minEta, maxEta] = std::minmax_element(etas.begin(), etas.end());
     const auto [minPhi, maxPhi] = std::minmax_element(phis.begin(), phis.end());
 
-    cluster.sizeLoc0 = *maxEta - *minEta;
-    cluster.sizeLoc1 = *maxPhi - *minPhi;
+    Cluster cluster;
+    if (m_cfg.readCellData) {
+      cluster.channels.reserve(etas.size());
 
-    if (totalTot == 0.0) {
-      ACTS_VERBOSE("total time over threshold is 0, set all activations to 0");
-      nTotalTotZero++;
-    }
+      cluster.sizeLoc0 = *maxEta - *minEta;
+      cluster.sizeLoc1 = *maxPhi - *minPhi;
 
-    for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
-      // Make best out of what we have:
-      // Weight the overall collected charge corresponding to the
-      // time-over-threshold of each cell Use this as activation (does this make
-      // sense?)
-      auto activation =
-          (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
+      if (totalTot == 0.0) {
+        ACTS_VERBOSE(
+            "total time over threshold is 0, set all activations to 0");
+        nTotalTotZero++;
+      }
 
-      // This bases every cluster at zero, but shouldn't matter right now
-      ActsFatras::Segmentizer::Bin2D bin;
-      bin[0] = eta - *minEta;
-      bin[1] = phi - *minPhi;
+      for (const auto& [eta, phi, tot] : Acts::zip(etas, phis, tots)) {
+        // Make best out of what we have:
+        // Weight the overall collected charge corresponding to the
+        // time-over-threshold of each cell Use this as activation (does this
+        // make sense?)
+        auto activation =
+            (totalTot != 0.0) ? CLcharge_count[im] * tot / totalTot : 0.0;
 
-      // Of course we have no Segment2D because this is not Fatras
-      cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
-                                    activation);
+        // This bases every cluster at zero, but shouldn't matter right now
+        ActsFatras::Segmentizer::Bin2D bin;
+        bin[0] = eta - *minEta;
+        bin[1] = phi - *minPhi;
+
+        // Of course we have no Segment2D because this is not Fatras
+        cluster.channels.emplace_back(bin, ActsFatras::Segmentizer::Segment2D{},
+                                      activation);
+      }
+
+      ACTS_VERBOSE("- shape: " << cluster.channels.size()
+                               << "cells, dimensions: " << cluster.sizeLoc0
+                               << ", " << cluster.sizeLoc1);
     }
 
     cluster.globalPosition = {CLx[im], CLy[im], CLz[im]};
@@ -367,16 +368,7 @@ RootAthenaDumpReader::readMeasurements(
     cluster.etaAngle = CLeta_angle[im];
     cluster.phiAngle = CLphi_angle[im];
 
-    ACTS_VERBOSE("CL shape: " << cluster.channels.size()
-                              << "cells, dimensions: " << cluster.sizeLoc0
-                              << ", " << cluster.sizeLoc1);
-
-    clusters[im] = cluster;
-
     // Measurement creation
-    ACTS_VERBOSE("CL loc dims:" << CLloc_direction1[im] << ", "
-                                << CLloc_direction2[im] << ", "
-                                << CLloc_direction3[im]);
     const auto& locCov = CLlocal_cov->at(im);
 
     Acts::GeometryIdentifier geoId;
@@ -413,8 +405,8 @@ RootAthenaDumpReader::readMeasurements(
         continue;
       }
 
-      const double tol = (type == ePixel) ? Acts::s_onSurfaceTolerance : 1.3_mm;
-      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {}, tol);
+      auto loc = surface->globalToLocal(gctx, cluster.globalPosition, {},
+                                        Acts::s_onSurfaceTolerance);
 
       if (!loc.ok()) {
         const Acts::Vector3 v =
@@ -441,32 +433,39 @@ RootAthenaDumpReader::readMeasurements(
       digiPars.variances = {locCov[0], locCov[3]};
       digiPars.values = localParams;
     } else {
-      digiPars.indices = {Acts::eBoundLoc0};
       assert(!locCov.empty());
-      digiPars.variances = {locCov[0]};
-      digiPars.values = {localParams[0]};
+      // Barrel-endcap index can be -2/2 for endcap or 0 for barrel
+      // We need to choose the coordinate of local measurement depending on that
+      const static std::array boundLoc = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+      auto i = CLbarrel_endcap[im] == 0 ? 0 : 1;
+      digiPars.variances = {locCov[i]};
+      digiPars.values = {localParams[i]};
+      digiPars.indices = {boundLoc[i]};
     }
 
     std::size_t measIndex = measurements.size();
-    createMeasurement(measurements, geoId, digiPars);
-
-    // Create measurement particles map and particles container
-    for (const auto& [subevt, barcode] :
-         Acts::zip(CLparticleLink_eventIndex->at(im),
-                   CLparticleLink_barcode->at(im))) {
-      SimBarcode dummyBarcode{concatInts(barcode, subevt)};
-      // If we don't find the particle, create one with default values
-      if (particles.find(dummyBarcode) == particles.end()) {
-        ACTS_VERBOSE("Particle with subevt " << subevt << ", barcode "
-                                             << barcode
-                                             << "not found, create dummy one");
-        particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
-      }
-      measPartMap.insert(
-          std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
-    }
-
+    ACTS_VERBOSE("Add measurement with index " << measIndex);
     imIdxMap.emplace(im, measIndex);
+    createMeasurement(measurements, geoId, digiPars);
+    clusters.push_back(cluster);
+
+    if (!m_cfg.noTruth) {
+      // Create measurement particles map and particles container
+      for (const auto& [subevt, barcode] :
+           Acts::zip(CLparticleLink_eventIndex->at(im),
+                     CLparticleLink_barcode->at(im))) {
+        SimBarcode dummyBarcode{concatInts(barcode, subevt)};
+        // If we don't find the particle, create one with default values
+        if (particles.find(dummyBarcode) == particles.end()) {
+          ACTS_VERBOSE("Particle with subevt "
+                       << subevt << ", barcode " << barcode
+                       << "not found, create dummy one");
+          particles.emplace(dummyBarcode, Acts::PdgParticle::eInvalid);
+        }
+        measPartMap.insert(
+            std::pair<Index, ActsFatras::Barcode>{measIndex, dummyBarcode});
+      }
+    }
   }
 
   if (measurements.size() < static_cast<std::size_t>(nCL)) {
@@ -480,11 +479,12 @@ RootAthenaDumpReader::readMeasurements(
   }
 
   if (nTotalTotZero > 0) {
-    ACTS_WARNING(nTotalTotZero << " / " << nCL
-                               << " clusters have zero time-over-threshold");
+    ACTS_DEBUG(nTotalTotZero << " / " << nCL
+                             << " clusters have zero time-over-threshold");
   }
 
-  return {clusters, measurements, measPartMap, imIdxMap};
+  return {std::move(clusters), std::move(measurements), std::move(measPartMap),
+          std::move(imIdxMap)};
 }
 
 std::tuple<SimSpacePointContainer, SimSpacePointContainer,
@@ -619,7 +619,8 @@ RootAthenaDumpReader::readSpacepoints(
     ACTS_DEBUG("Skipped " << skippedSpacePoints
                           << " because of eta/phi overlaps");
   }
-  if (spacePoints.size() < static_cast<std::size_t>(nSP)) {
+  if (spacePoints.size() <
+      (static_cast<std::size_t>(nSP) - skippedSpacePoints)) {
     ACTS_WARNING("Could not convert " << nSP - spacePoints.size() << " of "
                                       << nSP << " spacepoints");
   }
@@ -630,7 +631,8 @@ RootAthenaDumpReader::readSpacepoints(
   ACTS_DEBUG("Created " << stripSpacePoints.size() << " "
                         << " strip space points");
 
-  return {spacePoints, pixelSpacePoints, stripSpacePoints};
+  return {std::move(spacePoints), std::move(pixelSpacePoints),
+          std::move(stripSpacePoints)};
 }
 
 std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
@@ -640,6 +642,7 @@ RootAthenaDumpReader::reprocessParticles(
   std::vector<ActsExamples::SimParticle> newParticles;
   newParticles.reserve(particles.size());
   IndexMultimap<ActsFatras::Barcode> newMeasPartMap;
+  newMeasPartMap.reserve(measPartMap.size());
 
   const auto partMeasMap = invertIndexMultimap(measPartMap);
 
@@ -686,7 +689,7 @@ RootAthenaDumpReader::reprocessParticles(
 
   ACTS_DEBUG("After reprocessing particles " << newParticles.size() << " of "
                                              << particles.size() << " remain");
-  return {particleVectorToSet(newParticles), newMeasPartMap};
+  return {particleVectorToSet(newParticles), std::move(newMeasPartMap)};
 }
 
 ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
@@ -704,19 +707,27 @@ ProcessCode RootAthenaDumpReader::read(const AlgorithmContext& ctx) {
   std::optional<std::unordered_map<int, std::size_t>> optImIdxMap;
 
   if (!m_cfg.onlySpacepoints) {
-    auto candidateParticles = readParticles();
+    SimParticleContainer candidateParticles;
+
+    if (!m_cfg.noTruth) {
+      candidateParticles = readParticles();
+    }
 
     auto [clusters, measurements, candidateMeasPartMap, imIdxMap] =
         readMeasurements(candidateParticles, ctx.geoContext);
     optImIdxMap.emplace(std::move(imIdxMap));
 
-    auto [particles, measPartMap] =
-        reprocessParticles(candidateParticles, candidateMeasPartMap);
-
     m_outputClusters(ctx, std::move(clusters));
-    m_outputParticles(ctx, std::move(particles));
-    m_outputMeasParticleMap(ctx, std::move(measPartMap));
     m_outputMeasurements(ctx, std::move(measurements));
+
+    if (!m_cfg.noTruth) {
+      auto [particles, measPartMap] =
+          reprocessParticles(candidateParticles, candidateMeasPartMap);
+
+      m_outputParticles(ctx, std::move(particles));
+      m_outputParticleMeasMap(ctx, invertIndexMultimap(measPartMap));
+      m_outputMeasParticleMap(ctx, std::move(measPartMap));
+    }
   }
 
   auto [spacePoints, pixelSpacePoints, stripSpacePoints] =

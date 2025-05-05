@@ -159,6 +159,8 @@ void addLogging(Acts::Python::Context& ctx) {
         };
   };
 
+  py::class_<Logger>(m, "Logger");
+
   auto logger =
       py::class_<PythonLogger, std::shared_ptr<PythonLogger>>(logging, "Logger")
           .def("log", &PythonLogger::log)
@@ -207,6 +209,28 @@ void addLogging(Acts::Python::Context& ctx) {
 
   logging.def("setFailureThreshold", &Logging::setFailureThreshold);
   logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+
+  struct ScopedFailureThresholdContextManager {
+    std::optional<Logging::ScopedFailureThreshold> m_scopedFailureThreshold =
+        std::nullopt;
+    Logging::Level m_level;
+
+    explicit ScopedFailureThresholdContextManager(Logging::Level level)
+        : m_level(level) {}
+
+    void enter() { m_scopedFailureThreshold.emplace(m_level); }
+
+    void exit(const py::object& /*exc_type*/, const py::object& /*exc_value*/,
+              const py::object& /*traceback*/) {
+      m_scopedFailureThreshold.reset();
+    }
+  };
+
+  py::class_<ScopedFailureThresholdContextManager>(logging,
+                                                   "ScopedFailureThreshold")
+      .def(py::init<Logging::Level>(), "level"_a)
+      .def("__enter__", &ScopedFailureThresholdContextManager::enter)
+      .def("__exit__", &ScopedFailureThresholdContextManager::exit);
 
   static py::exception<Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);

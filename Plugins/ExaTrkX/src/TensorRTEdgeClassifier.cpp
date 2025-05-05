@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/TensorRTEdgeClassifier.hpp"
 
-#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
+#include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
 
 #include <chrono>
