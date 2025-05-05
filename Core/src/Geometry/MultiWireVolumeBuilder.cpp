@@ -1,0 +1,95 @@
+// This file is part of the ACTS project.
+//
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "Acts/Geometry/MultiWireVolumeBuilder.hpp"
+
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Navigation/MultiLayerNavigationPolicy.hpp"
+#include "Acts/Navigation/TryAllNavigationPolicy.hpp"
+#include "Acts/Geometry/NavigationPolicyFactory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+
+
+// Constructor
+Acts::MultiWireVolumeBuilder::MultiWireVolumeBuilder(const Config& config, std::unique_ptr<const Acts::Logger> logger)
+    : m_config(config), m_logger(std::move(logger)) {
+
+    if (m_config.mlSurfaces.empty()) {
+        throw std::invalid_argument(
+            "MultiWireStructureBuilder: No surfaces are given");
+    } else if (m_config.binning.size() != 2u) {
+        throw ::std::invalid_argument(
+            "MultiWireStructureBuilder: Invalid binning provided");
+    }else if (m_config.bounds.size() < 4u) {
+        throw ::std::invalid_argument(
+            "MultiWireStructureBuilder: Invalid bounds provided for trapezoidal volume");
+    }
+}
+
+std::unique_ptr<Acts::TrackingVolume> Acts::MultiWireVolumeBuilder::buildVolume(const Acts::GeometryContext& gctx) const {
+  
+  // Create the tracking volume
+
+  ACTS_VERBOSE("Building a tracking volume with name " << m_config.name <<
+  " ,translation"<<toString(m_config.transform.translation())<<" and number of surfaces "<<m_config.mlSurfaces.size());
+  
+
+  auto bArray =
+    toArray<TrapezoidVolumeBounds::BoundValues::eSize>(m_config.bounds);
+  std::shared_ptr<TrapezoidVolumeBounds> volumeBounds = std::make_shared<TrapezoidVolumeBounds>(bArray);
+
+  std::unique_ptr<Acts::TrackingVolume> trackingVolume = 
+      std::make_unique<Acts::TrackingVolume>(m_config.transform, volumeBounds, m_config.name);
+
+  // Add the surfaces to the tracking volume
+  for (auto& surface : m_config.mlSurfaces) {
+    trackingVolume->addSurface(surface);
+  }
+
+  auto [protoAxisA, expansionA] = m_config.binning.at(0);
+  auto [protoAxisB, expansionB] = m_config.binning.at(1);
+
+  //Use TryAll Navigation Policy for the portals and acceleration structure based on surface array for the sensitive surfaces
+
+  Acts::TryAllNavigationPolicy::Config tryAllConfig;
+  tryAllConfig.portals = true;
+  tryAllConfig.sensitives = false;
+
+  Acts::TryAllNavigationPolicy tryAllPolicy(gctx, *trackingVolume.get(), *m_logger, tryAllConfig);
+
+  //Configure the navigation policy with the binning for the grid for the sensitive surfaces
+  Acts::MultiLayerNavigationPolicy::Config navConfig;
+  navConfig.layerType = Acts::MultiLayerNavigationPolicy::LayerType::Plane;
+  navConfig.bins = {protoAxisA.getAxis().getNBins(), protoAxisB.getAxis().getNBins()};
+  navConfig.binExtension = {expansionA, expansionB};
+  navConfig.axisDir = m_config.normalDir;
+
+  Acts::MultiLayerNavigationPolicy navPolicy(gctx, *trackingVolume.get(), *m_logger, navConfig);
+
+
+
+  // Set the Navigation Policy for the tracking volume using the factory
+  std::function<std::unique_ptr<Acts::INavigationPolicy>(
+    const GeometryContext&, const TrackingVolume&, const Logger&)>
+    factory = Acts::NavigationPolicyFactory::make()
+                  .add<Acts::TryAllNavigationPolicy>(tryAllConfig)         // no arguments
+                  .add<Acts::MultiLayerNavigationPolicy>(navConfig);  // config struct as argument
+
+ 
+  auto policyBase = factory(gctx, *trackingVolume.get(), *m_logger);
+
+  trackingVolume->setNavigationPolicy(std::move(policyBase));
+  
+
+  return trackingVolume;
+
+}
+
