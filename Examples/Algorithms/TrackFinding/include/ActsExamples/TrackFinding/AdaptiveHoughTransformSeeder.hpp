@@ -31,11 +31,11 @@
 #include <cstddef>
 #include <memory>
 #include <numbers>
+#include <stack>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <stack>
 
 namespace ActsExamples {
 struct AlgorithmContext;
@@ -161,7 +161,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
                                  // should not go beyond
 
     unsigned threshold =
-        5;  // number of lines passing section for it to be still considered
+        8;  // number of lines passing section for it to be still considered
 
     bool deduplicate = true;  // when adding solutions try avoiding duplicates
 
@@ -187,10 +187,17 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
 
   // information that is needed for each measurement
   struct PreprocessedMeasurement {
+    /// Construct the measurement used internally
+    ///
+    /// @param ir inverse of radius
+    /// @param p azimuthal angle
+    /// @param l link to space point
+    PreprocessedMeasurement(double ir, double p, Acts::SourceLink l)
+        : invr(ir), phi(p), link(l) {}
     double invr;
     double phi;
     Acts::SourceLink link;
-};
+    };
 
   /// Construct the seeding algorithm.
   ///
@@ -225,9 +232,9 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @brief process sections on the stack
   /// and qualifying them for further division, discarding them or moving to
   /// solutions vector
-  /// @arg sections is the stack of sectoins to consider
-  /// @arg solutions is the output set of sections
-  /// @arg measurements are input measurements
+  /// @param sections is the stack of sectoins to consider
+  /// @param solutions is the output set of sections
+  /// @param measurements are input measurements
   void processStackHead(
       std::stack<AccumulatorSection>& sections,
       std::vector<AccumulatorSection>& solutions,
@@ -236,24 +243,23 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
   /// @brief assign measurements to the section
   /// @warning the sections needs to have already indices of measurements to consider
   /// @warning from previous iteration
-  /// @arg sections section to be processed
-  /// @arg vector of measurements - indices in the section need to point to this vector
+  /// @param sections section to be processed
+  /// @param vector of measurements - indices in the section need to point to this vector
   void updateSection(AccumulatorSection& section,
                      const std::vector<PreprocessedMeasurement>& input) const;
 
   /// @brief check if lines intersect in the section
   /// modifies the section leaving only indices of measurements that do so
-  /// @arg section - the section to check, 
-  /// @arg measurements - the measurements that are pointed to by indices in section
+  /// @param section - the section to check
+  /// @param measurements - the measurements that are pointed to by indices in section
   bool passIntersectionsCheck(
       const AccumulatorSection& section,
       const std::vector<PreprocessedMeasurement>& measurements) const;
 
-  
   /// @brief  add solution to the solutions vector
   /// depending on options it may eliminate trivial duplicates
-  /// @arg s - the solution to be potentially added
-  /// @arg solutions - the output solutions set
+  /// @param s - the solution to be potentially added
+  /// @param solutions - the output solutions set
   void addSolution(AccumulatorSection&& s,
                    std::vector<AccumulatorSection>& output) const;
 };

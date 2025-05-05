@@ -20,9 +20,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/GbtsSeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
-#include "ActsExamples/TrackFinding/AdaptiveHoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/MuonHoughSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
@@ -183,9 +183,10 @@ void addTrackFinding(Context& ctx) {
       localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-        ActsExamples::AdaptiveHoughTransformSeeder, mex, "AdaptiveHoughTransformSeeder",
-        inputSpacePoints, outputSeeds, outputProtoTracks, trackingGeometry,
-        qOverPtMin, qOverPtMinBinSize, phiMinBinSize, threshold, deduplicate, requireIntersections, inverseA);
+      ActsExamples::AdaptiveHoughTransformSeeder, mex,
+      "AdaptiveHoughTransformSeeder", inputSpacePoints, outputSeeds,
+      outputProtoTracks, trackingGeometry, qOverPtMin, qOverPtMinBinSize,
+      phiMinBinSize, threshold, deduplicate, requireIntersections, inverseA);
   
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MuonHoughSeeder, mex,
                                 "MuonHoughSeeder", inSimHits, inDriftCircles);

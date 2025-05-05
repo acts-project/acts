@@ -137,7 +137,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
                           -std::numbers::pi, -config().qOverPtMin)});
 
   // all the measurements should be considered at start
-  // therfore indices of all of them are stored
+  // therefore indices of all of them are stored
   // additional loop over regions will wrap this
   sectionsStack.top().indices().resize(measurements.size());
   std::iota(std::begin(sectionsStack.top().indices()),
@@ -193,7 +193,7 @@ void AdaptiveHoughTransformSeeder::processStackHead(
 
   // check if it is an ~empty section
   if (section.count() < config().threshold) {
-    ACTS_DEBUG("Failed threshold check");
+    ACTS_VERBOSE("Failed threshold check");
     sections.pop();
     return;
   }
@@ -268,7 +268,7 @@ bool AdaptiveHoughTransformSeeder::passIntersectionsCheck(
                         config().inverseA;
 
       const double adif = a1 - a2;
-      if (std::fabs(adif) < 1e-5 ) {  // Parallel lines, need to skip
+      if (std::abs(adif) < 1e-5) {  // Parallel lines, need to skip
         continue;
       }
       const double bdif = b2 - b1;

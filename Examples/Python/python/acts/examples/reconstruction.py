@@ -285,7 +285,8 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
-    adaptiveHoughTransformConfig: Optional[acts.examples.AdaptiveHoughTransformSeeder.Config] = None,
+    adaptiveHoughTransformConfig: Optional[
+        acts.examples.AdaptiveHoughTransformSeeder.Config] = None,
     hashingTrainingConfigArg: Optional[
         HashingTrainingConfigArg
     ] = HashingTrainingConfigArg(),
@@ -421,14 +422,14 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.AdaptiveHoughTransform:
             logger.info("Using Hough Transform seeding")
             adaptiveHoughTransformConfig = (
-               adaptiveHoughTransformConfig
-               or acts.examples.AdaptiveHoughTransformSeeder.Config()
+                adaptiveHoughTransformConfig
+                or acts.examples.AdaptiveHoughTransformSeeder.Config()
             )
             adaptiveHoughTransformConfig.inputSpacePoints = [spacePoints]
             adaptiveHoughTransformConfig.outputProtoTracks = "prototracks"
             adaptiveHoughTransformConfig.outputSeeds = "seeds"
             adaptiveHoughTransformConfig.trackingGeometry = trackingGeometry
-            seeds = addAdaptiveHoughTransformSeeding(s, adaptiveHoughTransformConfig, logLevel=acts.logging.DEBUG)
+            seeds = addAdaptiveHoughTransformSeeding(s, adaptiveHoughTransformConfig, logLevel=logLevel)
         elif seedingAlgorithm == SeedingAlgorithm.Gbts:
             logger.info("Using Gbts seeding")
             # output of algs changed, only one output now
