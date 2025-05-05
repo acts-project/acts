@@ -109,10 +109,10 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   ProtoVertexContainer protoVertices;
 
   // assumes the begin/end iterator references the particles container
-  auto addProtoVertex = [&](const std::vector<TrackIndex>& vtxTracks) {
+  auto addProtoVertex = [&](const std::vector<TrackIndex>& vertexTracks) {
     ProtoVertex protoVertex;
-    protoVertex.reserve(vtxTracks.size());
-    for (const auto& track : vtxTracks) {
+    protoVertex.reserve(vertexTracks.size());
+    for (const auto& track : vertexTracks) {
       protoVertex.push_back(track);
     }
     protoVertices.push_back(std::move(protoVertex));
@@ -121,32 +121,33 @@ ProcessCode TruthVertexFinder::execute(const AlgorithmContext& ctx) const {
   if (m_cfg.excludeSecondaries) {
     // if secondaries are excluded, the `separateSecondaries` flag has no effect
     // since there will be no secondary vertices to separate
-    for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-      if (vtxId.vertexSecondary() != 0u) {
+    for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+      if (vertexId.vertexSecondary() != 0u) {
         continue;
       }
-      addProtoVertex(vtxTracks);
+      addProtoVertex(vertexTracks);
     }
   } else {
     // particles from secondary vertices should be included
     if (m_cfg.separateSecondaries) {
       // secondary particles are added to separate secondary vertices
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-        addProtoVertex(vtxTracks);
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+        addProtoVertex(vertexTracks);
       }
     } else {
       // secondary particles are included in the primary vertex
 
       std::unordered_map<SimVertexBarcode, std::vector<TrackIndex>>
           protoVertexTrackMap2;
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap) {
-        auto vtxId2 = SimVertexBarcode(vtxId).setVertexSecondary(0);
-        protoVertexTrackMap2[vtxId2].insert(protoVertexTrackMap2[vtxId].end(),
-                                            vtxTracks.begin(), vtxTracks.end());
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap) {
+        auto vertexId2 = SimVertexBarcode(vertexId).setVertexSecondary(0);
+        auto& vertexTracks2 = protoVertexTrackMap2[vertexId2];
+        vertexTracks2.insert(vertexTracks2.end(), vertexTracks.begin(),
+                             vertexTracks.end());
       }
 
-      for (auto&& [vtxId, vtxTracks] : protoVertexTrackMap2) {
-        addProtoVertex(vtxTracks);
+      for (auto&& [vertexId, vertexTracks] : protoVertexTrackMap2) {
+        addProtoVertex(vertexTracks);
       }
     }
   }
