@@ -21,12 +21,17 @@ class FullyConnectedGraphConstructor : public GraphConstructionBase {
     // Due to O(n^2) the algorithm can be configured to fail above a certain
     // graph size.
     std::size_t maxGraphSize = 1000;
+    std::size_t maxOutEdges = std::numeric_limits<std::size_t>::max();
 
     // Only connect edges up to this delta R
     float maxDeltaR = std::numeric_limits<float>::infinity();
+    float maxDeltaZ = std::numeric_limits<float>::infinity();
 
     // Offset of the r feature in the input features
     std::size_t rOffset = 0;
+    std::size_t phiOffset = 1;
+    std::size_t zOffset = 2;
+    std::size_t etaOffset = 3;
 
     // Scales (used for edge feature building)
     float rScale = 1.0;

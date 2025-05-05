@@ -62,33 +62,83 @@ FullyConnectedGraphConstructor::operator()(
   }
 
   // Build fully connected edges
-  std::vector<std::int64_t> edgeListVector;
-  edgeListVector.reserve(numEdges * 2);
+  std::vector<std::tuple<std::int64_t, std::int64_t, float>> edgeData;
+  edgeData.reserve(numEdges);
   std::size_t skipped = 0;
   for (auto i = 0ul; i < numNodes; ++i) {
     for (auto j = i + 1; j < numNodes; ++j) {
       auto ri = inputValues.at(i * numAllFeatures + m_cfg.rOffset);
       auto rj = inputValues.at(j * numAllFeatures + m_cfg.rOffset);
-      if (std::abs(ri - rj) * m_cfg.rScale > m_cfg.maxDeltaR) {
+      auto zi = inputValues.at(i * numAllFeatures + m_cfg.zOffset);
+      auto zj = inputValues.at(j * numAllFeatures + m_cfg.zOffset);
+
+      auto dr = std::abs(ri - rj) * m_cfg.rScale;
+      auto dz = std::abs(zi - zj) * m_cfg.zScale;
+      if (dr > m_cfg.maxDeltaR || dz > m_cfg.maxDeltaZ) {
         skipped++;
         continue;
       }
 
+      auto dist = std::sqrt(dr * dr + dz * dz);
+
       if (ri < rj) {
-        edgeListVector.push_back(i);
-        edgeListVector.push_back(j);
+        edgeData.emplace_back(i, j, dist);
       } else {
-        edgeListVector.push_back(j);
-        edgeListVector.push_back(i);
+        edgeData.emplace_back(j, i, dist);
       }
     }
   }
 
-  numEdges = edgeListVector.size() / 2;
+  if (m_cfg.maxOutEdges < std::numeric_limits<std::size_t>::max()) {
+    ACTS_DEBUG("Filtering edges to only keep the "
+               << m_cfg.maxOutEdges << " closest edges per node");
+
+    // Sort the edges by src node and then by distance
+    std::sort(edgeData.begin(), edgeData.end(),
+              [](const auto &lhs, const auto &rhs) {
+                if (std::get<0>(lhs) == std::get<0>(rhs)) {
+                  return std::get<2>(lhs) < std::get<2>(rhs);
+                }
+                return std::get<0>(lhs) < std::get<0>(rhs);
+              });
+
+    // Only keep the N shortest edges per src node
+    std::vector<std::size_t> nOutEdges(numNodes, 0);
+    edgeData.erase(
+        std::remove_if(edgeData.begin(), edgeData.end(),
+                       [&nOutEdges, this](const auto &edge) {
+                         auto src = std::get<0>(edge);
+                         nOutEdges.at(src)++;
+                         if (nOutEdges.at(src) <= m_cfg.maxOutEdges) {
+                           return false;
+                         }
+                         return true;
+                       }),
+        edgeData.end());
+  }
+
+  // Check if we have any edges
+  if (edgeData.empty()) {
+    ACTS_WARNING("No edges created, skipping graph construction");
+    throw NoEdgesError{};
+  }
+
+  numEdges = edgeData.size();
   ACTS_DEBUG("Built " << numEdges << " edges, skipped " << skipped);
 
+  // Bring the edge list into the right format
+  std::vector<std::int64_t> edgeListVector;
+  edgeListVector.reserve(numEdges * 2);
+  std::transform(edgeData.begin(), edgeData.end(),
+                 std::back_inserter(edgeListVector),
+                 [](const auto &edge) { return std::get<0>(edge); });
+  std::transform(edgeData.begin(), edgeData.end(),
+                 std::back_inserter(edgeListVector),
+                 [](const auto &edge) { return std::get<1>(edge); });
+
+  // Convert the edge list to a tensor
   auto edgeList =
-      detail::vectorToTensor2D(edgeListVector, 2).transpose(0, 1).contiguous();
+      detail::vectorToTensor2D(edgeListVector, numEdges).contiguous();
   assert(edgeList.size(0) == 2);
   assert(edgeList.size(1) == static_cast<std::int64_t>(numEdges));
 
@@ -104,6 +154,12 @@ FullyConnectedGraphConstructor::operator()(
     return angle;
   };
 
+  // Shorthand for the feature offsets
+  const auto r = m_cfg.rOffset;
+  const auto phi = m_cfg.phiOffset;
+  const auto z = m_cfg.zOffset;
+  const auto eta = m_cfg.etaOffset;
+
   // TODO Unify edge feature building, this is only to get it in fast
   constexpr static std::size_t numEdgeFeatures = 6;
   std::vector<float> edgeFeatureVector;
@@ -118,18 +174,18 @@ FullyConnectedGraphConstructor::operator()(
     const float *srcFeatures = inputValues.data() + src * numAllFeatures;
     const float *dstFeatures = inputValues.data() + dst * numAllFeatures;
 
-    const float deltaR = dstFeatures[0] - srcFeatures[0];
+    const float deltaR = dstFeatures[r] - srcFeatures[r];
     const float deltaPhi =
-        resetAngle((dstFeatures[1] - srcFeatures[1]) * m_cfg.phiScale) /
+        resetAngle((dstFeatures[phi] - srcFeatures[phi]) * m_cfg.phiScale) /
         m_cfg.phiScale;
-    const float deltaZ = dstFeatures[2] - srcFeatures[2];
-    const float deltaEta = dstFeatures[3] - srcFeatures[3];
+    const float deltaZ = dstFeatures[z] - srcFeatures[z];
+    const float deltaEta = dstFeatures[eta] - srcFeatures[eta];
     float phislope = 0.0;
     float rphislope = 0.0;
 
     if (deltaR != 0.0) {
       phislope = std::clamp(deltaPhi / deltaR, -100.f, 100.f);
-      float avgR = 0.5f * (dstFeatures[0] + srcFeatures[0]);
+      float avgR = 0.5f * (dstFeatures[r] + srcFeatures[r]);
       rphislope = avgR * phislope;
     }
 
