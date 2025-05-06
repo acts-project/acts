@@ -10,6 +10,7 @@
 #include "Acts/Plugins/ExaTrkX/detail/ConnectedComponents.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.cuh"
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <c10/cuda/CUDAGuard.h>
@@ -28,10 +29,10 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   assert(edgeTensor.size(0) == 2);
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdges = static_cast<std::size_t>(edgeTensor.size(1));
+  auto numEdges = static_cast<std::size_t>(edgeTensor.size(1));
 
   if (numEdges == 0) {
-    ACTS_WARNING("No edges remained after edge classification");
+    ACTS_DEBUG("No edges remained after edge classification");
     return {};
   }
 
@@ -45,7 +46,35 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
         .count();
   };
 
-  int* cudaLabels;
+  if (m_cfg.doJunctionRemoval) {
+    const auto scoreTensor =
+        std::any_cast<torch::Tensor>(weights).to(torch::kCUDA);
+    assert(scoreTensor.size(0) == edgeTensor.size(1));
+    auto cudaScorePtr = scoreTensor.data_ptr<float>();
+
+    ACTS_DEBUG("Do junction removal...");
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto [cudaSrcPtrJr, numEdgesOut] = detail::junctionRemovalCuda(
+        numEdges, numSpacepoints, cudaScorePtr, cudaSrcPtr, cudaTgtPtr, stream);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    cudaSrcPtr = cudaSrcPtrJr;
+    cudaTgtPtr = cudaSrcPtrJr + numEdgesOut;
+
+    if (numEdgesOut == 0) {
+      ACTS_WARNING(
+          "No edges remained after junction removal, this should not happen!");
+      ACTS_CUDA_CHECK(cudaFreeAsync(cudaSrcPtrJr, stream));
+      ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
+      return {};
+    }
+
+    ACTS_DEBUG("Removed " << numEdges - numEdgesOut
+                          << " edges in junction removal");
+    ACTS_DEBUG("Junction removal took " << ms(t0, t1) << " ms");
+    numEdges = numEdgesOut;
+  }
+
+  int* cudaLabels{};
   ACTS_CUDA_CHECK(
       cudaMallocAsync(&cudaLabels, numSpacepoints * sizeof(int), stream));
 
@@ -63,7 +92,13 @@ std::vector<std::vector<int>> CudaTrackBuilding::operator()(
   ACTS_CUDA_CHECK(cudaMemcpyAsync(trackLabels.data(), cudaLabels,
                                   numSpacepoints * sizeof(int),
                                   cudaMemcpyDeviceToHost, stream));
+
+  // Free Memory
   ACTS_CUDA_CHECK(cudaFreeAsync(cudaLabels, stream));
+  if (m_cfg.doJunctionRemoval) {
+    ACTS_CUDA_CHECK(cudaFreeAsync(cudaSrcPtr, stream));
+  }
+
   ACTS_CUDA_CHECK(cudaStreamSynchronize(stream));
   ACTS_CUDA_CHECK(cudaGetLastError());
 

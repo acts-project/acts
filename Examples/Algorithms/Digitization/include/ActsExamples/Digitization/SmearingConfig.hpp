@@ -25,8 +25,13 @@ struct ParameterSmearingConfig {
   bool forcePositiveValues = false;
 };
 
-// The configured indices must be unique, i.e. each one can only appear once
-// in a smearer configuration.
-using SmearingConfig = std::vector<ParameterSmearingConfig>;
+struct SmearingConfig {
+  /// The configured indices must be unique, i.e. each one can only appear once
+  /// in a smearer configuration.
+  std::vector<ParameterSmearingConfig> params;
+  /// The maximum number of retries to find a valid smeared value
+  /// before giving up and returning an error.
+  std::size_t maxRetries = 0;
+};
 
 }  // namespace ActsExamples

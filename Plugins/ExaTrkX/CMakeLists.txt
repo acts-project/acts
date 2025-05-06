@@ -2,7 +2,10 @@ add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
-    target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+    )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
