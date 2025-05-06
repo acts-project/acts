@@ -155,7 +155,7 @@ OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
   ACTS_DEBUG("Create score tensor");
   auto scores = torch::empty(
       edgeIndex.size(1),
-      torch::TensorOptions().device(execContext.device).dtype(torch::kFloat32));
+      torch::TensorOptions().device(torchDevice).dtype(torch::kFloat32));
   if (m_model->GetOutputTypeInfo(0)
           .GetTensorTypeAndShapeInfo()
           .GetDimensionsCount() == 2) {
