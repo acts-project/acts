@@ -74,9 +74,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
         0 * Acts::UnitConstants::e / Acts::UnitConstants::GeV,
         1 * Acts::UnitConstants::ns};
     /// Initial sigma(q/pt) for the track parameters.
+    /// @note The resulting q/p sigma is added to the one in `initialSigmas`
     double initialSigmaQoverPt =
         0.1 * Acts::UnitConstants::e / Acts::UnitConstants::GeV;
     /// Initial sigma(pt)/pt for the track parameters.
+    /// @note The resulting q/p sigma is added to the one in `initialSigmas`
     double initialSigmaPtRel = 0.1;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
