@@ -14,7 +14,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building traccc as part of the Acts project")
 
-set(TRACCC_VERSION "${_acts_traccc_version}")
+set(TRACCC_VERSION "${_acts_traccc_minimal_version}")
 
 # Declare where to get traccc from.
 FetchContent_Declare(traccc SYSTEM ${ACTS_TRACCC_SOURCE})

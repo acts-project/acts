@@ -14,7 +14,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building Covfie as part of the Acts project")
 
-set(COVFIE_VERSION "v${_acts_covfie_version}")
+set(COVFIE_VERSION "v${_acts_covfie_minimal_version}")
 
 # Declare where to get covfie from.
 FetchContent_Declare(covfie SYSTEM ${ACTS_COVFIE_SOURCE})

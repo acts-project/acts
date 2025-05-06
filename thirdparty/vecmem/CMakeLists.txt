@@ -14,7 +14,7 @@ include(FetchContent)
 # Tell the user what's happening.
 message(STATUS "Building VecMem as part of the Acts project")
 
-set(VECMEM_VERSION "v${_acts_vecmem_version}")
+set(VECMEM_VERSION "v${_acts_vecmem_minimal_version}")
 
 # Declare where to get VecMem from.
 FetchContent_Declare(VecMem SYSTEM ${ACTS_VECMEM_SOURCE})
