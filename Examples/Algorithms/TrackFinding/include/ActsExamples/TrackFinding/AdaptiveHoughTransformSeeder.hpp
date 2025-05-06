@@ -111,10 +111,10 @@ class AccumulatorSection {
   double yBegin() const { return m_yBegin; }
 
  private:
-  double m_xSize;
-  double m_ySize;
-  double m_xBegin;
-  double m_yBegin;
+  double m_xSize = 0;
+  double m_ySize = 0;
+  double m_xBegin = 0;
+  double m_yBegin = 0;
   unsigned m_divisionLevel =
       0;  // number of times the starting section was already divided
   std::vector<unsigned>
@@ -175,7 +175,7 @@ class AdaptiveHoughTransformSeeder final : public IAlgorithm {
     /// @param p azimuthal angle
     /// @param l link to space point
     PreprocessedMeasurement(double ir, double p, Acts::SourceLink l)
-        : invr(ir), phi(p), link(l) {}
+        : invr(ir), phi(p), link(std::move(l)) {}
     double invr;
     double phi;
     Acts::SourceLink link;

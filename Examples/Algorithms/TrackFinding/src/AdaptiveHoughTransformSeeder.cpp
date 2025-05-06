@@ -144,7 +144,7 @@ ProcessCode AdaptiveHoughTransformSeeder::execute(
             std::end(sectionsStack.top().indices()), 0);
 
   std::vector<AccumulatorSection> solutions;
-  while (not sectionsStack.empty()) {
+  while (! sectionsStack.empty()) {
     ACTS_VERBOSE("Processing AccumulatorSection "
                  << sectionsStack.top().xBegin() << " "
                  << sectionsStack.top().xSize() << " "
