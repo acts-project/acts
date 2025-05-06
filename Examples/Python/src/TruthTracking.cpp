@@ -120,10 +120,10 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputTracks,
-      inputParticles, inputMeasurementParticlesMap, outputProtoVertices,
-      excludeSecondaries, separateSecondaries, trackMatchingRatio);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthVertexFinder, mex,
+                                "TruthVertexFinder", inputTracks,
+                                inputTrackParticleMatching, outputProtoVertices,
+                                excludeSecondaries, separateSecondaries);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackModifier, mex,
                                 "TrackModifier", inputTracks, outputTracks,

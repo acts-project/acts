@@ -10,49 +10,34 @@
 #include "Acts/Plugins/ExaTrkX/detail/CudaUtils.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/JunctionRemoval.hpp"
 
+#include <thrust/count.h>
 #include <thrust/execution_policy.h>
 #include <thrust/scan.h>
 #include <thrust/transform_scan.h>
 
 namespace Acts::detail {
 
-__global__ void findNumInOutEdge(std::size_t nEdges, const float *scores,
+__global__ void findNumInOutEdge(std::size_t nEdges,
                                  const std::int64_t *srcNodes,
                                  const std::int64_t *dstNodes, int *numInEdges,
                                  int *numOutEdges) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nEdges) {
     return;
   }
 
-  int srcNode = srcNodes[i];
-  int dstNode = dstNodes[i];
+  auto srcNode = srcNodes[i];
+  auto dstNode = dstNodes[i];
 
   atomicAdd(&numInEdges[dstNode], 1);
   atomicAdd(&numOutEdges[srcNode], 1);
-}
-
-__global__ void keepOnlyJunctions(std::size_t nNodes, int *numInEdges,
-                                  int *numOutEdges) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i >= nNodes) {
-    return;
-  }
-
-  // Set the number of in and out edges to 0 for non-junction cases
-  if (numInEdges[i] <= 1) {
-    numInEdges[i] = 0;
-  }
-  if (numOutEdges[i] <= 1) {
-    numOutEdges[i] = 0;
-  }
 }
 
 __global__ void fillJunctionEdges(std::size_t nEdges,
                                   const std::int64_t *edgeNodes,
                                   const int *numEdgesPrefixSum,
                                   int *junctionEdges, int *junctionEdgeOffset) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nEdges) {
     return;
   }
@@ -61,19 +46,12 @@ __global__ void fillJunctionEdges(std::size_t nEdges,
   int base = numEdgesPrefixSum[node];
   int numEdgesNode = numEdgesPrefixSum[node + 1] - base;
 
-  if (numEdgesNode == 1) {
-    printf("[t%d, b%d] WARNING: node %d is not a junction\n", threadIdx.x,
-           blockIdx.x, node);
-    return;
-  }
+  // Zero is allowed, because we set 1 to 0 before
+  assert(numEdgesNode != 1 && "node is not a junction");
 
   if (numEdgesNode != 0) {
     int offset = atomicAdd(&junctionEdgeOffset[node], 1);
-    if (offset >= numEdgesNode) {
-      printf("[t%d, b%d] WARNING: inconsistent edge count for node %d\n",
-             threadIdx.x, blockIdx.x, node);
-      return;
-    }
+    assert(offset < numEdgesNode && "inconsistent offset with number of edges");
     junctionEdges[base + offset] = i;
   }
 }
@@ -82,7 +60,7 @@ __global__ void fillEdgeMask(std::size_t nNodes, const float *scores,
                              const int *numEdgesPrefixSum,
                              const int *junctionEdges,
                              bool *edgesToRemoveMask) {
-  const int i = blockIdx.x * blockDim.x + threadIdx.x;
+  const std::size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i >= nNodes) {
     return;
   }
@@ -112,12 +90,26 @@ __global__ void fillEdgeMask(std::size_t nNodes, const float *scores,
   }
 }
 
-struct CastBoolToIntNot {
-  int __device__ operator()(bool b) { return static_cast<int>(!b); }
-};
-
 struct LogicalNotPredicate {
   bool __device__ operator()(bool b) { return !b; }
+};
+
+// When we perform the prefix sum over the number of outgoing/incoming edges,
+// we only want to count edges that are part of a junction. The requirement for
+// this is that there are >= 2 outgoing/incoming edges.
+// Therefore, we design the accumulation operator in a way, that it returns zero
+// for non-junction cases
+// This allows to skip a preprocessing step to set the edge count for
+// non-junction nodes explicitly to zero Also, it should work for the prefix sum
+// values, since those will only ever be 0 or >= 2 due to the above requirements
+// A informal proof of associativity is given in
+// https://github.com/acts-project/acts/pull/4223
+struct AccumulateJunctionEdges {
+  int __device__ operator()(int a, int b) const {
+    a = a < 2 ? 0 : a;
+    b = b < 2 ? 0 : b;
+    return a + b;
+  }
 };
 
 std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
@@ -141,20 +133,17 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
   const dim3 blockSize = 512;
   const dim3 gridSizeEdges = (nEdges + blockSize.x - 1) / blockSize.x;
   findNumInOutEdge<<<gridSizeEdges, blockSize, 0, stream>>>(
-      nEdges, scores, srcNodes, dstNodes, numInEdges, numOutEdges);
+      nEdges, srcNodes, dstNodes, numInEdges, numOutEdges);
   ACTS_CUDA_CHECK(cudaGetLastError());
 
-  // Launch the kernel to keep only junctions
-  const dim3 gridSizeNodes = (nNodes + blockSize.x - 1) / blockSize.x;
-  keepOnlyJunctions<<<gridSizeNodes, blockSize, 0, stream>>>(nNodes, numInEdges,
-                                                             numOutEdges);
-  ACTS_CUDA_CHECK(cudaGetLastError());
-
-  // Perform prefix sum on the number of in and out edges
+  // Perform prefix sum on the number of in and out edges with a special
+  // reduction that does not include edges from non-junction nodes
   thrust::exclusive_scan(thrust::device.on(stream), numInEdges,
-                         numInEdges + nNodes + 1, numInEdges);
+                         numInEdges + nNodes + 1, numInEdges, 0,
+                         AccumulateJunctionEdges{});
   thrust::exclusive_scan(thrust::device.on(stream), numOutEdges,
-                         numOutEdges + nNodes + 1, numOutEdges);
+                         numOutEdges + nNodes + 1, numOutEdges, 0,
+                         AccumulateJunctionEdges{});
 
   // Find the total number of in and out edges involved in junctions
   int numJunctionInEdges{}, numJunctionOutEdges{};
@@ -199,6 +188,7 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
       cudaMemsetAsync(edgesToRemoveMask, 0, nEdges * sizeof(bool), stream));
 
   // Fill the edge mask with the edges to be removed
+  const dim3 gridSizeNodes = (nNodes + blockSize.x - 1) / blockSize.x;
   fillEdgeMask<<<gridSizeNodes, blockSize, 0, stream>>>(
       nNodes, scores, numInEdges, junctionInEdges, edgesToRemoveMask);
   ACTS_CUDA_CHECK(cudaGetLastError());
@@ -216,10 +206,9 @@ std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
 
   // Compactify the edges based on the edge mask
   int nEdgesToRemove =
-      thrust::reduce(thrust::device.on(stream), edgesToRemoveMask,
-                     edgesToRemoveMask + nEdges, 0, thrust::plus<int>());
+      thrust::count(thrust::device.on(stream), edgesToRemoveMask,
+                    edgesToRemoveMask + nEdges, true);
   int nEdgesAfter = nEdges - nEdgesToRemove;
-
   // Allocate memory for the new srcNodes and dstNodes arrays
   std::int64_t *newSrcNodes{};
   ACTS_CUDA_CHECK(cudaMallocAsync(

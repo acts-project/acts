@@ -15,9 +15,16 @@
 
 namespace Acts::detail {
 
+/// Function to perform the basic junction reomval algorithm on a graph with
+/// scored edges: In case a node has more than one in/out edge, only the
+/// edge with the largest score is kept.
+/// NOTE: The function expects pointers on the device
+/// NOTE: The function returns a pointer to device memory. The caller is
+/// responsible for freeing the memory with cudaFreeAsync(ptr, stream).
+/// TODO: Use some type of RAII type in the future
 std::pair<std::int64_t *, std::size_t> junctionRemovalCuda(
     std::size_t nEdges, std::size_t nNodes, const float *scores,
     const std::int64_t *srcNodes, const std::int64_t *dstNodes,
     cudaStream_t stream);
 
-}
+}  // namespace Acts::detail

@@ -73,26 +73,26 @@ void testJunctionRemoval(const Vi &srcNodes, const Vi &dstNodes,
   Vi idxs(nEdgesOut);
   std::iota(idxs.begin(), idxs.end(), 0);
   std::sort(idxs.begin(), idxs.end(), [&](int a, int b) {
-    if (srcNodesOut[a] != srcNodesOut[b]) {
-      return srcNodesOut[a] < srcNodesOut[b];
+    if (srcNodesOut.at(a) != srcNodesOut.at(b)) {
+      return srcNodesOut.at(a) < srcNodesOut.at(b);
     }
-    return dstNodesOut[a] < dstNodesOut[b];
+    return dstNodesOut.at(a) < dstNodesOut.at(b);
   });
 
   Vi srcNodesOutSorted(nEdgesOut);
   Vi dstNodesOutSorted(nEdgesOut);
   for (std::size_t i = 0; i < nEdgesOut; ++i) {
-    srcNodesOutSorted[i] = srcNodesOut[idxs[i]];
-    dstNodesOutSorted[i] = dstNodesOut[idxs[i]];
+    srcNodesOutSorted.at(i) = srcNodesOut.at(idxs.at(i));
+    dstNodesOutSorted.at(i) = dstNodesOut.at(idxs.at(i));
   }
 
   BOOST_REQUIRE_EQUAL(nEdgesOut, nExpectedEdges);
-  BOOST_CHECK_EQUAL_COLLECTIONS(srcNodesOut.begin(), srcNodesOut.end(),
-                                expectedSrcNodes.begin(),
-                                expectedSrcNodes.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(dstNodesOut.begin(), dstNodesOut.end(),
-                                expectedDstNodes.begin(),
-                                expectedDstNodes.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+      srcNodesOutSorted.begin(), srcNodesOutSorted.end(),
+      expectedSrcNodes.begin(), expectedSrcNodes.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+      dstNodesOutSorted.begin(), dstNodesOutSorted.end(),
+      expectedDstNodes.begin(), expectedDstNodes.end());
 }
 
 BOOST_AUTO_TEST_CASE(test_no_junction) {
@@ -150,8 +150,8 @@ BOOST_AUTO_TEST_CASE(test_junction_leftover_edge) {
   Vi srcNodes = {0, 1, 3, j};
   Vi dstNodes = {1, j, j, 4};
   Vf scores = {0.9f, 0.1f, 0.9f, 0.9f};
-  Vi expectedSrcNodes = {0, 3, j};
-  Vi expectedDstNodes = {1, j, 4};
+  Vi expectedSrcNodes = {0, j, 3};
+  Vi expectedDstNodes = {1, 4, j};
   testJunctionRemoval(srcNodes, dstNodes, scores, expectedSrcNodes,
                       expectedDstNodes);
 }
