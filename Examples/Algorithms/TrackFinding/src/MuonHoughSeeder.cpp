@@ -20,7 +20,6 @@
 #include "TBox.h"
 #include "TCanvas.h"
 #include "TH2D.h"
-#include "TLatex.h"
 #include "TLegend.h"
 #include "TMarker.h"
 #include "TStyle.h"
@@ -80,7 +79,7 @@ MuonHoughSeeder::MuonHoughSeeder(MuonHoughSeeder::Config cfg,
   m_outputMaxima.initialize(m_cfg.outHoughMax);
 }
 
-using PatternSeed = std::pair<double, double>;  // y0, tan theta
+MuonHoughSeeder::~MuonHoughSeeder() = default;
 
 ProcessCode MuonHoughSeeder::execute(const AlgorithmContext& ctx) const {
   // read the hits and circles
