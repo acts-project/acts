@@ -126,6 +126,7 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
   }
 
   const auto nHits = moduleIds.size();
+  assert(inputValues.size() % moduleIds.size() == 0);
   const auto nFeatures = inputValues.size() / moduleIds.size();
   auto &features = inputValues;
 
@@ -135,18 +136,13 @@ std::tuple<std::any, std::any, std::any> ModuleMapCuda::operator()(
                                << ", blockDim: " << blockDim.x);
 
   // Get stream if available, otherwise use default stream
-  cudaStream_t stream;
-#if 0
-  ACTS_CUDA_CHECK(cudaStreamCreate(&stream));
-#else
-  assert(execContext.stream);
+  cudaStream_t stream = cudaStreamLegacy;
   std::optional<c10::cuda::CUDAStreamGuard> streamGuard;
   if (execContext.stream) {
-    ACTS_VERBOSE("Got stream " << *execContext.stream);
+    ACTS_DEBUG("Got stream " << *execContext.stream);
     stream = execContext.stream->stream();
     streamGuard.emplace(*execContext.stream);
   }
-#endif
 
   /////////////////////////
   // Prepare input data
@@ -505,7 +501,7 @@ detail::CUDA_edge_data<float> ModuleMapCuda::makeEdges(
     ACTS_DEBUG("Allocate " << (2ul * nb_doublet_edges * sizeof(int)) * 1.0e-6
                            << " MB for edges");
     cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
-    cuda_reduced_M1_hits.emplace(nb_doublet_edges, stream);
+    cuda_reduced_M2_hits.emplace(nb_doublet_edges, stream);
 
     // Prefix sum to get the edge offset for each doublet
     thrust::exclusive_scan(thrust::device.on(stream), cuda_edge_sum.data(),
