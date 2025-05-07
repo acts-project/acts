@@ -1186,6 +1186,7 @@ def addSeedPerformanceWriters(
             inputParticles=selectedParticles,
             inputTrackParticleMatching="seed_particle_matching",
             inputParticleTrackMatching="particle_seed_matching",
+            inputParticleMeasurementsMap="particle_measurements_map",
             filePath=str(outputDirRoot / f"performance_seeding.root"),
         )
     )
@@ -1709,6 +1710,7 @@ def addTrackWriters(
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
+                inputParticleMeasurementsMap="particle_measurements_map",
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)
