@@ -22,11 +22,5 @@ set(ACTSVG_BUILD_PYTHON_BINDINGS
     "Build python bindings for actsvg if Acts python bindings are enabled"
 )
 
-set(ACTSVG_USE_SYSTEM_PYBIND11
-    ${ACTSVG_BUILD_PYTHON_BINDINGS}
-    CACHE BOOL
-    "Use system pybind11 if building python bindings for actsvg in order to keep consistency with ACTS"
-)
-
 # Now set up its build.
 FetchContent_MakeAvailable(actsvg)
