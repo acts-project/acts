@@ -20,7 +20,8 @@ namespace Acts {
 class CudaTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   struct Config {
-    // nothing yet
+    bool useOneBlockImplementation = true;
+    bool doJunctionRemoval = false;
   };
 
   CudaTrackBuilding(const Config &cfg, std::unique_ptr<const Logger> logger)

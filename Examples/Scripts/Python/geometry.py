@@ -30,8 +30,9 @@ def runGeometry(
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
+        ithread = 0
 
-        context = AlgorithmContext(ialg, ievt, eventStore)
+        context = AlgorithmContext(ialg, ievt, eventStore, ithread)
 
         for cdr in decorators:
             r = cdr.decorate(context)

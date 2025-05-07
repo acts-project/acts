@@ -20,12 +20,12 @@ env:
   CCACHE_DIR: ${{ github.workspace }}/ccache
   CCACHE_MAXSIZE: 500M
   CCACHE_KEY_SUFFIX: r2
-  DEPENDENCY_TAG: v5
+  DEPENDENCY_TAG: v9.0.0
 
 jobs:
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:63
+    container: ghcr.io/acts-project/ubuntu2404:74
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -36,15 +36,15 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
-        uses: actions/cache/restore@v4
         id: ccache-restore
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
@@ -57,13 +57,10 @@ jobs:
         # versions
         # Need to set git user & email for patching to work (GeoModel plugin)
         run: >
-          git config --global user.name 'CI' &&
-          git config --global user.email '<>' &&
           ccache -z &&
           cmake -B build -S .
           --preset=github-ci
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DPython_EXECUTABLE=$(which python3)
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
@@ -102,7 +99,6 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
@@ -111,9 +107,25 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
+      # We configure and build without ROOT in the same job to garantuee that we can use the ccache cache
+      - name: Configure (without ROOT)
+        run: >
+          ccache -z &&
+          rm -rf build &&
+          cmake -B build -S .
+          --preset=github-ci-no-root
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DPython_EXECUTABLE=$(which python3)
+
+      - name: Build (without ROOT)
+        run: cmake --build build
+
+      - name: ccache stats (without ROOT)
+        run: ccache -s
+
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:63
+    container: ghcr.io/acts-project/ubuntu2404:74
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -124,11 +136,10 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -143,17 +154,17 @@ jobs:
           PYTEST_MD_REPORT: true
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
-        run: >
+        run: |
           geant4-config --install-datasets
-          && source build/this_acts_withdeps.sh
-          && python3 -m pip install -r Examples/Python/tests/requirements.txt
-          && python3 -m pip install pytest-md-report
-          && pytest -rFsv -k "not exatrkx" -v
-          && cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
+          source build/this_acts_withdeps.sh
+          python3 -m pip install -r Examples/Python/tests/requirements.txt
+          python3 -m pip install pytest-md-report
+          pytest -rfExw -k "not exatrkx" -v
+          cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2404:63
+    container: ghcr.io/acts-project/ubuntu2404:74
     needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
@@ -166,11 +177,10 @@ jobs:
 
       - run: apt-get update && apt-get install -y time
 
-      - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-24.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -188,20 +198,22 @@ jobs:
 
       - name: Physics performance checks
         shell: bash
-        run: >
+        run: |
           echo "::group::Dependencies"
-          && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && python3 -m pip install histcmp==0.8.1 matplotlib
-          && python3 -m pip install -r Examples/Scripts/requirements.txt
-          && geant4-config --install-datasets
-          && venv_python=$(which python3)
-          && echo $venv_python
-          && source build/this_acts_withdeps.sh
-          && export PATH=$(dirname $venv_python):$PATH
-          && echo $PATH
-          && which python3
-          && echo "::endgroup::"
-          && CI/physmon/phys_perf_mon.sh all physmon
+          git config --global safe.directory "$GITHUB_WORKSPACE"
+          python3 -m pip install histcmp==0.8.1 matplotlib
+          python3 -m pip install -r Examples/Scripts/requirements.txt
+          geant4-config --install-datasets
+          venv_python=$(which python3)
+          echo $venv_python
+          echo "Pre-setup"
+          source build/this_acts_withdeps.sh
+          echo "Post-setup"
+          export PATH=$(dirname $venv_python):$PATH
+          which python3
+          echo $PATH
+          echo "::endgroup::"
+          CI/physmon/phys_perf_mon.sh all physmon
 
       - name: Post step summary
         if: always()
@@ -252,7 +264,7 @@ jobs:
           - image: ubuntu2404_clang19
             std: 20
             cxx: clang++-19
-    container: ghcr.io/acts-project/${{ matrix.image }}:75
+    container: ghcr.io/acts-project/${{ matrix.image }}:74
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -263,26 +275,23 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/ubuntu-22.04/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-
       - name: Install dependencies
-        run: CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          compiler: ${{ matrix.cxx }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ github.sha }}
+          key: ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-${{ github.sha }}
           restore-keys: |
-            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-
+            ccache-${{ runner.os  }}-${{ github.job }}-${{ env.CCACHE_KEY_SUFFIX }}-${{ matrix.image }}-${{ matrix.std }}-${{ matrix.cxx }}-
 
 
       - name: Configure
-        # setting CMAKE_CXX_STANDARD=20 is a workaround for a bug in the
-        # dd4hep CMake configuration that gets triggered on recent CMake
-        # versions
         run: >
           ccache -z &&
           cmake -B build -S .
@@ -290,7 +299,6 @@ jobs:
           -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
@@ -321,6 +329,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=${{ matrix.std }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
@@ -341,16 +350,11 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Print architecture
-        run: uname -p
-
-      - name: Set dependencies URL
-        run: echo "DEPENDENCY_URL=https://acts.web.cern.ch/ACTS/ci/macos-14/deps.${DEPENDENCY_TAG}.tar.zst" >> $GITHUB_ENV
-
       - name: Install dependencies
-        run: >
-          brew install cmake ninja ccache xerces-c
-          && CI/dependencies.sh
+        uses: ./.github/actions/dependencies
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          compiler: clang++
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
@@ -363,12 +367,10 @@ jobs:
 
       - name: Configure
         run: >
-          ccache -z
-          && cmake -B build -S .
+          ccache -z &&
+          cmake -B build -S .
           --preset=github-ci
-          -DCMAKE_PREFIX_PATH="${{ env.DEPENDENCY_DIR }}"
           -DCMAKE_INSTALL_PREFIX="${{ env.INSTALL_DIR }}"
-          -DPython_EXECUTABLE=$(which python3)
 
       - name: Build
         run: cmake --build build
@@ -403,7 +405,6 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build

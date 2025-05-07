@@ -8,6 +8,7 @@ import subprocess
 import sys
 import re
 import collections
+import shutil
 
 import pytest
 
@@ -182,7 +183,10 @@ def test_geant4(tmp_path, assert_root_hash):
             stderr=subprocess.STDOUT,
         )
     except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
+        if e.output is not None:
+            print(e.output.decode("utf-8"))
+        if e.stderr is not None:
+            print(e.stderr.decode("utf-8"))
         raise
 
     assert_csv_output(csv, "particles_simulated")
@@ -432,8 +436,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         seq,
         trk_geo,
         field,
-        digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        digiConfigFile=srcdir / "Examples/Configs/generic-digi-smearing-config.json",
         rnd=rnd,
     )
 
@@ -458,8 +461,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         field,
         *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
-        geoSelectionConfigFile=srcdir
-        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        geoSelectionConfigFile=srcdir / "Examples/Configs/generic-seeding-config.json",
         outputDirRoot=str(tmp_path),
     )
 
@@ -523,64 +525,6 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 50
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
-
-
-@pytest.mark.slow
-@pytest.mark.odd
-@pytest.mark.skipif(not hepmc3Enabled, reason="HepMC3 plugin not available")
-@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
-def test_event_recording(tmp_path):
-    script = (
-        Path(__file__).parent.parent.parent.parent
-        / "Examples"
-        / "Scripts"
-        / "Python"
-        / "event_recording.py"
-    )
-    assert script.exists()
-
-    env = os.environ.copy()
-    env["NEVENTS"] = "1"
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    try:
-        subprocess.check_call(
-            [sys.executable, str(script)],
-            cwd=tmp_path,
-            env=env,
-            stderr=subprocess.STDOUT,
-        )
-    except subprocess.CalledProcessError as e:
-        print(e.output.decode("utf-8"))
-        raise
-
-    from acts.examples.hepmc3 import HepMC3AsciiReader
-
-    out_path = tmp_path / "hepmc3"
-    # out_path.mkdir()
-
-    assert len([f for f in out_path.iterdir() if f.name.endswith("events.hepmc3")]) > 0
-    assert all([f.stat().st_size > 100 for f in out_path.iterdir()])
-
-    s = Sequencer(numThreads=1)
-
-    s.addReader(
-        HepMC3AsciiReader(
-            level=acts.logging.INFO,
-            inputDir=str(out_path),
-            inputStem="events",
-            outputEvents="hepmc-events",
-        )
-    )
-
-    alg = AssertCollectionExistsAlg(
-        "hepmc-events", name="check_alg", level=acts.logging.INFO
-    )
-    s.addAlgorithm(alg)
-
-    s.run()
-
-    assert alg.events_seen == 1
 
 
 @pytest.mark.parametrize("revFiltMomThresh", [0 * u.GeV, 1 * u.TeV])
@@ -968,17 +912,15 @@ def test_geometry_example(detectorFactory, aligned, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-DIGI_SHARE_DIR = (
-    Path(__file__).parent.parent.parent.parent
-    / "Examples/Algorithms/Digitization/share"
-)
+ACTS_DIR = Path(__file__).parent.parent.parent.parent
+CONFIG_DIR = ACTS_DIR / "Examples/Configs"
 
 
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1012,24 +954,16 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-smearing-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-smearing-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
         ),
         pytest.param(
-            (
-                getOpenDataDetectorDirectory()
-                / "config"
-                / "odd-digi-geometric-config.json"
-            ),
+            (ACTS_DIR / "Examples/Configs" / "odd-digi-geometric-config.json"),
             marks=[
                 pytest.mark.odd,
             ],
@@ -1040,14 +974,14 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 def test_digitization_example_input_parsing(digi_config_file):
     from acts.examples import readDigiConfigFromJson
 
-    acts.examples.readDigiConfigFromJson(str(digi_config_file))
+    readDigiConfigFromJson(str(digi_config_file))
 
 
 @pytest.mark.parametrize(
     "digi_config_file",
     [
-        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
-        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+        CONFIG_DIR / "generic-digi-smearing-config.json",
+        CONFIG_DIR / "generic-digi-geometric-config.json",
     ],
     ids=["smeared", "geometric"],
 )
@@ -1107,7 +1041,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
 
     input = (
         Path(__file__).parent
-        / "../../../Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+        / "../../../Examples/Configs/generic-digi-smearing-config.json"
     )
     assert input.exists(), input.resolve()
 
@@ -1360,14 +1294,20 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
-    if backend == "onnx":
-        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
-    else:
-        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+    # Extract both models, since we currently don't have a working implementation
+    # of metric learning with ONNX and we need to use torch here
+    onnx_url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    torch_url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
 
-    tarfile_name = tmp_path / "models.tar"
-    urllib.request.urlretrieve(url, tarfile_name)
-    tarfile.open(tarfile_name).extractall(tmp_path)
+    for url in [onnx_url, torch_url]:
+        tarfile_name = tmp_path / "models.tar"
+        urllib.request.urlretrieve(url, tarfile_name)
+        tarfile.open(tarfile_name).extractall(tmp_path)
+
+    shutil.copyfile(
+        tmp_path / "torchscript_models/embed.pt", tmp_path / "onnx_models/embed.pt"
+    )
+
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"

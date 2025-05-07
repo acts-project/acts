@@ -277,6 +277,7 @@ def addSeeding(
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     trackSmearingSigmas: TrackSmearingSigmas = TrackSmearingSigmas(),
     initialSigmas: Optional[list] = None,
+    initialSigmaQoverPt: Optional[float] = None,
     initialSigmaPtRel: Optional[float] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
@@ -368,6 +369,7 @@ def addSeeding(
             selectedParticles=selectedParticles,
             trackSmearingSigmas=trackSmearingSigmas,
             initialSigmas=initialSigmas,
+            initialSigmaQoverPt=initialSigmaQoverPt,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
@@ -457,6 +459,7 @@ def addSeeding(
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialSigmas=initialSigmas,
+                initialSigmaQoverPt=initialSigmaQoverPt,
                 initialSigmaPtRel=initialSigmaPtRel,
                 initialVarInflation=initialVarInflation,
                 particleHypothesis=particleHypothesis,
@@ -545,6 +548,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     trackSmearingSigmas: TrackSmearingSigmas,
     initialSigmas: Optional[List[float]],
+    initialSigmaQoverPt: Optional[float],
     initialSigmaPtRel: Optional[float],
     initialVarInflation: Optional[List[float]],
     particleHypothesis: Optional[acts.ParticleHypothesis],
@@ -582,6 +586,7 @@ def addTruthSmearedSeeding(
             sigmaTheta=trackSmearingSigmas.theta,
             sigmaPtRel=trackSmearingSigmas.ptRel,
             initialSigmas=initialSigmas,
+            initialSigmaQoverPt=initialSigmaQoverPt,
             initialSigmaPtRel=initialSigmaPtRel,
             initialVarInflation=initialVarInflation,
             particleHypothesis=particleHypothesis,
@@ -1181,6 +1186,7 @@ def addSeedPerformanceWriters(
             inputParticles=selectedParticles,
             inputTrackParticleMatching="seed_particle_matching",
             inputParticleTrackMatching="particle_seed_matching",
+            inputParticleMeasurementsMap="particle_measurements_map",
             filePath=str(outputDirRoot / f"performance_seeding.root"),
         )
     )
@@ -1704,6 +1710,7 @@ def addTrackWriters(
                 inputParticles="particles_selected",
                 inputTrackParticleMatching="track_particle_matching",
                 inputParticleTrackMatching="particle_track_matching",
+                inputParticleMeasurementsMap="particle_measurements_map",
                 filePath=str(outputDirRoot / f"performance_finding_{name}.root"),
             )
             s.addWriter(trackFinderPerfWriter)
@@ -1785,6 +1792,8 @@ def addExaTrkX(
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
+        "modelPath": str(modelDir / "embed.pt"),
+        "selectedFeatures": [0, 1, 2],
     }
 
     filterConfig = {
@@ -1798,8 +1807,6 @@ def addExaTrkX(
     }
 
     if backend == ExaTrkXBackend.Torch:
-        metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
-        metricLearningConfig["selectedFeatures"] = [0, 1, 2]
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["selectedFeatures"] = [0, 1, 2]
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
@@ -1813,12 +1820,11 @@ def addExaTrkX(
         ]
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
-        metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
-        metricLearningConfig["spacepointFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
-        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
+        # There is currently no implementation of a Metric learning based fully on ONNX
+        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
@@ -2180,8 +2186,7 @@ def addVertexFitting(
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
             inputTracks=tracks,
-            inputParticles=selectedParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputTrackParticleMatching="track_particle_matching",
             outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )
@@ -2248,29 +2253,30 @@ def addVertexFitting(
     return s
 
 
-def addSingleSeedVertexFinding(
+def addHoughVertexFinding(
     s,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     inputSpacePoints: Optional[str] = "spacepoints",
-    outputVertices: Optional[str] = "fittedSeedVertices",
+    outputVertices: Optional[str] = "fittedHoughVertices",
 ) -> None:
     from acts.examples import (
-        SingleSeedVertexFinderAlgorithm,
+        HoughVertexFinderAlgorithm,
         VertexNTupleWriter,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+    findHoughVertex = HoughVertexFinderAlgorithm(
         level=customLogLevel(),
         inputSpacepoints=inputSpacePoints,
         outputVertices=outputVertices,
     )
-    s.addAlgorithm(findSingleSeedVertex)
+    s.addAlgorithm(findHoughVertex)
 
     inputParticles = "particles"
     selectedParticles = "particles_selected"
+    inputTruthVertices = "vertices_truth"
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -2280,11 +2286,15 @@ def addSingleSeedVertexFinding(
         s.addWriter(
             VertexNTupleWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles=inputParticles,
-                inputSelectedTruthParticles=selectedParticles,
+                inputParticles=inputParticles,
+                inputSelectedParticles=selectedParticles,
+                inputTracks="",
+                inputTrackParticleMatching="",
+                writeTrackInfo=False,
+                inputTruthVertices=inputTruthVertices,
                 inputVertices=outputVertices,
-                treeName="seedvertexing",
-                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
+                treeName="houghvertexing",
+                filePath=str(outputDirRoot / "performance_houghvertexing.root"),
             )
         )
 

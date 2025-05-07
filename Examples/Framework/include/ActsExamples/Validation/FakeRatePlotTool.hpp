@@ -20,16 +20,13 @@
 
 class TEfficiency;
 class TH2F;
-namespace ActsFatras {
-class Particle;
-}  // namespace ActsFatras
 
 namespace ActsExamples {
 
-// Tools to make fake rate plots to show tracking fake rate.
-//
-// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
-// not matched with truth.
+/// Tools to make fake rate plots to show tracking fake rate.
+///
+/// The fake rate is investigated for all reco tracks. A track is 'fake' if it's
+/// not matched with truth.
 class FakeRatePlotTool {
  public:
   /// @brief The nested configuration struct
@@ -42,20 +39,25 @@ class FakeRatePlotTool {
   };
 
   /// @brief Nested Cache struct
-  struct FakeRatePlotCache {
-    TH2F* nReco_vs_pT;          ///< Number of reco tracks vs pT scatter plot
-    TH2F* nTruthMatched_vs_pT;  ///< Number of truth-matched reco tracks vs pT
-                                ///< scatter plot
-    TH2F* nFake_vs_pT;   ///< Number of fake (truth-unmatched) tracks vs pT
-                         ///< scatter plot
-    TH2F* nReco_vs_eta;  ///< Number of reco tracks vs eta scatter plot
-    TH2F* nTruthMatched_vs_eta;  ///< Number of truth-matched reco tracks vs eta
-                                 ///< scatter plot
-    TH2F* nFake_vs_eta;  ///< Number of fake (truth-unmatched) tracks vs eta
-                         ///< scatter plot
-    TEfficiency* fakeRate_vs_pT;   ///< Tracking fake rate vs pT
-    TEfficiency* fakeRate_vs_eta;  ///< Tracking fake rate vs eta
-    TEfficiency* fakeRate_vs_phi;  ///< Tracking fake rate vs phi
+  struct Cache {
+    /// Number of reco tracks vs pT scatter plot
+    TH2F* nReco_vs_pT;
+    /// Number of truth-matched reco tracks vs pT scatter plot
+    TH2F* nTruthMatched_vs_pT;
+    /// Number of fake (truth-unmatched) tracks vs pT scatter plot
+    TH2F* nFake_vs_pT;
+    /// Number of reco tracks vs eta scatter plot
+    TH2F* nReco_vs_eta;
+    /// Number of truth-matched reco tracks vs eta scatter plot
+    TH2F* nTruthMatched_vs_eta;
+    /// Number of fake (truth-unmatched) tracks vs eta scatter plot
+    TH2F* nFake_vs_eta;
+    /// Tracking fake rate vs pT
+    TEfficiency* fakeRate_vs_pT;
+    /// Tracking fake rate vs eta
+    TEfficiency* fakeRate_vs_eta;
+    /// Tracking fake rate vs phi
+    TEfficiency* fakeRate_vs_phi;
   };
 
   /// Constructor
@@ -66,42 +68,42 @@ class FakeRatePlotTool {
 
   /// @brief book the fake rate plots
   ///
-  /// @param fakeRatePlotCache the cache for fake rate plots
-  void book(FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param cache the cache for fake rate plots
+  void book(Cache& cache) const;
 
   /// @brief fill fake rate w.r.t. fitted track parameters
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
+  /// @param cache cache object for fake rate plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const Acts::BoundTrackParameters& fittedParameters,
+  void fill(Cache& cache, const Acts::BoundTrackParameters& fittedParameters,
             bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
+  /// @param cache cache object for fake rate plots
   /// @param truthParticle the truth Particle
   /// @param nTruthMatchedTracks the number of truth-Matched tracks
   /// @param nFakeTracks the number of fake tracks
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const SimParticleState& truthParticle,
+  void fill(Cache& cache, const SimParticleState& truthParticle,
             std::size_t nTruthMatchedTracks, std::size_t nFakeTracks) const;
 
   /// @brief write the fake rate plots to file
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
-  void write(const FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param cache cache object for fake rate plots
+  void write(const Cache& cache) const;
 
   /// @brief delete the fake rate plots
   ///
-  /// @param fakeRatePlotCache cache object for fake rate plots
-  void clear(FakeRatePlotCache& fakeRatePlotCache) const;
+  /// @param cache cache object for fake rate plots
+  void clear(Cache& cache) const;
 
  private:
-  Config m_cfg;                                  ///< The Config class
-  std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
+  /// The Config class
+  Config m_cfg;
+  /// The logging instance
+  std::unique_ptr<const Acts::Logger> m_logger;
 
   /// The logger
   const Acts::Logger& logger() const { return *m_logger; }

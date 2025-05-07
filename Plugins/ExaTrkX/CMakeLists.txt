@@ -2,13 +2,18 @@ add_library(ActsPluginExaTrkX SHARED src/buildEdges.cpp src/ExaTrkXPipeline.cpp)
 
 if(ACTS_EXATRKX_ENABLE_CUDA)
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_WITH_CUDA)
-    target_sources(ActsPluginExaTrkX PRIVATE src/CudaTrackBuilding.cu)
+    target_sources(
+        ActsPluginExaTrkX
+        PRIVATE src/CudaTrackBuilding.cu src/JunctionRemoval.cu
+    )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_sources(
+    target_sources(ActsPluginExaTrkX PRIVATE src/OnnxEdgeClassifier.cpp)
+    target_link_libraries(ActsPluginExaTrkX PRIVATE onnxruntime::onnxruntime)
+    target_compile_definitions(
         ActsPluginExaTrkX
-        PRIVATE src/OnnxEdgeClassifier.cpp src/OnnxMetricLearning.cpp
+        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
     )
 endif()
 
@@ -74,15 +79,6 @@ if(ACTS_EXATRKX_ENABLE_CUDA)
     )
 else()
     target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
-endif()
-
-if(ACTS_EXATRKX_ENABLE_ONNX)
-    target_compile_definitions(
-        ActsPluginExaTrkX
-        PUBLIC ACTS_EXATRKX_ONNX_BACKEND
-    )
-
-    target_link_libraries(ActsPluginExaTrkX PRIVATE OnnxRuntime)
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
