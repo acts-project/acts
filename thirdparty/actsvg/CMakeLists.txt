@@ -17,9 +17,15 @@ message(STATUS "Building actsvg as part of the ACTS project")
 FetchContent_Declare(actsvg SYSTEM ${ACTS_ACTSVG_SOURCE})
 
 set(ACTSVG_BUILD_PYTHON_BINDINGS
-    OFF
+    ${ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS}
     CACHE BOOL
-    "Do not build the Python bindings for actsvg"
+    "Build python bindings for actsvg if Acts python bindings are enabled"
+)
+
+set(ACTSVG_USE_SYSTEM_PYBIND11
+    ${ACTSVG_BUILD_PYTHON_BINDINGS}
+    CACHE BOOL
+    "Use system pybind11 if building python bindings for actsvg in order to keep consistency with ACTS"
 )
 
 # Now set up its build.
