@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numbers>
 #include <random>
 
 #include "Dataset.hpp"
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(HighlandRms) {
   double rmsTheta3D = rms(theta3Ds, 0);
 
   CHECK_CLOSE_REL(rmsThetaYZ, theta0, 0.02);
-  CHECK_CLOSE_REL(rmsTheta3D, M_SQRT2 * theta0, 0.02);
+  CHECK_CLOSE_REL(rmsTheta3D, std::numbers::sqrt2 * theta0, 0.02);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

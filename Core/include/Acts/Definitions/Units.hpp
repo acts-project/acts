@@ -1,12 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include <numbers>
 
 namespace Acts {
 
@@ -170,7 +172,7 @@ constexpr double h = 3600.0 * s;
 // Angles, native unit radian
 constexpr double mrad = 1e-3;
 constexpr double rad = 1.0;
-constexpr double degree = 0.017453292519943295;  // = M_PI / 180.0 * rad;
+constexpr double degree = std::numbers::pi / 180. / rad;
 // Energy/mass/momentum, native unit GeV
 constexpr double GeV = 1.0;
 constexpr double eV = 1e-9 * GeV;
@@ -199,12 +201,12 @@ constexpr double mol = 1.0;
 
 namespace UnitLiterals {
 // define user literal functions for the given unit constant
-#define ACTS_DEFINE_UNIT_LITERAL(name)                        \
-  constexpr double operator"" _##name(long double x) {        \
-    return ::Acts::UnitConstants::name * x;                   \
-  }                                                           \
-  constexpr double operator"" _##name(unsigned long long x) { \
-    return ::Acts::UnitConstants::name * x;                   \
+#define ACTS_DEFINE_UNIT_LITERAL(name)                       \
+  constexpr double operator""_##name(long double x) {        \
+    return ::Acts::UnitConstants::name * x;                  \
+  }                                                          \
+  constexpr double operator""_##name(unsigned long long x) { \
+    return ::Acts::UnitConstants::name * x;                  \
   }
 ACTS_DEFINE_UNIT_LITERAL(fm)
 ACTS_DEFINE_UNIT_LITERAL(pm)

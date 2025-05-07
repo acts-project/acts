@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,6 +37,13 @@ class IReader : public SequenceElement {
   /// event number provided to select the proper data to be read.
   virtual ProcessCode read(const AlgorithmContext& context) = 0;
 
+  /// Instructs this reader to skip over a fixed number of events
+  /// @param events
+  /// @return Process code indicating if the skip was successful
+  virtual ProcessCode skip(std::size_t /*events*/) {
+    return ProcessCode::SUCCESS;
+  }
+
   /// Internal execute method forwards to the read method as mutable
   /// @param context The algorithm context
   ProcessCode internalExecute(const AlgorithmContext& context) final {
@@ -48,6 +55,9 @@ class IReader : public SequenceElement {
 
   /// Fulfill the algorithm interface
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
+
+  /// Return the type for debug output
+  std::string_view typeName() const override { return "Reader"; }
 };
 
 }  // namespace ActsExamples

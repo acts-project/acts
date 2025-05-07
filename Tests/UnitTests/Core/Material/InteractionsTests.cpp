@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -102,7 +102,7 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
 
 // no material -> no interactions
 BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
-  const auto vacuum = Acts::MaterialSlab(Acts::Material(), x);
+  const auto vacuum = Acts::MaterialSlab::Vacuum(x);
   const auto qOverP = q / p;
   const auto absQ = std::abs(q);
   const auto absPdg = Acts::makeAbsolutePdgParticle(i);

@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
@@ -19,14 +18,13 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceConcept.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
-#include <cmath>
-#include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -57,7 +55,7 @@ class CylinderSurface : public RegularSurface {
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = M_PI, double avphi = 0.,
+                  double halfphi = std::numbers::pi, double avphi = 0.,
                   double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
@@ -89,9 +87,6 @@ class CylinderSurface : public RegularSurface {
                   const Transform3& shift);
 
  public:
-  ~CylinderSurface() override = default;
-  CylinderSurface() = delete;
-
   /// Assignment operator
   ///
   /// @param other is the source cylinder for the copy
@@ -100,11 +95,11 @@ class CylinderSurface : public RegularSurface {
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the type of global binning to be done
+  /// @param aDir is the axis Direction of global binning to be done
   ///
   /// @return is the global position to be used for binning
-  Vector3 binningPosition(const GeometryContext& gctx,
-                          BinningValue bValue) const final;
+  Vector3 referencePosition(const GeometryContext& gctx,
+                            AxisDirection aDir) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -197,7 +192,7 @@ class CylinderSurface : public RegularSurface {
       const Vector3& direction,
       const BoundaryTolerance& boundaryTolerance =
           BoundaryTolerance::Infinite(),
-      ActsScalar tolerance = s_onSurfaceTolerance) const final;
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -214,14 +209,20 @@ class CylinderSurface : public RegularSurface {
 
   /// Return a Polyhedron for a cylinder
   ///
+  /// This method represents the cylinder as a polyhedron with a given number
+  /// of segments to represent a quarter of a full circle. The polyedron will
+  /// consist of the vertices of the cylinder on both sides, and faces between
+  /// them, both as rectangular faces and as triangular faces.
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
-  /// are given
+  /// @param quarterSegments The number of segments to approximate a quarter of the
+  /// full circle; it's chosen to be 1, only the extrema points (-pi, -0.5pi,
+  /// 0., 0.5pi) are inserted to capture the correct extent in the x-y plane
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      std::size_t lseg) const override;
+  Polyhedron polyhedronRepresentation(
+      const GeometryContext& gctx,
+      unsigned int quarterSegments = 2u) const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
@@ -253,14 +254,14 @@ class CylinderSurface : public RegularSurface {
   /// @note The surfaces need to be *compatible*, i.e. have cylinder bounds
   ///       that align, and have the same radius
   /// @param other The other cylinder surface to merge with
-  /// @param direction The binning direction: either @c binZ or @c binRPhi
+  /// @param direction The axis direction: either @c AxisZ or @c AxisRPhi
   /// @param externalRotation If true, any phi rotation is done in the transform
   /// @param logger The logger to use
   /// @return The merged cylinder surface and a boolean indicating if surfaces are reversed
   /// @note The returned boolean is `false` if `this` is *left* or
   ///       *counter-clockwise* of @p other, and `true` if not.
   std::pair<std::shared_ptr<CylinderSurface>, bool> mergedWith(
-      const CylinderSurface& other, BinningValue direction,
+      const CylinderSurface& other, AxisDirection direction,
       bool externalRotation, const Logger& logger = getDummyLogger()) const;
 
  protected:

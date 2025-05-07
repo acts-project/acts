@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFindingExaTrkX/PrototracksToParameters.hpp"
 
 #include "Acts/Seeding/BinnedGroup.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -60,8 +59,9 @@ ProcessCode PrototracksToParameters::execute(
   const auto &sps = m_inputSpacePoints(ctx);
   auto prototracks = m_inputProtoTracks(ctx);
 
-  // Make some lookup tables. Allocate space for the maximum number of indices
-  // (max 2 source links per spacepoint)
+  // Make some lookup tables and pre-allocate some space
+  // Note this is a heuristic, since it is not garantueed that each measurement
+  // is part of a spacepoint
   std::vector<const SimSpacePoint *> indexToSpacepoint(2 * sps.size(), nullptr);
   std::vector<Acts::GeometryIdentifier> indexToGeoId(
       2 * sps.size(), Acts::GeometryIdentifier{0});
@@ -69,8 +69,12 @@ ProcessCode PrototracksToParameters::execute(
   for (const auto &sp : sps) {
     for (const auto &sl : sp.sourceLinks()) {
       const auto &isl = sl.template get<IndexSourceLink>();
-      indexToSpacepoint[isl.index()] = &sp;
-      indexToGeoId[isl.index()] = isl.geometryId();
+      if (isl.index() >= indexToSpacepoint.size()) {
+        indexToSpacepoint.resize(isl.index() + 1, nullptr);
+        indexToGeoId.resize(isl.index() + 1, Acts::GeometryIdentifier{0});
+      }
+      indexToSpacepoint.at(isl.index()) = &sp;
+      indexToGeoId.at(isl.index()) = isl.geometryId();
     }
   }
 
@@ -119,12 +123,14 @@ ProcessCode PrototracksToParameters::execute(
     }
 
     // Make the seed
+    auto result =
+        track | std::views::filter([&](auto i) {
+          return i < indexToSpacepoint.size() &&
+                 indexToSpacepoint.at(i) != nullptr;
+        }) |
+        std::views::transform([&](auto i) { return indexToSpacepoint.at(i); });
     tmpSps.clear();
-    std::transform(track.begin(), track.end(), std::back_inserter(tmpSps),
-                   [&](auto i) { return indexToSpacepoint[i]; });
-    tmpSps.erase(std::remove_if(tmpSps.begin(), tmpSps.end(),
-                                [](auto sp) { return sp == nullptr; }),
-                 tmpSps.end());
+    std::ranges::copy(result, std::back_inserter(tmpSps));
 
     if (tmpSps.size() < 3) {
       ACTS_WARNING("Could not find all spacepoints, skip");
@@ -144,8 +150,9 @@ ProcessCode PrototracksToParameters::execute(
 
     SimSeed seed =
         m_cfg.buildTightSeeds
-            ? SimSeed(*tmpSps[0], *tmpSps[1], *tmpSps[2], z_vertex)
-            : SimSeed(*tmpSps[0], *tmpSps[s / 2], *tmpSps[s - 1], z_vertex);
+            ? SimSeed(*tmpSps.at(0), *tmpSps.at(1), *tmpSps.at(2))
+            : SimSeed(*tmpSps.at(0), *tmpSps.at(s / 2), *tmpSps.at(s - 1));
+    seed.setVertexZ(z_vertex);
 
     // Compute parameters
     const auto &bottomSP = seed.sp().front();
@@ -155,25 +162,30 @@ ProcessCode PrototracksToParameters::execute(
                            .geometryId();
     const auto &surface = *m_cfg.geometry->findSurface(geoId);
 
-    auto field = m_cfg.magneticField->getField(
+    auto fieldRes = m_cfg.magneticField->getField(
         {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
-    if (!field.ok()) {
-      ACTS_ERROR("Field lookup error: " << field.error());
+    if (!fieldRes.ok()) {
+      ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;
     }
+    Acts::Vector3 field = *fieldRes;
 
-    auto pars = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), surface, *field,
-        m_cfg.bFieldMin);
+    if (field.norm() < m_cfg.bFieldMin) {
+      ACTS_WARNING("Magnetic field at seed is too small " << field.norm());
+      continue;
+    }
 
-    if (not pars) {
+    auto parsResult = Acts::estimateTrackParamsFromSeed(
+        ctx.geoContext, seed.sp(), surface, field);
+    if (!parsResult.ok()) {
       ACTS_WARNING("Skip track because of bad params");
     }
+    const auto &pars = *parsResult;
 
     seededTracks.push_back(track);
     seeds.emplace_back(std::move(seed));
     parameters.push_back(Acts::BoundTrackParameters(
-        surface.getSharedPtr(), *pars, m_covariance, m_cfg.particleHypothesis));
+        surface.getSharedPtr(), pars, m_covariance, m_cfg.particleHypothesis));
   }
 
   if (skippedTracks > 0) {

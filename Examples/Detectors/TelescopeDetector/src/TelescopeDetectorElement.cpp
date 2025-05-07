@@ -1,17 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
+namespace ActsExamples {
+
+TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
@@ -27,7 +29,7 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
   mutableSurface->assignSurfaceMaterial(std::move(material));
 }
 
-ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
+TelescopeDetectorElement::TelescopeDetectorElement(
     std::shared_ptr<const Acts::Transform3> transform,
     std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
@@ -40,3 +42,5 @@ ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(
       m_elementDiscBounds(std::move(dBounds)) {
   m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
+
+}  // namespace ActsExamples

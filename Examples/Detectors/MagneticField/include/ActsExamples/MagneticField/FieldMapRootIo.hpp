@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -57,8 +57,7 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
                                     std::array<std::size_t, 2> nBinsRZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
-    bool firstQuadrant = false);
+    double lengthUnit, double BFieldUnit, bool firstQuadrant = false);
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -105,7 +104,6 @@ detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromRoot(
                                     std::array<std::size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
     const std::string& fieldMapFile, const std::string& treeName,
-    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
-    bool firstOctant = false);
+    double lengthUnit, double BFieldUnit, bool firstOctant = false);
 
 }  // namespace ActsExamples

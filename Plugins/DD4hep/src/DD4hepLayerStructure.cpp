@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
@@ -26,7 +26,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     DD4hepDetectorElement::Store& dd4hepStore, const GeometryContext& gctx,
     const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Check for misconfiguration with double naming
-  if (dd4hepStore.find(options.name) != dd4hepStore.end()) {
+  if (dd4hepStore.contains(options.name)) {
     std::string reMessage = "DD4hepLayerStructure: structure with name '";
     reMessage += options.name;
     reMessage += "' already registered in DetectorElementStore";
@@ -38,7 +38,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   fCache.sExtent = options.extent;
   fCache.pExtent = options.extent;
   fCache.extentConstraints = options.extentConstraints;
-  fCache.nExtentSegments = options.nSegments;
+  fCache.nExtentQSegments = options.quarterSegments;
   m_surfaceFactory->construct(fCache, gctx, dd4hepElement,
                               options.conversionOptions);
 
@@ -67,16 +67,18 @@ Acts::Experimental::DD4hepLayerStructure::builder(
     const auto& extent = fCache.sExtent.value();
     // Check if the binning
     ACTS_VERBOSE("Checking if surface binning ranges can be patched.");
-    for (auto& b : fCache.binnings) {
-      if (extent.constrains(b.binValue)) {
-        ACTS_VERBOSE("Binning '" << binningValueName(b.binValue)
+    for (auto& [dpAxis, bExp] : fCache.binnings) {
+      if (extent.constrains(dpAxis.getAxisDirection())) {
+        ACTS_VERBOSE("Binning '" << axisDirectionName(dpAxis.getAxisDirection())
                                  << "' is patched.");
-        ACTS_VERBOSE(" <- from : [" << b.edges.front() << ", " << b.edges.back()
-                                    << "]");
-        b.edges.front() = extent.min(b.binValue);
-        b.edges.back() = extent.max(b.binValue);
-        ACTS_VERBOSE(" -> to   : [" << b.edges.front() << ", " << b.edges.back()
-                                    << "]");
+        ACTS_VERBOSE(" <- from : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
+        dpAxis.setRange(extent.min(dpAxis.getAxisDirection()),
+                        extent.max(dpAxis.getAxisDirection()));
+        ACTS_VERBOSE(" -> to   : ["
+                     << dpAxis.getAxis().getBinEdges().front() << ", "
+                     << dpAxis.getAxis().getBinEdges().back() << "]");
       }
     }
   }

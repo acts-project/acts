@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -99,23 +99,6 @@ class AmbiguityTrackClassifier {
       }
       goodTracks.push_back(bestTrackID);
     }
-    return goodTracks;
-  }
-
-  /// Select the track associated with each cluster
-  ///
-  /// @param clusters is a map of clusters, each cluster correspond to a vector of track ID
-  /// @param tracks is the input track container
-  /// @return a vector of trackID corresponding tho the good tracks
-  template <TrackContainerFrontend track_container_t>
-  std::vector<std::size_t> solveAmbiguity(
-      std::unordered_map<std::size_t, std::vector<std::size_t>>& clusters,
-      const track_container_t& tracks) const {
-    std::vector<std::vector<float>> outputTensor =
-        inferScores(clusters, tracks);
-    std::vector<std::size_t> goodTracks =
-        trackSelection(clusters, outputTensor);
-
     return goodTracks;
   }
 

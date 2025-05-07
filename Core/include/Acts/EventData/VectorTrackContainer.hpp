@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -147,7 +147,7 @@ class VectorTrackContainerBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       default:
-        return m_dynamic.find(key) != m_dynamic.end();
+        return m_dynamic.contains(key);
     }
   }
 
@@ -204,7 +204,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   VectorTrackContainer(const VectorTrackContainer& other) = default;
   VectorTrackContainer(VectorTrackContainer&&) = default;
 
-  VectorTrackContainer(const ConstVectorTrackContainer& other);
+  explicit VectorTrackContainer(const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -225,7 +225,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   template <typename T>
   constexpr void addColumn_impl(const std::string_view& key) {
-    HashedString hashedKey = hashString(key);
+    HashedString hashedKey = hashStringDynamic(key);
     m_dynamic.insert({hashedKey, std::make_unique<detail::DynamicColumn<T>>()});
   }
 
@@ -253,6 +253,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   void reserve(IndexType size);
   void clear();
+  std::size_t size() const;
 
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
@@ -281,13 +282,13 @@ class ConstVectorTrackContainer final
   ConstVectorTrackContainer() : VectorTrackContainerBase{} {}
 
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
-  ConstVectorTrackContainer(const VectorTrackContainer& other)
+  explicit ConstVectorTrackContainer(const VectorTrackContainer& other)
       : VectorTrackContainerBase{other} {
     assert(checkConsistency());
   }
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
-  ConstVectorTrackContainer(VectorTrackContainer&& other)
+  explicit ConstVectorTrackContainer(VectorTrackContainer&& other)
       : VectorTrackContainerBase{std::move(other)} {
     assert(checkConsistency());
   }

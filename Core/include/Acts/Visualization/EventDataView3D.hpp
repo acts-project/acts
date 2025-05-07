@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -26,6 +26,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 #include <optional>
 #include <vector>
 
@@ -81,9 +82,9 @@ struct EventDataView3D {
     // Now generate the ellipse points
     std::vector<Vector3> ellipse;
     ellipse.reserve(lseg);
-    double thetaStep = 2 * M_PI / lseg;
+    double thetaStep = 2 * std::numbers::pi / lseg;
     for (std::size_t it = 0; it < lseg; ++it) {
-      double phi = -M_PI + it * thetaStep;
+      double phi = -std::numbers::pi + it * thetaStep;
       double cphi = std::cos(phi);
       double sphi = std::sin(phi);
       double x = lposition.x() + (l1sq * ctheta * cphi - l2sq * stheta * sphi);

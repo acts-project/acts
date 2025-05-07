@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 
@@ -43,7 +43,7 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   m_outputRecoVtxParameters.initialize(m_cfg.outputRecoVtxParameters);
   m_outputBeamspotConstraint.initialize(m_cfg.outputBeamspotConstraint);
 
-  m_inputChain = new TChain(m_cfg.inputTreeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.inputTreeName.c_str());
 
   // unused event identifier
   std::int32_t eventNumber = 0;
@@ -115,6 +115,8 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
+
+ActsExamples::RootAthenaNTupleReader::~RootAthenaNTupleReader() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     const ActsExamples::AlgorithmContext& context) {

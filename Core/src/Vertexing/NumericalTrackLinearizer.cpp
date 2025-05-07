@@ -1,17 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/PropagatorOptions.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
+
+#include <numbers>
 
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer::linearizeTrack(
@@ -76,10 +78,10 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   // Fill "paramVec", "pca", and "momentumAtPCA"
   {
     Vector3 globalCoords = endParams.position(gctx);
-    ActsScalar globalTime = endParams.time();
-    ActsScalar phi = perigeeParams(BoundIndices::eBoundPhi);
-    ActsScalar theta = perigeeParams(BoundIndices::eBoundTheta);
-    ActsScalar qOvP = perigeeParams(BoundIndices::eBoundQOverP);
+    double globalTime = endParams.time();
+    double phi = perigeeParams(BoundIndices::eBoundPhi);
+    double theta = perigeeParams(BoundIndices::eBoundTheta);
+    double qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
     paramVec << globalCoords, globalTime, phi, theta, qOvP;
     pca << globalCoords, globalTime;
@@ -94,7 +96,7 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
   BoundVector newPerigeeParams;
 
   // Check if wiggled angle theta are within definition range [0, pi]
-  if (paramVec(eLinTheta) + m_cfg.delta > M_PI) {
+  if (paramVec(eLinTheta) + m_cfg.delta > std::numbers::pi) {
     ACTS_ERROR(
         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)! "
         "You might need to decrease targetTolerance as well.");
@@ -114,9 +116,10 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     Vector3 wiggledDir = makeDirectionFromPhiTheta(paramVecCopy(eLinPhi),
                                                    paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
-    CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVecCopy.template head<eLinPosSize>(), wiggledDir,
-        paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
+    BoundTrackParameters wiggledCurvilinearParams =
+        BoundTrackParameters::createCurvilinear(
+            paramVecCopy.template head<eLinPosSize>(), wiggledDir,
+            paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
     intersection = perigeeSurface
@@ -141,7 +144,8 @@ Acts::NumericalTrackLinearizer::linearizeTrack(
     // previously computed value for better readability.
     completeJacobian(eLinPhi, i) =
         Acts::detail::difference_periodic(newPerigeeParams(eLinPhi),
-                                          perigeeParams(eLinPhi), 2 * M_PI) /
+                                          perigeeParams(eLinPhi),
+                                          2 * std::numbers::pi) /
         m_cfg.delta;
   }
 

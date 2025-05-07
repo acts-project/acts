@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -87,6 +87,7 @@ class Layer : public virtual GeometryObject {
   /// Declare the TrackingVolume as a friend, to be able to register previous,
   /// next and set the enclosing TrackingVolume
   friend class TrackingVolume;
+  friend class Gen1GeometryClosureVisitor;
 
  public:
   /// Default Constructor - deleted
@@ -218,9 +219,10 @@ class Layer : public virtual GeometryObject {
   /// @param thickness is the normal thickness of the Layer
   /// @param ades oapproach descriptor
   /// @param laytyp is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
-        std::unique_ptr<ApproachDescriptor> ades = nullptr,
-        LayerType laytyp = passive);
+  explicit Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+                 double thickness = 0.,
+                 std::unique_ptr<ApproachDescriptor> ades = nullptr,
+                 LayerType laytyp = passive);
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only

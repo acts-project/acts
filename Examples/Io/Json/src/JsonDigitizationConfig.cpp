@@ -1,14 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Utilities/BinningData.hpp"
@@ -18,7 +17,6 @@
 
 #include <cstddef>
 #include <fstream>
-#include <initializer_list>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -64,7 +62,7 @@ void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
   // Digital
   auto digital = f.target<const Digitization::Digital>();
   if (digital != nullptr) {
-    j["type"] = "Digitial";
+    j["type"] = "Digital";
     j["bindata"] = nlohmann::json(digital->binningData);
     return;
   }
@@ -87,18 +85,18 @@ void from_json(
   if (sType == "Gauss") {
     f = Digitization::Gauss(j["stddev"]);
   } else if (sType == "GaussTrunc") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussTrunc(sigma, range);
   } else if (sType == "GaussClipped") {
-    Acts::ActsScalar sigma = j["stddev"];
-    std::pair<Acts::ActsScalar, Acts::ActsScalar> range = j["range"];
+    double sigma = j["stddev"];
+    std::pair<double, double> range = j["range"];
     f = Digitization::GaussClipped(sigma, range);
   } else if (sType == "Uniform") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
     f = Digitization::Uniform(bd);
-  } else if (sType == "Digitial") {
+  } else if (sType == "Digital") {
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
     f = Digitization::Digital(bd);
@@ -139,7 +137,9 @@ void ActsExamples::to_json(nlohmann::json& j,
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
-  to_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    to_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -157,16 +157,18 @@ void ActsExamples::from_json(const nlohmann::json& j,
     for (const auto& jvar : jvariances) {
       auto idx =
           static_cast<Acts::BoundIndices>(jvar["index"].get<std::size_t>());
-      auto vars = jvar["rms"].get<std::vector<Acts::ActsScalar>>();
+      auto vars = jvar["rms"].get<std::vector<double>>();
       gdc.varianceMap[idx] = vars;
     }
   }
-  from_json(j["charge-smearing"], gdc.chargeSmearer);
+  if (j.find("charge-smearing") != j.end()) {
+    from_json(j["charge-smearing"], gdc.chargeSmearer);
+  }
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::SmearingConfig& sdc) {
-  for (const auto& sc : sdc) {
+  for (const auto& sc : sdc.params) {
     j.push_back(nlohmann::json(sc));
   }
 }
@@ -176,7 +178,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   for (const auto& jpsc : j) {
     ActsExamples::ParameterSmearingConfig psc;
     from_json(jpsc, psc);
-    sdc.push_back(psc);
+    sdc.params.push_back(psc);
   }
 }
 
@@ -185,7 +187,7 @@ void ActsExamples::to_json(nlohmann::json& j,
   if (!dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
-  if (!dc.smearingDigiConfig.empty()) {
+  if (!dc.smearingDigiConfig.params.empty()) {
     j["smearing"] = nlohmann::json(dc.smearingDigiConfig);
   }
 }

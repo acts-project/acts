@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Digitization/Segmentizer.hpp"
 
@@ -117,7 +117,7 @@ ActsFatras::Segmentizer::segments(const Acts::GeometryContext& geoCtx,
     // The phi boundaries
     if (bstart[1] != bend[1]) {
       double referenceR =
-          surface.binningPositionValue(geoCtx, Acts::BinningValue::binR);
+          surface.referencePositionValue(geoCtx, Acts::AxisDirection::AxisR);
       Acts::Vector2 origin = {0., 0.};
       const auto& phiboundaries = segmentation.binningData()[1].boundaries();
       std::vector<double> phibbounds = {

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -64,7 +64,8 @@ struct SpacePointParameters {
 class SpacePointUtility {
  public:
   /// Constructor
-  SpacePointUtility(SpacePointBuilderConfig cfg) : m_config(std::move(cfg)) {}
+  explicit SpacePointUtility(SpacePointBuilderConfig cfg)
+      : m_config(std::move(cfg)) {}
 
   /// @brief Getter method for the global coordinates of a SourceLink
   ///
@@ -75,8 +76,7 @@ class SpacePointUtility {
   /// @param par local position
   /// @param cov local covariance
   /// @return vectors of the global coordinates and covariance of the SourceLink
-  std::tuple<Vector3, std::optional<ActsScalar>, Vector2,
-             std::optional<ActsScalar>>
+  std::tuple<Vector3, std::optional<double>, Vector2, std::optional<double>>
   globalCoords(const GeometryContext& gctx, const SourceLink& slink,
                const SourceLinkSurfaceAccessor& surfaceAccessor,
                const BoundVector& par, const BoundSquareMatrix& cov) const;

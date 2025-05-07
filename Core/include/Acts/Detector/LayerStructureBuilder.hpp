@@ -1,24 +1,22 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/ProtoSupport.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 
 #include <array>
 #include <cstddef>
@@ -26,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts::Experimental {
@@ -58,7 +57,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
    public:
     /// Constructor with predefined surfaces
     /// @param isurfaces is the vector of surfaces
-    SurfacesHolder(std::vector<std::shared_ptr<Surface>> isurfaces)
+    explicit SurfacesHolder(std::vector<std::shared_ptr<Surface>> isurfaces)
         : m_surfaces(std::move(isurfaces)) {}
 
     /// Return the surfaces from the holder
@@ -84,15 +83,16 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Definition of Supports
     std::vector<ProtoSupport> supports = {};
     /// Definition of Binnings
-    std::vector<ProtoBinning> binnings = {};
+    std::vector<std::tuple<DirectedProtoAxis, std::size_t>> binnings = {};
     /// Optional extent (if already parsed), will trigger binning autorange
     /// check
     std::optional<Extent> extent = std::nullopt;
     /// Minimum number of surfaces to build an internal structure
     /// - otherwise the tryAll options is used
     unsigned int nMinimalSurfaces = 4u;
-    /// Polyhedron approximations
-    unsigned int nSegments = 1u;
+    /// Polyhedron approximations: number of segments to be used
+    /// to approximate a quarter of a circle
+    unsigned int quarterSegments = 1u;
     /// Extra information, mainly for screen output
     std::string auxiliary = "";
   };
@@ -101,9 +101,10 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  LayerStructureBuilder(const Config& cfg,
-                        std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "LayerStructureBuilder", Logging::INFO));
+  explicit LayerStructureBuilder(const Config& cfg,
+                                 std::unique_ptr<const Logger> logger =
+                                     getDefaultLogger("LayerStructureBuilder",
+                                                      Logging::INFO));
 
   /// The interface definition for internal structure creation
   ///

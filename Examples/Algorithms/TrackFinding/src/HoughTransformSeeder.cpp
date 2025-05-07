@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 
@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -75,13 +76,7 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
         "HoughTransformSeeder: Missing hough track seeds output collection");
   }
 
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument(
-        "HoughTransformSeeder: Missing source link input collection");
-  }
-
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
-  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
 
   if (!m_cfg.trackingGeometry) {
@@ -495,7 +490,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
                             << isp->key());
     for (auto& sp : spContainer) {
-      double r = std::hypot(sp.x(), sp.y());
+      double r = Acts::fastHypot(sp.x(), sp.y());
       double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
@@ -519,14 +514,14 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
 void ActsExamples::HoughTransformSeeder::addMeasurements(
     const AlgorithmContext& ctx) const {
   const auto& measurements = m_inputMeasurements(ctx);
-  const auto& sourceLinks = m_inputSourceLinks(ctx);
 
   ACTS_DEBUG("Inserting " << measurements.size() << " space points from "
                           << m_cfg.inputMeasurements);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
-    auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
+    auto range =
+        selectLowestNonZeroGeometryObject(measurements.orderedIndices(), geoId);
     // groupByModule only works with geometry containers, not with an
     // arbitrary range. do the equivalent grouping manually
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
@@ -565,7 +560,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
             surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        double r = std::hypot(globalPos[Acts::ePos0], globalPos[Acts::ePos1]);
+        double r = globalPos.head<2>().norm();
         double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
         double z = globalPos[Acts::ePos2];
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 
@@ -48,7 +48,7 @@ namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any /*nodes*/, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, torch::Device) {
+    std::vector<int>& spacepointIDs, const ExecutionContext& execContext) {
   ACTS_DEBUG("Start track building");
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
   const auto edgeWeightTensor =

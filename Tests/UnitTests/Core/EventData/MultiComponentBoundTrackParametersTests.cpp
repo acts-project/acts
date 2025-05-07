@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
       b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  auto surface =
+  std::shared_ptr<PlaneSurface> surface =
       CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
           .planeSurface();
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
   using cov_t = std::optional<BoundSquareMatrix>;
   for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
                           cov_t{BoundSquareMatrix::Identity()}}) {
-    auto surface =
+    std::shared_ptr<PlaneSurface> surface =
         CurvilinearSurface(Vector3::Ones(), Vector3::Ones().normalized())
             .planeSurface();
 

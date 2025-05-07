@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/detail/CuboidalDetectorHelper.hpp"
 
@@ -28,23 +28,23 @@ Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
-    BinningValue bValue, const std::vector<unsigned int>& selectedOnly,
+    AxisDirection bValue, const std::vector<unsigned int>& selectedOnly,
     Acts::Logging::Level logLevel) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in "
-                        << binningValueName(bValue) << ".");
+                        << axisDirectionName(bValue) << ".");
 
   // Check transform for consistency
   auto centerDistances =
       DetectorVolumeConsistency::checkCenterAlignment(gctx, volumes, bValue);
 
   // Assign the portal indices according to the volume bounds definition
-  std::array<BinningValue, 3u> possibleValues = {
-      BinningValue::binX, BinningValue::binY, BinningValue::binZ};
-  // 1 -> [ 2,3 ] for binX connection (cylclic one step)
-  // 2 -> [ 4,5 ] for binY connection (cylclic two steps)
-  // 0 -> [ 0,1 ] for binZ connection (to be in line with cylinder covnention)
+  std::array<AxisDirection, 3u> possibleValues = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
+  // 1 -> [ 2,3 ] for AxisX connection (cylclic one step)
+  // 2 -> [ 4,5 ] for AxisY connection (cylclic two steps)
+  // 0 -> [ 0,1 ] for AxisZ connection (to be in line with cylinder covnention)
   using PortalSet = std::array<std::size_t, 2u>;
   std::vector<PortalSet> portalSets = {
       {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
@@ -53,15 +53,15 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   auto [sIndex, fIndex] = portalSets[toUnderlying(bValue)];
 
   // Log the merge splits, i.e. the boundaries of the volumes
-  std::array<std::vector<ActsScalar>, 3u> mergeSplits;
-  std::array<ActsScalar, 3u> mergeHalfLengths = {
+  std::array<std::vector<double>, 3u> mergeSplits;
+  std::array<double, 3u> mergeHalfLengths = {
       0.,
       0.,
       0.,
   };
 
   // Pick the counter part value
-  auto counterPart = [&](BinningValue mValue) -> BinningValue {
+  auto counterPart = [&](AxisDirection mValue) -> AxisDirection {
     for (auto cValue : possibleValues) {
       if (cValue != mValue && cValue != bValue) {
         return cValue;
@@ -72,7 +72,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
   // Things that can be done without a loop be first/last check
   // Estimate the merge parameters: the scalar and the transform
-  using MergeParameters = std::tuple<ActsScalar, Transform3>;
+  using MergeParameters = std::tuple<double, Transform3>;
   std::map<std::size_t, MergeParameters> mergeParameters;
   auto& firstVolume = volumes.front();
   auto& lastVolume = volumes.back();
@@ -93,8 +93,8 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
                           ->surface()
                           .transform(gctx)
                           .rotation();
-      ActsScalar stepDown = firstBoundValues[toUnderlying(bValue)];
-      ActsScalar stepUp = lastBoundValues[toUnderlying(bValue)];
+      double stepDown = firstBoundValues[toUnderlying(bValue)];
+      double stepUp = lastBoundValues[toUnderlying(bValue)];
       // Take translation from first and last volume
       auto translationF = firstVolume->portalPtrs()[index]
                               ->surface()
@@ -113,7 +113,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       portalTransform.prerotate(rotation);
       portalTransform.pretranslate(translation);
       // The half length to be kept
-      ActsScalar keepHalfLength =
+      double keepHalfLength =
           firstBoundValues[toUnderlying(counterPart(mergeValue))];
       mergeParameters[index] = MergeParameters(keepHalfLength, portalTransform);
     }
@@ -169,21 +169,21 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     // - this is an anticyclic swap
     bool mergedInX = true;
     switch (bValue) {
-      case BinningValue::binZ: {
-        mergedInX = (mergeValue == BinningValue::binY);
+      case AxisDirection::AxisZ: {
+        mergedInX = (mergeValue == AxisDirection::AxisY);
       } break;
-      case BinningValue::binY: {
-        mergedInX = (mergeValue == BinningValue::binX);
+      case AxisDirection::AxisY: {
+        mergedInX = (mergeValue == AxisDirection::AxisX);
       } break;
-      case BinningValue::binX: {
-        mergedInX = (mergeValue == BinningValue::binZ);
+      case AxisDirection::AxisX: {
+        mergedInX = (mergeValue == AxisDirection::AxisZ);
       } break;
       default:
         break;
     }
 
     // The stitch boundaries for portal pointing
-    std::vector<ActsScalar> stitchBoundaries;
+    std::vector<double> stitchBoundaries;
     stitchBoundaries.push_back(-mergeHalfLengths[im]);
     for (auto step : mergeSplits[im]) {
       stitchBoundaries.push_back(stitchBoundaries.back() + step);
@@ -208,12 +208,12 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
       // Assign the portal direction
       // in a consistent way
       Acts::Direction dir =
-          (index % 2 == 0) ? Direction::Forward : Direction::Backward;
+          (index % 2 == 0) ? Direction::Forward() : Direction::Backward();
 
       // Make the stitch boundaries
       pReplacements.push_back(PortalReplacement(
           portal, index, dir, stitchBoundaries,
-          (mergedInX ? BinningValue::binX : BinningValue::binY)));
+          (mergedInX ? AxisDirection::AxisX : AxisDirection::AxisY)));
     }
   }
 
@@ -243,20 +243,20 @@ Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     const GeometryContext& /*gctx*/,
     const std::vector<DetectorComponent::PortalContainer>& containers,
-    BinningValue bValue, const std::vector<unsigned int>& /*unused */,
+    AxisDirection bValue, const std::vector<unsigned int>& /*unused */,
     Acts::Logging::Level logLevel) noexcept(false) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   ACTS_DEBUG("Connect " << containers.size() << " containers in "
-                        << binningValueName(bValue) << ".");
+                        << axisDirectionName(bValue) << ".");
 
   // Return the new container
   DetectorComponent::PortalContainer dShell;
 
   // The possible bin values
-  std::array<BinningValue, 3u> possibleValues = {
-      BinningValue::binX, BinningValue::binY, BinningValue::binZ};
+  std::array<AxisDirection, 3u> possibleValues = {
+      AxisDirection::AxisX, AxisDirection::AxisY, AxisDirection::AxisZ};
   // And their associated portal sets, see above
   using PortalSet = std::array<std::size_t, 2u>;
   std::vector<PortalSet> portalSets = {
@@ -270,12 +270,12 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
     auto& formerContainer = containers[ic - 1];
     auto& currentContainer = containers[ic];
     // Check and throw exception
-    if (formerContainer.find(startIndex) == formerContainer.end()) {
+    if (!formerContainer.contains(startIndex)) {
       throw std::invalid_argument(
           "CuboidalDetectorHelper: proto container has no fuse portal at index "
           "of former container.");
     }
-    if (currentContainer.find(endIndex) == currentContainer.end()) {
+    if (!currentContainer.contains(endIndex)) {
       throw std::invalid_argument(
           "CuboidalDetectorHelper: proto container has no fuse portal at index "
           "of current container.");
@@ -283,13 +283,11 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
 
     std::shared_ptr<Portal> sPortal = formerContainer.find(startIndex)->second;
     auto sAttachedVolumes =
-        sPortal
-            ->attachedDetectorVolumes()[Direction(Direction::Backward).index()];
+        sPortal->attachedDetectorVolumes()[Direction::Backward().index()];
 
     std::shared_ptr<Portal> ePortal = currentContainer.find(endIndex)->second;
     auto eAttachedVolumes =
-        ePortal
-            ->attachedDetectorVolumes()[Direction(Direction::Forward).index()];
+        ePortal->attachedDetectorVolumes()[Direction::Forward().index()];
 
     auto fusedPortal = Portal::fuse(sPortal, ePortal);
 
@@ -322,7 +320,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::connect(
   return dShell;
 }
 
-std::array<std::vector<Acts::ActsScalar>, 3u>
+std::array<std::vector<double>, 3u>
 Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
     [[maybe_unused]] const GeometryContext& gctx,
     [[maybe_unused]] const std::vector<
@@ -332,22 +330,19 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   ACTS_LOCAL_LOGGER(getDefaultLogger("CuboidalDetectorHelper", logLevel));
 
   // The return boundaries
-  std::array<std::vector<Acts::ActsScalar>, 3u> boundaries;
+  std::array<std::vector<double>, 3u> boundaries;
 
   // The map for collecting
-  std::array<std::map<ActsScalar, std::size_t>, 3u> valueMaps;
+  std::array<std::map<double, std::size_t>, 3u> valueMaps;
   auto& xMap = valueMaps[0u];
   auto& yMap = valueMaps[1u];
   auto& zMap = valueMaps[2u];
 
-  auto fillMap = [&](std::map<ActsScalar, std::size_t>& map,
-                     const std::array<ActsScalar, 2u>& values) {
+  auto fillMap = [&](std::map<double, std::size_t>& map,
+                     const std::array<double, 2u>& values) {
     for (auto v : values) {
-      if (map.find(v) != map.end()) {
-        ++map[v];
-      } else {
-        map[v] = 1u;
-      }
+      // This will insert v with a value of 0 if it doesn't exist
+      ++map[v];
     }
   };
 
@@ -356,18 +351,18 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
     if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCuboid) {
       auto bValues = v->volumeBounds().values();
       // The min/max values
-      ActsScalar halfX = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthX];
-      ActsScalar halfY = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthY];
-      ActsScalar halfZ = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
+      double halfX = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthX];
+      double halfY = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthY];
+      double halfZ = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
       // Get the transform @todo use a center of gravity of the detector
       auto translation = v->transform(gctx).translation();
       // The min/max values
-      ActsScalar xMin = translation.x() - halfX;
-      ActsScalar xMax = translation.x() + halfX;
-      ActsScalar yMin = translation.y() - halfY;
-      ActsScalar yMax = translation.y() + halfY;
-      ActsScalar zMin = translation.z() - halfZ;
-      ActsScalar zMax = translation.z() + halfZ;
+      double xMin = translation.x() - halfX;
+      double xMax = translation.x() + halfX;
+      double yMin = translation.y() - halfY;
+      double yMax = translation.y() + halfY;
+      double zMin = translation.z() - halfZ;
+      double zMax = translation.z() + halfZ;
       // Fill the maps
       fillMap(xMap, {xMin, xMax});
       fillMap(yMap, {yMin, yMax});
@@ -376,7 +371,7 @@ Acts::Experimental::detail::CuboidalDetectorHelper::xyzBoundaries(
   }
 
   for (auto [im, map] : enumerate(valueMaps)) {
-    for (auto [key, value] : map) {
+    for (auto [key, _] : map) {
       boundaries[im].push_back(key);
     }
     std::ranges::sort(boundaries[im]);

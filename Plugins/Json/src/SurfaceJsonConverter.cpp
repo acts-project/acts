@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
@@ -28,8 +28,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-
-#include <algorithm>
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
@@ -45,13 +44,13 @@ void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
 void Acts::to_json(nlohmann::json& j,
                    const std::shared_ptr<const Acts::Surface>& surface) {
   Acts::GeometryContext gctx;
-  j = SurfaceJsonConverter::toJson(gctx, *(surface.get()));
+  j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
 void Acts::toJson(nlohmann::json& j,
                   const std::shared_ptr<const Acts::Surface>& surface,
                   const Acts::GeometryContext& gctx) {
-  j = SurfaceJsonConverter::toJson(gctx, *(surface.get()));
+  j = SurfaceJsonConverter::toJson(gctx, *surface);
 }
 
 std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,6 +22,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
+#include <algorithm>
 #include <functional>
 
 namespace Acts {
@@ -81,8 +82,7 @@ class AdaptiveMultiVertexFitter {
 
     Result<void> removeVertexFromCollection(Vertex& vtxToRemove,
                                             const Logger& logger) {
-      auto it = std::find(vertexCollection.begin(), vertexCollection.end(),
-                          &vtxToRemove);
+      auto it = std::ranges::find(vertexCollection, &vtxToRemove);
       // Check if the value was found before erasing
       if (it == vertexCollection.end()) {
         ACTS_ERROR("vtxToRemove is not part of vertexCollection.");
@@ -98,7 +98,7 @@ class AdaptiveMultiVertexFitter {
     /// @brief Config constructor
     ///
     /// @param est ImpactPointEstimator
-    Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
+    explicit Config(ImpactPointEstimator est) : ipEst(std::move(est)) {}
 
     // ImpactPointEstimator
     ImpactPointEstimator ipEst;
@@ -145,10 +145,9 @@ class AdaptiveMultiVertexFitter {
   /// @param cfg Configuration object
   /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFitter(Config cfg,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::INFO))
+  explicit AdaptiveMultiVertexFitter(
+      Config cfg, std::unique_ptr<const Logger> logger = getDefaultLogger(
+                      "AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)), m_logger(std::move(logger)) {
     if (!m_cfg.extractParameters.connected()) {
       throw std::invalid_argument(

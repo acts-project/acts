@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 
@@ -27,9 +27,9 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   const unsigned int num_slinks = sourceLinks.size();
 
   Acts::Vector3 gPos = Acts::Vector3::Zero();
-  std::optional<Acts::ActsScalar> gTime = std::nullopt;
+  std::optional<double> gTime = std::nullopt;
   Acts::Vector2 gCov = Acts::Vector2::Zero();
-  std::optional<Acts::ActsScalar> gCovT = std::nullopt;
+  std::optional<double> gCovT = std::nullopt;
 
   if (num_slinks == 1) {  // pixel SP formation
     auto slink = sourceLinks.at(0);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -62,8 +62,18 @@ struct SimpleReverseFilteringLogic {
 
   bool doBackwardFiltering(
       Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
-    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    auto momentum = std::abs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
+  }
+};
+
+struct SimpleOutlierFinder {
+  double chi2Cut = std::numeric_limits<double>::infinity();
+
+  bool isOutlier(
+      Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
+    double chi2 = Acts::calculatePredictedChi2(trackState);
+    return chi2 > chi2Cut;
   }
 };
 
@@ -76,6 +86,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
+  SimpleOutlierFinder outlierFinder;
 
   bool multipleScattering = false;
   bool energyLoss = false;
@@ -102,6 +113,8 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     extensions.reverseFilteringLogic
         .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
             &reverseFilteringLogic);
+    extensions.outlierFinder.connect<&SimpleOutlierFinder::isOutlier>(
+        &outlierFinder);
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
@@ -159,7 +172,7 @@ ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold,
-    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    Acts::FreeToBoundCorrection freeToBoundCorrection, double chi2Cut,
     const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
@@ -191,6 +204,7 @@ ActsExamples::makeKalmanFitterFunction(
   fitterFunction->reverseFilteringLogic.momentumThreshold =
       reverseFilteringMomThreshold;
   fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
+  fitterFunction->outlierFinder.chi2Cut = chi2Cut;
 
   return fitterFunction;
 }

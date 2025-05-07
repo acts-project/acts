@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
@@ -97,7 +97,8 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
 
   Acts::GaussianTrackDensity::Config densityCfg;
   densityCfg.extractParameters.connect<&Acts::InputTrack::extractParameters>();
-  auto seeder = std::make_shared<Seeder>(Seeder::Config{{densityCfg}});
+  auto seeder = std::make_shared<Seeder>(
+      Seeder::Config{Acts::GaussianTrackDensity(densityCfg)});
   // Set up the actual vertex finder
   Finder::Config finderCfg(std::move(vertexFitter), seeder, ipEst);
   finderCfg.trackLinearizer.connect<&Linearizer::linearizeTrack>(&linearizer);
@@ -122,7 +123,7 @@ ProcessCode IterativeVertexFinderAlgorithm::execute(
   }
 
   // show some debug output
-  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  ACTS_DEBUG("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
     ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
                                   << vtx.tracks().size() << " tracks.");

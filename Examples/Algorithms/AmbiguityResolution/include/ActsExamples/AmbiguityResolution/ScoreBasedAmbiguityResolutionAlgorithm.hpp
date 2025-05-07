@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <numbers>
 #include <string>
 
 namespace ActsExamples {
@@ -53,16 +54,10 @@ class ScoreBasedAmbiguityResolutionAlgorithm final : public IAlgorithm {
     // maximum number of shared hit per track
     std::size_t maxShared = 5;
 
-    double pTMin = 0 * Acts::UnitConstants::GeV;
-    double pTMax = 1e5 * Acts::UnitConstants::GeV;
+    // minimum number of unshared hits per track
+    std::size_t minUnshared = 5;
 
-    double phiMin = -M_PI * Acts::UnitConstants::rad;
-    double phiMax = M_PI * Acts::UnitConstants::rad;
-
-    double etaMin = -5;
-    double etaMax = 5;
-
-    bool useAmbiguityFunction = false;
+    bool useAmbiguityScoring = false;
   };
 
   /// Construct the ambiguity resolution algorithm.

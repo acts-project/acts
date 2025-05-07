@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -35,7 +35,7 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ///
   /// @param binUtility a BinUtility determining the granularity
   ///        and binning of the material on the volume
-  ProtoVolumeMaterial(const BinUtility& binUtility);
+  explicit ProtoVolumeMaterial(const BinUtility& binUtility);
 
   /// Copy constructor
   ///
@@ -69,15 +69,14 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
 
  private:
   BinUtility m_binUtility;
-  Material m_material;
+  Material m_material = Material::Vacuum();
 };
 
-/// Return the material
 inline const Acts::Material Acts::ProtoVolumeMaterial::material(
     const Acts::Vector3& /*position*/) const {
   return m_material;
 }
-/// Return the bin Utility
+
 inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
   return m_binUtility;
 }

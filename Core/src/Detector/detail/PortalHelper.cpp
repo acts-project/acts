@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/detail/PortalHelper.hpp"
 
@@ -35,8 +35,8 @@ void Acts::Experimental::detail::PortalHelper::attachExternalNavigationDelegate(
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const Direction& direction, const std::vector<ActsScalar>& boundaries,
-    const BinningValue& binning) {
+    const Direction& direction, const std::vector<double>& boundaries,
+    const AxisDirection& binning) {
   // Check if the boundaries need a transform
   const auto pTransform = portal.surface().transform(gctx);
   // Creating a link to the mother

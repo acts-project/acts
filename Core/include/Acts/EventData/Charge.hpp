@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -60,24 +60,23 @@ struct Neutral {
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  constexpr Neutral(float absQ) noexcept {
+  constexpr explicit Neutral(float absQ) noexcept {
     assert((absQ == 0) && "Input charge must be zero");
     (void)absQ;
   }
 
   constexpr float absQ() const noexcept { return 0; }
 
-  constexpr float extractCharge(ActsScalar /*qOverP*/) const noexcept {
+  constexpr float extractCharge(double /*qOverP*/) const noexcept {
     return 0.0f;
   }
 
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
     return 1.0f / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
-                              float signedQ) const noexcept {
+  constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert((signedQ != 0) && "charge must be 0");
     (void)signedQ;
     return 1.0f / momentum;
@@ -103,23 +102,22 @@ struct SinglyCharged {
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  constexpr SinglyCharged(float absQ) noexcept {
+  constexpr explicit SinglyCharged(float absQ) noexcept {
     assert((absQ == UnitConstants::e) && "Input charge magnitude must be e");
     (void)absQ;
   }
 
   constexpr float absQ() const noexcept { return UnitConstants::e; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(UnitConstants::e, qOverP);
   }
 
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
-                              float signedQ) const noexcept {
+  constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert((std::abs(signedQ) == UnitConstants::e) &&
            "absolute charge must be e");
     return signedQ / momentum;
@@ -143,23 +141,22 @@ static_assert(ChargeConcept<SinglyCharged>,
 class NonNeutralCharge {
  public:
   /// Construct with the magnitude of the input charge.
-  constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
+  constexpr explicit NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 < absQ) && "Input charge magnitude must be positive");
   }
-  constexpr NonNeutralCharge(SinglyCharged /*unused*/) noexcept
+  constexpr explicit NonNeutralCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(m_absQ, qOverP);
   }
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return extractCharge(qOverP) / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
-                              float signedQ) const noexcept {
+  constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return signedQ / momentum;
   }
@@ -185,24 +182,23 @@ static_assert(ChargeConcept<NonNeutralCharge>,
 class AnyCharge {
  public:
   /// Construct with the magnitude of the input charge.
-  constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
+  constexpr explicit AnyCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 <= absQ) && "Input charge magnitude must be zero or positive");
   }
-  constexpr AnyCharge(SinglyCharged /*unused*/) noexcept
+  constexpr explicit AnyCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}
-  constexpr AnyCharge(Neutral /*unused*/) noexcept {}
+  constexpr explicit AnyCharge(Neutral /*unused*/) noexcept {}
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
-  constexpr float extractCharge(ActsScalar qOverP) const noexcept {
+  constexpr float extractCharge(double qOverP) const noexcept {
     return std::copysign(m_absQ, qOverP);
   }
-  constexpr ActsScalar extractMomentum(ActsScalar qOverP) const noexcept {
+  constexpr double extractMomentum(double qOverP) const noexcept {
     return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
   }
 
-  constexpr ActsScalar qOverP(ActsScalar momentum,
-                              float signedQ) const noexcept {
+  constexpr double qOverP(double momentum, float signedQ) const noexcept {
     assert(std::abs(signedQ) == m_absQ && "inconsistent charge");
     return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;
   }

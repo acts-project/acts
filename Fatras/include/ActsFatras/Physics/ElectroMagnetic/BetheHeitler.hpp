@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,6 +14,7 @@
 
 #include <array>
 #include <cmath>
+#include <numbers>
 #include <random>
 
 namespace ActsFatras {
@@ -24,9 +25,6 @@ namespace ActsFatras {
 /// "A Gaussian-mixture approximation of the Bethe–Heitler model of electron
 /// energy loss by bremsstrahlung" R. Frühwirth
 struct BetheHeitler {
-  using Scalar = Particle::Scalar;
-  using Vector3 = Particle::Vector3;
-
   /// A scaling factor to
   double scaleFactor = 1.;
 
@@ -41,9 +39,9 @@ struct BetheHeitler {
   /// @param [in] rndTheta1 Random number for the polar angle
   /// @param [in] rndTheta2 Random number for the polar angle
   /// @param [in] rndTheta3 Random number for the polar angle
-  Particle bremPhoton(const Particle &particle, Scalar gammaE, Scalar rndPsi,
-                      Scalar rndTheta1, Scalar rndTheta2,
-                      Scalar rndTheta3) const;
+  Particle bremPhoton(const Particle &particle, double gammaE, double rndPsi,
+                      double rndTheta1, double rndTheta2,
+                      double rndTheta3) const;
 
   /// Simulate energy loss and update the particle parameters.
   ///
@@ -58,15 +56,15 @@ struct BetheHeitler {
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
-    std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),
-                                          1.0);
+    std::gamma_distribution<double> gDist(
+        slab.thicknessInX0() / std::numbers::ln2, 1.);
 
     const auto u = gDist(generator);
     const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
-    std::uniform_real_distribution<Scalar> uDist(0., 1.);
+    std::uniform_real_distribution<double> uDist(0., 1.);
     // Build the produced photon
     Particle photon =
         bremPhoton(particle, sampledEnergyLoss, uDist(generator),

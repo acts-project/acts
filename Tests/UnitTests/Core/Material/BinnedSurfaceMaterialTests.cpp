@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,8 +21,8 @@ namespace Acts::Test {
 
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
-  BinUtility xyBinning(2, -1., 1., open, BinningValue::binX);
-  xyBinning += BinUtility(3, -3., 3., open, BinningValue::binY);
+  BinUtility xyBinning(2, -1., 1., open, AxisDirection::AxisX);
+  xyBinning += BinUtility(3, -3., 3., open, AxisDirection::AxisY);
 
   // Constructor a few material properties
   MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);

@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -39,9 +39,10 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// Constructor
   ///
   /// @param logger logging instance
-  LayerArrayCreator(const Config& /*cfg*/,
-                    std::unique_ptr<const Logger> logger =
-                        getDefaultLogger("LayerArrayCreator", Logging::INFO))
+  explicit LayerArrayCreator(const Config& /*cfg*/,
+                             std::unique_ptr<const Logger> logger =
+                                 getDefaultLogger("LayerArrayCreator",
+                                                  Logging::INFO))
       : m_logger(std::move(logger)) {}
 
   /// Destructor
@@ -54,13 +55,13 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param min is the minimum value for binning
   /// @param max is the maximum value for binning
   /// @param bType is the binning type
-  /// @param bValue is the value in which the binning should be done
+  /// @param aDir is the axis direction for the layer binning
   ///
   /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layersInput, double min,
       double max, BinningType bType = arbitrary,
-      BinningValue bValue = BinningValue::binX) const override;
+      AxisDirection aDir = AxisDirection::AxisX) const override;
 
   /// set logging instance
   void setLogger(std::unique_ptr<const Logger> logger) {
@@ -79,11 +80,11 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param layer object and thus needs the
   /// @param gctx geometry context.
   ///
-  /// @param bValue is the Binning value for the layer array
+  /// @param aDir is the axis direction for the binning
   /// @param offset is the sift for the navigation layer
   std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
                                                    const Layer& layer,
-                                                   BinningValue bValue,
+                                                   AxisDirection aDir,
                                                    double offset) const;
 };
 

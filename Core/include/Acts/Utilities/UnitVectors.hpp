@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -79,7 +79,7 @@ inline Eigen::Matrix<T, 2, 1> makePhiThetaFromDirection(
 /// The special case of the direction vector pointing along the z-axis is
 /// handled by forcing the unit vector to along the x-axis.
 template <typename InputVector>
-inline auto makeCurvilinearUnitU(
+inline auto createCurvilinearUnitU(
     const Eigen::MatrixBase<InputVector>& direction) {
   EIGEN_STATIC_ASSERT_FIXED_SIZE(InputVector);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(InputVector);
@@ -121,7 +121,7 @@ inline auto makeCurvilinearUnitU(
 ///
 /// with the additional condition that `U` is located in the global x-y plane.
 template <typename InputVector>
-inline auto makeCurvilinearUnitVectors(
+inline auto createCurvilinearUnitVectors(
     const Eigen::MatrixBase<InputVector>& direction) {
   EIGEN_STATIC_ASSERT_FIXED_SIZE(InputVector);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(InputVector);
@@ -131,7 +131,7 @@ inline auto makeCurvilinearUnitVectors(
   using OutputVector = typename InputVector::PlainObject;
 
   std::pair<OutputVector, OutputVector> unitVectors;
-  unitVectors.first = makeCurvilinearUnitU(direction);
+  unitVectors.first = createCurvilinearUnitU(direction);
   unitVectors.second = direction.cross(unitVectors.first);
   unitVectors.second.normalize();
   return unitVectors;

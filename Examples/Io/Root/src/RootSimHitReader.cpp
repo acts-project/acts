@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootSimHitReader.hpp"
 
@@ -29,7 +29,7 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
     : IReader(),
       m_cfg(config),
       m_logger(Acts::getDefaultLogger(name(), level)) {
-  m_inputChain = new TChain(m_cfg.treeName.c_str());
+  m_inputChain = std::make_unique<TChain>(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
@@ -103,14 +103,16 @@ RootSimHitReader::RootSimHitReader(const RootSimHitReader::Config& config,
                              << availableEvents().second);
 }
 
+RootSimHitReader::~RootSimHitReader() = default;
+
 std::pair<std::size_t, std::size_t> RootSimHitReader::availableEvents() const {
   return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
 
 ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
-  auto it = std::find_if(
-      m_eventMap.begin(), m_eventMap.end(),
-      [&](const auto& a) { return std::get<0>(a) == context.eventNumber; });
+  auto it = std::ranges::find_if(m_eventMap, [&](const auto& a) {
+    return std::get<0>(a) == context.eventNumber;
+  });
 
   if (it == m_eventMap.end()) {
     // explicitly warn if it happens for the first or last event as that might
@@ -144,8 +146,8 @@ ProcessCode RootSimHitReader::read(const AlgorithmContext& context) {
       break;
     }
 
-    const Acts::GeometryIdentifier geoid = m_uint64Columns.at("geometry_id");
-    const SimBarcode pid = m_uint64Columns.at("particle_id");
+    const Acts::GeometryIdentifier geoid{m_uint64Columns.at("geometry_id")};
+    const SimBarcode pid{m_uint64Columns.at("particle_id")};
     const auto index = m_int32Columns.at("index");
 
     const Acts::Vector4 pos4 = {

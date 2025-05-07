@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
@@ -20,10 +20,8 @@
 #include <algorithm>
 #include <array>
 #include <optional>
-#include <ostream>
 #include <random>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;
@@ -32,13 +30,15 @@ namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
+const double minHalfX = 1.;
+const double maxHalfX = 6.;
+const double halfY = 2.;
+
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
-  //
-  // default construction  deleted
-  // TrapezoidBounds defaultConstructedTrapezoidBounds;
-  //
+  /// Test default construction
+  // default construction is deleted
+
   /// Test construction with defining half lengths
   BOOST_CHECK_EQUAL(TrapezoidBounds(minHalfX, maxHalfX, halfY).type(),
                     SurfaceBounds::eTrapezoid);
@@ -50,7 +50,6 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsConstruction) {
 
 /// Unit test for creating compliant/non-compliant TrapezoidBounds object
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
   /// Copy constructor
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   // const bool symmetric(false);
@@ -63,8 +62,6 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
 
 // Exception tests
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
-
   // Negative x at min y
   BOOST_CHECK_THROW(TrapezoidBounds(-minHalfX, maxHalfX, halfY),
                     std::logic_error);
@@ -84,25 +81,23 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsException) {
 
 /// Unit tests for TrapezoidBounds properties
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
-  //
   TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
-  //
+
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.type(), SurfaceBounds::eTrapezoid);
-  //
+
   /// Test minHalflengthX
   BOOST_CHECK_EQUAL(
       trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXnegY), minHalfX);
-  //
+
   /// Test maxHalfLengthX
   BOOST_CHECK_EQUAL(
       trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthXposY), maxHalfX);
-  //
+
   /// Test halflengthY
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY),
                     halfY);
-  //
+
   /// Test distanceToBoundary
   Vector2 outside(30., 0.);
   Vector2 inRectangle(2., 0.5);
@@ -114,24 +109,18 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
   BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(), actualVertices.cend(),
                                 expectedVertices.cbegin(),
                                 expectedVertices.cend());
-  /**
-  for (auto i: trapezoidBoundsObject.vertices()){
-    std::cout<<i[0]<<", "<<i[1]<<std::endl;
-  }**/
-  //
+
   /// Test boundingBox
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.boundingBox(),
                     RectangleBounds(6., 2.));
-  //
 
-  //
   /// Test dump
-  boost::test_tools::output_test_stream dumpOuput;
-  trapezoidBoundsObject.toStream(dumpOuput);
-  BOOST_CHECK(dumpOuput.is_equal(
+  boost::test_tools::output_test_stream dumpOutput;
+  trapezoidBoundsObject.toStream(dumpOutput);
+  BOOST_CHECK(dumpOutput.is_equal(
       "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY, rotAngle) = "
       "(1.0000000, 6.0000000, 2.0000000, 0.0000000)"));
-  //
+
   /// Test inside
   BOOST_CHECK(
       trapezoidBoundsObject.inside(inRectangle, BoundaryTolerance::None()));
@@ -161,7 +150,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
       {2, 2.5},
       {-2, 2.5},
       {2, -2.5},
-      {2, -2.5},
+      {-2, -2.5},
       {4, -1},
       {-4, -1},
       {-7, 0},
@@ -171,7 +160,6 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties) {
       {-5, -3},
       {-5, 3},
       {6, 2},
-
   };
 
   for (const auto& p : testPoints) {
@@ -191,17 +179,17 @@ BOOST_DATA_TEST_CASE(
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                        bdata::distribution =
                            std::uniform_real_distribution<double>(-3, 3))) ^
-        bdata::xrange(1000) * bdata::make({0.0, 0.1, 0.2, 0.3}),
+        bdata::xrange(1000) * bdata::make({0., 0.1, 0.2, 0.3}),
     x, y, index, tol) {
   (void)index;
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
+
   static const TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
   static const auto vertices = trapezoidBoundsObject.vertices();
 
   BoundaryTolerance tolerance = BoundaryTolerance::None();
 
-  if (tol != 0.0) {
-    tolerance = BoundaryTolerance::AbsoluteBound{tol, tol};
+  if (tol != 0.) {
+    tolerance = BoundaryTolerance::AbsoluteBound(tol, tol);
   }
 
   BOOST_CHECK_EQUAL(
@@ -211,10 +199,11 @@ BOOST_DATA_TEST_CASE(
 
 /// Unit test for testing TrapezoidBounds assignment
 BOOST_AUTO_TEST_CASE(TrapezoidBoundsAssignment) {
-  double minHalfX(1.), maxHalfX(6.), halfY(2.);
   TrapezoidBounds trapezoidBoundsObject(minHalfX, maxHalfX, halfY);
-  // operator == not implemented in this class
-  //
+
+  /// Test operator ==
+  // not implemented in this class
+
   /// Test assignment
   TrapezoidBounds assignedTrapezoidBoundsObject(10., 20., 14.2);
   assignedTrapezoidBoundsObject = trapezoidBoundsObject;

@@ -1,14 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -44,7 +45,7 @@ class RootAthenaDumpReader : public IReader {
     // Name of tree
     std::string treename;
     // Name of inputfile
-    std::string inputfile;
+    std::vector<std::string> inputfiles;
     // name of the output measurements
     std::string outputMeasurements = "athena_measurements";
     // name of the output pixel space points
@@ -57,18 +58,46 @@ class RootAthenaDumpReader : public IReader {
     std::string outputClusters = "athena_clusters";
     // name of the output particles
     std::string outputParticles = "athena_particles";
-    // name of the simhit map
+    // name of the measurements -> particles map
     std::string outputMeasurementParticlesMap = "athena_meas_parts_map";
+    // name of the particles -> measurements map
+    std::string outputParticleMeasurementsMap = "athena_parts_meas_map";
     // name of the track parameters (fitted by athena?)
     std::string outputTrackParameters = "athena_track_parameters";
+
+    /// Only extract spacepoints
+    bool onlySpacepoints = false;
+
+    /// Skip truth data
+    bool noTruth = false;
 
     /// Only extract particles that passed the tracking requirements, for
     /// details see:
     /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.cxx?ref_type=heads#L1363
     bool onlyPassedParticles = false;
 
+    /// Skip spacepoints with phi overlap
     bool skipOverlapSPsPhi = false;
+
+    /// Skip spacepoints with eta overlap
     bool skipOverlapSPsEta = false;
+
+    /// A map that provides a mapping between ACTS and Athena surface
+    /// identifiers
+    std::shared_ptr<ActsExamples::GeometryIdMapActsAthena> geometryIdMap =
+        nullptr;
+
+    /// Tracking Geometry that contains the surfaces where we project
+    /// the measurements on
+    std::shared_ptr<Acts::TrackingGeometry> trackingGeometry = nullptr;
+
+    /// When projecting measurements on ACTS surfaces, which euclidean boundary
+    /// tolerance should be allowed. If a value above zero is needed, this
+    /// indicates that the ACTS surfaces do not 100% include the athena surfaces
+    double absBoundaryTolerance = 0.0;
+
+    /// Whether to read cell data
+    bool readCellData = true;
   };
 
   RootAthenaDumpReader(const RootAthenaDumpReader &) = delete;
@@ -94,11 +123,41 @@ class RootAthenaDumpReader : public IReader {
   const Config &config() const { return m_cfg; }
 
  private:
+  /// Particles with barcodes larger then this value are considered to be
+  /// secondary particles
+  /// https://gitlab.cern.ch/atlas/athena/-/blob/main/InnerDetector/InDetGNNTracking/src/DumpObjects.h?ref_type=heads#L101
+  constexpr static int s_maxBarcodeForPrimary = 200000;
+
   /// Private access to the logging instance
   const Acts::Logger &logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;
+
+  /// Helper method to read particles
+  SimParticleContainer readParticles() const;
+
+  /// Helper method to read measurements
+  std::tuple<ClusterContainer, MeasurementContainer,
+             IndexMultimap<ActsFatras::Barcode>,
+             std::unordered_map<int, std::size_t>>
+  readMeasurements(SimParticleContainer &particles,
+                   const Acts::GeometryContext &gctx) const;
+
+  /// Helper method to read spacepoints
+  /// @param imIdxMap optional remapping of indices. Since the measurement
+  /// index must be continuous, we need to remap the measurements indices
+  /// if we skip measurements in the first place
+  std::tuple<SimSpacePointContainer, SimSpacePointContainer,
+             SimSpacePointContainer>
+  readSpacepoints(const std::optional<std::unordered_map<int, std::size_t>>
+                      &imIdxMap) const;
+
+  /// Helper method to reprocess particle ids
+  std::pair<SimParticleContainer, IndexMultimap<ActsFatras::Barcode>>
+  reprocessParticles(
+      const SimParticleContainer &particles,
+      const IndexMultimap<ActsFatras::Barcode> &measPartMap) const;
 
   /// Write handlers
   WriteDataHandle<SimSpacePointContainer> m_outputPixelSpacePoints{
@@ -114,6 +173,8 @@ class RootAthenaDumpReader : public IReader {
       this, "output_measurements"};
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputMeasParticleMap{
       this, "output_meas_part_map"};
+  WriteDataHandle<InverseMultimap<ActsFatras::Barcode>> m_outputParticleMeasMap{
+      this, "output_part_meas_map"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::mutex m_read_mutex;
@@ -121,7 +182,8 @@ class RootAthenaDumpReader : public IReader {
   /// Vector of {eventNr, entryMin, entryMax}
   std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
   std::shared_ptr<TChain> m_inputchain;
-  long unsigned int m_events;
+  std::size_t m_events;
+  bool m_haveStripFeatures = true;
 
   static constexpr unsigned int maxCL = 1500000;
   static constexpr unsigned int maxSP = 1500000;
@@ -138,7 +200,7 @@ class RootAthenaDumpReader : public IReader {
   int CLindex[maxCL] = {};  //[nCL]
 
   // Clusters
-  std::vector<std::string> *CLhardware;
+  std::vector<std::string> *CLhardware{};
   Double_t CLx[maxCL] = {};           //[nCL]
   Double_t CLy[maxCL] = {};           //[nCL]
   Double_t CLz[maxCL] = {};           //[nCL]
@@ -148,13 +210,13 @@ class RootAthenaDumpReader : public IReader {
   Int_t CLphi_module[maxCL] = {};     //[nCL]
   Int_t CLside[maxCL] = {};           //[nCL]
   ULong64_t CLmoduleID[maxCL] = {};   //[nCL]
-  std::vector<std::vector<int>> *CLparticleLink_eventIndex;
-  std::vector<std::vector<int>> *CLparticleLink_barcode;
-  std::vector<std::vector<bool>> *CLbarcodesLinked;
-  std::vector<std::vector<float>> *CLparticle_charge;
-  std::vector<std::vector<int>> *CLphis;
-  std::vector<std::vector<int>> *CLetas;
-  std::vector<std::vector<int>> *CLtots;
+  std::vector<std::vector<int>> *CLparticleLink_eventIndex{};
+  std::vector<std::vector<int>> *CLparticleLink_barcode{};
+  std::vector<std::vector<bool>> *CLbarcodesLinked{};
+  std::vector<std::vector<float>> *CLparticle_charge{};
+  std::vector<std::vector<int>> *CLphis{};
+  std::vector<std::vector<int>> *CLetas{};
+  std::vector<std::vector<int>> *CLtots{};
   Double_t CLloc_direction1[maxCL] = {};      //[nCL]
   Double_t CLloc_direction2[maxCL] = {};      //[nCL]
   Double_t CLloc_direction3[maxCL] = {};      //[nCL]
@@ -172,7 +234,7 @@ class RootAthenaDumpReader : public IReader {
   Float_t CLnorm_x[maxCL] = {};               //[nCL]
   Float_t CLnorm_y[maxCL] = {};               //[nCL]
   Float_t CLnorm_z[maxCL] = {};               //[nCL]
-  std::vector<std::vector<double>> *CLlocal_cov;
+  std::vector<std::vector<double>> *CLlocal_cov{};
 
   // Particles
   Int_t nPartEVT = 0;
@@ -195,8 +257,8 @@ class RootAthenaDumpReader : public IReader {
   Int_t Part_vProdNout[maxPart] = {};     //[nPartEVT]
   Int_t Part_vProdStatus[maxPart] = {};   //[nPartEVT]
   Int_t Part_vProdBarcode[maxPart] = {};  //[nPartEVT]
-  std::vector<std::vector<int>> *Part_vParentID;
-  std::vector<std::vector<int>> *Part_vParentBarcode;
+  std::vector<std::vector<int>> *Part_vParentID{};
+  std::vector<std::vector<int>> *Part_vParentBarcode{};
 
   // Spacepoints
   Int_t nSP = 0;
@@ -212,27 +274,30 @@ class RootAthenaDumpReader : public IReader {
   double SPcovz[maxSP] = {};        //[nSP]
   float SPhl_topstrip[maxSP] = {};  //[nSP]
   float SPhl_botstrip[maxSP] = {};  //[nSP]
-  std::vector<std::vector<float>> *SPtopStripDirection;
-  std::vector<std::vector<float>> *SPbottomStripDirection;
-  std::vector<std::vector<float>> *SPstripCenterDistance;
-  std::vector<std::vector<float>> *SPtopStripCenterPosition;
+  std::vector<std::vector<float>> *SPtopStripDirection{};
+  std::vector<std::vector<float>> *SPbottomStripDirection{};
+  std::vector<std::vector<float>> *SPstripCenterDistance{};
+  std::vector<std::vector<float>> *SPtopStripCenterPosition{};
 
+  // Those fields are not used currently
+  // Keep the code though, since it is annoying to write
+  /*
   // Tracks
   Int_t nTRK = 0;
   Int_t TRKindex[maxTRK] = {};                //[nTRK]
   Int_t TRKtrack_fitter[maxTRK] = {};         //[nTRK]
   Int_t TRKparticle_hypothesis[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKproperties;
-  std::vector<std::vector<int>> *TRKpattern;
+  std::vector<std::vector<int>> *TRKproperties{};
+  std::vector<std::vector<int>> *TRKpattern{};
   Int_t TRKndof[maxTRK] = {};     //[nTRK]
   Int_t TRKmot[maxTRK] = {};      //[nTRK]
   Int_t TRKoot[maxTRK] = {};      //[nTRK]
   Float_t TRKchiSq[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index;
-  std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index;
+  std::vector<std::vector<int>> *TRKmeasurementsOnTrack_pixcl_sctcl_index{};
+  std::vector<std::vector<int>> *TRKoutliersOnTrack_pixcl_sctcl_index{};
   Int_t TRKcharge[maxTRK] = {};  //[nTRK]
-  std::vector<std::vector<double>> *TRKperigee_position;
-  std::vector<std::vector<double>> *TRKperigee_momentum;
+  std::vector<std::vector<double>> *TRKperigee_position{};
+  std::vector<std::vector<double>> *TRKperigee_momentum{};
   Int_t TTCindex[maxTRK] = {};          //[nTRK]
   Int_t TTCevent_index[maxTRK] = {};    //[nTRK]
   Int_t TTCparticle_link[maxTRK] = {};  //[nTRK]
@@ -242,10 +307,11 @@ class RootAthenaDumpReader : public IReader {
   Int_t nDTT = 0;
   Int_t DTTindex[maxDTT] = {};  //[nDTT]
   Int_t DTTsize[maxDTT] = {};   //[nDTT]
-  std::vector<std::vector<int>> *DTTtrajectory_eventindex;
-  std::vector<std::vector<int>> *DTTtrajectory_barcode;
-  std::vector<std::vector<int>> *DTTstTruth_subDetType;
-  std::vector<std::vector<int>> *DTTstTrack_subDetType;
-  std::vector<std::vector<int>> *DTTstCommon_subDetType;
+  std::vector<std::vector<int>> *DTTtrajectory_eventindex{};
+  std::vector<std::vector<int>> *DTTtrajectory_barcode{};
+  std::vector<std::vector<int>> *DTTstTruth_subDetType{};
+  std::vector<std::vector<int>> *DTTstTrack_subDetType{};
+  std::vector<std::vector<int>> *DTTstCommon_subDetType{};
+  */
 };
 }  // namespace ActsExamples

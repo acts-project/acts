@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -81,12 +81,8 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(resolveMaterial);
-    ACTS_PYTHON_MEMBER(resolvePassive);
-    ACTS_PYTHON_MEMBER(resolveSensitive);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
+                       trackingGeometry);
   }
 
   {
@@ -104,12 +100,8 @@ void addPropagation(Context& ctx) {
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(resolveMaterial);
-    ACTS_PYTHON_MEMBER(resolvePassive);
-    ACTS_PYTHON_MEMBER(resolveSensitive);
-    ACTS_PYTHON_MEMBER(detector);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_STRUCT(c, resolveMaterial, resolvePassive, resolveSensitive,
+                       detector);
   }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

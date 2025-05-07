@@ -1,51 +1,51 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/detail/BoundaryCheckHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <utility>
 
-using Acts::VectorHelpers::perp;
-using Acts::VectorHelpers::phi;
+namespace Acts {
 
-Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
-  return SurfaceBounds::eCylinder;
+using VectorHelpers::perp;
+using VectorHelpers::phi;
+
+std::vector<double> CylinderBounds::values() const {
+  return {m_values.begin(), m_values.end()};
 }
 
-Acts::Vector2 Acts::CylinderBounds::shifted(
-    const Acts::Vector2& lposition) const {
-  return {Acts::detail::radian_sym((lposition[Acts::eBoundLoc0] / get(eR)) -
-                                   get(eAveragePhi)),
-          lposition[Acts::eBoundLoc1]};
+Vector2 CylinderBounds::shifted(const Vector2& lposition) const {
+  return {detail::radian_sym((lposition[0] / get(eR)) - get(eAveragePhi)),
+          lposition[1]};
 }
 
-Acts::ActsMatrix<2, 2> Acts::CylinderBounds::jacobian() const {
-  ActsMatrix<2, 2> j;
-  j(0, eBoundLoc0) = 1 / get(eR);
-  j(0, eBoundLoc1) = 0;
-  j(1, eBoundLoc0) = 0;
-  j(1, eBoundLoc1) = 1;
+SquareMatrix2 CylinderBounds::jacobian() const {
+  SquareMatrix2 j;
+  j(0, 0) = 1 / get(eR);
+  j(0, 1) = 0;
+  j(1, 0) = 0;
+  j(1, 1) = 1;
   return j;
 }
 
-bool Acts::CylinderBounds::inside(
-    const Vector2& lposition,
-    const BoundaryTolerance& boundaryTolerance) const {
+bool CylinderBounds::inside(const Vector2& lposition,
+                            const BoundaryTolerance& boundaryTolerance) const {
   double bevelMinZ = get(eBevelMinZ);
   double bevelMaxZ = get(eBevelMaxZ);
 
@@ -69,8 +69,8 @@ bool Acts::CylinderBounds::inside(
   double localx =
       lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
   Vector2 shiftedlposition = shifted(lposition);
-  if ((std::fabs(shiftedlposition[0]) <= halfPhi &&
-       std::fabs(shiftedlposition[1]) <= halfLengthZ)) {
+  if ((std::abs(shiftedlposition[0]) <= halfPhi &&
+       std::abs(shiftedlposition[1]) <= halfLengthZ)) {
     return true;
   }
 
@@ -92,7 +92,7 @@ bool Acts::CylinderBounds::inside(
                                jacobian());
 }
 
-std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
+std::ostream& CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "
@@ -104,31 +104,26 @@ std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
-    const Transform3 ctrans, std::size_t lseg) const {
+std::vector<Vector3> CylinderBounds::circleVertices(
+    const Transform3 transform, unsigned int quarterSegments) const {
   std::vector<Vector3> vertices;
 
   double avgPhi = get(eAveragePhi);
   double halfPhi = get(eHalfPhiSector);
 
-  bool fullCylinder = coversFullAzimuth();
-
-  // Get the phi segments from the helper - ensures extra points
-  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
-                              : detail::VerticesHelper::phiSegments(
-                                    avgPhi - halfPhi, avgPhi + halfPhi,
-                                    {static_cast<ActsScalar>(avgPhi)});
+  std::vector<double> phiRef = {};
+  if (bool fullCylinder = coversFullAzimuth(); fullCylinder) {
+    phiRef = {avgPhi};
+  }
 
   // Write the two bows/circles on either side
   std::vector<int> sides = {-1, 1};
   for (auto& side : sides) {
-    for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 && !fullCylinder) ? 1 : 0;
-      /// Helper method to create the segment
-      detail::VerticesHelper::createSegment(
-          vertices, {get(eR), get(eR)}, phiSegs[iseg], phiSegs[iseg + 1], lseg,
-          addon, Vector3(0., 0., side * get(eHalfLengthZ)), ctrans);
-    }
+    // Helper method to create the segment
+    auto svertices = detail::VerticesHelper::segmentVertices(
+        {get(eR), get(eR)}, avgPhi - halfPhi, avgPhi + halfPhi, phiRef,
+        quarterSegments, Vector3(0., 0., side * get(eHalfLengthZ)), transform);
+    vertices.insert(vertices.end(), svertices.begin(), svertices.end());
   }
 
   double bevelMinZ = get(eBevelMinZ);
@@ -138,11 +133,11 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   if ((bevelMinZ != 0. || bevelMaxZ != 0.) && vertices.size() % 2 == 0) {
     auto halfWay = vertices.end() - vertices.size() / 2;
     double mult{1};
-    auto invCtrans = ctrans.inverse();
-    auto func = [&mult, &ctrans, &invCtrans](Vector3& v) {
-      v = invCtrans * v;
+    auto invTransform = transform.inverse();
+    auto func = [&mult, &transform, &invTransform](Vector3& v) {
+      v = invTransform * v;
       v(2) += v(1) * mult;
-      v = ctrans * v;
+      v = transform * v;
     };
     if (bevelMinZ != 0.) {
       mult = std::tan(-bevelMinZ);
@@ -156,18 +151,20 @@ std::vector<Acts::Vector3> Acts::CylinderBounds::createCircles(
   return vertices;
 }
 
-void Acts::CylinderBounds::checkConsistency() noexcept(false) {
+void CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid radial setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid radial setup: radius is negative");
   }
   if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("CylinderBounds: invalid length setup.");
+    throw std::invalid_argument(
+        "CylinderBounds: invalid length setup: half length is negative");
   }
-  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > M_PI) {
+  if (get(eHalfPhiSector) <= 0. || get(eHalfPhiSector) > std::numbers::pi) {
     throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi)) &&
-      std::abs(std::abs(get(eAveragePhi)) - M_PI) > s_epsilon) {
+      std::abs(std::abs(get(eAveragePhi)) - std::numbers::pi) > s_epsilon) {
     throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
   }
   if (get(eBevelMinZ) != detail::radian_sym(get(eBevelMinZ))) {
@@ -177,3 +174,5 @@ void Acts::CylinderBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument("CylinderBounds: invalid bevel at max Z.");
   }
 }
+
+}  // namespace Acts

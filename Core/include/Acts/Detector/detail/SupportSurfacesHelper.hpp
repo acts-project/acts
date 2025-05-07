@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -32,7 +32,7 @@ using namespace UnitLiterals;
 namespace Experimental::detail::SupportSurfacesHelper {
 
 using SupportSurfaceComponents =
-    std::tuple<Surface::SurfaceType, std::vector<ActsScalar>, Acts::Transform3>;
+    std::tuple<Surface::SurfaceType, std::vector<double>, Acts::Transform3>;
 
 /// @brief  A support creator turns an extend into a vector of bound values
 using SurfaceComponentsCreator =
@@ -44,15 +44,15 @@ struct CylindricalSupport {
   /// - negative indicates inner support
   /// - zero is centered (not recommended)
   /// - positive indicates outer support
-  ActsScalar rOffset = 0.;
+  double rOffset = 0.;
 
   /// Clearance in z in order to make the support surfaces
   /// not touch the volume boundaries
-  std::array<ActsScalar, 2u> zClearance = {1_mm, 1_mm};
+  std::array<double, 2u> zClearance = {1_mm, 1_mm};
 
   /// Clearance in phi if a sectoral support is chosen
   /// not to touch the volume boundaries
-  std::array<ActsScalar, 2u> phiClearance = {0.0001_rad, 0.0001_rad};
+  std::array<double, 2u> phiClearance = {0.0001_rad, 0.0001_rad};
 
   // Type is obviously a cylinder
   static constexpr Surface::SurfaceType type = Surface::SurfaceType::Cylinder;
@@ -71,15 +71,15 @@ struct DiscSupport {
   /// - negative indicates support an z min
   /// - zero is centered
   /// - positive indicates support at z max
-  ActsScalar zOffset = 0.;
+  double zOffset = 0.;
 
   /// Clearance in r in order to make the support surfaces
   /// not touch the volume boundaries
-  std::array<ActsScalar, 2u> rClearance = {1_mm, 1_mm};
+  std::array<double, 2u> rClearance = {1_mm, 1_mm};
 
   /// Clearance in phi if a sectoral support is chosen
   /// not to touch the volume boundaries
-  std::array<ActsScalar, 2u> phiClearance = {0.0001_rad, 0.0001_rad};
+  std::array<double, 2u> phiClearance = {0.0001_rad, 0.0001_rad};
 
   // Type is obviously a disc
   static constexpr Surface::SurfaceType type = Surface::SurfaceType::Disc;
@@ -95,17 +95,17 @@ struct DiscSupport {
 /// @brief Helper method to build planar support structure
 struct RectangularSupport {
   /// Placement - the remaining loc0, loc1 are then cyclic
-  BinningValue pPlacement = BinningValue::binZ;
+  AxisDirection pPlacement = AxisDirection::AxisZ;
 
   /// Offset in position placement
-  ActsScalar pOffset = 0.;
+  double pOffset = 0.;
 
   /// Clearance in first local direction - cyclic order
-  std::array<ActsScalar, 2u> loc0Clearance = {1_mm, 1_mm};
+  std::array<double, 2u> loc0Clearance = {1_mm, 1_mm};
 
   /// Clearance in phi if a sectoral support is chosen
   /// not to touch the volume boundaries
-  std::array<ActsScalar, 2u> loc1Clearance = {1_mm, 1_mm};
+  std::array<double, 2u> loc1Clearance = {1_mm, 1_mm};
 
   // Type is obviously a plane
   static constexpr Surface::SurfaceType type = Surface::SurfaceType::Plane;

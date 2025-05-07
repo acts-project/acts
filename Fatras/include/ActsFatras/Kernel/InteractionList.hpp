@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -83,9 +83,7 @@ template <typename process_t>
 concept PointLikeProcessConcept = requires(
     const process_t& p, std::uniform_int_distribution<unsigned int>& rng,
     const Particle& prt) {
-  {
-    p.generatePathLimits(rng, prt)
-  } -> std::same_as<std::pair<Particle::Scalar, Particle::Scalar>>;
+  { p.generatePathLimits(rng, prt) } -> std::same_as<std::pair<double, double>>;
 };
 
 template <typename process_t>
@@ -177,10 +175,8 @@ class InteractionList {
  public:
   /// Point-like interaction selection.
   struct Selection {
-    Particle::Scalar x0Limit =
-        std::numeric_limits<Particle::Scalar>::infinity();
-    Particle::Scalar l0Limit =
-        std::numeric_limits<Particle::Scalar>::infinity();
+    double x0Limit = std::numeric_limits<double>::infinity();
+    double l0Limit = std::numeric_limits<double>::infinity();
     std::size_t x0Process = std::numeric_limits<std::size_t>::max();
     std::size_t l0Process = std::numeric_limits<std::size_t>::max();
   };

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,9 +18,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
@@ -43,21 +41,21 @@ struct TestSourceLink final {
   std::size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
-  Acts::ActsVector<2> parameters;
+  Acts::Vector2 parameters;
   Acts::ActsSquareMatrix<2> covariance;
 
   /// Construct a source link for a 1d measurement.
-  TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
+  TestSourceLink(BoundIndices idx, double val, double var,
                  GeometryIdentifier gid = GeometryIdentifier(),
                  std::size_t sid = 0u)
       : m_geometryId(gid),
         sourceId(sid),
         indices{idx, eBoundSize},
         parameters(val, 0),
-        covariance(Acts::ActsVector<2>(var, 0).asDiagonal()) {}
+        covariance(Acts::Vector2(var, 0).asDiagonal()) {}
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
-                 const Acts::ActsVector<2>& params,
+                 const Acts::Vector2& params,
                  const Acts::ActsSquareMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(),
                  std::size_t sid = 0u)
@@ -72,12 +70,13 @@ struct TestSourceLink final {
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
+
   bool operator==(const TestSourceLink& rhs) const {
     return (m_geometryId == rhs.m_geometryId) && (sourceId == rhs.sourceId) &&
            (indices == rhs.indices) && (parameters == rhs.parameters) &&
            (covariance == rhs.covariance);
   }
-  bool operator!=(const TestSourceLink& rhs) const { return !(*this == rhs); }
+
   std::ostream& print(std::ostream& os) const {
     os << "TestsSourceLink(geometryId=" << m_geometryId
        << ",sourceId=" << sourceId;
@@ -125,7 +124,7 @@ inline std::ostream& operator<<(std::ostream& os,
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
-void testSourceLinkCalibratorReturn(
+void testSourceLinkCalibrator(
     const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
     const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
@@ -138,31 +137,18 @@ void testSourceLinkCalibratorReturn(
     trackState.allocateCalibrated(2);
     trackState.template calibrated<2>() = sl.parameters;
     trackState.template calibratedCovariance<2>() = sl.covariance;
-    trackState.template setSubspaceIndices(
+    trackState.setProjectorSubspaceIndices(
         std::array{sl.indices[0], sl.indices[1]});
   } else if (sl.indices[0] != Acts::eBoundSize) {
     trackState.allocateCalibrated(1);
     trackState.template calibrated<1>() = sl.parameters.head<1>();
     trackState.template calibratedCovariance<1>() =
         sl.covariance.topLeftCorner<1, 1>();
-    trackState.template setSubspaceIndices(std::array{sl.indices[0]});
+    trackState.setProjectorSubspaceIndices(std::array{sl.indices[0]});
   } else {
     throw std::runtime_error(
         "Tried to extract measurement from invalid TestSourceLink");
   }
-}
-
-/// Extract the measurement from a TestSourceLink.
-///
-/// @param gctx Unused
-/// @param trackState TrackState to calibrated
-template <typename trajectory_t>
-void testSourceLinkCalibrator(
-    const GeometryContext& gctx, const CalibrationContext& cctx,
-    const SourceLink& sourceLink,
-    typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
-                                               trackState);
 }
 
 }  // namespace Acts::detail::Test

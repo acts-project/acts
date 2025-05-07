@@ -1,17 +1,24 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <type_traits>
+
 namespace Acts::detail {
 
-/// A helper type for providinig a propagation state which can be used with
-/// functions expecting single-component steppers and states
+/// A helper struct to store a reference to a single-component state and its
+/// associated navigation state and options
 template <typename stepping_t, typename navigation_t, typename options_t,
           typename geoctx_t>
 struct SinglePropState {
@@ -37,10 +44,11 @@ struct LoopComponentProxyBase {
 
   component_t& cmp;
 
-  LoopComponentProxyBase(component_t& c) : cmp(c) {}
+  explicit LoopComponentProxyBase(component_t& c) : cmp(c) {}
 
   // These are the const accessors, which are shared between the mutable
   // ComponentProxy and the ConstComponentProxy
+  const auto& state() const { return cmp.state; }
   auto status() const { return cmp.status; }
   auto weight() const { return cmp.weight; }
   auto pathAccumulated() const { return cmp.state.pathAccumulated; }
@@ -92,6 +100,7 @@ struct LoopComponentProxy
   using Base::pathAccumulated;
   using Base::singleState;
   using Base::singleStepper;
+  using Base::state;
   using Base::status;
   using Base::weight;
 
@@ -103,6 +112,7 @@ struct LoopComponentProxy
 
   // These are the mutable accessors, the const ones are inherited from the
   // ComponentProxyBase
+  auto& state() { return cmp.state; }
   auto& status() { return cmp.status; }
   auto& weight() { return cmp.weight; }
   auto& pathAccumulated() { return cmp.state.pathAccumulated; }
@@ -126,11 +136,11 @@ struct LoopComponentProxy
   Result<typename SingleStepper::BoundState> boundState(
       const Surface& surface, bool transportCov,
       const FreeToBoundCorrection& freeToBoundCorrection) {
-    return detail::boundState(all_state.geoContext, surface, cov(), jacobian(),
-                              jacTransport(), derivative(), jacToGlobal(),
-                              pars(), all_state.particleHypothesis,
-                              all_state.covTransport && transportCov,
-                              cmp.state.pathAccumulated, freeToBoundCorrection);
+    return detail::boundState(
+        all_state.options.geoContext, surface, cov(), jacobian(),
+        jacTransport(), derivative(), jacToGlobal(), pars(),
+        all_state.particleHypothesis, all_state.covTransport && transportCov,
+        cmp.state.pathAccumulated, freeToBoundCorrection);
   }
 
   void update(const FreeVector& freeParams, const BoundVector& boundParams,

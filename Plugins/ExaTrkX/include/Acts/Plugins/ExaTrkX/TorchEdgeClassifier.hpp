@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -29,19 +29,20 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
  public:
   struct Config {
     std::string modelPath;
-    int numFeatures = 3;
-    float cut = 0.21;
+    std::vector<int> selectedFeatures = {};
+    float cut = 0.5;
     int nChunks = 1;  // NOTE for GNN use 1
     bool undirected = false;
     int deviceID = 0;
+    bool useEdgeFeatures = false;
   };
 
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges,
-      torch::Device device = torch::Device(torch::kCPU)) override;
+  std::tuple<std::any, std::any, std::any, std::any> operator()(
+      std::any nodeFeatures, std::any edgeIndex, std::any edgeFeatures = {},
+      const ExecutionContext &execContext = {}) override;
 
   Config config() const { return m_cfg; }
   torch::Device device() const override { return m_device; };

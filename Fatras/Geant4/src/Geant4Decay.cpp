@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsFatras/Geant4/Geant4Decay.hpp"
 
@@ -50,7 +50,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   }
 
   // Boost the decay products using the parents four-momentum
-  const Particle::Vector4 mom4 = parent.fourMomentum();
+  const Acts::Vector4 mom4 = parent.fourMomentum();
   products->Boost(mom4[Acts::eMom0] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom1] / mom4[Acts::eEnergy],
                   mom4[Acts::eMom2] / mom4[Acts::eEnergy]);
@@ -64,7 +64,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
 
     // Convert the decay product from Geant4 to Acts
     const G4ThreeVector& mom = prod->GetMomentum();
-    constexpr Scalar convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
+    constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
     Acts::Vector3 amgMom(mom.x(), mom.y(), mom.z());
     amgMom *= convertEnergy;
     const std::int32_t pdg = prod->GetPDGcode();

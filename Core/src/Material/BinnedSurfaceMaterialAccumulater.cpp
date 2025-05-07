@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/BinnedSurfaceMaterialAccumulater.hpp"
 
@@ -53,7 +53,7 @@ Acts::BinnedSurfaceMaterialAccumulater::createState() const {
     // Second attempt from ProtoGridSurfaceMaterial
     auto psgm = dynamic_cast<const ProtoGridSurfaceMaterial*>(surfaceMaterial);
     if (psgm != nullptr) {
-      auto binUtility = psgm->binning().toBinUtility();
+      BinUtility binUtility(psgm->binning());
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning from ProtoGridSurfaceMaterial is "
                  << binUtility);
@@ -119,9 +119,9 @@ void Acts::BinnedSurfaceMaterialAccumulater::accumulate(
   }
 
   // After mapping this track, average the touched bins
-  for (auto tmapBin : touchedMapBins) {
-    std::vector<std::array<std::size_t, 3>> trackBins = {tmapBin.second};
-    tmapBin.first->trackAverage(trackBins, true);
+  for (const auto& [key, value] : touchedMapBins) {
+    std::vector<std::array<std::size_t, 3>> trackBins = {value};
+    key->trackAverage(trackBins, true);
   }
 
   // Empty bin correction

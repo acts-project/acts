@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <fstream>
 #include <mutex>
+#include <numbers>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -30,9 +31,9 @@ namespace Acts {
 namespace detail {
 
 struct GaussianComponent {
-  ActsScalar weight = 0.0;
-  ActsScalar mean = 0.0;
-  ActsScalar var = 0.0;
+  double weight = 0.0;
+  double mean = 0.0;
+  double var = 0.0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
@@ -72,7 +73,7 @@ struct BetheHeitlerApproxSingleCmp {
 
   /// Checks if an input is valid for the parameterization. The threshold for
   /// x/x0 is 0.002 and orientates on the values used in ATLAS
-  constexpr bool validXOverX0(ActsScalar x) const {
+  constexpr bool validXOverX0(double x) const {
     return x < 0.002;
     ;
   }
@@ -81,12 +82,12 @@ struct BetheHeitlerApproxSingleCmp {
   /// Bethe-Heitler-Distribution
   ///
   /// @param x pathlength in terms of the radiation length
-  static auto mixture(const ActsScalar x) {
+  static auto mixture(const double x) {
     std::array<detail::GaussianComponent, 1> ret{};
 
     ret[0].weight = 1.0;
 
-    const double c = x / std::log(2);
+    const double c = x / std::numbers::ln2;
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
@@ -108,9 +109,9 @@ class AtlasBetheHeitlerApprox {
 
  public:
   struct PolyData {
-    std::array<ActsScalar, PolyDegree + 1> weightCoeffs;
-    std::array<ActsScalar, PolyDegree + 1> meanCoeffs;
-    std::array<ActsScalar, PolyDegree + 1> varCoeffs;
+    std::array<double, PolyDegree + 1> weightCoeffs;
+    std::array<double, PolyDegree + 1> meanCoeffs;
+    std::array<double, PolyDegree + 1> varCoeffs;
   };
 
   using Data = std::array<PolyData, NComponents>;
@@ -125,6 +126,7 @@ class AtlasBetheHeitlerApprox {
   constexpr static double m_singleGaussianLimit = 0.002;
   double m_lowLimit = 0.10;
   double m_highLimit = 0.20;
+  bool m_clampToRange = false;
 
  public:
   /// Construct the Bethe-Heitler approximation description with two
@@ -138,16 +140,19 @@ class AtlasBetheHeitlerApprox {
   /// @param highTransform whether the high data need to be transformed
   /// @param lowLimit the upper limit for the low data
   /// @param highLimit the upper limit for the high data
+  /// @param clampToRange whether to clamp the input x/x0 to the allowed range
   constexpr AtlasBetheHeitlerApprox(const Data &lowData, const Data &highData,
                                     bool lowTransform, bool highTransform,
                                     double lowLimit = 0.1,
-                                    double highLimit = 0.2)
+                                    double highLimit = 0.2,
+                                    bool clampToRange = false)
       : m_lowData(lowData),
         m_highData(highData),
         m_lowTransform(lowTransform),
         m_highTransform(highTransform),
         m_lowLimit(lowLimit),
-        m_highLimit(highLimit) {}
+        m_highLimit(highLimit),
+        m_clampToRange(clampToRange) {}
 
   /// Returns the number of components the returned mixture will have
   constexpr auto numComponents() const { return NComponents; }
@@ -155,19 +160,30 @@ class AtlasBetheHeitlerApprox {
   /// Checks if an input is valid for the parameterization
   ///
   /// @param x pathlength in terms of the radiation length
-  constexpr bool validXOverX0(ActsScalar x) const { return x < m_highLimit; }
+  constexpr bool validXOverX0(double x) const {
+    if (m_clampToRange) {
+      return true;
+    } else {
+      return x < m_highLimit;
+    }
+  }
 
   /// Generates the mixture from the polynomials and reweights them, so
   /// that the sum of all weights is 1
   ///
   /// @param x pathlength in terms of the radiation length
-  auto mixture(ActsScalar x) const {
+  auto mixture(double x) const {
     using Array =
         boost::container::static_vector<detail::GaussianComponent, NComponents>;
+
+    if (m_clampToRange) {
+      x = std::clamp(x, 0.0, m_highLimit);
+    }
+
     // Build a polynom
-    auto poly = [](ActsScalar xx,
-                   const std::array<ActsScalar, PolyDegree + 1> &coeffs) {
-      ActsScalar sum{0.};
+    auto poly = [](double xx,
+                   const std::array<double, PolyDegree + 1> &coeffs) {
+      double sum{0.};
       for (const auto c : coeffs) {
         sum = xx * sum + c;
       }
@@ -179,7 +195,7 @@ class AtlasBetheHeitlerApprox {
     auto make_mixture = [&](const Data &data, double xx, bool transform) {
       // Value initialization should garanuee that all is initialized to zero
       Array ret(NComponents);
-      ActsScalar weight_sum = 0;
+      double weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
         // (TrkGaussianSumFilter/src/GsfCombinedMaterialEffects.cxx:79)
@@ -238,9 +254,11 @@ class AtlasBetheHeitlerApprox {
   /// the parameterization for high x/x0
   /// @param lowLimit the upper limit for the low x/x0-data
   /// @param highLimit the upper limit for the high x/x0-data
+  /// @param clampToRange forwarded to constructor
   static auto loadFromFiles(const std::string &low_parameters_path,
                             const std::string &high_parameters_path,
-                            double lowLimit = 0.1, double highLimit = 0.2) {
+                            double lowLimit = 0.1, double highLimit = 0.2,
+                            bool clampToRange = false) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);
 
@@ -284,7 +302,8 @@ class AtlasBetheHeitlerApprox {
     const auto [highData, highTransform] = read_file(high_parameters_path);
 
     return AtlasBetheHeitlerApprox(lowData, highData, lowTransform,
-                                   highTransform, lowLimit, highLimit);
+                                   highTransform, lowLimit, highLimit,
+                                   clampToRange);
   }
 };
 
@@ -292,6 +311,7 @@ class AtlasBetheHeitlerApprox {
 /// configuration, that are stored as static data in the source code.
 /// This may not be an optimal configuration, but should allow to run
 /// the GSF without the need to load files
-AtlasBetheHeitlerApprox<6, 5> makeDefaultBetheHeitlerApprox();
+AtlasBetheHeitlerApprox<6, 5> makeDefaultBetheHeitlerApprox(
+    bool clampToRange = false);
 
 }  // namespace Acts

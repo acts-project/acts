@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -21,9 +22,11 @@
 #include "Acts/Propagator/TryAllNavigator.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
+#include <numbers>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -40,8 +43,6 @@ auto tGeometry = cGeometry();
 
 const double Bz = 2_T;
 auto bField = std::make_shared<ConstantBField>(Vector3{0, 0, Bz});
-
-Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
 using SurfaceCollector = SurfaceCollector<SurfaceSelector>;
 
@@ -69,13 +70,11 @@ std::vector<GeometryIdentifier> collectRelevantGeoIds(
 /// @param logger A logger instance
 template <typename propagator_t>
 void runSelfConsistencyTest(const propagator_t& prop,
-                            const CurvilinearTrackParameters& start,
+                            const BoundTrackParameters& start,
                             const Acts::Logger& logger) {
-  // Action list and abort list
-  using ActionListType = ActionList<SurfaceCollector>;
-  using AbortListType = AbortList<>;
-  using Options =
-      typename propagator_t::template Options<ActionListType, AbortListType>;
+  // Actor list
+  using ActorList = ActorList<SurfaceCollector>;
+  using Options = typename propagator_t::template Options<ActorList>;
 
   // forward surface test
   Options fwdOptions(tgContext, mfContext);
@@ -83,7 +82,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& fwdSurfaceCollector =
-      fwdOptions.actionList.template get<SurfaceCollector>();
+      fwdOptions.actorList.template get<SurfaceCollector>();
   fwdSurfaceCollector.selector.selectSensitive = true;
   fwdSurfaceCollector.selector.selectMaterial = true;
   fwdSurfaceCollector.selector.selectPassive = true;
@@ -104,11 +103,11 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // backward surface test
   Options bwdOptions(tgContext, mfContext);
   bwdOptions.pathLimit = 25_cm;
-  bwdOptions.direction = Direction::Backward;
+  bwdOptions.direction = Direction::Backward();
 
   // get the surface collector and configure it
   auto& bwdMSurfaceCollector =
-      bwdOptions.actionList.template get<SurfaceCollector>();
+      bwdOptions.actorList.template get<SurfaceCollector>();
   bwdMSurfaceCollector.selector.selectSensitive = true;
   bwdMSurfaceCollector.selector.selectMaterial = true;
   bwdMSurfaceCollector.selector.selectPassive = true;
@@ -143,7 +142,7 @@ void runSelfConsistencyTest(const propagator_t& prop,
 
   // get the surface collector and configure it
   auto& fwdStepSurfaceCollector =
-      fwdOptions.actionList.template get<SurfaceCollector>();
+      fwdOptions.actorList.template get<SurfaceCollector>();
   fwdStepSurfaceCollector.selector.selectSensitive = true;
   fwdStepSurfaceCollector.selector.selectMaterial = true;
   fwdStepSurfaceCollector.selector.selectPassive = true;
@@ -190,11 +189,11 @@ void runSelfConsistencyTest(const propagator_t& prop,
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext);
-  bwdStepOptions.direction = Direction::Backward;
+  bwdStepOptions.direction = Direction::Backward();
 
   // get the surface collector and configure it
   auto& bwdStepSurfaceCollector =
-      bwdOptions.actionList.template get<SurfaceCollector>();
+      bwdOptions.actorList.template get<SurfaceCollector>();
   bwdStepSurfaceCollector.selector.selectSensitive = true;
   bwdStepSurfaceCollector.selector.selectMaterial = true;
   bwdStepSurfaceCollector.selector.selectPassive = true;
@@ -255,16 +254,14 @@ void runSelfConsistencyTest(const propagator_t& prop,
 template <typename propagator_probe_t, typename propagator_ref_t>
 void runConsistencyTest(const propagator_probe_t& propProbe,
                         const propagator_ref_t& propRef,
-                        const CurvilinearTrackParameters& start,
+                        const BoundTrackParameters& start,
                         const Acts::Logger& logger) {
   // Action list and abort list
-  using ActionListType = ActionList<SurfaceCollector>;
-  using AbortListType = AbortList<>;
+  using ActorList = ActorList<SurfaceCollector>;
 
   auto run = [&](const auto& prop) {
     using propagator_t = std::decay_t<decltype(prop)>;
-    using Options =
-        typename propagator_t::template Options<ActionListType, AbortListType>;
+    using Options = typename propagator_t::template Options<ActorList>;
 
     // forward surface test
     Options fwdOptions(tgContext, mfContext);
@@ -273,7 +270,7 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
 
     // get the surface collector and configure it
     auto& fwdSurfaceCollector =
-        fwdOptions.actionList.template get<SurfaceCollector>();
+        fwdOptions.actorList.template get<SurfaceCollector>();
     fwdSurfaceCollector.selector.selectSensitive = true;
     fwdSurfaceCollector.selector.selectMaterial = true;
     fwdSurfaceCollector.selector.selectPassive = true;
@@ -303,45 +300,46 @@ void runConsistencyTest(const propagator_probe_t& propProbe,
                                 refSurfaces.begin(), refSurfaces.end());
 }
 
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
+
 const int nTestsSelfConsistency = 500;
 const int nTestsRefConsistency = 500;
-int skip = 0;
 
+using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 using EigenStepper = Acts::EigenStepper<>;
 using EigenPropagator = Propagator<EigenStepper, Navigator>;
-using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
-using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
 using Reference1StraightLinePropagator =
     Propagator<StraightLineStepper, TryAllNavigator>;
-using Reference2EigenPropagator =
-    Propagator<EigenStepper, TryAllOverstepNavigator>;
+using Reference1EigenPropagator = Propagator<EigenStepper, TryAllNavigator>;
 using Reference2StraightLinePropagator =
     Propagator<StraightLineStepper, TryAllOverstepNavigator>;
+using Reference2EigenPropagator =
+    Propagator<EigenStepper, TryAllOverstepNavigator>;
 
-EigenStepper estepper(bField);
 StraightLineStepper slstepper;
+EigenStepper estepper(bField);
 
-EigenPropagator epropagator(estepper,
-                            Navigator({tGeometry, true, true, false},
-                                      getDefaultLogger("e_nav", Logging::INFO)),
-                            getDefaultLogger("e_prop", Logging::INFO));
 StraightLinePropagator slpropagator(slstepper,
                                     Navigator({tGeometry, true, true, false},
                                               getDefaultLogger("sl_nav",
                                                                Logging::INFO)),
                                     getDefaultLogger("sl_prop", Logging::INFO));
+EigenPropagator epropagator(estepper,
+                            Navigator({tGeometry, true, true, false},
+                                      getDefaultLogger("e_nav", Logging::INFO)),
+                            getDefaultLogger("e_prop", Logging::INFO));
 
+Reference1StraightLinePropagator refslpropagator1(
+    slstepper,
+    TryAllNavigator({tGeometry, true, true, false},
+                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
+    getDefaultLogger("ref1_sl_prop", Logging::INFO));
 Reference1EigenPropagator refepropagator1(
     estepper,
     TryAllNavigator({tGeometry, true, true, false,
                      BoundaryTolerance::Infinite()},
                     getDefaultLogger("ref1_e_nav", Logging::INFO)),
     getDefaultLogger("ref1_e_prop", Logging::INFO));
-Reference1StraightLinePropagator refslpropagator1(
-    slstepper,
-    TryAllNavigator({tGeometry, true, true, false},
-                    getDefaultLogger("ref1_sl_nav", Logging::INFO)),
-    getDefaultLogger("ref1_sl_prop", Logging::INFO));
 
 Reference2EigenPropagator refepropagator2(
     estepper,
@@ -360,28 +358,45 @@ auto eventGen =
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.5_GeV, 10_GeV))) ^
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                   bdata::distribution =
-                       std::uniform_real_distribution<double>(-M_PI, M_PI))) ^
+                   bdata::distribution = std::uniform_real_distribution<double>(
+                       -std::numbers::pi, std::numbers::pi))) ^
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 22,
                    bdata::distribution = std::uniform_real_distribution<double>(
-                       1.0, M_PI - 1.0))) ^
+                       1., std::numbers::pi - 1.))) ^
     bdata::random(
         (bdata::engine = std::mt19937(), bdata::seed = 23,
          bdata::distribution = std::uniform_int_distribution<int>(0, 1)));
 
-BOOST_DATA_TEST_CASE(NavigatorSelfConsistency,
-                     eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
-                     theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
-
-  if (index < skip) {
-    return;
-  }
-
+BoundTrackParameters createStartParameters(double pT, double phi, double theta,
+                                           int charge) {
   double p = pT / std::sin(theta);
   double q = -1 + 2 * charge;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
+  return BoundTrackParameters::createCurvilinear(Vector4::Zero(), phi, theta,
+                                                 q / p, std::nullopt,
+                                                 ParticleHypothesis::pion());
+}
+
+BOOST_DATA_TEST_CASE(NavigatorStraightLineSelfConsistency,
+                     eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
+                     theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
+
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
+
+  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
+             << pT << "\n    phi = " << phi << "\n    theta = " << theta
+             << "\n    charge = " << charge << "\n    index = " << index);
+
+  ACTS_DEBUG(">>> Test self consistency slpropagator");
+  runSelfConsistencyTest(slpropagator, start, logger());
+}
+
+BOOST_DATA_TEST_CASE(NavigatorEigenSelfConsistency,
+                     eventGen ^ bdata::xrange(nTestsSelfConsistency), pT, phi,
+                     theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
+
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
   ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
              << pT << "\n    phi = " << phi << "\n    theta = " << theta
@@ -389,24 +404,29 @@ BOOST_DATA_TEST_CASE(NavigatorSelfConsistency,
 
   ACTS_DEBUG(">>> Test self consistency epropagator");
   runSelfConsistencyTest(epropagator, start, logger());
-
-  ACTS_DEBUG(">>> Test self consistency slpropagator");
-  runSelfConsistencyTest(slpropagator, start, logger());
 }
 
-BOOST_DATA_TEST_CASE(NavigatorRef1Consistency,
+BOOST_DATA_TEST_CASE(NavigatorRef1StraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
-  if (index < skip) {
-    return;
-  }
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
-  double p = pT / std::sin(theta);
-  double q = -1 + 2 * charge;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
+  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
+             << pT << "\n    phi = " << phi << "\n    theta = " << theta
+             << "\n    charge = " << charge << "\n    index = " << index);
+
+  ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
+  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
+}
+
+BOOST_DATA_TEST_CASE(NavigatorRef1EigenConsistency,
+                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
+                     theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
+
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
   ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
              << pT << "\n    phi = " << phi << "\n    theta = " << theta
@@ -414,40 +434,36 @@ BOOST_DATA_TEST_CASE(NavigatorRef1Consistency,
 
   ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
   runConsistencyTest(epropagator, refepropagator1, start, logger());
-
-  ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
 }
 
-BOOST_DATA_TEST_CASE(NavigatorRef2Consistency,
+BOOST_DATA_TEST_CASE(NavigatorRef2StraightLineConsistency,
                      eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
                      theta, charge, index) {
-  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel))
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
 
-  if (index < skip) {
-    return;
-  }
-
-  double p = pT / std::sin(theta);
-  double q = -1 + 2 * charge;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, q / p,
-                                   std::nullopt, ParticleHypothesis::pion());
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
 
   ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
              << pT << "\n    phi = " << phi << "\n    theta = " << theta
              << "\n    charge = " << charge << "\n    index = " << index);
-
-  ACTS_DEBUG(">>> Test reference 1 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator1, start, logger());
-
-  ACTS_DEBUG(">>> Test reference 1 consistency slpropagator");
-  runConsistencyTest(slpropagator, refslpropagator1, start, logger());
-
-  ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
-  runConsistencyTest(epropagator, refepropagator2, start, logger());
 
   ACTS_DEBUG(">>> Test reference 2 consistency slpropagator");
   runConsistencyTest(slpropagator, refslpropagator2, start, logger());
+}
+
+BOOST_DATA_TEST_CASE(NavigatorRef2EigenConsistency,
+                     eventGen ^ bdata::xrange(nTestsRefConsistency), pT, phi,
+                     theta, charge, index) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("NavigatorTest", logLevel));
+
+  BoundTrackParameters start = createStartParameters(pT, phi, theta, charge);
+
+  ACTS_DEBUG(">>> Run navigation tests with:\n    pT = "
+             << pT << "\n    phi = " << phi << "\n    theta = " << theta
+             << "\n    charge = " << charge << "\n    index = " << index);
+
+  ACTS_DEBUG(">>> Test reference 2 consistency epropagator");
+  runConsistencyTest(epropagator, refepropagator2, start, logger());
 }
 
 }  // namespace Acts::Test

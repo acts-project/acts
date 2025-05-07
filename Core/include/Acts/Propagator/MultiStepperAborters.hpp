@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-struct MultiStepperSurfaceReached : public SurfaceReached {
+struct MultiStepperSurfaceReached : public ForcedSurfaceReached {
   /// If this is set, we are also happy if the mean of the components is on the
   /// surface. How the averaging is performed depends on the stepper
   /// implementation
@@ -25,7 +25,6 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
   double averageOnSurfaceTolerance = 0.2;
 
   MultiStepperSurfaceReached() = default;
-  MultiStepperSurfaceReached(double oLimit) : SurfaceReached(oLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -39,7 +38,7 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+  bool checkAbort(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
     if (surface == nullptr) {
       ACTS_VERBOSE(
@@ -59,20 +58,20 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
                   averageOnSurfaceTolerance)
               .closest();
 
-      if (sIntersection.status() == Intersection3D::Status::onSurface) {
+      if (sIntersection.status() == IntersectionStatus::onSurface) {
         ACTS_VERBOSE(
             "MultiStepperSurfaceReached aborter | "
             "Reached target in average mode");
         for (auto cmp : stepper.componentIterable(state.stepping)) {
-          cmp.status() = Intersection3D::Status::onSurface;
+          cmp.status() = IntersectionStatus::onSurface;
         }
 
         return true;
       }
 
       ACTS_VERBOSE(
-          "MultiStepperSurfaceReached aborter | "
-          "Target intersection not found. Maybe next time?");
+          "MultiStepperSurfaceReached aborter | Average distance to target: "
+          << sIntersection.pathLength());
     }
 
     bool reached = true;
@@ -82,11 +81,11 @@ struct MultiStepperSurfaceReached : public SurfaceReached {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      if (!SurfaceReached::operator()(singleState, singleStepper, navigator,
-                                      logger)) {
+      if (!ForcedSurfaceReached::checkAbort(singleState, singleStepper,
+                                            navigator, logger)) {
         reached = false;
       } else {
-        cmp.status() = Acts::Intersection3D::Status::onSurface;
+        cmp.status() = Acts::IntersectionStatus::onSurface;
       }
     }
 

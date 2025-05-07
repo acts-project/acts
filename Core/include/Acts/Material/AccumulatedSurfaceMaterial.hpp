@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,7 +37,7 @@ class AccumulatedSurfaceMaterial {
   /// Default Constructor - for homogeneous material
   ///
   /// @param splitFactor is the pre/post splitting directive
-  AccumulatedSurfaceMaterial(double splitFactor = 0.);
+  explicit AccumulatedSurfaceMaterial(double splitFactor = 0.);
 
   /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
@@ -49,8 +49,8 @@ class AccumulatedSurfaceMaterial {
   ///
   /// @param binUtility defines the binning structure on the surface
   /// @param splitFactor is the pre/post splitting directive
-  AccumulatedSurfaceMaterial(const BinUtility& binUtility,
-                             double splitFactor = 0.);
+  explicit AccumulatedSurfaceMaterial(const BinUtility& binUtility,
+                                      double splitFactor = 0.);
 
   /// Copy Constructor
   ///

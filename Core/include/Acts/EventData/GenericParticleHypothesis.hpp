@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -45,7 +45,7 @@ class GenericParticleHypothesis {
   /// If the lookup fails an exception is thrown.
   ///
   /// @param absPdg the absolute PDG
-  GenericParticleHypothesis(PdgParticle absPdg)
+  explicit GenericParticleHypothesis(PdgParticle absPdg)
       : m_absPdg{absPdg},
         m_mass{findMass(absPdg).value()},
         m_chargeType{std::abs(findCharge(absPdg).value())} {
@@ -57,7 +57,7 @@ class GenericParticleHypothesis {
   ///
   /// @note This enables implicit conversion.
   template <typename other_charge_t>
-  constexpr GenericParticleHypothesis(
+  explicit constexpr GenericParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : m_absPdg{other.absolutePdg()},
         m_mass{other.mass()},
@@ -132,11 +132,6 @@ class GenericParticleHypothesis {
                          const GenericParticleHypothesis<ChargeType>& rhs) {
     return (lhs.m_absPdg == rhs.m_absPdg) && (lhs.m_mass == rhs.m_mass) &&
            (lhs.m_chargeType == rhs.m_chargeType);
-  }
-  friend bool operator!=(const GenericParticleHypothesis<ChargeType>& lhs,
-                         const GenericParticleHypothesis<ChargeType>& rhs) {
-    return (lhs.m_absPdg != rhs.m_absPdg) || (lhs.m_mass != rhs.m_mass) ||
-           (lhs.m_chargeType != rhs.m_chargeType);
   }
 };
 

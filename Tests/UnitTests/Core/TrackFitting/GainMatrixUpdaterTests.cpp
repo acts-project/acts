@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <utility>
 
 namespace {
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE(Update) {
 
   // Make dummy track parameters
   ParametersVector trkPar;
-  trkPar << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
+  trkPar << 0.3, 0.5, std::numbers::pi / 2., 0.3 * std::numbers::pi, 0.01, 0.;
   CovarianceMatrix trkCov = CovarianceMatrix::Zero();
   trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(UpdateFailed) {
 
   // Make dummy track parameters
   ParametersVector trkPar;
-  trkPar << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
+  trkPar << 0.3, 0.5, std::numbers::pi / 2., 0.3 * std::numbers::pi, 0.01, 0.;
   CovarianceMatrix trkCov = CovarianceMatrix::Zero();
 
   // Make trajectory w/ one state

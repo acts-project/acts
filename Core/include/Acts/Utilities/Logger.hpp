@@ -1,20 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 // STL include(s)
-#include <cassert>
 #include <ctime>
-#include <exception>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -51,7 +50,7 @@
 #define ACTS_LOCAL_LOGGER(log_object)                                          \
   struct __local_acts_logger                                                   \
   {                                                                            \
-    __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger):         \
+    explicit __local_acts_logger(std::unique_ptr<const ::Acts::Logger> logger):         \
       m_logger(std::move(logger))                                              \
     {}                                                                         \
                                                                                \
@@ -448,8 +447,8 @@ class TimedOutputDecorator final : public OutputDecorator {
   ///
   /// @param [in] wrappee output print policy object to be wrapped
   /// @param [in] format  format of time stamp (see std::strftime)
-  TimedOutputDecorator(std::unique_ptr<OutputPrintPolicy> wrappee,
-                       const std::string& format = "%X")
+  explicit TimedOutputDecorator(std::unique_ptr<OutputPrintPolicy> wrappee,
+                                const std::string& format = "%X")
       : OutputDecorator(std::move(wrappee)), m_format(format) {}
 
   /// @brief flush the debug message to the destination stream
@@ -482,7 +481,9 @@ class TimedOutputDecorator final : public OutputDecorator {
     char buffer[20];
     time_t t{};
     std::time(&t);
-    std::strftime(buffer, sizeof(buffer), m_format.c_str(), localtime(&t));
+    struct tm tbuf {};
+    std::strftime(buffer, sizeof(buffer), m_format.c_str(),
+                  localtime_r(&t, &tbuf));
     return buffer;
   }
 
@@ -586,6 +587,15 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param [in] lvl   debug level of debug message
   /// @param [in] input text of debug message
   void flush(const Level& lvl, const std::string& input) final {
+    // Mutex to serialize access to std::cout
+    static std::mutex s_stdoutMutex;
+    std::unique_lock lock{s_stdoutMutex,
+                          std::defer_lock};  // prep empty, we might not need it
+
+    if (m_out == &std::cout) {
+      lock.lock();  // lock only if we are printing to std::cout
+    }
+
     (*m_out) << input << std::endl;
     if (lvl >= getFailureThreshold()) {
       throw ThresholdFailure(

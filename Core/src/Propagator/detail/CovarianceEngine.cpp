@@ -1,23 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
-#include "Acts/Utilities/AlgebraHelpers.hpp"
-#include "Acts/Utilities/JacobianHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -29,8 +26,6 @@ namespace Acts {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-using CurvilinearState =
-    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 Result<BoundState> detail::boundState(
     const GeometryContext& geoContext, const Surface& surface,
@@ -67,7 +62,7 @@ Result<BoundState> detail::boundState(
       fullTransportJacobian, accumulatedPath);
 }
 
-CurvilinearState detail::curvilinearState(
+BoundState detail::curvilinearState(
     BoundSquareMatrix& boundCovariance, BoundMatrix& fullTransportJacobian,
     FreeMatrix& freeTransportJacobian, FreeVector& freeToPathDerivatives,
     BoundToFreeMatrix& boundToFreeJacobian, const FreeVector& freeParameters,
@@ -93,12 +88,12 @@ CurvilinearState detail::curvilinearState(
   pos4[ePos1] = freeParameters[eFreePos1];
   pos4[ePos2] = freeParameters[eFreePos2];
   pos4[eTime] = freeParameters[eFreeTime];
-  CurvilinearTrackParameters curvilinearParams(
-      pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
-      particleHypothesis);
+  BoundTrackParameters curvilinearParams =
+      BoundTrackParameters::createCurvilinear(
+          pos4, direction, freeParameters[eFreeQOverP], std::move(cov),
+          particleHypothesis);
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParams), fullTransportJacobian,
-                         accumulatedPath);
+  return {std::move(curvilinearParams), fullTransportJacobian, accumulatedPath};
 }
 
 void detail::transportCovarianceToBound(

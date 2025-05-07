@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <system_error>
 #include <vector>
@@ -60,7 +61,8 @@ std::normal_distribution<double> z2dist(zVertexPos2 * 1_mm, 0.5_mm);
 // Track pT distribution
 std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                               std::numbers::pi);
 // Track eta distribution
 std::uniform_real_distribution<double> etaDist(-4., 4.);
 
@@ -94,7 +96,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   VertexingOptions vertexingOptions(geoContext, magFieldContext);
 
   using Finder1 = GridDensityVertexFinder;
-  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
+  GaussianGridTrackDensity::Config gDensityConfig(100, mainGridSize,
+                                                  trkGridSize);
+  GaussianGridTrackDensity gDensity(gDensityConfig);
+  Finder1::Config cfg1(gDensity);
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
   Finder1 finder1(cfg1);
@@ -142,7 +147,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           geoContext, perigeeSurface, makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());
@@ -261,7 +266,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           geoContext, perigeeSurface, makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());
@@ -379,7 +384,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   vertexingOptions.constraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder;
-  Finder1::Config cfg1{{{100, mainGridSize, trkGridSize}}};
+  GaussianGridTrackDensity::Config gDensityConfig(100, mainGridSize,
+                                                  trkGridSize);
+  GaussianGridTrackDensity gDensity(gDensityConfig);
+  Finder1::Config cfg1(gDensity);
   cfg1.cacheGridStateForTrackRemoval = false;
   cfg1.estimateSeedWidth = true;
   cfg1.extractParameters.connect<&InputTrack::extractParameters>();
@@ -427,7 +435,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     pos[eZ] = z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           geoContext, perigeeSurface, makeVector4(pos, 0),
                            direction, charge / pt, covMat,
                            ParticleHypothesis::pion())
                            .value());

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -32,11 +32,11 @@ struct InteractionVolume {
 
   /// Constructor from tracking volume
   /// @param tv The tracking volume
-  InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
+  explicit InteractionVolume(const TrackingVolume* tv) : trackingVolume(tv) {}
 
   /// Constructor from detector volume
   /// @param dv The detector volume
-  InteractionVolume(const Experimental::DetectorVolume* dv)
+  explicit InteractionVolume(const Experimental::DetectorVolume* dv)
       : detectorVolume(dv) {}
 
   /// Forward the geometry identifier
@@ -87,7 +87,7 @@ struct MaterialInteraction {
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
-  MaterialSlab materialSlab;
+  MaterialSlab materialSlab = MaterialSlab::Nothing();
 };
 
 /// Simple result struct to be returned

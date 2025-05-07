@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
@@ -43,7 +43,7 @@ double AdaptiveGridTrackDensity::getBinCenter(std::int32_t bin,
 }
 
 std::int32_t AdaptiveGridTrackDensity::getBin(double value, double binExtent) {
-  return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
+  return static_cast<std::int32_t>(std::floor(value / binExtent - 0.5) + 1);
 }
 
 std::uint32_t AdaptiveGridTrackDensity::getTrkGridSize(
@@ -156,7 +156,7 @@ AdaptiveGridTrackDensity::getMaxZTPosition(DensityMap& densityMap) const {
   double maxZ = getSpatialBinCenter(bin.first);
   double maxT = getTemporalBinCenter(bin.second);
 
-  return std::make_pair(maxZ, maxT);
+  return std::pair(maxZ, maxT);
 }
 
 Result<AdaptiveGridTrackDensity::ZTPositionAndWidth>
@@ -181,7 +181,7 @@ AdaptiveGridTrackDensity::getMaxZTPositionAndWidth(
 
 AdaptiveGridTrackDensity::DensityMap AdaptiveGridTrackDensity::addTrack(
     const BoundTrackParameters& trk, DensityMap& mainDensityMap) const {
-  ActsVector<3> impactParams = trk.impactParameters();
+  Vector3 impactParams = trk.impactParameters();
   ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
   std::uint32_t spatialTrkGridSize =
@@ -286,7 +286,7 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   bool binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count({rhmBin + 1, tMaxBin}) == 0) {
+    if (!densityMap.contains({rhmBin + 1, tMaxBin})) {
       binFilled = false;
       break;
     }
@@ -308,7 +308,7 @@ Result<double> AdaptiveGridTrackDensity::estimateSeedWidth(
   binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count({lhmBin - 1, tMaxBin}) == 0) {
+    if (!densityMap.contains({lhmBin - 1, tMaxBin})) {
       binFilled = false;
       break;
     }

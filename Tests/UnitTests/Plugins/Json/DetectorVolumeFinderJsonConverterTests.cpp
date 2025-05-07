@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,8 +22,8 @@
 BOOST_AUTO_TEST_SUITE(DetectorVolumeFinderJsonConverter)
 
 BOOST_AUTO_TEST_CASE(RzVolumes) {
-  std::vector<Acts::ActsScalar> zBoundaries = {-1000., -500, 150.};
-  std::vector<Acts::ActsScalar> rBoundaries = {0., 10., 30., 35.};
+  std::vector<double> zBoundaries = {-1000., -500, 150.};
+  std::vector<double> rBoundaries = {0., 10., 30., 35.};
 
   using AxesGeneratorType = Acts::GridAxisGenerators::VarBoundVarBound;
 
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(RzVolumes) {
   grid.atPosition(p22) = 22u;
   grid.atPosition(p23) = 23u;
 
-  auto casts = std::array<Acts::BinningValue, 2u>{Acts::BinningValue::binZ,
-                                                  Acts::BinningValue::binR};
+  auto casts = std::array<Acts::AxisDirection, 2u>{Acts::AxisDirection::AxisZ,
+                                                   Acts::AxisDirection::AxisR};
 
   using IndexedDetectorVolumesImpl = Acts::Experimental::IndexedGridNavigation<
       Acts::Experimental::IExternalNavigation, GridType,

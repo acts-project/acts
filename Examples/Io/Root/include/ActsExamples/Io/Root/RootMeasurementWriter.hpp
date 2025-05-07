@@ -1,16 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
@@ -24,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 class TFile;
 class TTree;
@@ -34,7 +30,6 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// @class RootMeasurementWriter
 ///
@@ -64,8 +59,6 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// file access mode
     std::string fileMode = "RECREATE";
 
-    /// The indices for this digitization configurations
-    Acts::GeometryHierarchyMap<std::vector<Acts::BoundIndices>> boundIndices;
     /// Map of the geometry identifier to the surface
     std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
         surfaceByIdentifier;

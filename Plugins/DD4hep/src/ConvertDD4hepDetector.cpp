@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 
@@ -21,7 +21,6 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
@@ -31,9 +30,7 @@
 #include <array>
 #include <cmath>
 #include <list>
-#include <map>
 #include <regex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -429,7 +426,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     plbConfig.layerIdentification = subDetector.name();
     plbConfig.centralLayerRadii = std::vector<double>(1, 0.5 * (rMax + rMin));
     plbConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
-    plbConfig.centralLayerThickness = std::vector<double>(1, fabs(rMax - rMin));
+    plbConfig.centralLayerThickness =
+        std::vector<double>(1, std::abs(rMax - rMin));
     plbConfig.centralLayerMaterial = {plMaterial};
     auto pcLayerBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         plbConfig, logger.clone(std::string("D2A_PL:") + subDetector.name()));

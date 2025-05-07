@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Binned SP Group Iterator
 
@@ -28,12 +28,6 @@ template <typename grid_t>
 bool Acts::BinnedGroupIterator<grid_t>::operator==(
     const Acts::BinnedGroupIterator<grid_t>& other) const {
   return m_group.ptr == other.m_group.ptr && m_gridItr == other.m_gridItr;
-}
-
-template <typename grid_t>
-bool Acts::BinnedGroupIterator<grid_t>::operator!=(
-    const Acts::BinnedGroupIterator<grid_t>& other) const {
-  return !(*this == other);
 }
 
 template <typename grid_t>
@@ -70,7 +64,7 @@ Acts::BinnedGroupIterator<grid_t>::operator*() const {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-overread"
 #endif
-  return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
+  return {std::move(bottoms), global_index, std::move(tops)};
 #if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
@@ -91,7 +85,8 @@ void Acts::BinnedGroupIterator<grid_t>::findNotEmptyBin() {
     passesMask = m_group->mask().at(m_gridItr.globalBinIndex());
   }
   // loop and only stop when we find a non-empty bin which is not masked
-  while ((dimCollection == 0ul || !passesMask) && ++m_gridItr != m_gridItrEnd) {
+  while ((dimCollection == 0ul || !passesMask) &&
+         (++m_gridItr != m_gridItrEnd)) {
     dimCollection = (*m_gridItr).size();
     if (dimCollection == 0ul) {
       continue;

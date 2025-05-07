@@ -1,17 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <array>
 #include <memory>
@@ -21,7 +19,7 @@ namespace Acts {
 class TrackingGeometry;
 }  // namespace Acts
 
-namespace ActsExamples::Telescope {
+namespace ActsExamples {
 
 /// The telescope detector surface type
 enum class TelescopeSurfaceType {
@@ -45,13 +43,14 @@ enum class TelescopeSurfaceType {
 /// @param surfaceType is the detector surface type
 /// @param binValue indicates which axis the detector surface normals are
 /// parallel to
-std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
-    const typename TelescopeDetectorElement::ContextType& gctx,
-    std::vector<std::shared_ptr<TelescopeDetectorElement>>& detectorStore,
+std::unique_ptr<const Acts::TrackingGeometry> buildTelescopeDetector(
+    const Acts::GeometryContext& gctx,
+    std::vector<std::shared_ptr<const Acts::DetectorElementBase>>&
+        detectorStore,
     const std::vector<double>& positions,
     const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, TelescopeSurfaceType surfaceType,
-    Acts::BinningValue binValue = Acts::BinningValue::binZ);
+    Acts::AxisDirection binValue = Acts::AxisDirection::AxisZ);
 
-}  // namespace ActsExamples::Telescope
+}  // namespace ActsExamples

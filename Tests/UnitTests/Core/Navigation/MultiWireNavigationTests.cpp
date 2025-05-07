@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -67,19 +67,21 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
     pos.y() = ipos.y() + 2 * (i + 1) * radius;
   }
 
-  std::vector<ActsScalar> vBounds = {0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesX * 2 * radius,
-                                     0.5 * nSurfacesY * 2 * radius, halfZ};
+  std::vector<double> vBounds = {0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesX * 2 * radius,
+                                 0.5 * nSurfacesY * 2 * radius, halfZ};
 
   MultiWireStructureBuilder::Config mlCfg;
   mlCfg.name = "Multi_Layer_With_Wires";
   mlCfg.mlSurfaces = strawSurfaces;
 
   mlCfg.mlBinning = {
-      ProtoBinning(Acts::BinningValue::binX, Acts::AxisBoundaryType::Bound,
-                   -vBounds[0], vBounds[0], nSurfacesX, 1u),
-      ProtoBinning(Acts::BinningValue::binY, Acts::AxisBoundaryType::Bound,
-                   -vBounds[1], vBounds[1], nSurfacesY, 0u)};
+      {DirectedProtoAxis(AxisDirection::AxisX, AxisBoundaryType::Bound,
+                         -vBounds[0], vBounds[0], nSurfacesX),
+       1u},
+      {DirectedProtoAxis(AxisDirection::AxisY, AxisBoundaryType::Bound,
+                         -vBounds[1], vBounds[1], nSurfacesY),
+       0u}};
   mlCfg.mlBounds = vBounds;
 
   MultiWireStructureBuilder mlBuilder(mlCfg);

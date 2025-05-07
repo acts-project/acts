@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -24,7 +24,7 @@
 #include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
-#if ((BOOST_VERSION / 100) % 1000) <= 71
+#if BOOST_VERSION < 107200
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help") != 0u) {
+    if (vm.contains("help")) {
       std::cout << description;
     }
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
     // Subdetector configurations
     std::vector<Region> dRegion = {};
 
-    if (vm.count("config") > 0) {
+    if (vm.contains("config")) {
       std::filesystem::path config = vm["config"].as<std::string>();
       std::cout << "Reading region configuration from JSON: " << config
                 << std::endl;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/MaterialInteractionAssignment.hpp"
 
@@ -49,7 +49,7 @@ Acts::MaterialInteractionAssignment::assign(
 
     // Walk along the sorted intersections
     auto [cSurface, cPosition, cDirection] = intersectedSurfaces[is];
-    ActsScalar cDistance = (cPosition - materialInteraction.position).norm();
+    double cDistance = (cPosition - materialInteraction.position).norm();
 
     // Peak forward to check if you have a closer intersection
     while (
@@ -57,9 +57,9 @@ Acts::MaterialInteractionAssignment::assign(
         (((intersectedSurfaces[is + 1]).position - materialInteraction.position)
              .norm() < cDistance)) {
       // Recalculate the new distance
-      ActsScalar nDistance = ((intersectedSurfaces[is + 1]).position -
-                              materialInteraction.position)
-                                 .norm();
+      double nDistance = ((intersectedSurfaces[is + 1]).position -
+                          materialInteraction.position)
+                             .norm();
       ++is;
       cDistance = nDistance;
     }
@@ -68,12 +68,11 @@ Acts::MaterialInteractionAssignment::assign(
     auto [surface, position, direction] = intersectedSurfaces[is];
 
     // Calculate the path correction
-    ActsScalar pathCorrection =
-        surface->pathCorrection(gctx, position, direction);
+    double pathCorrection = surface->pathCorrection(gctx, position, direction);
 
     // A local veta veto kicked in
     GeometryIdentifier intersectionID = surface->geometryId();
-    if (options.localVetos.find(intersectionID) != options.localVetos.end()) {
+    if (options.localVetos.contains(intersectionID)) {
       const auto& localVeto = *options.localVetos.find(intersectionID);
       if (localVeto(materialInteraction, intersectedSurfaces[is])) {
         unassignedMaterialInteractions.push_back(materialInteraction);
@@ -91,8 +90,7 @@ Acts::MaterialInteractionAssignment::assign(
     assignedMaterialInteraction.intersectionID = intersectionID;
     // Check for possible reassignment
     if (is + 1u < intersectedSurfaces.size() &&
-        options.reAssignments.find(intersectionID) !=
-            options.reAssignments.end()) {
+        options.reAssignments.contains(intersectionID)) {
       auto reAssignment = (*options.reAssignments.find(intersectionID));
       reAssignment(assignedMaterialInteraction, intersectedSurfaces[is],
                    intersectedSurfaces[is + 1]);
@@ -110,8 +108,7 @@ Acts::MaterialInteractionAssignment::assign(
   // (empty bin correction can use this information)
   std::vector<IAssignmentFinder::SurfaceAssignment> surfacesWithoutAssignments;
   for (const auto& intersectedSurface : intersectedSurfaces) {
-    if (assignedSurfaces.find(intersectedSurface.surface) ==
-        assignedSurfaces.end()) {
+    if (!assignedSurfaces.contains(intersectedSurface.surface)) {
       surfacesWithoutAssignments.push_back(intersectedSurface);
     }
   }

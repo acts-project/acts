@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -38,7 +38,7 @@ class Geant4DetectorElement : public DetectorElementBase {
   /// @param thickness the thickness of this detector element
   Geant4DetectorElement(std::shared_ptr<Surface> surface,
                         const G4VPhysicalVolume& g4physVol,
-                        const Transform3& toGlobal, ActsScalar thickness);
+                        const Transform3& toGlobal, double thickness);
 
   /// Return local to global transform associated with this detector element
   ///
@@ -52,7 +52,7 @@ class Geant4DetectorElement : public DetectorElementBase {
   Surface& surface() override;
 
   /// Return the thickness of this detector element
-  ActsScalar thickness() const override;
+  double thickness() const override;
 
   /// @return to the Geant4 physical volume
   const G4VPhysicalVolume& g4PhysicalVolume() const;
@@ -65,7 +65,7 @@ class Geant4DetectorElement : public DetectorElementBase {
   /// The global transformation before the volume
   Transform3 m_toGlobal;
   ///  Thickness of this detector element
-  ActsScalar m_thickness{0.};
+  double m_thickness{0.};
 };
 
 }  // namespace Acts

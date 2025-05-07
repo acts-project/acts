@@ -1,18 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <utility>
 
-Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
+namespace Acts {
+
+detail::RotationToAxes detail::rotationToLocalAxesDerivative(
     const RotationMatrix3& compositeRotation,
     const RotationMatrix3& relRotation) {
   // Suppose the local axes of the composite have small rotation first around
@@ -87,6 +87,8 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
                     rotToCompositeLocalYAxis * relRotation(1, 2) +
                     rotToCompositeLocalZAxis * relRotation(2, 2);
 
-  return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
-                         std::move(rotToLocalZAxis));
+  return {std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
+          std::move(rotToLocalZAxis)};
 }
+
+}  // namespace Acts

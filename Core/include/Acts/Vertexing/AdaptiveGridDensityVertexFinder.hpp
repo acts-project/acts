@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,7 +37,8 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// @brief The Config struct
   struct Config {
     ///@param gDensity The grid density
-    Config(const AdaptiveGridTrackDensity& gDensity) : gridDensity(gDensity) {}
+    explicit Config(const AdaptiveGridTrackDensity& gDensity)
+        : gridDensity(gDensity) {}
 
     // The grid density object
     AdaptiveGridTrackDensity gridDensity;
@@ -110,7 +111,7 @@ class AdaptiveGridDensityVertexFinder final : public IVertexFinder {
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  AdaptiveGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
+  explicit AdaptiveGridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {}
 
  private:
   /// @brief Checks if a track passes the selection criteria for seeding

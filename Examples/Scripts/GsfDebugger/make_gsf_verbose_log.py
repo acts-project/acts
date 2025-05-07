@@ -1,7 +1,6 @@
-#!/bin/python3
-import sys
+#!/usr/bin/env python3
+
 from pathlib import Path
-import os
 
 import acts
 import acts.examples
@@ -14,13 +13,11 @@ if __name__ == "__main__":
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    digiConfigFile = (
-        srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-    )
+    digiConfigFile = srcdir / "Examples/Configs/generic-digi-smearing-config.json"
     assert digiConfigFile.exists()
 
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    detector = acts.examples.GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 

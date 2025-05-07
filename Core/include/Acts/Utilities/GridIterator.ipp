@@ -1,12 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include <numeric>
 
 namespace Acts {
+
 // Global Iterator
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...>::GridGlobalIterator(
@@ -37,39 +40,12 @@ bool GridGlobalIterator<T, Axes...>::operator==(
 }
 
 template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator!=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this == other);
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator<(
+auto GridGlobalIterator<T, Axes...>::operator<=>(
     const GridGlobalIterator<T, Axes...>& other) const {
   // This operator only makes sense if the two iterators we are comparing
   // are using the same grid
   assert(m_grid.ptr == other.m_grid.ptr);
-  return m_idx < other.m_idx;
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator>(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  // This operator only makes sense if the two iterators we are comparing
-  // are using the same grid
-  assert(m_grid.ptr == other.m_grid.ptr);
-  return m_idx > other.m_idx;
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator<=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this > other);
-}
-
-template <typename T, class... Axes>
-bool GridGlobalIterator<T, Axes...>::operator>=(
-    const GridGlobalIterator<T, Axes...>& other) const {
-  return !(*this < other);
+  return m_idx <=> other.m_idx;
 }
 
 template <typename T, class... Axes>
@@ -89,13 +65,13 @@ GridGlobalIterator<T, Axes...>& GridGlobalIterator<T, Axes...>::operator-=(
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator+(
     const std::size_t offset) const {
-  return {*m_grid, m_idx + offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx + offset);
 }
 
 template <typename T, class... Axes>
 GridGlobalIterator<T, Axes...> GridGlobalIterator<T, Axes...>::operator-(
     const std::size_t offset) const {
-  return {*m_grid, m_idx - offset};
+  return GridGlobalIterator<T, Axes...>(*m_grid, m_idx - offset);
 }
 
 template <typename T, class... Axes>
@@ -220,12 +196,6 @@ bool Acts::GridLocalIterator<T, Axes...>::operator==(
   }
 
   return true;
-}
-
-template <typename T, class... Axes>
-bool Acts::GridLocalIterator<T, Axes...>::operator!=(
-    const Acts::GridLocalIterator<T, Axes...>& other) const {
-  return !(*this == other);
 }
 
 template <typename T, class... Axes>

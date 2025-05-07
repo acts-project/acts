@@ -1,24 +1,26 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameterHelpers.hpp"
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/EventData/TransformationHelpers.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <cassert>
 #include <cmath>
 #include <optional>
-#include <type_traits>
 
 namespace Acts {
 
@@ -31,10 +33,17 @@ namespace Acts {
 template <class particle_hypothesis_t>
 class GenericFreeTrackParameters {
  public:
-  using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
+
+  /// Converts an unknown bound track parameter.
+  template <FreeTrackParametersConcept other_track_parameter_t>
+  static GenericFreeTrackParameters create(
+      const other_track_parameter_t& other) {
+    return GenericFreeTrackParameters(
+        other.parameters(), other.particleHypothesis(), other.covariance());
+  }
 
   /// Construct from a parameters vector and particle charge.
   ///
@@ -52,7 +61,34 @@ class GenericFreeTrackParameters {
                              ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
-        m_particleHypothesis(std::move(particleHypothesis)) {}
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
+  }
+
+  /// Construct from four-position, direction, absolute momentum, and charge.
+  ///
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge over momentum
+  /// @param cov Free parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
+  GenericFreeTrackParameters(const Vector4& pos4, const Vector3& dir,
+                             double qOverP, std::optional<CovarianceMatrix> cov,
+                             ParticleHypothesis particleHypothesis)
+      : m_params(FreeVector::Zero()),
+        m_cov(std::move(cov)),
+        m_particleHypothesis(std::move(particleHypothesis)) {
+    m_params[eFreePos0] = pos4[ePos0];
+    m_params[eFreePos1] = pos4[ePos1];
+    m_params[eFreePos2] = pos4[ePos2];
+    m_params[eFreeTime] = pos4[eTime];
+    m_params[eFreeDir0] = dir[eMom0];
+    m_params[eFreeDir1] = dir[eMom1];
+    m_params[eFreeDir2] = dir[eMom2];
+    m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
+  }
 
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
@@ -62,8 +98,8 @@ class GenericFreeTrackParameters {
   /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
   /// @param particleHypothesis Particle hypothesis
-  GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+  GenericFreeTrackParameters(const Vector4& pos4, double phi, double theta,
+                             double qOverP, std::optional<CovarianceMatrix> cov,
                              ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
@@ -77,34 +113,17 @@ class GenericFreeTrackParameters {
     m_params[eFreeDir1] = dir[eMom1];
     m_params[eFreeDir2] = dir[eMom2];
     m_params[eFreeQOverP] = qOverP;
+
+    assert(isFreeVectorValid(m_params) && "Invalid free parameters vector");
   }
 
   /// Converts a free track parameter with a different hypothesis.
   template <typename other_particle_hypothesis_t>
-  GenericFreeTrackParameters(
+  explicit GenericFreeTrackParameters(
       const GenericFreeTrackParameters<other_particle_hypothesis_t>& other)
       : GenericFreeTrackParameters(other.parameters(),
                                    other.particleHypothesis(),
                                    other.covariance()) {}
-
-  /// Converts an unknown bound track parameter.
-  template <typename other_track_parameter_t>
-  static GenericFreeTrackParameters create(
-      const other_track_parameter_t& other) {
-    static_assert(FreeTrackParametersConcept<other_track_parameter_t>);
-
-    return GenericFreeTrackParameters(
-        other.parameters(), other.particleHypothesis(), other.covariance());
-  }
-
-  /// Parameters are not default constructible due to the charge type.
-  GenericFreeTrackParameters() = delete;
-  GenericFreeTrackParameters(const GenericFreeTrackParameters&) = default;
-  GenericFreeTrackParameters(GenericFreeTrackParameters&&) = default;
-  ~GenericFreeTrackParameters() = default;
-  GenericFreeTrackParameters& operator=(const GenericFreeTrackParameters&) =
-      default;
-  GenericFreeTrackParameters& operator=(GenericFreeTrackParameters&&) = default;
 
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
@@ -115,7 +134,7 @@ class GenericFreeTrackParameters {
   ///
   /// @tparam kIndex Track parameter index
   template <FreeIndices kIndex>
-  Scalar get() const {
+  double get() const {
     return m_params[kIndex];
   }
 
@@ -131,47 +150,58 @@ class GenericFreeTrackParameters {
   /// Spatial position three-vector.
   Vector3 position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
-  Scalar time() const { return m_params[eFreeTime]; }
+  double time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return phi(direction()); }
+  double phi() const { return VectorHelpers::phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return theta(direction()); }
+  double theta() const { return VectorHelpers::theta(direction()); }
   /// Charge over momentum.
-  Scalar qOverP() const { return m_params[eFreeQOverP]; }
+  double qOverP() const { return m_params[eFreeQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
-  Scalar absoluteMomentum() const {
+  double absoluteMomentum() const {
     return m_particleHypothesis.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
-  Scalar transverseMomentum() const {
+  double transverseMomentum() const {
     // direction vector w/ arbitrary normalization can be parametrized as
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
-    Scalar transverseMagnitude =
-        std::hypot(m_params[eFreeDir0], m_params[eFreeDir1]);
+    double transverseMagnitude2 =
+        square(m_params[eFreeDir0]) + square(m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    Scalar magnitude = std::hypot(transverseMagnitude, m_params[eFreeDir2]);
+    double magnitude2 = transverseMagnitude2 + square(m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
-    return (transverseMagnitude / magnitude) * absoluteMomentum();
+    return std::sqrt(transverseMagnitude2 / magnitude2) * absoluteMomentum();
   }
   /// Momentum three-vector.
   Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
-  Scalar charge() const {
+  double charge() const {
     return m_particleHypothesis.extractCharge(get<eFreeQOverP>());
   }
 
   /// Particle hypothesis.
   const ParticleHypothesis& particleHypothesis() const {
     return m_particleHypothesis;
+  }
+
+  /// Reflect the parameters in place.
+  void reflectInPlace() { m_params = reflectFreeParameters(m_params); }
+
+  /// Reflect the parameters.
+  /// @return Reflected parameters.
+  GenericFreeTrackParameters<ParticleHypothesis> reflect() const {
+    GenericFreeTrackParameters<ParticleHypothesis> reflected = *this;
+    reflected.reflectInPlace();
+    return reflected;
   }
 
  private:

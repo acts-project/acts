@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -97,7 +97,9 @@ struct Factory {
 
   MapHelper m_helper;
 
-  MutablePodioTrackStateContainer create() { return {m_helper}; }
+  MutablePodioTrackStateContainer create() {
+    return MutablePodioTrackStateContainer{m_helper};
+  }
 };
 
 using CommonTests = MultiTrajectoryTestsCommon<Factory>;
@@ -200,6 +202,11 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
 BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   CommonTests ct;
   ct.testMultiTrajectoryExtraColumnsRuntime();
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryAllocateCalibratedInit) {
+  CommonTests ct;
+  ct.testMultiTrajectoryAllocateCalibratedInit(rng);
 }
 
 BOOST_AUTO_TEST_CASE(WriteToPodioFrame) {

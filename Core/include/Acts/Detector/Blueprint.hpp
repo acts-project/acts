@@ -1,19 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
+#include "Acts/Utilities/ProtoAxis.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 
 #include <map>
@@ -38,7 +38,7 @@ class IRootVolumeFinderBuilder;
 ///
 /// Leaf nodes can have internal builders attached, while all the external
 /// builders will be created when the blueprint is interpreted.
-namespace Blueprint {
+namespace Gen2Blueprint {
 
 struct Node final {
   /// Branch constructor
@@ -47,11 +47,11 @@ struct Node final {
   /// @param t the transform
   /// @param bt the boundary type
   /// @param bv the boundary values
-  /// @param bss the binning values
+  /// @param bss the axis directions for the binning
   /// @param cs the children of the node
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<ActsScalar>& bv, const std::vector<BinningValue>& bss,
+       const std::vector<double>& bv, const std::vector<AxisDirection>& bss,
        std::vector<std::unique_ptr<Node>> cs = {}, const Extent& e = Extent())
       : name(n),
         transform(t),
@@ -73,7 +73,7 @@ struct Node final {
   /// @param isb the internal structure builder (optional)
   /// @param e the estimated extent of the node (optional)
   Node(const std::string& n, const Transform3& t, VolumeBounds::BoundsType bt,
-       const std::vector<ActsScalar>& bv,
+       const std::vector<double>& bv,
        std::shared_ptr<const IInternalStructureBuilder> isb = nullptr,
        const Extent& e = Extent())
       : name(n),
@@ -90,16 +90,17 @@ struct Node final {
   /// The boundary type
   VolumeBounds::BoundsType boundsType = VolumeBounds::eOther;
   /// The associated values
-  std::vector<ActsScalar> boundaryValues = {};
+  std::vector<double> boundaryValues = {};
   /// Parent node - nullptr for root only
   const Node* parent = nullptr;
   /// Branch definitions: children
   std::vector<std::unique_ptr<Node>> children = {};
   /// Branch definition binning
-  std::vector<BinningValue> binning = {};
+  std::vector<AxisDirection> binning = {};
 
   /// Portal proto material binning
-  std::map<unsigned int, BinningDescription> portalMaterialBinning = {};
+  std::map<unsigned int, std::vector<DirectedProtoAxis>> portalMaterialBinning =
+      {};
 
   /// Auxiliary information
   std::vector<std::string> auxiliary = {};
@@ -129,5 +130,5 @@ struct Node final {
   }
 };
 
-}  // namespace Blueprint
+}  // namespace Gen2Blueprint
 }  // namespace Acts::Experimental

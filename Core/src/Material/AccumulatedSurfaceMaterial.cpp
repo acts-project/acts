@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 
@@ -140,7 +140,7 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
   // Create the properties matrix
   MaterialSlabMatrix mpMatrix(
       m_binUtility.bins(1),
-      MaterialSlabVector(m_binUtility.bins(0), MaterialSlab()));
+      MaterialSlabVector(m_binUtility.bins(0), MaterialSlab::Nothing()));
   // Loop over and fill
   for (std::size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
     for (std::size_t ib0 = 0; ib0 < m_binUtility.bins(0); ++ib0) {

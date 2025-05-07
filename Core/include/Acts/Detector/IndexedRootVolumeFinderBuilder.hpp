@@ -1,17 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/PortalNavigation.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <memory>
 #include <vector>
@@ -26,7 +26,8 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
  public:
   /// @brief Constructor with binning casts
   /// @param binning the cast values for the grid binning
-  IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning);
+  explicit IndexedRootVolumeFinderBuilder(
+      std::vector<Acts::AxisDirection> binning);
 
   /// The virtual interface definition for root volume finder builders
   ///
@@ -40,7 +41,7 @@ class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
       const final;
 
  private:
-  std::vector<Acts::BinningValue> m_casts;
+  std::vector<Acts::AxisDirection> m_casts;
 };
 
 }  // namespace Acts::Experimental

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 namespace Acts::detail {
 
@@ -106,12 +107,12 @@ struct CyclicParameterTraits {
 //
 // The functions names are chosen to be consistent w/ std::numeric_limits
 struct PhiBoundParameterLimits {
-  static constexpr double lowest() { return -M_PI; }
-  static constexpr double max() { return M_PI; }
+  static constexpr double lowest() { return -std::numbers::pi; }
+  static constexpr double max() { return std::numbers::pi; }
 };
 struct ThetaBoundParameterLimits {
   static constexpr double lowest() { return 0; }
-  static constexpr double max() { return M_PI; }
+  static constexpr double max() { return std::numbers::pi; }
 };
 
 // Traits implementation structs for single parameters.

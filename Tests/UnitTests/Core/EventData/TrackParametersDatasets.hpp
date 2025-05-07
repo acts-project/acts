@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/RegularSurface.hpp"
 
 #include <cmath>
+#include <numbers>
 #include <vector>
 
 namespace {
@@ -40,16 +41,19 @@ const auto surfaces =
         CurvilinearSurface(Vector3::Zero(), Vector3::UnitZ()).planeSurface(),
     });
 // positions
-const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.50);
+const auto posAngle = bdata::xrange(-std::numbers::pi, std::numbers::pi, 0.5);
 const auto posPositiveNonzero = bdata::xrange(0.25, 1.0, 0.25);
 const auto posPositive = bdata::make(0.0) + posPositiveNonzero;
 const auto posSymmetric = bdata::xrange(-1.0, 1.0, 0.50);
 // time
 const auto ts = bdata::make(1.0);
 // direction angles
-const auto phis = bdata::make({0.0, M_PI, -M_PI, M_PI_2, -M_PI_2});
-const auto thetasNoForwardBackward = bdata::xrange(M_PI_4, M_PI, M_PI_4);
-const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
+const auto phis = bdata::make({0., std::numbers::pi, -std::numbers::pi,
+                               std::numbers::pi / 2., -std::numbers::pi / 2.});
+const auto thetasNoForwardBackward = bdata::xrange(
+    std::numbers::pi / 4., std::numbers::pi, std::numbers::pi / 4.);
+const auto thetas =
+    bdata::make({0., std::numbers::pi}) + thetasNoForwardBackward;
 // absolute momenta
 const auto ps = bdata::make({1.0, 10.0});
 // charges

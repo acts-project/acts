@@ -1,26 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
-#include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -30,28 +25,70 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cstddef>
-#include <memory>
 #include <string>
-#include <tuple>
-#include <utility>
 #include <variant>
 #include <vector>
 
-namespace ActsFatras {
-class Barcode;
-}  // namespace ActsFatras
-
 namespace ActsExamples {
-struct AlgorithmContext;
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {
  public:
+  class Config {
+   public:
+    /// Input collection of simulated hits.
+    std::string inputSimHits = "simhits";
+    /// Output measurements collection.
+    std::string outputMeasurements = "measurements";
+    /// Output cells map (geoID -> collection of cells).
+    std::string outputCells = "cells";
+    /// Output cluster collection.
+    std::string outputClusters = "clusters";
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap = "measurement_particles_map";
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap = "measurement_simhits_map";
+    /// Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
+    /// Output collection to map particles to simulated hits.
+    std::string outputSimHitMeasurementsMap = "simhit_measurements_map";
+
+    /// Map of surface by identifier to allow local - to global
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier;
+    /// Random numbers tool.
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    /// Flag to determine whether cell data should be written to the
+    /// `outputCells` collection; if true, writes (rather voluminous) cell data.
+    bool doOutputCells = false;
+    /// Flag to determine whether or not to run the clusterization; if true,
+    /// clusters, measurements, and sim-hit-maps are output.
+    bool doClusterization = true;
+    /// Do we merge hits or not
+    bool doMerge = false;
+    /// How close do parameters have to be to consider merged
+    double mergeNsigma = 1.0;
+    /// Consider clusters that share a corner as merged (8-cell connectivity)
+    bool mergeCommonCorner = false;
+    /// Energy deposit threshold for accepting a hit
+    /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
+    /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+    /// Table 35.10)
+    /// @NOTE The default is set to 0 because this works only well with Geant4
+    double minEnergyDeposit = 0.0;  // 1000 * 3.65 * Acts::UnitConstants::eV;
+    /// The digitizers per GeometryIdentifiers
+    Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
+
+    /// Minimum number of attempts to derive a valid dgitized measurement when
+    /// random numbers are involved.
+    std::size_t minMaxRetries = 10;
+  };
+
   /// Construct the smearing algorithm.
   ///
   /// @param config is the algorithm configuration
   /// @param level is the logging level
-  DigitizationAlgorithm(DigitizationConfig config, Acts::Logging::Level level);
+  DigitizationAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Build measurement from simulation hits at input.
   ///
@@ -60,7 +97,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get const access to the config
-  const DigitizationConfig& config() const { return m_cfg; }
+  const Config& config() const { return m_cfg; }
 
  private:
   /// Helper method for creating digitized parameters from clusters
@@ -90,24 +127,31 @@ class DigitizationAlgorithm final : public IAlgorithm {
                                  CombinedDigitizer<4>>;
 
   /// Configuration of the Algorithm
-  DigitizationConfig m_cfg;
+  Config m_cfg;
   /// Digitizers within geometry hierarchy
   Acts::GeometryHierarchyMap<Digitizer> m_digitizers;
-  /// Geometric digtizer
+  /// Geometric digitizer
   ActsFatras::Channelizer m_channelizer;
 
-  ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
-                                                           "SimHitContainer"};
+  using CellsMap =
+      std::map<Acts::GeometryIdentifier, std::vector<Cluster::Cell>>;
 
-  WriteDataHandle<IndexSourceLinkContainer> m_sourceLinkWriteHandle{
-      this, "SourceLinks"};
-  WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
-      this, "Measurements"};
-  WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
-  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
-      m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};
-  WriteDataHandle<IndexMultimap<Index>> m_measurementSimHitsMapWriteHandle{
-      this, "MeasurementSimHitsMap"};
+  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
+
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+  WriteDataHandle<CellsMap> m_outputCells{this, "OutputCells"};
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
+
+  WriteDataHandle<IndexMultimap<SimBarcode>> m_outputMeasurementParticlesMap{
+      this, "OutputMeasurementParticlesMap"};
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
+  WriteDataHandle<InverseMultimap<Index>> m_outputSimHitMeasurementsMap{
+      this, "OutputSimHitMeasurementsMap"};
 
   /// Construct a fixed-size smearer from a configuration.
   ///
@@ -117,15 +161,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ///
   /// @return a variant of a Digitizer
   template <std::size_t kSmearDIM>
-  static Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
+  Digitizer makeDigitizer(const DigiComponentsConfig& cfg) {
     CombinedDigitizer<kSmearDIM> impl;
     // Copy the geometric configuration
     impl.geometric = cfg.geometricDigiConfig;
     // Prepare the smearing configuration
-    for (int i = 0; i < static_cast<int>(kSmearDIM); ++i) {
-      impl.smearing.indices[i] = cfg.smearingDigiConfig.at(i).index;
+    for (std::size_t i = 0; i < kSmearDIM; ++i) {
+      impl.smearing.indices[i] = cfg.smearingDigiConfig.params.at(i).index;
       impl.smearing.smearFunctions[i] =
-          cfg.smearingDigiConfig.at(i).smearFunction;
+          cfg.smearingDigiConfig.params.at(i).smearFunction;
+      impl.smearing.forcePositive[i] =
+          cfg.smearingDigiConfig.params.at(i).forcePositiveValues;
+      impl.smearing.maxRetries =
+          std::max(m_cfg.minMaxRetries, cfg.smearingDigiConfig.maxRetries);
     }
     return impl;
   }

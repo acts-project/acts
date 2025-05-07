@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootTrackSummaryWriter.hpp"
 
@@ -33,6 +33,7 @@
 #include <ios>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 #include <ostream>
 #include <stdexcept>
@@ -52,12 +53,6 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
     : WriterT(config.inputTracks, "RootTrackSummaryWriter", level),
       m_cfg(config) {
   // tracks collection name is already checked by base ctor
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing particles input collection");
-  }
-  if (m_cfg.inputTrackParticleMatching.empty()) {
-    throw std::invalid_argument("Missing input track particles matching");
-  }
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
@@ -65,8 +60,9 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
-  m_inputParticles.initialize(m_cfg.inputParticles);
-  m_inputTrackParticleMatching.initialize(m_cfg.inputTrackParticleMatching);
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+  m_inputTrackParticleMatching.maybeInitialize(
+      m_cfg.inputTrackParticleMatching);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -116,6 +112,7 @@ RootTrackSummaryWriter::RootTrackSummaryWriter(
   m_outputTree->Branch("t_pT", &m_t_pT);
   m_outputTree->Branch("t_d0", &m_t_d0);
   m_outputTree->Branch("t_z0", &m_t_z0);
+  m_outputTree->Branch("t_prodR", &m_t_prodR);
 
   m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
   m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
@@ -219,9 +216,16 @@ ProcessCode RootTrackSummaryWriter::finalize() {
 
 ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
                                            const ConstTrackContainer& tracks) {
-  // Read additional input collections
-  const auto& particles = m_inputParticles(ctx);
-  const auto& trackParticleMatching = m_inputTrackParticleMatching(ctx);
+  // In case we do not have truth info, we bind to a empty collection
+  const static SimParticleContainer emptyParticles;
+  const static TrackParticleMatching emptyTrackParticleMatching;
+
+  const auto& particles =
+      m_inputParticles.isInitialized() ? m_inputParticles(ctx) : emptyParticles;
+  const auto& trackParticleMatching =
+      m_inputTrackParticleMatching.isInitialized()
+          ? m_inputTrackParticleMatching(ctx)
+          : emptyTrackParticleMatching;
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -243,6 +247,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_nSharedHits.push_back(track.nSharedHits());
     m_chi2Sum.push_back(track.chi2());
     m_NDF.push_back(track.nDoF());
+
     {
       std::vector<double> measurementChi2;
       std::vector<std::uint32_t> measurementVolume;
@@ -265,8 +270,6 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
           measurementLayer.push_back(layer);
         }
       }
-      // IDs are stored as double (as the vector of vector of int is not known
-      // to ROOT)
       m_measurementChi2.push_back(std::move(measurementChi2));
       m_measurementVolume.push_back(std::move(measurementVolume));
       m_measurementLayer.push_back(std::move(measurementLayer));
@@ -297,6 +300,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     float t_d0 = NaNfloat;
     float t_z0 = NaNfloat;
     float t_qop = NaNfloat;
+    float t_prodR = NaNfloat;
 
     // Get the perigee surface
     const Acts::Surface* pSurface =
@@ -337,6 +341,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         t_eta = eta(particle.direction());
         t_pT = t_p * perp(particle.direction());
         t_qop = particle.qOverP();
+        t_prodR = std::sqrt(t_vx * t_vx + t_vy * t_vy);
 
         if (pSurface != nullptr) {
           auto intersection =
@@ -388,6 +393,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     m_t_pT.push_back(t_pT);
     m_t_d0.push_back(t_d0);
     m_t_z0.push_back(t_z0);
+    m_t_prodR.push_back(t_prodR);
 
     // Initialize the fitted track parameters info
     std::array<float, Acts::eBoundSize> param = {NaNfloat, NaNfloat, NaNfloat,
@@ -405,9 +411,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
         param[i] = parameter[i];
       }
 
-      const auto& covariance = track.covariance();
       for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-        error[i] = std::sqrt(covariance(i, i));
+        double variance = getCov(i, i);
+        error[i] = variance >= 0 ? std::sqrt(variance) : NaNfloat;
       }
     }
 
@@ -418,8 +424,9 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
     if (foundMajorityParticle && hasFittedParams) {
       res = {param[Acts::eBoundLoc0] - t_d0,
              param[Acts::eBoundLoc1] - t_z0,
-             Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
-                                               static_cast<float>(2 * M_PI)),
+             Acts::detail::difference_periodic(
+                 param[Acts::eBoundPhi], t_phi,
+                 static_cast<float>(2 * std::numbers::pi)),
              param[Acts::eBoundTheta] - t_theta,
              param[Acts::eBoundQOverP] - t_qop,
              param[Acts::eBoundTime] - t_time};
@@ -572,6 +579,7 @@ ProcessCode RootTrackSummaryWriter::writeT(const AlgorithmContext& ctx,
   m_t_eta.clear();
   m_t_d0.clear();
   m_t_z0.clear();
+  m_t_prodR.clear();
 
   m_hasFittedParams.clear();
   m_eLOC0_fit.clear();

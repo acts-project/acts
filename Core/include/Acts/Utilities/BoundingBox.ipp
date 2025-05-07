@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 template <typename entity_t, typename value_t, std::size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::AxisAlignedBoundingBox(
@@ -346,15 +346,13 @@ template <typename entity_t, typename value_t, std::size_t DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformed(
     const transform_type& trf) const {
-  VertexType vmin, vmax;
-  std::tie(vmin, vmax) = transformVertices(trf);
+  const auto [vmin, vmax] = transformVertices(trf);
   return self_t(m_entity, vmin, vmax);
 }
 
 template <typename entity_t, typename value_t, std::size_t DIM>
 void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
-    IVisualization3D& helper, std::array<int, 3> color,
-    const transform_type& trf) const
+    IVisualization3D& helper, Color color, const transform_type& trf) const
   requires(DIM == 3)
 {
   static_assert(DIM == 3, "PLY output only supported in 3D");
@@ -464,8 +462,7 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
 
   std::array<std::vector<box_t*>, 8> octants;
   // calc center of boxes
-  VertexType vmin, vmax;
-  std::tie(vmin, vmax) = box_t::wrap(lprims);
+  const auto [vmin, vmax] = box_t::wrap(lprims);
   VertexType glob_ctr = (vmin + vmax) / 2.;
 
   for (auto* box : lprims) {

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Json/ExtentJsonConverter.hpp"
 
@@ -22,9 +22,9 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   {
     nlohmann::json jrange;
     const auto& xrange = e.range();
-    for (auto ibv : allBinningValues()) {
+    for (auto ibv : allAxisDirections()) {
       if (e.constrains(ibv)) {
-        jrange[binningValueName(ibv)] = xrange[toUnderlying(ibv)];
+        jrange[axisDirectionName(ibv)] = xrange[toUnderlying(ibv)];
       }
     }
     j["range"] = jrange;
@@ -33,10 +33,10 @@ void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
   {
     nlohmann::json jenvelope;
     const auto& envelope = e.envelope();
-    for (auto ibv : allBinningValues()) {
+    for (auto ibv : allAxisDirections()) {
       if (envelope[ibv] != zeroEnvelope) {
-        jenvelope[binningValueName(ibv)] =
-            Range1D<ActsScalar>(envelope[ibv][0], envelope[ibv][1]);
+        jenvelope[axisDirectionName(ibv)] =
+            Range1D<double>(envelope[ibv][0], envelope[ibv][1]);
       }
     }
     if (!jenvelope.empty()) {
@@ -49,7 +49,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
   const auto& jrange = j["range"];
 
   for (const auto& [key, value] : jrange.items()) {
-    BinningValue bval = binningValueFromName(key);
+    AxisDirection bval = axisDirectionFromName(key);
     e.set(bval, value["min"], value["max"]);
   }
 
@@ -58,7 +58,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
     ExtentEnvelope envelope;
 
     for (const auto& [key, value] : jenvelope.items()) {
-      BinningValue bval = binningValueFromName(key);
+      AxisDirection bval = axisDirectionFromName(key);
       envelope[bval] = {value["min"], value["max"]};
     }
 

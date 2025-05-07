@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -178,7 +178,7 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
 /// Calculate the inverse of an Eigen matrix after checking if it can be
 /// numerically inverted. This allows to catch potential FPEs before they occur.
 /// For matrices up to 4x4, the inverse is computed directly. For larger
-/// matrices, the FullPivLU is used.
+/// matrices, and dynamic matrices the FullPivLU is used.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
@@ -192,12 +192,11 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   constexpr int cols = MatrixType::ColsAtCompileTime;
 
   static_assert(rows == cols);
-  static_assert(rows != -1);
 
   ResultType result;
   bool invertible = false;
 
-  if constexpr (rows > 4) {
+  if constexpr (rows > 4 || rows == -1) {
     Eigen::FullPivLU<MatrixType> mFullPivLU(m);
     if (mFullPivLU.isInvertible()) {
       invertible = true;

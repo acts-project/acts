@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -44,7 +44,7 @@ struct VolumeMaterialInteraction {
   const Direction navDir;
 
   /// Data evaluated within this struct
-  MaterialSlab slab;
+  MaterialSlab slab = MaterialSlab::Nothing();
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 0;
 
@@ -117,9 +117,9 @@ struct VolumeMaterialInteraction {
                               ->material(pos),
                           1);  // state.stepping.StepSize
     } else {
-      slab = MaterialSlab();
+      slab = MaterialSlab::Nothing();
     }
-    return slab.isValid();
+    return !slab.isVacuum();
   }
 };
 

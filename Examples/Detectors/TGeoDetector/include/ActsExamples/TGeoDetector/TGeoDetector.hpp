@@ -1,17 +1,19 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/DetectorCommons/Detector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstddef>
@@ -22,30 +24,12 @@
 #include <utility>
 #include <vector>
 
-namespace Acts {
-class TGeoDetectorElement;
-class TrackingGeometry;
-class IMaterialDecorator;
-}  // namespace Acts
-
-namespace ActsExamples {
-class IContextDecorator;
-}  // namespace ActsExamples
-
 namespace ActsExamples {
 
-struct TGeoDetector {
-  using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
-  using DetectorStore = std::vector<DetectorElementPtr>;
-
-  using ContextDecorators =
-      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
-  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
-
-  /// The Store of the detector elements (lifetime: job)
-  DetectorStore detectorStore;
-
+class TGeoDetector : public Detector {
+ public:
   struct Config {
+    Acts::Logging::Level logLevel = Acts::Logging::WARNING;
     Acts::Logging::Level surfaceLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level layerLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level volumeLogLevel = Acts::Logging::WARNING;
@@ -69,13 +53,15 @@ struct TGeoDetector {
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
 
+    std::shared_ptr<Acts::IMaterialDecorator> materialDecorator;
+
     enum SubVolume : std::size_t { Negative = 0, Central, Positive };
 
     template <typename T>
     struct LayerTriplet {
       LayerTriplet() = default;
 
-      LayerTriplet(T value)
+      explicit LayerTriplet(T value)
           : negative{value}, central{value}, positive{value} {}
 
       LayerTriplet(T _negative, T _central, T _positive)
@@ -150,9 +136,10 @@ struct TGeoDetector {
   static void readTGeoLayerBuilderConfigsFile(const std::string& path,
                                               Config& config);
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const Config& cfg,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  explicit TGeoDetector(const Config& cfg);
+
+ private:
+  Config m_cfg;
 };
 
 }  // namespace ActsExamples

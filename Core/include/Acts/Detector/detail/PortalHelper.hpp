@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -34,7 +34,7 @@ class Portal;
 /// gathered from the sub volumes, the binning description
 using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
-               std::vector<ActsScalar>, BinningValue>;
+               std::vector<double>, AxisDirection>;
 
 namespace detail::PortalHelper {
 
@@ -62,8 +62,8 @@ void attachExternalNavigationDelegate(
 void attachDetectorVolumesUpdater(
     const GeometryContext& gctx, Portal& portal,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const Direction& direction, const std::vector<ActsScalar>& boundaries,
-    const BinningValue& binning);
+    const Direction& direction, const std::vector<double>& boundaries,
+    const AxisDirection& binning);
 
 /// @brief Create and attach the multi link updator, the portal will get
 /// a volume updator attached, that points to the different sub volumes

@@ -1,20 +1,18 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <cassert>
-#include <variant>
 
 namespace Acts {
 class VectorMultiTrajectory;
@@ -38,13 +36,12 @@ void ActsExamples::PassThroughCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = fixedMeasurement.parameters();
-    trackState.calibratedCovariance<kMeasurementSize>() =
-        fixedMeasurement.covariance();
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.allocateCalibrated(fixedMeasurement.parameters().eval(),
+                                  fixedMeasurement.covariance().eval());
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }
 

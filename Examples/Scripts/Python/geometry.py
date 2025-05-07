@@ -7,8 +7,6 @@ import acts
 from acts import MaterialMapJsonConverter
 from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
-    GenericDetector,
-    AlignedDetector,
     WhiteBoard,
     AlgorithmContext,
     ProcessCode,
@@ -32,8 +30,9 @@ def runGeometry(
     for ievt in range(events):
         eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
+        ithread = 0
 
-        context = AlgorithmContext(ialg, ievt, eventStore)
+        context = AlgorithmContext(ialg, ievt, eventStore, ithread)
 
         for cdr in decorators:
             r = cdr.decorate(context)
@@ -90,9 +89,11 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector, trackingGeometry, decorators = AlignedDetector.create()
-    # detector, trackingGeometry, decorators = GenericDetector.create()
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    # detector = AlignedDetector()
+    # detector = GenericDetector()
+    detector = getOpenDataDetector()
+    trackingGeometry = detector.trackingGeometry()
+    decorators = detector.contextDecorators()
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
 

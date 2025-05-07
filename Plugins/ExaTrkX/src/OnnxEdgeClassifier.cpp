@@ -1,106 +1,199 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/Utils.hpp"
+
+#include <boost/container/static_vector.hpp>
 #include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
 
-#include "runSessionWithIoBinding.hpp"
-
 using namespace torch::indexing;
+namespace bc = boost::container;
+
+namespace {
+
+Ort::Value torchToOnnx(Ort::MemoryInfo &memoryInfo, at::Tensor &tensor) {
+  ONNXTensorElementDataType onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+
+  if (tensor.dtype() == torch::kFloat32) {
+    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT;
+  } else if (tensor.dtype() == torch::kInt64) {
+    onnxType = ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64;
+  } else {
+    throw std::runtime_error(
+        "Cannot convert torch::Tensor to Ort::Value (datatype)");
+  }
+
+  bc::static_vector<std::int64_t, 2> shape;
+  for (auto size : tensor.sizes()) {
+    shape.push_back(size);
+  }
+  return Ort::Value::CreateTensor(memoryInfo, tensor.data_ptr(),
+                                  tensor.nbytes(), shape.data(), shape.size(),
+                                  onnxType);
+}
+
+}  // namespace
 
 namespace Acts {
 
 OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
-                                       std::unique_ptr<const Logger> logger)
-    : m_logger(std::move(logger)),
+                                       std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)),
       m_cfg(cfg),
-      m_device(torch::Device(torch::kCPU)) {
-  m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
-                                     "ExaTrkX - edge classifier");
+      m_device(torch::cuda::is_available() ? torch::Device(torch::kCUDA)
+                                           : torch::Device(torch::kCPU)) {
+  ACTS_INFO("OnnxEdgeClassifier with ORT API version " << ORT_API_VERSION);
 
-  Ort::SessionOptions session_options;
-  session_options.SetIntraOpNumThreads(1);
-  session_options.SetGraphOptimizationLevel(
+  OrtLoggingLevel onnxLevel = ORT_LOGGING_LEVEL_WARNING;
+  switch (m_logger->level()) {
+    case Acts::Logging::VERBOSE:
+      onnxLevel = ORT_LOGGING_LEVEL_VERBOSE;
+      break;
+    case Acts::Logging::DEBUG:
+      onnxLevel = ORT_LOGGING_LEVEL_INFO;
+      break;
+    case Acts::Logging::INFO:
+      onnxLevel = ORT_LOGGING_LEVEL_WARNING;
+      break;
+    case Acts::Logging::WARNING:
+      onnxLevel = ORT_LOGGING_LEVEL_WARNING;
+      break;
+    case Acts::Logging::ERROR:
+      onnxLevel = ORT_LOGGING_LEVEL_ERROR;
+      break;
+    case Acts::Logging::FATAL:
+      onnxLevel = ORT_LOGGING_LEVEL_FATAL;
+      break;
+    default:
+      throw std::runtime_error("Invalid log level");
+  }
+
+  m_env = std::make_unique<Ort::Env>(onnxLevel, "ExaTrkX - edge classifier");
+
+  Ort::SessionOptions sessionOptions;
+  sessionOptions.SetIntraOpNumThreads(1);
+  sessionOptions.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
+  if (m_device.is_cuda()) {
+    ACTS_INFO("Try to add ONNX execution provider for CUDA");
+    OrtCUDAProviderOptions cuda_options;
+    cuda_options.device_id = 0;
+    sessionOptions.AppendExecutionProvider_CUDA(cuda_options);
+  }
+
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
-                                           session_options);
+                                           sessionOptions);
 
   Ort::AllocatorWithDefaultOptions allocator;
 
-  m_inputNameNodes =
-      std::string(m_model->GetInputNameAllocated(0, allocator).get());
-  m_inputNameEdges =
-      std::string(m_model->GetInputNameAllocated(1, allocator).get());
-  m_outputNameScores =
+  if (m_model->GetInputCount() < 2 || m_model->GetInputCount() > 3) {
+    throw std::invalid_argument("ONNX edge classifier needs 2 or 3 inputs!");
+  }
+
+  for (std::size_t i = 0; i < m_model->GetInputCount(); ++i) {
+    m_inputNames.emplace_back(
+        m_model->GetInputNameAllocated(i, allocator).get());
+  }
+
+  if (m_model->GetOutputCount() != 1) {
+    throw std::invalid_argument(
+        "ONNX edge classifier needs exactly one output!");
+  }
+
+  m_outputName =
       std::string(m_model->GetOutputNameAllocated(0, allocator).get());
 }
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, torch::Device) {
-  Ort::AllocatorWithDefaultOptions allocator;
-  auto memoryInfo = Ort::MemoryInfo::CreateCpu(
-      OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+std::tuple<std::any, std::any, std::any, std::any>
+OnnxEdgeClassifier::operator()(std::any inputNodes, std::any inputEdges,
+                               std::any inEdgeFeatures,
+                               const ExecutionContext &execContext) {
+  const char *deviceStr = execContext.device.is_cuda() ? "Cuda" : "Cpu";
+  ACTS_DEBUG("Create ORT memory info (" << deviceStr << ")");
+  Ort::MemoryInfo memoryInfo(deviceStr, OrtArenaAllocator,
+                             execContext.device.index(), OrtMemTypeDefault);
 
-  auto eInputTensor = std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
-  auto edgeList = std::any_cast<std::vector<std::int64_t>>(inputEdges);
-  const int numEdges = edgeList.size() / 2;
+  bc::static_vector<Ort::Value, 3> inputTensors;
+  bc::static_vector<const char *, 3> inputNames;
 
-  std::vector<const char *> fInputNames{m_inputNameNodes.c_str(),
-                                        m_inputNameEdges.c_str()};
-  std::vector<Ort::Value> fInputTensor;
-  fInputTensor.push_back(std::move(*eInputTensor));
-  std::vector<std::int64_t> fEdgeShape{2, numEdges};
-  fInputTensor.push_back(Ort::Value::CreateTensor<std::int64_t>(
-      memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
-      fEdgeShape.size()));
+  // Node tensor
+  auto nodeTensor =
+      std::any_cast<torch::Tensor>(inputNodes).to(execContext.device);
+  ACTS_DEBUG("nodes: " << detail::TensorDetails{nodeTensor});
+  inputTensors.push_back(torchToOnnx(memoryInfo, nodeTensor));
+  inputNames.push_back(m_inputNames.at(0).c_str());
 
-  // filtering outputs
-  std::vector<const char *> fOutputNames{m_outputNameScores.c_str()};
-  std::vector<float> fOutputData(numEdges);
+  // Edge tensor
+  auto edgeIndex =
+      std::any_cast<torch::Tensor>(inputEdges).to(execContext.device);
+  ACTS_DEBUG("edgeIndex: " << detail::TensorDetails{edgeIndex});
+  inputTensors.push_back(torchToOnnx(memoryInfo, edgeIndex));
+  inputNames.push_back(m_inputNames.at(1).c_str());
 
-  auto outputDims = m_model->GetOutputTypeInfo(0)
-                        .GetTensorTypeAndShapeInfo()
-                        .GetDimensionsCount();
-  using Shape = std::vector<std::int64_t>;
-  Shape fOutputShape = outputDims == 2 ? Shape{numEdges, 1} : Shape{numEdges};
-  std::vector<Ort::Value> fOutputTensor;
-  fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
-      memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
-      fOutputShape.size()));
-  runSessionWithIoBinding(*m_model, fInputNames, fInputTensor, fOutputNames,
-                          fOutputTensor);
+  // Edge feature tensor
+  std::optional<torch::Tensor> edgeFeatures;
+  if (m_inputNames.size() == 3 && inEdgeFeatures.has_value()) {
+    edgeFeatures =
+        std::any_cast<torch::Tensor>(inEdgeFeatures).to(execContext.device);
+    ACTS_DEBUG("edgeFeatures: " << detail::TensorDetails{*edgeFeatures});
+    inputTensors.push_back(torchToOnnx(memoryInfo, *edgeFeatures));
+    inputNames.push_back(m_inputNames.at(2).c_str());
+  }
 
-  ACTS_DEBUG("Get scores for " << numEdges << " edges.");
-  torch::Tensor edgeListCTen = torch::tensor(edgeList, {torch::kInt64});
-  edgeListCTen = edgeListCTen.reshape({2, numEdges});
+  // Output score tensor
+  ACTS_DEBUG("Create score tensor");
+  auto scores = torch::empty(
+      edgeIndex.size(1),
+      torch::TensorOptions().device(execContext.device).dtype(torch::kFloat32));
+  if (m_model->GetOutputTypeInfo(0)
+          .GetTensorTypeAndShapeInfo()
+          .GetDimensionsCount() == 2) {
+    scores = scores.reshape({scores.numel(), 1});
+  }
 
-  torch::Tensor fOutputCTen = torch::tensor(fOutputData, {torch::kFloat32});
-  fOutputCTen = fOutputCTen.sigmoid();
+  std::vector<Ort::Value> outputTensors;
+  outputTensors.push_back(torchToOnnx(memoryInfo, scores));
+  std::vector<const char *> outputNames{m_outputName.c_str()};
 
-  torch::Tensor filterMask = fOutputCTen > m_cfg.cut;
-  torch::Tensor edgesAfterFCTen = edgeListCTen.index({Slice(), filterMask});
+  ACTS_DEBUG("Run model");
+  Ort::RunOptions options;
+  m_model->Run(options, inputNames.data(), inputTensors.data(),
+               inputTensors.size(), outputNames.data(), outputTensors.data(),
+               outputNames.size());
+  scores = scores.squeeze();
 
-  std::vector<std::int64_t> edgesAfterFiltering;
-  std::copy(edgesAfterFCTen.data_ptr<std::int64_t>(),
-            edgesAfterFCTen.data_ptr<std::int64_t>() + edgesAfterFCTen.numel(),
-            std::back_inserter(edgesAfterFiltering));
+  ACTS_VERBOSE("Slice of classified output before sigmoid:\n"
+               << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
 
-  std::int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
-  ACTS_DEBUG("Finished edge classification, after cut: " << numEdgesAfterF
-                                                         << " edges.");
+  scores.sigmoid_();
 
-  return {std::make_shared<Ort::Value>(std::move(fInputTensor[0])),
-          edgesAfterFiltering, fOutputCTen};
+  ACTS_DEBUG("scores: " << detail::TensorDetails{scores});
+  ACTS_VERBOSE("Slice of classified output:\n"
+               << scores.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
+
+  torch::Tensor filterMask = scores > m_cfg.cut;
+  torch::Tensor edgesAfterCut = edgeIndex.index({Slice(), filterMask});
+
+  ACTS_DEBUG("Finished edge classification, after cut: "
+             << edgesAfterCut.size(1) << " edges.");
+
+  if (edgesAfterCut.size(1) == 0) {
+    throw Acts::NoEdgesError{};
+  }
+
+  return {std::move(nodeTensor), edgesAfterCut.clone(),
+          std::move(inEdgeFeatures), std::move(scores)};
 }
 
 }  // namespace Acts

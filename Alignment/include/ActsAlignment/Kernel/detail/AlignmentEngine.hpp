@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -208,7 +208,9 @@ TrackAlignmentState trackAlignmentState(
                                            measdim) = measCovariance;
 
     // (b) Get and fill the bound parameters to measurement projection matrix
-    const ActsDynamicMatrix H = state.effectiveProjector();
+    const ActsDynamicMatrix H =
+        state.projectorSubspaceHelper().fullProjector().topLeftCorner(
+            measdim, eBoundSize);
     alignState.projectionMatrix.block(iMeasurement, iParams, measdim,
                                       eBoundSize) = H;
     // (c) Get and fill the residual

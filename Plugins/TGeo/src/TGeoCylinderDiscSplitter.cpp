@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 
@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <numbers>
 #include <utility>
 
 Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
@@ -34,7 +35,7 @@ Acts::TGeoCylinderDiscSplitter::split(
   // Thickness
   auto tgIdentifier = tgde->identifier();
   const TGeoNode& tgNode = tgde->tgeoNode();
-  ActsScalar tgThickness = tgde->thickness();
+  double tgThickness = tgde->thickness();
 
   // Disc segments are detected, attempt a split
   if (m_cfg.discPhiSegments > 0 || m_cfg.discRadialSegments > 0) {
@@ -51,16 +52,16 @@ Acts::TGeoCylinderDiscSplitter::split(
       const Acts::Vector3 discCenter = sf.center(gctx);
 
       const auto& boundValues = sf.bounds().values();
-      ActsScalar discMinR = boundValues[Acts::RadialBounds::eMinR];
-      ActsScalar discMaxR = boundValues[Acts::RadialBounds::eMaxR];
+      double discMinR = boundValues[Acts::RadialBounds::eMinR];
+      double discMaxR = boundValues[Acts::RadialBounds::eMaxR];
 
-      ActsScalar phiStep = 2 * M_PI / m_cfg.discPhiSegments;
-      ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
-      ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
+      double phiStep = 2 * std::numbers::pi / m_cfg.discPhiSegments;
+      double cosPhiHalf = std::cos(0.5 * phiStep);
+      double sinPhiHalf = std::sin(0.5 * phiStep);
 
-      std::vector<ActsScalar> radialValues = {};
+      std::vector<double> radialValues = {};
       if (m_cfg.discRadialSegments > 1) {
-        ActsScalar rStep = (discMaxR - discMinR) / m_cfg.discRadialSegments;
+        double rStep = (discMaxR - discMinR) / m_cfg.discRadialSegments;
         radialValues.reserve(m_cfg.discRadialSegments);
         for (int ir = 0; ir <= m_cfg.discRadialSegments; ++ir) {
           radialValues.push_back(discMinR + ir * rStep);
@@ -70,27 +71,27 @@ Acts::TGeoCylinderDiscSplitter::split(
       }
 
       for (std::size_t ir = 1; ir < radialValues.size(); ++ir) {
-        ActsScalar minR = radialValues[ir - 1];
-        ActsScalar maxR = radialValues[ir];
+        double minR = radialValues[ir - 1];
+        double maxR = radialValues[ir];
 
-        ActsScalar maxLocY = maxR * cosPhiHalf;
-        ActsScalar minLocY = minR * cosPhiHalf;
+        double maxLocY = maxR * cosPhiHalf;
+        double minLocY = minR * cosPhiHalf;
 
-        ActsScalar hR = 0.5 * (maxLocY + minLocY);
-        ActsScalar hY = 0.5 * (maxLocY - minLocY);
-        ActsScalar hXminY = minR * sinPhiHalf;
-        ActsScalar hXmaxY = maxR * sinPhiHalf;
+        double hR = 0.5 * (maxLocY + minLocY);
+        double hY = 0.5 * (maxLocY - minLocY);
+        double hXminY = minR * sinPhiHalf;
+        double hXmaxY = maxR * sinPhiHalf;
 
         auto tgTrapezoid =
             std::make_shared<Acts::TrapezoidBounds>(hXminY, hXmaxY, hY);
 
         for (int im = 0; im < m_cfg.discPhiSegments; ++im) {
           // Get the moduleTransform
-          ActsScalar phi = -M_PI + im * phiStep;
-          auto tgTransform =
-              Transform3(Translation3(hR * std::cos(phi), hR * std::sin(phi),
-                                      discCenter.z()) *
-                         AngleAxis3(phi - 0.5 * M_PI, Vector3::UnitZ()));
+          double phi = -std::numbers::pi + im * phiStep;
+          auto tgTransform = Transform3(
+              Translation3(hR * std::cos(phi), hR * std::sin(phi),
+                           discCenter.z()) *
+              AngleAxis3(phi - std::numbers::pi / 2., Vector3::UnitZ()));
 
           // Create a new detector element per split
           auto tgDetectorElement = std::make_shared<Acts::TGeoDetectorElement>(
@@ -116,18 +117,16 @@ Acts::TGeoCylinderDiscSplitter::split(
                                  std::abs(m_cfg.cylinderLongitudinalSegments));
 
       const auto& boundValues = sf.bounds().values();
-      ActsScalar cylinderR = boundValues[Acts::CylinderBounds::eR];
-      ActsScalar cylinderHalfZ =
-          boundValues[Acts::CylinderBounds::eHalfLengthZ];
+      double cylinderR = boundValues[Acts::CylinderBounds::eR];
+      double cylinderHalfZ = boundValues[Acts::CylinderBounds::eHalfLengthZ];
 
-      ActsScalar phiStep = 2 * M_PI / m_cfg.cylinderPhiSegments;
-      ActsScalar cosPhiHalf = std::cos(0.5 * phiStep);
-      ActsScalar sinPhiHalf = std::sin(0.5 * phiStep);
+      double phiStep = 2 * std::numbers::pi / m_cfg.cylinderPhiSegments;
+      double cosPhiHalf = std::cos(0.5 * phiStep);
+      double sinPhiHalf = std::sin(0.5 * phiStep);
 
-      std::vector<ActsScalar> zValues = {};
+      std::vector<double> zValues = {};
       if (m_cfg.cylinderLongitudinalSegments > 1) {
-        ActsScalar zStep =
-            2 * cylinderHalfZ / m_cfg.cylinderLongitudinalSegments;
+        double zStep = 2 * cylinderHalfZ / m_cfg.cylinderLongitudinalSegments;
         zValues.reserve(m_cfg.cylinderLongitudinalSegments);
         for (int ir = 0; ir <= m_cfg.cylinderLongitudinalSegments; ++ir) {
           zValues.push_back(-cylinderHalfZ + ir * zStep);
@@ -136,26 +135,26 @@ Acts::TGeoCylinderDiscSplitter::split(
         zValues = {-cylinderHalfZ, cylinderHalfZ};
       }
 
-      ActsScalar planeR = cylinderR * cosPhiHalf;
-      ActsScalar planeHalfX = cylinderR * sinPhiHalf;
+      double planeR = cylinderR * cosPhiHalf;
+      double planeHalfX = cylinderR * sinPhiHalf;
 
       for (std::size_t iz = 1; iz < zValues.size(); ++iz) {
-        ActsScalar minZ = zValues[iz - 1];
-        ActsScalar maxZ = zValues[iz];
+        double minZ = zValues[iz - 1];
+        double maxZ = zValues[iz];
 
-        ActsScalar planeZ = 0.5 * (minZ + maxZ);
-        ActsScalar planeHalfY = 0.5 * (maxZ - minZ);
+        double planeZ = 0.5 * (minZ + maxZ);
+        double planeHalfY = 0.5 * (maxZ - minZ);
 
         auto tgRectangle =
             std::make_shared<Acts::RectangleBounds>(planeHalfX, planeHalfY);
 
         for (int im = 0; im < m_cfg.cylinderPhiSegments; ++im) {
           // Get the moduleTransform
-          ActsScalar phi = -M_PI + im * phiStep;
-          ActsScalar cosPhi = std::cos(phi);
-          ActsScalar sinPhi = std::sin(phi);
-          ActsScalar planeX = planeR * cosPhi;
-          ActsScalar planeY = planeR * sinPhi;
+          double phi = -std::numbers::pi + im * phiStep;
+          double cosPhi = std::cos(phi);
+          double sinPhi = std::sin(phi);
+          double planeX = planeR * cosPhi;
+          double planeY = planeR * sinPhi;
 
           Acts::Vector3 planeCenter(planeX, planeY, planeZ);
           Acts::Vector3 planeAxisZ = {cosPhi, sinPhi, 0.};

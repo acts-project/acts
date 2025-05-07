@@ -1,10 +1,10 @@
-# This file is part of the Acts project.
+# This file is part of the ACTS project.
 #
-# Copyright (C) 2021 CERN for the benefit of the Acts project
+# Copyright (C) 2016 CERN for the benefit of the ACTS project
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http:#mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 
 # each volume configuration is one logical block
@@ -137,7 +137,7 @@ def block_to_json(args):
             data["range"] = ps[1:]
             data["type"] = "GaussClipped"
         elif t in [3, 4]:
-            data["type"] = "Uniform" if t == 3 else "Digitial"
+            data["type"] = "Uniform" if t == 3 else "Digital"
 
             pitch = ps[0]
             low = ps[1]
@@ -145,7 +145,7 @@ def block_to_json(args):
 
             data["bindata"] = [
                 0,  # Acts::Open,
-                0,  # Acts::BinningValue::binX,
+                0,  # Acts::AxisDirection::AxisX,
                 (high - low) / pitch,
                 low,
                 high,

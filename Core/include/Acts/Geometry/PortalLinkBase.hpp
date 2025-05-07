@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -75,7 +75,7 @@ class PortalLinkBase {
   /// @return The merged portal link
   static std::unique_ptr<PortalLinkBase> merge(
       std::unique_ptr<PortalLinkBase> a, std::unique_ptr<PortalLinkBase> b,
-      BinningValue direction, const Logger& logger = getDummyLogger());
+      AxisDirection direction, const Logger& logger = getDummyLogger());
 
   /// Stream output function
   /// @param os The output stream
@@ -111,7 +111,7 @@ class PortalLinkBase {
   /// executed.
   static void checkMergePreconditions(const PortalLinkBase& a,
                                       const PortalLinkBase& b,
-                                      BinningValue direction);
+                                      AxisDirection direction);
 
   std::shared_ptr<RegularSurface> m_surface;
 };

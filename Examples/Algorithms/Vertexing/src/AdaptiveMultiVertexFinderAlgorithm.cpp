@@ -1,20 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Propagator/SympyStepper.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
@@ -23,13 +23,10 @@
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -37,7 +34,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
-#include <unordered_map>
 #include <utility>
 
 #include "TruthVertexSeeder.hpp"
@@ -118,7 +114,8 @@ AdaptiveMultiVertexFinderAlgorithm::makeVertexSeeder() const {
     Acts::GaussianTrackDensity::Config trkDensityCfg;
     trkDensityCfg.extractParameters
         .connect<&Acts::InputTrack::extractParameters>();
-    return std::make_unique<Seeder>(Seeder::Config{trkDensityCfg});
+    return std::make_unique<Seeder>(
+        Seeder::Config{Acts::GaussianTrackDensity(trkDensityCfg)});
   }
 
   if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
@@ -249,7 +246,8 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
       // Count the number of particles associated with each vertex
       std::size_t particleCount = 0;
       for (const auto& particle : truthParticles) {
-        if (particle.particleId().vertexId() == truthVertex.vertexId()) {
+        if (static_cast<SimVertexBarcode>(particle.particleId().vertexId()) ==
+            truthVertex.vertexId()) {
           ++particleCount;
         }
       }
@@ -287,7 +285,7 @@ ProcessCode AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // show some debug output
-  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  ACTS_DEBUG("Found " << vertices.size() << " vertices in event");
   for (const auto& vtx : vertices) {
     ACTS_DEBUG("Found vertex at " << vtx.fullPosition().transpose() << " with "
                                   << vtx.tracks().size() << " tracks.");

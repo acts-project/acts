@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,7 +15,6 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
-#include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -52,12 +51,13 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 
   // Start a bit in the volume 2, so we do not have any boundary checking for
   // the volume transition in the log
-  Acts::CurvilinearTrackParameters start(
-      Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
-      Acts::ParticleHypothesis::pion());
+  Acts::BoundTrackParameters start =
+      Acts::BoundTrackParameters::createCurvilinear(
+          Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV,
+          std::nullopt, Acts::ParticleHypothesis::pion());
 
-  Propagator::Options<Acts::ActionList<Acts::detail::SteppingLogger>,
-                      Acts::AbortList<Acts::EndOfWorldReached>>
+  Propagator::Options<
+      Acts::ActorList<Acts::detail::SteppingLogger, Acts::EndOfWorldReached>>
       opts(geoCtx, magCtx);
 
   auto res = propagator.propagate(start, opts);

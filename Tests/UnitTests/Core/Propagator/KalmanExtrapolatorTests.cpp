@@ -1,24 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -27,11 +24,8 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
-#include <array>
-#include <map>
 #include <memory>
 #include <optional>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -78,9 +72,9 @@ struct StepWiseActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
+  void act(propagator_state_t& state, const stepper_t& stepper,
+           const navigator_t& navigator, result_type& result,
+           const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = navigator.currentSurface(state.navigation);
     if (surface && surface->associatedDetectorElement()) {
@@ -129,21 +123,20 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
   // The start parameters
-  CurvilinearTrackParameters start(Vector4(-3_m, 0, 0, 42_ns), 0_degree,
-                                   90_degree, 1_e / 1_GeV, cov,
-                                   ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4(-3_m, 0, 0, 42_ns), 0_degree, 90_degree, 1_e / 1_GeV, cov,
+      ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;
-  using StepWiseActors = ActionList<StepWiseActor>;
-  using Aborters = AbortList<EndOfWorldReached>;
+  using StepWiseActors = ActorList<StepWiseActor, EndOfWorldReached>;
 
   // Create some options
-  using StepWiseOptions = Propagator::Options<StepWiseActors, Aborters>;
+  using StepWiseOptions = Propagator::Options<StepWiseActors>;
   StepWiseOptions swOptions(tgContext, mfContext);
 
-  using PlainActors = ActionList<>;
-  using PlainOptions = Propagator::Options<PlainActors, Aborters>;
+  using PlainActors = ActorList<EndOfWorldReached>;
+  using PlainOptions = Propagator::Options<PlainActors>;
   PlainOptions pOptions(tgContext, mfContext);
 
   // Run the standard propagation

@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -22,8 +22,10 @@
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include <fstream>
 #include <ios>
 #include <iostream>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -122,14 +124,15 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
       // Compute the distance between the truth and estimated directions
       float truthPhi = phi(truthUnitDir);
       float truthEta = std::atanh(std::cos(theta(truthUnitDir)));
-      float dEta = fabs(truthEta - seedEta);
-      float dPhi = fabs(truthPhi - seedPhi) < M_PI
-                       ? fabs(truthPhi - seedPhi)
-                       : fabs(truthPhi - seedPhi) - M_PI;
+      float dEta = std::abs(truthEta - seedEta);
+      float dPhi =
+          std::abs(truthPhi - seedPhi) < std::numbers::pi_v<float>
+              ? std::abs(truthPhi - seedPhi)
+              : std::abs(truthPhi - seedPhi) - std::numbers::pi_v<float>;
       truthDistance = sqrt(dPhi * dPhi + dEta * dEta);
       // If the seed is truth matched, check if it is the closest one for the
       // contributing particle
-      if (goodSeed.find(majorityParticleId) != goodSeed.end()) {
+      if (goodSeed.contains(majorityParticleId)) {
         if (goodSeed[majorityParticleId].second > truthDistance) {
           goodSeed[majorityParticleId] = std::make_pair(iparams, truthDistance);
         }
@@ -163,13 +166,8 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
     infoMap[toAdd.seedID] = toAdd;
   }
 
-  mos << "seed_id,particleId,"
-      << "pT,eta,phi,"
-      << "bX,bY,bZ,"
-      << "mX,mY,mZ,"
-      << "tX,tY,tZ,"
-      << "good/duplicate/fake,"
-      << "vertexZ,quality,"
+  mos << "seed_id,particleId," << "pT,eta,phi," << "bX,bY,bZ," << "mX,mY,mZ,"
+      << "tX,tY,tZ," << "good/duplicate/fake," << "vertexZ,quality,"
       << "Hits_ID" << '\n';
 
   for (auto& [id, info] : infoMap) {

@@ -1,16 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -20,19 +19,18 @@
 #include <thread>
 #include <utility>
 
-ActsExamples::Contextual::ExternalAlignmentDecorator::
-    ExternalAlignmentDecorator(const Config& cfg,
-                               std::unique_ptr<const Acts::Logger> logger)
+namespace ActsExamples {
+
+ExternalAlignmentDecorator::ExternalAlignmentDecorator(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   if (m_cfg.trackingGeometry != nullptr) {
     // parse and populate
-    parseGeometry(*m_cfg.trackingGeometry.get());
+    parseGeometry(*m_cfg.trackingGeometry);
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::Contextual::ExternalAlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+ProcessCode ExternalAlignmentDecorator::decorate(AlgorithmContext& context) {
   // Iov map access needs to be synchronized
   std::lock_guard lock{m_iovMutex};
 
@@ -96,7 +94,7 @@ ActsExamples::Contextual::ExternalAlignmentDecorator::decorate(
   return ProcessCode::SUCCESS;
 }
 
-void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
+void ExternalAlignmentDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
   // Double-visit - first count
   std::size_t nTransforms = 0;
@@ -125,3 +123,5 @@ void ActsExamples::Contextual::ExternalAlignmentDecorator::parseGeometry(
   tGeometry.visitSurfaces(fillTransforms);
   m_nominalStore = std::move(aStore);
 }
+
+}  // namespace ActsExamples

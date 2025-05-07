@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -25,15 +25,15 @@ namespace Acts::detail::GeoModelExentHelper {
 /// @param ctype the type of the constraint as string from the database
 ///
 /// @return a vector
-std::vector<BinningValue> readBoundsConstaints(const std::string& boundsEntry,
-                                               const std::string& ctype = "i");
+std::vector<AxisDirection> readBoundsConstaints(const std::string& boundsEntry,
+                                                const std::string& ctype = "i");
 
 /// @brief Helper function to find out which ones are constraint needed for binning
 ///
 /// @param binningEntry the bounds entry from the database
 ///
 /// @return a vector
-std::vector<BinningValue> readBinningConstraints(
+std::vector<AxisDirection> readBinningConstraints(
     const std::vector<std::string>& binningEntry);
 
 /// @brief Helper function to create the extent from database volume entry

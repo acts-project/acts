@@ -7,7 +7,7 @@ from acts.examples import (
     DigitizationConfigurator,
     writeDigiConfigToJson,
     GenericDetector,
-    GeometryHierarchyMap_DigiComponentsConfig,
+    DigiConfigContainer,
 )
 
 
@@ -27,19 +27,17 @@ def runDigitizationConfig(
 
     trackingGeometry.visitSurfaces(digiConfigurator)
 
-    outputConfig = GeometryHierarchyMap_DigiComponentsConfig(
-        digiConfigurator.outputDigiComponents
-    )
+    outputConfig = DigiConfigContainer(digiConfigurator.outputDigiComponents)
 
     writeDigiConfigToJson(outputConfig, str(output))
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, _ = GenericDetector.create()
+    detector = GenericDetector()
+    trackingGeometry = detector.trackingGeometry()
 
     runDigitizationConfig(
         trackingGeometry=trackingGeometry,
-        input=Path(__file__).parent
-        / "../../Algorithms/Digitization/share/default-smearing-config-generic.json",
+        input=Path(__file__).parent / "../../Configs/generic-digi-smearing-config.json",
         output=Path.cwd() / "digi-config-out.json",
     )

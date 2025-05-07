@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,7 +37,7 @@ class ZScanVertexFinder final : public IVertexFinder {
     /// @brief Finder configuration
     ///
     /// @param ipEst ImpactPointEstimator
-    Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
+    explicit Config(const ImpactPointEstimator& ipEst) : ipEstimator(ipEst) {}
 
     // ImpactPointEstimator
     ImpactPointEstimator ipEstimator;
@@ -72,9 +72,10 @@ class ZScanVertexFinder final : public IVertexFinder {
   ///
   /// @param cfg Configuration object
   /// @param logger Logging instance
-  ZScanVertexFinder(const Config& cfg,
-                    std::unique_ptr<const Logger> logger =
-                        getDefaultLogger("ZScanVertexFinder", Logging::INFO));
+  explicit ZScanVertexFinder(const Config& cfg,
+                             std::unique_ptr<const Logger> logger =
+                                 getDefaultLogger("ZScanVertexFinder",
+                                                  Logging::INFO));
 
   /// @brief Function that determines single vertex,
   /// based on z0 values of input tracks,

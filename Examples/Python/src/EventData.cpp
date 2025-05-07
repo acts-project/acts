@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
@@ -25,12 +25,16 @@ void addEventData(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   py::class_<Acts::ParticleHypothesis>(m, "ParticleHypothesis")
-      .def(py::init<PdgParticle, float, float>(), py::arg("pdg"),
-           py::arg("mass"), py::arg("absCharge"))
+      .def(py::init([](Acts::PdgParticle absPdg, float mass, float absCharge) {
+             return Acts::ParticleHypothesis(absPdg, mass,
+                                             AnyCharge{absCharge});
+           }),
+           py::arg("pdg"), py::arg("mass"), py::arg("absCharge"))
       .def(py::init([](std::underlying_type_t<Acts::PdgParticle> absPdg,
                        float mass, float absCharge) {
              return Acts::ParticleHypothesis(
-                 static_cast<Acts::PdgParticle>(absPdg), mass, absCharge);
+                 static_cast<Acts::PdgParticle>(absPdg), mass,
+                 AnyCharge{absCharge});
            }),
            py::arg("absPdg"), py::arg("mass"), py::arg("absCharge"))
       .def("__str__",

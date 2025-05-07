@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -40,9 +40,9 @@ namespace Acts::Test {
 auto tContext = GeometryContext();
 auto mContext = MagneticFieldContext();
 
-ActsScalar rMin = 0.;
-ActsScalar rMid = 25.;
-ActsScalar rMax = 110.;
+double rMin = 0.;
+double rMid = 25.;
+double rMax = 110.;
 
 auto vCylinderOuter = std::make_shared<CylinderVolumeBounds>(rMid, rMax, 110.);
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   LayerArrayCreator::Config lacConfig;
   LayerArrayCreator lac = LayerArrayCreator(lacConfig);
   auto layers = lac.layerArray(tContext, {pCylinderLayer}, rMin, rMid,
-                               arbitrary, BinningValue::binR);
+                               arbitrary, AxisDirection::AxisR);
 
   auto innerVolume = std::make_shared<TrackingVolume>(
       Transform3::Identity(), vCylinderInner, nullptr, std::move(layers),
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
   TrackingVolumeArrayCreator tvac = TrackingVolumeArrayCreator(tvacConfig);
 
   auto volumes = tvac.trackingVolumeArray(tContext, {innerVolume, outerVolume},
-                                          BinningValue::binR);
+                                          AxisDirection::AxisR);
 
   auto vCylinderTop = std::make_shared<CylinderVolumeBounds>(rMin, rMax, 110.);
 
@@ -119,19 +119,19 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingGeometry) {
 BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
   unsigned int volID = 1;
   auto assignGeoIds = [&volID](Experimental::DetectorVolume& dVol) -> void {
-    dVol.assignGeometryId(GeometryIdentifier().setVolume(volID));
+    dVol.assignGeometryId(GeometryIdentifier().withVolume(volID));
     unsigned int pID = 1;
     for (auto& p : dVol.portalPtrs()) {
       p->surface().assignGeometryId(
-          GeometryIdentifier().setVolume(volID).setBoundary(pID));
+          GeometryIdentifier().withVolume(volID).withBoundary(pID));
     }
     volID++;
   };
 
   auto portalGenerator = Experimental::defaultPortalGenerator();
 
-  ActsScalar rInnerL0 = 19;
-  ActsScalar rOuterL0 = 21;
+  double rInnerL0 = 19;
+  double rOuterL0 = 21;
 
   Transform3 nominal = Transform3::Identity();
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(FindSurfaceIntersectionsTrackingVolume) {
   auto pCylinderSurface =
       Surface::makeShared<CylinderSurface>(Transform3::Identity(), pCylinder);
   pCylinderSurface->assignSurfaceMaterial(surfaceMaterial);
-  pCylinderSurface->assignGeometryId(GeometryIdentifier().setSensitive(1));
+  pCylinderSurface->assignGeometryId(GeometryIdentifier().withSensitive(1));
 
   auto layer0 = Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Layer0", nominal, std::move(vCylinderL0),

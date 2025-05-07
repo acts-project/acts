@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 
@@ -14,11 +14,11 @@
 void ActsExamples::from_json(const nlohmann::json& data,
                              Acts::GeometryIdentifier& geoId) {
   Acts::GeometryIdentifier::Value null(0u);
-  geoId.setVolume(data.value("volume", null));
-  geoId.setBoundary(data.value("boundary", null));
-  geoId.setLayer(data.value("layer", null));
-  geoId.setApproach(data.value("approach", null));
-  geoId.setSensitive(data.value("sensitive", null));
+  geoId = geoId.withVolume(data.value("volume", null))
+              .withBoundary(data.value("boundary", null))
+              .withLayer(data.value("layer", null))
+              .withApproach(data.value("approach", null))
+              .withSensitive(data.value("sensitive", null));
 }
 
 void ActsExamples::to_json(nlohmann::json& data,

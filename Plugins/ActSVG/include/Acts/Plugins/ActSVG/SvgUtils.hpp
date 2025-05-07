@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,29 +17,31 @@
 #include <tuple>
 #include <vector>
 
-namespace Acts {
-namespace Svg {
+namespace Acts::Svg {
 
+/// @brief Style struct
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {255, 255, 255};
-  ActsScalar fillOpacity = 1.;
+  double fillOpacity = 1.;
 
   // Highlight parameters
   std::array<int, 3> highlightColor = {0, 0, 0};
   std::vector<std::string> highlights = {};
 
-  ActsScalar strokeWidth = 0.5;
+  double strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-  ActsScalar highlightStrokeWidth = 2;
+  double highlightStrokeWidth = 2;
   std::array<int, 3> highlightStrokeColor = {0, 0, 0};
 
   std::vector<int> strokeDasharray = {};
 
   unsigned int fontSize = 14u;
+  std::array<int, 3> fontColor = {0};
 
-  unsigned int nSegments = 72u;
+  /// Number of segments to approximate a quarter of a circle
+  unsigned int quarterSegments = 72u;
 
   /// Conversion to fill and stroke object from the base library
   /// @return a tuple of actsvg digestable objects
@@ -57,7 +59,20 @@ struct Style {
     str._hl_width = highlightStrokeWidth;
     str._dasharray = strokeDasharray;
 
-    return std::tie(fll, str);
+    return {fll, str};
+  }
+
+  /// Conversion to fill, stroke and font
+  /// @return a tuple of actsvg digestable objects
+  std::tuple<actsvg::style::fill, actsvg::style::stroke, actsvg::style::font>
+  fillStrokeFont() const {
+    auto [fll, str] = fillAndStroke();
+
+    actsvg::style::font fnt;
+    fnt._size = fontSize;
+    fnt._fc._rgb = fontColor;
+
+    return std::tie(fll, str, fnt);
   }
 };
 
@@ -86,10 +101,10 @@ inline static actsvg::svg::object group(
 /// @param yEnd the end position y
 ///
 /// @return a single svg object as a measure
-inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
-                                          ActsScalar xEnd, ActsScalar yEnd,
+inline static actsvg::svg::object measure(double xStart, double yStart,
+                                          double xEnd, double yEnd,
                                           const std::string& variable = "",
-                                          ActsScalar value = 0.,
+                                          double value = 0.,
                                           const std::string& unit = "") {
   std::string mlabel = "";
   if (!variable.empty()) {
@@ -119,8 +134,8 @@ inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
 /// @param yMax the maximum y value
 ///
 /// @return an svg object
-inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
-                                         ActsScalar yMin, ActsScalar yMax) {
+inline static actsvg::svg::object axesXY(double xMin, double xMax, double yMin,
+                                         double yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
@@ -132,31 +147,27 @@ inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
 /// @param xPos the minimum x value
 /// @param yPos the maximum x value
 /// @param title the title of the info box
+/// @param titleStyle the title of the info box
 /// @param info the text of the info box
-/// @param infoBoxStyle the style of the info box
+/// @param infoStyle the style of the info box (body)
 /// @param object the connected object
 ///
 /// @return an svg object
-inline static actsvg::svg::object infoBox(ActsScalar xPos, ActsScalar yPos,
-                                          const std::string& title,
-                                          const std::vector<std::string>& info,
-                                          const Style& infoBoxStyle,
-                                          const actsvg::svg::object& object) {
-  auto [fill, stroke] = infoBoxStyle.fillAndStroke();
+inline static actsvg::svg::object infoBox(
+    double xPos, double yPos, const std::string& title, const Style& titleStyle,
+    const std::vector<std::string>& info, const Style& infoStyle,
+    actsvg::svg::object& object,
+    const std::vector<std::string>& highlights = {"mouseover", "mouseout"}) {
+  auto [titleFill, titleStroke, titleFont] = titleStyle.fillStrokeFont();
+  auto [infoFill, infoStroke, infoFont] = infoStyle.fillStrokeFont();
 
-  actsvg::style::font titleFont;
-  titleFont._fc = actsvg::style::color{{255, 255, 255}};
-  titleFont._size = infoBoxStyle.fontSize;
-
-  actsvg::style::fill infoFill = fill;
-  infoFill._fc._opacity = 0.4;
-  actsvg::style::font infoFont;
-  infoFont._size = infoBoxStyle.fontSize;
+  actsvg::style::stroke stroke;
 
   return actsvg::draw::connected_info_box(
       object._id + "_infoBox",
       {static_cast<actsvg::scalar>(xPos), static_cast<actsvg::scalar>(yPos)},
-      title, fill, titleFont, info, infoFill, infoFont, stroke, object);
+      title, titleFill, titleFont, info, infoFill, infoFont, stroke, object,
+      highlights);
 }
 
 /// Helper method to write to file
@@ -178,5 +189,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
   fout.close();
 }
 
-}  // namespace Svg
-}  // namespace Acts
+}  // namespace Acts::Svg

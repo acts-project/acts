@@ -1,10 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+#include "Acts/Utilities/AngleHelpers.hpp"
+
+#include <numbers>
 
 #include "TFile.h"
 #include "TH1F.h"
@@ -21,7 +25,7 @@
 void momentumDistributions(std::string inFile, std::string treeName,
                            std::string outFile, int nBins, float r, float zMin,
                            float zMax, float etaMin, float etaMax,
-                           float thetaMin = 0., float thetaMax = M_PI) {
+                           float thetaMin = 0., float thetaMax = std::numbers::pi_v<float>) {
   std::cout << "Opening file: " << inFile << std::endl;
   TFile inputFile(inFile.c_str());
   std::cout << "Reading tree: " << treeName << std::endl;
@@ -106,7 +110,7 @@ void momentumDistributions(std::string inFile, std::string treeName,
 
     for (int j = 0; j < x->size(); j++) {
       float hitTheta = std::atan2(std::hypot(x->at(j), y->at(j)), z->at(j));
-      hitsEta->Fill(-log(tan(hitTheta * 0.5)));
+      hitsEta->Fill(Acts::AngleHelpers::etaFromTheta(hitTheta));
       hitsTheta->Fill(hitTheta);
       hitsZ->Fill(z->at(j));
     }

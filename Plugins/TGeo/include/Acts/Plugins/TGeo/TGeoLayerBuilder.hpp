@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -58,9 +58,9 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
-    using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
+    using RangeConfig = std::pair<AxisDirection, std::pair<double, double>>;
 
-    using SplitConfig = std::pair<BinningValue, double>;
+    using SplitConfig = std::pair<AxisDirection, double>;
 
     /// Identify the search volume by name
     std::string volumeName = "";
@@ -133,9 +133,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// Constructor
   /// @param config is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config& config,
-                   std::unique_ptr<const Logger> logger =
-                       getDefaultLogger("TGeoLayerBuilder", Logging::INFO));
+  explicit TGeoLayerBuilder(const Config& config,
+                            std::unique_ptr<const Logger> logger =
+                                getDefaultLogger("TGeoLayerBuilder",
+                                                 Logging::INFO));
 
   /// Destructor
   ~TGeoLayerBuilder() override;

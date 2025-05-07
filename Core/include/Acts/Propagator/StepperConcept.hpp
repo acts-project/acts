@@ -1,22 +1,20 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryTolerance.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Concepts.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -29,15 +27,9 @@ concept CommonStepper = requires {
   typename Stepper::Jacobian;
   typename Stepper::Covariance;
   typename Stepper::BoundState;
-  typename Stepper::CurvilinearState;
 
   requires requires(const Stepper& s, State& t) {
     { s.transportCovarianceToCurvilinear(t) } -> std::same_as<void>;
-
-    requires requires(const BoundVector& bv, const BoundSquareMatrix& bm,
-                      const Surface& sf, const double d) {
-      { s.resetState(t, bv, bm, sf, d) } -> std::same_as<void>;
-    };
 
     requires requires(const Surface& sf, bool b,
                       const FreeToBoundCorrection& corr) {
@@ -50,20 +42,20 @@ concept CommonStepper = requires {
     requires requires(bool b) {
       {
         s.curvilinearState(t, b)
-      } -> std::same_as<typename Stepper::CurvilinearState>;
+      } -> std::same_as<typename Stepper::BoundState>;
     };
 
     requires requires(const Surface& sf, std::uint8_t ui, Direction d,
-                      const BoundaryTolerance& bt, ActsScalar sc,
-                      const Logger& l) {
-      { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, l) };
+                      const BoundaryTolerance& bt, double sc,
+                      ConstrainedStep::Type st, const Logger& l) {
+      { s.updateSurfaceStatus(t, sf, ui, d, bt, sc, st, l) };
     };
 
     requires requires(const ConstrainedStep::Type st) {
       { s.releaseStepSize(t, st) } -> std::same_as<void>;
 
-      requires requires(double d, bool b) {
-        { s.updateStepSize(t, d, st, b) } -> std::same_as<void>;
+      requires requires(double d) {
+        { s.updateStepSize(t, d, st) } -> std::same_as<void>;
       };
     };
   };

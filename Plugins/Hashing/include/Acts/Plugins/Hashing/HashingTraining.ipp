@@ -1,14 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/AngleHelpers.hpp"
 
+#include <cmath>
 #include <cstdint>
 
 #include <annoy/annoylib.h>
@@ -38,18 +40,16 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
 
   auto annoyModel = AnnoyModel(f);
 
-  using Scalar = Acts::ActsScalar;
-
   annoyModel.set_seed(annoySeed);
 
   unsigned int spacePointIndex = 0;
   // Add spacePoints parameters to Annoy
   for (const auto& spacePoint : spacePoints) {
-    Scalar x = spacePoint->x() / Acts::UnitConstants::mm;
-    Scalar y = spacePoint->y() / Acts::UnitConstants::mm;
+    double x = spacePoint->x() / Acts::UnitConstants::mm;
+    double y = spacePoint->y() / Acts::UnitConstants::mm;
 
     // Helix transform
-    Scalar phi = atan2(y, x);
+    double phi = std::atan2(y, x);
 
     std::vector<double> vec(f);
     // Avoid potential null pointer dereference
@@ -57,11 +57,11 @@ AnnoyModel HashingTrainingAlgorithm<SpacePointContainer>::execute(
       vec[0] = phi;
     }
     if (f >= 2) {
-      Scalar z = spacePoint->z() / Acts::UnitConstants::mm;
-      Scalar r2 = x * x + y * y;
-      Scalar rho = sqrt(r2 + z * z);
-      Scalar theta = acos(z / rho);
-      Scalar eta = -log(tan(0.5 * theta));
+      double z = spacePoint->z() / Acts::UnitConstants::mm;
+      double r2 = x * x + y * y;
+      double rho = std::sqrt(r2 + z * z);
+      double theta = std::acos(z / rho);
+      double eta = Acts::AngleHelpers::etaFromTheta(theta);
       vec[1] = eta;
     }
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(SurfaceVolumeContainment) {
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
-  Acts::ActsScalar rInner = 10.;
-  Acts::ActsScalar rOuter = 100.;
-  Acts::ActsScalar zHalfL = 200.;
+  double rInner = 10.;
+  double rOuter = 100.;
+  double zHalfL = 200.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -185,10 +185,10 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   // Check the extent
   auto volumeExtent = tubeCylinderVolume->extent(tContext, 1);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::BinningValue::binR), 10., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::BinningValue::binR), 100., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.min(Acts::BinningValue::binZ), -200., 10e-5);
-  CHECK_CLOSE_ABS(volumeExtent.max(Acts::BinningValue::binZ), 200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(Acts::AxisDirection::AxisR), 10., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(Acts::AxisDirection::AxisR), 100., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.min(Acts::AxisDirection::AxisZ), -200., 10e-5);
+  CHECK_CLOSE_ABS(volumeExtent.max(Acts::AxisDirection::AxisZ), 200., 10e-5);
 }
 
 BOOST_AUTO_TEST_CASE(UpdatePortal) {
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
 }
 
 BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
-  Acts::ActsScalar bigBox = 100.;
-  Acts::ActsScalar smallBox = 10.;
+  double bigBox = 100.;
+  double smallBox = 10.;
 
   Acts::Transform3 nominal = Acts::Transform3::Identity();
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   auto portalGenerator = defaultPortalGenerator();
 
-  std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
+  std::vector<double> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};

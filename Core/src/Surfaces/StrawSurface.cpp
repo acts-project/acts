@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/StrawSurface.hpp"
 
@@ -14,32 +14,32 @@
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include <algorithm>
+#include <numbers>
 #include <utility>
 #include <vector>
 
-Acts::StrawSurface::StrawSurface(const Transform3& transform, double radius,
-                                 double halez)
+namespace Acts {
+
+StrawSurface::StrawSurface(const Transform3& transform, double radius,
+                           double halez)
     : GeometryObject(), LineSurface(transform, radius, halez) {}
 
-Acts::StrawSurface::StrawSurface(const Transform3& transform,
-                                 std::shared_ptr<const LineBounds> lbounds)
+StrawSurface::StrawSurface(const Transform3& transform,
+                           std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), LineSurface(transform, std::move(lbounds)) {}
 
-Acts::StrawSurface::StrawSurface(
-    const std::shared_ptr<const LineBounds>& lbounds,
-    const DetectorElementBase& detelement)
+StrawSurface::StrawSurface(const std::shared_ptr<const LineBounds>& lbounds,
+                           const DetectorElementBase& detelement)
     : GeometryObject(), LineSurface(lbounds, detelement) {}
 
-Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
+StrawSurface::StrawSurface(const StrawSurface& other)
     : GeometryObject(), LineSurface(other) {}
 
-Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
-                                 const StrawSurface& other,
-                                 const Transform3& shift)
+StrawSurface::StrawSurface(const GeometryContext& gctx,
+                           const StrawSurface& other, const Transform3& shift)
     : GeometryObject(), LineSurface(gctx, other, shift) {}
 
-Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
+StrawSurface& StrawSurface::operator=(const StrawSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
     m_bounds = other.m_bounds;
@@ -47,8 +47,8 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   return *this;
 }
 
-Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, std::size_t lseg) const {
+Polyhedron StrawSurface::polyhedronRepresentation(
+    const GeometryContext& gctx, unsigned int quarterSegments) const {
   // Prepare vertices and faces
   std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
@@ -56,20 +56,17 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
 
   const Transform3& ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
-  if (lseg > 1) {
+  if (quarterSegments > 0u) {
     double r = m_bounds->get(LineBounds::eR);
-    auto phiSegs = detail::VerticesHelper::phiSegments();
     // Write the two bows/circles on either side
     std::vector<int> sides = {-1, 1};
     for (auto& side : sides) {
-      for (std::size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-        int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
-        /// Helper method to create the segment
-        detail::VerticesHelper::createSegment(
-            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
-            Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
-            ctransform);
-      }
+      // Helper method to create the segment
+      auto svertices = detail::VerticesHelper::segmentVertices(
+          {r, r}, -std::numbers::pi, std::numbers::pi, {}, quarterSegments,
+          Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
+          ctransform);
+      vertices.insert(vertices.end(), svertices.begin(), svertices.end());
     }
     auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices);
     faces = facesMesh.first;
@@ -88,3 +85,5 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
 
   return Polyhedron(vertices, faces, triangularMesh, false);
 }
+
+}  // namespace Acts

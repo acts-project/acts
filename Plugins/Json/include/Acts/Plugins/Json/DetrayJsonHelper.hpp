@@ -1,15 +1,15 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 
 #include <span>
 #include <tuple>
@@ -40,7 +40,7 @@ namespace Acts::DetrayJsonHelper {
 /// @param portal is the flag for conversion into detray portal format
 ///
 /// @return type and value array in detray format
-std::tuple<unsigned int, std::vector<ActsScalar>> maskFromBounds(
+std::tuple<unsigned int, std::vector<double>> maskFromBounds(
     const Acts::SurfaceBounds& sBounds, bool portal = false);
 
 /// @brief add volume link
@@ -62,6 +62,6 @@ void addVolumeLink(nlohmann::json& jSurface, int vLink);
 /// @param casts are the grid axes cast types
 ///
 /// @return the acceleration link idnetifier
-std::size_t accelerationLink(std::span<const BinningValue> casts);
+std::size_t accelerationLink(std::span<const AxisDirection> casts);
 
 }  // namespace Acts::DetrayJsonHelper

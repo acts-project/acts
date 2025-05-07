@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,7 +23,7 @@ namespace Acts {
 class Surface;
 }
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// The G4SteppingAction that is called for every step in
 /// the simulation process.
@@ -41,16 +41,19 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     bool primary = true;
     bool secondary = true;
+
+    /// step logging mode
+    bool stepLogging = false;
   };
 
   /// Construct the stepping action
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  SensitiveSteppingAction(const Config& cfg,
-                          std::unique_ptr<const Acts::Logger> logger =
-                              Acts::getDefaultLogger("SensitiveSteppingAction",
-                                                     Acts::Logging::INFO));
+  explicit SensitiveSteppingAction(
+      const Config& cfg,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "SensitiveSteppingAction", Acts::Logging::INFO));
   ~SensitiveSteppingAction() override = default;
 
   /// @brief Interface Method doing the step and records the data
@@ -83,4 +86,4 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
       m_surfaceMapping;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

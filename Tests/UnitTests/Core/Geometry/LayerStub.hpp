@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -24,9 +24,10 @@ class LayerStub : virtual public SurfaceStub, public Layer {
   /// copy constructor (deleted in Surface baseclass)
   LayerStub(const LayerStub& otherLayer) = delete;
   /// constructor with pointer to SurfaceArray (protected in Layer baseclass)
-  LayerStub(std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0,
-            std::unique_ptr<ApproachDescriptor> ad = nullptr,
-            LayerType ltype = passive)
+  explicit LayerStub(std::unique_ptr<SurfaceArray> surfaceArray,
+                     double thickness = 0,
+                     std::unique_ptr<ApproachDescriptor> ad = nullptr,
+                     LayerType ltype = passive)
       : SurfaceStub(),
         Layer(std::move(surfaceArray), thickness, std::move(ad), ltype) {}
 

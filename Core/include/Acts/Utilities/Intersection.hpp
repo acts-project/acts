@@ -1,15 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
@@ -24,7 +23,6 @@ namespace Acts {
 
 /// Status enum
 enum class IntersectionStatus : int {
-  missed = 0,
   unreachable = 0,
   reachable = 1,
   onSurface = 2
@@ -47,8 +45,6 @@ class Intersection {
  public:
   /// Position type
   using Position = ActsVector<DIM>;
-  /// Status enum
-  using Status = IntersectionStatus;
 
   /// Constructor with arguments
   ///
@@ -56,20 +52,22 @@ class Intersection {
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
   constexpr Intersection(const Position& position, double pathLength,
-                         Status status)
+                         IntersectionStatus status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
   /// Returns whether the intersection was successful or not
-  constexpr bool isValid() const { return m_status != Status::missed; }
+  constexpr bool isValid() const {
+    return m_status != IntersectionStatus::unreachable;
+  }
 
   /// Returns the position of the interseciton
   constexpr const Position& position() const { return m_position; }
 
   /// Returns the path length to the interseciton
-  constexpr ActsScalar pathLength() const { return m_pathLength; }
+  constexpr double pathLength() const { return m_pathLength; }
 
   /// Returns the intersection status enum
-  constexpr Status status() const { return m_status; }
+  constexpr IntersectionStatus status() const { return m_status; }
 
   /// Static factory to creae an invalid instesection
   constexpr static Intersection invalid() { return Intersection(); }
@@ -87,12 +85,12 @@ class Intersection {
   /// be first.
   constexpr static bool closestOrder(const Intersection& aIntersection,
                                      const Intersection& bIntersection) {
-    if ((aIntersection.status() == Status::unreachable) &&
-        (bIntersection.status() != Status::unreachable)) {
+    if ((aIntersection.status() == IntersectionStatus::unreachable) &&
+        (bIntersection.status() != IntersectionStatus::unreachable)) {
       return false;
     }
-    if ((aIntersection.status() != Status::unreachable) &&
-        (bIntersection.status() == Status::unreachable)) {
+    if ((aIntersection.status() != IntersectionStatus::unreachable) &&
+        (bIntersection.status() == IntersectionStatus::unreachable)) {
       return true;
     }
     // both are reachable or onSurface now
@@ -115,9 +113,9 @@ class Intersection {
   /// Position of the intersection
   Position m_position = Position::Zero();
   /// Signed path length to the intersection (if valid)
-  ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
+  double m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
-  Status m_status = Status::unreachable;
+  IntersectionStatus m_status = IntersectionStatus::unreachable;
 
   constexpr Intersection() = default;
 };
@@ -156,12 +154,10 @@ class ObjectIntersection {
   }
 
   /// Returns the path length to the interseciton
-  constexpr ActsScalar pathLength() const {
-    return m_intersection.pathLength();
-  }
+  constexpr double pathLength() const { return m_intersection.pathLength(); }
 
   /// Returns the status of the interseciton
-  constexpr Intersection3D::Status status() const {
+  constexpr IntersectionStatus status() const {
     return m_intersection.status();
   }
 

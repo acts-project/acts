@@ -1,13 +1,14 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
@@ -103,19 +104,17 @@ class TrackStateRange {
       return false;
     }
 
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
-
     ProxyType operator*() const { return *proxy; }
     ProxyType operator*() { return *proxy; }
   };
 
-  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  explicit TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
   TrackStateRange() : m_begin{std::nullopt} {}
 
-  Iterator begin() { return m_begin; }
+  Iterator begin() { return Iterator{m_begin}; }
   Iterator end() { return Iterator{std::nullopt}; }
 
-  Iterator cbegin() const { return m_begin; }
+  Iterator cbegin() const { return Iterator{m_begin}; }
   Iterator cend() const { return Iterator{std::nullopt}; }
 
  private:
@@ -689,22 +688,30 @@ class MultiTrajectory {
   /// Allocate storage for a calibrated measurement of specified dimension
   /// @param istate The track state to store for
   /// @param measdim the dimension of the measurement to store
-  /// @note Is a noop if the track state already has an allocation
-  ///       an the dimension is the same.
+  /// @note In case an allocation is already present, no additional allocation
+  ///       will be performed, but the existing allocation will be zeroed.
   void allocateCalibrated(IndexType istate, std::size_t measdim) {
     throw_assert(measdim > 0 && measdim <= eBoundSize,
                  "Invalid measurement dimension detected");
 
-    self().allocateCalibrated_impl(istate, measdim);
+    visit_measurement(measdim, [this, istate]<std::size_t DIM>(
+                                   std::integral_constant<std::size_t, DIM>) {
+      self().allocateCalibrated_impl(
+          istate, ActsVector<DIM>{ActsVector<DIM>::Zero()},
+          ActsSquareMatrix<DIM>{ActsSquareMatrix<DIM>::Zero()});
+    });
   }
 
-  // This function will move to an rvalue reference in the next major version
-  template <typename source_link_t>
-  void setUncalibratedSourceLink(IndexType istate, source_link_t&& sourceLink)
+  template <std::size_t measdim, typename val_t, typename cov_t>
+  void allocateCalibrated(IndexType istate, const Eigen::DenseBase<val_t>& val,
+                          const Eigen::DenseBase<cov_t>& cov) {
+    self().allocateCalibrated_impl(istate, val, cov);
+  }
+
+  void setUncalibratedSourceLink(IndexType istate, SourceLink&& sourceLink)
     requires(!ReadOnly)
   {
-    self().setUncalibratedSourceLink_impl(
-        istate, std::forward<source_link_t>(sourceLink));
+    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
   }
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {

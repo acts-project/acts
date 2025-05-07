@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -46,7 +46,7 @@ struct Fixture {
 
   Fixture(std::uint64_t rngSeed, std::shared_ptr<Acts::Surface> surf)
       : rng(rngSeed),
-        gid(Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(
+        gid(Acts::GeometryIdentifier().withVolume(1).withLayer(2).withSensitive(
             3)),
         pid(ActsFatras::Barcode().setVertexPrimary(12).setParticle(23)),
         surface(std::move(surf)) {
@@ -57,7 +57,7 @@ struct Fixture {
 
     // generate random track parameters
     auto [par, cov] =
-        Acts::detail::Test::generateBoundParametersCovariance(rng);
+        Acts::detail::Test::generateBoundParametersCovariance(rng, {});
     boundParams = par;
 
     freeParams =
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(GaussianSmearing) {
   ActsFatras::BoundParametersSmearer<ActsExamples::RandomEngine, 1u> s;
 
   for (auto& el : digiConfig) {
-    for (auto& smearing : el.smearingDigiConfig) {
+    for (auto& smearing : el.smearingDigiConfig.params) {
       // check if the forcePositiveValue parameter is successfully parsed
       BOOST_CHECK(smearing.forcePositiveValues);
       std::fill(std::begin(s.indices), std::end(s.indices),
@@ -157,9 +157,9 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
 
   Acts::BinUtility segmentation;
   segmentation +=
-      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::BinningValue::binX);
+      Acts::BinUtility(336, -8.4, 8.4, Acts::open, Acts::AxisDirection::AxisX);
   segmentation +=
-      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::BinningValue::binY);
+      Acts::BinUtility(1280, -36, 36, Acts::open, Acts::AxisDirection::AxisY);
 
   gdc.segmentation = segmentation;
   gdc.threshold = 0.01;

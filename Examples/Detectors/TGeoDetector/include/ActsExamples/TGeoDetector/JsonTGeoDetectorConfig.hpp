@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -17,6 +17,8 @@
 
 #include <map>
 #include <string>
+
+#include <nlohmann/json.hpp>
 
 // Namespace of the module splitters
 namespace Acts {
@@ -53,29 +55,26 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::BinningType,
 
 }  // namespace Acts
 
-namespace ActsExamples {
-
-namespace Options {
+namespace ActsExamples::Options {
 
 /// Read config for options interval
-void from_json(const nlohmann::json& j,
-               ActsExamples::Options::Interval& interval) {
+void from_json(const nlohmann::json& j, Interval& interval) {
   interval.lower = j.at("lower");
   interval.upper = j.at("upper");
 }
 
 /// Write config for options interval
-void to_json(nlohmann::json& j,
-             const ActsExamples::Options::Interval& interval) {
+void to_json(nlohmann::json& j, const Interval& interval) {
   // no direct conversion from std::optional to json
   j = nlohmann::json{{"lower", interval.lower.value_or(0)},
                      {"upper", interval.upper.value_or(0)}};
 }
 
-}  // namespace Options
+}  // namespace ActsExamples::Options
 
-void from_json(const nlohmann::json& j,
-               ActsExamples::TGeoITkModuleSplitter::Config& msc) {
+namespace ActsExamples {
+
+void from_json(const nlohmann::json& j, TGeoITkModuleSplitter::Config& msc) {
   msc.barrelMap =
       j["geo-tgeo-barrel-map"].get<std::map<std::string, unsigned int>>();
   msc.discMap =
@@ -83,8 +82,7 @@ void from_json(const nlohmann::json& j,
           .get<std::map<std::string, std::vector<std::pair<double, double>>>>();
 }
 
-void to_json(nlohmann::json& j,
-             const ActsExamples::TGeoITkModuleSplitter::Config& msc) {
+void to_json(nlohmann::json& j, const TGeoITkModuleSplitter::Config& msc) {
   j["geo-tgeo-barrel-map"] = msc.barrelMap;
   j["geo-tgeo-disc-map"] = msc.discMap;
 }
@@ -92,7 +90,7 @@ void to_json(nlohmann::json& j,
 /// Read layer configuration triplets
 template <typename T>
 void from_json(const nlohmann::json& j,
-               ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
+               TGeoDetector::Config::LayerTriplet<T>& ltr) {
   ltr.negative = j.at("negative").get<T>();
   ltr.central = j.at("central").get<T>();
   ltr.positive = j.at("positive").get<T>();
@@ -101,15 +99,14 @@ void from_json(const nlohmann::json& j,
 /// Write layer configuration triplets
 template <typename T>
 void to_json(nlohmann::json& j,
-             const ActsExamples::TGeoDetector::Config::LayerTriplet<T>& ltr) {
+             const TGeoDetector::Config::LayerTriplet<T>& ltr) {
   j = nlohmann::json{{"negative", ltr.negative},
                      {"central", ltr.central},
                      {"positive", ltr.positive}};
 }
 
 /// Read volume struct
-void from_json(const nlohmann::json& j,
-               ActsExamples::TGeoDetector::Config::Volume& vol) {
+void from_json(const nlohmann::json& j, TGeoDetector::Config::Volume& vol) {
   // subdetector selection
   vol.name = j.at("geo-tgeo-volume-name");
 
@@ -145,8 +142,7 @@ void from_json(const nlohmann::json& j,
   if (j.count("geo-tgeo-itk-module-split") != 0) {
     vol.itkModuleSplit = j.at("geo-tgeo-itk-module-split");
     if (vol.itkModuleSplit) {
-      ActsExamples::TGeoITkModuleSplitter::Config itkConfig =
-          j.at("Splitters").at("ITk");
+      TGeoITkModuleSplitter::Config itkConfig = j.at("Splitters").at("ITk");
       vol.barrelMap = itkConfig.barrelMap;
       vol.discMap = itkConfig.discMap;
     }
@@ -185,7 +181,7 @@ void to_json(nlohmann::json& j, const TGeoDetector::Config::Volume& vol) {
   j["Splitters"]["CylinderDisk"] = cdConfig;
 
   if (vol.itkModuleSplit) {
-    ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
+    TGeoITkModuleSplitter::Config itkConfig;
     itkConfig.barrelMap = vol.barrelMap;
     itkConfig.discMap = vol.discMap;
     j["Splitters"]["ITk"] = itkConfig;

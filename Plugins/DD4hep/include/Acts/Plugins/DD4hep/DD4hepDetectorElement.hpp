@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -77,7 +77,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ///       TGeoTubeSeg should be translated to a disc surface. Per default it
   ///       will be translated into a cylindrical surface.
   /// @param material Optional material of detector element
-  DD4hepDetectorElement(
+  explicit DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
       double scalor = 1., bool isDisc = false,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -42,7 +42,8 @@ class GridGlobalIterator {
   /// @param [in] idx The global bin
   ///
   /// @pre Global bin index must be a valid index for the grid
-  GridGlobalIterator(const Acts::Grid<T, Axes...>& grid, std::size_t idx = 0ul);
+  explicit GridGlobalIterator(const Acts::Grid<T, Axes...>& grid,
+                              std::size_t idx = 0ul);
 
   /// @brief Copy constructor
   /// @param [in] other The GlobalBinIterator to be copied
@@ -73,27 +74,10 @@ class GridGlobalIterator {
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief (In-)Equality operator
+  /// @brief Comparison (<=>) operator
   /// @param [in] other The other GridGlobalIterator to be compared against this one
   /// @return The result of the comparison
-  bool operator!=(const GridGlobalIterator<T, Axes...>& other) const;
-
-  /// @brief Comparison (<) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator<(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (>) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator>(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (<=) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator<=(const GridGlobalIterator<T, Axes...>& other) const;
-  /// @brief Comparison (>=) opetator
-  /// @param [in] other The other GridGlobalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator>=(const GridGlobalIterator<T, Axes...>& other) const;
+  auto operator<=>(const GridGlobalIterator<T, Axes...>& other) const;
 
   /// @brief Increment this iterator with an offset
   /// @param [in] offset The increment value
@@ -238,10 +222,6 @@ class GridLocalIterator {
   /// @param [in] other The other GridLocalIterator to be compared against this one
   /// @return The result of the comparison
   bool operator==(const Acts::GridLocalIterator<T, Axes...>& other) const;
-  /// @brief (In-)Equality operator
-  /// @param [in] other The other GridLocalIterator to be compared against this one
-  /// @return The result of the comparison
-  bool operator!=(const Acts::GridLocalIterator<T, Axes...>& other) const;
 
   /// @brief Return stored value at given local position
   /// @return The stored value in the grid from that given local position

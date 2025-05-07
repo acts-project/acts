@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -155,13 +155,13 @@ class BoundarySurfaceT {
 template <class volume_t>
 inline const RegularSurface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
     const {
-  return (*(m_surface.get()));
+  return *m_surface;
 }
 
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
                                               Direction dir) {
-  if (dir == Direction::Backward) {
+  if (dir == Direction::Backward()) {
     m_oppositeVolume = volume;
   } else {
     m_alongVolume = volume;
@@ -171,7 +171,7 @@ void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes, Direction dir) {
-  if (dir == Direction::Backward) {
+  if (dir == Direction::Backward()) {
     m_oppositeVolumeArray = volumes;
   } else {
     m_alongVolumeArray = volumes;

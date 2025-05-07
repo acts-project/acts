@@ -1,40 +1,38 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ActorList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <random>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -101,25 +99,25 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Define start parameters from ranom input
   double p = pT / sin(theta);
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 0), phi, theta, dcharge / p,
-                                   std::nullopt, ParticleHypothesis::pion());
+  BoundTrackParameters start = BoundTrackParameters::createCurvilinear(
+      Vector4::Zero(), phi, theta, dcharge / p, std::nullopt,
+      ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 
   // Action list and abort list
-  using RefereceActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
-  using ReferenceAbortList = AbortList<EndOfWorld>;
+  using ReferenceActorList =
+      ActorList<MaterialInteractor, SurfaceCollector<>, EndOfWorld>;
 
   // Options definition
-  using Options = typename rpropagator_t::template Options<RefereceActionList,
-                                                           ReferenceAbortList>;
+  using Options = typename rpropagator_t::template Options<ReferenceActorList>;
   Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
     pOptions.stepping.maxStepSize = oversteppingMaxStepSize;
   }
 
   // Surface collector configuration
-  auto& sCollector = pOptions.actionList.template get<SurfaceCollector<>>();
+  auto& sCollector = pOptions.actorList.template get<SurfaceCollector<>>();
   sCollector.selector.selectSensitive = true;
   sCollector.selector.selectMaterial = true;
 
@@ -141,16 +139,16 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initializer
-    using DirectActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
+    using DirectActorList = ActorList<MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
     using DirectOptions =
-        typename dpropagator_t::template Options<DirectActionList, AbortList<>>;
+        typename dpropagator_t::template Options<DirectActorList>;
     DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
     dOptions.navigation.surfaces = surfaceSequence;
     // Surface collector configuration
-    auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
+    auto& dCollector = dOptions.actorList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;
     dCollector.selector.selectMaterial = true;
 
@@ -180,14 +178,14 @@ BOOST_DATA_TEST_CASE(
     bdata::random((bdata::engine = std::mt19937(), bdata::seed = 20,
                    bdata::distribution = std::uniform_real_distribution<double>(
                        0.15_GeV, 10_GeV))) ^
-        bdata::random((bdata::engine = std::mt19937(), bdata::seed = 21,
-                       bdata::distribution =
-                           std::uniform_real_distribution<double>(-M_PI,
-                                                                  M_PI))) ^
+        bdata::random(
+            (bdata::engine = std::mt19937(), bdata::seed = 21,
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 -std::numbers::pi, std::numbers::pi))) ^
         bdata::random(
             (bdata::engine = std::mt19937(), bdata::seed = 22,
-             bdata::distribution =
-                 std::uniform_real_distribution<double>(1.0, M_PI - 1.0))) ^
+             bdata::distribution = std::uniform_real_distribution<double>(
+                 1., std::numbers::pi - 1.))) ^
         bdata::random((bdata::engine = std::mt19937(), bdata::seed = 23,
                        bdata::distribution =
                            std::uniform_int_distribution<std::uint8_t>(0, 1))) ^
@@ -195,6 +193,120 @@ BOOST_DATA_TEST_CASE(
     pT, phi, theta, charge, index) {
   // Run the test
   runTest(rpropagator, dpropagator, pT, phi, theta, charge, index);
+}
+
+struct NavigationBreakAborter {
+  bool checkAbort(const auto& state, const auto& /*stepper*/, const auto& nav,
+                  const auto& /*logger*/) const {
+    return nav.navigationBreak(state.navigation);
+  }
+};
+
+// According to stackoverflow, clang before version 16 cannot handle
+// std::ranges::subrange See
+// https://stackoverflow.com/questions/64300832/why-does-clang-think-gccs-subrange-does-not-satisfy-gccs-ranges-begin-functi
+#if defined(__clang__) && __clang_major__ < 16
+#define CLANG_RANGE_BUG_WORKAROUND
+#endif
+
+#ifdef CLANG_RANGE_BUG_WORKAROUND
+template <typename It>
+struct Subrange {
+  It b, e;
+  Subrange(It b_, It e_) : b(b_), e(e_) {}
+  auto begin() const { return b; }
+  auto end() const { return e; }
+};
+#endif
+
+/// Run a simple test with a sequence of surfaces to check if fwd and backward
+/// navigation works
+#ifdef CLANG_RANGE_BUG_WORKAROUND
+template <typename ref_surfaces_t>
+#else
+template <std::ranges::range ref_surfaces_t>
+#endif
+void runSimpleTest(const std::vector<const Surface*>& surfaces,
+                   Direction direction, const Surface* startSurface,
+                   ref_surfaces_t expectedSurfaces) {
+  Propagator<StraightLineStepper, DirectNavigator> prop(StraightLineStepper{},
+                                                        DirectNavigator{});
+
+  using DirectActorList = ActorList<SurfaceCollector<>, NavigationBreakAborter>;
+  using DirectOptions =
+      typename Propagator<StraightLineStepper,
+                          DirectNavigator>::template Options<DirectActorList>;
+  DirectOptions pOptions(tgContext, mfContext);
+  pOptions.direction = direction;
+  pOptions.navigation.surfaces = surfaces;
+  pOptions.navigation.startSurface = startSurface;
+  auto& dCollector = pOptions.actorList.template get<SurfaceCollector<>>();
+  dCollector.selector.selectSensitive = true;
+  dCollector.selector.selectMaterial = true;
+  dCollector.selector.selectPassive = true;
+
+  // Create the start parameters in the middle of the start surface
+  BoundTrackParameters startParameters = BoundTrackParameters(
+      startSurface->getSharedPtr(),
+      {0.0_mm, 0.0_mm, 0.0_rad, 0.0_rad, 1.0 / 1.0_GeV, 0.0_ns}, std::nullopt,
+      ParticleHypothesis::muon());
+
+  // Propagate the track
+  auto result = prop.propagate(startParameters, pOptions);
+
+  // Check if the result is valid
+  BOOST_REQUIRE(result.ok());
+
+  // Check if the surfaces are the same
+  const auto& collectedSurfaceHits =
+      result->get<SurfaceCollector<>::result_type>().collected;
+  std::vector<const Surface*> collectedSurfaces;
+  std::ranges::transform(collectedSurfaceHits,
+                         std::back_inserter(collectedSurfaces),
+                         [](const auto& hit) { return hit.surface; });
+  // the initial surface is twice in the collection
+  collectedSurfaces.erase(
+      std::unique(collectedSurfaces.begin(), collectedSurfaces.end()),
+      collectedSurfaces.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(
+      collectedSurfaces.begin(), collectedSurfaces.end(),
+      expectedSurfaces.begin(), expectedSurfaces.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_direct_navigator_fwd_bwd) {
+  // Create 10 surfaces at z = 0, 100, 200, ..., 900
+  std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
+  for (int i = 0; i < 10; i++) {
+    Transform3 transform = Transform3::Identity();
+    transform.translate(Vector3{0.0_mm, 0.0_mm, i * 100.0_mm});
+    auto surface = Surface::makeShared<PlaneSurface>(transform, nullptr);
+    surface->assignGeometryId(
+        Acts::GeometryIdentifier().withVolume(1).withLayer(1).withSensitive(i +
+                                                                            1));
+    surfaces.push_back(surface);
+  }
+
+  // Create vector of pointers to the surfaces
+  std::vector<const Acts::Surface*> surfacePointers;
+  std::ranges::transform(surfaces, std::back_inserter(surfacePointers),
+                         [](const auto& s) { return s.get(); });
+
+  for (auto it = surfacePointers.begin(); it != surfacePointers.end(); ++it) {
+    runSimpleTest(surfacePointers, Direction::Forward(), *it,
+#ifndef CLANG_RANGE_BUG_WORKAROUND
+                  std::ranges::subrange{it, surfacePointers.end()});
+#else
+                  Subrange{it, surfacePointers.end()});
+#endif
+  }
+  for (auto it = surfacePointers.rbegin(); it != surfacePointers.rend(); ++it) {
+    runSimpleTest(surfacePointers, Direction::Backward(), *it,
+#ifndef CLANG_RANGE_BUG_WORKAROUND
+                  std::ranges::subrange{it, surfacePointers.rend()});
+#else
+                  Subrange{it, surfacePointers.rend()});
+#endif
+  }
 }
 
 }  // namespace Acts::Test

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -98,12 +98,12 @@ struct ProtoVolume {
   void extendUp(ProtoVolume& ptVolume);
 
   /// Extend the tracking volume with its own constituents
-  /// @param bValue the binning value that is propagated
-  void propagateMinDown(BinningValue bValue);
+  /// @param aDir the axis direction that is propagated
+  void propagateMinDown(AxisDirection aDir);
 
   /// Extend the tracking volume with its own constituents
-  /// @param bValue the binning value that is propagated
-  void propagateMaxDown(BinningValue bValue);
+  /// @param aDir the axis direction that is propagated
+  void propagateMaxDown(AxisDirection aDir);
 
   /// Constrain the daughter volumes with this volume
   ///

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -83,7 +83,7 @@ class RootParticleReader : public IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain* m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// Event identifier.
   std::uint32_t m_eventId = 0;
@@ -114,6 +114,12 @@ class RootParticleReader : public IReader {
   std::vector<std::uint32_t>* m_particle = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_generation = new std::vector<std::uint32_t>;
   std::vector<std::uint32_t>* m_subParticle = new std::vector<std::uint32_t>;
+
+  std::vector<float>* m_eLoss = new std::vector<float>;
+  std::vector<float>* m_pathInX0 = new std::vector<float>;
+  std::vector<float>* m_pathInL0 = new std::vector<float>;
+  std::vector<std::int32_t>* m_numberOfHits = new std::vector<std::int32_t>;
+  std::vector<std::uint32_t>* m_outcome = new std::vector<std::uint32_t>;
 };
 
 }  // namespace ActsExamples

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -70,9 +70,10 @@ BOOST_AUTO_TEST_CASE(trajectoryStateVolume) {
   std::vector<GeometryIdentifier::Value> volumes = {searchVolume};
 
   auto searchSurface = Surface::makeShared<PerigeeSurface>(Vector3(0, 0, 0));
-  searchSurface->assignGeometryId(GeometryIdentifier().setVolume(searchVolume));
+  searchSurface->assignGeometryId(
+      GeometryIdentifier().withVolume(searchVolume));
   auto otherSurface = Surface::makeShared<PerigeeSurface>(Vector3(0, 0, 0));
-  otherSurface->assignGeometryId(GeometryIdentifier().setVolume(otherVolume));
+  otherSurface->assignGeometryId(GeometryIdentifier().withVolume(otherVolume));
 
   VectorMultiTrajectory traj;
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -42,7 +42,7 @@ class GeometryHierarchyMapJsonConverter {
   /// Construct the converter.
   ///
   /// @param valueIdentifier user-defined identifier for the stored value
-  GeometryHierarchyMapJsonConverter(std::string valueIdentifier)
+  explicit GeometryHierarchyMapJsonConverter(std::string valueIdentifier)
       : m_valueIdentifier(std::move(valueIdentifier)) {
     if (m_valueIdentifier.empty()) {
       throw std::invalid_argument("Value identifier must be non-empty");
@@ -96,12 +96,13 @@ class GeometryHierarchyMapJsonConverter {
   /// @return a valid geometry Identifier
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryIdentifier()
-        .setVolume(encoded.value("volume", GeometryIdentifier::Value{0u}))
-        .setBoundary(encoded.value("boundary", GeometryIdentifier::Value{0u}))
-        .setLayer(encoded.value("layer", GeometryIdentifier::Value{0u}))
-        .setApproach(encoded.value("approach", GeometryIdentifier::Value{0u}))
-        .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value{0u}))
-        .setExtra(encoded.value("extra", GeometryIdentifier::Value{0u}));
+        .withVolume(encoded.value("volume", GeometryIdentifier::Value{0u}))
+        .withBoundary(encoded.value("boundary", GeometryIdentifier::Value{0u}))
+        .withLayer(encoded.value("layer", GeometryIdentifier::Value{0u}))
+        .withApproach(encoded.value("approach", GeometryIdentifier::Value{0u}))
+        .withSensitive(
+            encoded.value("sensitive", GeometryIdentifier::Value{0u}))
+        .withExtra(encoded.value("extra", GeometryIdentifier::Value{0u}));
   }
 
  private:
@@ -155,7 +156,7 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t, decorator_t>::toJson(
   for (std::size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
     auto value_json = nlohmann::json(container.valueAt(i));
-    if constexpr (!std::is_same<decorator_t, void>::value) {
+    if constexpr (!std::is_same_v<decorator_t, void>) {
       decorateJson(decorator, container.valueAt(i), value_json);
     }
     entry["value"] = std::move(value_json);
@@ -193,7 +194,7 @@ auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
     auto value = entry.at("value").get<Value>();
     elements.emplace_back(id, std::move(value));
   }
-  return elements;
+  return Container(std::move(elements));
 }
 
 }  // namespace Acts

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -13,11 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include <actsvg/core.hpp>
 
-namespace Acts {
-
-namespace Svg {
-
-namespace EventDataConverter {
+namespace Acts::Svg::EventDataConverter {
 
 /// Write/create a 3D point in XY view
 ///
@@ -27,8 +23,8 @@ namespace EventDataConverter {
 /// @param idx the running index
 ///
 /// @return a vector of svg objects
-actsvg::svg::object pointXY(const Vector3& pos, ActsScalar size,
-                            const Style& style, unsigned int idx = 0);
+actsvg::svg::object pointXY(const Vector3& pos, double size, const Style& style,
+                            unsigned int idx = 0);
 
 /// Write/create a 3D point in ZR view
 ///
@@ -38,8 +34,8 @@ actsvg::svg::object pointXY(const Vector3& pos, ActsScalar size,
 /// @param indx the running index
 ///
 /// @return a vector of svg objects
-actsvg::svg::object pointZR(const Vector3& pos, ActsScalar size,
-                            const Style& style, unsigned int idx = 0);
+actsvg::svg::object pointZR(const Vector3& pos, double size, const Style& style,
+                            unsigned int idx = 0);
 
 /// Write/create a 3D point in a given view
 ///
@@ -50,8 +46,8 @@ actsvg::svg::object pointZR(const Vector3& pos, ActsScalar size,
 ///
 /// @return a vector of svg objects
 template <typename view_type>
-actsvg::svg::object point(const Vector3& pos, ActsScalar size,
-                          const Style& style, unsigned int idx) {
+actsvg::svg::object point(const Vector3& pos, double size, const Style& style,
+                          unsigned int idx) {
   view_type view;
   std::vector<Vector3> ps = {pos};
   auto ppos = view(ps)[0];
@@ -62,8 +58,4 @@ actsvg::svg::object point(const Vector3& pos, ActsScalar size,
   return circle;
 }
 
-}  // namespace EventDataConverter
-
-}  // namespace Svg
-
-}  // namespace Acts
+}  // namespace Acts::Svg::EventDataConverter

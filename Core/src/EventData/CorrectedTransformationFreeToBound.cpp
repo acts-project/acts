@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
@@ -25,9 +25,8 @@
 #include <utility>
 #include <vector>
 
-Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
-                                                   ActsScalar alpha_,
-                                                   ActsScalar beta_)
+Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_, double alpha_,
+                                                   double beta_)
     : apply(apply_), alpha(alpha_), beta(beta_) {}
 
 Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_)
@@ -38,8 +37,8 @@ Acts::FreeToBoundCorrection::operator bool() const {
 }
 
 Acts::detail::CorrectedFreeToBoundTransformer::CorrectedFreeToBoundTransformer(
-    ActsScalar alpha, ActsScalar beta, ActsScalar cosIncidentAngleMinCutoff,
-    ActsScalar cosIncidentAngleMaxCutoff)
+    double alpha, double beta, double cosIncidentAngleMinCutoff,
+    double cosIncidentAngleMaxCutoff)
     : m_alpha(alpha),
       m_beta(beta),
       m_cosIncidentAngleMinCutoff(cosIncidentAngleMinCutoff),
@@ -63,7 +62,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal =
       surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
-  ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
+  double absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound
   // transformation
@@ -78,7 +77,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   std::size_t sampleSize = 2 * eFreeSize + 1;
   // The sampled free parameters, the weight for measurement W_m and weight for
   // covariance, W_c
-  std::vector<std::tuple<FreeVector, ActsScalar, ActsScalar>> sampledFreeParams;
+  std::vector<std::tuple<FreeVector, double, double>> sampledFreeParams;
   sampledFreeParams.reserve(sampleSize);
 
   // Initialize the covariance sqrt root matrix
@@ -99,11 +98,11 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   covSqrt = U * D;
 
   // Define kappa = alpha*alpha*N
-  ActsScalar kappa = m_alpha * m_alpha * static_cast<double>(eFreeSize);
+  double kappa = m_alpha * m_alpha * static_cast<double>(eFreeSize);
   // lambda = alpha*alpha*N - N
-  ActsScalar lambda = kappa - static_cast<double>(eFreeSize);
+  double lambda = kappa - static_cast<double>(eFreeSize);
   // gamma = sqrt(labmda + N)
-  ActsScalar gamma = std::sqrt(kappa);
+  double gamma = std::sqrt(kappa);
 
   // Sample the free parameters
   // 1. the nominal parameter
@@ -125,7 +124,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
 
   // The transformed bound parameters and weight for each sampled free
   // parameters
-  std::vector<std::pair<BoundVector, ActsScalar>> transformedBoundParams;
+  std::vector<std::pair<BoundVector, double>> transformedBoundParams;
 
   // 1. The nominal one
   // The sampled free parameters, the weight for measurement W_m and weight for

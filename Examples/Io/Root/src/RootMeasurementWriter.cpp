@@ -1,29 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
-#include <cstddef>
 #include <ios>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
-#include <variant>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -41,6 +37,7 @@ struct RootMeasurementWriter::DigitizationTree {
   int volumeID = 0;
   int layerID = 0;
   int surfaceID = 0;
+  int extraID = 0;
 
   // Reconstruction information
   float recBound[Acts::eBoundSize] = {};
@@ -78,6 +75,7 @@ struct RootMeasurementWriter::DigitizationTree {
     tree->Branch("volume_id", &volumeID);
     tree->Branch("layer_id", &layerID);
     tree->Branch("surface_id", &surfaceID);
+    tree->Branch("extra_id", &extraID);
 
     for (auto ib : recoIndices) {
       tree->Branch(("rec_" + bNames[ib]).c_str(), &recBound[ib]);
@@ -124,6 +122,7 @@ struct RootMeasurementWriter::DigitizationTree {
     volumeID = geoId.volume();
     layerID = geoId.layer();
     surfaceID = geoId.sensitive();
+    extraID = geoId.extra();
   }
 
   /// Convenience function to register the truth parameters
@@ -270,8 +269,7 @@ ProcessCode RootMeasurementWriter::writeT(
     const ConstVariableBoundMeasurementProxy meas =
         measurements.getMeasurement(hitIdx);
 
-    Acts::GeometryIdentifier geoId =
-        meas.sourceLink().template get<IndexSourceLink>().geometryId();
+    Acts::GeometryIdentifier geoId = meas.geometryId();
     // find the corresponding surface
     auto surfaceItr = m_cfg.surfaceByIdentifier.find(geoId);
     if (surfaceItr == m_cfg.surfaceByIdentifier.end()) {

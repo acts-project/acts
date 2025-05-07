@@ -1,17 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CurvilinearSurface.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/JacobianHelpers.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iomanip>
 #include <ios>
@@ -25,10 +24,10 @@ bool CurvilinearSurface::isStandardRepresentation() const {
 }
 
 RotationMatrix3 CurvilinearSurface::referenceFrame() const {
-  /// the right-handed coordinate system is defined as
-  /// T = normal
-  /// U = Z x T if T not parallel to Z otherwise U = X x T
-  /// V = T x U
+  // the right-handed coordinate system is defined as
+  // T = normal
+  // U = Z x T if T not parallel to Z otherwise U = X x T
+  // V = T x U
   Vector3 T = m_direction.normalized();
   Vector3 U = (isStandardRepresentation() ? Vector3::UnitZ() : Vector3::UnitX())
                   .cross(T)

@@ -1,21 +1,25 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Portal.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/CompositePortalLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GridPortalLink.hpp"
 #include "Acts/Geometry/PortalLinkBase.hpp"
 #include "Acts/Geometry/TrivialPortalLink.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
-#include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 
@@ -36,7 +40,7 @@ Portal::Portal(Direction direction, std::unique_ptr<PortalLinkBase> link) {
 
   m_surface = link->surfacePtr();
 
-  if (direction == Direction::AlongNormal) {
+  if (direction == Direction::AlongNormal()) {
     m_alongNormal = std::move(link);
   } else {
     m_oppositeNormal = std::move(link);
@@ -56,10 +60,10 @@ Portal::Portal(const GeometryContext& gctx,
   }
 
   if (alongNormal != nullptr) {
-    setLink(gctx, Direction::AlongNormal, std::move(alongNormal));
+    setLink(gctx, Direction::AlongNormal(), std::move(alongNormal));
   }
   if (oppositeNormal != nullptr) {
-    setLink(gctx, Direction::OppositeNormal, std::move(oppositeNormal));
+    setLink(gctx, Direction::OppositeNormal(), std::move(oppositeNormal));
   }
 }
 
@@ -69,12 +73,12 @@ Portal::Portal(const GeometryContext& gctx, Arguments&& args) {
   }
 
   if (args.alongNormal.surface) {
-    setLink(gctx, Direction::AlongNormal,
+    setLink(gctx, Direction::AlongNormal(),
             std::make_unique<TrivialPortalLink>(
                 std::move(args.alongNormal.surface), *args.alongNormal.volume));
   }
   if (args.oppositeNormal.surface) {
-    setLink(gctx, Direction::OppositeNormal,
+    setLink(gctx, Direction::OppositeNormal(),
             std::make_unique<TrivialPortalLink>(
                 std::move(args.oppositeNormal.surface),
                 *args.oppositeNormal.volume));
@@ -88,9 +92,9 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
   }
 
   auto& target =
-      direction == Direction::AlongNormal ? m_alongNormal : m_oppositeNormal;
+      direction == Direction::AlongNormal() ? m_alongNormal : m_oppositeNormal;
   const auto& other =
-      direction == Direction::AlongNormal ? m_oppositeNormal : m_alongNormal;
+      direction == Direction::AlongNormal() ? m_oppositeNormal : m_alongNormal;
 
   // check if surfaces are identical
   if (m_surface != nullptr &&
@@ -132,7 +136,7 @@ void Portal::setLink(const GeometryContext& gctx, Direction direction,
 }
 
 const PortalLinkBase* Portal::getLink(Direction direction) const {
-  if (direction == Direction::AlongNormal) {
+  if (direction == Direction::AlongNormal()) {
     return m_alongNormal.get();
   } else {
     return m_oppositeNormal.get();
@@ -146,7 +150,7 @@ Result<const TrackingVolume*> Portal::resolveVolume(
   const Vector3 normal = m_surface->normal(gctx, position);
   Direction side = Direction::fromScalarZeroAsPositive(normal.dot(direction));
 
-  const PortalLinkBase* link = side == Direction::AlongNormal
+  const PortalLinkBase* link = side == Direction::AlongNormal()
                                    ? m_alongNormal.get()
                                    : m_oppositeNormal.get();
 
@@ -172,10 +176,15 @@ const RegularSurface& Portal::surface() const {
   return *m_surface;
 }
 
+RegularSurface& Portal::surface() {
+  assert(m_surface != nullptr);
+  return *m_surface;
+}
+
 Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
-                     Portal& bPortal, BinningValue direction,
+                     Portal& bPortal, AxisDirection direction,
                      const Logger& logger) {
-  ACTS_DEBUG("Merging to portals along " << direction);
+  ACTS_VERBOSE("Merging two portals along " << direction);
 
   if (&aPortal == &bPortal) {
     ACTS_ERROR("Cannot merge a portal with itself");
@@ -238,9 +247,9 @@ Portal Portal::merge(const GeometryContext& gctx, Portal& aPortal,
 
 Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
                     Portal& bPortal, const Logger& logger) {
-  ACTS_DEBUG("Fusing two portals");
+  ACTS_VERBOSE("Fusing two portals");
   if (&aPortal == &bPortal) {
-    ACTS_ERROR("Cannot merge a portal with itself");
+    ACTS_ERROR("Cannot fuse a portal with itself");
     throw PortalMergingException{};
   }
 
@@ -262,6 +271,10 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
 
   if (!isSameSurface(gctx, *aPortal.m_surface, *bPortal.m_surface)) {
     ACTS_ERROR("Portals have different surfaces");
+    ACTS_ERROR("A: " << aPortal.m_surface->bounds());
+    ACTS_ERROR("\n" << aPortal.m_surface->transform(gctx).matrix());
+    ACTS_ERROR("B: " << bPortal.m_surface->bounds());
+    ACTS_ERROR("\n" << bPortal.m_surface->transform(gctx).matrix());
     throw PortalFusingException();
   }
 
@@ -277,16 +290,27 @@ Portal Portal::fuse(const GeometryContext& gctx, Portal& aPortal,
     throw PortalFusingException();
   }
 
+  auto maybeConvertToGrid = [&](std::unique_ptr<PortalLinkBase> link)
+      -> std::unique_ptr<PortalLinkBase> {
+    auto* composite = dynamic_cast<CompositePortalLink*>(link.get());
+    if (composite == nullptr) {
+      return link;
+    }
+
+    ACTS_VERBOSE("Converting composite to grid during portal fusing");
+    return composite->makeGrid(gctx, logger);
+  };
+
   aPortal.m_surface.reset();
   bPortal.m_surface.reset();
   if (aHasAlongNormal) {
     ACTS_VERBOSE("Taking along normal from lhs, opposite normal from rhs");
-    return Portal{gctx, std::move(aPortal.m_alongNormal),
-                  std::move(bPortal.m_oppositeNormal)};
+    return Portal{gctx, maybeConvertToGrid(std::move(aPortal.m_alongNormal)),
+                  maybeConvertToGrid(std::move(bPortal.m_oppositeNormal))};
   } else {
     ACTS_VERBOSE("Taking along normal from rhs, opposite normal from lhs");
-    return Portal{gctx, std::move(bPortal.m_alongNormal),
-                  std::move(aPortal.m_oppositeNormal)};
+    return Portal{gctx, maybeConvertToGrid(std::move(bPortal.m_alongNormal)),
+                  maybeConvertToGrid(std::move(aPortal.m_oppositeNormal))};
   }
 }
 
@@ -300,12 +324,30 @@ bool Portal::isSameSurface(const GeometryContext& gctx, const Surface& a,
     return false;
   }
 
-  if (a.bounds() != b.bounds()) {
+  std::vector<double> aValues = a.bounds().values();
+  std::vector<double> bValues = b.bounds().values();
+  bool different = false;
+  for (auto [aVal, bVal] : zip(aValues, bValues)) {
+    if (std::abs(aVal - bVal) > s_onSurfaceTolerance) {
+      different = true;
+      break;
+    }
+  }
+
+  if (a.bounds().type() != b.bounds().type() || different) {
     return false;
   }
 
-  if (!a.transform(gctx).isApprox(b.transform(gctx),
-                                  s_transformEquivalentTolerance)) {
+  if (!a.transform(gctx).linear().isApprox(b.transform(gctx).linear(),
+                                           s_transformEquivalentTolerance)) {
+    return false;
+  }
+
+  Vector3 delta =
+      (a.transform(gctx).translation() - b.transform(gctx).translation())
+          .cwiseAbs();
+
+  if (delta.maxCoeff() > s_onSurfaceTolerance) {
     return false;
   }
 

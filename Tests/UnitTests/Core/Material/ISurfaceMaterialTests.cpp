@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -14,7 +14,6 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
-#include <cstddef>
 #include <ostream>
 
 namespace Acts::Test {
@@ -22,7 +21,7 @@ namespace Acts::Test {
 class SurfaceMaterialStub : public ISurfaceMaterial {
   using ISurfaceMaterial::ISurfaceMaterial;
 
-  ISurfaceMaterial& operator*=(double /*scale*/) override { return *this; };
+  ISurfaceMaterial& scale(double /*factor*/) override { return *this; };
 
   const MaterialSlab& materialSlab(const Vector2& /*lp*/) const override {
     return m_fullMaterial;
@@ -37,7 +36,7 @@ class SurfaceMaterialStub : public ISurfaceMaterial {
     return sl;
   };
 
-  MaterialSlab m_fullMaterial{};
+  MaterialSlab m_fullMaterial = MaterialSlab::Nothing();
 };
 
 /// Test the constructors
@@ -46,25 +45,25 @@ BOOST_AUTO_TEST_CASE(ISurfaceMaterial_factor_test) {
   SurfaceMaterialStub stub{splitFactor};
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward, MaterialUpdateStage::FullUpdate), 1.0);
+      stub.factor(Direction::Forward(), MaterialUpdateStage::FullUpdate), 1.0);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward, MaterialUpdateStage::FullUpdate), 1.0);
+      stub.factor(Direction::Backward(), MaterialUpdateStage::FullUpdate), 1.0);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward, MaterialUpdateStage::PostUpdate),
+      stub.factor(Direction::Forward(), MaterialUpdateStage::PostUpdate),
       splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward, MaterialUpdateStage::PreUpdate),
+      stub.factor(Direction::Backward(), MaterialUpdateStage::PreUpdate),
       splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Forward, MaterialUpdateStage::PreUpdate),
+      stub.factor(Direction::Forward(), MaterialUpdateStage::PreUpdate),
       1 - splitFactor);
 
   BOOST_CHECK_EQUAL(
-      stub.factor(Direction::Backward, MaterialUpdateStage::PostUpdate),
+      stub.factor(Direction::Backward(), MaterialUpdateStage::PostUpdate),
       1 - splitFactor);
 }
 

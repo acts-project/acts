@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -41,6 +41,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <random>
 #include <tuple>
 #include <type_traits>
@@ -75,9 +76,10 @@ std::uniform_real_distribution<double> z0Dist(-0.2_mm, 0.2_mm);
 // Track pT distribution
 std::uniform_real_distribution<double> pTDist(1._GeV, 30._GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<double> phiDist(-std::numbers::pi,
+                                               std::numbers::pi);
 // Track theta distribution
-std::uniform_real_distribution<double> thetaDist(1.0, M_PI - 1.0);
+std::uniform_real_distribution<double> thetaDist(1., std::numbers::pi - 1.);
 // Track charge helper distribution
 std::uniform_real_distribution<double> qDist(-1, 1);
 // Distribution of track time (relative to vertex time). Values are unrealistic
@@ -515,35 +517,35 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
       0, 0, 0, 0, 0, 1_ns;
 
   std::vector<BoundTrackParameters> params1 = {
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1a),
-                                   geoContext, makeVector4(pos1a, 0),
-                                   mom1a.normalized(), 1_e / mom1a.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1a),
+          makeVector4(pos1a, 0), mom1a.normalized(), 1_e / mom1a.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1b),
-                                   geoContext, makeVector4(pos1b, 0),
-                                   mom1b.normalized(), -1_e / mom1b.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1b),
+          makeVector4(pos1b, 0), mom1b.normalized(), -1_e / mom1b.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1c),
-                                   geoContext, makeVector4(pos1c, 0),
-                                   mom1c.normalized(), 1_e / mom1c.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1c),
+          makeVector4(pos1c, 0), mom1c.normalized(), 1_e / mom1c.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1d),
-                                   geoContext, makeVector4(pos1d, 0),
-                                   mom1d.normalized(), -1_e / mom1d.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1d),
+          makeVector4(pos1d, 0), mom1d.normalized(), -1_e / mom1d.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1e),
-                                   geoContext, makeVector4(pos1e, 0),
-                                   mom1e.normalized(), 1_e / mom1e.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1e),
+          makeVector4(pos1e, 0), mom1e.normalized(), 1_e / mom1e.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos1f),
-                                   geoContext, makeVector4(pos1f, 0),
-                                   mom1f.normalized(), -1_e / mom1f.norm(),
-                                   covMat1, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos1f),
+          makeVector4(pos1f, 0), mom1f.normalized(), -1_e / mom1f.norm(),
+          covMat1, ParticleHypothesis::pion())
           .value(),
   };
 
@@ -559,20 +561,20 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   Covariance covMat2 = covMat1;
 
   std::vector<BoundTrackParameters> params2 = {
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2a),
-                                   geoContext, makeVector4(pos2a, 0),
-                                   mom2a.normalized(), 1_e / mom2a.norm(),
-                                   covMat2, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos2a),
+          makeVector4(pos2a, 0), mom2a.normalized(), 1_e / mom2a.norm(),
+          covMat2, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2b),
-                                   geoContext, makeVector4(pos2b, 0),
-                                   mom2b.normalized(), -1_e / mom2b.norm(),
-                                   covMat2, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos2b),
+          makeVector4(pos2b, 0), mom2b.normalized(), -1_e / mom2b.norm(),
+          covMat2, ParticleHypothesis::pion())
           .value(),
-      BoundTrackParameters::create(Surface::makeShared<PerigeeSurface>(pos2c),
-                                   geoContext, makeVector4(pos2c, 0),
-                                   mom2c.normalized(), -1_e / mom2c.norm(),
-                                   covMat2, ParticleHypothesis::pion())
+      BoundTrackParameters::create(
+          geoContext, Surface::makeShared<PerigeeSurface>(pos2c),
+          makeVector4(pos2c, 0), mom2c.normalized(), -1_e / mom2c.norm(),
+          covMat2, ParticleHypothesis::pion())
           .value(),
   };
 

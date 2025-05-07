@@ -1,16 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -110,6 +110,7 @@ class Portal {
   /// precision). The resulting portal will have one portal along the shared
   /// surface's normal vector, and one opposite that vector.
   ///
+  /// ```
   ///    portal1   portal2
   ///      +---+   +---+
   ///      |   |   |   |
@@ -118,6 +119,7 @@ class Portal {
   ///      |   |   |   |
   ///      |   |   |   |
   ///      +---+   +---+
+  /// ```
   ///
   /// @note The input portals need to have compatible link loadaout, e.g. one
   ///       portal needs to have the *along normal* slot filled, and the
@@ -140,6 +142,7 @@ class Portal {
   /// relative to one another (e.g. one along one opposite), the function will
   /// throw an exception.
   ///
+  /// ```
   ///         ^                     ^
   ///         |                     |
   ///  portal1|              portal2|
@@ -149,6 +152,7 @@ class Portal {
   ///         |                     |
   ///         |                     |
   ///         v                     v
+  /// ```
   ///
   /// @note This is a destructive operation on both portals, their
   ///       links will be moved to produce merged links, which can fail
@@ -159,7 +163,7 @@ class Portal {
   /// @param direction The direction of the merge (e.g. along z)
   /// @param logger The logger to push output to
   static Portal merge(const GeometryContext& gctx, Portal& aPortal,
-                      Portal& bPortal, BinningValue direction,
+                      Portal& bPortal, AxisDirection direction,
                       const Logger& logger = getDummyLogger());
 
   /// Resolve the volume for a 3D position and a direction
@@ -211,6 +215,10 @@ class Portal {
   /// Access the portal surface that is shared between the two links
   /// @return The portal surface
   const RegularSurface& surface() const;
+
+  /// Access the portal surface that is shared between the two links
+  /// @return The portal surface
+  RegularSurface& surface();
 
  private:
   /// Helper to check surface equivalence without checking material status. This

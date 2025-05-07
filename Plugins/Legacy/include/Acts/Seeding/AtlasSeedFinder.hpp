@@ -1,16 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
 // AtlasSeedFinder.hpp Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Seeding/LegacyInternalSeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
@@ -318,7 +319,7 @@ inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
 
   if (m_checketa) {
     // filter SP outside of eta-range
-    float z = (fabs(r[2]) + m_zmax);
+    float z = std::abs(r[2]) + m_zmax;
     float x = r[0] * m_dzdrmin;
     float y = r[1] * m_dzdrmin;
     if ((z * z) < (x * x + y * y)) {

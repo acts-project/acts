@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -23,12 +23,12 @@ class Vertex {
   /// @brief Construct for vertex at given 3d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector3& position);
+  explicit Vertex(const Vector3& position);
 
   /// @brief Construct for vertex at given 4d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const Vector4& position);
+  explicit Vertex(const Vector4& position);
 
   /// @brief Vertex constructor
   ///
@@ -50,7 +50,7 @@ class Vertex {
   Vector3 position() const;
 
   /// @return Returns time
-  ActsScalar time() const;
+  double time() const;
 
   /// @return Returns 4-position
   const Vector4& fullPosition() const;
@@ -86,7 +86,7 @@ class Vertex {
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(ActsScalar time);
+  void setTime(double time);
 
   /// @brief Sets 3x3 covariance
   ///

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/EventData/NeuralCalibrator.hpp"
 
@@ -14,6 +14,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
 #include <TFile.h>
@@ -85,7 +86,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  if (!rangeContainsValue(m_volumeIds, idxSourceLink.geometryId())) {
+  if (!Acts::rangeContainsValue(m_volumeIds,
+                                idxSourceLink.geometryId().volume())) {
     m_fallback.calibrate(measurements, clusters, gctx, cctx, sourceLink,
                          trackState);
     return;
@@ -175,7 +177,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
   Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
     constexpr std::size_t kMeasurementSize = decltype(N)::value;
     const ConstFixedBoundMeasurementProxy<kMeasurementSize> fixedMeasurement =
-        measurement;
+        static_cast<ConstFixedBoundMeasurementProxy<kMeasurementSize>>(
+            measurement);
 
     Acts::ActsVector<kMeasurementSize> calibratedParameters =
         fixedMeasurement.parameters();
@@ -187,9 +190,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
     calibratedCovariance(boundLoc0, boundLoc0) = output[iVar0];
     calibratedCovariance(boundLoc1, boundLoc1) = output[iVar0 + 1];
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = calibratedParameters;
-    trackState.calibratedCovariance<kMeasurementSize>() = calibratedCovariance;
-    trackState.setSubspaceIndices(fixedMeasurement.subspaceIndices());
+    trackState.allocateCalibrated(calibratedParameters, calibratedCovariance);
+    trackState.setProjectorSubspaceIndices(fixedMeasurement.subspaceIndices());
   });
 }

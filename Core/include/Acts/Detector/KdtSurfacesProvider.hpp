@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -12,7 +12,7 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 
 #include <array>
@@ -34,10 +34,10 @@ class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
   using KDTS =
-      KDTree<kDIM, std::shared_ptr<Surface>, ActsScalar, std::array, bSize>;
+      KDTree<kDIM, std::shared_ptr<Surface>, double, std::array, bSize>;
 
   /// Broadcast the query definition
-  using Query = std::array<ActsScalar, kDIM>;
+  using Query = std::array<double, kDIM>;
 
   /// Broadcast the entry
   using Entry = std::pair<Query, std::shared_ptr<Surface>>;
@@ -50,7 +50,7 @@ class KdtSurfaces {
   /// @param rgen the reference point generator
   KdtSurfaces(const GeometryContext& gctx,
               const std::vector<std::shared_ptr<Surface>>& surfaces,
-              const std::array<BinningValue, kDIM>& casts,
+              const std::array<AxisDirection, kDIM>& casts,
               const reference_generator& rgen =
                   detail::PolyhedronReferenceGenerator<1u, false>{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
@@ -86,7 +86,7 @@ class KdtSurfaces {
   ///
   /// @return the matching surfaces from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(
-      const RangeXD<kDIM, ActsScalar>& range) const {
+      const RangeXD<kDIM, double>& range) const {
     // Strip the surfaces
     std::vector<std::shared_ptr<Surface>> surfacePtrs;
     auto surfaceQuery = m_kdt->rangeSearchWithKey(range);
@@ -101,7 +101,7 @@ class KdtSurfaces {
   ///
   /// @return the matching surfaces fpulled from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(const Extent& extent) const {
-    RangeXD<kDIM, ActsScalar> qRange;
+    RangeXD<kDIM, double> qRange;
     for (auto [ibv, v] : enumerate(m_casts)) {
       qRange[ibv] = extent.range(v);
     }
@@ -113,7 +113,7 @@ class KdtSurfaces {
   std::unique_ptr<KDTS> m_kdt = nullptr;
 
   /// Cast values that turn a global position to lookup position
-  std::array<BinningValue, kDIM> m_casts = {};
+  std::array<AxisDirection, kDIM> m_casts = {};
 
   /// Helper to generate reference points for filling
   reference_generator m_rGenerator;
@@ -148,7 +148,7 @@ class KdtSurfaces {
     float weight = 1. / cQueries.size();
     for (auto& q : cQueries) {
       std::transform(c.begin(), c.end(), q.begin(), c.begin(),
-                     std::plus<ActsScalar>());
+                     std::plus<double>());
     }
     std::for_each(c.begin(), c.end(), [&](auto& v) { v *= weight; });
     return c;

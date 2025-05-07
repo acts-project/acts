@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Visualization/GeometryView3D.hpp"
 
@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -36,42 +35,21 @@
 #include <cmath>
 #include <filesystem>
 #include <memory>
-#include <ostream>
 #include <utility>
 #include <vector>
-
-namespace Acts::Experimental {
-ViewConfig s_viewSensitive = {.color = {0, 180, 240}};
-ViewConfig s_viewPassive = {.color = {240, 280, 0}};
-ViewConfig s_viewVolume = {.color = {220, 220, 0}};
-ViewConfig s_viewGrid = {.color = {220, 0, 0}};
-ViewConfig s_viewLine = {.color = {0, 0, 220}};
-}  // namespace Acts::Experimental
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
                                           const ViewConfig& viewConfig) {
-  if (viewConfig.visible) {
-    if (!viewConfig.triangulate) {
-      helper.faces(polyhedron.vertices, polyhedron.faces, viewConfig.color);
-    } else {
-      helper.faces(polyhedron.vertices, polyhedron.triangularMesh,
-                   viewConfig.color);
-    }
-  }
+  polyhedron.visualize(helper, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
-                                       const Transform3& transform,
+                                       const Transform3& /*transform*/,
                                        const ViewConfig& viewConfig) {
-  Polyhedron surfaceHedron =
-      surface.polyhedronRepresentation(gctx, viewConfig.nSegments);
-  if (!transform.isApprox(Transform3::Identity())) {
-    surfaceHedron.move(transform);
-  }
-  drawPolyhedron(helper, surfaceHedron, viewConfig);
+  surface.visualize(helper, gctx, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurfaceArray(
@@ -101,13 +79,12 @@ void Acts::GeometryView3D::drawSurfaceArray(
   auto axes = surfaceArray.getAxes();
   if (!binning.empty() && binning.size() == 2 && axes.size() == 2) {
     // Cylinder surface array
-    if (binning[0] == BinningValue::binPhi &&
-        binning[1] == BinningValue::binZ) {
-      double R = arrayExtent.medium(BinningValue::binR) + gridConfig.offset;
+    if (binning[0] == AxisDirection::AxisPhi &&
+        binning[1] == AxisDirection::AxisZ) {
+      double R = arrayExtent.medium(AxisDirection::AxisR) + gridConfig.offset;
       auto phiValues = axes[0]->getBinEdges();
       auto zValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
-      gridRadConfig.nSegments = phiValues.size();
       // Longitudinal lines
       for (auto phi : phiValues) {
         double cphi = std::cos(phi);
@@ -126,13 +103,13 @@ void Acts::GeometryView3D::drawSurfaceArray(
         }
       }
 
-    } else if (binning[0] == BinningValue::binR &&
-               binning[1] == BinningValue::binPhi) {
-      double z = arrayExtent.medium(BinningValue::binZ) + gridConfig.offset;
+    } else if (binning[0] == AxisDirection::AxisR &&
+               binning[1] == AxisDirection::AxisPhi) {
+      double z = arrayExtent.medium(AxisDirection::AxisZ) + gridConfig.offset;
       auto rValues = axes[0]->getBinEdges();
       auto phiValues = axes[1]->getBinEdges();
       ViewConfig gridRadConfig = gridConfig;
-      gridRadConfig.nSegments = phiValues.size();
+      gridRadConfig.quarterSegments = phiValues.size();
       for (auto r : rValues) {
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
@@ -163,12 +140,9 @@ void Acts::GeometryView3D::drawSurfaceArray(
 void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                       const Volume& volume,
                                       const GeometryContext& gctx,
-                                      const Transform3& transform,
+                                      const Transform3& /*transform*/,
                                       const ViewConfig& viewConfig) {
-  auto bSurfaces = volume.volumeBounds().orientedSurfaces(volume.transform());
-  for (const auto& bs : bSurfaces) {
-    drawSurface(helper, *bs.surface, gctx, transform, viewConfig);
-  }
+  volume.visualize(helper, gctx, viewConfig);
 }
 
 void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
@@ -259,7 +233,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   ViewConfig lConfig = layerView;
   ViewConfig sConfig = sensitiveView;
   ViewConfig gConfig = gridView;
-  gConfig.nSegments = 8;
+  gConfig.quarterSegments = 8;
 
   ViewConfig vcConfig = cConfig;
   std::string vname = tVolume.volumeName();
@@ -334,7 +308,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   auto direction = Vector3(end - start).normalized();
   double hlength = 0.5 * Vector3(end - start).norm();
 
-  auto unitVectors = makeCurvilinearUnitVectors(direction);
+  auto unitVectors = createCurvilinearUnitVectors(direction);
   RotationMatrix3 lrotation;
   lrotation.col(0) = unitVectors.first;
   lrotation.col(1) = unitVectors.second;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepFieldAdapter.hpp"
 
@@ -48,12 +48,6 @@ Result<Vector3> DD4hepFieldAdapter::getField(
   result *= m_fieldConversionFactor;
 
   return Result<Vector3>::success(result);
-}
-
-Result<Vector3> DD4hepFieldAdapter::getFieldGradient(
-    const Vector3& /*position*/, ActsMatrix<3, 3>& /*derivative*/,
-    MagneticFieldProvider::Cache& /*cache*/) const {
-  return Result<Vector3>::failure(MagneticFieldError::NotImplemented);
 }
 
 }  // namespace Acts

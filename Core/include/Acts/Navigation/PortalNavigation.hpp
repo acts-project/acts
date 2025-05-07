@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -14,6 +14,7 @@
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdaters.hpp"
 #include "Acts/Utilities/Axis.hpp"
+#include "Acts/Utilities/AxisDefinitions.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
 #include <stdexcept>
@@ -86,7 +87,7 @@ struct BoundVolumesGrid1Navigation : public IExternalNavigation {
   /// @param cVolumes the contained volumes
   /// @param bTransform is the optional transform
   BoundVolumesGrid1Navigation(
-      const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
+      const std::vector<double>& gBoundaries, AxisDirection bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
       const Transform3& bTransform = Transform3::Identity()) noexcept(false)
       : indexedUpdater(IndexedUpdater(VariableBoundIndexGrid1(std::make_tuple(

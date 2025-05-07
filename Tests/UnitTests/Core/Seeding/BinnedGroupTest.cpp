@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,6 +15,7 @@
 
 #include <array>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 namespace Acts::Test {
@@ -156,7 +157,7 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_2d) {
   using value_t = std::size_t;
   using binfinder_t = Acts::GridBinFinder<2ul>;
 
-  Axis phiAxis(AxisClosed, -M_PI, M_PI, 40);
+  Axis phiAxis(AxisClosed, -std::numbers::pi, std::numbers::pi, 40);
   Axis zAxis(AxisBound, 0, 100, 10);
 
   Grid grid(Type<std::vector<value_t>>, std::move(phiAxis), std::move(zAxis));
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(binned_group_fill_3d) {
   using grid_t = Acts::Grid<std::vector<value_t>, phiAxis_t, zAxis_t, rAxis_t>;
   using binfinder_t = Acts::GridBinFinder<3ul>;
 
-  phiAxis_t phiAxis(-M_PI, M_PI, 40);
+  phiAxis_t phiAxis(-std::numbers::pi, std::numbers::pi, 40);
   zAxis_t zAxis(0, 100, 10);
   rAxis_t rAxis(0, 11000, 1);
 

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -38,7 +38,7 @@ struct Eq {
   using grid_type =
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>>;
 
-  std::array<ActsScalar, 2u> range = {};
+  std::array<double, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis
@@ -66,7 +66,7 @@ struct Var {
   template <typename T>
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>>;
 
-  std::vector<ActsScalar> edges = {};
+  std::vector<double> edges = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {
@@ -98,9 +98,9 @@ struct EqEq {
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>,
                  Acts::Axis<Acts::AxisType::Equidistant, bType>>;
 
-  std::array<ActsScalar, 2u> range0 = {};
+  std::array<double, 2u> range0 = {};
   std::size_t nBins0 = 0u;
-  std::array<ActsScalar, 2u> range1 = {};
+  std::array<double, 2u> range1 = {};
   std::size_t nBins1 = 1u;
 
   /// Call operator that generates the Axis
@@ -110,7 +110,7 @@ struct EqEq {
                                                        nBins0);
     Acts::Axis<Acts::AxisType::Equidistant, bType> bEq(range1[0u], range1[1u],
                                                        nBins1);
-    return std::tie(aEq, bEq);
+    return {aEq, bEq};
   }
 };
 
@@ -151,16 +151,16 @@ struct EqVar {
       Acts::Grid<T, Acts::Axis<Acts::AxisType::Equidistant, aType>,
                  Acts::Axis<Acts::AxisType::Variable, bType>>;
 
-  std::array<ActsScalar, 2u> range = {};
+  std::array<double, 2u> range = {};
   std::size_t nBins = 0u;
-  std::vector<ActsScalar> edges = {};
+  std::vector<double> edges = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {
     Acts::Axis<Acts::AxisType::Equidistant, aType> eqA(range[0u], range[1u],
                                                        nBins);
     Acts::Axis<Acts::AxisType::Variable, bType> varB(edges);
-    return std::tie(eqA, varB);
+    return {eqA, varB};
   }
 };
 
@@ -201,8 +201,8 @@ struct VarEq {
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>,
                                Acts::Axis<Acts::AxisType::Equidistant, bType>>;
 
-  std::vector<ActsScalar> edges = {};
-  std::array<ActsScalar, 2u> range = {};
+  std::vector<double> edges = {};
+  std::array<double, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis
@@ -210,7 +210,7 @@ struct VarEq {
     Acts::Axis<Acts::AxisType::Variable, aType> varA(edges);
     Acts::Axis<Acts::AxisType::Equidistant, bType> eqB(range[0u], range[1u],
                                                        nBins);
-    return std::tie(varA, eqB);
+    return {varA, eqB};
   }
 };
 
@@ -250,14 +250,14 @@ struct VarVar {
   using grid_type = Acts::Grid<T, Acts::Axis<Acts::AxisType::Variable, aType>,
                                Acts::Axis<Acts::AxisType::Variable, bType>>;
 
-  std::vector<ActsScalar> edges0 = {};
-  std::vector<ActsScalar> edges1 = {};
+  std::vector<double> edges0 = {};
+  std::vector<double> edges1 = {};
 
   /// Call operator that generates the Axis
   return_type operator()() const {
     Acts::Axis<Acts::AxisType::Variable, aType> varA(edges0);
     Acts::Axis<Acts::AxisType::Variable, bType> varB(edges1);
-    return std::tie(varA, varB);
+    return {varA, varB};
   }
 };
 

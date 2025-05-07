@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -18,10 +18,7 @@
 #include <memory>
 
 // core algorithm so in acts namespace
-namespace Acts {
-
-template <typename T>
-class SeedFilter;
+namespace Acts::Experimental {
 
 template <typename SpacePoint>
 struct SeedFinderGbtsConfig {
@@ -31,16 +28,12 @@ struct SeedFinderGbtsConfig {
   // Seed cut
   float minPt = 400. * Acts::UnitConstants::MeV;
 
-  ///////////some declared not filled in by reco: //////
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
-
   //   //detector ROI
   //   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
   //   bool isInInternalUnits = false;
   /// for load space points
-  unsigned int maxSeedsPerSpM = 5;
 
   // Parameter which can loosen the tolerance of the track seed to form a
   // helix. This is useful for e.g. misaligned seeding.
@@ -50,11 +43,11 @@ struct SeedFinderGbtsConfig {
   float m_nMaxPhiSlice = 53;  // used to calculate phi slices
   bool m_useClusterWidth =
       false;  // bool for use of cluster width in loadSpacePoints function
-  std::string connector_input_file;  // input file for connector object
+  std::string ConnectorInputFile;  // Path to the connector configuration file
+                                   // that defines the layer connections
   std::vector<TrigInDetSiLayer> m_layerGeometry;
 
   // for runGbts_TrackFinder
-  bool m_LRTmode = true;  // eventually want to set from full chain
   bool m_useEtaBinning =
       true;  // bool to use eta binning from geometry structure
   bool m_doubletFilterRZ = true;  // bool applies new Z cuts on doublets
@@ -101,4 +94,4 @@ struct SeedFinderGbtsConfig {
 
 };  // end of config struct
 
-}  // namespace Acts
+}  // namespace Acts::Experimental

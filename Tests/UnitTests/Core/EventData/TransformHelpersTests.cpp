@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -28,7 +29,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr auto eps = std::numeric_limits<ActsScalar>::epsilon();
+constexpr auto eps = std::numeric_limits<double>::epsilon();
 }
 
 BOOST_AUTO_TEST_SUITE(TransformBoundToFree)
@@ -74,7 +75,7 @@ BOOST_DATA_TEST_CASE(
     surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     surface, l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
@@ -158,7 +159,7 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
                      ts* phis* thetas* ps* qsNonZero, time, phiInput, theta, p,
                      q) {
   // phi is ill-defined in forward/backward tracks
-  const auto phi = ((0 < theta) && (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) && (theta < std::numbers::pi)) ? phiInput : 0.;
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -37,7 +37,8 @@ class GridDensityVertexFinder final : public IVertexFinder {
   /// @brief The Config struct
   struct Config {
     ///@param gDensity The grid density
-    Config(GaussianGridTrackDensity gDensity) : gridDensity(gDensity) {}
+    explicit Config(GaussianGridTrackDensity gDensity)
+        : gridDensity(gDensity) {}
 
     // The grid density object
     GaussianGridTrackDensity gridDensity;
@@ -67,7 +68,7 @@ class GridDensityVertexFinder final : public IVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    State(MainGridVector mainGrid_) : mainGrid(std::move(mainGrid_)) {}
+    explicit State(MainGridVector mainGrid_) : mainGrid(std::move(mainGrid_)) {}
 
     // The main density grid
     MainGridVector mainGrid;
@@ -117,7 +118,7 @@ class GridDensityVertexFinder final : public IVertexFinder {
   /// @brief Constructor for user-defined InputTrack type
   ///
   /// @param cfg Configuration object
-  GridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {
+  explicit GridDensityVertexFinder(const Config& cfg) : m_cfg(cfg) {
     if (!m_cfg.extractParameters.connected()) {
       throw std::invalid_argument(
           "GridDensityVertexFinder: "

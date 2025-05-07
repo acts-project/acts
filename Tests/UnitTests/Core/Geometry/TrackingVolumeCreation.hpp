@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -96,14 +96,14 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
   ///  create the volume array
   using VAP = std::pair<TrackingVolumePtr, Vector3>;
   std::vector<VAP> volumes = {
-      {iVolume, iVolume->binningPosition(gctx, BinningValue::binR)},
-      {oVolume, oVolume->binningPosition(gctx, BinningValue::binR)}};
+      {iVolume, iVolume->referencePosition(gctx, AxisDirection::AxisR)},
+      {oVolume, oVolume->referencePosition(gctx, AxisDirection::AxisR)}};
   ///  the bounds for the container
   auto hVolumeBounds =
       std::make_shared<CylinderVolumeBounds>(0., hVolumeR, hVolumeHalflength);
   ///  create the BinUtility & the BinnedArray
   auto vUtility = std::make_unique<const BinUtility>(
-      volumes.size(), 0., hVolumeR, open, BinningValue::binR);
+      volumes.size(), 0., hVolumeR, open, AxisDirection::AxisR);
   std::shared_ptr<const TrackingVolumeArray> vArray =
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));

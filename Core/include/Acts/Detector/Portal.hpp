@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -47,7 +47,7 @@ class Portal {
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
-  Portal(std::shared_ptr<RegularSurface> surface);
+  explicit Portal(std::shared_ptr<RegularSurface> surface);
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building

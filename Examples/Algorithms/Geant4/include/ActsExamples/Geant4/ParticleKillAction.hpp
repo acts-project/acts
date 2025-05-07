@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023-2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -22,7 +22,7 @@ namespace Acts {
 class Volume;
 }  // namespace Acts
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4 {
 
 /// A G4SteppingAction that is called for every step in the simulation process.
 ///
@@ -47,10 +47,10 @@ class ParticleKillAction : public G4UserSteppingAction {
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  ParticleKillAction(const Config& cfg,
-                     std::unique_ptr<const Acts::Logger> logger =
-                         Acts::getDefaultLogger("ParticleKillAction",
-                                                Acts::Logging::INFO));
+  explicit ParticleKillAction(const Config& cfg,
+                              std::unique_ptr<const Acts::Logger> logger =
+                                  Acts::getDefaultLogger("ParticleKillAction",
+                                                         Acts::Logging::INFO));
   ~ParticleKillAction() override = default;
 
   /// @brief Called every step, conditionally sets the tracking state to `fStopAndKill`
@@ -67,4 +67,4 @@ class ParticleKillAction : public G4UserSteppingAction {
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4

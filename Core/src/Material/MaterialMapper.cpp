@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/MaterialMapper.hpp"
 
@@ -63,7 +63,7 @@ Acts::MaterialMapper::mapMaterial(State& state, const GeometryContext& gctx,
 
   // The material interactions
   m_cfg.surfaceMaterialAccumulater->accumulate(
-      *state.surfaceMaterialAccumulaterState.get(), assigned, emptyBinSurfaces);
+      *state.surfaceMaterialAccumulaterState, assigned, emptyBinSurfaces);
 
   // The function to calculate the total material before returning
   auto calculateTotalMaterial = [](RecordedMaterialTrack& rTrack) -> void {
@@ -86,7 +86,7 @@ Acts::MaterialMapper::DetectorMaterialMaps Acts::MaterialMapper::finalizeMaps(
   // The surface maps
   detectorMaterialMaps.first =
       m_cfg.surfaceMaterialAccumulater->finalizeMaterial(
-          *state.surfaceMaterialAccumulaterState.get());
+          *state.surfaceMaterialAccumulaterState);
 
   return detectorMaterialMaps;
 }

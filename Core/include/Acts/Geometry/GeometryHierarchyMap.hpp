@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -69,7 +69,7 @@ class GeometryHierarchyMap {
   /// Construct the container from the given elements.
   ///
   /// @param elements input elements (must be unique with respect to identifier)
-  GeometryHierarchyMap(std::vector<InputElement> elements);
+  explicit GeometryHierarchyMap(std::vector<InputElement> elements);
 
   /// Construct the container from an initializer list.
   ///
@@ -79,10 +79,10 @@ class GeometryHierarchyMap {
   // defaulted constructors and assignment operators
   GeometryHierarchyMap() = default;
   GeometryHierarchyMap(const GeometryHierarchyMap&) = default;
-  GeometryHierarchyMap(GeometryHierarchyMap&&) = default;
+  GeometryHierarchyMap(GeometryHierarchyMap&&) noexcept = default;
   ~GeometryHierarchyMap() = default;
   GeometryHierarchyMap& operator=(const GeometryHierarchyMap&) = default;
-  GeometryHierarchyMap& operator=(GeometryHierarchyMap&&) = default;
+  GeometryHierarchyMap& operator=(GeometryHierarchyMap&&) noexcept = default;
 
   /// Return an iterator pointing to the beginning of the stored values.
   Iterator begin() const { return m_values.begin(); }
@@ -99,7 +99,9 @@ class GeometryHierarchyMap {
   /// Access the geometry identifier for the i-th element with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
-  GeometryIdentifier idAt(std::size_t index) const { return m_ids.at(index); }
+  GeometryIdentifier idAt(std::size_t index) const {
+    return GeometryIdentifier(m_ids.at(index));
+  }
 
   /// Access the value of the i-th element in the container with bounds check.
   ///
@@ -117,22 +119,34 @@ class GeometryHierarchyMap {
   /// @retval `.end()` iterator if no matching element exists
   Iterator find(const GeometryIdentifier& id) const;
 
+  /// Check if the most specific value exists for a given geometry identifier.
+  ///
+  /// This function checks if there is an element matching exactly the given
+  /// geometry id, or from the element for the next available higher level
+  /// within the geometry hierarchy.
+  ///
+  /// @param id geometry identifier for which existence is being checked
+  /// @retval `true` if a matching element exists
+  /// @retval `false` if no matching element exists
+  bool contains(const GeometryIdentifier& id) const;
+
  private:
   // NOTE this class assumes that it knows the ordering of the levels within
   //      the geometry id. if the geometry id changes, this code has to be
   //      adapted too. the asserts ensure that such a change is caught.
-  static_assert(GeometryIdentifier().setVolume(1).value() <
-                    GeometryIdentifier().setVolume(1).setBoundary(1).value(),
+  static_assert(GeometryIdentifier().withVolume(1).value() <
+                    GeometryIdentifier().withVolume(1).withBoundary(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setBoundary(1).value() <
-                    GeometryIdentifier().setBoundary(1).setLayer(1).value(),
+  static_assert(GeometryIdentifier().withBoundary(1).value() <
+                    GeometryIdentifier().withBoundary(1).withLayer(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setLayer(1).value() <
-                    GeometryIdentifier().setLayer(1).setApproach(1).value(),
+  static_assert(GeometryIdentifier().withLayer(1).value() <
+                    GeometryIdentifier().withLayer(1).withApproach(1).value(),
                 "Incompatible GeometryIdentifier hierarchy");
-  static_assert(GeometryIdentifier().setApproach(1).value() <
-                    GeometryIdentifier().setApproach(1).setSensitive(1).value(),
-                "Incompatible GeometryIdentifier hierarchy");
+  static_assert(
+      GeometryIdentifier().withApproach(1).value() <
+          GeometryIdentifier().withApproach(1).withSensitive(1).value(),
+      "Incompatible GeometryIdentifier hierarchy");
 
   using Identifier = GeometryIdentifier::Value;
 
@@ -145,31 +159,31 @@ class GeometryHierarchyMap {
   /// Construct a mask where all leading non-zero levels are set.
   static constexpr Identifier makeLeadingLevelsMask(GeometryIdentifier id) {
     // construct id from encoded value with all bits set
-    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
+    const auto allSet = GeometryIdentifier(~GeometryIdentifier::Value{0u});
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
-      return allSet.setExtra(0u).value();
+      return allSet.withExtra(0u).value();
     }
     if (id.approach() != 0u) {
-      return allSet.setExtra(0u).setSensitive(0u).value();
+      return allSet.withExtra(0u).withSensitive(0u).value();
     }
     if (id.layer() != 0u) {
-      return allSet.setExtra(0u).setSensitive(0u).setApproach(0u).value();
+      return allSet.withExtra(0u).withSensitive(0u).withApproach(0u).value();
     }
     if (id.boundary() != 0u) {
-      return allSet.setExtra(0u)
-          .setSensitive(0u)
-          .setApproach(0u)
-          .setLayer(0u)
+      return allSet.withExtra(0u)
+          .withSensitive(0u)
+          .withApproach(0u)
+          .withLayer(0u)
           .value();
     }
     if (id.volume() != 0u) {
-      return allSet.setExtra(0u)
-          .setSensitive(0u)
-          .setApproach(0u)
-          .setLayer(0u)
-          .setBoundary(0u)
+      return allSet.withExtra(0u)
+          .withSensitive(0u)
+          .withApproach(0u)
+          .withLayer(0u)
+          .withBoundary(0u)
           .value();
     }
     // no valid levels; all bits are zero.
@@ -178,7 +192,7 @@ class GeometryHierarchyMap {
 
   /// Construct a mask where only the highest level is set.
   static constexpr Identifier makeHighestLevelMask() {
-    return makeLeadingLevelsMask(GeometryIdentifier(0u).setVolume(1u));
+    return makeLeadingLevelsMask(GeometryIdentifier(0u).withVolume(1u));
   }
 
   /// Compare the two identifiers only within the masked bits.
@@ -243,7 +257,8 @@ inline void GeometryHierarchyMap<value_t>::fill(
 
   for (const auto& element : elements) {
     m_ids.push_back(element.first.value());
-    m_masks.push_back(makeLeadingLevelsMask(element.first.value()));
+    m_masks.push_back(
+        makeLeadingLevelsMask(GeometryIdentifier(element.first.value())));
     m_values.push_back(std::move(element.second));
   }
 }
@@ -301,6 +316,12 @@ inline auto GeometryHierarchyMap<value_t>::find(
 
   // all options are exhausted and no matching element was found.
   return end();
+}
+
+template <typename value_t>
+inline auto GeometryHierarchyMap<value_t>::contains(
+    const GeometryIdentifier& id) const -> bool {
+  return this->find(id) != this->end();
 }
 
 }  // namespace Acts

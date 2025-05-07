@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -35,8 +35,8 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
     std::string output;
   };
 
-  HelloRandomAlgorithm(const Config& cfg,
-                       Acts::Logging::Level level = Acts::Logging::INFO);
+  explicit HelloRandomAlgorithm(
+      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;

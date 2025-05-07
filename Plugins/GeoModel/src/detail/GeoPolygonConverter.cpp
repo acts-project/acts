@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2024 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/GeoModel/detail/GeoPolygonConverter.hpp"
 
@@ -30,7 +30,7 @@ Acts::detail::GeoPolygonConverter::operator()(
     const PVConstLink& geoPV, const GeoSimplePolygonBrep& polygon,
     const Transform3& absTransform, bool sensitive) const {
   /// auto-calculate the unit length conversion
-  static constexpr ActsScalar unitLength =
+  static constexpr double unitLength =
       Acts::UnitConstants::mm / GeoModelKernelUnits::millimeter;
 
   // Create the surface transform
@@ -47,10 +47,10 @@ Acts::detail::GeoPolygonConverter::operator()(
   // sort based on the y-coordinate
   std::ranges::sort(vertices, {}, [](const auto& v) { return v[1]; });
   if (nVertices == 4) {
-    double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxposy = fabs(vertices[2][0] - vertices[3][0]) / 2;
-    double hly = fabs(vertices[0][1] - vertices[3][1]) / 2;
-    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxposy, hly};
+    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    double hlxposy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    double hly = std::abs(vertices[0][1] - vertices[3][1]) / 2;
+    std::vector<double> halfLengths = {hlxnegy, hlxposy, hly};
 
     // Create the surface
     Vector3 colX = rotation.col(0);
@@ -61,9 +61,9 @@ Acts::detail::GeoPolygonConverter::operator()(
     rotation.col(2) = colZ;
     transform.linear() = rotation;
     // Create the surface bounds
-    ActsScalar halfXnegY = unitLength * halfLengths[0];
-    ActsScalar halfXposY = unitLength * halfLengths[1];
-    ActsScalar halfY = unitLength * halfLengths[2];
+    double halfXnegY = unitLength * halfLengths[0];
+    double halfXposY = unitLength * halfLengths[1];
+    double halfY = unitLength * halfLengths[2];
     auto trapBounds =
         std::make_shared<Acts::TrapezoidBounds>(halfXnegY, halfXposY, halfY);
     if (!sensitive) {
@@ -78,12 +78,11 @@ Acts::detail::GeoPolygonConverter::operator()(
     // Return the detector element and surface
     return std::make_tuple(detectorElement, surface);
   } else if (nVertices == 6) {
-    double hlxnegy = fabs(vertices[0][0] - vertices[1][0]) / 2;
-    double hlxzeroy = fabs(vertices[2][0] - vertices[3][0]) / 2;
-    double hlxposy = fabs(vertices[4][0] - vertices[5][0]) / 2;
-    double hly = fabs(vertices[0][1] - vertices[4][1]) / 2;
-    std::vector<ActsScalar> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly,
-                                           hly};
+    double hlxnegy = std::abs(vertices[0][0] - vertices[1][0]) / 2;
+    double hlxzeroy = std::abs(vertices[2][0] - vertices[3][0]) / 2;
+    double hlxposy = std::abs(vertices[4][0] - vertices[5][0]) / 2;
+    double hly = std::abs(vertices[0][1] - vertices[4][1]) / 2;
+    std::vector<double> halfLengths = {hlxnegy, hlxzeroy, hlxposy, hly, hly};
 
     // Create the surface
 
@@ -96,11 +95,11 @@ Acts::detail::GeoPolygonConverter::operator()(
     transform.linear() = rotation;
 
     // Create the surface bounds
-    ActsScalar halfXnegY = unitLength * halfLengths[0];
-    ActsScalar halfXzeroY = unitLength * halfLengths[1];
-    ActsScalar halfXposY = unitLength * halfLengths[2];
-    ActsScalar halfYnegX = unitLength * halfLengths[3];
-    ActsScalar halfYposX = unitLength * halfLengths[4];
+    double halfXnegY = unitLength * halfLengths[0];
+    double halfXzeroY = unitLength * halfLengths[1];
+    double halfXposY = unitLength * halfLengths[2];
+    double halfYnegX = unitLength * halfLengths[3];
+    double halfYposX = unitLength * halfLengths[4];
 
     auto diamondBounds = std::make_shared<Acts::DiamondBounds>(
         halfXnegY, halfXzeroY, halfXposY, halfYnegX, halfYposX);

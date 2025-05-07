@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -174,7 +174,7 @@ DetectorComponent::PortalContainer wrapInZR(
 ///
 /// @return extracted boundary values
 template <typename volume_container_t>
-std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
+std::array<std::vector<double>, 3u> rzphiBoundaries(
     const GeometryContext& gctx, const volume_container_t& volumes,
     double precision = 0.,
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
@@ -185,8 +185,8 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
                                                 << " volumes.");
 
   // The return boundaries
-  std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
-  auto insertWithPrecision = [&](std::size_t is, ActsScalar value) -> void {
+  std::array<std::set<double>, 3u> uniqueBoundaries;
+  auto insertWithPrecision = [&](std::size_t is, double value) -> void {
     if (precision == 0.) {
       uniqueBoundaries[is].insert(value);
       return;
@@ -199,19 +199,19 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
     if (v->volumeBounds().type() == VolumeBounds::BoundsType::eCylinder) {
       const auto& bValues = v->volumeBounds().values();
       // The min/max values
-      ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
-      ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
-      ActsScalar zCenter = v->transform(gctx).translation().z();
-      ActsScalar zHalfLength =
+      double rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
+      double rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
+      double zCenter = v->transform(gctx).translation().z();
+      double zHalfLength =
           bValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
-      ActsScalar zMin = zCenter - zHalfLength;
-      ActsScalar zMax = zCenter + zHalfLength;
-      ActsScalar phiCenter =
+      double zMin = zCenter - zHalfLength;
+      double zMax = zCenter + zHalfLength;
+      double phiCenter =
           bValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
-      ActsScalar phiSector =
+      double phiSector =
           bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-      ActsScalar phiMin = phiCenter - phiSector;
-      ActsScalar phiMax = phiCenter + phiSector;
+      double phiMin = phiCenter - phiSector;
+      double phiMax = phiCenter + phiSector;
       // Fill the sets
       insertWithPrecision(0u, rMin);
       insertWithPrecision(0u, rMax);
@@ -229,12 +229,12 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
   ACTS_VERBOSE("- did yield " << uniqueBoundaries[2u].size()
                               << " boundaries in phi.");
 
-  return {{std::vector<ActsScalar>(uniqueBoundaries[0].begin(),
-                                   uniqueBoundaries[0].end()),
-           std::vector<ActsScalar>(uniqueBoundaries[1].begin(),
-                                   uniqueBoundaries[1].end()),
-           std::vector<ActsScalar>(uniqueBoundaries[2].begin(),
-                                   uniqueBoundaries[2].end())}};
+  return {{std::vector<double>(uniqueBoundaries[0].begin(),
+                               uniqueBoundaries[0].end()),
+           std::vector<double>(uniqueBoundaries[1].begin(),
+                               uniqueBoundaries[1].end()),
+           std::vector<double>(uniqueBoundaries[2].begin(),
+                               uniqueBoundaries[2].end())}};
 }
 
 }  // namespace detail::CylindricalDetectorHelper

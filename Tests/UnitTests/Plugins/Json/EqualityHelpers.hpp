@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
@@ -88,10 +88,10 @@ inline static bool isEqual(const BinUtility& ba, const BinUtility& bb,
 ///
 /// @return bool for euqal
 inline static bool isEqual(const Acts::Extent& ea, const Acts::Extent& eb,
-                           Acts::ActsScalar tolerance = 0.) {
+                           double tolerance = 0.) {
   bool equalConstrains = true;
   bool equalRange = true;
-  for (auto& bVal : allBinningValues()) {
+  for (auto& bVal : allAxisDirections()) {
     equalConstrains =
         equalConstrains && (ea.constrains(bVal) == eb.constrains(bVal));
     BOOST_CHECK(equalConstrains);

@@ -1,10 +1,10 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 
@@ -61,10 +61,10 @@ FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
     result.m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
-  std::copy(m_stracktraces.begin(), m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
+  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
+            std::back_inserter(result.m_stackTraces));
+  std::copy(m_stackTraces.begin(), m_stackTraces.end(),
+            std::back_inserter(result.m_stackTraces));
 
   result.deduplicate();
 
@@ -76,8 +76,8 @@ void FpeMonitor::Result::merge(const Result &with) {
     m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
-            std::back_inserter(m_stracktraces));
+  std::copy(with.m_stackTraces.begin(), with.m_stackTraces.end(),
+            std::back_inserter(m_stackTraces));
 
   deduplicate();
 }
@@ -87,24 +87,22 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
   auto st = std::make_unique<boost::stacktrace::stacktrace>(
       boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
-  auto it = std::find_if(
-      m_stracktraces.begin(), m_stracktraces.end(), [&](const FpeInfo &el) {
-        return areFpesEquivalent({el.type, *el.st}, {type, *st});
-      });
+  auto it = std::ranges::find_if(m_stackTraces, [&](const FpeInfo &el) {
+    return areFpesEquivalent({el.type, *el.st}, {type, *st});
+  });
 
-  if (it != m_stracktraces.end()) {
+  if (it != m_stackTraces.end()) {
     it->count += 1;
   } else {
-    m_stracktraces.push_back({1, type, std::move(st)});
+    m_stackTraces.push_back({1, type, std::move(st)});
   }
 }
 
 bool FpeMonitor::Result::contains(
     FpeType type, const boost::stacktrace::stacktrace &st) const {
-  return std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
-                      [&](const FpeInfo &el) {
-                        return areFpesEquivalent({el.type, *el.st}, {type, st});
-                      }) != m_stracktraces.end();
+  return std::ranges::any_of(m_stackTraces, [&](const FpeInfo &el) {
+    return areFpesEquivalent({el.type, *el.st}, {type, st});
+  });
 }
 
 FpeMonitor::Result &FpeMonitor::result() {
@@ -130,12 +128,12 @@ unsigned int FpeMonitor::Result::count(FpeType type) const {
 }
 
 unsigned int FpeMonitor::Result::numStackTraces() const {
-  return m_stracktraces.size();
+  return m_stackTraces.size();
 }
 
 const std::vector<FpeMonitor::Result::FpeInfo> &
 FpeMonitor::Result::stackTraces() const {
-  return m_stracktraces;
+  return m_stackTraces;
 }
 
 bool FpeMonitor::Result::encountered(FpeType type) const {
@@ -163,20 +161,18 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
 
 void FpeMonitor::Result::deduplicate() {
   std::vector<FpeInfo> copy{};
-  copy = std::move(m_stracktraces);
-  m_stracktraces.clear();
+  copy = std::move(m_stackTraces);
+  m_stackTraces.clear();
 
   for (auto &info : copy) {
-    auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
-                           [&info](const FpeInfo &el) {
-                             return areFpesEquivalent({el.type, *el.st},
-                                                      {info.type, *info.st});
-                           });
-    if (it != m_stracktraces.end()) {
+    auto it = std::ranges::find_if(m_stackTraces, [&info](const FpeInfo &el) {
+      return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
+    });
+    if (it != m_stackTraces.end()) {
       it->count += info.count;
       continue;
     }
-    m_stracktraces.push_back({info.count, info.type, std::move(info.st)});
+    m_stackTraces.push_back({info.count, info.type, std::move(info.st)});
   }
 }
 
@@ -334,6 +330,14 @@ std::string FpeMonitor::stackTraceToString(
 std::string FpeMonitor::getSourceLocation(
     const boost::stacktrace::frame &frame) {
   return frame.source_file() + ":" + std::to_string(frame.source_line());
+}
+
+bool FpeMonitor::canSymbolize() {
+#if defined(BOOST_STACKTRACE_USE_NOOP)
+  return false;
+#else
+  return true;
+#endif
 }
 
 }  // namespace Acts

@@ -1,15 +1,13 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2023 CERN for the benefit of the Acts project
+// Copyright (C) 2016 CERN for the benefit of the ACTS project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -18,7 +16,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -51,6 +48,8 @@ class RootSimHitReader : public IReader {
   /// @param config The Configuration struct
   RootSimHitReader(const Config &config, Acts::Logging::Level level);
 
+  ~RootSimHitReader() override;
+
   /// Framework name() method
   std::string name() const override { return "RootSimHitReader"; }
 
@@ -82,7 +81,7 @@ class RootSimHitReader : public IReader {
   std::vector<std::tuple<std::uint32_t, std::size_t, std::size_t>> m_eventMap;
 
   /// The input tree name
-  TChain *m_inputChain = nullptr;
+  std::unique_ptr<TChain> m_inputChain;
 
   /// The keys we have in the ROOT file
   constexpr static std::array<const char *, 12> m_floatKeys = {
